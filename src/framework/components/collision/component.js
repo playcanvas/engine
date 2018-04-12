@@ -1,9 +1,9 @@
 pc.extend(pc, function () {
     /**
      * @component
+     * @constructor
      * @name pc.CollisionComponent
-     * @description Create a new CollisionComponent
-     * @class A collision volume. use this in conjunction with a {@link pc.RigidBodyComponent} to make a collision volume that can be simulated using the physics engine.
+     * @classdesc A collision volume. Use this in conjunction with a {@link pc.RigidBodyComponent} to make a collision volume that can be simulated using the physics engine.
      * <p>If the {@link pc.Entity} does not have a {@link pc.RigidBodyComponent} then this collision volume will act as a trigger volume. When an entity with a dynamic
      * or kinematic body enters or leaves an entity with a trigger volume, both entities will receive trigger events.
      * <p>The following table shows all the events that can be fired between two Entities:
@@ -47,6 +47,7 @@ pc.extend(pc, function () {
      *   </tr>
      * </table>
      * </p>
+     * @description Create a new CollisionComponent
      * @param {pc.CollisionComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @property {String} type The type of the collision volume. Defaults to 'box'. Can be one of the following:
@@ -65,6 +66,16 @@ pc.extend(pc, function () {
      * @property {pc.Model} model The model that is added to the scene graph for the mesh collision volume.
      * @extends pc.Component
      */
+    var CollisionComponent = function CollisionComponent (system, entity) {
+        this.on('set_type', this.onSetType, this);
+        this.on('set_halfExtents', this.onSetHalfExtents, this);
+        this.on('set_radius', this.onSetRadius, this);
+        this.on('set_height', this.onSetHeight, this);
+        this.on('set_axis', this.onSetAxis, this);
+        this.on("set_asset", this.onSetAsset, this);
+        this.on("set_model", this.onSetModel, this);
+    };
+    CollisionComponent = pc.inherits(CollisionComponent, pc.Component);
 
     // Events Documentation
     /**
@@ -103,16 +114,6 @@ pc.extend(pc, function () {
      * a {@link pc.RigidBodyComponent} attached.
      * @param {pc.Entity} other The {@link pc.Entity} that exited this collision volume.
     */
-    var CollisionComponent = function CollisionComponent (system, entity) {
-        this.on('set_type', this.onSetType, this);
-        this.on('set_halfExtents', this.onSetHalfExtents, this);
-        this.on('set_radius', this.onSetRadius, this);
-        this.on('set_height', this.onSetHeight, this);
-        this.on('set_axis', this.onSetAxis, this);
-        this.on("set_asset", this.onSetAsset, this);
-        this.on("set_model", this.onSetModel, this);
-    };
-    CollisionComponent = pc.inherits(CollisionComponent, pc.Component);
 
     pc.extend(CollisionComponent.prototype, {
 
@@ -147,7 +148,6 @@ pc.extend(pc, function () {
         },
 
         onSetAsset: function (name, oldValue, newValue) {
-            var self = this;
             var asset;
             var assets = this.system.app.assets;
 

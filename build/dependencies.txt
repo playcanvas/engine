@@ -5,6 +5,7 @@
 ../src/core/color.js
 ../src/core/guid.js
 ../src/core/time.js
+../src/core/hash.js
 ../src/core/uri.js
 ../src/core/log.js
 ../src/core/inheritance.js
@@ -53,11 +54,8 @@
 ../src/graphics/program-lib/chunks/generated-shader-chunks.js
 ../src/graphics/program-lib/program-lib.js
 ../src/graphics/program-lib/basic.js
-../src/graphics/program-lib/depth.js
-../src/graphics/program-lib/depth-rgba.js
 ../src/graphics/program-lib/particle.js
 ../src/graphics/program-lib/standard.js
-../src/graphics/program-lib/pick.js
 ../src/graphics/program-lib/skybox.js
 ../src/graphics/post-effect.js
 ../src/scene/scene.js
@@ -78,6 +76,11 @@
 ../src/scene/pick.js
 ../src/scene/procedural.js
 ../src/scene/default-material.js
+../src/scene/layer.js
+../src/scene/layer-composition.js
+../src/scene/sprite.js
+../src/scene/texture-atlas.js
+../src/scene/stencil-parameters.js
 ../src/anim/animation.js
 ../src/anim/skeleton.js
 ../src/sound/manager.js
@@ -116,6 +119,7 @@
 ../src/framework/components/camera/system.js
 ../src/framework/components/camera/data.js
 ../src/framework/components/camera/post-effect-queue.js
+../src/framework/components/camera/post-effect-pass.js
 ../src/framework/components/light/component.js
 ../src/framework/components/light/system.js
 ../src/framework/components/light/data.js
@@ -147,6 +151,10 @@
 ../src/framework/components/particle-system/component.js
 ../src/framework/components/particle-system/system.js
 ../src/framework/components/particle-system/data.js
+../src/framework/components/sprite/sprite-animation-clip.js
+../src/framework/components/sprite/component.js
+../src/framework/components/sprite/system.js
+../src/framework/components/sprite/data.js
 ../src/framework/components/screen/component.js
 ../src/framework/components/screen/system.js
 ../src/framework/components/screen/data.js
@@ -179,6 +187,8 @@
 ../src/resources/scene-settings.js
 ../src/resources/folder.js
 ../src/resources/font.js
+../src/resources/texture-atlas.js
+../src/resources/sprite.js
 ../src/resources/parser/json-model.js
 ../src/resources/parser/scene.js
 ../src/asset/asset.js

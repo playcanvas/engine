@@ -4,12 +4,12 @@ pc.extend(pc, function () {
     var tmpVecC = new pc.Vec3();
     var tmpVecD = new pc.Vec3();
     var tmpVecE = new pc.Vec3();
-    var tmpVecF = new pc.Vec3();
 
     /**
+     * @constructor
      * @name pc.BoundingBox
      * @description Create a new axis-aligned bounding box.
-     * @class Axis-Aligned Bounding Box.
+     * @classdesc Axis-Aligned Bounding Box.
      * @param {pc.Vec3} [center] Center of box. The constructor takes a reference of this parameter.
      * @param {pc.Vec3} [halfExtents] Half the distance across the box in each axis. The constructor takes a reference of this parameter.
      */
@@ -139,7 +139,6 @@ pc.extend(pc, function () {
             var absDiff = tmpVecD;
             var absDir = tmpVecE;
             var rayDir = ray.direction;
-            var i;
 
             diff.sub2(ray.origin, this.center);
             absDiff.set(Math.abs(diff.x), Math.abs(diff.y), Math.abs(diff.z));

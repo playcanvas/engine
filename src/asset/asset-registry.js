@@ -1,12 +1,13 @@
 pc.extend(pc, function () {
     /**
-    * @name pc.AssetRegistry
-    * @class Container for all assets that are available to this application
-    * @description Create an instance of an AssetRegistry.
-    * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
-    * @param {pc.ResourceLoader} loader The ResourceLoader used to load the asset files.
-    * @property {String} prefix A URL prefix that will be added to all asset loading requests.
-    */
+     * @constructor
+     * @name pc.AssetRegistry
+     * @classdesc Container for all assets that are available to this application
+     * @description Create an instance of an AssetRegistry.
+     * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
+     * @param {pc.ResourceLoader} loader The ResourceLoader used to load the asset files.
+     * @property {String} prefix A URL prefix that will be added to all asset loading requests.
+     */
     var AssetRegistry = function (loader) {
         this._loader = loader;
 
@@ -220,6 +221,7 @@ pc.extend(pc, function () {
         remove: function (asset) {
             delete this._cache[asset.id];
             delete this._names[asset.name];
+
             var url = asset.file ? asset.file.url : null;
             if (url)
                 delete this._urls[url];
@@ -385,7 +387,6 @@ pc.extend(pc, function () {
                         self.fire("error", err, asset);
                         self.fire("error:" + asset.id, err, asset);
                         asset.fire("error", err, asset);
-                        return;
                     }
                 });
             }
@@ -450,7 +451,6 @@ pc.extend(pc, function () {
             var url = asset.getFileUrl();
             var dir = pc.path.getDirectory(url);
             var basename = pc.path.getBasename(url);
-            var name = basename.replace(".json", "");
             var ext = pc.path.getExtension(url);
 
 
@@ -510,7 +510,7 @@ pc.extend(pc, function () {
                     done(null, materials);
             };
 
-            for(i = 0; i < mapping.mapping.length; i++) {
+            for (i = 0; i < mapping.mapping.length; i++) {
                 var path = mapping.mapping[i].path;
                 if (path) {
                     self.loadFromUrl(pc.path.join(dir, path), "material", onLoadAsset);
@@ -650,7 +650,7 @@ pc.extend(pc, function () {
         */
         filter: function (callback) {
             var items = [ ];
-            for(var i = 0, len = this._assets.length; i < len; i++) {
+            for (var i = 0, len = this._assets.length; i < len; i++) {
                 if (callback(this._assets[i]))
                     items.push(this._assets[i]);
             }

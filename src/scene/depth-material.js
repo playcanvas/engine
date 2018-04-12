@@ -2,9 +2,9 @@ pc.extend(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.DepthMaterial
-     * @class A Depth material is for rendering linear depth values to a render target.
-     * @author Will Eastcott
+     * @classdesc A Depth material is for rendering linear depth values to a render target.
      */
     var DepthMaterial = function () {
     };

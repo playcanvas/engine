@@ -17,13 +17,13 @@ pc.extend(pc, function() {
          */
         createURI: function (options) {
             var s = "";
-            if((options.authority || options.scheme) && (options.host || options.hostpath)) {
+            if ((options.authority || options.scheme) && (options.host || options.hostpath)) {
                 throw new Error("Can't have 'scheme' or 'authority' and 'host' or 'hostpath' option");
             }
-            if(options.host && options.hostpath) {
+            if (options.host && options.hostpath) {
                 throw new Error("Can't have 'host' and 'hostpath' option");
             }
-            if(options.path && options.hostpath) {
+            if (options.path && options.hostpath) {
                 throw new Error("Can't have 'path' and 'hostpath' option");
             }
 
@@ -39,7 +39,7 @@ pc.extend(pc, function() {
                 s += options.host;
             }
 
-            if(options.path) {
+            if (options.path) {
                 s += options.path;
             }
 
@@ -60,15 +60,16 @@ pc.extend(pc, function() {
 
         /**
          * @private
+         * @constructor
          * @name pc.URI
          * @description Create a new URI object
-         * @class A URI object
+         * @classdesc A URI object
          * @param {String} uri URI string
          */
         URI: function (uri) {
             // See http://tools.ietf.org/html/rfc2396#appendix-B for details of RegExp
             var re = /^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/,
-            result = uri.match(re);
+                result = uri.match(re);
 
             /**
              * @name pc.URI#scheme
@@ -104,6 +105,7 @@ pc.extend(pc, function() {
              * @function
              * @name pc.URI#toString
              * @description Convert URI back to string
+             * @returns {String} The URI as a string.
              */
             this.toString = function () {
                 var s = "";
@@ -132,16 +134,15 @@ pc.extend(pc, function() {
             /**
              * @function
              * @name pc.URI#getQuery
-             * @description Returns the query parameters as an Object
+             * @description Returns the query parameters as an Object.
+             * @returns {Object} The URI's query parameters converted to an Object.
              * @example
-             * <code><pre lang="javascript">
-             * var s = "http://example.com?a=1&b=2&c=3
+             * var s = "http://example.com?a=1&b=2&c=3";
              * var uri = new pc.URI(s);
              * var q = uri.getQuery();
              * console.log(q.a); // logs "1"
              * console.log(q.b); // logs "2"
              * console.log(q.c); // logs "3"
-             * </code></pre>
              */
             this.getQuery = function () {
                 var vars;
@@ -185,4 +186,4 @@ pc.extend(pc, function() {
             };
         }
     };
-} ());
+}());

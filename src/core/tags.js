@@ -8,14 +8,14 @@ pc.extend(pc, (function() {
         addItem: function(item) {
             var tags = item.tags._list;
 
-            for(var i = 0; i < tags.length; i++)
+            for (var i = 0; i < tags.length; i++)
                 this.add(tags[i], item);
         },
 
         removeItem: function(item) {
             var tags = item.tags._list;
 
-            for(var i = 0; i < tags.length; i++)
+            for (var i = 0; i < tags.length; i++)
                 this.remove(tags[i], item);
         },
 
@@ -76,13 +76,13 @@ pc.extend(pc, (function() {
             var index = { };
             var items = [ ];
             var i, n, t;
-            var item, tag, tags, tagsRest, list, missingIndex;
+            var item, tag, tags, tagsRest, missingIndex;
 
             var sort = function(a, b) {
                 return self._index[a].list.length - self._index[b].list.length;
             };
 
-            for(i = 0; i < args.length; i++) {
+            for (i = 0; i < args.length; i++) {
                 tag = args[i];
 
                 if (tag instanceof Array) {
@@ -94,7 +94,7 @@ pc.extend(pc, (function() {
                     } else {
                         // check if all indexes are in present
                         missingIndex = false;
-                        for(t = 0; t < tag.length; t++) {
+                        for (t = 0; t < tag.length; t++) {
                             if (! this._index[tag[t]]) {
                                 missingIndex = true;
                                 break;
@@ -111,7 +111,7 @@ pc.extend(pc, (function() {
                         if (tagsRest.length === 1)
                             tagsRest = tagsRest[0];
 
-                        for(n = 0; n < this._index[tags[0]].list.length; n++) {
+                        for (n = 0; n < this._index[tags[0]].list.length; n++) {
                             item = this._index[tags[0]].list[n];
                             if ((this._key ? ! index[item[this._key]] : (items.indexOf(item) === -1)) && item.tags.has(tagsRest)) {
                                 if (this._key)
@@ -125,7 +125,7 @@ pc.extend(pc, (function() {
                 }
 
                 if (tag && typeof(tag) === 'string' && this._index[tag]) {
-                    for(n = 0; n < this._index[tag].list.length; n++) {
+                    for (n = 0; n < this._index[tag].list.length; n++) {
                         item = this._index[tag].list[n];
 
                         if (this._key) {
@@ -143,7 +143,6 @@ pc.extend(pc, (function() {
             return items;
         }
     };
-
 
 
     /**
@@ -282,7 +281,7 @@ pc.extend(pc, (function() {
             this._list = [ ];
             this._index = { };
 
-            for(var i = 0; i < tags.length; i++)
+            for (var i = 0; i < tags.length; i++)
                 this.fire('remove', tags[i], this._parent);
 
             this.fire('change', this._parent);
@@ -320,7 +319,7 @@ pc.extend(pc, (function() {
             if (! this._list.length || ! tags.length)
                 return false;
 
-            for(var i = 0; i < tags.length; i++) {
+            for (var i = 0; i < tags.length; i++) {
                 if (tags[i].length === 1) {
                     // single occurance
                     if (this._index[tags[i][0]])
@@ -329,7 +328,7 @@ pc.extend(pc, (function() {
                     // combined occurance
                     var multiple = true;
 
-                    for(var t = 0; t < tags[i].length; t++) {
+                    for (var t = 0; t < tags[i].length; t++) {
                         if (this._index[tags[i][t]])
                             continue;
 
@@ -364,12 +363,12 @@ pc.extend(pc, (function() {
             if (! args || ! args.length)
                 return tags;
 
-            for(var i = 0; i < args.length; i++) {
+            for (var i = 0; i < args.length; i++) {
                 if (args[i] instanceof Array) {
                     if (! flat)
                         tmp = [ ];
 
-                    for(var t = 0; t < args[i].length; t++) {
+                    for (var t = 0; t < args[i].length; t++) {
                         if (typeof(args[i][t]) !== 'string')
                             continue;
 
@@ -392,7 +391,7 @@ pc.extend(pc, (function() {
             }
 
             return tags;
-        },
+        }
     };
 
     /**

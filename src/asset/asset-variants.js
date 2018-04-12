@@ -18,8 +18,6 @@ pc.extend(pc, function () {
                 var fieldAsBool = !!this[field];
                 var valueAsBool = !!value;
                 if (fieldAsBool !== valueAsBool || (this[field] && value && this[field].hash !== value.hash)) {
-                    var old = this[field];
-
                     if (value) {
                         this[field] = {
                             url: value.url,
@@ -48,7 +46,7 @@ pc.extend(pc, function () {
     defineVariantProperty('etc1');
 
     AssetVariants.prototype.clear = function() {
-        for(var i = 0; i < properties.length; i++)
+        for (var i = 0; i < properties.length; i++)
             this[properties[i]] = null;
     };
 

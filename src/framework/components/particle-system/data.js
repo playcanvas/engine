@@ -67,6 +67,8 @@ pc.extend(pc, function() {
         this.paused = false;
 
         this.autoPlay = true;
+
+        this.layers = [pc.LAYERID_WORLD]; // assign to the default world layer
     };
     ParticleSystemComponentData = pc.inherits(ParticleSystemComponentData, pc.ComponentData);
 

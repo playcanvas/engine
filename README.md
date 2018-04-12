@@ -25,14 +25,15 @@ PlayCanvas Engine and Tools been used by leading companies in game development, 
 
 ## Features
 
-The PlayCanvas Engine is a fully featured 3D game engine.
+The PlayCanvas Engine is a fully featured game engine.
 
 * **Graphics**
-    * WebGL-based 3D renderer
+    * WebGL 2.0 based renderer (with fallback to WebGL 1.0)
     * Physically based rendering (PBR)
-    * Directional, point and spot lights (all of which can cast shadows)
-    * Runtime Lightmap baking
-    * Static and skinned meshes
+    * Directional, point and spot lights
+    * Shadow mapping (PCF and VSM implementations)
+    * Runtime lightmap baking
+    * Static, skinned and morphed meshes
     * GPU Particle engine with editor
     * PostFX library: bloom, edge detect, FXAA, vignette, etc
     * Seamless default material support from Maya, 3DS Max, Blender, etc.
@@ -48,7 +49,7 @@ The PlayCanvas Engine is a fully featured 3D game engine.
 * **Entity / Component System**
     * Built-in components: model, sound, animation, camera, collision, light, rigidbody, script, particlesystem
 * **Scripting system**
-    * Write game behaviours by attaching JavaScript to game entities
+    * Write game behaviors by attaching JavaScript to game entities
     * Live code hot-swap enables rapid iteration
 * **Input**
     * Mouse, Keyboard, Touch, Gamepad, VR
@@ -180,12 +181,14 @@ Specific engine versions:
 
 ## Getting Help
 
-[**Forums**](http://forum.playcanvas.com) - Use the forum to ask/answer questions about Engine, Editor or generally PlayCanvas
+[**Forums**](https://forum.playcanvas.com) - Use the forum to ask/answer questions about PlayCanvas.
+
+[**Discord**](https://discord.gg/Abgck8a) - Real-time text, voice and video chat for the PlayCanvas developer community.
 
 ## Contributing
 
 Want to help us make the best 3D engine on the web? Great!
-Check out [CONTRIB.md](https://github.com/playcanvas/engine/blob/master/CONTRIB.md) that will get you started.
+Check out [CONTRIBUTING.md](https://github.com/playcanvas/engine/blob/master/.github/CONTRIBUTING.md) that will get you started.
 And look for ["good first PR"](https://github.com/playcanvas/engine/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+PR%22)  label in Issues.
 
 ### Github Issues

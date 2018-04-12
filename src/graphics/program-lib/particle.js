@@ -23,6 +23,12 @@ pc.programlib.particle = {
         var vshader = "";
         var fshader = pc.programlib.precisionCode(device) + "\n";
 
+        if (device.webgl2) {
+            vshader += "#define GL2\n";
+            fshader += "#define GL2\n";
+        }
+        vshader += "#define VERTEXSHADER\n";
+
         if (options.animTex) vshader += "\nuniform vec4 animTexParams;\n";
         if (options.normal == 2) vshader += "\nvarying mat3 ParticleMat;\n";
         if (options.normal == 1) vshader += "\nvarying vec3 Normal;\n";
@@ -31,6 +37,7 @@ pc.programlib.particle = {
         if (!options.useCpu) {
             vshader += chunk.particle_initVS;
             vshader += (options.pack8? chunk.particleInputRgba8PS : chunk.particleInputFloatPS);
+            if (options.soft > 0) vshader += chunk.screenDepthPS;
             vshader += chunk.particleVS;
             if (options.localSpace) vshader += chunk.particle_localShiftVS;
             if (options.animTex) vshader += this._animTex(options, chunk);
@@ -43,6 +50,7 @@ pc.programlib.particle = {
             vshader += chunk.particle_endVS;
             if (options.soft > 0) vshader += chunk.particle_softVS;
         } else {
+            if (options.soft > 0) vshader += chunk.screenDepthPS;
             vshader += chunk.particle_cpuVS;
             if (options.localSpace) vshader += chunk.particle_localShiftVS;
             if (options.animTex) vshader += this._animTex(options, chunk);
@@ -82,7 +90,7 @@ pc.programlib.particle = {
         }
 
         if (options.normal == 2) fshader += "\nuniform sampler2D normalMap;\n";
-        if (options.soft > 0) fshader += "\nuniform sampler2D uDepthMap;\n uniform vec4 uScreenSize;\n";
+        if (options.soft > 0) fshader += chunk.screenDepthPS;
         fshader += chunk.particlePS;
         if (options.soft > 0) fshader += chunk.particle_softPS;
         if (options.normal == 1) fshader += "\nvec3 normal = Normal;\n";

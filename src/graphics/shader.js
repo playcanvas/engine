@@ -31,8 +31,9 @@ pc.extend(pc, function () {
     }
 
     /**
+     * @constructor
      * @name pc.Shader
-     * @class A shader is a program that is responsible for rendering graphical primitives on a device's
+     * @classdesc A shader is a program that is responsible for rendering graphical primitives on a device's
      * graphics processor. The shader is generated from a shader definition. This shader definition specifies
      * the code for processing vertices and fragments processed by the GPU. The language of the code is GLSL
      * (or more specifically ESSL, the OpenGL ES Shading Language). The shader definition also describes how
@@ -72,46 +73,54 @@ pc.extend(pc, function () {
      * };
      *
      * shader = new pc.Shader(graphicsDevice, shaderDefinition);
-     * @author Will Eastcott
      */
     var Shader = function (graphicsDevice, definition) {
-        this._refCount = 0;
         this.device = graphicsDevice;
         this.definition = definition;
-        this.ready = false;
 
-        // #ifdef PROFILER
-        var startTime = pc.now();
-        this.device.fire('shader:compile:start', {
-            timestamp: startTime,
-            target: this
-        });
-        // #endif
+        // Used for shader variants (see pc.Material)
+        this._refCount = 0;
 
-        var gl = this.device.gl;
-        this.vshader = createShader(gl, gl.VERTEX_SHADER, definition.vshader);
-        this.fshader = createShader(gl, gl.FRAGMENT_SHADER, definition.fshader);
-        this.program = createProgram(gl, this.vshader, this.fshader);
+        this.compile();
 
-        // TODO: probably reuse VS/FS
-        graphicsDevice._shaderStats.vsCompiled++;
-        graphicsDevice._shaderStats.fsCompiled++;
-        graphicsDevice._shaderStats.linked++;
-        if (definition.tag===pc.SHADERTAG_MATERIAL) {
-            graphicsDevice._shaderStats.materialShaders++;
-        }
-
-        // #ifdef PROFILER
-        var endTime = pc.now();
-        this.device.fire('shader:compile:end', {
-            timestamp: endTime,
-            target: this
-        });
-        this.device._shaderStats.compileTime += endTime - startTime;
-        // #endif
+        this.device.shaders.push(this);
     };
 
     Shader.prototype = {
+        compile: function () {
+            this.ready = false;
+
+            // #ifdef PROFILER
+            var startTime = pc.now();
+            this.device.fire('shader:compile:start', {
+                timestamp: startTime,
+                target: this
+            });
+            // #endif
+
+            var gl = this.device.gl;
+            this.vshader = createShader(gl, gl.VERTEX_SHADER, this.definition.vshader);
+            this.fshader = createShader(gl, gl.FRAGMENT_SHADER, this.definition.fshader);
+            this.program = createProgram(gl, this.vshader, this.fshader);
+
+            // TODO: probably reuse VS/FS
+            this.device._shaderStats.vsCompiled++;
+            this.device._shaderStats.fsCompiled++;
+            this.device._shaderStats.linked++;
+            if (this.definition.tag===pc.SHADERTAG_MATERIAL) {
+                this.device._shaderStats.materialShaders++;
+            }
+
+            // #ifdef PROFILER
+            var endTime = pc.now();
+            this.device.fire('shader:compile:end', {
+                timestamp: endTime,
+                target: this
+            });
+            this.device._shaderStats.compileTime += endTime - startTime;
+            // #endif
+        },
+
         link: function () {
             var gl = this.device.gl;
             var retValue = true;
@@ -211,7 +220,7 @@ pc.extend(pc, function () {
                 location = gl.getUniformLocation(this.program, info.name);
                 if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
                     (this.device.webgl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
-                    ) {
+                ) {
                     this.samplers.push(new pc.ShaderInput(this.device, info.name, _typeToPc[info.type], location));
                 } else {
                     this.uniforms.push(new pc.ShaderInput(this.device, info.name, _typeToPc[info.type], location));
@@ -238,8 +247,14 @@ pc.extend(pc, function () {
          * @description Frees resources associated with this shader.
          */
         destroy: function () {
+            var device = this.device;
+            var idx = device.shaders.indexOf(this);
+            if (idx !== -1) {
+                device.shaders.splice(idx, 1);
+            }
+
             if (this.program) {
-                var gl = this.device.gl;
+                var gl = device.gl;
                 gl.deleteProgram(this.program);
                 this.program = null;
                 this.device.removeShaderFromCache(this);

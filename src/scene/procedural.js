@@ -9,7 +9,6 @@
  * var normals = pc.calculateNormals(positions, indices);
  * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
- * @author Will Eastcott
  */
 
 var primitiveUv1Padding = 4.0 / 64;
@@ -26,7 +25,6 @@ pc.calculateNormals = function (positions, indices) {
     var p1p2 = new pc.Vec3();
     var p1p3 = new pc.Vec3();
     var faceNormal = new pc.Vec3();
-    var vertexNormal = new pc.Vec3();
 
     var normals = [];
 
@@ -87,7 +85,6 @@ pc.calculateNormals = function (positions, indices) {
  * @example
  * var tangents = pc.calculateTangents(positions, normals, uvs, indices);
  * var mesh = pc.createMesh(positions, normals, tangents, uvs, indices);
- * @author Will Eastcott
  */
 pc.calculateTangents = function (positions, normals, uvs, indices) {
     var triangleCount = indices.length / 3;
@@ -144,11 +141,11 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
         } else {
             r = 1.0 / area;
             sdir.set((t2 * x1 - t1 * x2) * r,
-                    (t2 * y1 - t1 * y2) * r,
-                    (t2 * z1 - t1 * z2) * r);
+                     (t2 * y1 - t1 * y2) * r,
+                     (t2 * z1 - t1 * z2) * r);
             tdir.set((s1 * x2 - s2 * x1) * r,
-                    (s1 * y2 - s2 * y1) * r,
-                    (s1 * z2 - s2 * z1) * r);
+                     (s1 * y2 - s2 * y1) * r,
+                     (s1 * z2 - s2 * z1) * r);
         }
 
         tan1[i1 * 3 + 0] += sdir.x;
@@ -223,7 +220,6 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
  *         uvs: treeUvs,
  *         indices: treeIndices
  *     });
- * @author Will Eastcott
  */
 pc.createMesh = function (device, positions, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -286,10 +282,10 @@ pc.createMesh = function (device, positions, opts) {
         if (uvs1 !== null) {
             iterator.element[pc.SEMANTIC_TEXCOORD1].set(uvs1[i*2], uvs1[i*2+1]);
         }
-        if(blendIndices !== null) {
+        if (blendIndices !== null) {
             iterator.element[pc.SEMANTIC_BLENDINDICES].set(blendIndices[i*2], blendIndices[i*2+1]);
         }
-        if(blendWeights !== null) {
+        if (blendWeights !== null) {
             iterator.element[pc.SEMANTIC_BLENDWEIGHT].set(blendWeights[i*2], blendWeights[i*2+1]);
         }
         iterator.next();
@@ -338,7 +334,6 @@ pc.createMesh = function (device, positions, opts) {
  * @param {Number} opts.segments The number of radial divisions forming cross-sections of the torus ring (defaults to 20).
  * @param {Number} opts.sides The number of divisions around the tubular body of the torus ring (defaults to 30).
  * @returns {pc.Mesh} A new torus-shaped mesh.
- * @author Will Eastcott
  */
 pc.createTorus = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -386,9 +381,9 @@ pc.createTorus = function (device, opts) {
     }
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        indices: indices
     };
 
     if (pc.precalculatedTangents) {
@@ -614,7 +609,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
         positions: positions,
         normals: normals,
         uvs: uvs,
-        uvs1:uvs1,
+        uvs1: uvs1,
         indices: indices
     };
 };
@@ -635,13 +630,12 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
  * @param {Number} opts.heightSegments The number of divisions along the length of the cylinder (defaults to 5).
  * @param {Number} opts.capSegments The number of divisions around the tubular body of the cylinder (defaults to 20).
  * @returns {pc.Mesh} A new cylinder-shaped mesh.
- * @author Will Eastcott
  */
 pc.createCylinder = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     // #ifdef DEBUG
     if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius'))
-      console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+        console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
     // #endif
 
     var radius = opts && (opts.radius || opts.baseRadius);
@@ -676,7 +670,6 @@ pc.createCylinder = function (device, opts) {
  * @param {Number} opts.heightSegments The number of divisions along the tubular length of the capsule (defaults to 1).
  * @param {Number} opts.sides The number of divisions around the tubular body of the capsule (defaults to 20).
  * @returns {pc.Mesh} A new cylinder-shaped mesh.
- * @author Will Eastcott
  */
 pc.createCapsule = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -712,7 +705,6 @@ pc.createCapsule = function (device, opts) {
  * @param {Number} opts.heightSegments The number of divisions along the length of the cone (defaults to 5).
  * @param {Number} opts.capSegments The number of divisions around the tubular body of the cone (defaults to 18).
  * @returns {pc.Mesh} A new cone-shaped mesh.
- * @author Will Eastcott
  */
 pc.createCone = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -745,7 +737,6 @@ pc.createCone = function (device, opts) {
  * @param {Number} opts.radius The radius of the sphere (defaults to 0.5).
  * @param {Number} opts.segments The number of divisions along the longitudinal and latitudinal axes of the sphere (defaults to 16).
  * @returns {pc.Mesh} A new sphere-shaped mesh.
- * @author Will Eastcott
  */
 pc.createSphere = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -797,10 +788,10 @@ pc.createSphere = function (device, opts) {
     }
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        uvs1:      uvs, // UV1 = UV0 for sphere
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        uvs1: uvs, // UV1 = UV0 for sphere
+        indices: indices
     };
 
     if (pc.precalculatedTangents) {
@@ -826,7 +817,6 @@ pc.createSphere = function (device, opts) {
  * @param {Number} opts.widthSegments The number of divisions along the X axis of the plane (defaults to 5).
  * @param {Number} opts.lengthSegments The number of divisions along the Z axis of the plane (defaults to 5).
  * @returns {pc.Mesh} A new plane-shaped mesh.
- * @author Will Eastcott
  */
 pc.createPlane = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -851,6 +841,8 @@ pc.createPlane = function (device, opts) {
     //      |    Z    |
     // (0,0)x---------x(1,0)
     //         width
+    var vcounter = 0;
+
     for (i = 0; i <= ws; i++) {
         for (j = 0; j <= ls; j++) {
             x = -he.x + 2.0 * he.x * i / ws;
@@ -864,17 +856,19 @@ pc.createPlane = function (device, opts) {
             uvs.push(u, v);
 
             if ((i < ws) && (j < ls)) {
-                indices.push(j + i * (ws + 1),       j + (i + 1) * (ws + 1),     j + i * (ws + 1) + 1);
-                indices.push(j + (i + 1) * (ws + 1), j + (i + 1) * (ws + 1) + 1, j + i * (ws + 1) + 1);
+                indices.push(vcounter+ls+1, vcounter+1, vcounter);
+                indices.push(vcounter+ls+1, vcounter+ls+2, vcounter+1);
             }
+
+            vcounter++;
         }
     }
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        uvs1:      uvs, // UV1 = UV0 for plane
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        uvs1: uvs, // UV1 = UV0 for plane
+        indices: indices
     };
 
     if (pc.precalculatedTangents) {
@@ -899,8 +893,7 @@ pc.createPlane = function (device, opts) {
  * @param {Number} opts.widthSegments The number of divisions along the X axis of the box (defaults to 1).
  * @param {Number} opts.lengthSegments The number of divisions along the Z axis of the box (defaults to 1).
  * @param {Number} opts.heightSegments The number of divisions along the Y axis of the box (defaults to 1).
- * @return {pc.Mesh} A new box-shaped mesh.
- * @author Will Eastcott
+ * @returns {pc.Mesh} A new box-shaped mesh.
  */
 pc.createBox = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -939,23 +932,23 @@ pc.createBox = function (device, opts) {
     ];
 
     var sides = {
-        FRONT  : 0,
-        BACK   : 1,
-        TOP    : 2,
-        BOTTOM : 3,
-        RIGHT  : 4,
-        LEFT   : 5
+        FRONT: 0,
+        BACK: 1,
+        TOP: 2,
+        BOTTOM: 3,
+        RIGHT: 4,
+        LEFT: 5
     };
 
-    var side, i, j;
     var positions = [];
     var normals = [];
     var uvs = [];
     var uvs1 = [];
     var indices = [];
+    var vcounter = 0;
 
     var generateFace = function (side, uSegments, vSegments) {
-        var x, y, z, u, v;
+        var u, v;
         var i, j;
         var offset = positions.length / 3;
 
@@ -987,9 +980,11 @@ pc.createBox = function (device, opts) {
                 uvs1.push(u, v);
 
                 if ((i < uSegments) && (j < vSegments)) {
-                    indices.push(offset + j + i * (uSegments + 1),       offset + j + (i + 1) * (uSegments + 1),     offset + j + i * (uSegments + 1) + 1);
-                    indices.push(offset + j + (i + 1) * (uSegments + 1), offset + j + (i + 1) * (uSegments + 1) + 1, offset + j + i * (uSegments + 1) + 1);
+                    indices.push(vcounter+vSegments+1, vcounter+1, vcounter);
+                    indices.push(vcounter+vSegments+1, vcounter+vSegments+2, vcounter+1);
                 }
+
+                vcounter++;
             }
         }
     };
@@ -1002,10 +997,10 @@ pc.createBox = function (device, opts) {
     generateFace(sides.LEFT, ls, hs);
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        uvs1:      uvs1,
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        uvs1: uvs1,
+        indices: indices
     };
 
     if (pc.precalculatedTangents) {

@@ -1,14 +1,16 @@
 pc.extend(pc, function () {
     /**
+     * @constructor
      * @name pc.Skin
-     * @class A skin contains data about the bones in a hierarchy that drive a skinned mesh animation.
+     * @classdesc A skin contains data about the bones in a hierarchy that drive a skinned mesh animation.
      * Specifically, the skin stores the bone name and inverse bind matrix and for each bone.
      * Inverse bind matrices are instrumental in the mathematics of vertex skinning.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this skin.
      * @param {pc.Mat4[]} ibp The array of inverse bind matrices.
      * @param {String[]} boneNames The array of bone names for the bones referenced by this skin.
-     * @author Will Eastcott
      */
+
+    var _invMatrix = new pc.Mat4();
 
     var Skin = function (graphicsDevice, ibp, boneNames) {
         // Constant between clones
@@ -18,16 +20,15 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.SkinInstance
-     * @class A skin instance is responsible for generating the matrix palette that is used to
+     * @classdesc A skin instance is responsible for generating the matrix palette that is used to
      * skin vertices from object space to world space.
      * @param {pc.Skin} skin The skin that will provide the inverse bind pose matrices to
      * generate the final matrix palette.
-     * @author Will Eastcott
      */
-    var SkinInstance = function (skin, node) {
+    var SkinInstance = function (skin) {
         this.skin = skin;
-        this.rootNode = node;
         this._dirty = true;
 
         // Unique per clone
@@ -70,21 +71,19 @@ pc.extend(pc, function () {
             this.matrixPalette = new Float32Array(numBones * 16);
         }
         this.matrices = [];
-        for(var i=0; i<numBones; i++) {
+        for (var i=0; i<numBones; i++) {
             this.matrices[i] = new pc.Mat4();
         }
     };
 
     SkinInstance.prototype = {
 
-        updateMatrices: function () {
+        updateMatrices: function (rootNode) {
 
-            var pos = this.rootNode.getPosition();
+            _invMatrix.copy(rootNode.getWorldTransform()).invert();
             for (var i = this.bones.length - 1; i >= 0; i--) {
-                this.matrices[i].mul2(this.bones[i].getWorldTransform(), this.skin.inverseBindPose[i]);
-                this.matrices[i].data[12] -= pos.x;
-                this.matrices[i].data[13] -= pos.y;
-                this.matrices[i].data[14] -= pos.z;
+                this.matrices[i].mul2(_invMatrix, this.bones[i].getWorldTransform()); // world space -> rootNode space
+                this.matrices[i].mul2(this.matrices[i], this.skin.inverseBindPose[i]); // rootNode space -> bind space
             }
         },
 

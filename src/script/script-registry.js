@@ -1,11 +1,12 @@
 pc.extend(pc, function () {
     /**
-    * @name pc.ScriptRegistry
-    * @class Container for all Script Types that are available to this application
-    * @description Create an instance of a pc.ScriptRegistry.
-    * Note: PlayCanvas scripts can access the Script Registry from inside the application with {@link pc.Application#scripts} {@link pc.ADDRESS_REPEAT}.
-    * @param {pc.Application} app Application to attach registry to.
-    */
+     * @constructor
+     * @name pc.ScriptRegistry
+     * @classdesc Container for all Script Types that are available to this application
+     * @description Create an instance of a pc.ScriptRegistry.
+     * Note: PlayCanvas scripts can access the Script Registry from inside the application with {@link pc.Application#scripts} {@link pc.ADDRESS_REPEAT}.
+     * @param {pc.Application} app Application to attach registry to.
+     */
     var ScriptRegistry = function (app) {
         pc.events.attach(this);
 
@@ -22,7 +23,7 @@ pc.extend(pc, function () {
      * Note: when {@link pc.createScript} is called, it will add the {@link ScriptType} to the registry automatically.
      * If a script already exists in registry, and the new script has a `swap` method defined,
      * it will perform code hot swapping automatically in async manner.
-     * @param {ScriptType} scriptType Script Type that is created using {@link pc.createScript}
+     * @param {ScriptType} script Script Type that is created using {@link pc.createScript}
      * @returns {Boolean} True if added for the first time or false if script already exists
      * @example
      * var PlayerController = pc.createScript('playerController');
@@ -63,11 +64,11 @@ pc.extend(pc, function () {
                 return;
 
             var components = self.app.systems.script._components;
-            var i, s, scriptInstance, attributes;
+            var i, scriptInstance, attributes;
             var scriptInstances = [ ];
             var scriptInstancesInitialized = [ ];
 
-            for(i = 0; i < components.length; i++) {
+            for (i = 0; i < components.length; i++) {
                 // check if awaiting for script
                 if (components[i]._scriptsIndex[script.__name] && components[i]._scriptsIndex[script.__name].awaiting) {
                     if (components[i]._scriptsData && components[i]._scriptsData[script.__name])
@@ -85,11 +86,11 @@ pc.extend(pc, function () {
             }
 
             // initialize attributes
-            for(i = 0; i < scriptInstances.length; i++)
+            for (i = 0; i < scriptInstances.length; i++)
                 scriptInstances[i].__initializeAttributes();
 
             // call initialize()
-            for(i = 0; i < scriptInstances.length; i++) {
+            for (i = 0; i < scriptInstances.length; i++) {
                 if (scriptInstances[i].enabled) {
                     scriptInstances[i]._initialized = true;
 
@@ -101,7 +102,7 @@ pc.extend(pc, function () {
             }
 
             // call postInitialize()
-            for(i = 0; i < scriptInstancesInitialized.length; i++) {
+            for (i = 0; i < scriptInstancesInitialized.length; i++) {
                 scriptInstancesInitialized[i]._postInitialized = true;
 
                 if (scriptInstancesInitialized[i].postInitialize)

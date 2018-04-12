@@ -18,10 +18,11 @@ pc.extend(pc, function () {
     ];
 
     /**
+     * @constructor
      * @name pc.AnimationComponentSystem
+     * @classdesc The AnimationComponentSystem manages creating and deleting AnimationComponents
      * @description Create an AnimationComponentSystem
-     * @class The AnimationComponentSystem manages creating and deleting AnimationComponents
-     * @param {pc.Application} app The Application for the current application
+     * @param {pc.Application} app The application managing this system.
      * @extends pc.ComponentSystem
      */
     var AnimationComponentSystem = function AnimationComponentSystem (app) {
@@ -52,7 +53,7 @@ pc.extend(pc, function () {
 
         cloneComponent: function (entity, clone) {
             var key;
-            var component = this.addComponent(clone, {});
+            this.addComponent(clone, {});
 
             clone.animation.data.assets = pc.extend([], entity.animation.assets);
             clone.animation.data.speed = entity.animation.speed;

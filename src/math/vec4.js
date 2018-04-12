@@ -2,14 +2,17 @@ pc.extend(pc, (function () {
     'use strict';
 
     /**
-    * @name pc.Vec4
-    * @class A 4-dimensional vector.
-    * @description Creates a new Vec4 object
-    * @param {Number} [x] The x value. If x is an array of length 4, the array will be used to populate all components.
-    * @param {Number} [y] The y value
-    * @param {Number} [z] The z value
-    * @param {Number} [w] The w value
-    */
+     * @constructor
+     * @name pc.Vec4
+     * @classdesc A 4-dimensional vector.
+     * @description Creates a new Vec4 object.
+     * @param {Number} [x] The x value. If x is an array of length 4, the array will be used to populate all components.
+     * @param {Number} [y] The y value.
+     * @param {Number} [z] The z value.
+     * @param {Number} [w] The w value.
+     * @example
+     * var v = new pc.Vec4(1, 2, 3, 4);
+     */
     var Vec4 = function (x, y, z, w) {
         if (x && x.length === 4) {
             this.data = new Float32Array(x);
@@ -349,6 +352,7 @@ pc.extend(pc, (function () {
          * @param {Number} y The value to set on the second component of the vector.
          * @param {Number} z The value to set on the third component of the vector.
          * @param {Number} w The value to set on the fourth component of the vector.
+         * @returns {pc.Vec4} Self for chaining.
          * @example
          * var v = new pc.Vec4();
          * v.set(5, 10, 20, 40);

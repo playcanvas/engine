@@ -1,7 +1,8 @@
 pc.extend(pc, function () {
     /**
+     * @constructor
      * @name pc.Model
-     * @class A model is a graphical object that can be added to or removed from a scene.
+     * @classdesc A model is a graphical object that can be added to or removed from a scene.
      * It contains a hierarchy and any number of mesh instances.
      * @description Creates a new model.
      * @example
@@ -68,7 +69,6 @@ pc.extend(pc, function () {
          * @returns {pc.Model} A clone of the specified model.
          * @example
          * var clonedModel = model.clone();
-         * @author Will Eastcott
          */
         clone: function () {
             var i, j;
@@ -98,7 +98,7 @@ pc.extend(pc, function () {
             // Clone the skin instances
             for (i = 0; i < this.skinInstances.length; i++) {
                 var skin = this.skinInstances[i].skin;
-                var cloneSkinInstance = new pc.SkinInstance(skin, cloneGraph);
+                var cloneSkinInstance = new pc.SkinInstance(skin);
 
                 // Resolve bone IDs to actual graph nodes
                 var bones = [];
@@ -161,7 +161,7 @@ pc.extend(pc, function () {
             var meshInstances = this.meshInstances;
             var meshInstance, mesh, skin, morph, ib, boneTex, j;
             var device;
-            for(var i = 0; i < meshInstances.length; i++) {
+            for (var i = 0; i < meshInstances.length; i++) {
                 meshInstance = meshInstances[i];
 
                 mesh = meshInstance.mesh;
@@ -173,7 +173,7 @@ pc.extend(pc, function () {
                             mesh.vertexBuffer.destroy();
                             mesh.vertexBuffer = null;
                         }
-                        for(j=0; j<mesh.indexBuffer.length; j++) {
+                        for (j=0; j<mesh.indexBuffer.length; j++) {
                             device = device || mesh.indexBuffer.device;
                             ib = mesh.indexBuffer[j];
                             if (!ib) continue;
@@ -214,7 +214,6 @@ pc.extend(pc, function () {
          * for (var i = 0; i < model.meshInstances.length; i++) {
          *     model.meshInstances[i].renderStyle = pc.RENDERSTYLE_WIREFRAME;
          * }
-         * @author Will Eastcott
          */
         generateWireframe: function () {
             var i, j, k;

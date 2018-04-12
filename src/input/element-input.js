@@ -48,10 +48,13 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.ElementInputEvent
-     * @class Represents an input event fired on a {@link pc.ElementComponent}. When an event is raised on an ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
+     * @classdesc Represents an input event fired on a {@link pc.ElementComponent}. When an event is raised
+     * on an ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
      * @description Create an instance of a pc.ElementInputEvent.
      * @param {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
+     * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
      * @property {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
      * @property {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
      */
@@ -76,8 +79,9 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.ElementMouseEvent
-     * @class Represents a Mouse event fired on a {@link pc.ElementComponent}.
+     * @classdesc Represents a Mouse event fired on a {@link pc.ElementComponent}.
      * @extends pc.ElementInputEvent
      * @description Create an instance of a pc.ElementMouseEvent.
      * @param {MouseEvent} event The MouseEvent that was originally raised.
@@ -128,8 +132,9 @@ pc.extend(pc, function () {
     ElementMouseEvent = pc.inherits(ElementMouseEvent, ElementInputEvent);
 
     /**
+     * @constructor
      * @name pc.ElementTouchEvent
-     * @class Represents a TouchEvent fired on a {@link pc.ElementComponent}.
+     * @classdesc Represents a TouchEvent fired on a {@link pc.ElementComponent}.
      * @extends pc.ElementInputEvent
      * @description Create an instance of a pc.ElementTouchEvent.
      * @param {TouchEvent} event The TouchEvent that was originally raised.
@@ -146,8 +151,9 @@ pc.extend(pc, function () {
     ElementTouchEvent = pc.inherits(ElementTouchEvent, ElementInputEvent);
 
     /**
+     * @constructor
      * @name pc.ElementInput
-     * @class Handles mouse and touch events for {@link pc.ElementComponent}s. When input events
+     * @classdesc Handles mouse and touch events for {@link pc.ElementComponent}s. When input events
      * occur on an ElementComponent this fires the appropriate events on the ElementComponent.
      * @description Create a new pc.ElementInput instance.
      * @param {Element} domElement The DOM element
@@ -219,7 +225,6 @@ pc.extend(pc, function () {
         detach: function () {
             if (! this._attached) return;
             this._attached = false;
-            this._target = null;
 
             window.removeEventListener('mouseup', this._upHandler, false);
             window.removeEventListener('mousedown', this._downHandler, false);
@@ -231,6 +236,8 @@ pc.extend(pc, function () {
             this._target.removeEventListener('touchend', this._touchendHandler, false);
             this._target.removeEventListener('touchmove', this._touchmoveHandler, false);
             this._target.removeEventListener('touchcancel', this._touchcancelHandler, false);
+
+            this._target = null;
         },
 
         /**
@@ -481,8 +488,6 @@ pc.extend(pc, function () {
         _calcTouchCoords: function (touch) {
             var totalOffsetX = 0;
             var totalOffsetY = 0;
-            var canvasX = 0;
-            var canvasY = 0;
             var target = touch.target;
             while (!(target instanceof HTMLElement)) {
                 target = target.parentNode;

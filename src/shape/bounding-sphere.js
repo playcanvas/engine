@@ -3,11 +3,11 @@ pc.extend(pc, function () {
     var tmpVecB = new pc.Vec3();
     var tmpVecC = new pc.Vec3();
     var tmpVecD = new pc.Vec3();
-    var diffBetweenPoints = new pc.Vec3();
 
     /**
+     * @constructor
      * @name pc.BoundingSphere
-     * @class A bounding sphere is a volume for facilitating fast intersection testing.
+     * @classdesc A bounding sphere is a volume for facilitating fast intersection testing.
      * @description Creates a new bounding sphere.
      * @example
      * // Create a new bounding sphere centered on the origin with a radius of 0.5

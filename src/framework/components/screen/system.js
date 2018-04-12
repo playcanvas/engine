@@ -2,9 +2,10 @@ pc.extend(pc, function () {
     var _schema = [ 'enabled' ];
 
     /**
+     * @constructor
      * @name pc.ScreenComponentSystem
+     * @classdesc Manages creation of {@link pc.ScreenComponent}s.
      * @description Create a new ScreenComponentSystem
-     * @class Manages creation of {@link pc.ScreenComponent}s.
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */

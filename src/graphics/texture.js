@@ -2,8 +2,9 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
+     * @constructor
      * @name pc.Texture
-     * @class A texture is a container for texel data that can be utilized in a fragment shader.
+     * @classdesc A texture is a container for texel data that can be utilized in a fragment shader.
      * Typically, the texel data represents an image that is mapped over geometry.
      * @description Creates a new texture.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this texture.
@@ -47,6 +48,9 @@ pc.extend(pc, function () {
      * @param {Boolean} options.rgbm Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
      * @param {Boolean} options.fixCubemapSeams Specifies whether this cubemap texture requires special
      * seam fixing shader code to look right. Defaults to false.
+     * @param {Boolean} options.flipY Specifies whether the texture should be flipped in the Y-direction. Only affects textures
+     * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures or textures set from raw
+     * pixel data. Defaults to true.
      * @param {Boolean} options.compareOnRead When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      * Defaults to false.
@@ -79,7 +83,7 @@ pc.extend(pc, function () {
      *     }
      * }
      * texture.unlock();
-     * @author Will Eastcott
+     * @property {String} name The name of the texture. Defaults to null.
      */
     var Texture = function (graphicsDevice, options) {
         this.device = graphicsDevice;
@@ -96,6 +100,7 @@ pc.extend(pc, function () {
         this._cubemap = false;
         this._volume = false;
         this.fixCubemapSeams = false;
+        this._flipY = true;
 
         this._mipmaps = true;
 
@@ -139,6 +144,8 @@ pc.extend(pc, function () {
             this._compareOnRead = (options.compareOnRead !== undefined) ? options.compareOnRead : this._compareOnRead;
             this._compareFunc = (options._compareFunc !== undefined) ? options._compareFunc : this._compareFunc;
 
+            this._flipY = (options.flipY !== undefined) ? options.flipY : this._flipY;
+
             if (graphicsDevice.webgl2) {
                 this._depth = (options.depth !== undefined) ? options.depth : this._depth;
                 this._volume = (options.volume !== undefined) ? options.volume : this._volume;
@@ -157,23 +164,14 @@ pc.extend(pc, function () {
 
         // Mip levels
         this._invalid = false;
-        this._levels = this._cubemap ? [[ null, null, null, null, null, null ]] : [ null ];
-        this._levelsUpdated = this._cubemap ? [[ true, true, true, true, true, true ]] : [ true ];
         this._lockedLevel = -1;
+        this._levels = this._cubemap ? [[ null, null, null, null, null, null ]] : [ null ];
 
-        this._needsUpload = true;
-        this._needsMipmapsUpload = this._mipmaps;
-        this._mipmapsUploaded = false;
-
-        this._minFilterDirty = true;
-        this._magFilterDirty = true;
-        this._addressUDirty = true;
-        this._addressVDirty = true;
-        this._addressWDirty = this._volume;
-        this._anisotropyDirty = true;
-        this._compareModeDirty = true;
+        this.dirtyAll();
 
         this._gpuSize = 0;
+
+        this.device.textures.push(this);
     };
 
     // Public properties
@@ -191,7 +189,9 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'minFilter', {
-        get: function () { return this._minFilter; },
+        get: function () {
+            return this._minFilter;
+        },
         set: function (v) {
             if (this._minFilter !== v) {
                 this._minFilter = v;
@@ -210,8 +210,10 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'magFilter', {
-        get: function() { return this._magFilter; },
-        set: function(v) {
+        get: function () {
+            return this._magFilter;
+        },
+        set: function (v) {
             if (this._magFilter !== v) {
                 this._magFilter = v;
                 this._magFilterDirty = true;
@@ -230,8 +232,10 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'addressU', {
-        get: function() { return this._addressU; },
-        set: function(v) {
+        get: function () {
+            return this._addressU;
+        },
+        set: function (v) {
             if (this._addressU !== v) {
                 this._addressU = v;
                 this._addressUDirty = true;
@@ -250,8 +254,10 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'addressV', {
-        get: function() { return this._addressV; },
-        set: function(v) {
+        get: function () {
+            return this._addressV;
+        },
+        set: function (v) {
             if (this._addressV !== v) {
                 this._addressV = v;
                 this._addressVDirty = true;
@@ -270,8 +276,10 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'addressW', {
-        get: function() { return this._addressW; },
-        set: function(addressW) {
+        get: function () {
+            return this._addressW;
+        },
+        set: function (addressW) {
             if (!this.device.webgl2) return;
             if (!this._volume) {
                 logWARNING("Can't set W addressing mode for a non-3D texture.");
@@ -291,8 +299,10 @@ pc.extend(pc, function () {
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      */
     Object.defineProperty(Texture.prototype, 'compareOnRead', {
-        get: function() { return this._compareOnRead; },
-        set: function(v) {
+        get: function () {
+            return this._compareOnRead;
+        },
+        set: function (v) {
             if (this._compareOnRead !== v) {
                 this._compareOnRead = v;
                 this._compareModeDirty = true;
@@ -315,8 +325,10 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'compareFunc', {
-        get: function() { return this._compareFunc; },
-        set: function(v) {
+        get: function () {
+            return this._compareFunc;
+        },
+        set: function (v) {
             if (this._compareFunc !== v) {
                 this._compareFunc = v;
                 this._compareModeDirty = true;
@@ -332,8 +344,10 @@ pc.extend(pc, function () {
      * @description Toggles automatic mipmap generation. Can't be used on non power of two textures.
      */
     Object.defineProperty(Texture.prototype, 'autoMipmap', {
-        get: function() { return this._mipmaps; },
-        set: function(v) {
+        get: function () {
+            return this._mipmaps;
+        },
+        set: function (v) {
             this._mipmaps = v;
         }
     });
@@ -344,8 +358,10 @@ pc.extend(pc, function () {
      * @description Defines if texture should generate/upload mipmaps if possible.
      */
     Object.defineProperty(Texture.prototype, 'mipmaps', {
-        get: function() { return this._mipmaps; },
-        set: function(v) {
+        get: function () {
+            return this._mipmaps;
+        },
+        set: function (v) {
             if (this._mipmaps !== v) {
                 this._mipmaps = v;
                 this._minFilterDirty = true;
@@ -362,7 +378,9 @@ pc.extend(pc, function () {
      * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
      */
     Object.defineProperty(Texture.prototype, 'anisotropy', {
-        get: function () { return this._anisotropy; },
+        get: function () {
+            return this._anisotropy;
+        },
         set: function (v) {
             if (this._anisotropy !== v) {
                 this._anisotropy = v;
@@ -378,7 +396,9 @@ pc.extend(pc, function () {
      * @description The width of the texture in pixels.
      */
     Object.defineProperty(Texture.prototype, 'width', {
-        get: function() { return this._width; }
+        get: function () {
+            return this._width;
+        }
     });
 
     /**
@@ -388,7 +408,9 @@ pc.extend(pc, function () {
      * @description The height of the texture in pixels.
      */
     Object.defineProperty(Texture.prototype, 'height', {
-        get: function() { return this._height; }
+        get: function () {
+            return this._height;
+        }
     });
 
     /**
@@ -398,7 +420,9 @@ pc.extend(pc, function () {
      * @description The number of depth slices in a 3D texture (WebGL2 only).
      */
     Object.defineProperty(Texture.prototype, 'depth', {
-        get: function() { return this._depth; }
+        get: function () {
+            return this._depth;
+        }
     });
 
     /**
@@ -431,7 +455,9 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'format', {
-        get: function() { return this._format; }
+        get: function () {
+            return this._format;
+        }
     });
 
     /**
@@ -441,7 +467,9 @@ pc.extend(pc, function () {
      * @description Returns true if this texture is a cube map and false otherwise.
      */
     Object.defineProperty(Texture.prototype, 'cubemap', {
-        get: function() { return this._cubemap; }
+        get: function () {
+            return this._cubemap;
+        }
     });
 
     /**
@@ -451,25 +479,44 @@ pc.extend(pc, function () {
      * @description Returns true if this texture is a 3D volume and false otherwise.
      */
     Object.defineProperty(Texture.prototype, 'volume', {
-        get: function() { return this._volume; }
+        get: function () {
+            return this._volume;
+        }
+    });
+
+    /**
+     * @name pc.Texture#flipY
+     * @type Boolean
+     * @description Specifies whether the texture should be flipped in the Y-direction. Only affects textures
+     * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures
+     * or textures set from raw pixel data. Defaults to true.
+     */
+    Object.defineProperty(Texture.prototype, 'flipY', {
+        get: function () {
+            return this._flipY;
+        },
+        set: function (flipY) {
+            if (this._flipY !== flipY) {
+                this._flipY = flipY;
+                this._needsUpload = true;
+            }
+        }
     });
 
     // Public methods
     pc.extend(Texture.prototype, {
-        /**
-         * @private
-         * @function
-         * @name pc.Texture#bind
-         * @description Activates the specified texture on the current texture unit.
-         */
-        bind: function () { },
-
         /**
          * @function
          * @name pc.Texture#destroy
          * @description Forcibly free up the underlying WebGL resource owned by the texture.
          */
         destroy: function () {
+            var device = this.device;
+            var idx = device.textures.indexOf(this);
+            if (idx !== -1) {
+                device.textures.splice(idx, 1);
+            }
+
             if (this._glTextureId) {
                 var gl = this.device.gl;
                 gl.deleteTexture(this._glTextureId);
@@ -489,6 +536,24 @@ pc.extend(pc, function () {
             }
         },
 
+        // Force a full resubmission of the texture to WebGL (used on a context restore event)
+        dirtyAll: function () {
+            this._glTextureId = undefined;
+            this._levelsUpdated = this._cubemap ? [[ true, true, true, true, true, true ]] : [ true ];
+
+            this._needsUpload = true;
+            this._needsMipmapsUpload = this._mipmaps;
+            this._mipmapsUploaded = false;
+
+            this._minFilterDirty = true;
+            this._magFilterDirty = true;
+            this._addressUDirty = true;
+            this._addressVDirty = true;
+            this._addressWDirty = this._volume;
+            this._anisotropyDirty = true;
+            this._compareModeDirty = true;
+        },
+
         /**
          * @function
          * @name pc.Texture#lock
@@ -496,18 +561,25 @@ pc.extend(pc, function () {
          * @param {Object} options Optional options object. Valid properties are as follows:
          * @param {Number} options.level The mip level to lock with 0 being the top level. Defaults to 0.
          * @param {Number} options.face If the texture is a cubemap, this is the index of the face to lock.
+         * @returns {ArrayBuffer} A typed array containing the pixel data of the locked mip level.
          */
         lock: function (options) {
             // Initialize options to some sensible defaults
             options = options || { level: 0, face: 0, mode: pc.TEXTURELOCK_WRITE };
-            if (options.level === undefined) { options.level = 0; }
-            if (options.face === undefined) { options.face = 0; }
-            if (options.mode === undefined) { options.mode = pc.TEXTURELOCK_WRITE; }
+            if (options.level === undefined) {
+                options.level = 0;
+            }
+            if (options.face === undefined) {
+                options.face = 0;
+            }
+            if (options.mode === undefined) {
+                options.mode = pc.TEXTURELOCK_WRITE;
+            }
 
             this._lockedLevel = options.level;
 
             if (this._levels[options.level] === null) {
-                switch(this._format) {
+                switch (this._format) {
                     case pc.PIXELFORMAT_A8:
                     case pc.PIXELFORMAT_L8:
                         this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth);
@@ -550,15 +622,6 @@ pc.extend(pc, function () {
 
             return this._levels[options.level];
         },
-
-        /**
-         * @private
-         * @function
-         * @name pc.Texture#recover
-         * @description Restores the texture in the event of the underlying WebGL context being lost and then
-         * restored.
-         */
-        recover: function () { },
 
         /**
          * @function
@@ -629,7 +692,7 @@ pc.extend(pc, function () {
 
                 // remove levels
                 if (this._cubemap) {
-                    for(i = 0; i < 6; i++) {
+                    for (i = 0; i < 6; i++) {
                         this._levels[0][i] = null;
                         this._levelsUpdated[0][i] = true;
                     }
@@ -660,7 +723,7 @@ pc.extend(pc, function () {
          * @name pc.Texture#getSource
          * @description Get the pixel data of the texture. If this is a cubemap then an array of 6 images will be returned otherwise
          * a single image.
-         * @return {HTMLImageElement} The source image of this texture.
+         * @returns {HTMLImageElement} The source image of this texture.
          */
         getSource: function () {
             return this._levels[0];
@@ -700,7 +763,7 @@ pc.extend(pc, function () {
             var i = 0;
             var j;
             var face;
-            while(this._levels[i]) {
+            while (this._levels[i]) {
                 var mipSize;
                 if (!this.cubemap) {
                     mipSize = this._levels[i].length;
@@ -710,7 +773,7 @@ pc.extend(pc, function () {
                     }
                     fsize += mipSize;
                 } else {
-                    for(face=0; face<6; face++) {
+                    for (face=0; face<6; face++) {
                         if (! this._levels[i][face]) {
                             console.error('No level data for mip ' + i + ', face ' + face);
                             return;
@@ -758,7 +821,7 @@ pc.extend(pc, function () {
             header[5] = this.width * this.height * 4;
             header[6] = 0; // depth
             header[7] = this._levels.length;
-            for(i=0; i<11; i++) header[8 + i] = 0;
+            for (i=0; i<11; i++) header[8 + i] = 0;
             header[19] = DDS_PIXELFORMAT_SIZE;
             header[20] = DDS_PIXELFLAGS_RGBA8;
             header[21] = 0; // fourcc
@@ -779,7 +842,7 @@ pc.extend(pc, function () {
                 for (i=0; i<this._levels.length; i++) {
                     level = this._levels[i];
                     mip = new Uint8Array(buff, offset, level.length);
-                    for(j=0; j<level.length; j++) mip[j] = level[j];
+                    for (j=0; j<level.length; j++) mip[j] = level[j];
                     offset += level.length;
                 }
             } else {
@@ -787,7 +850,7 @@ pc.extend(pc, function () {
                     for (i=0; i<this._levels.length; i++) {
                         level = this._levels[i][face];
                         mip = new Uint8Array(buff, offset, level.length);
-                        for(j=0; j<level.length; j++) mip[j] = level[j];
+                        for (j=0; j<level.length; j++) mip[j] = level[j];
                         offset += level.length;
                     }
                 }

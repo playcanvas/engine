@@ -2,22 +2,22 @@ pc.extend(pc, function () {
     'use strict';
 
     var JSON_PRIMITIVE_TYPE = {
-        "points":        pc.PRIMITIVE_POINTS,
-        "lines":         pc.PRIMITIVE_LINES,
-        "lineloop":      pc.PRIMITIVE_LINELOOP,
-        "linestrip":     pc.PRIMITIVE_LINESTRIP,
-        "triangles":     pc.PRIMITIVE_TRIANGLES,
+        "points": pc.PRIMITIVE_POINTS,
+        "lines": pc.PRIMITIVE_LINES,
+        "lineloop": pc.PRIMITIVE_LINELOOP,
+        "linestrip": pc.PRIMITIVE_LINESTRIP,
+        "triangles": pc.PRIMITIVE_TRIANGLES,
         "trianglestrip": pc.PRIMITIVE_TRISTRIP,
-        "trianglefan":   pc.PRIMITIVE_TRIFAN
+        "trianglefan": pc.PRIMITIVE_TRIFAN
     };
 
     var JSON_VERTEX_ELEMENT_TYPE = {
-        "int8":    pc.TYPE_INT8,
-        "uint8":   pc.TYPE_UINT8,
-        "int16":   pc.TYPE_INT16,
-        "uint16":  pc.TYPE_UINT16,
-        "int32":   pc.TYPE_INT32,
-        "uint32":  pc.TYPE_UINT32,
+        "int8": pc.TYPE_INT8,
+        "uint8": pc.TYPE_UINT8,
+        "int16": pc.TYPE_INT16,
+        "uint16": pc.TYPE_UINT16,
+        "int32": pc.TYPE_INT32,
+        "uint32": pc.TYPE_UINT32,
         "float32": pc.TYPE_FLOAT32
     };
 
@@ -136,7 +136,7 @@ pc.extend(pc, function () {
                 var skin = new pc.Skin(this._device, inverseBindMatrices, skinData.boneNames);
                 skins.push(skin);
 
-                var skinInstance = new pc.SkinInstance(skin, nodes[0]);
+                var skinInstance = new pc.SkinInstance(skin);
                 // Resolve bone IDs to actual graph nodes
                 var bones = [];
                 for (j = 0; j < skin.boneNames.length; j++) {
@@ -158,7 +158,7 @@ pc.extend(pc, function () {
             var modelData = data.model;
             var morphs = [];
             var morphInstances = [];
-            var i, j, k;
+            var i, j;
 
             var targets, morphTarget, morphTargetArray;
 
@@ -178,10 +178,10 @@ pc.extend(pc, function () {
                         );
 
                         morphTarget = new pc.MorphTarget({indices: targets[j].indices,
-                                                          deltaPositions: targets[j].deltaPositions,
-                                                          deltaNormals: targets[j].deltaNormals,
-                                                          name: targets[j].name,
-                                                          aabb: aabb});
+                            deltaPositions: targets[j].deltaPositions,
+                            deltaNormals: targets[j].deltaNormals,
+                            name: targets[j].name,
+                            aabb: aabb});
 
                         morphTargetArray.push(morphTarget);
                     }
@@ -202,7 +202,7 @@ pc.extend(pc, function () {
 
         // optimized pc.calculateTangents for many calls with different index buffer but same vertex buffer
         _calculateTangentsMorphTarget: function (positions, normals, uvs, indices,
-                                            tan1, tan2, mtIndices, tangents) {
+            tan1, tan2, mtIndices, tangents) {
             var sdirx, sdiry, sdirz;
             var tdirx, tdiry, tdirz;
             var v1x, v1y, v1z;
@@ -216,14 +216,12 @@ pc.extend(pc, function () {
             var nx, ny, nz;
 
             var triangleCount;
-            var vertexCount;
             var i1, i2, i3;
             var x1, x2, y1, y2, z1, z2, s1, s2, t1, t2, r;
             var i, j; // Loop counter
             var area, ndott, mtIndexCount, len;
 
             triangleCount = indices.length / 3;
-            vertexCount   = positions.length / 3;
 
             area = 0.0;
 
@@ -267,9 +265,9 @@ pc.extend(pc, function () {
 
                 area = s1 * t2 - s2 * t1;
 
-                //area can 0.0 for degenerate triangles or bad uv coordinates
+                // area can 0.0 for degenerate triangles or bad uv coordinates
                 if (area == 0.0) {
-                    //fallback to default values
+                    // fallback to default values
                     sdirx = 0;
                     sdiry = 1;
                     sdirz = 0;
@@ -404,10 +402,10 @@ pc.extend(pc, function () {
                     tnorm = new Float32Array(numVerts * 3);
                     tnorm.set(baseNorm);
 
-                    for(j=0; j<morphs.length; j++) {
+                    for (j=0; j<morphs.length; j++) {
                         if (modelData.meshes[i].morph !== j) continue;
 
-                        for(k=0; k<morphs[j]._targets.length; k++) {
+                        for (k=0; k<morphs[j]._targets.length; k++) {
                             target = morphs[j]._targets[k];
 
                             var mtIndices = target.indices;
@@ -420,17 +418,17 @@ pc.extend(pc, function () {
                             if (!flagged || flagged.length < numVerts) {
                                 flagged = new Uint8Array(numVerts);
                             } else {
-                                for(l=0; l>numVerts; l++) flagged[l] = 0;
+                                for (l=0; l>numVerts; l++) flagged[l] = 0;
                             }
 
-                            for(l=0; l<numMtIndices; l++) {
+                            for (l=0; l<numMtIndices; l++) {
                                 index = mtIndices[l];
                                 flagged[index] = 1;
                             }
 
                             // Collect affected triangles
                             var numMtTriIndices = 0;
-                            for(l=0; l<numIndices; l += 3) {
+                            for (l=0; l<numIndices; l += 3) {
                                 triA = indices[l];
                                 triB = indices[l + 1];
                                 triC = indices[l + 2];
@@ -446,7 +444,7 @@ pc.extend(pc, function () {
                             // Generate morphed position/normal
                             var deltaPos = target.deltaPositions;
                             var deltaNorm = target.deltaNormals;
-                            for(l=0; l<numMtIndices; l++) {
+                            for (l=0; l<numMtIndices; l++) {
                                 index = mtIndices[l];
                                 tpos[index*3] += deltaPos[l*3];
                                 tpos[index*3+1] += deltaPos[l*3+1];
@@ -460,14 +458,14 @@ pc.extend(pc, function () {
 
                             // Generate tangents
                             this._calculateTangentsMorphTarget(tpos,
-                                                             tnorm,
-                                                             baseUv,
-                                                             mtTriIndices,
-                                                             tan1, tan2, mtIndices, targetTangents);
+                                                               tnorm,
+                                                               baseUv,
+                                                               mtTriIndices,
+                                                               tan1, tan2, mtIndices, targetTangents);
 
                             // Generate tangent deltas
                             var deltaTangents = target.deltaTangents;
-                            for(l=0; l<numMtIndices; l++) {
+                            for (l=0; l<numMtIndices; l++) {
                                 index = mtIndices[l];
                                 deltaTangents[l*4] = targetTangents[l*4] - tangents[index*4];
                                 deltaTangents[l*4+1] = targetTangents[l*4+1] - tangents[index*4+1];
@@ -502,7 +500,7 @@ pc.extend(pc, function () {
                                 tan2[triC * 3 + 1] = 0;
                                 tan2[triC * 3 + 2] = 0;
                             }
-                            for(l=0; l<numMtIndices; l++) {
+                            for (l=0; l<numMtIndices; l++) {
                                 index = target.indices[l];
                                 tpos[index*3] = basePos[index*3];
                                 tpos[index*3+1] = basePos[index*3+1];
@@ -544,7 +542,7 @@ pc.extend(pc, function () {
                 var vertexData = modelData.vertices[i];
 
                 // Check to see if we need to generate tangents
-                if (vertexData.position && vertexData.normal && vertexData.texCoord0) {
+                if (!vertexData.tangent && vertexData.position && vertexData.normal && vertexData.texCoord0) {
                     var indices = [];
                     for (j = 0; j < modelData.meshes.length; j++) {
                         if (modelData.meshes[j].vertices === i) {
@@ -557,7 +555,7 @@ pc.extend(pc, function () {
                 }
 
                 var formatDesc = [];
-                for(attributeName in vertexData) {
+                for (attributeName in vertexData) {
                     attribute = vertexData[attributeName];
 
                     var attribType = attribute.type;

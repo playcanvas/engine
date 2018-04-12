@@ -4,7 +4,11 @@ uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
 uniform mat3 matrix_normal;
 uniform mat4 matrix_viewInverse;
+
+#ifndef VIEWMATRIX
+#define VIEWMATRIX
 uniform mat4 matrix_view;
+#endif
 
 uniform float numParticles, numParticlesPot;
 uniform float graphSampleSize;
@@ -17,6 +21,11 @@ uniform sampler2D particleTexOUT, particleTexIN;
 uniform sampler2D internalTex0;
 uniform sampler2D internalTex1;
 uniform sampler2D internalTex2;
+
+#ifndef CAMERAPLANES
+#define CAMERAPLANES
+uniform vec4 camera_params;
+#endif
 
 varying vec4 texCoordsAlphaLife;
 

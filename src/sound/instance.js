@@ -14,9 +14,10 @@ pc.extend(pc, function () {
     };
 
     if (pc.SoundManager.hasAudioContext()) {
-        /**
+       /**
+        * @constructor
         * @name pc.SoundInstance
-        * @class A pc.SoundInstance plays a {@link pc.Sound}
+        * @classdesc A pc.SoundInstance plays a {@link pc.Sound}
         * @param {pc.SoundManager} manager The sound manager
         * @param {pc.Sound} sound The sound to play
         * @param {Object} options Options for the instance
@@ -109,8 +110,6 @@ pc.extend(pc, function () {
             this.source = null;
         };
 
-
-
         SoundInstance.prototype = {
             /**
              * @function
@@ -198,6 +197,9 @@ pc.extend(pc, function () {
                 if (this._state !== STATE_PLAYING || !this.source)
                     return false;
 
+                // store current time
+                this._updateCurrentTime();
+
                 // set state to paused
                 this._state = STATE_PAUSED;
 
@@ -275,6 +277,7 @@ pc.extend(pc, function () {
              * @function
              * @name pc.SoundInstance#stop
              * @description Stops playback of sound. Calling play() again will restart playback from the beginning of the sound.
+             * @returns {Boolean} Returns true if the sound was stopped.
              */
             stop: function () {
                 if (this._state === STATE_STOPPED || !this.source)
@@ -399,7 +402,7 @@ pc.extend(pc, function () {
              * @function
              * @name pc.SoundInstance#getExternalNodes
              * @description Gets any external nodes set by {@link pc.SoundInstance#setExternalNodes}.
-             * @return {AudioNode[]} Returns an array that contains the two nodes set by {@link pc.SoundInstance#setExternalNodes}.
+             * @returns {AudioNode[]} Returns an array that contains the two nodes set by {@link pc.SoundInstance#setExternalNodes}.
              */
             getExternalNodes: function () {
                 return [this._firstNode, this._lastNode];
@@ -439,6 +442,16 @@ pc.extend(pc, function () {
             },
 
             /**
+            * @private
+            * @function
+            * @name pc.SoundInstance#_updateCurrentTime
+            * @description Sets the current time taking into account the time the instance started playing, the current pitch and the current time offset.
+            */
+            _updateCurrentTime: function () {
+                this._currentTime = capTime((this._manager.context.currentTime - this._startedAt) * this.pitch + this._currentOffset, this.duration);
+            },
+
+            /**
              * @private
              * @function
              * @name pc.SoundInstance#_onManagerDestroy
@@ -472,8 +485,6 @@ pc.extend(pc, function () {
             },
 
             set: function (pitch) {
-                var old = this._pitch;
-
                 // set offset to current time so that
                 // we calculate the rest of the time with the new pitch
                 // from now on
@@ -538,7 +549,7 @@ pc.extend(pc, function () {
                 }
 
                 // recalculate current time
-                this._currentTime = capTime((this._manager.context.currentTime - this._startedAt) * this.pitch + this._currentOffset, this.duration);
+                this._updateCurrentTime();
                 return this._currentTime;
             },
             set: function (value) {

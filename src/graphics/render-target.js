@@ -7,8 +7,9 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.RenderTarget
-     * @class A render target is a rectangular rendering surface.
+     * @classdesc A render target is a rectangular rendering surface.
      * @description Creates a new render target. A color buffer or a depth buffer must be set.
      * @param {Object} options Object for passing optional arguments.
      * @param {pc.Texture} [options.colorBuffer] The texture that this render target will treat as a rendering surface.
@@ -41,8 +42,8 @@ pc.extend(pc, function () {
      *     depth: true
      * });
      *
-     * // Set the render target on an entity's camera component
-     * entity.camera.renderTarget = renderTarget;
+     * // Set the render target on a layer
+     * layer.renderTarget = renderTarget;
      */
     var RenderTarget = function (options, _arg2, _arg3) {
 
@@ -98,8 +99,14 @@ pc.extend(pc, function () {
          */
         destroy: function () {
             if (!this._device) return;
-            var gl = this._device.gl;
 
+            var device = this._device;
+            var idx = device.targets.indexOf(this);
+            if (idx !== -1) {
+                device.targets.splice(idx, 1);
+            }
+
+            var gl = device.gl;
             if (this._glFrameBuffer) {
                 gl.deleteFramebuffer(this._glFrameBuffer);
                 this._glFrameBuffer = null;
@@ -165,6 +172,7 @@ pc.extend(pc, function () {
          * @param {pc.RenderTarget} source Source render target to copy from
          * @param {Boolean} color Copy color buffer
          * @param {Boolean} depth Copy depth buffer
+         * @returns {Boolean} true if the copy was successfull, false otherwise.
          */
         copy: function (source, color, depth) {
             if (!this._device) {
@@ -224,7 +232,7 @@ pc.extend(pc, function () {
     Object.defineProperty(RenderTarget.prototype, 'face', {
         get: function() {
             return this._face;
-        },
+        }
     });
 
     /**

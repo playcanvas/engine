@@ -178,7 +178,7 @@ pc.extend(pc, function () {
 
         onPostStateChange: function() {
             var script;
-            for(var i = 0, len = this.scripts.length; i < len; i++) {
+            for (var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
 
                 if (script._initialized && ! script._postInitialized && script.enabled) {
@@ -207,7 +207,7 @@ pc.extend(pc, function () {
             this.fire('state', this.enabled);
 
             var script;
-            for(var i = 0, len = this.scripts.length; i < len; i++) {
+            for (var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
                 script.enabled = script._enabled;
             }
@@ -218,19 +218,19 @@ pc.extend(pc, function () {
 
             // destroy all scripts
             var destroyed = true;
-            while(this.scripts.length > 0 && destroyed)
+            while (this.scripts.length > 0 && destroyed)
                 destroyed = this.destroy(this.scripts[0].__scriptType.__name);
         },
 
         _onInitializeAttributes: function() {
-            for(var i = 0, len = this.scripts.length; i < len; i++)
+            for (var i = 0, len = this.scripts.length; i < len; i++)
                 this.scripts[i].__initializeAttributes();
         },
 
         _scriptMethod: function(script, method, arg) {
             try {
                 script[method](arg);
-            } catch(ex) {
+            } catch (ex) {
                 // disable script if it fails to call method
                 script.enabled = false;
 
@@ -247,7 +247,7 @@ pc.extend(pc, function () {
         _onInitialize: function() {
             var script, scripts = this._scripts;
 
-            for(var i = 0, len = scripts.length; i < len; i++) {
+            for (var i = 0, len = scripts.length; i < len; i++) {
                 script = scripts[i];
                 if (! script._initialized && script.enabled) {
                     script._initialized = true;
@@ -264,7 +264,7 @@ pc.extend(pc, function () {
         _onUpdate: function(dt) {
             var script, scripts = this._scripts;
 
-            for(var i = 0, len = scripts.length; i < len; i++) {
+            for (var i = 0, len = scripts.length; i < len; i++) {
                 script = scripts[i];
                 if (script.update && script.enabled)
                     this._scriptMethod(script, ScriptComponent.scriptMethods.update, dt);
@@ -274,7 +274,7 @@ pc.extend(pc, function () {
         _onPostUpdate: function(dt) {
             var script, scripts = this._scripts;
 
-            for(var i = 0, len = scripts.length; i < len; i++) {
+            for (var i = 0, len = scripts.length; i < len; i++) {
                 script = scripts[i];
                 if (script.postUpdate && script.enabled)
                     this._scriptMethod(script, ScriptComponent.scriptMethods.postUpdate, dt);
@@ -429,7 +429,6 @@ pc.extend(pc, function () {
             // remove swap event
             this.system.app.scripts.off('swap:' + scriptName, scriptData.onSwap);
 
-            delete this._scriptsIndex[scriptName];
             delete this[scriptName];
 
             this.fire('destroy', scriptName, scriptData.instance || null);
@@ -524,7 +523,7 @@ pc.extend(pc, function () {
         set: function(value) {
             this._scriptsData = value;
 
-            for(var key in value) {
+            for (var key in value) {
                 if (! value.hasOwnProperty(key))
                     continue;
 
@@ -538,7 +537,7 @@ pc.extend(pc, function () {
 
                     // attributes
                     if (typeof(value[key].attributes) === 'object') {
-                        for(var attr in value[key].attributes) {
+                        for (var attr in value[key].attributes) {
                             if (pc.createScript.reservedAttributes[attr])
                                 continue;
 

@@ -4,7 +4,7 @@ pc.extend(pc, function () {
 
         // TODO scripts2
         // arrays
-        switch(args.type) {
+        switch (args.type) {
             case 'boolean':
                 return !! value;
             case 'number':
@@ -26,7 +26,7 @@ pc.extend(pc, function () {
                 } else {
                     try {
                         return JSON.parse(value);
-                    } catch(ex) {
+                    } catch (ex) {
                         return null;
                     }
                 }
@@ -36,7 +36,7 @@ pc.extend(pc, function () {
                     var result = [ ];
 
                     if (value instanceof Array) {
-                        for(i = 0; i < value.length; i++) {
+                        for (i = 0; i < value.length; i++) {
                             if (value[i] instanceof pc.Asset) {
                                 result.push(value[i]);
                             } else if (typeof(value[i]) === 'number') {
@@ -81,13 +81,13 @@ pc.extend(pc, function () {
                         return value.clone();
                     }
                 } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
-                    for(i = 0; i < value.length; i++) {
+                    for (i = 0; i < value.length; i++) {
                         if (typeof(value[i]) !== 'number')
                             return null;
                     }
                     if (! old) old = new pc.Color();
 
-                    for(i = 0; i < 4; i++)
+                    for (i = 0; i < 4; i++)
                         old.data[i] = (i === 4 && value.length === 3) ? 1 : value[i];
 
                     return old;
@@ -114,13 +114,13 @@ pc.extend(pc, function () {
                         return value.clone();
                     }
                 } else if (value instanceof Array && value.length === len) {
-                    for(i = 0; i < value.length; i++) {
+                    for (i = 0; i < value.length; i++) {
                         if (typeof(value[i]) !== 'number')
                             return null;
                     }
                     if (! old) old = new pc['Vec' + len]();
 
-                    for(i = 0; i < len; i++)
+                    for (i = 0; i < len; i++)
                         old.data[i] = value[i];
 
                     return old;
@@ -148,11 +148,12 @@ pc.extend(pc, function () {
 
 
     /**
-    * @name pc.ScriptAttributes
-    * @class Container of Script Attribute definitions. Implements an interface to add/remove attributes and store their definition for a {@link ScriptType}.
-    * Note: An instance of pc.ScriptAttributes is created automatically by each {@link ScriptType}.
-    * @param {ScriptType} scriptType Script Type that attributes relate to.
-    */
+     * @constructor
+     * @name pc.ScriptAttributes
+     * @classdesc Container of Script Attribute definitions. Implements an interface to add/remove attributes and store their definition for a {@link ScriptType}.
+     * Note: An instance of pc.ScriptAttributes is created automatically by each {@link ScriptType}.
+     * @param {ScriptType} scriptType Script Type that attributes relate to.
+     */
     var ScriptAttributes = function(scriptType) {
         this.scriptType = scriptType;
         this.index = { };
@@ -320,21 +321,22 @@ pc.extend(pc, function () {
             throw new Error('script name: \'' + name + '\' is reserved, please change script name');
 
         /**
-        * @name ScriptType
-        * @class Represents the type of a script. It is returned by {@link pc.createScript}. Also referred to as Script Type.<br />
-        * The type is to be extended using its JavaScript prototype. There is a <strong>list of methods</strong>
-        * that will be executed by the engine on instances of this type, such as: <ul><li>initialize</li><li>postInitialize</li><li>update</li><li>postUpdate</li><li>swap</li></ul>
-        * <strong>initialize</strong> and <strong>postInitialize</strong> - are called if defined when script is about to run for the first time - postInitialize will run after all initialize methods are executed in the same tick or enabling chain of actions.<br />
-        * <strong>update</strong> and <strong>postUpdate</strong> - methods are called if defined for enabled (running state) scripts on each tick.<br />
-        * <strong>swap</strong> - This method will be called when a {@link ScriptType} that already exists in the registry gets redefined.
-        * If the new {@link ScriptType} has a `swap` method in its prototype, then it will be executed to perform hot-reload at runtime.
-        * @property {pc.Application} app The {@link pc.Application} that the instance of this type belongs to.
-        * @property {pc.Entity} entity The {@link pc.Entity} that the instance of this type belongs to.
-        * @property {Boolean} enabled True if the instance of this type is in running state. False when script is not running,
-        * because the Entity or any of its parents are disabled or the Script Component is disabled or the Script Instance is disabled.
-        * When disabled no update methods will be called on each tick.
-        * initialize and postInitialize methods will run once when the script instance is in `enabled` state during app tick.
-        */
+         * @constructor
+         * @name ScriptType
+         * @classdesc Represents the type of a script. It is returned by {@link pc.createScript}. Also referred to as Script Type.<br />
+         * The type is to be extended using its JavaScript prototype. There is a <strong>list of methods</strong>
+         * that will be executed by the engine on instances of this type, such as: <ul><li>initialize</li><li>postInitialize</li><li>update</li><li>postUpdate</li><li>swap</li></ul>
+         * <strong>initialize</strong> and <strong>postInitialize</strong> - are called if defined when script is about to run for the first time - postInitialize will run after all initialize methods are executed in the same tick or enabling chain of actions.<br />
+         * <strong>update</strong> and <strong>postUpdate</strong> - methods are called if defined for enabled (running state) scripts on each tick.<br />
+         * <strong>swap</strong> - This method will be called when a {@link ScriptType} that already exists in the registry gets redefined.
+         * If the new {@link ScriptType} has a `swap` method in its prototype, then it will be executed to perform hot-reload at runtime.
+         * @property {pc.Application} app The {@link pc.Application} that the instance of this type belongs to.
+         * @property {pc.Entity} entity The {@link pc.Entity} that the instance of this type belongs to.
+         * @property {Boolean} enabled True if the instance of this type is in running state. False when script is not running,
+         * because the Entity or any of its parents are disabled or the Script Component is disabled or the Script Instance is disabled.
+         * When disabled no update methods will be called on each tick.
+         * initialize and postInitialize methods will run once when the script instance is in `enabled` state during app tick.
+         */
         var script = function(args) {
             if (! args || ! args.app || ! args.entity)
                 console.warn('script \'' + name + '\' has missing arguments in consructor');
@@ -385,7 +387,7 @@ pc.extend(pc, function () {
                 return;
 
             // set attributes values
-            for(var key in script.attributes.index) {
+            for (var key in script.attributes.index) {
                 if (this.__attributesRaw && this.__attributesRaw.hasOwnProperty(key)) {
                     this[key] = this.__attributesRaw[key];
                 } else if (! this.__attributes.hasOwnProperty(key)) {
@@ -420,7 +422,7 @@ pc.extend(pc, function () {
          * })
          */
         script.extend = function(methods) {
-            for(var key in methods) {
+            for (var key in methods) {
                 if (! methods.hasOwnProperty(key))
                     continue;
 

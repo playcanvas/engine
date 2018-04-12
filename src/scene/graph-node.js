@@ -7,8 +7,9 @@ pc.extend(pc, function () {
     var scaleCompensateScaleForParent = new pc.Vec3();
 
     /**
+     * @constructor
      * @name pc.GraphNode
-     * @class A hierarchical scene node.
+     * @classdesc A hierarchical scene node.
      * @param {String} [name] The non-unique name of the graph node, default is "Untitled".
      * @property {String} name The non-unique name of a graph node.
      * @property {pc.Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link pc.GraphNode#findByTag} function.
@@ -173,11 +174,12 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * Called when the enabled flag of the entity or one of its
-        * parents changes
-        */
+         * @private
+         * @function
+         * @name pc.GraphNode#_onHierarchyStateChanged
+         * @description Called when the enabled flag of the entity or one of its parents changes.
+         * @param {Boolean} enabled true if enabled in the hierarchy, false if disabled.
+         */
         _onHierarchyStateChanged: function (enabled) {
             // Override in derived classes
             this._enabledInHierarchy = enabled;
@@ -187,7 +189,7 @@ pc.extend(pc, function () {
             clone.name = this.name;
 
             var tags = this.tags._list;
-            for(var i = 0 ; i < tags.length; i++)
+            for (var i = 0; i < tags.length; i++)
                 clone.tags.add(tags[i]);
 
             clone._labels = pc.extend(this._labels, {});
@@ -254,7 +256,7 @@ pc.extend(pc, function () {
             if (attr instanceof Function) {
                 var fn = attr;
 
-                for(i = 0; i < len; i++) {
+                for (i = 0; i < len; i++) {
                     if (fn(this._children[i]))
                         results.push(this._children[i]);
 
@@ -265,17 +267,17 @@ pc.extend(pc, function () {
             } else {
                 var testValue;
 
-                if(this[attr]) {
-                    if(this[attr] instanceof Function) {
+                if (this[attr]) {
+                    if (this[attr] instanceof Function) {
                         testValue = this[attr]();
                     } else {
                         testValue = this[attr];
                     }
-                    if(testValue === value)
+                    if (testValue === value)
                         results.push(this);
                 }
 
-                for(i = 0; i < len; ++i) {
+                for (i = 0; i < len; ++i) {
                     descendants = this._children[i].find(attr, value);
                     if (descendants.length)
                         results = results.concat(descendants);
@@ -289,7 +291,8 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#findOne
          * @description Depth first search the graph for nodes using supplied method to find first matching node.
-         * @param {Function} fn Method which is executed for each descendant node, to test if node satisfies search logic. Returning true from that method will stop search and return that node.
+         * @param {Function} fn Method which is executed for each descendant node, to test if node satisfies search
+         * logic. Returning true from that method will stop search and return that node.
          * @returns {pc.GraphNode} A single graph node.
          * @example
          * // find node that is called `head` and have model component
@@ -309,28 +312,28 @@ pc.extend(pc, function () {
                 if (result)
                     return this;
 
-                for(i = 0; i < len; i++) {
+                for (i = 0; i < len; i++) {
                     result = this._children[i].findOne(fn);
                     if (result)
                         return this._children[i];
                 }
             } else {
                 var testValue;
-                if(this[attr]) {
-                    if(this[attr] instanceof Function) {
+                if (this[attr]) {
+                    if (this[attr] instanceof Function) {
                         testValue = this[attr]();
                     } else {
                         testValue = this[attr];
                     }
-                    if(testValue === value) {
+                    if (testValue === value) {
                         return this;
                     }
                 }
 
-                for(i = 0; i < len; i++) {
-                     result = this._children[i].findOne(attr, value);
-                     if(result !== null)
-                         return result;
+                for (i = 0; i < len; i++) {
+                    result = this._children[i].findOne(attr, value);
+                    if (result !== null)
+                        return result;
                 }
             }
 
@@ -369,7 +372,7 @@ pc.extend(pc, function () {
             var i, len = this._children.length;
             var descendants;
 
-            for(i = 0; i < len; i++) {
+            for (i = 0; i < len; i++) {
                 if (this._children[i].tags._has(tags))
                     result.push(this._children[i]);
 
@@ -440,7 +443,7 @@ pc.extend(pc, function () {
          * @function
          * @name  pc.GraphNode#getPath
          * @description Gets the path of the entity relative to the root of the hierarchy
-         * @return {String} The path
+         * @returns {String} The path
          * @example
          * var path = this.entity.getPath();
          */
@@ -468,7 +471,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#getRoot
          * @description Get the highest ancestor node from this graph node.
-         * @return {pc.GraphNode} The root node of the hierarchy to which this node belongs.
+         * @returns {pc.GraphNode} The root node of the hierarchy to which this node belongs.
          * @example
          * var root = this.entity.getRoot();
          */
@@ -503,7 +506,8 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#isDescendantOf
          * @description Check if node is descendant of another node.
-         * @returns {Boolean} if node is descendant of another node
+         * @param {pc.GraphNode} node Potential ancestor of node.
+         * @returns {Boolean} if node is descendant of another node.
          * @example
          * if (roof.isDescendantOf(house)) {
          *     // roof is descendant of house entity
@@ -511,7 +515,7 @@ pc.extend(pc, function () {
          */
         isDescendantOf: function (node) {
             var parent = this._parent;
-            while(parent) {
+            while (parent) {
                 if (parent === node)
                     return true;
 
@@ -524,6 +528,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#isAncestorOf
          * @description Check if node is ancestor for another node.
+         * @param {pc.GraphNode} node Potential descendant of node.
          * @returns {Boolean} if node is ancestor for another node
          * @example
          * if (body.isAncestorOf(foot)) {
@@ -888,7 +893,7 @@ pc.extend(pc, function () {
                 this._dirtyWorld = true;
 
                 var i = this._children.length;
-                while(i--) {
+                while (i--) {
                     if (this._children[i]._dirtyWorld)
                         continue;
 
@@ -1113,7 +1118,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#removeChild
          * @description Remove the node from the child list and update the parent value of the child.
-         * @param {pc.GraphNode} node The node to remove
+         * @param {pc.GraphNode} child The node to remove.
          * @example
          * var child = this.entity.children[0];
          * this.entity.removeChild(child);
@@ -1123,8 +1128,8 @@ pc.extend(pc, function () {
             var length = this._children.length;
 
             // Remove from child list
-            for(i = 0; i < length; ++i) {
-                if(this._children[i] === child) {
+            for (i = 0; i < length; ++i) {
+                if (this._children[i] === child) {
                     this._children.splice(i, 1);
 
                     // Clear parent
@@ -1201,11 +1206,11 @@ pc.extend(pc, function () {
             var i, length = this._children.length;
             results = results || [];
 
-            if(this.hasLabel(label)) {
+            if (this.hasLabel(label)) {
                 results.push(this);
             }
 
-            for(i = 0; i < length; ++i) {
+            for (i = 0; i < length; ++i) {
                 results = this._children[i].findByLabel(label, results);
             }
 
@@ -1231,7 +1236,7 @@ pc.extend(pc, function () {
                         var scale = this.localScale;
                         var parentToUseScaleFrom = parent; // current parent
                         if (parentToUseScaleFrom) {
-                            while(parentToUseScaleFrom && parentToUseScaleFrom.scaleCompensation) {
+                            while (parentToUseScaleFrom && parentToUseScaleFrom.scaleCompensation) {
                                 parentToUseScaleFrom = parentToUseScaleFrom._parent;
                             }
                             // topmost node with scale compensation
@@ -1283,7 +1288,7 @@ pc.extend(pc, function () {
             if (this._dirtyLocal || this._dirtyWorld)
                 this._sync();
 
-            for(var i = 0; i < this._children.length; i++)
+            for (var i = 0; i < this._children.length; i++)
                 this._children[i].syncHierarchy();
         },
 
@@ -1510,7 +1515,7 @@ pc.extend(pc, function () {
                 if (! this._dirtyLocal)
                     this._dirtify(true);
             };
-        }(),
+        }()
     });
 
     return {

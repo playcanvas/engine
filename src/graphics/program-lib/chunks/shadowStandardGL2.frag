@@ -53,6 +53,7 @@ float _getShadowPCF5x5(sampler2DShadow shadowMap, vec3 shadowParams) {
     sum *= 1.0f / 144.0;
 
     sum = gammaCorrectInput(sum); // gives softer gradient
+    sum = saturate(sum);
 
     return sum;
 }

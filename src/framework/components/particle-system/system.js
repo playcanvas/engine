@@ -48,13 +48,15 @@ pc.extend(pc, function() {
         'animTilesY',
         'animNumFrames',
         'animSpeed',
-        'animLoop'
+        'animLoop',
+        'layers'
     ];
 
     /**
+     * @constructor
      * @name pc.ParticleSystemComponentSystem
+     * @classdesc Allows an Entity to render a particle system
      * @description Create a new ParticleSystemComponentSystem
-     * @class Allows an Entity to render a particle system
      * @param {pc.Application} app The Application.
      * @extends pc.ComponentSystem
      */
@@ -125,6 +127,11 @@ pc.extend(pc, function() {
                         data[prop].type = type;
                     }
                 }
+
+                // duplicate layer list
+                if (data.layers && pc.type(data.layers) === 'array') {
+                    data.layers = data.layers.slice(0);
+                }
             }
 
             ParticleSystemComponentSystem._super.initializeComponentData.call(this, component, data, properties);
@@ -145,6 +152,8 @@ pc.extend(pc, function() {
 
                     sourceProp = sourceProp.clone();
                     data[prop] = sourceProp;
+                } else if (prop === "layers") {
+                    data.layers = source.layers.slice(0);
                 } else {
                     if (sourceProp !== null && sourceProp !== undefined) {
                         data[prop] = sourceProp;
@@ -157,19 +166,47 @@ pc.extend(pc, function() {
 
         onUpdate: function(dt) {
             var components = this.store;
-            var currentCamera;
-            var numSteps, i;
+            var numSteps, i, j, c;
             var stats = this.app.stats.particles;
 
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
-                    var c = components[id];
+                    c = components[id];
                     var entity = c.entity;
                     var data = c.data;
 
                     if (data.enabled && entity.enabled) {
                         var emitter = data.model.emitter;
                         if (!emitter.meshInstance.visible) continue;
+
+                        // Bake ambient and directional lighting into one ambient cube
+                        // TODO: only do if lighting changed
+                        // TODO: don't do for every emitter
+                        if (emitter.lighting) {
+                            var layer, lightCube;
+                            for (i=0; i<this.layers.length; i++) {
+                                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                                if (!layer._lightCube) {
+                                    layer._lightCube = new Float32Array(6 * 3);
+                                }
+                                lightCube = layer._lightCube;
+                                for (i = 0; i < 6; i++) {
+                                    lightCube[i * 3] = this.scene.ambientLight.data[0];
+                                    lightCube[i * 3 + 1] = this.scene.ambientLight.data[1];
+                                    lightCube[i * 3 + 2] = this.scene.ambientLight.data[2];
+                                }
+                                var dirs = layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
+                                for (j = 0; j < dirs.length; j++) {
+                                    for (c = 0; c < 6; c++) {
+                                        var weight = Math.max(this.lightCubeDir[c].dot(dirs[j]._direction), 0) * dirs[j]._intensity;
+                                        lightCube[c * 3] += dirs[j]._color.data[0] * weight;
+                                        lightCube[c * 3 + 1] += dirs[j]._color.data[1] * weight;
+                                        lightCube[c * 3 + 2] += dirs[j]._color.data[2] * weight;
+                                    }
+                                }
+                            }
+                            emitter.constantLightCube.setValue(lightCube); // ?
+                        }
 
                         if (!data.paused) {
                             emitter.simTime += dt;
@@ -180,7 +217,7 @@ pc.extend(pc, function() {
                             }
                             if (numSteps) {
                                 numSteps = Math.min(numSteps, emitter.maxSubSteps);
-                                for(i=0; i<numSteps; i++) {
+                                for (i=0; i<numSteps; i++) {
                                     emitter.addTime(emitter.fixedTimeStep);
                                 }
                                 stats._updatesPerFrame += numSteps;
@@ -198,7 +235,6 @@ pc.extend(pc, function() {
         onRemove: function(entity, component) {
             var data = component.data;
             if (data.model) {
-                this.app.scene.removeModel(data.model);
                 entity.removeChild(data.model.getGraph());
                 data.model = null;
             }

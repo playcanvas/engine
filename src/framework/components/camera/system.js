@@ -16,18 +16,21 @@ pc.extend(pc, function () {
         'scissorRect',
         'camera',
         'aspectRatio',
+        'aspectRatioMode',
         'horizontalFov',
         'model',
         'renderTarget',
         'calculateTransform',
         'calculateProjection',
         'cullFaces',
-        'flipFaces'
+        'flipFaces',
+        'layers'
     ];
 
     /**
+     * @constructor
      * @name pc.CameraComponentSystem
-     * @class Used to add and remove {@link pc.CameraComponent}s from Entities. It also holds an
+     * @classdesc Used to add and remove {@link pc.CameraComponent}s from Entities. It also holds an
      * array of all active cameras.
      * @description Create a new CameraComponentSystem
      * @param {pc.Application} app The Application
@@ -65,6 +68,7 @@ pc.extend(pc, function () {
                 'model',
                 'camera',
                 'aspectRatio',
+                'aspectRatioMode',
                 'horizontalFov',
                 'renderTarget',
                 'clearColor',
@@ -83,7 +87,8 @@ pc.extend(pc, function () {
                 'calculateTransform',
                 'calculateProjection',
                 'cullFaces',
-                'flipFaces'
+                'flipFaces',
+                'layers'
             ];
 
             // duplicate data because we're modifying the data
@@ -91,6 +96,10 @@ pc.extend(pc, function () {
             properties.forEach(function (prop) {
                 data[prop] = _data[prop];
             });
+
+            if (data.layers && pc.type(data.layers) === 'array') {
+                data.layers = data.layers.slice(0);
+            }
 
             if (data.clearColor && pc.type(data.clearColor) === 'array') {
                 var c = data.clearColor;
@@ -114,6 +123,7 @@ pc.extend(pc, function () {
 
             data.camera = new pc.Camera();
             data._node = component.entity;
+            data.camera._component = component;
 
             var self = component;
             data.camera.calculateTransform = function(mat, mode) {

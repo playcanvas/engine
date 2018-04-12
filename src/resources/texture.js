@@ -3,17 +3,17 @@ pc.extend(pc, function () {
 
     var JSON_ADDRESS_MODE = {
         "repeat": pc.ADDRESS_REPEAT,
-        "clamp":  pc.ADDRESS_CLAMP_TO_EDGE,
+        "clamp": pc.ADDRESS_CLAMP_TO_EDGE,
         "mirror": pc.ADDRESS_MIRRORED_REPEAT
     };
 
     var JSON_FILTER_MODE = {
-        "nearest":             pc.FILTER_NEAREST,
-        "linear":              pc.FILTER_LINEAR,
+        "nearest": pc.FILTER_NEAREST,
+        "linear": pc.FILTER_LINEAR,
         "nearest_mip_nearest": pc.FILTER_NEAREST_MIPMAP_NEAREST,
-        "linear_mip_nearest":  pc.FILTER_LINEAR_MIPMAP_NEAREST,
-        "nearest_mip_linear":  pc.FILTER_NEAREST_MIPMAP_LINEAR,
-        "linear_mip_linear":   pc.FILTER_LINEAR_MIPMAP_LINEAR
+        "linear_mip_nearest": pc.FILTER_LINEAR_MIPMAP_NEAREST,
+        "nearest_mip_linear": pc.FILTER_NEAREST_MIPMAP_LINEAR,
+        "linear_mip_linear": pc.FILTER_LINEAR_MIPMAP_LINEAR
     };
 
     function arrayBufferCopy(src, dst, dstByteOffset, numBytes) {
@@ -116,7 +116,6 @@ pc.extend(pc, function () {
             if (! url)
                 return;
 
-            var self = this;
             var texture;
             var ext = pc.path.getExtension(url).toLowerCase();
             var format = null;
@@ -243,10 +242,10 @@ pc.extend(pc, function () {
                 var DXT_BLOCK_HEIGHT = 4;
                 var blockSize = fcc===FCC_DXT1? 8 : 16;
                 var numBlocksAcross, numBlocksDown, numBlocks;
-                for(var face=0; face<faces; face++) {
+                for (var face=0; face<faces; face++) {
                     var mipWidth = width;
                     var mipHeight = height;
-                    for(var i=0; i<mips; i++) {
+                    for (var i=0; i<mips; i++) {
                         if (compressed) {
                             if (etc1) {
                                 mipSize = Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8;
@@ -316,6 +315,6 @@ pc.extend(pc, function () {
     };
 
     return {
-        TextureHandler: TextureHandler,
+        TextureHandler: TextureHandler
     };
 }());

@@ -24,10 +24,11 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.Skeleton
-     * @property {Boolean} looping Determines whether skeleton is looping its animation.
-     * @class Represents a skeleton used to play animations.
+     * @classdesc Represents a skeleton used to play animations.
      * @param {pc.GraphNode} graph The root pc.GraphNode of the skeleton.
+     * @property {Boolean} looping Determines whether skeleton is looping its animation.
      */
     var Skeleton = function Skeleton(graph) {
         this._animation = null;
@@ -65,7 +66,6 @@ pc.extend(pc, function () {
      * Otherwise, the animation's current time will remain at its duration (i.e. the
      * end).
      * @param {Number} delta The time in seconds to progress the skeleton's animation.
-     * @author Will Eastcott
      */
     Skeleton.prototype.addTime = function (delta) {
         if (this._animation !== null) {
@@ -156,7 +156,6 @@ pc.extend(pc, function () {
      * @param {Number} alpha The value controlling the interpolation in relation to the two input
      * skeletons. The value is in the range 0 to 1, 0 generating skel1, 1 generating skel2 and anything
      * in between generating a spherical interpolation between the two.
-     * @author Will Eastcott
      */
     Skeleton.prototype.blend = function (skel1, skel2, alpha) {
         var numNodes = this._interpolatedKeys.length;
@@ -206,7 +205,6 @@ pc.extend(pc, function () {
      * @name pc.Skeleton#getAnimation
      * @description Returns the animation currently assigned to the specified skeleton.
      * @returns {pc.Animation} The animation set on the skeleton.
-     * @author Will Eastcott
      */
     Skeleton.prototype.getAnimation = function () {
         return this._animation;
@@ -245,7 +243,6 @@ pc.extend(pc, function () {
      * the specified skeleton. This value will be between zero and the duration of the
      * animation.
      * @returns {Number} The current time of the animation set on the skeleton.
-     * @author Will Eastcott
      */
     Skeleton.prototype.getCurrentTime = function () {
         return this._time;
@@ -260,7 +257,6 @@ pc.extend(pc, function () {
      * the specified skeleton. This value must be between zero and the duration of the
      * animation.
      * @param {Number} time The current time of the animation set on the skeleton.
-     * @author Will Eastcott
      */
     Skeleton.prototype.setCurrentTime = function (time) {
         this.currentTime = time;
@@ -285,7 +281,6 @@ pc.extend(pc, function () {
      * @name pc.Skeleton#getNumNodes
      * @description Returns the number of nodes held by the specified skeleton.
      * @returns {Number} The number of nodes held by the specified skeleton.
-     * @author Will Eastcott
      */
     Skeleton.prototype.getNumNodes = function () {
         return this._interpolatedKeys.length;
@@ -298,7 +293,6 @@ pc.extend(pc, function () {
      * @name pc.Skeleton#setAnimation
      * @description Sets an animation on the specified skeleton.
      * @param {pc.Animation} animation The animation to set on the skeleton.
-     * @author Will Eastcott
      */
     Skeleton.prototype.setAnimation = function (animation) {
         this.animation = animation;
@@ -311,7 +305,6 @@ pc.extend(pc, function () {
      * then subsequently used to drive the local transformation matrices of the node
      * hierarchy.
      * @param {pc.GraphNode} graph The root node of the graph that the skeleton is to drive.
-     * @author Will Eastcott
      */
     Skeleton.prototype.setGraph = function (graph) {
         var i;
@@ -337,7 +330,6 @@ pc.extend(pc, function () {
      * skeleton. Internally, this function converts the interpolated keyframe at each node in the
      * skeleton into the local transformation matrix at each corresponding node in the linked node
      * hierarchy.
-     * @author Will Eastcott
      */
     Skeleton.prototype.updateGraph = function () {
         if (this.graph) {
@@ -369,7 +361,6 @@ pc.extend(pc, function () {
      * of the animation. Otherwise, the animation stops at its end after a single play through.
      * @param {Boolean} looping True to cause the animation to loop back to the start on completion
      * and false otherwise.
-     * @author Will Eastcott
      */
     Skeleton.prototype.setLooping = function (looping) {
         this.looping = looping;
@@ -382,7 +373,6 @@ pc.extend(pc, function () {
      * @name pc.Skeleton#getLooping
      * @description Queries the specified skeleton to determine whether it is looping its animation.
      * @returns {Boolean} True if the skeleton is looping the animation, false otherwise.
-     * @author Will Eastcott
      */
     Skeleton.prototype.getLooping = function () {
         return this.looping;

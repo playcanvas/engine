@@ -22,8 +22,9 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.SoundSlot
-     * @class The SoundSlot controls playback of an audio asset.
+     * @classdesc The SoundSlot controls playback of an audio asset.
      * @description Create a new SoundSlot
      * @param {pc.SoundComponent} component The Component that created this slot.
      * @param {String} name The name of the slot.
@@ -89,7 +90,7 @@ pc.extend(pc, function () {
          * @description Plays a sound. If {@link pc.SoundSlot#overlap} is true the new sound
          * instance will be played independently of any other instances already playing.
          * Otherwise existing sound instances will stop before playing the new sound.
-         * @return {pc.SoundInstance} The new sound instance
+         * @returns {pc.SoundInstance} The new sound instance
          */
         play: function () {
             // stop if overlap is false
@@ -125,6 +126,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.SoundSlot#pause
          * @description Pauses all sound instances. To continue playback call {@link pc.SoundSlot#resume}.
+         * @returns {Boolean} true if the sound instances paused successfully, false otherwise.
          */
         pause: function () {
             var paused = false;
@@ -407,7 +409,7 @@ pc.extend(pc, function () {
             for (var i = 0, len = instances.length; i < len; i++) {
                 instances[i].position = position;
             }
-        },
+        }
     };
 
     Object.defineProperty(SoundSlot.prototype, 'name', {
@@ -415,7 +417,6 @@ pc.extend(pc, function () {
             return this._name;
         },
         set: function (value) {
-            var old = this._name;
             this._name = value;
         }
     });
@@ -425,7 +426,6 @@ pc.extend(pc, function () {
             return this._volume;
         },
         set: function (value) {
-            var old = this._volume;
             this._volume = pc.math.clamp(Number(value) || 0, 0, 1);
 
             // update instances if non overlapping
@@ -443,7 +443,6 @@ pc.extend(pc, function () {
             return this._pitch;
         },
         set: function (value) {
-            var old = this._pitch;
             this._pitch = Math.max(Number(value) || 0, 0.01);
 
             // update instances if non overlapping
@@ -461,7 +460,6 @@ pc.extend(pc, function () {
             return this._loop;
         },
         set: function (value) {
-            var old = this._loop;
             this._loop = !!value;
 
             // update instances if non overlapping
@@ -477,7 +475,6 @@ pc.extend(pc, function () {
             return this._autoPlay;
         },
         set: function (value) {
-            var old = this._autoPlay;
             this._autoPlay = !!value;
         }
     });
@@ -487,7 +484,6 @@ pc.extend(pc, function () {
             return this._overlap;
         },
         set: function (value) {
-            var old = this._overlap;
             this._overlap = !!value;
         }
     });
@@ -497,7 +493,6 @@ pc.extend(pc, function () {
             return this._startTime;
         },
         set: function (value) {
-            var old = this._startTime;
             this._startTime = Math.max(0, Number(value) || 0);
 
             // update instances if non overlapping
@@ -526,7 +521,6 @@ pc.extend(pc, function () {
             }
         },
         set: function (value) {
-            var old = this._duration;
             this._duration = Math.max(0, Number(value) || 0) || null;
 
             // update instances if non overlapping

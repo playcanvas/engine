@@ -1,5 +1,6 @@
 *.DS_Store
 /build/output
 /src/graphics/program-lib/chunks/generated-shader-chunks.js
-package.json
 node_modules/
+.idea/
+npm-debug.log

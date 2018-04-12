@@ -4,8 +4,9 @@ pc.extend(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.MorphTarget
-     * @class A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
+     * @classdesc A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
      * Multiple morph targets can be blended together on a mesh. This is useful for effects that are hard to achieve with conventional animation and skinning.
      * @param {Object} options Object for passing optional arguments.
      * @param {Number[]} deltaPositions An array of 3-dimensional vertex position offsets.
@@ -24,7 +25,7 @@ pc.extend(pc, function () {
             var arr = options.deltaPositions;
             this.indices = [];
             this.indices.length = arr.length;
-            for(var i=0; i<arr.length; i++) {
+            for (var i=0; i<arr.length; i++) {
                 this.indices[i] = i;
             }
         }
@@ -37,8 +38,9 @@ pc.extend(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.Morph
-     * @class Contains a list of pc.MorphTarget, a combined AABB and some associated data.
+     * @classdesc Contains a list of pc.MorphTarget, a combined AABB and some associated data.
      * @param {pc.MoprhTarget[]} targets A list of morph targets
      */
     var Morph = function (targets) {
@@ -71,7 +73,7 @@ pc.extend(pc, function () {
             var offsetT = -1;
             var elems = this._baseBuffer.format.elements;
             var vertSize = this._baseBuffer.format.size;
-            for(var j=0; j<elems.length; j++) {
+            for (var j=0; j<elems.length; j++) {
                 if (elems[j].name === pc.SEMANTIC_POSITION) {
                     offsetP = elems[j].offset;
                 } else if (elems[j].name === pc.SEMANTIC_NORMAL) {
@@ -94,16 +96,15 @@ pc.extend(pc, function () {
 
             this.aabb.copy(this._baseAabb);
 
-            var numVerts = this._baseBuffer.numVertices;
             var numIndices;
-            var i, j, k, target, index, id;
+            var i, j, target, index, id;
             var x, y, z;
 
             var vertSizeF = this._vertSizeF;
             var offsetPF = this._offsetPF;
             var baseData = this._baseData;
 
-            for(i=0; i<this._targets.length; i++) {
+            for (i=0; i<this._targets.length; i++) {
                 target = this._targets[i];
 
                 if (!target.aabb && target.indices.length > 0) {
@@ -112,7 +113,7 @@ pc.extend(pc, function () {
                     _morphMax.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
                     numIndices = target.indices.length;
-                    for(j=0; j<numIndices; j++) {
+                    for (j=0; j<numIndices; j++) {
                         index = target.indices[j];
                         id = index * vertSizeF + offsetPF;
 
@@ -177,8 +178,9 @@ pc.extend(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.MorphInstance
-     * @class An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, holds morphed buffer and associated data.
+     * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, holds morphed buffer and associated data.
      * @param {pc.Morph} morph The pc.Morph to instance.
     */
     var MorphInstance = function (morph) {
@@ -200,7 +202,7 @@ pc.extend(pc, function () {
             this._vertexData = new Float32Array(this._vertexBuffer.storage);
             this._weights = [];
             this._weights.length = this.morph._targets.length;
-            for(var i=0; i<this.morph._targets.length; i++) {
+            for (var i=0; i<this.morph._targets.length; i++) {
                 this._weights[i] = 0;
             }
             this._dirty = true;
@@ -247,6 +249,7 @@ pc.extend(pc, function () {
          * @private
          * @function
          * @name pc.MorphInstance#updateBounds
+         * @param {pc.Mesh} mesh Base mesh for the morph.
          * @description Calculates AABB for this morph instance. Called automatically by renderer.
          */
         updateBounds: function (mesh) {
@@ -266,6 +269,7 @@ pc.extend(pc, function () {
          * @private
          * @function
          * @name pc.MorphInstance#update
+         * @param {pc.Mesh} mesh Base mesh for the morph.
          * @description Performs morphing. Called automatically by renderer.
          */
         update: function (mesh) {
@@ -276,7 +280,6 @@ pc.extend(pc, function () {
                 this._setBaseMesh(mesh);
             }
 
-            var numVerts = this.morph._baseBuffer.numVertices;
             var numIndices, index;
 
             var targets = this.morph._targets;
@@ -287,17 +290,16 @@ pc.extend(pc, function () {
             var offsetNF = this.morph._offsetNF;
             var offsetTF = this.morph._offsetTF;
 
-            var baseData = this.morph._baseData;
             var vdata = this._vertexData;
             vdata.set(this.morph._baseData);
 
-            for(var i=0; i<targets.length; i++) {
+            for (var i=0; i<targets.length; i++) {
                 weight = weights[i];
                 if (weight === 0) continue;
                 target = targets[i];
                 numIndices = target.indices.length;
 
-                for(j=0; j<numIndices; j++) {
+                for (j=0; j<numIndices; j++) {
 
                     j3 = j * 3;
                     index = target.indices[j];

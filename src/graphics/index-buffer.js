@@ -2,8 +2,9 @@ pc.extend(pc, function () {
     'use strict';
 
     /**
+     * @constructor
      * @name pc.IndexBuffer
-     * @class An index buffer is the mechanism via which the application specifies primitive
+     * @classdesc An index buffer is the mechanism via which the application specifies primitive
      * index data to the graphics hardware.
      * @description Creates a new index buffer.
      * @example
@@ -31,7 +32,6 @@ pc.extend(pc, function () {
         this.device = graphicsDevice;
 
         var gl = this.device.gl;
-        this.bufferId = gl.createBuffer();
 
         // Allocate the storage
         var bytesPerIndex;
@@ -49,13 +49,15 @@ pc.extend(pc, function () {
 
         this.numBytes = this.numIndices * bytesPerIndex;
 
-        if (initialData && this.setData(initialData)) {
-            return;
+        if (initialData) {
+            this.setData(initialData);
         } else {
             this.storage = new ArrayBuffer(this.numBytes);
         }
 
         graphicsDevice._vram.ib += this.numBytes;
+
+        this.device.buffers.push(this);
     };
 
     IndexBuffer.prototype = {
@@ -65,13 +67,22 @@ pc.extend(pc, function () {
          * @description Frees resources associated with this index buffer.
          */
         destroy: function () {
-            if (!this.bufferId) return;
-            var gl = this.device.gl;
-            gl.deleteBuffer(this.bufferId);
-            this.device._vram.ib -= this.storage.byteLength;
-            this.bufferId = null;
+            var device = this.device;
+            var idx = device.buffers.indexOf(this);
+            if (idx !== -1) {
+                device.buffers.splice(idx, 1);
+            }
 
-            if (this.device.indexBuffer === this) this.device.indexBuffer = null;
+            if (this.bufferId) {
+                var gl = this.device.gl;
+                gl.deleteBuffer(this.bufferId);
+                this.device._vram.ib -= this.storage.byteLength;
+                this.bufferId = null;
+
+                if (this.device.indexBuffer === this) {
+                    this.device.indexBuffer = null;
+                }
+            }
         },
 
         /**
@@ -114,6 +125,11 @@ pc.extend(pc, function () {
         unlock: function () {
             // Upload the new index data
             var gl = this.device.gl;
+
+            if (!this.bufferId) {
+                this.bufferId = gl.createBuffer();
+            }
+
             var glUsage;
             switch (this.usage) {
                 case pc.BUFFER_STATIC:

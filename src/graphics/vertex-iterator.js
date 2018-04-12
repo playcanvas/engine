@@ -60,11 +60,11 @@ pc.extend(pc, function () {
     }
 
     /**
+     * @constructor
      * @name pc.VertexIterator
-     * @class A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
+     * @classdesc A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
      * @description Returns a new pc.VertexIterator object.
      * @param {pc.VertexBuffer} vertexBuffer The vertex buffer to be iterated.
-     * @author Will Eastcott
      */
     function VertexIterator(vertexBuffer) {
         // Store the vertex buffer

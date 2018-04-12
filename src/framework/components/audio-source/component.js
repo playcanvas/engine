@@ -1,8 +1,10 @@
 pc.extend(pc, function () {
     /**
+     * @private
      * @component
+     * @constructor
      * @name pc.AudioSourceComponent
-     * @class The AudioSource Component controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponent}.
+     * @classdesc The AudioSource Component controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponent}.
      * @description Create a new AudioSource Component
      * @param {pc.AudioSourceComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The entity that the Component is attached to
@@ -34,6 +36,7 @@ pc.extend(pc, function () {
 
     pc.extend(AudioSourceComponent.prototype, {
         /**
+         * @private
          * @function
          * @name pc.AudioSourceComponent#play
          * @description Begin playback of an audio asset in the component attached to an entity
@@ -51,7 +54,7 @@ pc.extend(pc, function () {
 
             var channel;
             var componentData = this.data;
-            if(componentData.sources[name]) {
+            if (componentData.sources[name]) {
                 if (!componentData['3d']) {
                     channel = this.system.manager.playSound(componentData.sources[name], componentData);
                     componentData.currentSource = name;
@@ -66,6 +69,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AudioSourceComponent#pause
          * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link pc.AudioSourceComponent#unpause}
@@ -77,6 +81,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AudioSourceComponent#unpause
          * @description Resume playback of the audio if paused. Playback is resumed at the time it was paused.
@@ -88,19 +93,19 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.AudioSourceComponent#stop
          * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
          */
         stop: function() {
-            if(this.channel) {
+            if (this.channel) {
                 this.channel.stop();
                 this.channel = null;
             }
         },
 
         onSetAssets: function (name, oldValue, newValue) {
-            var componentData = this.data;
             var newAssets = [];
             var i, len = newValue.length;
 
@@ -134,7 +139,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if(!this.system._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
+            if (!this.system._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
                 this.loadAudioSourceAssets(newAssets);
             }
         },

@@ -1,12 +1,13 @@
 pc.extend(pc, function() {
 
     /**
-    * @private
-    * @name pc.ModelComponentData
-    * @class Data for a {@link pc.ModelComponent}
-    * @description Create a new data object
-    * @extends pc.ComponentData
-    */
+     * @private
+     * @constructor
+     * @name pc.ModelComponentData
+     * @classdesc Data for a {@link pc.ModelComponent}
+     * @description Create a new data object
+     * @extends pc.ComponentData
+     */
     var ModelComponentData = function () {
         // serialized
         this.enabled = true;
@@ -20,6 +21,7 @@ pc.extend(pc, function() {
         this.lightmapped = false;
         this.lightmapSizeMultiplier = 1;
         this.isStatic = false;
+        this.layers = [pc.LAYERID_WORLD]; // assign to the default world layer
         this.batchGroupId = -1;
 
         // non-serialized
@@ -29,6 +31,6 @@ pc.extend(pc, function() {
     ModelComponentData = pc.inherits(ModelComponentData, pc.ComponentData);
 
     return {
-        ModelComponentData:ModelComponentData
+        ModelComponentData: ModelComponentData
     };
 }());

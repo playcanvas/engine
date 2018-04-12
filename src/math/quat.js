@@ -2,14 +2,29 @@ pc.extend(pc, (function () {
     'use strict';
 
     /**
-    * @name pc.Quat
-    * @class A quaternion.
-    * @description Create a new Quat object
-    * @param {Number} [x] The quaternion's x component. Default value 0. If x is an array of length 4, the array will be used to populate all components.
-    * @param {Number} [y] The quaternion's y component. Default value 0.
-    * @param {Number} [z] The quaternion's z component. Default value 0.
-    * @param {Number} [w] The quaternion's w component. Default value 1.
-    */
+     * @constructor
+     * @name pc.Quat
+     * @classdesc A quaternion.
+     * @description Create a new Quat object.
+     * @param {Number} [x] The quaternion's x component. Default value 0. If x is an array of length 4, the array will be used to populate all components.
+     * @param {Number} [y] The quaternion's y component. Default value 0.
+     * @param {Number} [z] The quaternion's z component. Default value 0.
+     * @param {Number} [w] The quaternion's w component. Default value 1.
+     */
+    var Quat = function (x, y, z, w) {
+        if (x && x.length === 4) {
+            this.x = x[0];
+            this.y = x[1];
+            this.z = x[2];
+            this.w = x[3];
+        } else {
+            this.x = (x === undefined) ? 0 : x;
+            this.y = (y === undefined) ? 0 : y;
+            this.z = (z === undefined) ? 0 : z;
+            this.w = (w === undefined) ? 1 : w;
+        }
+    };
+
     /**
      * @field
      * @type Number
@@ -66,19 +81,6 @@ pc.extend(pc, (function () {
      * // Set w
      * quat.w = 0;
      */
-    var Quat = function (x, y, z, w) {
-        if (x && x.length === 4) {
-            this.x = x[0];
-            this.y = x[1];
-            this.z = x[2];
-            this.w = x[3];
-        } else {
-            this.x = (x === undefined) ? 0 : x;
-            this.y = (y === undefined) ? 0 : y;
-            this.z = (z === undefined) ? 0 : z;
-            this.w = (w === undefined) ? 1 : w;
-        }
-    };
 
     Quat.prototype = {
         /**
@@ -129,14 +131,58 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Quat#equals
          * @description Reports whether two quaternions are equal.
+         * @param {pc.Quat} rhs The quaternion to be compared against.
          * @returns {Boolean} true if the quaternions are equal and false otherwise.
          * @example
          * var a = new pc.Quat();
          * var b = new pc.Quat();
          * console.log("The two quaternions are " + (a.equals(b) ? "equal" : "different"));
          */
-        equals: function (that) {
-            return ((this.x === that.x) && (this.y === that.y) && (this.z === that.z) && (this.w === that.w));
+        equals: function (rhs) {
+            return ((this.x === rhs.x) && (this.y === rhs.y) && (this.z === rhs.z) && (this.w === rhs.w));
+        },
+
+        /**
+         * @function
+         * @name pc.Quat#getAxisAngle
+         * @description Gets the rotation axis and angle for a given
+         *  quaternion. If a quaternion is created with
+         *  setFromAxisAngle, this method will return the same
+         *  values as provided in the original parameter list
+         *  OR functionally equivalent values.
+         * @param {pc.Vec3} axis The 3-dimensional vector to receive the axis of rotation.
+         * @returns {Number} Angle, in degrees, of the rotation
+         * @example
+         * var q = new pc.Quat();
+         * q.setFromAxisAngle(new pc.Vec3(0, 1, 0), 90);
+         * var v = new pc.Vec3();
+         * var angle = q.getAxisAngle(v);
+         * // Should output 90
+         * console.log(angle)
+         * // Should output [0, 1, 0]
+         * console.log(v.toString());
+         */
+        getAxisAngle: function (axis) {
+            var rad = Math.acos(this.w) * 2;
+            var s = Math.sin(rad / 2);
+            if (s !== 0) {
+                axis.x = this.x / s;
+                axis.y = this.y / s;
+                axis.z = this.z / s;
+                if (axis.x < 0 || axis.y < 0 || axis.z < 0) {
+                    // Flip the sign
+                    axis.x *= -1;
+                    axis.y *= -1;
+                    axis.z *= -1;
+                    rad *= -1;
+                }
+            } else {
+                // If s is zero, return any axis (no rotation - axis does not matter)
+                axis.x = 1;
+                axis.y = 0;
+                axis.z = 0;
+            }
+            return rad * pc.math.RAD_TO_DEG;
         },
 
         /**
@@ -342,6 +388,7 @@ pc.extend(pc, (function () {
          * @param {Number} y The y component of the quaternion.
          * @param {Number} z The z component of the quaternion.
          * @param {Number} w The w component of the quaternion.
+         * @returns {pc.Quat} Self for chaining.
          * @example
          * var q = new pc.Quat();
          * q.set(1, 0, 0, 0);
