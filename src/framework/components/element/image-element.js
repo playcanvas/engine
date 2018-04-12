@@ -883,7 +883,7 @@ pc.extend(pc, function () {
             if (this._pixelsPerUnit === value) return;
 
             this._pixelsPerUnit = value;
-            if (this._sprite && this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
+            if (this._sprite && (this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
                 // force update
                 this.spriteFrame = this.spriteFrame;
             }
