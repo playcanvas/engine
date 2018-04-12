@@ -64,6 +64,10 @@ pc.extend(pc, function () {
         destroy: function () {
             if (this._model) {
                 this._element.removeModelFromLayers(this._model);
+                // reset mesh to the default because that's the mesh we want destroyed
+                // and not possible a mesh from the sprite asset that might be
+                // used elsewhere
+                this._meshInstance.mesh = this._defaultMesh;
                 this._model.destroy();
                 this._model = null;
             }
