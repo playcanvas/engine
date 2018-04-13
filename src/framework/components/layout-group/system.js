@@ -50,6 +50,15 @@ pc.extend(pc, function () {
                 // force update
                 component.padding = component.padding;
             }
+            if (data.spacing !== undefined) {
+                if (data.spacing instanceof pc.Vec2){
+                    component.spacing.copy(data.spacing);
+                } else {
+                    component.spacing.set(data.spacing[0], data.spacing[1]);
+                }
+                // force update
+                component.spacing = component.spacing;
+            }
             if (data.widthFitting !== undefined) component.widthFitting = data.widthFitting;
             if (data.heightFitting !== undefined) component.heightFitting = data.heightFitting;
             if (data.wrap !== undefined) component.wrap = data.wrap;
@@ -69,6 +78,7 @@ pc.extend(pc, function () {
                 reverseY: layoutGroup.reverseY,
                 alignment: layoutGroup.alignment,
                 padding: layoutGroup.padding,
+                spacing: layoutGroup.spacing,
                 widthFitting: layoutGroup.widthFitting,
                 heightFitting: layoutGroup.heightFitting,
                 wrap: layoutGroup.wrap,

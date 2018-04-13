@@ -45,6 +45,7 @@ pc.extend(pc, function () {
         this._reverseY = false;
         this._alignment = new pc.Vec2();
         this._padding = new pc.Vec4();
+        this._spacing = new pc.Vec2();
         this._widthFitting = pc.FITTING_NONE;
         this._heightFitting = pc.FITTING_NONE;
         this._wrap = false;
@@ -154,6 +155,7 @@ pc.extend(pc, function () {
     defineReflowSchedulingProperty('reverseY');
     defineReflowSchedulingProperty('alignment');
     defineReflowSchedulingProperty('padding');
+    defineReflowSchedulingProperty('spacing');
     defineReflowSchedulingProperty('widthFitting');
     defineReflowSchedulingProperty('heightFitting');
     defineReflowSchedulingProperty('wrap');
