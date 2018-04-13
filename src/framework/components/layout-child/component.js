@@ -12,11 +12,16 @@ pc.extend(pc, function () {
      * @component
      * @name pc.LayoutChildComponent
      * @description Create a new LayoutChildComponent
-     * @class A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent {@link pc.LayoutGroup}.
+     * @class A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent {@link pc.LayoutGroupComponent}.
      * @param {pc.LayoutChildComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @extends pc.Component
-     * TODO Add properties
+     * @property {Number} minWidth The minimum width the element should be rendered at.
+     * @property {Number} minHeight The minimum height the element should be rendered at.
+     * @property {Number} maxWidth The maximum width the element should be rendered at.
+     * @property {Number} maxHeight The maximum height the element should be rendered at.
+     * @property {Number} fitWidthProportion The amount of additional horizontal space that the element should take up, if necessary to satisfy a Stretch/Shrink fitting calculation. This is specified as a proportion, taking into account the proportion values of other siblings.
+     * @property {Number} fitHeightProportion The amount of additional vertical space that the element should take up, if necessary to satisfy a Stretch/Shrink fitting calculation. This is specified as a proportion, taking into account the proportion values of other siblings.
      */
     var LayoutChildComponent = function LayoutChildComponent(system, entity) {
         this._minWidth = DEFAULTS.minWidth;
