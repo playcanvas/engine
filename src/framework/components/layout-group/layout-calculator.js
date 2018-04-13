@@ -239,7 +239,7 @@ pc.extend(pc, function () {
             lines.forEach(function(line, lineIndex) {
                 var positionsThisLine = [];
                 var sizesThisLine = sizes[lineIndex];
-                var largestSizeThisLine = { width: -1, height: -1 };
+                var largestSizeThisLine = { width: Number.NEGATIVE_INFINITY, height: Number.NEGATIVE_INFINITY };
                 var largestElementThisLine = null;
 
                 // Find the largest element on this line so that we can use it for
@@ -306,8 +306,20 @@ pc.extend(pc, function () {
                 line.forEach(function(element, elementIndex) {
                     element[calculatedSizeA] = sizesThisLine[elementIndex][sizeA];
                     element[calculatedSizeB] = sizesThisLine[elementIndex][sizeB];
-                    element[axisA] = positionsThisLine[elementIndex][axisA];
-                    element[axisB] = positionsThisLine[elementIndex][axisB];
+
+                    if (options.orientation === pc.ORIENTATION_HORIZONTAL) {
+                        element.entity.setLocalPosition(
+                            positionsThisLine[elementIndex][axisA],
+                            positionsThisLine[elementIndex][axisB],
+                            element.entity.getLocalPosition().z
+                        );
+                    } else {
+                        element.entity.setLocalPosition(
+                            positionsThisLine[elementIndex][axisB],
+                            positionsThisLine[elementIndex][axisA],
+                            element.entity.getLocalPosition().z
+                        );
+                    }
                 });
             });
         }

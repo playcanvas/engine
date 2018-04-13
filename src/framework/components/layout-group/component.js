@@ -110,7 +110,7 @@ pc.extend(pc, function () {
                 widthFitting: this._widthFitting,
                 heightFitting: this._heightFitting,
                 wrap: this._wrap,
-                containerSize: new pc.Vec2(getElement(this.entity).width, getElement(this.entity).height)
+                containerSize: new pc.Vec2(container.calculatedWidth, container.calculatedHeight)
             };
 
             this._layoutCalculator.calculateLayout(elements, options);

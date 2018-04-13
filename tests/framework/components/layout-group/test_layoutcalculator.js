@@ -217,10 +217,17 @@ module("pc.LayoutCalculator", {
         options = options || {};
 
         this.elements.forEach(function(element, i) {
-            if (options.approx) {
-                QUnit.close(element[property], values[i], 0.001);
+            var propertyValue;
+            if (property === 'x' || property === 'y') {
+                propertyValue = element.entity.localPosition[property];
             } else {
-                strictEqual(element[property], values[i]);
+                propertyValue = element[property];
+            }
+
+            if (options.approx) {
+                QUnit.close(propertyValue, values[i], 0.001);
+            } else {
+                strictEqual(propertyValue, values[i]);
             }
         });
     },
