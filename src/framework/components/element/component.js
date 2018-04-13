@@ -766,6 +766,7 @@ pc.extend(pc, function () {
         },
 
         _setCalculatedWidth: function(value, updateMargins) {
+            var didChange = Math.abs(value - this._calculatedWidth) > 1e-5;
             this._calculatedWidth = value;
 
             if (updateMargins) {
@@ -778,10 +779,15 @@ pc.extend(pc, function () {
             this._flagChildrenAsDirty();
 
             this.fire('set:calculatedWidth', this._calculatedWidth);
-            this.fire('resize', this._calculatedWidth, this._calculatedHeight);
+
+            if (didChange) {
+                this.fire('resize', this._calculatedWidth, this._calculatedHeight);
+            }
         },
 
         _setCalculatedHeight: function(value, updateMargins) {
+            var didChange = Math.abs(value - this._calculatedHeight) > 1e-5;
+
             this._calculatedHeight = value;
 
             if (updateMargins) {
@@ -794,7 +800,10 @@ pc.extend(pc, function () {
             this._flagChildrenAsDirty();
 
             this.fire('set:calculatedHeight', this._calculatedHeight);
-            this.fire('resize', this._calculatedWidth, this._calculatedHeight);
+
+            if (didChange) {
+                this.fire('resize', this._calculatedWidth, this._calculatedHeight);
+            }
         },
 
         _flagChildrenAsDirty: function() {
