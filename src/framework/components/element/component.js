@@ -713,17 +713,33 @@ pc.extend(pc, function () {
         //   localAnchor, width, height, (local position is updated if anchors are split)
         // assumes these properties are up to date
         //   _margin
-        _calculateSize: function () {
+        _calculateSize: function (propagateCalculatedWidth, propagateCalculatedHeight) {
             // can't calculate if local anchors are wrong
             if (!this.entity._parent && !this.screen) return;
 
             this._calculateLocalAnchors();
 
+            var newWidth = this._absRight - this._absLeft;
+            var newHeight = this._absTop - this._absBottom;
+
+            // TODO This change is significant - needs discussion.
+            //      For context: without this change, any modifications to the margins done when
+            //      calculatedWidth/Height is updated will eventually end up being propagated to
+            //      the regular width/height. We want to avoid this except in the special case
+            //      where the user has changed the anchors from being split to unsplit.
+            if (propagateCalculatedWidth) {
+                this._setWidth(newWidth);
+            } else {
+                this._setCalculatedWidth(newWidth, false);
+            }
+
+            if (propagateCalculatedHeight) {
+                this._setHeight(newHeight);
+            } else {
+                this._setCalculatedHeight(newHeight, false);
+            }
+
             var p = this.entity.getLocalPosition();
-
-            this._setWidth(this._absRight - this._absLeft);
-            this._setHeight(this._absTop - this._absBottom);
-
             p.x = this._margin.data[0] + this._calculatedWidth * this._pivot.data[0];
             p.y = this._margin.data[1] + this._calculatedHeight * this._pivot.data[1];
 
@@ -992,7 +1008,7 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._width = value;
-            this.calculatedWidth = value;
+            this._setCalculatedWidth(value, true);
 
             this.fire('set:width', this._width);
         }
@@ -1005,7 +1021,7 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._height = value;
-            this.calculatedHeight = value;
+            this._setCalculatedHeight(value, true);
 
             this.fire('set:height', this._height);
         }
@@ -1067,17 +1083,22 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
+            var hadSplitAnchorsX = this._hasSplitAnchorsX;
+            var hadSplitAnchorsY = this._hasSplitAnchorsY;
+
             if (value instanceof pc.Vec4) {
                 this._anchor.set(value.x, value.y, value.z, value.w);
             } else {
                 this._anchor.set(value[0], value[1], value[2], value[3]);
             }
 
-
             if (!this.entity._parent && !this.screen) {
                 this._calculateLocalAnchors();
             } else {
-                this._calculateSize();
+                var anchorsBecameUnsplitX = hadSplitAnchorsX && !this._hasSplitAnchorsX;
+                var anchorsBecameUnsplitY = hadSplitAnchorsY && !this._hasSplitAnchorsY;
+
+                this._calculateSize(anchorsBecameUnsplitX, anchorsBecameUnsplitY);
             }
 
 
@@ -1090,6 +1111,17 @@ pc.extend(pc, function () {
         }
     });
 
+    Object.defineProperty(ElementComponent.prototype, "_hasSplitAnchorsX", {
+        get: function () {
+            return Math.abs(this._anchor.data[0] - this._anchor.data[2]) > 0.001;
+        },
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "_hasSplitAnchorsY", {
+        get: function () {
+            return Math.abs(this._anchor.data[1] - this._anchor.data[3]) > 0.001;
+        },
+    });
 
     // Returns the 4 corners of the element relative to its screen component.
     // Only works for elements that have a screen.
