@@ -52,10 +52,10 @@ pc.extend(pc, function () {
         this._layoutCalculator = new pc.LayoutCalculator();
 
         // Listen for the group container being resized
-        this._listenForResizeEvents(this, 'on');
+        this._listenForResizeEvents(this.entity, 'on');
 
         // Listen to existing children being resized
-        this.children.forEach(function(child) {
+        this.entity.children.forEach(function(child) {
             this._listenForResizeEvents(child, 'on');
         }.bind(this));
 
@@ -69,11 +69,11 @@ pc.extend(pc, function () {
 
     pc.extend(LayoutGroupComponent.prototype, {
         _listenForResizeEvents: function(target, onOff) {
-            getElement(this.entity)[onOff]('resize', this._onResize, this);
+            getElement(target)[onOff]('resize', this._onResize, this);
 
             // TODO Need to also handle the case where a LayoutChildComponent is added/removed from a child/the container
-            if (this.entity.layoutchild) {
-                this.entity.layoutchild[onOff]('resize', this._onResize, this);
+            if (target.layoutchild) {
+                target.layoutchild[onOff]('resize', this._onResize, this);
             }
         },
 
@@ -98,7 +98,8 @@ pc.extend(pc, function () {
         },
 
         reflow: function() {
-            var elements = this.children.map(getElement);
+            var elements = this.entity.children.map(getElement);
+            var container = getElement(this.entity);
 
             var options = {
                 orientation: this._orientation,
@@ -119,7 +120,7 @@ pc.extend(pc, function () {
         onRemove: function () {
             this.entity.off('insert', this._onResize, this);
 
-            this.children.forEach(function(child) {
+            this.entity.children.forEach(function(child) {
                 this._listenForResizeEvents(child, 'off');
             }.bind(this));
         }

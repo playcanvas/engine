@@ -21,7 +21,12 @@ pc.extend(pc, function () {
         this._reflowQueue = [];
 
         this.on('beforeremove', this._onRemoveComponent, this);
+
+        // Perform reflow when running in the engine
         pc.ComponentSystem.on('postUpdate', this._onPostUpdate, this);
+
+        // Perform reflow when running in the editor
+        pc.ComponentSystem.on('toolsUpdate', this._onToolsUpdate, this);
     };
     LayoutGroupComponentSystem = pc.inherits(LayoutGroupComponentSystem, pc.ComponentSystem);
 
@@ -85,13 +90,25 @@ pc.extend(pc, function () {
             });
         },
 
-        _onScheduleReflow: function (entity, component) {
+        _onScheduleReflow: function (component) {
             if (this._reflowQueue.indexOf(component) === -1) {
                 this._reflowQueue.push(component);
             }
         },
 
+        _onToolsUpdate: function () {
+            this._processReflowQueue();
+        },
+
         _onPostUpdate: function () {
+            this._processReflowQueue();
+        },
+
+        _processReflowQueue: function () {
+            if (this._reflowQueue.length === 0) {
+                return;
+            }
+
             // Sort in ascending order of depth within the graph (i.e. outermost first), so that
             // any layout groups which are children of other layout groups will always have their
             // new size set before their own reflow is calculated.
