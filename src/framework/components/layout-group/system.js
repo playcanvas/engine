@@ -30,7 +30,8 @@ pc.extend(pc, function () {
     pc.extend(LayoutGroupComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (data.orientation !== undefined) component.orientation = data.orientation;
-            if (data.reverse !== undefined) component.reverse = data.reverse;
+            if (data.reverseX !== undefined) component.reverseX = data.reverseX;
+            if (data.reverseY !== undefined) component.reverseY = data.reverseY;
             if (data.alignment !== undefined) {
                 if (data.alignment instanceof pc.Vec2){
                     component.alignment.copy(data.alignment);
@@ -64,7 +65,8 @@ pc.extend(pc, function () {
             return this.addComponent(clone, {
                 enabled: layoutGroup.enabled,
                 orientation: layoutGroup.orientation,
-                reverse: layoutGroup.reverse,
+                reverseX: layoutGroup.reverseX,
+                reverseY: layoutGroup.reverseY,
                 alignment: layoutGroup.alignment,
                 padding: layoutGroup.padding,
                 widthFitting: layoutGroup.widthFitting,

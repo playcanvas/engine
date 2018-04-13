@@ -5,7 +5,8 @@ module("pc.LayoutCalculator", {
 
         this.options = {
             orientation: pc.ORIENTATION_HORIZONTAL,
-            reverse: false,
+            reverseX: false,
+            reverseY: false,
             alignment: new pc.Vec2(0, 0),
             padding: new pc.Vec4(0, 0, 0, 0),
             spacing: new pc.Vec2(0, 0),
@@ -453,17 +454,30 @@ test("{ wrap: false } pc.FITTING_BOTH shrinks elements proportionally when natur
     this.assertValues('calculatedHeight', [100,  100,   100,   100, 100]);
 });
 
-test("{ wrap: false } can reverse elements", function () {
+test("{ wrap: false } can reverse elements on the x axis", function () {
     this.elements = this.mixedWidthElements;
-    this.options.reverse = true;
+    this.options.reverseX = true;
     this.options.orientation = pc.ORIENTATION_HORIZONTAL;
     this.options.widthFitting = pc.FITTING_NONE;
     this.options.containerSize.x = 260;
 
     this.calculate();
 
-    this.assertValues('x', [200, 150, 50, 30, 0]);
-    this.assertValues('y', [  0,   0,  0,  0, 0]);
+    this.assertValues('x', [0, 30, 50, 150, 200]);
+    this.assertValues('y', [0,  0,  0,   0,   0]);
+});
+
+test("{ wrap: false } can reverse elements on the y axis", function () {
+    this.elements = this.mixedHeightElements;
+    this.options.reverseY = true;
+    this.options.orientation = pc.ORIENTATION_VERTICAL;
+    this.options.widthFitting = pc.FITTING_NONE;
+    this.options.containerSize.x = 260;
+
+    this.calculate();
+
+    this.assertValues('x', [0,  0,  0,   0,   0]);
+    this.assertValues('y', [0, 30, 50, 150, 200]);
 });
 
 test("{ wrap: false } can align to [1, 0.5]", function () {
@@ -614,18 +628,47 @@ test("{ wrap: true } pc.FITTING_BOTH stretches elements proportionally when natu
     this.assertValues('calculatedHeight', [    100,    100,     100, 100, 100]);
 });
 
-test("{ wrap: true } can reverse elements", function () {
+test("{ wrap: true } can reverse elements on the x axis", function () {
     this.elements = this.mixedWidthElements;
     this.options.wrap = true;
-    this.options.reverse = true;
+    this.options.reverseX = true;
     this.options.orientation = pc.ORIENTATION_HORIZONTAL;
     this.options.widthFitting = pc.FITTING_NONE;
     this.options.containerSize.x = 260;
 
     this.calculate();
 
-    this.assertValues('x', [  0, 150, 50, 30, 0]);
-    this.assertValues('y', [100,   0,  0,  0, 0]);
+    this.assertValues('x', [150, 100,  0,  30,   0]);
+    this.assertValues('y', [  0,   0,  0, 100, 100]);
+});
+
+test("{ wrap: true } can reverse elements on the y axis", function () {
+    this.elements = this.mixedWidthElements;
+    this.options.wrap = true;
+    this.options.reverseY = true;
+    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
+    this.options.widthFitting = pc.FITTING_NONE;
+    this.options.containerSize.x = 260;
+
+    this.calculate();
+
+    this.assertValues('x', [  0, 100, 150, 0, 20]);
+    this.assertValues('y', [100, 100, 100, 0, 0]);
+});
+
+test("{ wrap: true } can reverse elements both axes", function () {
+    this.elements = this.mixedWidthElements;
+    this.options.wrap = true;
+    this.options.reverseX = true;
+    this.options.reverseY = true;
+    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
+    this.options.widthFitting = pc.FITTING_NONE;
+    this.options.containerSize.x = 260;
+
+    this.calculate();
+
+    this.assertValues('x', [150, 100,   0, 30, 0]);
+    this.assertValues('y', [100, 100, 100,  0, 0]);
 });
 
 test("{ wrap: true } can align to [1, 0.5]", function () {

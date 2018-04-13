@@ -72,19 +72,15 @@ pc.extend(pc, function () {
         function maxExtentA(element, size) { return  size[sizeA] * (1 - element.pivot[axisA]); }
         function maxExtentB(element, size) { return  size[sizeB] * (1 - element.pivot[axisB]); }
 
-        function calculateAll(allElements, fittingOptions) {
-            options = fittingOptions;
-
-            if (options.reverse) {
-                allElements = allElements.slice().reverse();
-            }
+        function calculateAll(allElements, layoutOptions) {
+            options = layoutOptions;
 
             availableSpace = new pc.Vec2(
                 options.containerSize.x - options.padding.data[0] - options.padding.data[2],
                 options.containerSize.y - options.padding.data[1] - options.padding.data[3]
             );
 
-            var lines = splitLines(allElements);
+            var lines = reverseLinesIfRequired(splitLines(allElements));
             var sizes = calculateSizes(lines);
             var positions = calculateBasePositions(lines, sizes);
 
@@ -93,13 +89,13 @@ pc.extend(pc, function () {
         }
 
         function splitLines(allElements) {
-            // If wrapping is disabled, we just put all elements into a single line.
             if (!options.wrap) {
+                // If wrapping is disabled, we just put all elements into a single line.
                 return [allElements];
             }
 
-            var sizes = getPropertiesMultiple(allElements, sizeA);
             var lines = [[]];
+            var sizes = getPropertiesMultiple(allElements, sizeA);
             var runningSize = 0;
             var allowOverrun = (options[fittingA] === pc.FITTING_SHRINK);
 
@@ -108,8 +104,8 @@ pc.extend(pc, function () {
 
                 // For the None, Stretch and Both fitting modes, we should break to a new
                 // line before we overrun the available space in the container.
-                if (!allowOverrun && runningSize >= availableSpace[axisA]) {
-                    runningSize = 0;
+                if (!allowOverrun && runningSize >= availableSpace[axisA] && lines[lines.length - 1].length !== 0) {
+                    runningSize = sizes[i][sizeA];
                     lines.push([]);
                 }
 
@@ -117,10 +113,32 @@ pc.extend(pc, function () {
 
                 // For the Shrink fitting mode, we should break to a new line immediately
                 // after we've overrun the available space in the container.
-                if (allowOverrun && runningSize >= availableSpace[axisA]) {
+                if (allowOverrun && runningSize >= availableSpace[axisA] && i !== allElements.length - 1) {
                     runningSize = 0;
                     lines.push([]);
                 }
+            }
+
+            return lines;
+        }
+
+        function reverseLinesIfRequired(lines) {
+            var reverseAxisA = (options.orientation === pc.ORIENTATION_HORIZONTAL && options.reverseX) ||
+                               (options.orientation === pc.ORIENTATION_VERTICAL   && options.reverseY);
+
+            var reverseAxisB = (options.orientation === pc.ORIENTATION_HORIZONTAL && options.reverseY) ||
+                               (options.orientation === pc.ORIENTATION_VERTICAL   && options.reverseX);
+
+            if (reverseAxisA) {
+                for (var lineIndex = 0; lineIndex < lines.length; ++lineIndex) {
+                    if (reverseAxisA) {
+                        lines[lineIndex].reverse();
+                    }
+                }
+            }
+
+            if (reverseAxisB) {
+                lines.reverse();
             }
 
             return lines;

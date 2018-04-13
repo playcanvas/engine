@@ -8,7 +8,8 @@ pc.extend(pc, function () {
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @extends pc.Component
      * @property {pc.ORIENTATION} orientation Whether the layout should run horizontally or vertically.
-     * @property {Boolean} reverse If set to false, horizontal layouts will run left-right and vertical layouts will run bottom-top. If set to true, the order will be reversed. Defaults to false.
+     * @property {Boolean} reverseX Reverses the order of children along the x axis.
+     * @property {Boolean} reverseY Reverses the order of children along the y axis.
      * @property {pc.Vec2} alignment Specifies the horizontal and vertical alignment of child elements. Values range from 0 to 1 where [0,0] is the bottom left and [1,1] is the top right.
      * @property {pc.Vec4} padding Padding to be applied inside the container before positioning any children. Specified as left, bottom, right and top values.
      * @property {pc.Vec2} spacing Spacing to be applied between each child element.
@@ -40,7 +41,8 @@ pc.extend(pc, function () {
      */
     var LayoutGroupComponent = function LayoutGroupComponent(system, entity) {
         this._orientation = pc.ORIENTATION_HORIZONTAL;
-        this._reverse = false;
+        this._reverseX = false;
+        this._reverseY = false;
         this._alignment = new pc.Vec2();
         this._padding = new pc.Vec4();
         this._widthFitting = pc.FITTING_NONE;
@@ -99,7 +101,8 @@ pc.extend(pc, function () {
 
             var options = {
                 orientation: this._orientation,
-                reverse: this._reverse,
+                reverseX: this._reverseX,
+                reverseY: this._reverseY,
                 alignment: this._alignment,
                 padding: this._padding,
                 spacing: this._spacing,
@@ -147,7 +150,8 @@ pc.extend(pc, function () {
     }
 
     defineReflowSchedulingProperty('orientation');
-    defineReflowSchedulingProperty('reverse');
+    defineReflowSchedulingProperty('reverseX');
+    defineReflowSchedulingProperty('reverseY');
     defineReflowSchedulingProperty('alignment');
     defineReflowSchedulingProperty('padding');
     defineReflowSchedulingProperty('widthFitting');
