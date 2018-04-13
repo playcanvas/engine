@@ -13,6 +13,7 @@ pc.extend(pc, function () {
         this._spriteAsset = null;
         this._sprite = null;
         this._spriteFrame = 0;
+        this._pixelsPerUnit = null;
 
         this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
 
@@ -63,6 +64,10 @@ pc.extend(pc, function () {
         destroy: function () {
             if (this._model) {
                 this._element.removeModelFromLayers(this._model);
+                // reset mesh to the default because that's the mesh we want destroyed
+                // and not possible a mesh from the sprite asset that might be
+                // used elsewhere
+                this._meshInstance.mesh = this._defaultMesh;
                 this._model.destroy();
                 this._model = null;
             }
@@ -272,8 +277,9 @@ pc.extend(pc, function () {
                                     frameData.rect.w / tex.height)
 
                 // scale: apply PPU
-                var scaleMulX = frameData.rect.z / this.sprite.pixelsPerUnit;
-                var scaleMulY = frameData.rect.w / this.sprite.pixelsPerUnit;
+                var ppu = this._pixelsPerUnit !== null ? this._pixelsPerUnit : this.sprite.pixelsPerUnit;
+                var scaleMulX = frameData.rect.z / ppu;
+                var scaleMulY = frameData.rect.w / ppu;
 
                 // scale borders if necessary instead of overlapping
                 this._outerScale.set(Math.max(w, this._innerOffset.x * scaleMulX), Math.max(h, this._innerOffset.y * scaleMulY));
@@ -514,7 +520,7 @@ pc.extend(pc, function () {
             // on force update when the sprite is 9-sliced. If it's not
             // then its mesh will change when the ppu changes which will
             // be handled by onSpriteMeshesChange
-            if (this.sprite.renderMode !== pc.SPRITE_RENDERMODE_SIMPLE) {
+            if (this.sprite.renderMode !== pc.SPRITE_RENDERMODE_SIMPLE && this._pixelsPerUnit === null) {
                 // force update
                 this.spriteFrame = this.spriteFrame;
             }
@@ -870,6 +876,22 @@ pc.extend(pc, function () {
                 this._mask = value;
                 this._toggleMask();
             }
+        }
+    });
+
+    Object.defineProperty(ImageElement.prototype, "pixelsPerUnit", {
+        get: function () {
+            return this._pixelsPerUnit;
+        },
+        set: function (value) {
+            if (this._pixelsPerUnit === value) return;
+
+            this._pixelsPerUnit = value;
+            if (this._sprite && (this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
+                // force update
+                this.spriteFrame = this.spriteFrame;
+            }
+
         }
     });
 

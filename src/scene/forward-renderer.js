@@ -1659,9 +1659,6 @@ pc.extend(pc, function () {
                         prevMaterial = null;
                     }
 
-                    stencilFront = null;
-                    stencilBack = null;
-
                     if (material !== prevMaterial) {
                         this._materialSwitches++;
                         if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
@@ -1738,13 +1735,10 @@ pc.extend(pc, function () {
                         } else {
                             device.setDepthBias(false);
                         }
-
-                        stencilFront = material.stencilFront;
-                        stencilBack = material.stencilBack;
                     }
 
-                    stencilFront = drawCall.stencilFront || stencilFront;
-                    stencilBack = drawCall.stencilBack || stencilBack;
+                    stencilFront = drawCall.stencilFront || material.stencilFront;
+                    stencilBack = drawCall.stencilBack || material.stencilBack;
 
                     if (stencilFront || stencilBack) {
                         device.setStencilTest(true);

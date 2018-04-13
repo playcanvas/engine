@@ -332,6 +332,7 @@ pc.extend(pc, function () {
                 },
 
                 onPostRenderOpaque: function(cameraPass) {
+                    if (!this.renderTarget) return;
                     this.cameras[cameraPass].camera._clearOptions = this.oldClear;
                 }
 
