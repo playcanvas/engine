@@ -116,11 +116,11 @@ pc.extend(pc, function () {
                 return componentA.entity.graphDepth < componentB.entity.graphDepth;
             });
 
-            this._reflowQueue.forEach(function(component) {
-                component.reflow();
-            });
 
-            // TODO Handle additional items being pushed to the reflow queue while a reflow is taking place?
+            while (this._reflowQueue.length > 0) {
+                var component = this._reflowQueue.shift();
+                component.reflow();
+            }
 
             this._reflowQueue = [];
         },
