@@ -63,18 +63,51 @@ pc.extend(pc, function () {
         this.entity.on('childinsert', this._onChildInsert, this);
         this.entity.on('childremove', this._onChildRemove, this);
 
-        this._scheduleReflow();
+        // Listen for ElementComponents and LayoutChildComponents being added
+        // to self or to children - covers cases where they are not already
+        // present at the point when this component is constructed.
+        pc.app.systems.element.on('add', this._onElementComponentAdd, this);
+        pc.app.systems.element.on('beforeremove', this._onElementComponentRemove, this);
+        pc.app.systems.layoutchild.on('add', this._onLayoutChildComponentAdd, this);
+        pc.app.systems.layoutchild.on('beforeremove', this._onLayoutChildComponentRemove, this);
+
+        if (this._selfAndChildrenAreAllElements()) {
+            this._scheduleReflow();
+        }
     };
     LayoutGroupComponent = pc.inherits(LayoutGroupComponent, pc.Component);
 
     pc.extend(LayoutGroupComponent.prototype, {
-        _listenForResizeEvents: function(target, onOff) {
-            getElement(target)[onOff]('resize', this._onResize, this);
+        _selfAndChildrenAreAllElements: function() {
+            return this.entity.element && this.entity.children.every(function(child) {
+                return child.element;
+            });
+        },
 
-            // TODO Need to also handle the case where a LayoutChildComponent is added/removed from a child/the container
+        _listenForResizeEvents: function(target, onOff) {
+            if (target.element) {
+                target.element[onOff]('resize', this._onResize, this);
+            }
+
             if (target.layoutchild) {
                 target.layoutchild[onOff]('resize', this._onResize, this);
             }
+        },
+
+        _onElementComponentAdd: function(entity, component) {
+            component.on('resize', this._onResize, this);
+        },
+
+        _onElementComponentRemove: function(entity, component) {
+            component.off('resize', this._onResize, this);
+        },
+
+        _onLayoutChildComponentAdd: function(entity, component) {
+            component.on('resize', this._onResize, this);
+        },
+
+        _onLayoutChildComponentRemove: function(entity, component) {
+            component.off('resize', this._onResize, this);
         },
 
         _onResize: function() {
@@ -92,9 +125,9 @@ pc.extend(pc, function () {
         },
 
         _scheduleReflow: function() {
-            this.fire('schedulereflow', this);
-
-            // TODO Also schedule the reflow of a LayoutGroupComponent on the child?
+            if (!this._isPerformingReflow) {
+                this.fire('schedulereflow', this);
+            }
         },
 
         reflow: function() {
@@ -114,7 +147,12 @@ pc.extend(pc, function () {
                 containerSize: new pc.Vec2(container.calculatedWidth, container.calculatedHeight)
             };
 
+            // In order to prevent recursive reflow (i.e. whereby setting the size of
+            // a child element triggers another reflow on the next frame, and so on)
+            // we flag that a reflow is currently in progress.
+            this._isPerformingReflow = true;
             this._layoutCalculator.calculateLayout(elements, options);
+            this._isPerformingReflow = false;
         },
 
         onRemove: function () {
