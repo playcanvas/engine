@@ -79,9 +79,7 @@ pc.extend(pc, function () {
 
     pc.extend(LayoutGroupComponent.prototype, {
         _selfAndChildrenAreAllElements: function() {
-            return this.entity.element && this.entity.children.every(function(child) {
-                return child.element;
-            });
+            return this.entity.element && this.entity.children.every(getElement);
         },
 
         _listenForResizeEvents: function(target, onOff) {
@@ -131,6 +129,10 @@ pc.extend(pc, function () {
         },
 
         reflow: function() {
+            if (!this._selfAndChildrenAreAllElements()) {
+                return;
+            }
+
             var elements = this.entity.children.map(getElement);
             var container = getElement(this.entity);
 
@@ -165,11 +167,7 @@ pc.extend(pc, function () {
     });
 
     function getElement(entity) {
-        var element = entity.element;
-        if (!element) {
-            throw new Error('Layout Groups can only be used with Elements');
-        }
-        return element;
+        return entity.element;
     }
 
     function defineReflowSchedulingProperty(name) {
