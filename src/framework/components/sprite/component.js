@@ -156,6 +156,9 @@ pc.extend(pc, function () {
             }
 
             if (this._meshInstance) {
+                // make sure we decrease the ref counts materials and meshes
+                this._meshInstance.material = null;
+                this._meshInstance.mesh = null;
                 this._meshInstance = null;
             }
         },
