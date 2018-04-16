@@ -31,8 +31,8 @@ pc.extend(pc, function () {
     var PROPERTY_DEFAULTS = {
         minWidth: 0,
         minHeight: 0,
-        maxWidth: null,
-        maxHeight: null,
+        maxWidth: Number.POSITIVE_INFINITY,
+        maxHeight: Number.POSITIVE_INFINITY,
         width: null,
         height: null,
         fitWidthProportion: 0,
@@ -56,7 +56,9 @@ pc.extend(pc, function () {
         var sizeA = propertyMappings.size[0];
         var sizeB = propertyMappings.size[1];
         var minSizeA = propertyMappings.minSize[0];
+        var minSizeB = propertyMappings.minSize[1];
         var maxSizeA = propertyMappings.maxSize[0];
+        var maxSizeB = propertyMappings.maxSize[1];
         var calculatedSizeA = propertyMappings.calculatedSize[0];
         var calculatedSizeB = propertyMappings.calculatedSize[1];
 
@@ -150,7 +152,7 @@ pc.extend(pc, function () {
 
             lines.forEach(function(line) {
                 var sizesThisLine = getPropertiesMultiple(line, sizeA, sizeB);
-                var requiredSpace = calculateTotalSpace(sizesThisLine);
+                var idealRequiredSpace = calculateTotalSpace(sizesThisLine, sizeA, axisA);
                 var applyStretching;
                 var applyShrinking;
 
@@ -161,18 +163,18 @@ pc.extend(pc, function () {
                         break;
 
                     case pc.FITTING_STRETCH:
-                        applyStretching = requiredSpace < availableSpace[axisA];
+                        applyStretching = idealRequiredSpace < availableSpace[axisA];
                         applyShrinking  = false;
                         break;
 
                     case pc.FITTING_SHRINK:
                         applyStretching = false;
-                        applyShrinking  = requiredSpace > availableSpace[axisA];
+                        applyShrinking  = idealRequiredSpace >= availableSpace[axisA];
                         break;
 
                     case pc.FITTING_BOTH:
-                        applyStretching = requiredSpace < availableSpace[axisA];
-                        applyShrinking  = requiredSpace > availableSpace[axisA];
+                        applyStretching = idealRequiredSpace < availableSpace[axisA];
+                        applyShrinking  = idealRequiredSpace >= availableSpace[axisA];
                         break;
 
                     default:
@@ -180,9 +182,9 @@ pc.extend(pc, function () {
                 }
 
                 if (applyStretching) {
-                    stretchSizesToFitContainer(line, sizesThisLine, requiredSpace);
+                    stretchSizesToFitContainer(line, sizesThisLine, idealRequiredSpace);
                 } else if (applyShrinking) {
-                    shrinkSizesToFitContainer(line, sizesThisLine, requiredSpace);
+                    shrinkSizesToFitContainer(line, sizesThisLine, idealRequiredSpace);
                 }
 
                 sizesAllLines.push(sizesThisLine);
@@ -191,40 +193,60 @@ pc.extend(pc, function () {
             return sizesAllLines;
         }
 
-        function calculateTotalSpace(sizes) {
-            var totalSizes = sumValues(sizes, sizeA);
-            var totalSpacing = (sizes.length - 1) * options.spacing[axisA];
+        function calculateTotalSpace(sizes, dimension, axis) {
+            var totalSizes = sumValues(sizes, dimension);
+            var totalSpacing = (sizes.length - 1) * options.spacing[axis];
 
             return totalSizes + totalSpacing;
         }
 
-        function stretchSizesToFitContainer(line, sizesThisLine, requiredSpace) {
-            var remainingSpace = availableSpace[axisA] - requiredSpace;
+        function stretchSizesToFitContainer(line, sizesThisLine, idealRequiredSpace) {
+            // TODO Refactor all size retrieval into a single function call and single object per
+            //      element, along with originalIndex, and use to simplify getOrderedIndices() fn.
+            var maxSizes = getProperties(line, maxSizeA);
+            var maxSizeOrder = getOrderedIndices(maxSizes);
+
             var fittingProportions = normalizeValues(getProperties(line, fittingProportionA));
+            var fittingProportionSums = createSumArray(fittingProportions, maxSizeOrder);
 
-            sizesThisLine.forEach(function(size, i) {
-                var increase = remainingSpace * fittingProportions[i];
-                var newSize = size[sizeA] + increase;
-                var maxSize = getProperty(line[i], maxSizeA);
+            var remainingUndershoot = availableSpace[axisA] - idealRequiredSpace;
 
-                if (maxSize !== null && newSize > maxSize) {
-                    newSize = maxSize;
-                }
+            for (var i = 0; i < sizesThisLine.length; ++i) {
+                var index = maxSizeOrder[i];
+                var fittingProportion = fittingProportions[index];
 
-                sizesThisLine[i][sizeA] = newSize;
-            });
+                var increase = fittingProportion === 0 ? 0 : (remainingUndershoot * fittingProportion / fittingProportionSums[index]);
+                var targetSize = sizesThisLine[index][sizeA] + increase;
+                var actualSize = Math.min(targetSize, maxSizes[index]);
+                var appliedIncrease = actualSize < targetSize ? (increase - (targetSize - actualSize)) : increase;
+
+                sizesThisLine[index][sizeA] = actualSize;
+                remainingUndershoot -= appliedIncrease;
+            }
         }
 
-        function shrinkSizesToFitContainer(line, sizesThisLine, requiredSpace) {
-            var overshoot = availableSpace[axisA] - requiredSpace;
-            var fittingProportions = normalizeValues(getProperties(line, fittingProportionA));
+        function shrinkSizesToFitContainer(line, sizesThisLine, idealRequiredSpace) {
             var minSizes = getProperties(line, minSizeA);
+            var minSizeOrder = getOrderedIndices(minSizes, true);
 
-            sizesThisLine.forEach(function(size, i) {
-                var inverseFittingProportion = (1 - fittingProportions[i]) / (line.length - 1);
-                var reduction = -overshoot * inverseFittingProportion;
-                sizesThisLine[i][sizeA] = Math.max(size[sizeA] - reduction, minSizes[i]);
-            });
+            var fittingProportions = normalizeValues(getProperties(line, fittingProportionA));
+            var inverseFittingProportions = fittingProportions.map(function(value) { return (1 - value) / (line.length - 1); });
+            var inverseFittingProportionSums = createSumArray(inverseFittingProportions, minSizeOrder);
+
+            var remainingOvershoot = availableSpace[axisA] - idealRequiredSpace;
+
+            for (var i = 0; i < sizesThisLine.length; ++i) {
+                var index = minSizeOrder[i];
+                var inverseFittingProportion = inverseFittingProportions[index];
+
+                var reduction = inverseFittingProportion === 0 ? 0 : (-remainingOvershoot * inverseFittingProportion / inverseFittingProportionSums[index]);
+                var targetSize = sizesThisLine[index][sizeA] - reduction;
+                var actualSize = Math.max(targetSize, minSizes[index]);
+                var appliedReduction = actualSize > targetSize ? (reduction - (actualSize - targetSize)) : reduction;
+
+                sizesThisLine[index][sizeA] = actualSize;
+                remainingOvershoot -= -appliedReduction;
+            }
         }
 
         // Calculate base positions based on the element sizes, spacing and padding
@@ -347,13 +369,9 @@ pc.extend(pc, function () {
             var layoutChildComponent = element.entity['layoutchild'];
 
             // First attempt to get the value from the element's LayoutChildComponent, if present.
-            if (layoutChildComponent && layoutChildComponent[propertyName] !== undefined && propertyName !== 'width' && propertyName !== 'height') {
-                // The width and height properties are always specified directly on the element.
-                if (propertyName === 'width' || propertyName === 'height') {
-                    return element[propertyName];
-                } else {
-                    return layoutChildComponent[propertyName];
-                }
+            // TODO Should this check if the LayoutChildComponent is enabled?
+            if (layoutChildComponent && layoutChildComponent[propertyName] !== undefined && layoutChildComponent[propertyName] !== null) {
+                return layoutChildComponent[propertyName];
             } else if (element[propertyName] !== undefined) {
                 return element[propertyName];
             } else {
@@ -379,6 +397,33 @@ pc.extend(pc, function () {
                     return value / sum;
                 });
             }
+        }
+
+        function getOrderedIndices(values, descending) {
+            return values
+                .map(function(value, index) {
+                    return {
+                        value: value,
+                        originalIndex: index
+                    };
+                })
+                .sort(function(a, b) {
+                    return descending ? b.value - a.value : a.value - b.value;
+                })
+                .map(function(value) {
+                    return value.originalIndex;
+                });
+        }
+
+        function createSumArray(values, order) {
+            var sumArray = [];
+            sumArray[order[values.length - 1]] = values[order[values.length - 1]];
+
+            for (var i = values.length - 2; i >= 0; --i) {
+                sumArray[order[i]] = sumArray[order[i + 1]] + values[order[i]];
+            }
+
+            return sumArray;
         }
 
         return calculateAll;
