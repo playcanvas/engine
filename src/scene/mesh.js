@@ -2,8 +2,6 @@ pc.extend(pc, function () {
     var id = 0;
     var _tmpAabb = new pc.BoundingBox();
 
-    var _layerDeprecationWarning = false;
-
     /**
      * @constructor
      * @name pc.Mesh
@@ -420,10 +418,6 @@ pc.extend(pc, function () {
             return this._layer;
         },
         set: function (layer) {
-            if (!_layerDeprecationWarning) {
-                _layerDeprecationWarning = true;
-                console.warn('meshInstance.layer is deprecated. Use pc.Layer or PlayCanvas Editor.');
-            }
             this._layer = layer;
             this.updateKey();
         }
