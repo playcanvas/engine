@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+    <script src="../../build/output/playcanvas-latest.js"></script>
+    <link href="../style.css" rel="stylesheet" />
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the app and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+        var entity, light, camera;
+
+        // Create a new layer to put in front of everything
+        var layer = new pc.Layer({
+            name: "Front Layer"
+        });
+
+        // get the world layer index
+        var worldLayer = app.scene.layers.getLayerByName("World");
+        var idx = app.scene.layers.getTransparentIndex(worldLayer);
+
+        // insert the new layer after the world layer
+        app.scene.layers.insert(layer, idx+1);
+
+        // Create an Entity with a camera component
+        // Make sure it renders both World and Front Layer
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.4, 0.45, 0.5),
+            layers: [worldLayer.id, layer.id]
+        });
+        camera.translate(0, 0, 24);
+        app.root.addChild(camera);
+
+        // Create an Entity with a point light component
+        // Make sure it lights both World and Front Layer
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "point",
+            color: new pc.Color(1, 1, 1),
+            range: 100,
+            layers: [worldLayer.id, layer.id]
+        });
+        light.translate(5, 0, 15);
+        app.root.addChild(light);
+
+        // red material is semi-transparent
+        var red = new pc.StandardMaterial();
+        red.diffuse.set(1,0,0);
+        red.blendType = pc.BLEND_NORMAL;
+        red.opacity = 0.5;
+        red.update();
+
+        // blue material does not test the existing depth buffer
+        var blue = new pc.StandardMaterial();
+        blue.diffuse.set(0,0,1);
+        blue.depthTest = false;
+        blue.update();
+
+        // red box is rendered first in World layer
+        var redBox = new pc.Entity();
+        redBox.addComponent('model', {
+            type: 'box'
+        });
+        redBox.model.material = red;
+        redBox.setLocalScale(5,5,5);
+        app.root.addChild(redBox);
+
+        // blue box is rendered in the Front Layer which is after World
+        // because it does not test for depth
+        // and is in a later layer
+        // it is visible even though it should be inside the red box
+        var blueBox = new pc.Entity();
+        blueBox.addComponent('model', {
+            type: 'box',
+            layers: [layer.id] // try removing this line, the blue box will appear inside the red one
+        });
+        blueBox.model.material = blue;
+        blueBox.setLocalScale(2.5,2.5,2.5);
+        app.root.addChild(blueBox);
+
+        app.on("update", function (dt) {
+            if (redBox) {
+                redBox.rotate(0,10*dt,0);
+            }
+            if (blueBox) {
+                blueBox.rotate(0,-10*dt,0);
+            }
+
+            blueBox.model.meshInstances[0].layer = 10;
+        });
+    </script>
+</body>
+</html>
