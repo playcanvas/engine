@@ -86,7 +86,7 @@ pc.extend(pc, function () {
             var sizes = calculateSizes(lines);
             var positions = calculateBasePositions(lines, sizes);
 
-            applyAlignment(lines, positions);
+            applyAlignment(lines, sizes, positions);
             applySizesAndPositions(lines, sizes, positions);
         }
 
@@ -330,11 +330,11 @@ pc.extend(pc, function () {
 
                 // Record the size of the overall line
                 line[sizeA] = cursor[axisA] - options.spacing[axisA];
-                line[sizeB] = cursor[axisB];
+                line[sizeB] = maxExtentB(largestElementThisLine, largestSizeThisLine);
 
                 // Move the cursor to the next line
                 cursor[axisA] = options.padding[axisA];
-                cursor[axisB] += maxExtentB(largestElementThisLine, largestSizeThisLine) + options.spacing[axisB];
+                cursor[axisB] += line[sizeB] + options.spacing[axisB];
 
                 positionsAllLines.push(positionsThisLine);
             });
@@ -346,15 +346,18 @@ pc.extend(pc, function () {
         }
 
         // Adjust base positions to account for the requested alignment.
-        function applyAlignment(lines, basePositions) {
+        function applyAlignment(lines, sizes, positions) {
             lines.forEach(function(line, lineIndex) {
-                var positionsThisLine = basePositions[lineIndex];
+                var sizesThisLine = sizes[lineIndex];
+                var positionsThisLine = positions[lineIndex];
                 var axisAOffset = (options.containerSize[axisA] - line[sizeA])  * options.alignment[axisA];
                 var axisBOffset = (options.containerSize[axisB] - lines[sizeB]) * options.alignment[axisB];
 
                 line.forEach(function(element, elementIndex) {
+                    var withinLineAxisBOffset = (line[sizeB] - sizesThisLine[elementIndex][sizeB]) * options.alignment[axisB];
+
                     positionsThisLine[elementIndex][axisA] += axisAOffset;
-                    positionsThisLine[elementIndex][axisB] += axisBOffset;
+                    positionsThisLine[elementIndex][axisB] += axisBOffset + withinLineAxisBOffset;
                 });
             });
         }
