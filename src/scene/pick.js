@@ -1,6 +1,8 @@
 pc.extend(pc, function () {
 
     var _deviceDeprecationWarning = false;
+    var _getSelectionDeprecationWarning = false;
+    var _prepareDeprecationWarning = false;
 
     function sortDrawCalls(drawCallA, drawCallB) {
 
@@ -92,7 +94,10 @@ pc.extend(pc, function () {
 
         if (typeof x === 'object') {
             // #ifdef DEBUG
-            console.warn("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
+            if (!_prepareDeprecationWarning) {
+                _prepareDeprecationWarning = true;
+                console.warn("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
+            }
             // #endif
 
             var rect = x;
@@ -168,10 +173,15 @@ pc.extend(pc, function () {
      */
     Picker.prototype.prepare = function (camera, scene, arg) {
         var device = this.device;
+        var self = this;
 
         if (camera instanceof pc.Camera) {
             // #ifdef DEBUG
-            console.warn("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
+            if (!_getSelectionDeprecationWarning) {
+                _getSelectionDeprecationWarning = true;
+                console.warn("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
+            }
+
             // #endif
             camera = camera._component;
         }
@@ -188,7 +198,6 @@ pc.extend(pc, function () {
 
         // Setup picker rendering once
         if (!this.layer) {
-            var self = this;
             var pickColorId = device.scope.resolve('uColor');
 
             this.layer = new pc.Layer({
@@ -219,20 +228,6 @@ pc.extend(pc, function () {
                     this.renderTarget = null;
                 },
 
-                onPreRender: function() {
-                    if (self.width !== this.renderTarget.width || self.height !== this.renderTarget.height) {
-                        this.onDisable();
-                        this.onEnable();
-                    }
-                    this.oldClear = this.cameras[0].camera._clearOptions;
-                    this.oldAspectMode = this.cameras[0].aspectRatioMode;
-                    this.oldAspect = this.cameras[0].aspectRatio;
-                    this.cameras[0].camera._clearOptions = self.clearOptions;
-                    this.cameras[0].aspectRatioMode = pc.ASPECT_MANUAL;
-                    var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
-                    this.cameras[0].aspectRatio = this.cameras[0].calculateAspectRatio(rt);
-                },
-
                 onDrawCall: function(meshInstance, i) {
                     self.pickColor[0] = ((i >> 16) & 0xff) / 255;
                     self.pickColor[1] = ((i >> 8) & 0xff) / 255;
@@ -241,12 +236,8 @@ pc.extend(pc, function () {
                     device.setBlending(false);
                 },
 
-                onPostRender: function() {
-                    this.cameras[0].camera._clearOptions = this.oldClear;
-                    this.cameras[0].aspectRatioMode = this.oldAspectMode;
-                    this.cameras[0].aspectRatio = this.oldAspect;
-                },
-
+                // could probably move updateCameraFrustum into onLayerPreRender function
+                // and remove everything else
                 onPreCull: function() {
                     this.oldAspectMode = this.cameras[0].aspectRatioMode;
                     this.oldAspect = this.cameras[0].aspectRatio;
@@ -256,6 +247,8 @@ pc.extend(pc, function () {
                     self.app.renderer.updateCameraFrustum(this.cameras[0].camera);
                 },
 
+                // could probably remove this because we've moved
+                // prerender/postrender to be outside of renderComposition
                 onPostCull: function() {
                     this.cameras[0].aspectRatioMode = this.oldAspectMode;
                     this.cameras[0].aspectRatio = this.oldAspect;
@@ -329,8 +322,34 @@ pc.extend(pc, function () {
             this.layer.addCamera(camera);
         }
 
+        // save old camera state
+        this.onLayerPreRender(this.layer, sourceLayer, sourceRt);
+
         // Render
         this.app.renderer.renderComposition(this.layerComp);
+
+        // restore old camera state
+        this.onLayerPostRender(this.layer);
+    };
+
+    Picker.prototype.onLayerPreRender = function (layer, sourceLayer, sourceRt) {
+        if (this.width !== layer.renderTarget.width || this.height !== layer.renderTarget.height) {
+            layer.onDisable();
+            layer.onEnable();
+        }
+        layer.oldClear = layer.cameras[0].camera._clearOptions;
+        layer.oldAspectMode = layer.cameras[0].aspectRatioMode;
+        layer.oldAspect = layer.cameras[0].aspectRatio;
+        layer.cameras[0].camera._clearOptions = this.clearOptions;
+        layer.cameras[0].aspectRatioMode = pc.ASPECT_MANUAL;
+        var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
+        layer.cameras[0].aspectRatio = layer.cameras[0].calculateAspectRatio(rt);
+    };
+
+    Picker.prototype.onLayerPostRender = function (layer) {
+        layer.cameras[0].camera._clearOptions = layer.oldClear;
+        layer.cameras[0].aspectRatioMode = layer.oldAspectMode;
+        layer.cameras[0].aspectRatio = layer.oldAspect;
     };
 
     /**
