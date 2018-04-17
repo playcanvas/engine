@@ -156,8 +156,8 @@ pc.extend(pc, function () {
 
         // Destroys the previous collision type and creates a new one based on the new type provided
         changeType: function (component, previousType, newType) {
-             this.implementations[previousType].remove( component.entity, component.data);
-             this._createImplementation(newType).reset(component, component.data);
+            this.implementations[previousType].remove( component.entity, component.data);
+            this._createImplementation(newType).reset(component, component.data);
         },
 
         // Recreates rigid bodies or triggers for the specified component

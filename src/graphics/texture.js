@@ -189,7 +189,9 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'minFilter', {
-        get: function () { return this._minFilter; },
+        get: function () {
+            return this._minFilter;
+        },
         set: function (v) {
             if (this._minFilter !== v) {
                 this._minFilter = v;
@@ -208,7 +210,9 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'magFilter', {
-        get: function () { return this._magFilter; },
+        get: function () {
+            return this._magFilter;
+        },
         set: function (v) {
             if (this._magFilter !== v) {
                 this._magFilter = v;
@@ -228,7 +232,9 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'addressU', {
-        get: function () { return this._addressU; },
+        get: function () {
+            return this._addressU;
+        },
         set: function (v) {
             if (this._addressU !== v) {
                 this._addressU = v;
@@ -248,7 +254,9 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'addressV', {
-        get: function () { return this._addressV; },
+        get: function () {
+            return this._addressV;
+        },
         set: function (v) {
             if (this._addressV !== v) {
                 this._addressV = v;
@@ -268,7 +276,9 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'addressW', {
-        get: function () { return this._addressW; },
+        get: function () {
+            return this._addressW;
+        },
         set: function (addressW) {
             if (!this.device.webgl2) return;
             if (!this._volume) {
@@ -289,7 +299,9 @@ pc.extend(pc, function () {
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      */
     Object.defineProperty(Texture.prototype, 'compareOnRead', {
-        get: function () { return this._compareOnRead; },
+        get: function () {
+            return this._compareOnRead;
+        },
         set: function (v) {
             if (this._compareOnRead !== v) {
                 this._compareOnRead = v;
@@ -313,7 +325,9 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'compareFunc', {
-        get: function () { return this._compareFunc; },
+        get: function () {
+            return this._compareFunc;
+        },
         set: function (v) {
             if (this._compareFunc !== v) {
                 this._compareFunc = v;
@@ -330,7 +344,9 @@ pc.extend(pc, function () {
      * @description Toggles automatic mipmap generation. Can't be used on non power of two textures.
      */
     Object.defineProperty(Texture.prototype, 'autoMipmap', {
-        get: function () { return this._mipmaps; },
+        get: function () {
+            return this._mipmaps;
+        },
         set: function (v) {
             this._mipmaps = v;
         }
@@ -342,7 +358,9 @@ pc.extend(pc, function () {
      * @description Defines if texture should generate/upload mipmaps if possible.
      */
     Object.defineProperty(Texture.prototype, 'mipmaps', {
-        get: function () { return this._mipmaps; },
+        get: function () {
+            return this._mipmaps;
+        },
         set: function (v) {
             if (this._mipmaps !== v) {
                 this._mipmaps = v;
@@ -360,7 +378,9 @@ pc.extend(pc, function () {
      * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
      */
     Object.defineProperty(Texture.prototype, 'anisotropy', {
-        get: function () { return this._anisotropy; },
+        get: function () {
+            return this._anisotropy;
+        },
         set: function (v) {
             if (this._anisotropy !== v) {
                 this._anisotropy = v;
@@ -376,7 +396,9 @@ pc.extend(pc, function () {
      * @description The width of the texture in pixels.
      */
     Object.defineProperty(Texture.prototype, 'width', {
-        get: function () { return this._width; }
+        get: function () {
+            return this._width;
+        }
     });
 
     /**
@@ -386,7 +408,9 @@ pc.extend(pc, function () {
      * @description The height of the texture in pixels.
      */
     Object.defineProperty(Texture.prototype, 'height', {
-        get: function () { return this._height; }
+        get: function () {
+            return this._height;
+        }
     });
 
     /**
@@ -396,7 +420,9 @@ pc.extend(pc, function () {
      * @description The number of depth slices in a 3D texture (WebGL2 only).
      */
     Object.defineProperty(Texture.prototype, 'depth', {
-        get: function () { return this._depth; }
+        get: function () {
+            return this._depth;
+        }
     });
 
     /**
@@ -429,7 +455,9 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Texture.prototype, 'format', {
-        get: function () { return this._format; }
+        get: function () {
+            return this._format;
+        }
     });
 
     /**
@@ -439,7 +467,9 @@ pc.extend(pc, function () {
      * @description Returns true if this texture is a cube map and false otherwise.
      */
     Object.defineProperty(Texture.prototype, 'cubemap', {
-        get: function () { return this._cubemap; }
+        get: function () {
+            return this._cubemap;
+        }
     });
 
     /**
@@ -449,7 +479,9 @@ pc.extend(pc, function () {
      * @description Returns true if this texture is a 3D volume and false otherwise.
      */
     Object.defineProperty(Texture.prototype, 'volume', {
-        get: function () { return this._volume; }
+        get: function () {
+            return this._volume;
+        }
     });
 
     /**
@@ -460,7 +492,9 @@ pc.extend(pc, function () {
      * or textures set from raw pixel data. Defaults to true.
      */
     Object.defineProperty(Texture.prototype, 'flipY', {
-        get: function () { return this._flipY; },
+        get: function () {
+            return this._flipY;
+        },
         set: function (flipY) {
             if (this._flipY !== flipY) {
                 this._flipY = flipY;
@@ -532,14 +566,20 @@ pc.extend(pc, function () {
         lock: function (options) {
             // Initialize options to some sensible defaults
             options = options || { level: 0, face: 0, mode: pc.TEXTURELOCK_WRITE };
-            if (options.level === undefined) { options.level = 0; }
-            if (options.face === undefined) { options.face = 0; }
-            if (options.mode === undefined) { options.mode = pc.TEXTURELOCK_WRITE; }
+            if (options.level === undefined) {
+                options.level = 0;
+            }
+            if (options.face === undefined) {
+                options.face = 0;
+            }
+            if (options.mode === undefined) {
+                options.mode = pc.TEXTURELOCK_WRITE;
+            }
 
             this._lockedLevel = options.level;
 
             if (this._levels[options.level] === null) {
-                switch(this._format) {
+                switch (this._format) {
                     case pc.PIXELFORMAT_A8:
                     case pc.PIXELFORMAT_L8:
                         this._levels[options.level] = new Uint8Array(this._width * this._height * this._depth);
@@ -652,7 +692,7 @@ pc.extend(pc, function () {
 
                 // remove levels
                 if (this._cubemap) {
-                    for(i = 0; i < 6; i++) {
+                    for (i = 0; i < 6; i++) {
                         this._levels[0][i] = null;
                         this._levelsUpdated[0][i] = true;
                     }
@@ -723,7 +763,7 @@ pc.extend(pc, function () {
             var i = 0;
             var j;
             var face;
-            while(this._levels[i]) {
+            while (this._levels[i]) {
                 var mipSize;
                 if (!this.cubemap) {
                     mipSize = this._levels[i].length;
@@ -733,7 +773,7 @@ pc.extend(pc, function () {
                     }
                     fsize += mipSize;
                 } else {
-                    for(face=0; face<6; face++) {
+                    for (face=0; face<6; face++) {
                         if (! this._levels[i][face]) {
                             console.error('No level data for mip ' + i + ', face ' + face);
                             return;
@@ -781,7 +821,7 @@ pc.extend(pc, function () {
             header[5] = this.width * this.height * 4;
             header[6] = 0; // depth
             header[7] = this._levels.length;
-            for(i=0; i<11; i++) header[8 + i] = 0;
+            for (i=0; i<11; i++) header[8 + i] = 0;
             header[19] = DDS_PIXELFORMAT_SIZE;
             header[20] = DDS_PIXELFLAGS_RGBA8;
             header[21] = 0; // fourcc
@@ -802,7 +842,7 @@ pc.extend(pc, function () {
                 for (i=0; i<this._levels.length; i++) {
                     level = this._levels[i];
                     mip = new Uint8Array(buff, offset, level.length);
-                    for(j=0; j<level.length; j++) mip[j] = level[j];
+                    for (j=0; j<level.length; j++) mip[j] = level[j];
                     offset += level.length;
                 }
             } else {
@@ -810,7 +850,7 @@ pc.extend(pc, function () {
                     for (i=0; i<this._levels.length; i++) {
                         level = this._levels[i][face];
                         mip = new Uint8Array(buff, offset, level.length);
-                        for(j=0; j<level.length; j++) mip[j] = level[j];
+                        for (j=0; j<level.length; j++) mip[j] = level[j];
                         offset += level.length;
                     }
                 }

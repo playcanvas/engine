@@ -35,7 +35,7 @@ pc.extend(pc, function () {
         this.schema = _schema;
 
         // default texture - make white so we can tint it with emissive color
-        this._defaultTexture = new pc.Texture(app.graphicsDevice, {width:1, height:1, format:pc.PIXELFORMAT_R8_G8_B8_A8});
+        this._defaultTexture = new pc.Texture(app.graphicsDevice, {width: 1, height: 1, format: pc.PIXELFORMAT_R8_G8_B8_A8});
         var pixels = this._defaultTexture.lock();
         var pixelData = new Uint8Array(4);
         pixelData[0] = 255.0;
@@ -265,6 +265,10 @@ pc.extend(pc, function () {
 
             component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
 
+            if (data.layers && pc.type(data.layers) === 'array') {
+                component.layers = data.layers.slice(0);
+            }
+
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
                 if (data.rect !== undefined) {
@@ -302,13 +306,14 @@ pc.extend(pc, function () {
                 if (data.spriteAsset !== undefined) component.spriteAsset = data.spriteAsset;
                 if (data.sprite) component.sprite = data.sprite;
                 if (data.spriteFrame !== undefined) component.spriteFrame = data.spriteFrame;
+                if (data.pixelsPerUnit !== undefined && data.pixelsPerUnit !== null) component.pixelsPerUnit = data.pixelsPerUnit;
                 if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
                 if (data.material) component.material = data.material;
 
                 if (data.mask !== undefined) {
                     component.mask = data.mask;
                 }
-            } else if(component.type === pc.ELEMENTTYPE_TEXT) {
+            } else if (component.type === pc.ELEMENTTYPE_TEXT) {
                 if (data.autoWidth !== undefined) component.autoWidth = data.autoWidth;
                 if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
                 if (data.text !== undefined) component.text = data.text;
@@ -376,11 +381,13 @@ pc.extend(pc, function () {
                 texture: source.texture,
                 spriteAsset: source.spriteAsset,
                 sprite: source.sprite,
-                frame: source.frame,
+                spriteFrame: source.spriteFrame,
+                pixelsPerUnit: source.pixelsPerUnit,
                 text: source.text,
                 spacing: source.spacing,
                 lineHeight: source.lineHeight,
                 wrapLines: source.wrapLines,
+                layers: source.layers,
                 fontSize: source.fontSize,
                 fontAsset: source.fontAsset,
                 font: source.font,

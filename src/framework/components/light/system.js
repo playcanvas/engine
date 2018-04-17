@@ -30,7 +30,7 @@ pc.extend(pc, function () {
             var data = {};
             var _props = pc._lightProps;
             var name;
-            for(var i=0; i<_props.length; i++) {
+            for (var i=0; i<_props.length; i++) {
                 name = _props[i];
                 data[name] = _data[name];
             }
@@ -39,6 +39,10 @@ pc.extend(pc, function () {
                 data.type = component.data.type;
 
             component.data.type = data.type;
+
+            if (data.layers && pc.type(data.layers) === 'array') {
+                data.layers = data.layers.slice(0);
+            }
 
             if (data.color && pc.type(data.color) === 'array')
                 data.color = new pc.Color(data.color[0], data.color[1], data.color[2]);
@@ -57,14 +61,10 @@ pc.extend(pc, function () {
             var light = new pc.Light();
             light.type = lightTypes[data.type];
             light._node = component.entity;
-            this.app.scene.addLight(light);
+            light._scene = this.app.scene;
             component.data.light = light;
 
             LightComponentSystem._super.initializeComponentData.call(this, component, data, _props);
-        },
-
-        onRemove: function (entity, data) {
-            this.app.scene.removeLight(data.light);
         },
 
         cloneComponent: function (entity, clone) {
@@ -73,7 +73,7 @@ pc.extend(pc, function () {
             var data = [];
             var name;
             var _props = pc._lightProps;
-            for(var i=0; i<_props.length; i++) {
+            for (var i=0; i<_props.length; i++) {
                 name = _props[i];
                 if (name==="light") continue;
                 if (light[name] && light[name].clone) {

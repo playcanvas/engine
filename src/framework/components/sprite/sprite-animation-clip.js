@@ -342,9 +342,9 @@ pc.extend(pc, function () {
                     }
 
                     this._component._hideModel();
-                }
-                // otherwise show sprite
-                else {
+                } else {
+                    // otherwise show sprite
+
                     // update texture
                     if (value.atlas.texture) {
                         mi = this._component._meshInstance;

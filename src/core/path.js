@@ -35,18 +35,18 @@ pc.path = function () {
             var num = arguments.length;
             var result = arguments[0];
 
-            for(index = 0; index < num - 1; ++index) {
+            for (index = 0; index < num - 1; ++index) {
                 var one = arguments[index];
                 var two = arguments[index+1];
-                if(!pc.isDefined(one) || !pc.isDefined(two)) {
+                if (!pc.isDefined(one) || !pc.isDefined(two)) {
                     throw new Error("undefined argument to pc.path.join");
                 }
-                if(two[0] === pc.path.delimiter) {
+                if (two[0] === pc.path.delimiter) {
                     result = two;
                     continue;
                 }
 
-                if(one && two && one[one.length - 1] !== pc.path.delimiter && two[0] !== pc.path.delimiter) {
+                if (one && two && one[one.length - 1] !== pc.path.delimiter && two[0] !== pc.path.delimiter) {
                     result += (pc.path.delimiter + two);
                 } else {
                     result += (two);
@@ -113,8 +113,8 @@ pc.path = function () {
 
         extractPath: function (s) {
             var path = ".",
-            parts = s.split("/"),
-            i = 0;
+                parts = s.split("/"),
+                i = 0;
 
             if (parts.length > 1) {
                 if (pc.path.isRelativePath(s) === false) {
@@ -127,4 +127,4 @@ pc.path = function () {
             return path;
         }
     };
-} ();
+}();

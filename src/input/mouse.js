@@ -134,7 +134,9 @@ pc.extend(pc, function () {
         this._downHandler = this._handleDown.bind(this);
         this._moveHandler = this._handleMove.bind(this);
         this._wheelHandler = this._handleWheel.bind(this);
-        this._contextMenuHandler = function (event) { event.preventDefault(); };
+        this._contextMenuHandler = function (event) {
+            event.preventDefault();
+        };
 
         this._target = null;
         this._attached = false;
@@ -460,4 +462,4 @@ pc.extend(pc, function () {
         Mouse: Mouse,
         MouseEvent: MouseEvent
     };
-} ());
+}());

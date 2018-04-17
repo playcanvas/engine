@@ -18,6 +18,8 @@ pc.extend(pc, function () {
         this._lineHeight = 32;
         this._wrapLines = false;
 
+        this._drawOrder = 0;
+
         this._alignment = new pc.Vec2(0.5, 0.5);
 
         this._autoWidth = true;
@@ -58,7 +60,7 @@ pc.extend(pc, function () {
     pc.extend(TextElement.prototype, {
         destroy: function () {
             if (this._model) {
-                this._system.app.scene.removeModel(this._model);
+                this._element.removeModelFromLayers(this._model);
                 this._model.destroy();
                 this._model = null;
             }
@@ -133,7 +135,7 @@ pc.extend(pc, function () {
                 charactersPerTexture[map]++;
             }
 
-            var removedModel = ! this._system.app.scene.containsModel(this._model);
+            var removedModel = false;
 
             var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
 
@@ -143,7 +145,7 @@ pc.extend(pc, function () {
 
                 if (meshInfo.count !== l) {
                     if (! removedModel) {
-                        this._system.app.scene.removeModel(this._model);
+                        this._element.removeModelFromLayers(this._model);
                         removedModel = true;
                     }
 
@@ -199,7 +201,7 @@ pc.extend(pc, function () {
 
                     mi.drawOrder = this._drawOrder;
                     if (screenSpace) {
-                        mi.layer = pc.scene.LAYER_HUD;
+                        mi.cull = false;
                     }
                     mi.screenSpace = screenSpace;
                     mi.setParameter("texture_msdfMap", this._font.textures[i]);
@@ -223,7 +225,7 @@ pc.extend(pc, function () {
             }
 
             if (removedModel && this._element.enabled && this._entity.enabled) {
-                this._system.app.scene.addModel(this._model);
+                this._element.addModelToLayers(this._model);
             }
 
             this._updateMeshes(text);
@@ -238,6 +240,7 @@ pc.extend(pc, function () {
                 if (oldMesh.vertexBuffer) {
                     oldMesh.vertexBuffer.destroy();
                 }
+
                 if (oldMesh.indexBuffer) {
                     for (ib = 0, iblen = oldMesh.indexBuffer.length; ib<iblen; ib++)
                         oldMesh.indexBuffer[ib].destroy();
@@ -263,20 +266,20 @@ pc.extend(pc, function () {
         },
 
         _updateMaterial: function (screenSpace) {
-            var layer;
+            var cull;
 
             if (screenSpace) {
                 this._material = this._system.defaultScreenSpaceTextMaterial;
-                layer = pc.scene.LAYER_HUD;
+                cull = false;
             } else {
                 this._material = this._system.defaultTextMaterial;
-                layer = pc.scene.LAYER_WORLD;
+                cull = true;
             }
 
             if (this._model) {
                 for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
                     var mi = this._model.meshInstances[i];
-                    mi.layer = layer;
+                    mi.cull = cull;
                     mi.material = this._material;
                     mi.screenSpace = screenSpace;
                 }
@@ -304,7 +307,12 @@ pc.extend(pc, function () {
             var lineStartIndex = 0;
             var numWordsThisLine = 0;
             var numCharsThisLine = 0;
-            var maxLineWidth = (this.autoWidth === true || this._wrapLines === false) ? Number.POSITIVE_INFINITY : this._element.width;
+            var splitHorizontalAnchors = Math.abs(this._element.anchor.x - this._element.anchor.z) >= 0.0001;
+
+            var maxLineWidth = this._element.width;
+            if ((this.autoWidth && !splitHorizontalAnchors) || !this._wrapLines) {
+                maxLineWidth = Number.POSITIVE_INFINITY;
+            }
 
             // todo: move this into font asset?
             // calculate max font extents from all available chars
@@ -626,14 +634,14 @@ pc.extend(pc, function () {
         },
 
         onEnable: function () {
-            if (this._model && !this._system.app.scene.containsModel(this._model)) {
-                this._system.app.scene.addModel(this._model);
+            if (this._model) {
+                this._element.addModelToLayers(this._model);
             }
         },
 
         onDisable: function () {
-            if (this._model && this._system.app.scene.containsModel(this._model)) {
-                this._system.app.scene.removeModel(this._model);
+            if (this._model) {
+                this._element.removeModelFromLayers(this._model);
             }
         }
     });
@@ -834,7 +842,7 @@ pc.extend(pc, function () {
                     if (! removedModel) {
                         // remove model from scene so that excess mesh instances are removed
                         // from the scene as well
-                        this._system.app.scene.removeModel(this._model);
+                        this._element.removeModelFromLayers(this._model);
                         removedModel = true;
                     }
                     this._removeMeshInstance(this._meshInfo[i].meshInstance);
@@ -872,7 +880,10 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._autoWidth = value;
-            if (value) {
+
+            // change width of element to match text width but only if the element
+            // does not have split horizontal anchors
+            if (value && Math.abs(this._element.anchor.x - this._element.anchor.z) < 0.0001) {
                 this._element.width = this.width;
             }
         }
@@ -885,7 +896,10 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._autoHeight = value;
-            if (value) {
+
+            // change height of element to match text height but only if the element
+            // does not have split vertical anchors
+            if (value && Math.abs(this._element.anchor.y - this._element.anchor.w) < 0.0001) {
                 this._element.height = this.height;
             }
         }

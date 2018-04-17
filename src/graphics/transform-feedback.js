@@ -146,7 +146,9 @@ pc.extend(pc, function () {
      * @description The current input buffer
      */
     Object.defineProperty(TransformFeedback.prototype, 'inputBuffer', {
-        get: function () { return this._inputBuffer; }
+        get: function () {
+            return this._inputBuffer;
+        }
     });
 
     /**
@@ -156,7 +158,9 @@ pc.extend(pc, function () {
      * @description The current output buffer
      */
     Object.defineProperty(TransformFeedback.prototype, 'outputBuffer', {
-        get: function () { return this._outputBuffer; }
+        get: function () {
+            return this._outputBuffer;
+        }
     });
 
     return {

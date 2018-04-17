@@ -48,6 +48,6 @@ pc.extend(pc, function () {
     });
 
     return {
-        AudioListenerComponentSystem : AudioListenerComponentSystem
+        AudioListenerComponentSystem: AudioListenerComponentSystem
     };
 }());

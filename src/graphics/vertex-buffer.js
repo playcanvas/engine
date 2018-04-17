@@ -65,7 +65,7 @@ pc.extend(pc, function () {
                 device.vertexBuffers.length = 0;
                 device.vbOffsets.length = 0;
                 device.attributesInvalidated = true;
-                for(var loc in device.enabledAttributes) {
+                for (var loc in device.enabledAttributes) {
                     gl.disableVertexAttribArray(loc);
                 }
                 device.enabledAttributes = {};

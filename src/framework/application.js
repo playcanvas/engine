@@ -173,7 +173,241 @@ pc.extend(pc, function () {
         if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
         this.scriptsOrder = options.scriptsOrder || [ ];
         this.scripts = new pc.ScriptRegistry(this);
+
+        var self = this;
+        this.defaultLayerWorld = new pc.Layer({
+            name: "World",
+            id: pc.LAYERID_WORLD
+        });
+
+        if (this.graphicsDevice.webgl2) {
+            // WebGL 2 depth layer just copies existing depth
+            this.defaultLayerDepth = new pc.Layer({
+                enabled: false,
+                name: "Depth",
+                id: pc.LAYERID_DEPTH,
+
+                onEnable: function() {
+                    if (this.renderTarget) return;
+                    var depthBuffer = new pc.Texture(self.graphicsDevice, {
+                        format: pc.PIXELFORMAT_DEPTHSTENCIL,
+                        width: self.graphicsDevice.width,
+                        height: self.graphicsDevice.height
+                    });
+                    depthBuffer.minFilter = pc.FILTER_NEAREST;
+                    depthBuffer.magFilter = pc.FILTER_NEAREST;
+                    depthBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    depthBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                    this.renderTarget = new pc.RenderTarget({
+                        colorBuffer: null,
+                        depthBuffer: depthBuffer,
+                        autoResolve: false
+                    });
+                    self.graphicsDevice.scope.resolve("uDepthMap").setValue(depthBuffer);
+                },
+
+                onDisable: function() {
+                    if (!this.renderTarget) return;
+                    this.renderTarget._depthBuffer.destroy();
+                    this.renderTarget.destroy();
+                    this.renderTarget = null;
+                },
+
+                onPreRenderOpaque: function(cameraPass) { // resize depth map if needed
+                    var gl = self.graphicsDevice.gl;
+                    this.srcFbo = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+
+                    if (!this.renderTarget) return;
+                    if (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height) {
+                        this.onDisable();
+                        this.onEnable();
+                    }
+
+                    // disable clearing
+                    this.oldClear = this.cameras[cameraPass].camera._clearOptions;
+                    this.cameras[cameraPass].camera._clearOptions = this.depthClearOptions;
+                },
+
+                onPostRenderOpaque: function(cameraPass) { // copy depth
+                    if (! this.renderTarget) return;
+
+                    this.cameras[cameraPass].camera._clearOptions = this.oldClear;
+
+                    var gl = self.graphicsDevice.gl;
+
+                    self.graphicsDevice.setRenderTarget(this.renderTarget);
+                    self.graphicsDevice.updateBegin();
+
+                    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.srcFbo);
+                    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this.renderTarget._glFrameBuffer);
+                    gl.blitFramebuffer( 0, 0, this.renderTarget.width, this.renderTarget.height,
+                                        0, 0, this.renderTarget.width, this.renderTarget.height,
+                                        gl.DEPTH_BUFFER_BIT,
+                                        gl.NEAREST);
+                }
+
+            });
+            this.defaultLayerDepth.depthClearOptions = {
+                flags: 0
+            };
+        } else {
+            // WebGL 1 depth layer just renders same objects as in World, but with RGBA-encoded depth shader
+            this.defaultLayerDepth = new pc.Layer({
+                enabled: false,
+                name: "Depth",
+                id: pc.LAYERID_DEPTH,
+                shaderPass: pc.SHADER_DEPTH,
+
+                onEnable: function() {
+                    if (this.renderTarget) return;
+                    var colorBuffer = new pc.Texture(self.graphicsDevice, {
+                        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                        width: self.graphicsDevice.width,
+                        height: self.graphicsDevice.height
+                    });
+                    colorBuffer.minFilter = pc.FILTER_NEAREST;
+                    colorBuffer.magFilter = pc.FILTER_NEAREST;
+                    colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                    colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                    this.renderTarget = new pc.RenderTarget(self.graphicsDevice, colorBuffer, {
+                        depth: true,
+                        stencil: self.graphicsDevice.supportsStencil
+                    });
+                    self.graphicsDevice.scope.resolve("uDepthMap").setValue(colorBuffer);
+                },
+
+                onDisable: function() {
+                    if (!this.renderTarget) return;
+                    this.renderTarget._colorBuffer.destroy();
+                    this.renderTarget.destroy();
+                    this.renderTarget = null;
+                },
+
+                onPostCull: function(cameraPass) {
+                    // Collect all rendered mesh instances with the same render target as World has, depthWrite == true and prior to this layer to replicate blitFramebuffer on WebGL2
+                    var visibleObjects = this.instances.visibleOpaque[cameraPass];
+                    var visibleList = visibleObjects.list;
+                    var visibleLength = 0;
+                    var layers = self.scene.layers.layerList;
+                    var subLayerEnabled = self.scene.layers.subLayerEnabled;
+                    var isTransparent = self.scene.layers.subLayerList;
+                    var rt = self.defaultLayerWorld.renderTarget;
+                    var cam = this.cameras[cameraPass];
+                    var layer;
+                    var j;
+                    var layerVisibleList, layerCamId, layerVisibleListLength, drawCall, transparent;
+                    for (var i=0; i<layers.length; i++) {
+                        layer = layers[i];
+                        if (layer === this) break;
+                        if (layer.renderTarget !== rt || !layer.enabled || !subLayerEnabled[i]) continue;
+                        layerCamId = layer.cameras.indexOf(cam);
+                        if (layerCamId < 0) continue;
+                        transparent = isTransparent[i];
+                        layerVisibleList = transparent ? layer.instances.visibleTransparent[layerCamId] : layer.instances.visibleOpaque[layerCamId];
+                        layerVisibleListLength = layerVisibleList.length;
+                        layerVisibleList = layerVisibleList.list;
+                        for (j=0; j<layerVisibleListLength; j++) {
+                            drawCall = layerVisibleList[j];
+                            if (drawCall.material && drawCall.material.depthWrite && !drawCall._noDepthDrawGl1) {
+                                visibleList[visibleLength] = drawCall;
+                                visibleLength++;
+                            }
+                        }
+                    }
+                    visibleObjects.length = visibleLength;
+                },
+
+                onPreRenderOpaque: function(cameraPass) { // resize depth map if needed
+                    if (!this.renderTarget) return;
+                    if (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height) {
+                        this.onDisable();
+                        this.onEnable();
+                    }
+                    this.oldClear = this.cameras[cameraPass].camera._clearOptions;
+                    this.cameras[cameraPass].camera._clearOptions = this.rgbaDepthClearOptions;
+                },
+
+                onDrawCall: function() {
+                    self.graphicsDevice.setColorWrite(true, true, true, true);
+                },
+
+                onPostRenderOpaque: function(cameraPass) {
+                    if (!this.renderTarget) return;
+                    this.cameras[cameraPass].camera._clearOptions = this.oldClear;
+                }
+
+            });
+            this.defaultLayerDepth.rgbaDepthClearOptions = {
+                color: [ 254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255 ],
+                depth: 1.0,
+                flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
+            };
+        }
+
+        this.defaultLayerSkybox = new pc.Layer({
+            enabled: false,
+            name: "Skybox",
+            id: pc.LAYERID_SKYBOX,
+            opaqueSortMode: pc.SORTMODE_NONE
+        });
+        this.defaultLayerUi = new pc.Layer({
+            enabled: true,
+            name: "UI",
+            id: pc.LAYERID_UI,
+            transparentSortMode: pc.SORTMODE_MANUAL,
+            passThrough: true
+        });
+        this.defaultLayerImmediate = new pc.Layer({
+            enabled: true,
+            name: "Immediate",
+            id: pc.LAYERID_IMMEDIATE,
+            opaqueSortMode: pc.SORTMODE_NONE,
+            passThrough: true
+        });
+        this.defaultLayerComposition = new pc.LayerComposition();
+
+        this.defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
+        this.defaultLayerComposition.pushOpaque(this.defaultLayerDepth);
+        this.defaultLayerComposition.pushOpaque(this.defaultLayerSkybox);
+        this.defaultLayerComposition.pushTransparent(this.defaultLayerWorld);
+        this.defaultLayerComposition.pushOpaque(this.defaultLayerImmediate);
+        this.defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
+        this.defaultLayerComposition.pushTransparent(this.defaultLayerUi);
+
+        this.scene.layers = this.defaultLayerComposition;
+
+        this._immediateLayer = this.defaultLayerImmediate;
+
+        // Default layers patch
+        this.scene.on('set:layers', function(oldComp, newComp) {
+            var list = newComp.layerList;
+            var layer;
+            for (var i=0; i<list.length; i++) {
+                layer = list[i];
+                switch (layer.id) {
+                    case pc.LAYERID_DEPTH:
+                        layer.onEnable = self.defaultLayerDepth.onEnable;
+                        layer.onDisable = self.defaultLayerDepth.onDisable;
+                        layer.onPreRenderOpaque = self.defaultLayerDepth.onPreRenderOpaque;
+                        layer.onPostRenderOpaque = self.defaultLayerDepth.onPostRenderOpaque;
+                        layer.depthClearOptions = self.defaultLayerDepth.depthClearOptions;
+                        layer.rgbaDepthClearOptions = self.defaultLayerDepth.rgbaDepthClearOptions;
+                        layer.shaderPass = self.defaultLayerDepth.shaderPass;
+                        layer.onPostCull = self.defaultLayerDepth.onPostCull;
+                        layer.onDrawCall = self.defaultLayerDepth.onDrawCall;
+                        break;
+                    case pc.LAYERID_UI:
+                        layer.passThrough = self.defaultLayerUi.passThrough;
+                        break;
+                    case pc.LAYERID_IMMEDIATE:
+                        layer.passThrough = self.defaultLayerImmediate.passThrough;
+                        break;
+                }
+            }
+        });
+
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
+        this.renderer.scene = this.scene;
         this.lightmapper = new pc.Lightmapper(this.graphicsDevice, this.root, this.scene, this.renderer, this.assets);
         this.once('prerender', this._firstBake, this);
         this.batcher = new pc.BatchManager(this.graphicsDevice, this.root, this.scene);
@@ -584,6 +818,9 @@ pc.extend(pc, function () {
 
         // set application properties from data file
         _parseApplicationProperties: function (props, callback) {
+            var i;
+            var len;
+
             // TODO: remove this temporary block after migrating properties
             if (! props.useDevicePixelRatio)
                 props.useDevicePixelRatio = props.use_device_pixel_ratio;
@@ -611,11 +848,40 @@ pc.extend(pc, function () {
                 }
             }
 
+            // set up layers
+            if (props.layers && props.layerOrder) {
+                var composition = new pc.LayerComposition();
+
+                var layers = {};
+                for (var key in props.layers) {
+                    var data = props.layers[key];
+                    data.id = parseInt(key, 10);
+                    data.enabled = true;
+                    layers[key] = new pc.Layer(data);
+                }
+
+                for (i = 0, len = props.layerOrder.length; i<len; i++) {
+                    var sublayer = props.layerOrder[i];
+                    var layer = layers[sublayer.layer];
+                    if (! layer) continue;
+
+                    if (sublayer.transparent) {
+                        composition.pushTransparent(layer);
+                    } else {
+                        composition.pushOpaque(layer);
+                    }
+
+                    composition.subLayerEnabled[i] = sublayer.enabled;
+                }
+
+                this.scene.layers = composition;
+            }
+
             // add batch groups
             if (props.batchGroups) {
-                for (var i = 0, len = props.batchGroups.length; i < len; i++) {
+                for (i = 0, len = props.batchGroups.length; i < len; i++) {
                     var grp = props.batchGroups[i];
-                    this.batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id);
+                    this.batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id, grp.layers);
                 }
 
             }
@@ -721,7 +987,7 @@ pc.extend(pc, function () {
                 }
 
                 var scripts = entities[key].components.script.scripts;
-                for(i = 0; i < scripts.length; i++) {
+                for (i = 0; i < scripts.length; i++) {
                     if (_index[scripts[i].url])
                         continue;
                     _scripts.push(scripts[i].url);
@@ -810,22 +1076,11 @@ pc.extend(pc, function () {
             // #endif
 
             this.fire("prerender");
-
-            var cameras = this.systems.camera.cameras;
-            var camera = null;
-            var renderer = this.renderer;
-
             this.root.syncHierarchy();
-
             this.batcher.updateAll();
-
-            // render the scene from each camera
-            for (var i=0,len=cameras.length; i<len; i++) {
-                camera = cameras[i];
-                camera.frameBegin();
-                renderer.render(this.scene, camera.camera);
-                camera.frameEnd();
-            }
+            pc._skipRenderCounter = 0;
+            this.renderer.renderComposition(this.scene.layers);
+            this.fire("postrender");
 
             // #ifdef PROFILER
             this.stats.frame.renderTime = pc.now() - this.stats.frame.renderStart;
@@ -863,7 +1118,7 @@ pc.extend(pc, function () {
             stats.morphTime = this.renderer._morphTime;
             stats.instancingTime = this.renderer._instancingTime;
             stats.otherPrimitives = 0;
-            for(var i=0; i<prims.length; i++) {
+            for (var i=0; i<prims.length; i++) {
                 if (i<pc.PRIMITIVE_TRIANGLES) {
                     stats.otherPrimitives += prims[i];
                 }
@@ -885,14 +1140,14 @@ pc.extend(pc, function () {
             // Draw call stats
             stats = this.stats.drawCalls;
             stats.forward = this.renderer._forwardDrawCalls;
-            stats.depth = this.renderer._depthDrawCalls;
+            stats.depth = 0;
             stats.shadow = this.renderer._shadowDrawCalls;
             stats.skinned = this.renderer._skinDrawCalls;
-            stats.immediate = this.renderer._immediateRendered;
-            stats.instanced = this.renderer._instancedDrawCalls;
-            stats.removedByInstancing = this.renderer._removedByInstancing;
+            stats.immediate = 0;
+            stats.instanced = 0;
+            stats.removedByInstancing = 0;
             stats.total = this.graphicsDevice._drawCallsPerFrame;
-            stats.misc = stats.total - (stats.forward + stats.depth + stats.shadow);
+            stats.misc = stats.total - (stats.forward + stats.shadow);
             this.renderer._depthDrawCalls = 0;
             this.renderer._shadowDrawCalls = 0;
             this.renderer._forwardDrawCalls = 0;
@@ -1085,7 +1340,7 @@ pc.extend(pc, function () {
 
                     if (r > winR) {
                         width = windowWidth;
-                        height = width / r ;
+                        height = width / r;
                     } else {
                         height = windowHeight;
                         width = height * r;
@@ -1250,6 +1505,10 @@ pc.extend(pc, function () {
         destroy: function () {
             Application._applications[this.graphicsDevice.canvas.id] = null;
 
+            if (Application._currentApplication === this) {
+                Application._currentApplication = null;
+            }
+
             this.off('librariesloaded');
             document.removeEventListener('visibilitychange', this._visibilityChangeHandler);
             document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler);
@@ -1264,6 +1523,7 @@ pc.extend(pc, function () {
                 this.mouse.off('mousedown');
                 this.mouse.off('mousewheel');
                 this.mouse.off('mousemove');
+                this.mouse.detach();
 
                 this.mouse = null;
             }
@@ -1272,6 +1532,7 @@ pc.extend(pc, function () {
                 this.keyboard.off("keydown");
                 this.keyboard.off("keyup");
                 this.keyboard.off("keypress");
+                this.keyboard.detach();
 
                 this.keyboard = null;
             }
@@ -1281,8 +1542,15 @@ pc.extend(pc, function () {
                 this.touch.off('touchend');
                 this.touch.off('touchmove');
                 this.touch.off('touchcancel');
+                this.touch.detach();
 
                 this.touch = null;
+            }
+
+            if (this.elementInput) {
+                this.elementInput.detach();
+
+                this.elementInput = null;
             }
 
             if (this.controller) {
@@ -1311,6 +1579,7 @@ pc.extend(pc, function () {
             this.graphicsDevice = null;
 
             this.renderer = null;
+            this.tick = null;
 
             if (this._audioManager) {
                 this._audioManager.destroy();

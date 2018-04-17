@@ -14,9 +14,11 @@ pc.extend(pc, function () {
         this._projection = pc.PROJECTION_PERSPECTIVE;
         this._nearClip = 0.1;
         this._farClip = 10000;
+        this._shaderParams = new pc.Vec4();
         this._fov = 45;
         this._orthoHeight = 10;
         this._aspect = 16 / 9;
+        this._aspectRatioMode = pc.ASPECT_AUTO;
         this._horizontalFov = false;
         this.frustumCulling = false;
         this.cullingMask = 0xFFFFFFFF;
@@ -65,6 +67,8 @@ pc.extend(pc, function () {
         this.overrideCalculateProjection = false;
         this._cullFaces = true;
         this._flipFaces = false;
+
+        this._component = null;
     };
 
     Camera.prototype = {
@@ -80,8 +84,10 @@ pc.extend(pc, function () {
             clone.projection = this._projection;
             clone.nearClip = this._nearClip;
             clone.farClip = this._farClip;
+            clone._shaderParams = this._shaderParams.clone();
             clone.fov = this._fov;
             clone.aspectRatio = this._aspect;
+            clone._aspectRatioMode = this._aspectRatioMode;
             clone.renderTarget = this.renderTarget;
             clone.setClearOptions(this.getClearOptions());
             clone.frustumCulling = this.frustumCulling;
@@ -209,6 +215,13 @@ pc.extend(pc, function () {
                     this._projMat.setOrtho(-x, x, -y, y, this._nearClip, this._farClip);
                 }
 
+                var n = this._nearClip;
+                var f = this._farClip;
+                this._shaderParams.x = 1 / f;
+                this._shaderParams.y = f;
+                this._shaderParams.z = (1 - f / n) / 2;
+                this._shaderParams.w = (1 + f / n) / 2;
+
                 this._projMatDirty = false;
             }
             return this._projMat;
@@ -268,7 +281,9 @@ pc.extend(pc, function () {
      * @description Camera's aspect ratio.
      */
     Object.defineProperty(Camera.prototype, 'aspectRatio', {
-        get: function() { return this._aspect; },
+        get: function() {
+            return this._aspect;
+        },
         set: function(v) {
             if (this._aspect !== v) {
                 this._aspect = v;
@@ -288,7 +303,9 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Camera.prototype, 'projection', {
-        get: function() { return this._projection; },
+        get: function() {
+            return this._projection;
+        },
         set: function(v) {
             if (this._projection !== v) {
                 this._projection = v;
@@ -304,7 +321,9 @@ pc.extend(pc, function () {
      * @description Camera's distance to near clipping plane
      */
     Object.defineProperty(Camera.prototype, 'nearClip', {
-        get: function() { return this._nearClip; },
+        get: function() {
+            return this._nearClip;
+        },
         set: function(v) {
             if (this._nearClip !== v) {
                 this._nearClip = v;
@@ -320,7 +339,9 @@ pc.extend(pc, function () {
      * @description Camera's distance to far clipping plane
      */
     Object.defineProperty(Camera.prototype, 'farClip', {
-        get: function() { return this._farClip; },
+        get: function() {
+            return this._farClip;
+        },
         set: function(v) {
             if (this._farClip !== v) {
                 this._farClip = v;
@@ -338,7 +359,9 @@ pc.extend(pc, function () {
      * hirozontalFov property defines the fov axis - vertical or horizontal.
      */
     Object.defineProperty(Camera.prototype, 'fov', {
-        get: function() { return this._fov; },
+        get: function() {
+            return this._fov;
+        },
         set: function(v) {
             if (this._fov !== v) {
                 this._fov = v;
@@ -354,7 +377,9 @@ pc.extend(pc, function () {
      * @description Camera's horizontal or vertical field of view.
      */
     Object.defineProperty(Camera.prototype, 'horizontalFov', {
-        get: function() { return this._horizontalFov; },
+        get: function() {
+            return this._horizontalFov;
+        },
         set: function(v) {
             if (this._horizontalFov !== v) {
                 this._horizontalFov = v;
@@ -370,7 +395,9 @@ pc.extend(pc, function () {
      * @description Camera's half height of the orthographics view.
      */
     Object.defineProperty(Camera.prototype, 'orthoHeight', {
-        get: function() { return this._orthoHeight; },
+        get: function() {
+            return this._orthoHeight;
+        },
         set: function(v) {
             if (this._orthoHeight !== v) {
                 this._orthoHeight = v;
@@ -386,7 +413,9 @@ pc.extend(pc, function () {
      * @description Camera's clear color.
      */
     Object.defineProperty(Camera.prototype, 'clearColor', {
-        get: function() { return this._clearOptions.color; },
+        get: function() {
+            return this._clearOptions.color;
+        },
         set: function(v) {
             this._clearOptions.color[0] = v[0];
             this._clearOptions.color[1] = v[1];
@@ -402,7 +431,9 @@ pc.extend(pc, function () {
      * @description Camera's clear depth value.
      */
     Object.defineProperty(Camera.prototype, 'clearDepth', {
-        get: function() { return this._clearOptions.depth; },
+        get: function() {
+            return this._clearOptions.depth;
+        },
         set: function(v) {
             this._clearOptions.depth = v;
         }
@@ -415,7 +446,9 @@ pc.extend(pc, function () {
      * @description Camera's clear stencil value.
      */
     Object.defineProperty(Camera.prototype, 'clearStencil', {
-        get: function() { return this._clearOptions.stencil; },
+        get: function() {
+            return this._clearOptions.stencil;
+        },
         set: function(v) {
             this._clearOptions.stencil = v;
         }
@@ -428,7 +461,9 @@ pc.extend(pc, function () {
      * @description Camera's clear flags bits value.
      */
     Object.defineProperty(Camera.prototype, 'clearFlags', {
-        get: function() { return this._clearOptions.flags; },
+        get: function() {
+            return this._clearOptions.flags;
+        },
         set: function(v) {
             this._clearOptions.flags = v;
         }

@@ -81,10 +81,13 @@ pc.extend(pc, function () {
      * @property {Number} spriteAsset The id of the sprite asset to render. Only works for {@link pc.ELEMENTTYPE_IMAGE} types which can render either a texture or a sprite.
      * @property {pc.Sprite} sprite The sprite to render. Only works for {@link pc.ELEMENTTYPE_IMAGE} types which can render either a texture or a sprite.
      * @property {Number} spriteFrame The frame of the sprite to render. Only works for {@link pc.ELEMENTTYPE_IMAGE} types who have a sprite assigned.
+     * @property {Number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit. Only works for {@link pc.ELEMENTTYPE_IMAGE} types who have a sliced sprite assigned.
      * @property {Number} materialAsset The id of the material asset to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {pc.Material} material The material to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {pc.Vec4} rect Specifies which region of the texture to use in order to render an image. Values range from 0 to 1 and indicate u, v, width, height. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {Number} batchGroupId Assign element to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
+     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
+     * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var ElementComponent = function ElementComponent (system, entity) {
         this._anchor = new pc.Vec4();
@@ -133,10 +136,6 @@ pc.extend(pc, function () {
 
         this.screen = null;
 
-        // if present a parent element that masks this element
-        this._maskEntity = null;
-        this._maskDepth = 0;
-
         this._type = pc.ELEMENTTYPE_GROUP;
 
         // element types
@@ -146,6 +145,9 @@ pc.extend(pc, function () {
 
         // input related
         this._useInput = false;
+
+        this._layers = [pc.LAYERID_UI]; // assign to the default UI layer
+        this._addedModel = null;
 
         this._batchGroupId = -1;
         // #ifdef DEBUG
@@ -389,6 +391,7 @@ pc.extend(pc, function () {
                 this.screen.screen.off('set:referenceresolution', this._onScreenResize, this);
                 this.screen.screen.off('set:scaleblend', this._onScreenResize, this);
                 this.screen.screen.off('set:screenspace', this._onScreenSpaceChange, this);
+                this.screen.screen.off('remove', this._onScreenRemove, this);
             }
 
             this.screen = screen;
@@ -397,6 +400,7 @@ pc.extend(pc, function () {
                 this.screen.screen.on('set:referenceresolution', this._onScreenResize, this);
                 this.screen.screen.on('set:scaleblend', this._onScreenResize, this);
                 this.screen.screen.on('set:screenspace', this._onScreenSpaceChange, this);
+                this.screen.screen.on('remove', this._onScreenRemove, this);
             }
 
             this._calculateSize();
@@ -459,7 +463,7 @@ pc.extend(pc, function () {
             var depth = 1;
             var parent = this.entity;
 
-            while(parent) {
+            while (parent) {
                 parent = parent.getParent();
                 if (parent && parent.element && parent.element.mask) {
                     depth++;
@@ -477,10 +481,6 @@ pc.extend(pc, function () {
             if (!ref) ref = 1;
 
             if (mask) {
-                var material;
-
-                this._maskEntity = mask;
-
                 this._setMaskedBy(mask);
 
                 if (this.mask) {
@@ -524,8 +524,6 @@ pc.extend(pc, function () {
                     mask = this.entity;
                 }
 
-                this._maskEntity = null;
-
                 // recurse through all children
                 children = this.entity.getChildren();
                 for (i = 0, l = children.length; i < l; i++) {
@@ -549,7 +547,7 @@ pc.extend(pc, function () {
 
             var parent = this.entity._parent;
 
-            while(parent && !parent.screen) {
+            while (parent && !parent.screen) {
                 if (parent.element && parent.element.mask) {
                     // mask entity
                     if (!result.mask) result.mask = parent;
@@ -574,6 +572,10 @@ pc.extend(pc, function () {
 
         _onScreenSpaceChange: function () {
             this.fire('screen:set:screenspace', this.screen.screen.screenSpace);
+        },
+
+        _onScreenRemove: function () {
+            this._updateScreen(null);
         },
 
         // store pixel positions of anchor relative to current parent resolution
@@ -611,6 +613,34 @@ pc.extend(pc, function () {
             return p;
         },
 
+        onLayersChanged: function(oldComp, newComp) {
+            this.addModelToLayers(this._image ? this._image._model : this._text._model);
+            oldComp.off("add", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerRemoved, this);
+            newComp.on("add", this.onLayerAdded, this);
+            newComp.on("remove", this.onLayerRemoved, this);
+        },
+
+        onLayerAdded: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            if (this._image) {
+                layer.addMeshInstances(this._image._model.meshInstances);
+            } else if (this._text) {
+                layer.addMeshInstances(this._text._model.meshInstances);
+            }
+        },
+
+        onLayerRemoved: function(layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            if (this._image) {
+                layer.removeMeshInstances(this._image._model.meshInstances);
+            } else if (this._text) {
+                layer.removeMeshInstances(this._text._model.meshInstances);
+            }
+        },
+
         onEnable: function () {
             ElementComponent._super.onEnable.call(this);
             if (this._image) this._image.onEnable();
@@ -628,10 +658,23 @@ pc.extend(pc, function () {
                     if (topMasks.indexOf(this) < 0) topMasks.push(this);
                 }
             }
+
+            this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.on("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+            }
         },
 
         onDisable: function () {
             ElementComponent._super.onDisable.call(this);
+
+            this.system.app.scene.off("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.off("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            }
+
             if (this._image) this._image.onDisable();
             if (this._text) this._text.onDisable();
             if (this._group) this._group.onDisable();
@@ -720,6 +763,26 @@ pc.extend(pc, function () {
 
             this.fire('set:height', this._height);
             this.fire('resize', this._width, this._height);
+        },
+
+        addModelToLayers: function(model) {
+            var layer;
+            this._addedModel = model;
+            for (var i=0; i<this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.addMeshInstances(model.meshInstances);
+            }
+        },
+
+        removeModelFromLayers: function(model) {
+            var layer;
+            this._addedModel = null;
+            for (var i=0; i<this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances(model.meshInstances);
+            }
         }
     });
 
@@ -745,6 +808,35 @@ pc.extend(pc, function () {
                     this._image = new pc.ImageElement(this);
                 } else if (value === pc.ELEMENTTYPE_TEXT) {
                     this._text = new pc.TextElement(this);
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(ElementComponent.prototype, "layers", {
+        get: function () {
+            return this._layers;
+        },
+
+        set: function (value) {
+            var i, layer;
+
+            if (this._addedModel) {
+                for (i=0; i<this._layers.length; i++) {
+                    layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
+                    if (layer) {
+                        layer.removeMeshInstances(this._addedModel.meshInstances);
+                    }
+                }
+            }
+
+            this._layers = value;
+
+            if (!this.enabled || !this.entity.enabled || ! this._addedModel) return;
+            for (i=0; i<this._layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
+                if (layer) {
+                    layer.addMeshInstances(this._addedModel.meshInstances);
                 }
             }
         }
@@ -1152,19 +1244,19 @@ pc.extend(pc, function () {
             if (this._batchGroupId === value)
                 return;
 
-           if (this._batchGroupId >= 0) this.system.app.batcher._markGroupDirty(this._batchGroupId);
-           if (value >= 0) this.system.app.batcher._markGroupDirty(value);
+            if (this._batchGroupId >= 0) this.system.app.batcher._markGroupDirty(this._batchGroupId);
+            if (value >= 0) this.system.app.batcher._markGroupDirty(value);
 
-           if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
+            if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching
                 if (this._image._model) {
-                    this.system.app.scene.addModel(this._image._model);
+                    this.addModelToLayers(this._image._model);
                 } else if (this._text._model) {
-                    this.system.app.scene.addModel(this._text._model);
+                    this.addModelToLayers(this._text._model);
                 }
-           }
+            }
 
-           this._batchGroupId = value;
+            this._batchGroupId = value;
         }
     });
 
@@ -1209,6 +1301,7 @@ pc.extend(pc, function () {
     _define("sprite");
     _define("spriteAsset");
     _define("spriteFrame");
+    _define("pixelsPerUnit");
     _define("opacity");
     _define("rect");
     _define("mask");

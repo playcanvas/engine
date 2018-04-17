@@ -10,7 +10,7 @@ pc.extend(pc, function () {
      * @param {String[]} boneNames The array of bone names for the bones referenced by this skin.
      */
 
-     var _invMatrix = new pc.Mat4();
+    var _invMatrix = new pc.Mat4();
 
     var Skin = function (graphicsDevice, ibp, boneNames) {
         // Constant between clones
@@ -71,7 +71,7 @@ pc.extend(pc, function () {
             this.matrixPalette = new Float32Array(numBones * 16);
         }
         this.matrices = [];
-        for(var i=0; i<numBones; i++) {
+        for (var i=0; i<numBones; i++) {
             this.matrices[i] = new pc.Mat4();
         }
     };

@@ -4,7 +4,7 @@ pc.extend(pc, function () {
     var spotEndPoint = new pc.Vec3();
     var tmpVec = new pc.Vec3();
 
-    var chanId = { r:0, g:1, b:2, a:3 };
+    var chanId = { r: 0, g: 1, b: 2, a: 3 };
 
     /**
      * @private
@@ -72,6 +72,10 @@ pc.extend(pc, function () {
         this._isPcf = true;
         this._cacheShadowMap = false;
         this._isCachedShadowMap = false;
+
+        this._visibleLength = [0]; // lengths of passes in culledList
+        this._visibleList = [[]]; // culled mesh instances per pass (1 for spot, 6 for point, cameraCount for directional)
+        this._visibleCameraSettings = []; // camera settings used in each directional light pass
     };
 
     Light.prototype = {
@@ -191,7 +195,7 @@ pc.extend(pc, function () {
             // Update final color
             var i = this._intensity;
             this._finalColor.set(r * i, g * i, b * i);
-            for(var c=0; c<3; c++) {
+            for (var c=0; c<3; c++) {
                 if (i >= 1) {
                     this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c] / i, 2.2) * i;
                 } else {
@@ -207,7 +211,7 @@ pc.extend(pc, function () {
                     var i;
                     if (rt) {
                         if (rt.length) {
-                            for(i=0; i<rt.length; i++) {
+                            for (i=0; i<rt.length; i++) {
                                 if (rt[i].colorBuffer) rt[i].colorBuffer.destroy();
                                 rt[i].destroy();
                             }
@@ -297,6 +301,8 @@ pc.extend(pc, function () {
             var stype = this._shadowType;
             this._shadowType = null;
             this.shadowType = stype; // refresh shadow type; switching from direct/spot to point and back may change it
+
+            if (this._scene !== null) this._scene.layers._dirtyLights = true;
         }
     });
 
@@ -469,7 +475,7 @@ pc.extend(pc, function () {
             var b = c[2];
             var i = this._intensity;
             this._finalColor.set(r * i, g * i, b * i);
-            for(var j = 0; j < 3; j++) {
+            for (var j = 0; j < 3; j++) {
                 if (i >= 1) {
                     this._linearFinalColor.data[j] = Math.pow(this._finalColor.data[j] / i, 2.2) * i;
                 } else {

@@ -41,8 +41,8 @@ pc.math = {
      * @returns {Number} The clamped value
      */
     clamp: function(value, min, max) {
-        if(value >= max) return max;
-        if(value <= min) return min;
+        if (value >= max) return max;
+        if (value <= min) return min;
         return value;
     },
 
@@ -138,7 +138,7 @@ pc.math = {
         // << operator uses signed 32 bit numbers, so 128<<24 is negative.
         // >>> used unsigned so >>>32 converts back to an unsigned.
         // See http://stackoverflow.com/questions/1908492/unsigned-integer-in-javascript
-        return ((r << 24) | (g << 16) | (b << 8) | a)>>>32;
+        return ((r << 24) | (g << 16) | (b << 8) | a) >>> 32;
     },
 
     /**

@@ -49,12 +49,9 @@ pc.extend(pc, function () {
     Component.prototype = {
         /**
          * @private
-         * @readonly
-         * @name pc.Component#data
-         * @type pc.ComponentData
-         * @description Access the {@link pc.ComponentData} directly. Usually you should
-         * access the data properties via the individual properties as modifying this data
-         * directly will not fire 'set' events.
+         * @property {pc.ComponentData} data Access the {@link pc.ComponentData} directly.
+         * Usually you should access the data properties via the individual properties as
+         * modifying this data directly will not fire 'set' events.
          */
         get data() {
             var record = this.system.store[this.entity._guid];

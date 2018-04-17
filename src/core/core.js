@@ -41,10 +41,10 @@ var pc = {
      */
     makeArray: function (arr) {
         var i,
-        ret = [],
-        length = arr.length;
+            ret = [],
+            length = arr.length;
 
-        for(i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             ret.push(arr[i]);
         }
 
@@ -93,13 +93,13 @@ var pc = {
      */
     extend: function(target, ex) {
         var prop,
-        copy;
+            copy;
 
-        for(prop in ex) {
+        for (prop in ex) {
             copy = ex[prop];
-            if(pc.type(copy) == "object") {
+            if (pc.type(copy) == "object") {
                 target[prop] = pc.extend({}, copy);
-            } else if(pc.type(copy) == "array") {
+            } else if (pc.type(copy) == "array") {
                 target[prop] = pc.extend([], copy);
             } else {
                 target[prop] = copy;
@@ -134,7 +134,7 @@ var _typeLookup = function () {
     var result = { };
     var names = [ "Array", "Object", "Function", "Date", "RegExp", "Float32Array" ];
 
-    for(var i = 0; i < names.length; i++)
+    for (var i = 0; i < names.length; i++)
         result["[object " + names[i] + "]"] = names[i].toLowerCase();
 
     return result;

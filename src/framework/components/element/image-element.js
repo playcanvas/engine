@@ -13,6 +13,7 @@ pc.extend(pc, function () {
         this._spriteAsset = null;
         this._sprite = null;
         this._spriteFrame = 0;
+        this._pixelsPerUnit = null;
 
         this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
 
@@ -62,7 +63,11 @@ pc.extend(pc, function () {
     pc.extend(ImageElement.prototype, {
         destroy: function () {
             if (this._model) {
-                this._system.app.scene.removeModel(this._model);
+                this._element.removeModelFromLayers(this._model);
+                // reset mesh to the default because that's the mesh we want destroyed
+                // and not possible a mesh from the sprite asset that might be
+                // used elsewhere
+                this._meshInstance.mesh = this._defaultMesh;
                 this._model.destroy();
                 this._model = null;
             }
@@ -148,6 +153,8 @@ pc.extend(pc, function () {
                     }
 
                 }
+                if (this._meshInstance) this._meshInstance.cull = false;
+
             } else {
                 if (!this._hasUserMaterial()) {
                     if (this._mask) {
@@ -176,6 +183,8 @@ pc.extend(pc, function () {
                         }
                     }
                 }
+
+                if (this._meshInstance) this._meshInstance.cull = true;
             }
             if (this._meshInstance) {
                 this._meshInstance.material = this._material;
@@ -268,8 +277,9 @@ pc.extend(pc, function () {
                                     frameData.rect.w / tex.height)
 
                 // scale: apply PPU
-                var scaleMulX = frameData.rect.z / this.sprite.pixelsPerUnit;
-                var scaleMulY = frameData.rect.w / this.sprite.pixelsPerUnit;
+                var ppu = this._pixelsPerUnit !== null ? this._pixelsPerUnit : this.sprite.pixelsPerUnit;
+                var scaleMulX = frameData.rect.z / ppu;
+                var scaleMulY = frameData.rect.w / ppu;
 
                 // scale borders if necessary instead of overlapping
                 this._outerScale.set(Math.max(w, this._innerOffset.x * scaleMulX), Math.max(h, this._innerOffset.y * scaleMulY));
@@ -291,11 +301,10 @@ pc.extend(pc, function () {
                     // set atlas rect
                     this._meshInstance.setParameter("atlasRect", this._atlasRect.data);
                     // set outer scale
-                    this._meshInstance.setParameter("outerScale", this._outerScale.data);
+                    // use outerScale in ALL passes (depth, picker, etc) so the shape is correct
+                    this._meshInstance.setParameter("outerScale", this._outerScale.data, 0xFFFFFFFF);
                     // set aabb update function
                     this._meshInstance._updateAabbFunc = this._updateAabbFunc;
-                    // hint for picking
-                    this._meshInstance.nineSlice = true;
                 }
 
                 // set scale and pivot
@@ -368,7 +377,6 @@ pc.extend(pc, function () {
                 }
 
                 if (this._meshInstance) {
-                    this._meshInstance.nineSlice = false;
                     this._meshInstance._updateAabbFunc = null;
                 }
 
@@ -386,7 +394,7 @@ pc.extend(pc, function () {
         _getHigherMask: function () {
             var parent = this._entity;
 
-            while(parent) {
+            while (parent) {
                 parent = parent.getParent();
                 if (parent && parent.element && parent.element.mask) {
                     return parent;
@@ -512,7 +520,7 @@ pc.extend(pc, function () {
             // on force update when the sprite is 9-sliced. If it's not
             // then its mesh will change when the ppu changes which will
             // be handled by onSpriteMeshesChange
-            if (this.sprite.renderMode !== pc.SPRITE_RENDERMODE_SIMPLE) {
+            if (this.sprite.renderMode !== pc.SPRITE_RENDERMODE_SIMPLE && this._pixelsPerUnit === null) {
                 // force update
                 this.spriteFrame = this.spriteFrame;
             }
@@ -547,14 +555,14 @@ pc.extend(pc, function () {
         },
 
         onEnable: function () {
-            if (this._model && !this._system.app.scene.containsModel(this._model)) {
-                this._system.app.scene.addModel(this._model);
+            if (this._model) {
+                this._element.addModelToLayers(this._model);
             }
         },
 
         onDisable: function () {
-            if (this._model && this._system.app.scene.containsModel(this._model)) {
-                this._system.app.scene.removeModel(this._model);
+            if (this._model) {
+                this._element.removeModelFromLayers(this._model);
             }
         }
     });
@@ -617,15 +625,14 @@ pc.extend(pc, function () {
                 this._meshInstance.material = value;
 
                 // if this is not the default material then clear color and opacity overrides
-                if (value !== this._system.defaultScreenSpaceImageMaterial
-                    && value !== this._system.defaultImageMaterial
-                    && value !== this._system.defaultImageMaskMaterial
-                    && value !== this._system.defaultScreenSpaceImageMaskMaterial) {
+                if (value !== this._system.defaultScreenSpaceImageMaterial &&
+                    value !== this._system.defaultImageMaterial &&
+                    value !== this._system.defaultImageMaskMaterial &&
+                    value !== this._system.defaultScreenSpaceImageMaskMaterial) {
                     this._meshInstance.deleteParameter('material_opacity');
                     this._meshInstance.deleteParameter('material_emissive');
-                }
-                // otherwise if we are back to the defaults reset the color and opacity
-                else {
+                } else {
+                    // otherwise if we are back to the defaults reset the color and opacity
                     this._meshInstance.setParameter('material_emissive', this._color.data3);
                     this._meshInstance.setParameter('material_opacity', this._color.data[3]);
                 }
@@ -869,6 +876,22 @@ pc.extend(pc, function () {
                 this._mask = value;
                 this._toggleMask();
             }
+        }
+    });
+
+    Object.defineProperty(ImageElement.prototype, "pixelsPerUnit", {
+        get: function () {
+            return this._pixelsPerUnit;
+        },
+        set: function (value) {
+            if (this._pixelsPerUnit === value) return;
+
+            this._pixelsPerUnit = value;
+            if (this._sprite && (this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
+                // force update
+                this.spriteFrame = this.spriteFrame;
+            }
+
         }
     });
 
