@@ -90,6 +90,8 @@ pc.extend(pc, function () {
             applySizesAndPositions(lines, sizes, positions);
         }
 
+        // Returns a 2D array of elements broken down into lines, based on the size of
+        // each element and whether the `wrap` property is set.
         function splitLines(allElements) {
             if (!options.wrap) {
                 // If wrapping is disabled, we just put all elements into a single line.
@@ -97,17 +99,17 @@ pc.extend(pc, function () {
             }
 
             var lines = [[]];
-            var sizes = getPropertiesMultiple(allElements, sizeA);
+            var idealSizes = getProperties(allElements, sizeA);
             var runningSize = 0;
             var allowOverrun = (options[fittingA] === pc.FITTING_SHRINK);
 
             for (var i = 0; i < allElements.length; ++i) {
-                runningSize += sizes[i][sizeA];
+                runningSize += idealSizes[i];
 
                 // For the None, Stretch and Both fitting modes, we should break to a new
                 // line before we overrun the available space in the container.
                 if (!allowOverrun && runningSize >= availableSpace[axisA] && lines[lines.length - 1].length !== 0) {
-                    runningSize = sizes[i][sizeA];
+                    runningSize = idealSizes[i];
                     lines.push([]);
                 }
 
@@ -146,12 +148,12 @@ pc.extend(pc, function () {
             return lines;
         }
 
-        // Calculate the required size for each element, based on the requested fitting mode
+        // Calculate the required size for each element, based on the requested fitting mode.
         function calculateSizes(lines) {
             var sizesAllLines = [];
 
             lines.forEach(function(line) {
-                var sizesThisLine = getPropertiesMultiple(line, sizeA, sizeB);
+                var sizesThisLine = getElementSizeProperties(line);
                 var idealRequiredSpace = calculateTotalSpace(sizesThisLine, sizeA, axisA);
                 var applyStretching;
                 var applyShrinking;
@@ -182,9 +184,9 @@ pc.extend(pc, function () {
                 }
 
                 if (applyStretching) {
-                    stretchSizesToFitContainer(line, sizesThisLine, idealRequiredSpace);
+                    stretchSizesToFitContainer(sizesThisLine, idealRequiredSpace);
                 } else if (applyShrinking) {
-                    shrinkSizesToFitContainer(line, sizesThisLine, idealRequiredSpace);
+                    shrinkSizesToFitContainer(sizesThisLine, idealRequiredSpace);
                 }
 
                 sizesAllLines.push(sizesThisLine);
@@ -200,56 +202,93 @@ pc.extend(pc, function () {
             return totalSizes + totalSpacing;
         }
 
-        function stretchSizesToFitContainer(line, sizesThisLine, idealRequiredSpace) {
-            // TODO Refactor all size retrieval into a single function call and single object per
-            //      element, along with originalIndex, and use to simplify getOrderedIndices() fn.
-            var maxSizes = getProperties(line, maxSizeA);
-            var maxSizeOrder = getOrderedIndices(maxSizes);
+        function stretchSizesToFitContainer(sizesThisLine, idealRequiredSpace) {
+            var ascendingMaxSizeOrder = getTraversalOrder(sizesThisLine, maxSizeA);
+            var fittingProportions = getNormalizedValues(sizesThisLine, fittingProportionA);
+            var fittingProportionSums = createSumArray(fittingProportions, ascendingMaxSizeOrder);
 
-            var fittingProportions = normalizeValues(getProperties(line, fittingProportionA));
-            var fittingProportionSums = createSumArray(fittingProportions, maxSizeOrder);
-
+            // Start by working out how much we have to stretch the child elements by
+            // in total in order to fill the available space in the container
             var remainingUndershoot = availableSpace[axisA] - idealRequiredSpace;
 
             for (var i = 0; i < sizesThisLine.length; ++i) {
-                var index = maxSizeOrder[i];
-                var fittingProportion = fittingProportions[index];
+                // As some elements may have a maximum size defined, we might not be
+                // able to scale all elements by the ideal amount necessary in order
+                // to fill the available space. To account for this, we run through
+                // the elements in ascending order of their maximum size, redistributing
+                // any remaining space to the other elements that are more able to
+                // make use of it.
+                var index = ascendingMaxSizeOrder[i];
 
-                var increase = fittingProportion === 0 ? 0 : (remainingUndershoot * fittingProportion / fittingProportionSums[index]);
-                var targetSize = sizesThisLine[index][sizeA] + increase;
-                var actualSize = Math.min(targetSize, maxSizes[index]);
-                var appliedIncrease = actualSize < targetSize ? (increase - (targetSize - actualSize)) : increase;
+                // Work out how much we ideally want to stretch this element by, based
+                // on the amount of space remaining and the fitting proportion value that
+                // was specified.
+                var targetIncrease = calculateAdjustment(index, remainingUndershoot, fittingProportions, fittingProportionSums);
+                var targetSize = sizesThisLine[index][sizeA] + targetIncrease;
+
+                // Work out how much we're actually able to stretch this element by,
+                // based on its maximum size, and apply the result.
+                var maxSize = sizesThisLine[index][maxSizeA];
+                var actualSize = Math.min(targetSize, maxSize);
 
                 sizesThisLine[index][sizeA] = actualSize;
+
+                // Work out how much of the total undershoot value we've just used,
+                // and decrement the remaining value by this much.
+                var actualIncrease = Math.max(targetSize - actualSize, 0);
+                var appliedIncrease = targetIncrease - actualIncrease;
+
                 remainingUndershoot -= appliedIncrease;
             }
         }
 
-        function shrinkSizesToFitContainer(line, sizesThisLine, idealRequiredSpace) {
-            var minSizes = getProperties(line, minSizeA);
-            var minSizeOrder = getOrderedIndices(minSizes, true);
+        // This loop is very similar to the one in stretchSizesToFitContainer() above,
+        // but with some awkward inversions and use of min as opposed to max etc that
+        // mean a more generalized version would probably be harder to read/debug than
+        // just having a small amount of duplication.
+        function shrinkSizesToFitContainer(sizesThisLine, idealRequiredSpace) {
+            var descendingMinSizeOrder = getTraversalOrder(sizesThisLine, minSizeA, true);
+            var fittingProportions = getNormalizedValues(sizesThisLine, fittingProportionA);
+            var inverseFittingProportions = getInverseValues(fittingProportions);
+            var inverseFittingProportionSums = createSumArray(inverseFittingProportions, descendingMinSizeOrder);
 
-            var fittingProportions = normalizeValues(getProperties(line, fittingProportionA));
-            var inverseFittingProportions = fittingProportions.map(function(value) { return (1 - value) / (line.length - 1); });
-            var inverseFittingProportionSums = createSumArray(inverseFittingProportions, minSizeOrder);
-
-            var remainingOvershoot = availableSpace[axisA] - idealRequiredSpace;
+            var remainingOvershoot = idealRequiredSpace - availableSpace[axisA];
 
             for (var i = 0; i < sizesThisLine.length; ++i) {
-                var index = minSizeOrder[i];
-                var inverseFittingProportion = inverseFittingProportions[index];
+                var index = descendingMinSizeOrder[i];
 
-                var reduction = inverseFittingProportion === 0 ? 0 : (-remainingOvershoot * inverseFittingProportion / inverseFittingProportionSums[index]);
-                var targetSize = sizesThisLine[index][sizeA] - reduction;
-                var actualSize = Math.max(targetSize, minSizes[index]);
-                var appliedReduction = actualSize > targetSize ? (reduction - (actualSize - targetSize)) : reduction;
+                // Similar to the stretch calculation above, we calculate the ideal
+                // size reduction value for this element based on its fitting proportion.
+                //
+                // However, note that we're using the inverse of the fitting value, as
+                // using the regular value would mean that an element with a fitting
+                // value of, say, 0.4, ends up rendering very small when shrinking is
+                // being applied. Using the inverse means that the balance of sizes
+                // between elements is similar for both the Stretch and Shrink modes.
+                var targetReduction = calculateAdjustment(index, remainingOvershoot, inverseFittingProportions, inverseFittingProportionSums);
+                var targetSize = sizesThisLine[index][sizeA] - targetReduction;
+
+                var minSize = sizesThisLine[index][minSizeA];
+                var actualSize = Math.max(targetSize, minSize);
 
                 sizesThisLine[index][sizeA] = actualSize;
-                remainingOvershoot -= -appliedReduction;
+
+                var actualReduction = Math.max(actualSize - targetSize, 0);
+                var appliedReduction = targetReduction - actualReduction;
+
+                remainingOvershoot -= appliedReduction;
             }
         }
 
-        // Calculate base positions based on the element sizes, spacing and padding
+        function calculateAdjustment(index, remainingAdjustment, fittingProportions, fittingProportionSums) {
+            if (fittingProportionSums[index] === 0) {
+                return 0;
+            } else {
+                return remainingAdjustment * fittingProportions[index] / fittingProportionSums[index];
+            }
+        }
+
+        // Calculate base positions based on the element sizes, spacing and padding.
         function calculateBasePositions(lines, sizes) {
             var cursor = {};
             cursor[axisA] = options.padding[axisA];
@@ -265,7 +304,7 @@ pc.extend(pc, function () {
                 var largestElementThisLine = null;
 
                 // Find the largest element on this line so that we can use it for
-                // calculating positions on axis B
+                // calculating the line height
                 line.forEach(function(element, elementIndex) {
                     var size = sizesThisLine[elementIndex];
 
@@ -278,7 +317,7 @@ pc.extend(pc, function () {
                 // Move the cursor to account for the largest element's size and pivot
                 cursor[axisB] -= minExtentB(largestElementThisLine, largestSizeThisLine);
 
-                // Distribute elements along the line on axis A
+                // Distribute elements along the line
                 line.forEach(function(element, elementIndex) {
                     cursor[axisA] -= minExtentA(element, sizesThisLine[elementIndex]);
 
@@ -306,7 +345,7 @@ pc.extend(pc, function () {
             return positionsAllLines;
         }
 
-        // Adjust base positions to account for the requested alignment
+        // Adjust base positions to account for the requested alignment.
         function applyAlignment(lines, basePositions) {
             lines.forEach(function(line, lineIndex) {
                 var positionsThisLine = basePositions[lineIndex];
@@ -320,6 +359,7 @@ pc.extend(pc, function () {
             });
         }
 
+        // Applies the final calculated sizes and positions back to elements themselves.
         function applySizesAndPositions(lines, sizes, positions) {
             lines.forEach(function(line, lineIndex) {
                 var sizesThisLine = sizes[lineIndex];
@@ -346,18 +386,42 @@ pc.extend(pc, function () {
             });
         }
 
+        // Reads all size-related properties for each element and applies some basic
+        // sanitization to ensure that minWidth is greater than 0, maxWidth is greater
+        // than minWidth, etc.
+        function getElementSizeProperties(elements) {
+            var sizeProperties = [];
+
+            for (var i = 0; i < elements.length; ++i) {
+                var element = elements[i];
+                var minWidth  = Math.max(getProperty(element, 'minWidth'), 0);
+                var minHeight = Math.max(getProperty(element, 'minHeight'), 0);
+                var maxWidth  = Math.max(getProperty(element, 'maxWidth'), minWidth);
+                var maxHeight = Math.max(getProperty(element, 'maxHeight'), minHeight);
+                var width  = clamp(getProperty(element, 'width'), minWidth, maxWidth);
+                var height = clamp(getProperty(element, 'height'), minHeight, maxHeight);
+                var fitWidthProportion  = getProperty(element, 'fitWidthProportion');
+                var fitHeightProportion = getProperty(element, 'fitHeightProportion');
+
+                sizeProperties.push({
+                    index: i,
+                    minWidth:  minWidth,
+                    minHeight: minHeight,
+                    maxWidth:  maxWidth,
+                    maxHeight: maxHeight,
+                    width:     width,
+                    height:    height,
+                    fitWidthProportion:  fitWidthProportion,
+                    fitHeightProportion: fitHeightProportion
+                });
+            }
+
+            return sizeProperties;
+        }
+
         function getProperties(elements, propertyName) {
             return elements.map(function(element) {
                 return getProperty(element, propertyName);
-            });
-        }
-
-        function getPropertiesMultiple(elements, propertyName1, propertyName2) {
-            return elements.map(function(element) {
-                var values = {};
-                values[propertyName1] = getProperty(element, propertyName1);
-                values[propertyName2] = getProperty(element, propertyName2);
-                return values;
             });
         }
 
@@ -379,14 +443,18 @@ pc.extend(pc, function () {
             }
         }
 
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
         function sumValues(values, propertyName) {
             return values.reduce(function(accumulator, current) {
                 return accumulator + (propertyName ? current[propertyName] : current);
             }, 0);
         }
 
-        function normalizeValues(values) {
-            var sum = sumValues(values);
+        function getNormalizedValues(values, propertyName) {
+            var sum = sumValues(values, propertyName);
 
             if (sum === 0) {
                 return values.map(function() {
@@ -394,27 +462,33 @@ pc.extend(pc, function () {
                 });
             } else {
                 return values.map(function(value) {
-                    return value / sum;
+                    return value[propertyName] / sum;
                 });
             }
         }
 
-        function getOrderedIndices(values, descending) {
+        function getInverseValues(values) {
+            return values.map(function(value) {
+                return (1 - value) / (values.length - 1);
+            });
+        }
+
+        function getTraversalOrder(values, orderBy, descending) {
             return values
-                .map(function(value, index) {
-                    return {
-                        value: value,
-                        originalIndex: index
-                    };
-                })
+                .slice()
                 .sort(function(a, b) {
-                    return descending ? b.value - a.value : a.value - b.value;
+                    return descending ? b[orderBy] - a[orderBy] : a[orderBy] - b[orderBy];
                 })
-                .map(function(value) {
-                    return value.originalIndex;
+                .map(function(a) {
+                    return a.index;
                 });
         }
 
+        // Returns a new array containing the sums of the values in the original array,
+        // running from right to left.
+        //
+        // For example, given: [0.2, 0.2, 0.3, 0.1, 0.2]
+        // Will return:        [1.0, 0.8, 0.6, 0.3, 0.2]
         function createSumArray(values, order) {
             var sumArray = [];
             sumArray[order[values.length - 1]] = values[order[values.length - 1]];

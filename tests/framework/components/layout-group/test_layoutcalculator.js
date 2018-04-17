@@ -343,11 +343,33 @@ test("{ wrap: false } pc.FITTING_STRETCH does not make any elements wider than t
 
     this.calculate();
 
-    this.assertValues('x', [0, 200, 300, 470, 510]);
+    this.assertValues('x', [0, 200, 300, 500, 540]);
     this.assertValues('y', [0,   0,   0,   0,   0]);
 
-    this.assertValues('calculatedWidth',  [200, 100, 170,  40,  60], { approx: true });
+    this.assertValues('calculatedWidth',  [200, 100, 200,  40,  60], { approx: true });
     this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+});
+
+test("{ wrap: false } pc.FITTING_STRETCH distributes additional space among remaining elements when one element's maxWidth is very small", function () {
+    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
+    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
+    this.options.widthFitting = pc.FITTING_STRETCH;
+    this.options.containerSize.x = 1000;
+
+    this.elements[0].entity.layoutchild.maxWidth = 300;
+    this.elements[1].entity.layoutchild.maxWidth = 300;
+    this.elements[2].entity.layoutchild.minWidth = 0;
+    this.elements[2].entity.layoutchild.maxWidth = 1;
+    this.elements[3].entity.layoutchild.maxWidth = 300;
+    this.elements[4].entity.layoutchild.maxWidth = 300;
+
+    this.calculate();
+
+    this.assertValues('x', [0, 277.556, 577.556, 578.556, 722.370], { approx: true });
+    this.assertValues('y', [0,       0,       0,       0,       0]);
+
+    this.assertValues('calculatedWidth',  [277.555, 300,   1, 143.815, 277.630], { approx: true });
+    this.assertValues('calculatedHeight', [    100, 100, 100,     100,     100]);
 });
 
 test("{ wrap: false } pc.FITTING_STRETCH includes spacing and padding in calculations", function () {
@@ -361,11 +383,11 @@ test("{ wrap: false } pc.FITTING_STRETCH includes spacing and padding in calcula
 
     this.calculate();
 
-    this.assertValues('x', [20, 170, 280, 410, 460]);
-    this.assertValues('y', [ 0,   0,   0,   0,   0]);
+    this.assertValues('x', [20, 196.667, 306.667, 450, 500], { approx: true });
+    this.assertValues('y', [ 0,       0,       0,   0,   0]);
 
-    this.assertValues('calculatedWidth',  [140, 100, 120,  40,  60], { approx: true });
-    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+    this.assertValues('calculatedWidth',  [166.667, 100, 133.333,  40,  60], { approx: true });
+    this.assertValues('calculatedHeight', [    100, 100,     100, 100, 100]);
 });
 
 test("{ wrap: false } pc.FITTING_SHRINK uses natural widths when total is less than container size", function () {
@@ -411,6 +433,27 @@ test("{ wrap: false } pc.FITTING_SHRINK does not make any elements smaller than 
 
     this.assertValues('calculatedWidth',  [ 60,  25,  55,  10,  15]);
     this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+});
+
+test("{ wrap: false } pc.FITTING_SHRINK distributes additional size reduction among remaining elements when one element's minWidth is very large", function () {
+    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
+    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
+    this.options.widthFitting = pc.FITTING_SHRINK;
+    this.options.containerSize.x = 100;
+
+    this.elements[0].entity.layoutchild.minWidth = 1;
+    this.elements[1].entity.layoutchild.minWidth = 1;
+    this.elements[2].entity.layoutchild.minWidth = 60;
+    this.elements[3].entity.layoutchild.minWidth = 1;
+    this.elements[4].entity.layoutchild.minWidth = 1;
+
+    this.calculate();
+
+    this.assertValues('x', [0, 58.71, 77.742, 137.742, 138.742], { approx: true });
+    this.assertValues('y', [0,     0,      0,       0,       0]);
+
+    this.assertValues('calculatedWidth',  [58.71, 19.032,  60,   1,   1], { approx: true });
+    this.assertValues('calculatedHeight', [  100,    100, 100, 100, 100]);
 });
 
 test("{ wrap: false } pc.FITTING_SHRINK includes spacing and padding in calculations", function () {
@@ -711,5 +754,3 @@ test("{ wrap: true } can align to [0.5, 1]", function () {
     this.assertValues('x', [  5, 105, 155, 105, 125]);
     this.assertValues('y', [200, 200, 200, 300, 300]);
 });
-
-// TODO Add vertical orientation tests for each fitting mode

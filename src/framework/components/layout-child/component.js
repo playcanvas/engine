@@ -1,13 +1,4 @@
 pc.extend(pc, function () {
-    var DEFAULTS = {
-        minWidth: 0,
-        minHeight: 0,
-        maxWidth: null,
-        maxHeight: null,
-        fitWidthProportion: 0,
-        fitHeightProportion: 0,
-    };
-
     /**
      * @component
      * @name pc.LayoutChildComponent
@@ -24,18 +15,14 @@ pc.extend(pc, function () {
      * @property {Number} fitHeightProportion The amount of additional vertical space that the element should take up, if necessary to satisfy a Stretch/Shrink fitting calculation. This is specified as a proportion, taking into account the proportion values of other siblings.
      */
     var LayoutChildComponent = function LayoutChildComponent(system, entity) {
-        this._minWidth = DEFAULTS.minWidth;
-        this._minHeight = DEFAULTS.minHeight;
-        this._maxWidth = DEFAULTS.maxWidth;
-        this._maxHeight = DEFAULTS.maxHeight;
-        this._fitWidthProportion = DEFAULTS.fitWidthProportion;
-        this._fitHeightProportion = DEFAULTS.fitHeightProportion;
+        this._minWidth = 0;
+        this._minHeight = 0;
+        this._maxWidth = null;
+        this._maxHeight = null;
+        this._fitWidthProportion = 0;
+        this._fitHeightProportion = 0;
     };
     LayoutChildComponent = pc.inherits(LayoutChildComponent, pc.Component);
-
-    // These are exposed for use by layout-calculator.js in the case where an
-    // element does not have a LayoutChildComponent.
-    LayoutChildComponent.DEFAULTS = DEFAULTS;
 
     function defineResizeProperty(name) {
         var _name = '_' + name;
