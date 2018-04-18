@@ -766,7 +766,8 @@ pc.extend(pc, function () {
         },
 
         _setCalculatedWidth: function(value, updateMargins) {
-            var didChange = Math.abs(value - this._calculatedWidth) > 1e-5;
+            var didChange = Math.abs(value - this._calculatedWidth) > 1e-4;
+
             this._calculatedWidth = value;
 
             if (updateMargins) {
@@ -786,7 +787,7 @@ pc.extend(pc, function () {
         },
 
         _setCalculatedHeight: function(value, updateMargins) {
-            var didChange = Math.abs(value - this._calculatedHeight) > 1e-5;
+            var didChange = Math.abs(value - this._calculatedHeight) > 1e-4;
 
             this._calculatedHeight = value;
 
