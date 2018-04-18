@@ -83,6 +83,18 @@ pc.extend(pc, function () {
         }
     };
 
+    /**
+    * @private
+    * @function
+    * @name pc.TextureAtlas#destroy
+    * @description Free up the underlying WebGL resource owned by the texture.
+    */
+    TextureAtlas.prototype.destroy = function () {
+        if (this._texture) {
+            this._texture.destroy();
+        }
+    },
+
     Object.defineProperty(TextureAtlas.prototype, 'texture', {
         get: function () {
             return this._texture;

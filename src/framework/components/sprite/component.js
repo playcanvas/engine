@@ -156,6 +156,9 @@ pc.extend(pc, function () {
             }
 
             if (this._meshInstance) {
+                // make sure we decrease the ref counts materials and meshes
+                this._meshInstance.material = null;
+                this._meshInstance.mesh = null;
                 this._meshInstance = null;
             }
         },
@@ -224,6 +227,7 @@ pc.extend(pc, function () {
                 this._meshInstance = new pc.MeshInstance(this._node, mesh, this._material);
                 this._meshInstance.castShadow = false;
                 this._meshInstance.receiveShadow = false;
+                this._meshInstance.drawOrder = this._drawOrder;
                 this._model.meshInstances.push(this._meshInstance);
 
                 // set overrides on mesh instance

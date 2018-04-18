@@ -115,10 +115,6 @@ pc.extend(pc, function () {
                 outputTarget: null
             };
 
-            // #ifdef DEBUG
-            console.warn("PostEffectQueue is deprecated. Use new post effects.");
-            // #endif
-
             // legacy compatibility: create new layer
             if (!this.layer) {
                 this.layer = new pc.Layer({

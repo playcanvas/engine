@@ -306,6 +306,7 @@ pc.extend(pc, function () {
                 if (data.spriteAsset !== undefined) component.spriteAsset = data.spriteAsset;
                 if (data.sprite) component.sprite = data.sprite;
                 if (data.spriteFrame !== undefined) component.spriteFrame = data.spriteFrame;
+                if (data.pixelsPerUnit !== undefined && data.pixelsPerUnit !== null) component.pixelsPerUnit = data.pixelsPerUnit;
                 if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
                 if (data.material) component.material = data.material;
 
@@ -380,7 +381,8 @@ pc.extend(pc, function () {
                 texture: source.texture,
                 spriteAsset: source.spriteAsset,
                 sprite: source.sprite,
-                frame: source.frame,
+                spriteFrame: source.spriteFrame,
+                pixelsPerUnit: source.pixelsPerUnit,
                 text: source.text,
                 spacing: source.spacing,
                 lineHeight: source.lineHeight,

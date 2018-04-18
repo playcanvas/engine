@@ -258,6 +258,29 @@ pc.extend(pc, function () {
         this._meshesDirty = false;
     };
 
+    /**
+    * @private
+    * @function
+    * @name pc.Sprite#destroy
+    * @description Free up the meshes created by the sprite.
+    */
+    Sprite.prototype.destroy = function () {
+        var i;
+        var len;
+
+        // destroy old meshes
+        for (i = 0, len = this._meshes.length; i < len; i++) {
+            var mesh = this._meshes[i];
+            if (! mesh) continue;
+
+            mesh.vertexBuffer.destroy();
+            for (var j = 0, len2 = mesh.indexBuffer.length; j<len2; j++) {
+                mesh.indexBuffer[j].destroy();
+            }
+        }
+        this._meshes.length = 0;
+    },
+
     Object.defineProperty(Sprite.prototype, 'frameKeys', {
         get: function () {
             return this._frameKeys;

@@ -663,6 +663,7 @@ pc.extend(pc, function() {
             this.resetMaterial();
 
             this.meshInstance = new pc.MeshInstance(this.node, mesh, this.material);
+            this.meshInstance.pick = false;
             this.meshInstance.updateKey(); // shouldn't be here?
             this.meshInstance.cull = true;
             this.meshInstance._noDepthDrawGl1 = true;
