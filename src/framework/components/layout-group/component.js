@@ -71,15 +71,13 @@ pc.extend(pc, function () {
         system.app.systems.layoutchild.on('add', this._onLayoutChildComponentAdd, this);
         system.app.systems.layoutchild.on('beforeremove', this._onLayoutChildComponentRemove, this);
 
-        if (this._selfAndChildrenAreAllElements()) {
-            this._scheduleReflow();
-        }
+        this._scheduleReflow();
     };
     LayoutGroupComponent = pc.inherits(LayoutGroupComponent, pc.Component);
 
     pc.extend(LayoutGroupComponent.prototype, {
-        _selfAndChildrenAreAllElements: function() {
-            return this.entity.element && this.entity.children.every(getElement);
+        _isSelfOrChild: function(entity) {
+            return (entity === this.entity) || (this.entity.children.indexOf(entity) !== -1);
         },
 
         _listenForResizeEvents: function(target, onOff) {
@@ -93,19 +91,27 @@ pc.extend(pc, function () {
         },
 
         _onElementComponentAdd: function(entity, component) {
-            component.on('resize', this._onResize, this);
+            if (this._isSelfOrChild(entity)) {
+                component.on('resize', this._onResize, this);
+            }
         },
 
         _onElementComponentRemove: function(entity, component) {
-            component.off('resize', this._onResize, this);
+            if (this._isSelfOrChild(entity)) {
+                component.off('resize', this._onResize, this);
+            }
         },
 
         _onLayoutChildComponentAdd: function(entity, component) {
-            component.on('resize', this._onResize, this);
+            if (this._isSelfOrChild(entity)) {
+                component.on('resize', this._onResize, this);
+            }
         },
 
         _onLayoutChildComponentRemove: function(entity, component) {
-            component.off('resize', this._onResize, this);
+            if (this._isSelfOrChild(entity)) {
+                component.off('resize', this._onResize, this);
+            }
         },
 
         _onResize: function() {
@@ -129,12 +135,12 @@ pc.extend(pc, function () {
         },
 
         reflow: function() {
-            if (!this._selfAndChildrenAreAllElements()) {
+            var container = getElement(this.entity);
+            var elements = this.entity.children.filter(getElement).map(getElement);
+
+            if (!container || elements.length === 0) {
                 return;
             }
-
-            var elements = this.entity.children.map(getElement);
-            var container = getElement(this.entity);
 
             var options = {
                 orientation: this._orientation,
