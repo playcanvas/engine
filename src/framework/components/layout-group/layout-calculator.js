@@ -308,7 +308,7 @@ pc.extend(pc, function () {
         function shrinkSizesToFitContainer(sizesThisLine, idealRequiredSpace, axis) {
             var descendingMinSizeOrder = getTraversalOrder(sizesThisLine, axis.minSize, true);
             var fittingProportions = getNormalizedValues(sizesThisLine, axis.fittingProportion);
-            var inverseFittingProportions = getInverseValues(fittingProportions);
+            var inverseFittingProportions = invertNormalizedValues(fittingProportions);
             var inverseFittingProportionSums = createSumArray(inverseFittingProportions, descendingMinSizeOrder);
 
             var remainingOvershoot = idealRequiredSpace - availableSpace[axis.axis];
@@ -357,6 +357,10 @@ pc.extend(pc, function () {
 
             // TODO Replace this and various other forEach/map cases with regular loops to avoid GC overhead
             lines.forEach(function(line, lineIndex) {
+                if (line.length === 0) {
+                    return;
+                }
+
                 var positionsThisLine = [];
                 var sizesThisLine = sizes[lineIndex];
 
@@ -515,7 +519,12 @@ pc.extend(pc, function () {
             }
         }
 
-        function getInverseValues(values) {
+        function invertNormalizedValues(values) {
+            // Guard against divide by zero error in the inversion calculation below
+            if (values.length === 1) {
+                return [1];
+            }
+
             return values.map(function(value) {
                 return (1 - value) / (values.length - 1);
             });

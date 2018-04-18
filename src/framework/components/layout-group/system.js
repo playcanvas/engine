@@ -116,7 +116,6 @@ pc.extend(pc, function () {
                 return componentA.entity.graphDepth < componentB.entity.graphDepth;
             });
 
-
             while (this._reflowQueue.length > 0) {
                 var component = this._reflowQueue.shift();
                 component.reflow();
