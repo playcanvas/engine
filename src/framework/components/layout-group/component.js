@@ -66,10 +66,10 @@ pc.extend(pc, function () {
         // Listen for ElementComponents and LayoutChildComponents being added
         // to self or to children - covers cases where they are not already
         // present at the point when this component is constructed.
-        pc.app.systems.element.on('add', this._onElementComponentAdd, this);
-        pc.app.systems.element.on('beforeremove', this._onElementComponentRemove, this);
-        pc.app.systems.layoutchild.on('add', this._onLayoutChildComponentAdd, this);
-        pc.app.systems.layoutchild.on('beforeremove', this._onLayoutChildComponentRemove, this);
+        system.app.systems.element.on('add', this._onElementComponentAdd, this);
+        system.app.systems.element.on('beforeremove', this._onElementComponentRemove, this);
+        system.app.systems.layoutchild.on('add', this._onLayoutChildComponentAdd, this);
+        system.app.systems.layoutchild.on('beforeremove', this._onLayoutChildComponentRemove, this);
 
         if (this._selfAndChildrenAreAllElements()) {
             this._scheduleReflow();
