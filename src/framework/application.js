@@ -217,8 +217,7 @@ pc.extend(pc, function () {
                     var gl = self.graphicsDevice.gl;
                     this.srcFbo = gl.getParameter(gl.FRAMEBUFFER_BINDING);
 
-                    if (!this.renderTarget) return;
-                    if (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height) {
+                    if (! this.renderTarget || (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height)) {
                         this.onDisable();
                         this.onEnable();
                     }
@@ -318,8 +317,7 @@ pc.extend(pc, function () {
                 },
 
                 onPreRenderOpaque: function(cameraPass) { // resize depth map if needed
-                    if (!this.renderTarget) return;
-                    if (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height) {
+                    if (!this.renderTarget || (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height)) {
                         this.onDisable();
                         this.onEnable();
                     }

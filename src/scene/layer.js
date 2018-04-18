@@ -117,7 +117,7 @@ pc.extend(pc, function () {
      *     <li>{@link pc.Layer#enabled} was changed from true to false</li>
      *     <li>{@link pc.Layer#decrementCounter} was called and set the counter to zero.</li>
      * </ul>
-     * @property {Function} onPreCull Custom function that is called before visibiliy culling is performed for this layer.
+     * @property {Function} onPreCull Custom function that is called before visibility culling is performed for this layer.
      * Useful, for example, if you want to modify camera projection while still using the same camera and make frustum culling work correctly with it
      * (see {@link pc.CameraComponent#calculateTransform} and {@link pc.CameraComponent#calculateProjection}).
      * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
@@ -307,6 +307,7 @@ pc.extend(pc, function () {
     });
 
     /**
+     * @private
      * @function
      * @name pc.Layer#incrementCounter
      * @description Increments the usage counter of this layer.
@@ -325,6 +326,7 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
      * @function
      * @name pc.Layer#decrementCounter
      * @description Decrements the usage counter of this layer.
