@@ -167,6 +167,31 @@ module("pc.ScriptComponent", {
                 },
                 "region": "eu-west-1",
                 "id": "6"
+            },
+            "7": {
+                "tags": [],
+                "name": "loadedLater.js",
+                "revision": 1,
+                "preload": false,
+                "meta": null,
+                "data": {
+                    "scripts": {
+                        "loadedLater": {
+                            "attributesOrder": [],
+                            "attributes": {}
+                      }
+                    },
+                    "loading": false
+                },
+                "type": "script",
+                "file": {
+                    "filename": "loadedLater.js",
+                    "size": 1,
+                    "hash": "loadedLater hash",
+                    "url": "loadedLater.js"
+                },
+                "region": "eu-west-1",
+                "id": "7"
             }
         });
 
@@ -1228,3 +1253,187 @@ test('if script instance is disabled in initialize call and enabled later, postI
     checkInitCall(e, 0, 'initialize scriptA');
     checkInitCall(e, 1, 'postInitialize scriptA');
 });
+
+test('initialize and postInitialize are called if script is added to the script registry later', function () {
+    var e = new pc.Entity();
+    e.addComponent('script', {
+        "enabled": true,
+        "order": ["loadedLater"],
+        "scripts": {
+            "loadedLater": {
+                "enabled": true,
+                "attributes": {}
+            }
+        }
+    });
+
+    this.app.root.addChild(e);
+
+    equal(window.initializeCalls.length, 0);
+
+    stop();
+
+    var asset = this.app.assets.get(7);
+    this.app.scripts.on('add:loadedLater', function () {
+        setTimeout(function () {
+            start();
+
+            equal(window.initializeCalls.length, 2);
+            checkInitCall(e, 0, 'initialize loadedLater');
+            checkInitCall(e, 1, 'postInitialize loadedLater');
+        }, 100);
+    });
+
+    this.app.assets.load(asset);
+});
+
+test('initialize and postInitialize are called if script is added to the script registry later', function () {
+    var e = new pc.Entity();
+    e.addComponent('script', {
+        "enabled": true,
+        "order": ["loadedLater"],
+        "scripts": {
+            "loadedLater": {
+                "enabled": true,
+                "attributes": {}
+            }
+        }
+    });
+
+    this.app.root.addChild(e);
+
+    equal(window.initializeCalls.length, 0);
+
+    stop();
+
+    var asset = this.app.assets.get(7);
+    this.app.scripts.on('add:loadedLater', function () {
+        setTimeout(function () {
+            start();
+
+            equal(window.initializeCalls.length, 2);
+            checkInitCall(e, 0, 'initialize loadedLater');
+            checkInitCall(e, 1, 'postInitialize loadedLater');
+        }, 100);
+    });
+
+    this.app.assets.load(asset);
+});
+
+test('if entity is disabled in initialize call of script that is added later, postInitialize is called only when it becomes enabled again', function () {
+    var e = new pc.Entity();
+    e.addComponent('script', {
+        "enabled": true,
+        "order": ["loadedLater"],
+        "scripts": {
+            "loadedLater": {
+                "enabled": true,
+                "attributes": {
+                    "disableEntity": true
+                }
+            }
+        }
+    });
+
+    this.app.root.addChild(e);
+
+    equal(window.initializeCalls.length, 0);
+
+    stop();
+
+    var asset = this.app.assets.get(7);
+    this.app.scripts.on('add:loadedLater', function () {
+        setTimeout(function () {
+            start();
+
+            equal(window.initializeCalls.length, 1);
+            checkInitCall(e, 0, 'initialize loadedLater');
+            window.initializeCalls.length = 0;
+
+            e.enabled = true;
+            equal(window.initializeCalls.length, 1);
+            checkInitCall(e, 0, 'postInitialize loadedLater');
+        }, 100);
+    });
+
+    this.app.assets.load(asset);
+});
+
+test('if script component is disabled in initialize call of script that is added later, postInitialize is called only when it becomes enabled again', function () {
+    var e = new pc.Entity();
+    e.addComponent('script', {
+        "enabled": true,
+        "order": ["loadedLater"],
+        "scripts": {
+            "loadedLater": {
+                "enabled": true,
+                "attributes": {
+                    "disableScriptComponent": true
+                }
+            }
+        }
+    });
+
+    this.app.root.addChild(e);
+
+    equal(window.initializeCalls.length, 0);
+
+    stop();
+
+    var asset = this.app.assets.get(7);
+    this.app.scripts.on('add:loadedLater', function () {
+        setTimeout(function () {
+            start();
+
+            equal(window.initializeCalls.length, 1);
+            checkInitCall(e, 0, 'initialize loadedLater');
+            window.initializeCalls.length = 0;
+
+            e.script.enabled = true;
+            equal(window.initializeCalls.length, 1);
+            checkInitCall(e, 0, 'postInitialize loadedLater');
+        }, 100);
+    });
+
+    this.app.assets.load(asset);
+});
+
+test('if script instance is disabled in initialize call of script that is added later, postInitialize is called only when it becomes enabled again', function () {
+    var e = new pc.Entity();
+    e.addComponent('script', {
+        "enabled": true,
+        "order": ["loadedLater"],
+        "scripts": {
+            "loadedLater": {
+                "enabled": true,
+                "attributes": {
+                    "disableScriptInstance": true
+                }
+            }
+        }
+    });
+
+    this.app.root.addChild(e);
+
+    equal(window.initializeCalls.length, 0);
+
+    stop();
+
+    var asset = this.app.assets.get(7);
+    this.app.scripts.on('add:loadedLater', function () {
+        setTimeout(function () {
+            start();
+
+            equal(window.initializeCalls.length, 1);
+            checkInitCall(e, 0, 'initialize loadedLater');
+            window.initializeCalls.length = 0;
+
+            e.script.loadedLater.enabled = true;
+            equal(window.initializeCalls.length, 1);
+            checkInitCall(e, 0, 'postInitialize loadedLater');
+        }, 100);
+    });
+
+    this.app.assets.load(asset);
+});
+
