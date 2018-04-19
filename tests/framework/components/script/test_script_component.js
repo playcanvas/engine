@@ -1320,7 +1320,7 @@ test('initialize and postInitialize are called if script is added to the script 
     this.app.assets.load(asset);
 });
 
-test('if entity is disabled in initialize call of script that is added later, postInitialize is called only when it becomes enabled again', function () {
+test('if entity is disabled in initialize call of script that is added to the registry later, postInitialize is called only when it becomes enabled again', function () {
     var e = new pc.Entity();
     e.addComponent('script', {
         "enabled": true,
@@ -1359,7 +1359,7 @@ test('if entity is disabled in initialize call of script that is added later, po
     this.app.assets.load(asset);
 });
 
-test('if script component is disabled in initialize call of script that is added later, postInitialize is called only when it becomes enabled again', function () {
+test('if script component is disabled in initialize call of script that is added to the registry later, postInitialize is called only when it becomes enabled again', function () {
     var e = new pc.Entity();
     e.addComponent('script', {
         "enabled": true,
@@ -1398,7 +1398,7 @@ test('if script component is disabled in initialize call of script that is added
     this.app.assets.load(asset);
 });
 
-test('if script instance is disabled in initialize call of script that is added later, postInitialize is called only when it becomes enabled again', function () {
+test('if script instance is disabled in initialize call of script that is added to the registry later, postInitialize is called only when it becomes enabled again', function () {
     var e = new pc.Entity();
     e.addComponent('script', {
         "enabled": true,
@@ -1437,3 +1437,40 @@ test('if script instance is disabled in initialize call of script that is added 
     this.app.assets.load(asset);
 });
 
+test('script attributes are initialized when script is added to the registry later', function () {
+    var e = new pc.Entity();
+    e.addComponent('script', {
+        "enabled": true,
+        "order": ["loadedLater"],
+        "scripts": {
+            "loadedLater": {
+                "enabled": true,
+                "attributes": {
+                    "disableEntity": true,
+                    "disableScriptComponent": true,
+                    "disableScriptInstance": true,
+                }
+            }
+        }
+    });
+
+    this.app.root.addChild(e);
+
+    ok (! e.script.loadedLater);
+
+    stop();
+
+    var asset = this.app.assets.get(7);
+    this.app.scripts.on('add:loadedLater', function () {
+        setTimeout(function () {
+            start();
+
+            ok(e.script.loadedLater);
+            equal(e.script.loadedLater.disableEntity, true);
+            equal(e.script.loadedLater.disableScriptComponent, true);
+            equal(e.script.loadedLater.disableScriptInstance, true);
+        }, 100);
+    });
+
+    this.app.assets.load(asset);
+});
