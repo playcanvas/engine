@@ -83,7 +83,7 @@ pc.extend(pc, function () {
             var sizes = calculateSizesOnAxisB(lines, calculateSizesOnAxisA(lines));
             var positions = calculateBasePositions(lines, sizes);
 
-            applyAlignment(lines, sizes, positions);
+            applyAlignmentAndPadding(lines, sizes, positions);
             applySizesAndPositions(lines, sizes, positions);
         }
 
@@ -207,7 +207,7 @@ pc.extend(pc, function () {
                 line.forEach(function(element, elementIndex) {
                     var sizesThisElement = sizesAllLines[lineIndex][elementIndex];
                     var currentSize = sizesThisElement[b.size];
-                    var availableSize = line.largestSize[b.size];
+                    var availableSize = lines.length === 1 ? availableSpace[b.axis] : line.largestSize[b.size];
                     var fittingAction = determineFittingAction(options[b.fitting], currentSize, availableSize);
 
                     if (fittingAction === FITTING_ACTION.APPLY_STRETCHING) {
@@ -350,11 +350,11 @@ pc.extend(pc, function () {
             }
         }
 
-        // Calculate base positions based on the element sizes, spacing and padding.
+        // Calculate base positions based on the element sizes and spacing.
         function calculateBasePositions(lines, sizes) {
             var cursor = {};
-            cursor[a.axis] = options.padding[a.axis];
-            cursor[b.axis] = options.padding[b.axis];
+            cursor[a.axis] = 0;
+            cursor[b.axis] = 0;
 
             var positionsAllLines = [];
 
@@ -386,7 +386,7 @@ pc.extend(pc, function () {
                 line[b.size] = maxExtentB(line.largestElement, line.largestSize);
 
                 // Move the cursor to the next line
-                cursor[a.axis] = options.padding[a.axis];
+                cursor[a.axis] = 0;
                 cursor[b.axis] += line[b.size] + options.spacing[b.axis];
 
                 positionsAllLines.push(positionsThisLine);
@@ -398,13 +398,20 @@ pc.extend(pc, function () {
             return positionsAllLines;
         }
 
-        // Adjust base positions to account for the requested alignment.
-        function applyAlignment(lines, sizes, positions) {
+        // Adjust base positions to account for the requested alignment and padding.
+        function applyAlignmentAndPadding(lines, sizes, positions) {
+            var alignmentA = options.alignment[a.axis];
+            var alignmentB = options.alignment[b.axis];
+
+            var paddingA = options.padding[a.axis];
+            var paddingB = options.padding[b.axis];
+
             lines.forEach(function(line, lineIndex) {
                 var sizesThisLine = sizes[lineIndex];
                 var positionsThisLine = positions[lineIndex];
-                var axisAOffset = (options.containerSize[a.axis] - line[a.size])  * options.alignment[a.axis];
-                var axisBOffset = (options.containerSize[b.axis] - lines[b.size]) * options.alignment[b.axis];
+
+                var axisAOffset = (availableSpace[a.axis] - line[a.size])  * alignmentA + paddingA;
+                var axisBOffset = (availableSpace[b.axis] - lines[b.size]) * alignmentB + paddingB;
 
                 line.forEach(function(element, elementIndex) {
                     var withinLineAxisBOffset = (line[b.size] - sizesThisLine[elementIndex][b.size]) * options.alignment[b.axis];
