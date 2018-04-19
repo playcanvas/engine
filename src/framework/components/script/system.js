@@ -22,6 +22,8 @@ pc.extend(pc, function () {
         // list of all entities script components
         this._components = [ ];
 
+        this.preloading = true;
+
         this.on('beforeremove', this._onBeforeRemove, this);
         pc.ComponentSystem.on('initialize', this._onInitialize, this);
         pc.ComponentSystem.on('postInitialize', this._onPostInitialize, this);
@@ -45,7 +47,7 @@ pc.extend(pc, function () {
                     component.create(data.order[i], {
                         enabled: data.scripts[data.order[i]].enabled,
                         attributes: data.scripts[data.order[i]].attributes,
-                        preloading: true
+                        preloading: this.preloading
                     });
                 }
             }
@@ -95,6 +97,8 @@ pc.extend(pc, function () {
         },
 
         _onInitialize: function() {
+            this.preloading = false;
+
             // initialize attributes
             for (var i = 0; i < this._components.length; i++)
                 this._components[i]._onInitializeAttributes();

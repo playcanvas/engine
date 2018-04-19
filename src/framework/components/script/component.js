@@ -15,6 +15,7 @@ pc.extend(pc, function () {
         this._scriptsIndex = { };
         this._scriptsData = null;
         this._oldState = true;
+        this._beingEnabled = false;
         this.on('set_enabled', this._onSetEnabled, this);
     };
     ScriptComponent = pc.inherits(ScriptComponent, pc.Component);
@@ -160,7 +161,14 @@ pc.extend(pc, function () {
     pc.extend(ScriptComponent.prototype, {
         onEnable: function () {
             ScriptComponent._super.onEnable.call(this);
+            this._beingEnabled = true;
             this._checkState();
+
+            if (! this.entity._beingEnabled) {
+                this.onPostStateChange();
+            }
+
+            this._beingEnabled = false;
         },
 
         onDisable: function () {
@@ -170,10 +178,10 @@ pc.extend(pc, function () {
 
         onPostStateChange: function() {
             var script;
-            for (var i = 0; i < this.scripts.length; i++) {
+            for (var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
 
-                if (script._initialized && ! script._postInitialized) {
+                if (script._initialized && ! script._postInitialized && script.enabled) {
                     script._postInitialized = true;
 
                     if (script.postInitialize)
@@ -182,8 +190,13 @@ pc.extend(pc, function () {
             }
         },
 
+        // We also need this handler because it is fired
+        // when value === old instead of onEnable and onDisable
+        // which are only fired when value !== old
         _onSetEnabled: function(prop, old, value) {
+            this._beingEnabled = true;
             this._checkState();
+            this._beingEnabled = false;
         },
 
         _checkState: function() {
@@ -193,22 +206,13 @@ pc.extend(pc, function () {
 
             this._oldState = state;
 
-            this.fire(this.enabled ? 'enable' : 'disable');
-            this.fire('state', this.enabled);
+            this.fire(state ? 'enable' : 'disable');
+            this.fire('state', state);
 
             var script;
             for (var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
                 script.enabled = script._enabled;
-
-                if (! script._initialized && script.enabled) {
-                    script._initialized = true;
-
-                    script.__initializeAttributes(true);
-
-                    if (script.initialize)
-                        this._scriptMethod(script, ScriptComponent.scriptMethods.initialize);
-                }
             }
         },
 
@@ -257,16 +261,7 @@ pc.extend(pc, function () {
         },
 
         _onPostInitialize: function() {
-            var script, scripts = this._scripts;
-
-            for (var i = 0, len = scripts.length; i < len; i++) {
-                script = scripts[i];
-                if (! script._postInitialized && script.enabled) {
-                    script._postInitialized = true;
-                    if (script.postInitialize)
-                        this._scriptMethod(script, ScriptComponent.scriptMethods.postInitialize);
-                }
-            }
+            this.onPostStateChange();
         },
 
         _onUpdate: function(dt) {
@@ -379,16 +374,22 @@ pc.extend(pc, function () {
 
                     this.system.app.scripts.on('swap:' + scriptType.__name, this._scriptsIndex[scriptType.__name].onSwap);
 
-                    if (! args.preloading && this.enabled && scriptInstance.enabled && ! scriptInstance._initialized) {
-                        scriptInstance._initialized = true;
-                        scriptInstance._postInitialized = true;
+                    if (! args.preloading) {
 
-                        if (scriptInstance.initialize)
-                            this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.initialize);
+                        if (scriptInstance.enabled && ! scriptInstance._initialized) {
+                            scriptInstance._initialized = true;
 
-                        if (scriptInstance.postInitialize)
-                            this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.postInitialize);
+                            if (scriptInstance.initialize)
+                                this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.initialize);
+                        }
+
+                        if (scriptInstance.enabled && ! scriptInstance._postInitialized) {
+                            scriptInstance._postInitialized = true;
+                            if (scriptInstance.postInitialize)
+                                this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.postInitialize);
+                        }
                     }
+
 
                     return scriptInstance;
                 } else {
