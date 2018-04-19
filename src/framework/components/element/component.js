@@ -1125,13 +1125,13 @@ pc.extend(pc, function () {
     Object.defineProperty(ElementComponent.prototype, "_hasSplitAnchorsX", {
         get: function () {
             return Math.abs(this._anchor.data[0] - this._anchor.data[2]) > 0.001;
-        },
+        }
     });
 
     Object.defineProperty(ElementComponent.prototype, "_hasSplitAnchorsY", {
         get: function () {
             return Math.abs(this._anchor.data[1] - this._anchor.data[3]) > 0.001;
-        },
+        }
     });
 
     // Returns the 4 corners of the element relative to its screen component.

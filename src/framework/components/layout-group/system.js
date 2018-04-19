@@ -84,7 +84,7 @@ pc.extend(pc, function () {
                 spacing: layoutGroup.spacing,
                 widthFitting: layoutGroup.widthFitting,
                 heightFitting: layoutGroup.heightFitting,
-                wrap: layoutGroup.wrap,
+                wrap: layoutGroup.wrap
             });
         },
 

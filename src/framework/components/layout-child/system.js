@@ -44,7 +44,7 @@ pc.extend(pc, function () {
                 maxWidth: layoutChild.maxWidth,
                 maxHeight: layoutChild.maxHeight,
                 fitWidthProportion: layoutChild.fitWidthProportion,
-                fitHeightProportion: layoutChild.fitHeightProportion,
+                fitHeightProportion: layoutChild.fitHeightProportion
             });
         }
     });

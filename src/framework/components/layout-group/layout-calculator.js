@@ -15,7 +15,7 @@ pc.extend(pc, function () {
         minSize: 'minWidth',
         maxSize: 'maxWidth',
         fitting: 'widthFitting',
-        fittingProportion: 'fitWidthProportion',
+        fittingProportion: 'fitWidthProportion'
     };
 
     AXIS_MAPPINGS[pc.ORIENTATION_VERTICAL] = {
@@ -25,7 +25,7 @@ pc.extend(pc, function () {
         minSize: 'minHeight',
         maxSize: 'maxHeight',
         fitting: 'heightFitting',
-        fittingProportion: 'fitHeightProportion',
+        fittingProportion: 'fitHeightProportion'
     };
 
     var OPPOSITE_ORIENTATION = {};
@@ -40,13 +40,13 @@ pc.extend(pc, function () {
         width: null,
         height: null,
         fitWidthProportion: 0,
-        fitHeightProportion: 0,
+        fitHeightProportion: 0
     };
 
     var FITTING_ACTION = {
         NONE: 'NONE',
         APPLY_STRETCHING: 'APPLY_STRETCHING',
-        APPLY_SHRINKING: 'APPLY_SHRINKING',
+        APPLY_SHRINKING: 'APPLY_SHRINKING'
     };
 
     // The layout logic is largely identical for the horizontal and vertical orientations,
@@ -64,12 +64,12 @@ pc.extend(pc, function () {
         var b = AXIS_MAPPINGS[OPPOSITE_ORIENTATION[orientation]];
 
         // Calculates the left/top extent of an element based on its position and pivot value
-        function minExtentA(element, size) { return -size[a.size] * element.pivot[a.axis]; }
-        function minExtentB(element, size) { return -size[b.size] * element.pivot[b.axis]; }
+        function minExtentA(element, size) {return -size[a.size] * element.pivot[a.axis]; }  // eslint-disable-line
+        function minExtentB(element, size) { return -size[b.size] * element.pivot[b.axis]; } // eslint-disable-line
 
         // Calculates the right/bottom extent of an element based on its position and pivot value
-        function maxExtentA(element, size) { return  size[a.size] * (1 - element.pivot[a.axis]); }
-        function maxExtentB(element, size) { return  size[b.size] * (1 - element.pivot[b.axis]); }
+        function maxExtentA(element, size) { return  size[a.size] * (1 - element.pivot[a.axis]); } // eslint-disable-line
+        function maxExtentB(element, size) { return  size[b.size] * (1 - element.pivot[b.axis]); } // eslint-disable-line
 
         function calculateAll(allElements, layoutOptions) {
             options = layoutOptions;
@@ -340,8 +340,8 @@ pc.extend(pc, function () {
         }
 
         function calculateAdjustment(index, remainingAdjustment, fittingProportions, fittingProportionSums) {
-            const proportion = fittingProportions[index];
-            const sumOfRemainingProportions = fittingProportionSums[index];
+            var proportion = fittingProportions[index];
+            var sumOfRemainingProportions = fittingProportionSums[index];
 
             if (Math.abs(proportion) < 1e-5 && Math.abs(sumOfRemainingProportions) < 1e-5) {
                 return remainingAdjustment;
@@ -467,13 +467,13 @@ pc.extend(pc, function () {
                 var fitHeightProportion = getProperty(element, 'fitHeightProportion');
 
                 sizeProperties.push({
-                    minWidth:  minWidth,
+                    minWidth: minWidth,
                     minHeight: minHeight,
-                    maxWidth:  maxWidth,
+                    maxWidth: maxWidth,
                     maxHeight: maxHeight,
-                    width:     width,
-                    height:    height,
-                    fitWidthProportion:  fitWidthProportion,
+                    width: width,
+                    height: height,
+                    fitWidthProportion: fitWidthProportion,
                     fitHeightProportion: fitHeightProportion
                 });
             }
