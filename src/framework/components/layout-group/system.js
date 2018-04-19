@@ -69,8 +69,6 @@ pc.extend(pc, function () {
             if (data.wrap !== undefined) component.wrap = data.wrap;
 
             LayoutGroupComponentSystem._super.initializeComponentData.call(this, component, data, properties);
-
-            component.on('schedulereflow', this._onScheduleReflow, this);
         },
 
         cloneComponent: function (entity, clone) {
@@ -90,7 +88,7 @@ pc.extend(pc, function () {
             });
         },
 
-        _onScheduleReflow: function (component) {
+        scheduleReflow: function (component) {
             if (this._reflowQueue.indexOf(component) === -1) {
                 this._reflowQueue.push(component);
             }
@@ -125,7 +123,6 @@ pc.extend(pc, function () {
         },
 
         _onRemoveComponent: function (entity, component) {
-            component.off('schedulereflow', this._onScheduleReflow, this);
             component.onRemove();
         }
     });

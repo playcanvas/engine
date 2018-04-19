@@ -130,7 +130,7 @@ pc.extend(pc, function () {
 
         _scheduleReflow: function() {
             if (!this._isPerformingReflow) {
-                this.fire('schedulereflow', this);
+                this.system.scheduleReflow(this);
             }
         },
 
