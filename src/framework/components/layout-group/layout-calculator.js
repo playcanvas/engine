@@ -340,10 +340,13 @@ pc.extend(pc, function () {
         }
 
         function calculateAdjustment(index, remainingAdjustment, fittingProportions, fittingProportionSums) {
-            if (fittingProportionSums[index] === 0) {
-                return 0;
+            const proportion = fittingProportions[index];
+            const sumOfRemainingProportions = fittingProportionSums[index];
+
+            if (Math.abs(proportion) < 1e-5 && Math.abs(sumOfRemainingProportions) < 1e-5) {
+                return remainingAdjustment;
             } else {
-                return remainingAdjustment * fittingProportions[index] / fittingProportionSums[index];
+                return remainingAdjustment * proportion / sumOfRemainingProportions;
             }
         }
 
