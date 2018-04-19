@@ -150,7 +150,8 @@ pc.extend(pc, function () {
         function calculateSizesOnAxisA(lines) {
             var sizesAllLines = [];
 
-            lines.forEach(function(line) {
+            for (var lineIndex = 0; lineIndex < lines.length; ++lineIndex) {
+                var line = lines[lineIndex];
                 var sizesThisLine = getElementSizeProperties(line);
                 var idealRequiredSpace = calculateTotalSpace(sizesThisLine, a);
                 var fittingAction = determineFittingAction(options[a.fitting], idealRequiredSpace, availableSpace[a.axis]);
@@ -162,7 +163,7 @@ pc.extend(pc, function () {
                 }
 
                 sizesAllLines.push(sizesThisLine);
-            });
+            }
 
             return sizesAllLines;
         }
@@ -172,25 +173,29 @@ pc.extend(pc, function () {
         function calculateSizesOnAxisB(lines, sizesAllLines) {
             var largestElementsForEachLine = [];
             var largestSizesForEachLine = [];
+            var elementIndex;
+            var lineIndex;
+            var line;
 
             // Find the largest element on each line.
-            lines.forEach(function(line, lineIndex) {
+            for (lineIndex = 0; lineIndex < lines.length; ++lineIndex) {
+                line = lines[lineIndex];
                 line.largestElement = null;
                 line.largestSize = { width: Number.NEGATIVE_INFINITY, height: Number.NEGATIVE_INFINITY };
 
                 // Find the largest element on this line.
-                line.forEach(function(element, elementIndex) {
+                for (elementIndex = 0; elementIndex < line.length; ++elementIndex) {
                     var sizesThisElement = sizesAllLines[lineIndex][elementIndex];
 
                     if (sizesThisElement[b.size] > line.largestSize[b.size]) {
-                        line.largestElement = element;
+                        line.largestElement = line[elementIndex];
                         line.largestSize = sizesThisElement;
                     }
-                });
+                }
 
                 largestElementsForEachLine.push(line.largestElement);
                 largestSizesForEachLine.push(line.largestSize);
-            });
+            }
 
             // Calculate line heights using the largest element on each line.
             var idealRequiredSpace = calculateTotalSpace(largestSizesForEachLine, b);
@@ -203,20 +208,22 @@ pc.extend(pc, function () {
             }
 
             // Calculate sizes for other elements based on the height of the line they're on.
-            lines.forEach(function(line, lineIndex) {
-                line.forEach(function(element, elementIndex) {
-                    var sizesThisElement = sizesAllLines[lineIndex][elementIndex];
-                    var currentSize = sizesThisElement[b.size];
-                    var availableSize = lines.length === 1 ? availableSpace[b.axis] : line.largestSize[b.size];
-                    var fittingAction = determineFittingAction(options[b.fitting], currentSize, availableSize);
+            for (lineIndex = 0; lineIndex < lines.length; ++lineIndex) {
+                line = lines[lineIndex];
 
-                    if (fittingAction === FITTING_ACTION.APPLY_STRETCHING) {
+                for (elementIndex = 0; elementIndex < line.length; ++elementIndex) {
+                    var sizesForThisElement = sizesAllLines[lineIndex][elementIndex];
+                    var currentSize = sizesForThisElement[b.size];
+                    var availableSize = lines.length === 1 ? availableSpace[b.axis] : line.largestSize[b.size];
+                    var elementFittingAction = determineFittingAction(options[b.fitting], currentSize, availableSize);
+
+                    if (elementFittingAction === FITTING_ACTION.APPLY_STRETCHING) {
                         sizesThisElement[b.size] = Math.min(availableSize, sizesThisElement[b.maxSize]);
-                    } else if (fittingAction === FITTING_ACTION.APPLY_SHRINKING) {
+                    } else if (elementFittingAction === FITTING_ACTION.APPLY_SHRINKING) {
                         sizesThisElement[b.size] = Math.max(availableSize, sizesThisElement[b.minSize]);
                     }
-                });
-            });
+                }
+            }
 
             return sizesAllLines;
         }
@@ -358,8 +365,9 @@ pc.extend(pc, function () {
 
             var positionsAllLines = [];
 
-            // TODO Replace this and various other forEach/map cases with regular loops to avoid GC overhead
-            lines.forEach(function(line, lineIndex) {
+            for (var lineIndex = 0; lineIndex < lines.length; ++lineIndex) {
+                var line = lines[lineIndex];
+
                 if (line.length === 0) {
                     return;
                 }
@@ -371,7 +379,9 @@ pc.extend(pc, function () {
                 cursor[b.axis] -= minExtentB(line.largestElement, line.largestSize);
 
                 // Distribute elements along the line
-                line.forEach(function(element, elementIndex) {
+                for (var elementIndex = 0; elementIndex < line.length; ++elementIndex) {
+                    var element = line[elementIndex];
+
                     cursor[a.axis] -= minExtentA(element, sizesThisLine[elementIndex]);
 
                     positionsThisLine[elementIndex] = {};
@@ -379,7 +389,7 @@ pc.extend(pc, function () {
                     positionsThisLine[elementIndex][b.axis] = cursor[b.axis];
 
                     cursor[a.axis] += maxExtentA(element, sizesThisLine[elementIndex]) + options.spacing[a.axis];
-                });
+                }
 
                 // Record the size of the overall line
                 line[a.size] = cursor[a.axis] - options.spacing[a.axis];
@@ -390,7 +400,7 @@ pc.extend(pc, function () {
                 cursor[b.axis] += line[b.size] + options.spacing[b.axis];
 
                 positionsAllLines.push(positionsThisLine);
-            });
+            }
 
             // Record the size of the full set of lines
             lines[b.size] = cursor[b.axis] - options.spacing[b.axis];
@@ -406,29 +416,33 @@ pc.extend(pc, function () {
             var paddingA = options.padding[a.axis];
             var paddingB = options.padding[b.axis];
 
-            lines.forEach(function(line, lineIndex) {
+            for (var lineIndex = 0; lineIndex < lines.length; ++lineIndex) {
+                var line = lines[lineIndex];
                 var sizesThisLine = sizes[lineIndex];
                 var positionsThisLine = positions[lineIndex];
 
                 var axisAOffset = (availableSpace[a.axis] - line[a.size])  * alignmentA + paddingA;
                 var axisBOffset = (availableSpace[b.axis] - lines[b.size]) * alignmentB + paddingB;
 
-                line.forEach(function(element, elementIndex) {
+                for (var elementIndex = 0; elementIndex < line.length; ++elementIndex) {
                     var withinLineAxisBOffset = (line[b.size] - sizesThisLine[elementIndex][b.size]) * options.alignment[b.axis];
 
                     positionsThisLine[elementIndex][a.axis] += axisAOffset;
                     positionsThisLine[elementIndex][b.axis] += axisBOffset + withinLineAxisBOffset;
-                });
-            });
+                }
+            }
         }
 
         // Applies the final calculated sizes and positions back to elements themselves.
         function applySizesAndPositions(lines, sizes, positions) {
-            lines.forEach(function(line, lineIndex) {
+            for (var lineIndex = 0; lineIndex < lines.length; ++lineIndex) {
+                var line = lines[lineIndex];
                 var sizesThisLine = sizes[lineIndex];
                 var positionsThisLine = positions[lineIndex];
 
-                line.forEach(function(element, elementIndex) {
+                for (var elementIndex = 0; elementIndex < line.length; ++elementIndex) {
+                    var element = line[elementIndex];
+
                     element[a.calculatedSize] = sizesThisLine[elementIndex][a.size];
                     element[b.calculatedSize] = sizesThisLine[elementIndex][b.size];
 
@@ -445,8 +459,8 @@ pc.extend(pc, function () {
                             element.entity.getLocalPosition().z
                         );
                     }
-                });
-            });
+                }
+            }
         }
 
         // Reads all size-related properties for each element and applies some basic
@@ -482,9 +496,13 @@ pc.extend(pc, function () {
         }
 
         function getProperties(elements, propertyName) {
-            return elements.map(function(element) {
-                return getProperty(element, propertyName);
-            });
+            var properties = [];
+
+            for (var i = 0; i < elements.length; ++i) {
+                properties.push(getProperty(elements[i], propertyName));
+            }
+
+            return properties;
         }
 
         // When reading an element's width/height, minWidth/minHeight etc, we have to look in
@@ -517,16 +535,21 @@ pc.extend(pc, function () {
 
         function getNormalizedValues(items, propertyName) {
             var sum = sumValues(items, propertyName);
+            var normalizedValues = [];
+            var numItems = items.length;
+            var i;
 
             if (sum === 0) {
-                return items.map(function() {
-                    return 1 / items.length;
-                });
+                for (i = 0; i < numItems; ++i) {
+                    normalizedValues.push(1 / numItems);
+                }
             } else {
-                return items.map(function(value) {
-                    return value[propertyName] / sum;
-                });
+                for (i = 0; i < numItems; ++i) {
+                    normalizedValues.push(items[i][propertyName] / sum);
+                }
             }
+
+            return normalizedValues;
         }
 
         function invertNormalizedValues(values) {
@@ -535,24 +558,33 @@ pc.extend(pc, function () {
                 return [1];
             }
 
-            return values.map(function(value) {
-                return (1 - value) / (values.length - 1);
-            });
+            var invertedValues = [];
+            var numValues = values.length;
+
+            for (var i = 0; i < numValues; ++i) {
+                invertedValues.push((1 - values[i]) / (numValues - 1));
+            }
+
+            return invertedValues;
         }
 
         function getTraversalOrder(items, orderBy, descending) {
-            items.forEach(function(item, index) {
-                item.index = index;
-            });
+            items.forEach(assignIndex);
 
             return items
                 .slice()
                 .sort(function(itemA, itemB) {
                     return descending ? itemB[orderBy] - itemA[orderBy] : itemA[orderBy] - itemB[orderBy];
                 })
-                .map(function(item) {
-                    return item.index;
-                });
+                .map(getIndex);
+        }
+
+        function assignIndex(item, index) {
+            item.index = index;
+        }
+
+        function getIndex(item) {
+            return item.index;
         }
 
         // Returns a new array containing the sums of the values in the original array,
