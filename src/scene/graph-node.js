@@ -50,7 +50,6 @@ pc.extend(pc, function () {
 
         this._enabled = true;
         this._enabledInHierarchy = false;
-        this._beingEnabled = false;
 
         this.scaleCompensation = false;
     };
@@ -108,13 +107,10 @@ pc.extend(pc, function () {
 
         set: function (enabled) {
             if (this._enabled !== enabled) {
-                this._beingEnabled = true;
                 this._enabled = enabled;
 
                 if (! this._parent || this._parent.enabled)
                     this._notifyHierarchyStateChanged(this, enabled);
-
-                this._beingEnabled = false;
             }
         }
     });

@@ -669,7 +669,10 @@ pc.extend(pc, function () {
 
                 // called after scripts are preloaded
                 var _loaded = function () {
+
+                    self.systems.script.preloading = true;
                     var entity = handler.open(url, data);
+                    self.systems.script.preloading = false;
 
                     // clear from cache because this data is modified by entity operations (e.g. destroy)
                     self.loader.clearCache(url, "hierarchy");
@@ -740,7 +743,9 @@ pc.extend(pc, function () {
                 if (!err) {
                     var _loaded = function () {
                         // parse and create scene
+                        self.systems.script.preloading = true;
                         var scene = handler.open(url, data);
+                        self.systems.script.preloading = false;
 
                         // clear scene from cache because we'll destroy it when we load another one
                         // so data will be invalid
@@ -752,6 +757,7 @@ pc.extend(pc, function () {
                         }, self.assets);
 
                         self.root.addChild(scene.root);
+
 
                         // Initialise pack settings
                         if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
@@ -856,7 +862,9 @@ pc.extend(pc, function () {
                 for (var key in props.layers) {
                     var data = props.layers[key];
                     data.id = parseInt(key, 10);
-                    data.enabled = true;
+                    // depth layer starts disabled - it should be enabled
+                    // only when needed by incrementing its ref counter
+                    data.enabled = (data.id !== pc.LAYERID_DEPTH);
                     layers[key] = new pc.Layer(data);
                 }
 

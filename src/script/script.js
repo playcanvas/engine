@@ -529,15 +529,13 @@ pc.extend(pc, function () {
                 return this._enabled && this.entity.script.enabled && this.entity.enabled;
             },
             set: function(value) {
-                value = !!value;
-                if (this._enabled !== value)
-                    this._enabled = value;
+                this._enabled = !!value;
 
-                if (this.enabled !== this._enabledOld) {
-                    this._enabledOld = this.enabled;
-                    this.fire(this.enabled ? 'enable' : 'disable');
-                    this.fire('state', this.enabled);
-                }
+                if (this.enabled === this._enabledOld) return;
+
+                this._enabledOld = this.enabled;
+                this.fire(this.enabled ? 'enable' : 'disable');
+                this.fire('state', this.enabled);
 
                 // initialize script if not initialized yet and script is enabled
                 if (! this._initialized && this.enabled) {
