@@ -854,7 +854,9 @@ pc.extend(pc, function () {
                 for (var key in props.layers) {
                     var data = props.layers[key];
                     data.id = parseInt(key, 10);
-                    data.enabled = true;
+                    // depth layer should only be enabled when needed
+                    // by incrementing its ref counter
+                    data.enabled = data.id !== pc.LAYERID_DEPTH;
                     layers[key] = new pc.Layer(data);
                 }
 
