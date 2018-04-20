@@ -38,5 +38,8 @@
   },
   "engines": {
     "node": ">= 0.6.12"
+  },
+  "dependencies": {
+    "npm": "^5.8.0"
   }
 }

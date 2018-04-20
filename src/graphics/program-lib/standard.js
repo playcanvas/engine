@@ -1304,6 +1304,8 @@ pc.programlib.standard = {
 
         fshader = code;
 
+        attributes = pc.extend(attributes, pc.shaderChunks.collectAttribs(vshader));
+
         return {
             attributes: attributes,
             vshader: vshader,
