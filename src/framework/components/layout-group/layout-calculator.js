@@ -218,9 +218,9 @@ pc.extend(pc, function () {
                     var elementFittingAction = determineFittingAction(options[b.fitting], currentSize, availableSize);
 
                     if (elementFittingAction === FITTING_ACTION.APPLY_STRETCHING) {
-                        sizesThisElement[b.size] = Math.min(availableSize, sizesThisElement[b.maxSize]);
+                        sizesForThisElement[b.size] = Math.min(availableSize, sizesForThisElement[b.maxSize]);
                     } else if (elementFittingAction === FITTING_ACTION.APPLY_SHRINKING) {
-                        sizesThisElement[b.size] = Math.max(availableSize, sizesThisElement[b.minSize]);
+                        sizesForThisElement[b.size] = Math.max(availableSize, sizesForThisElement[b.minSize]);
                     }
                 }
             }
