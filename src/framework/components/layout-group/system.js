@@ -24,9 +24,6 @@ pc.extend(pc, function () {
 
         // Perform reflow when running in the engine
         pc.ComponentSystem.on('postUpdate', this._onPostUpdate, this);
-
-        // Perform reflow when running in the editor
-        pc.ComponentSystem.on('toolsUpdate', this._onToolsUpdate, this);
     };
     LayoutGroupComponentSystem = pc.inherits(LayoutGroupComponentSystem, pc.ComponentSystem);
 
@@ -92,10 +89,6 @@ pc.extend(pc, function () {
             if (this._reflowQueue.indexOf(component) === -1) {
                 this._reflowQueue.push(component);
             }
-        },
-
-        _onToolsUpdate: function () {
-            this._processReflowQueue();
         },
 
         _onPostUpdate: function () {
