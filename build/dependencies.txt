@@ -163,7 +163,10 @@
 ../src/framework/components/element/data.js
 ../src/framework/components/element/image-element.js
 ../src/framework/components/element/text-element.js
-../src/framework/components/layout-group/component.js
+../src/framework/components/layout-group/constants.js
+../src/framework/components/layout-layout-group/component.js
+../src/framework/components/layout-layout-group/component.js
+../src/framework/components/layout-group/system.js
 ../src/framework/components/layout-group/system.js
 ../src/framework/components/layout-group/data.js
 ../src/framework/components/layout-group/layout-calculator.js
