@@ -162,6 +162,8 @@ pc.extend(pc, function () {
         if (node === this && this._app._enableList.length === 0)
             enableFirst = true;
 
+        node._beingEnabled = true;
+
         node._onHierarchyStateChanged(enabled);
 
         if (node._onHierarchyStatePostChanged)
@@ -173,6 +175,8 @@ pc.extend(pc, function () {
             if (c[i]._enabled)
                 this._notifyHierarchyStateChanged(c[i], enabled);
         }
+
+        node._beingEnabled = false;
 
         if (enableFirst) {
             for (i = 0, len = this._app._enableList.length; i < len; i++)
