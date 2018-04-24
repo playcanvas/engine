@@ -241,7 +241,7 @@ module("pc.ScriptComponent", {
 
 var checkInitCall = function (entity, index, text) {
     equal(window.initializeCalls[index], entity.getGuid() + ' ' + text);
-}
+};
 
 test("script assets are loaded", function () {
     ok(pc.app.assets.get(1));
@@ -1805,52 +1805,32 @@ test('destroying entity during postUpdate does not skip updating any other scrip
 });
 
 test('destroying entity during initialize does not skip updating any other script components on other entities', function () {
-    var root = new pc.Entity();
+    this.app.root.children[0].destroy();
 
-    var e = new pc.Entity();
-    e.addComponent('script', {
-        enabled: true,
-        order: ['destroyer'],
-        scripts: {
-            destroyer: {
-                enabled: true,
-                attributes: {
-                    methodName: 'initialize',
-                    destroyEntity: true
-                }
-            }
-        }
+    stop();
+
+    var app = this.app;
+
+    window.initializeCalls.length = 0;
+    this.app.loadScene('scene2.json', function () {
+        start();
+
+        var e = app.root.findByName('A');
+        var other = app.root.findByName('B');
+
+        app.start();
+
+        equal(window.initializeCalls.length, 8);
+        var idx = 0;
+        checkInitCall(e, idx++, 'initialize destroyer');
+        checkInitCall(e, idx++, 'disable destroyer');
+        checkInitCall(e, idx++, 'state false destroyer');
+        checkInitCall(e, idx++, 'destroy destroyer');
+        checkInitCall(other, idx++, 'initialize scriptA');
+        checkInitCall(other, idx++, 'postInitialize scriptA');
+        checkInitCall(other, idx++, 'update scriptA');
+        checkInitCall(other, idx++, 'postUpdate scriptA');
     });
-
-    root.addChild(e);
-
-    var other = new pc.Entity();
-    other.addComponent('script', {
-        enabled: true,
-        order: ['scriptA'],
-        scripts: {
-            scriptA: {
-                enabled: true
-            }
-        }
-    });
-
-    root.addChild(other);
-
-    this.app.root.addChild(root);
-
-    this.app.update();
-
-    equal(window.initializeCalls.length, 8);
-    var idx = 0;
-    checkInitCall(e, idx++, 'initialize destroyer');
-    checkInitCall(e, idx++, 'disable destroyer');
-    checkInitCall(e, idx++, 'state false destroyer');
-    checkInitCall(e, idx++, 'destroy destroyer');
-    checkInitCall(other, idx++, 'initialize scriptA');
-    checkInitCall(other, idx++, 'postInitialize scriptA');
-    checkInitCall(other, idx++, 'update scriptA');
-    checkInitCall(other, idx++, 'postUpdate scriptA');
 });
 
 test('destroying entity during postInitialize does not skip updating any other script components on other entities', function () {
