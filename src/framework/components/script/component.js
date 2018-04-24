@@ -206,7 +206,7 @@ pc.extend(pc, function () {
             return looping;
         },
 
-        // Restores isLoopingThroughScrits to the specified parameter
+        // Restores isLoopingThroughScripts to the specified parameter
         // If all loops are over then remove destroyed scripts form the _scripts array
         _endLooping: function (wasLoopingBefore) {
             this._isLoopingThroughScripts = wasLoopingBefore;
