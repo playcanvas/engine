@@ -93,8 +93,9 @@ pc.extend(pc, function () {
             var wasLooping = this._beginLooping();
 
             for (var i = 0; i < this._components.length; i++) {
-                if (! this._components[i].entity.enabled || ! this._components[i].enabled || this._components[i]._destroyed)
+                if (this._components[i]._destroyed || ! this._components[i].entity.enabled || ! this._components[i].enabled) {
                     continue;
+                }
 
                 this._components[i][name](dt);
             }
