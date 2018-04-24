@@ -83,6 +83,7 @@ pc.extend(pc, function () {
         _listenForResizeEvents: function(target, onOff) {
             if (target.element) {
                 target.element[onOff]('resize', this._onResize, this);
+                target.element[onOff]('set:pivot', this._onSetPivot, this);
             }
 
             if (target.layoutchild) {
@@ -115,6 +116,10 @@ pc.extend(pc, function () {
         },
 
         _onResize: function() {
+            this._scheduleReflow();
+        },
+
+        _onSetPivot: function() {
             this._scheduleReflow();
         },
 
