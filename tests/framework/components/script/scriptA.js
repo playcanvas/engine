@@ -21,8 +21,19 @@ ScriptA.prototype.initialize = function() {
     this.on('state', function (enabled) {
         window.initializeCalls.push(guid + ' state ' + enabled + ' scriptA');
     });
+    this.on('destroy', function () {
+        window.initializeCalls.push(this.entity.getGuid() + ' destroy scriptA');
+    });
 };
 
 ScriptA.prototype.postInitialize = function() {
     window.initializeCalls.push(this.entity.getGuid() + ' postInitialize scriptA');
+};
+
+ScriptA.prototype.update = function () {
+    window.initializeCalls.push(this.entity.getGuid() + ' update scriptA');
+};
+
+ScriptA.prototype.postUpdate = function () {
+    window.initializeCalls.push(this.entity.getGuid() + ' postUpdate scriptA');
 };

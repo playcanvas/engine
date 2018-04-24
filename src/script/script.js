@@ -347,6 +347,7 @@ pc.extend(pc, function () {
             this.entity = args.entity;
             this._enabled = typeof(args.enabled) === 'boolean' ? args.enabled : true;
             this._enabledOld = this.enabled;
+            this.__destroyed = false;
             this.__attributes = { };
             this.__attributesRaw = args.attributes || null;
             this.__scriptType = script;
@@ -526,7 +527,7 @@ pc.extend(pc, function () {
 
         Object.defineProperty(script.prototype, 'enabled', {
             get: function() {
-                return this._enabled && this.entity.script.enabled && this.entity.enabled;
+                return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
             },
             set: function(value) {
                 this._enabled = !!value;
@@ -589,7 +590,7 @@ pc.extend(pc, function () {
 
     // reserved script attribute names
     createScript.reservedAttributes = [
-        'app', 'entity', 'enabled', '_enabled', '_enabledOld',
+        'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
         '__attributes', '__attributesRaw', '__scriptType',
         '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
     ];
