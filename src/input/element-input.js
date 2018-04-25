@@ -614,8 +614,9 @@ pc.extend(pc, function () {
 
                 // 3D screen
                 var worldCorners = element.worldCorners;
-                var start = camera.entity.getPosition();
-                var end = vecA;
+                var start = vecA;
+                var end = vecB;
+                camera.screenToWorld(_x, _y, camera.nearClip, start);
                 camera.screenToWorld(_x, _y, camera.farClip, end);
 
                 if (intersectLineQuad(start, end, worldCorners)) {

@@ -290,7 +290,7 @@ pc.programlib.standard = {
             options.fresnelModel = (options.fresnelModel === 0) ? pc.FRESNEL_SCHLICK : options.fresnelModel;
         }
 
-        var cubemapReflection = options.cubeMap || (options.prefilteredCubemap && options.useSpecular) && (!options.sphereMap && !options.dpAtlas);
+        var cubemapReflection = (options.cubeMap || (options.prefilteredCubemap && options.useSpecular)) && !options.sphereMap && !options.dpAtlas;
         var reflections = options.sphereMap || cubemapReflection || options.dpAtlas;
         var useTangents = pc.precalculatedTangents;
         var useTexCubeLod = options.useTexCubeLod;
