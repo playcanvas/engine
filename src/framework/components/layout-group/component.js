@@ -147,6 +147,9 @@ pc.extend(pc, function () {
                 return;
             }
 
+            var containerWidth = Math.max(container.calculatedWidth, 0);
+            var containerHeight = Math.max(container.calculatedHeight, 0);
+
             var options = {
                 orientation: this._orientation,
                 reverseX: this._reverseX,
@@ -157,7 +160,7 @@ pc.extend(pc, function () {
                 widthFitting: this._widthFitting,
                 heightFitting: this._heightFitting,
                 wrap: this._wrap,
-                containerSize: new pc.Vec2(container.calculatedWidth, container.calculatedHeight)
+                containerSize: new pc.Vec2(containerWidth, containerHeight)
             };
 
             // In order to prevent recursive reflow (i.e. whereby setting the size of
