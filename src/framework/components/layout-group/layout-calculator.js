@@ -79,12 +79,30 @@ pc.extend(pc, function () {
                 options.containerSize.y - options.padding.data[1] - options.padding.data[3]
             );
 
+            resetAnchors(allElements);
+
             var lines = reverseLinesIfRequired(splitLines(allElements));
             var sizes = calculateSizesOnAxisB(lines, calculateSizesOnAxisA(lines));
             var positions = calculateBasePositions(lines, sizes);
 
             applyAlignmentAndPadding(lines, sizes, positions);
             applySizesAndPositions(lines, sizes, positions);
+        }
+
+        // Setting the anchors of child elements to anything other than 0,0,0,0 results
+        // in positioning that is hard to reason about for the user. Forcing the anchors
+        // to 0,0,0,0 gives us more predictable positioning, and also has the benefit of
+        // ensuring that the element is not in split anchors mode on either axis.
+        function resetAnchors(allElements) {
+            for (var i = 0; i < allElements.length; ++i) {
+                var element = allElements[i];
+                var anchor = element.anchor.data;
+
+                if (anchor[0] !== 0 || anchor[1] !== 0 || anchor[2] !== 0 || anchor[3] !== 0) {
+                    console.log('setting anchor to 0. curr: ', anchor);
+                    element.anchor = [0, 0, 0, 0];
+                }
+            }
         }
 
         // Returns a 2D array of elements broken down into lines, based on the size of
