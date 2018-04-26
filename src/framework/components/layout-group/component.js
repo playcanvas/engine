@@ -141,7 +141,7 @@ pc.extend(pc, function () {
 
         reflow: function() {
             var container = getElement(this.entity);
-            var elements = this.entity.children.filter(getElement).map(getElement);
+            var elements = this.entity.children.filter(isEnabledAndHasEnabledElement).map(getElement);
 
             if (!container || elements.length === 0) {
                 return;
@@ -182,6 +182,10 @@ pc.extend(pc, function () {
 
     function getElement(entity) {
         return entity.element;
+    }
+
+    function isEnabledAndHasEnabledElement(entity) {
+        return entity.enabled && entity.element && entity.element.enabled;
     }
 
     function defineReflowSchedulingProperty(name) {
