@@ -67,6 +67,11 @@ pc.extend(pc, function () {
             LightComponentSystem._super.initializeComponentData.call(this, component, data, _props);
         },
 
+        removeComponent: function (entity) {
+            var data = entity.light.data;
+            data.light.destroy();
+        },
+
         cloneComponent: function (entity, clone) {
             var light = entity.light;
 
