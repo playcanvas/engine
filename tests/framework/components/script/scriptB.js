@@ -12,8 +12,20 @@ ScriptB.prototype.initialize = function() {
     this.entity.script.on('state', function (enabled) {
         window.initializeCalls.push(guid + ' state ' + enabled + ' scriptB');
     });
+    this.on('destroy', function () {
+        window.initializeCalls.push(this.entity.getGuid() + ' destroy scriptB');
+    });
 };
 
 ScriptB.prototype.postInitialize = function() {
     window.initializeCalls.push(this.entity.getGuid() + ' postInitialize scriptB');
 };
+
+ScriptB.prototype.update = function () {
+    window.initializeCalls.push(this.entity.getGuid() + ' update scriptB');
+};
+
+ScriptB.prototype.postUpdate = function () {
+    window.initializeCalls.push(this.entity.getGuid() + ' postUpdate scriptB');
+};
+
