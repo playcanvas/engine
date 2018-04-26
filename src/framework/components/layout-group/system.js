@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     var _schema = [ 'enabled' ];
 
     /**
+     * @private
      * @name pc.LayoutGroupComponentSystem
      * @description Create a new LayoutGroupComponentSystem
      * @class Manages creation of {@link pc.LayoutGroupComponent}s.

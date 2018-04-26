@@ -1,5 +1,6 @@
 pc.extend(pc, function () {
     /**
+     * @private
      * @name pc.LayoutCalculator
      * @description Create a new LayoutCalculator
      * @class Used to manage layout calculations for LayoutGroupComponents

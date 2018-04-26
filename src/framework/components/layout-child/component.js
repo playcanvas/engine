@@ -1,5 +1,6 @@
 pc.extend(pc, function () {
     /**
+     * @private
      * @component
      * @name pc.LayoutChildComponent
      * @description Create a new LayoutChildComponent

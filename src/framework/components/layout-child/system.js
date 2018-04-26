@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     var _schema = [ 'enabled' ];
 
     /**
+     * @private
      * @name pc.LayoutChildComponentSystem
      * @description Create a new LayoutChildComponentSystem
      * @class Manages creation of {@link pc.LayoutChildComponent}s.
