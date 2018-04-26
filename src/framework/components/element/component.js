@@ -405,7 +405,7 @@ pc.extend(pc, function () {
                 this.screen.screen.on('remove', this._onScreenRemove, this);
             }
 
-            this._calculateSize();
+            this._calculateSize(this._hasSplitAnchorsX, this._hasSplitAnchorsY);
 
             this.fire('set:screen', this.screen);
 
@@ -567,7 +567,7 @@ pc.extend(pc, function () {
             this._cornersDirty = true;
             this._worldCornersDirty = true;
 
-            this._calculateSize();
+            this._calculateSize(this._hasSplitAnchorsX, this._hasSplitAnchorsY);
 
             this.fire('screen:set:resolution', res);
         },
@@ -723,11 +723,6 @@ pc.extend(pc, function () {
             var newWidth = this._absRight - this._absLeft;
             var newHeight = this._absTop - this._absBottom;
 
-            // TODO This change is significant - needs discussion.
-            //      For context: without this change, any modifications to the margins done when
-            //      calculatedWidth/Height is updated will eventually end up being propagated to
-            //      the regular width/height. We want to avoid this except in the special case
-            //      where the user has changed the anchors from being split to unsplit.
             if (propagateCalculatedWidth) {
                 this._setWidth(newWidth);
             } else {
@@ -937,7 +932,7 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._margin.copy(value);
-            this._calculateSize();
+            this._calculateSize(true, true);
         }
     });
 
@@ -1083,7 +1078,12 @@ pc.extend(pc, function () {
             this._margin.data[1] += my * dy;
             this._margin.data[3] -= my * dy;
 
-            this._onScreenResize();
+            this._anchorDirty = true;
+            this._cornersDirty = true;
+            this._worldCornersDirty = true;
+
+            this._calculateSize();
+
             this.fire('set:pivot', this._pivot);
         }
     });
@@ -1094,8 +1094,6 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
-            var hadSplitAnchorsX = this._hasSplitAnchorsX;
-            var hadSplitAnchorsY = this._hasSplitAnchorsY;
 
             if (value instanceof pc.Vec4) {
                 this._anchor.set(value.x, value.y, value.z, value.w);
@@ -1106,12 +1104,8 @@ pc.extend(pc, function () {
             if (!this.entity._parent && !this.screen) {
                 this._calculateLocalAnchors();
             } else {
-                var anchorsBecameUnsplitX = hadSplitAnchorsX && !this._hasSplitAnchorsX;
-                var anchorsBecameUnsplitY = hadSplitAnchorsY && !this._hasSplitAnchorsY;
-
-                this._calculateSize(anchorsBecameUnsplitX, anchorsBecameUnsplitY);
+                this._calculateSize(this._hasSplitAnchorsX, this._hasSplitAnchorsY);
             }
-
 
             this._anchorDirty = true;
 
