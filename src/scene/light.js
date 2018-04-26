@@ -79,6 +79,10 @@ pc.extend(pc, function () {
     };
 
     Light.prototype = {
+        destroy: function () {
+            this._destroyShadowMap();
+        },
+
         /**
          * @private
          * @function
@@ -217,6 +221,7 @@ pc.extend(pc, function () {
                             }
                         } else {
                             if (rt.colorBuffer) rt.colorBuffer.destroy();
+                            if (rt.depthBuffer) rt.depthBuffer.destroy();
                             rt.destroy();
                         }
                     }
