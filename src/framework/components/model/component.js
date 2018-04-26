@@ -268,12 +268,13 @@ pc.extend(pc, function () {
 
         onSetCastShadows: function (name, oldValue, newValue) {
             var layer;
+            var i;
             var model = this.data.model;
             if (model) {
                 var layers = this.layers;
                 var scene = this.system.app.scene;
                 if (oldValue && !newValue) {
-                    for (i=0; i<layers.length; i++) {
+                    for (i = 0; i < layers.length; i++) {
                         layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                         if (!layer) continue;
                         layer.removeShadowCasters(model.meshInstances);
@@ -281,8 +282,9 @@ pc.extend(pc, function () {
                 }
 
                 var meshInstances = model.meshInstances;
-                for (var i = 0; i < meshInstances.length; i++)
+                for (i = 0; i < meshInstances.length; i++) {
                     meshInstances[i].castShadow = newValue;
+                }
 
                 if (!oldValue && newValue) {
                     for (i=0; i<layers.length; i++) {

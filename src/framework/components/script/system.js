@@ -116,7 +116,7 @@ pc.extend(pc, function () {
                 // remove destroyed components
                 var len = this._destroyedComponents.length;
                 if (len) {
-                    for (i = 0; i < len; i++) {
+                    for (var i = 0; i < len; i++) {
                         var idx = this._components.indexOf(this._destroyedComponents[i]);
                         if (idx >= 0) {
                             this._components.splice(idx, 1);
