@@ -32,6 +32,7 @@ pc.extend(pc, function () {
 
     pc.extend(LayoutGroupComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
+            if (data.enabled !== undefined) component.enabled = data.enabled;
             if (data.orientation !== undefined) component.orientation = data.orientation;
             if (data.reverseX !== undefined) component.reverseX = data.reverseX;
             if (data.reverseY !== undefined) component.reverseY = data.reverseY;

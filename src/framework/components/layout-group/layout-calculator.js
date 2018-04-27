@@ -532,8 +532,7 @@ pc.extend(pc, function () {
             var layoutChildComponent = element.entity.layoutchild;
 
             // First attempt to get the value from the element's LayoutChildComponent, if present.
-            // TODO Should this check if the LayoutChildComponent is enabled?
-            if (layoutChildComponent && layoutChildComponent[propertyName] !== undefined && layoutChildComponent[propertyName] !== null) {
+            if (layoutChildComponent && layoutChildComponent.enabled && layoutChildComponent[propertyName] !== undefined && layoutChildComponent[propertyName] !== null) {
                 return layoutChildComponent[propertyName];
             } else if (element[propertyName] !== undefined) {
                 return element[propertyName];

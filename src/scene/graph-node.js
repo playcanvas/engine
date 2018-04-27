@@ -108,7 +108,16 @@ pc.extend(pc, function () {
 
         set: function (enabled) {
             if (this._enabled !== enabled) {
+                var prevValue = this._enabled;
+
                 this._enabled = enabled;
+
+                if (this.fire) {
+                    // TODO Using set_enabled here because it matches the convention in
+                    //      components/component.js, but we also have set:foo elsewhere.
+                    //      Which one is preferred?
+                    this.fire('set_enabled', 'enabled', prevValue, enabled);
+                }
 
                 if (! this._parent || this._parent.enabled)
                     this._notifyHierarchyStateChanged(this, enabled);

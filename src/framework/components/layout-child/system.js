@@ -25,6 +25,7 @@ pc.extend(pc, function () {
 
     pc.extend(LayoutChildComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
+            if (data.enabled !== undefined) component.enabled = data.enabled;
             if (data.minWidth !== undefined) component.minWidth = data.minWidth;
             if (data.minHeight !== undefined) component.minHeight = data.minHeight;
             if (data.maxWidth !== undefined) component.maxWidth = data.maxWidth;
