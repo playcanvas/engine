@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var _schema = [ 'enabled' ];
+    var _schema = ['enabled'];
 
     /**
      * @name pc.ScriptComponentSystem
@@ -57,7 +57,7 @@ pc.extend(pc, function () {
 
         cloneComponent: function(entity, clone) {
             var i, key;
-            var order = [ ];
+            var order = [];
             var scripts = { };
 
             for (i = 0; i < entity.script._scripts.length; i++) {

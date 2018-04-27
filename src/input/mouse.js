@@ -125,7 +125,7 @@ pc.extend(pc, function () {
         // Clear the mouse state
         this._lastX      = 0;
         this._lastY      = 0;
-        this._buttons      = [false,false,false];
+        this._buttons      = [false, false, false];
         this._lastbuttons  = [false, false, false];
 
 

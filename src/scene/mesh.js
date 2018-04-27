@@ -23,7 +23,7 @@ pc.extend(pc, function () {
         this._refCount = 0;
         this.id = id++;
         this.vertexBuffer = null;
-        this.indexBuffer = [ null ];
+        this.indexBuffer = [null];
         this.primitive = [{
             type: 0,
             base: 0,
@@ -88,7 +88,7 @@ pc.extend(pc, function () {
      * @property {Boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
-        this._key = [0,0];
+        this._key = [0, 0];
         this._shader = [null, null, null];
 
         this.isStatic = false;
@@ -176,7 +176,7 @@ pc.extend(pc, function () {
                     var index;
                     var offsetP, offsetI, offsetW;
                     var j, k, l;
-                    for (i=0; i<elems.length; i++) {
+                    for (i = 0; i < elems.length; i++) {
                         if (elems[i].name === pc.SEMANTIC_POSITION) {
                             offsetP = elems[i].offset;
                         } else if (elems[i].name === pc.SEMANTIC_BLENDINDICES) {
@@ -198,14 +198,14 @@ pc.extend(pc, function () {
                     var boneMax = [];
                     boneUsed = this.mesh.boneUsed;
 
-                    for (i=0; i<numBones; i++) {
+                    for (i = 0; i < numBones; i++) {
                         boneMin[i] = new pc.Vec3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
                         boneMax[i] = new pc.Vec3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
                     }
 
                     // Find bone AABBs by attached vertices
-                    for (j=0; j<numVerts; j++) {
-                        for (k=0; k<4; k++) {
+                    for (j = 0; j < numVerts; j++) {
+                        for (k = 0; k < 4; k++) {
                             if (dataF[j * vertSizeF + offsetWF + k] > 0) {
                                 index = data8[j * vertSize + offsetI + k];
                                 // Vertex j is affected by bone index
@@ -240,18 +240,18 @@ pc.extend(pc, function () {
                         var m, dx, dy, dz;
                         var target, mtIndices, mtIndicesLength, deltaPos;
 
-                        for (j=0; j<numVerts; j++) {
+                        for (j = 0; j < numVerts; j++) {
                             minMorphedPos[j * 3] = maxMorphedPos[j * 3] = dataF[j * vertSizeF + offsetPF];
                             minMorphedPos[j * 3 + 1] = maxMorphedPos[j * 3 + 1] = dataF[j * vertSizeF + offsetPF + 1];
                             minMorphedPos[j * 3 + 2] = maxMorphedPos[j * 3 + 2] = dataF[j * vertSizeF + offsetPF + 2];
                         }
 
-                        for (l=0; l<targets.length; l++) {
+                        for (l = 0; l < targets.length; l++) {
                             target = targets[l];
                             mtIndices = target.indices;
                             mtIndicesLength = mtIndices.length;
                             deltaPos = target.deltaPositions;
-                            for (k=0; k<mtIndicesLength; k++) {
+                            for (k = 0; k < mtIndicesLength; k++) {
                                 vertIndex = mtIndices[k];
 
                                 dx = deltaPos[k * 3];
@@ -279,14 +279,14 @@ pc.extend(pc, function () {
                         }
 
                         // Re-evaluate bone AABBs against min/max morphed positions
-                        for (l=0; l<targets.length; l++) {
+                        for (l = 0; l < targets.length; l++) {
                             target = targets[l];
                             mtIndices = target.indices;
                             mtIndicesLength = mtIndices.length;
                             deltaPos = target.deltaPositions;
-                            for (k=0; k<mtIndicesLength; k++) {
+                            for (k = 0; k < mtIndicesLength; k++) {
                                 vertIndex = mtIndices[k];
-                                for (m=0; m<4; m++) {
+                                for (m = 0; m < 4; m++) {
                                     if (dataF[vertIndex * vertSizeF + offsetWF + m] > 0) {
                                         index = data8[vertIndex * vertSize + offsetI + m];
                                         // Vertex vertIndex is affected by bone index
@@ -312,7 +312,7 @@ pc.extend(pc, function () {
                         }
                     }
 
-                    for (i=0; i<numBones; i++) {
+                    for (i = 0; i < numBones; i++) {
                         aabb = new pc.BoundingBox();
                         aabb.setMinMax(boneMin[i], boneMax[i]);
                         this.mesh.boneAabb.push(aabb);
@@ -322,7 +322,7 @@ pc.extend(pc, function () {
                 // Initialize per-instance AABBs if needed
                 if (!this._boneAabb) {
                     this._boneAabb = [];
-                    for (i=0; i<this.mesh.boneAabb.length; i++) {
+                    for (i = 0; i < this.mesh.boneAabb.length; i++) {
                         this._boneAabb[i] = new pc.BoundingBox();
                     }
                 }
@@ -330,7 +330,7 @@ pc.extend(pc, function () {
                 boneUsed = this.mesh.boneUsed;
 
                 // Update per-instance bone AABBs
-                for (i=0; i<this.mesh.boneAabb.length; i++) {
+                for (i = 0; i < this.mesh.boneAabb.length; i++) {
                     if (!boneUsed[i]) continue;
                     this._boneAabb[i].setFromTransformedAabb(this.mesh.boneAabb[i], this.skinInstance.matrices[i]);
                 }
@@ -338,7 +338,7 @@ pc.extend(pc, function () {
                 // Update full instance AABB
                 var rootNodeTransform = this.node.getWorldTransform();
                 var first = true;
-                for (i=0; i<this.mesh.boneAabb.length; i++) {
+                for (i = 0; i < this.mesh.boneAabb.length; i++) {
                     if (!boneUsed[i]) continue;
                     if (first) {
                         _tmpAabb.center.copy(this._boneAabb[i].center);
@@ -354,8 +354,8 @@ pc.extend(pc, function () {
                  // if there is no mesh then reset aabb
                 aabb = this.mesh ? this.mesh.aabb : this._aabb;
                 if (! this.mesh) {
-                    aabb.center.set(0,0,0);
-                    aabb.halfExtents.set(0,0,0);
+                    aabb.center.set(0, 0, 0);
+                    aabb.halfExtents.set(0, 0, 0);
                 }
 
                 this._aabb.setFromTransformedAabb(aabb, this.node.getWorldTransform());
@@ -374,7 +374,7 @@ pc.extend(pc, function () {
         },
         set: function (material) {
             var i;
-            for (i=0; i<this._shader.length; i++) {
+            for (i = 0; i < this._shader.length; i++) {
                 this._shader[i] = null;
             }
             // Remove the material's reference to this mesh instance
@@ -429,7 +429,7 @@ pc.extend(pc, function () {
         },
         set: function (val) {
             this._receiveShadow = val;
-            this._shaderDefs = val? (this._shaderDefs & ~pc.SHADERDEF_NOSHADOW) : (this._shaderDefs | pc.SHADERDEF_NOSHADOW);
+            this._shaderDefs = val ? (this._shaderDefs & ~pc.SHADERDEF_NOSHADOW) : (this._shaderDefs | pc.SHADERDEF_NOSHADOW);
             this._shader[pc.SHADER_FORWARD] = null;
             this._shader[pc.SHADER_FORWARDHDR] = null;
         }
@@ -441,8 +441,8 @@ pc.extend(pc, function () {
         },
         set: function (val) {
             this._skinInstance = val;
-            this._shaderDefs = val? (this._shaderDefs | pc.SHADERDEF_SKIN) : (this._shaderDefs & ~pc.SHADERDEF_SKIN);
-            for (var i=0; i<this._shader.length; i++) {
+            this._shaderDefs = val ? (this._shaderDefs | pc.SHADERDEF_SKIN) : (this._shaderDefs & ~pc.SHADERDEF_SKIN);
+            for (var i = 0; i < this._shader.length; i++) {
                 this._shader[i] = null;
             }
         }
@@ -526,7 +526,7 @@ pc.extend(pc, function () {
         this.buffer = new Float32Array(numObjects * instanceSize);
         this.count = numObjects;
         this.offset = 0;
-        this.usage = dynamic? pc.BUFFER_DYNAMIC : pc.BUFFER_STATIC;
+        this.usage = dynamic ? pc.BUFFER_DYNAMIC : pc.BUFFER_STATIC;
         this._buffer = null;
     };
 

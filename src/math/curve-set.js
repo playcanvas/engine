@@ -81,7 +81,7 @@ pc.extend(pc, (function () {
         clone: function () {
             var result = new pc.CurveSet();
 
-            result.curves = [ ];
+            result.curves = [];
             for (var i = 0; i < this.curves.length; i++) {
                 result.curves.push(this.curves[i].clone());
             }

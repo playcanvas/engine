@@ -15,9 +15,9 @@ pc.extend(pc, function () {
         this._spriteFrame = 0;
         this._pixelsPerUnit = null;
 
-        this._rect = new pc.Vec4(0,0,1,1); // x, y, w, h
+        this._rect = new pc.Vec4(0, 0, 1, 1); // x, y, w, h
 
-        this._color = new pc.Color(1,1,1,1);
+        this._color = new pc.Color(1, 1, 1, 1);
 
         this._mask = false; // this image element is a mask
         this._maskRef = 0; // id used in stencil buffer to mask
@@ -213,10 +213,10 @@ pc.extend(pc, function () {
             this._positions[10] = h;
             this._positions[11] = 0;
 
-            for (var i = 0; i < 12; i+=3) {
+            for (var i = 0; i < 12; i += 3) {
                 this._normals[i] = 0;
-                this._normals[i+1] = 0;
-                this._normals[i+2] = 1;
+                this._normals[i + 1] = 0;
+                this._normals[i + 2] = 1;
             }
 
             this._uvs[0] = this._rect.data[0];
@@ -235,7 +235,7 @@ pc.extend(pc, function () {
             this._indices[4] = 3;
             this._indices[5] = 1;
 
-            var mesh = pc.createMesh(this._system.app.graphicsDevice, this._positions, {uvs: this._uvs, normals: this._normals, indices: this._indices});
+            var mesh = pc.createMesh(this._system.app.graphicsDevice, this._positions, { uvs: this._uvs, normals: this._normals, indices: this._indices });
             this._updateMesh(mesh);
 
             return mesh;
@@ -276,7 +276,7 @@ pc.extend(pc, function () {
                 this._atlasRect.set(frameData.rect.x / tex.width,
                                     frameData.rect.y / tex.height,
                                     frameData.rect.z / tex.width,
-                                    frameData.rect.w / tex.height)
+                                    frameData.rect.w / tex.height);
 
                 // scale: apply PPU
                 var ppu = this._pixelsPerUnit !== null ? this._pixelsPerUnit : this.sprite.pixelsPerUnit;
@@ -333,8 +333,8 @@ pc.extend(pc, function () {
                 var vp = this._element.pivot.data[1];
 
                 for (i = 0; i < this._positions.length; i += 3) {
-                    this._positions[i] -= hp*w;
-                    this._positions[i+1] -= vp*h;
+                    this._positions[i] -= hp * w;
+                    this._positions[i + 1] -= vp * h;
                 }
 
                 w = 1;
@@ -363,9 +363,9 @@ pc.extend(pc, function () {
                 var it = new pc.VertexIterator(vb);
                 var numVertices = 4;
                 for (i = 0; i < numVertices; i++) {
-                    it.element[pc.SEMANTIC_POSITION].set(this._positions[i*3+0], this._positions[i*3+1], this._positions[i*3+2]);
-                    it.element[pc.SEMANTIC_NORMAL].set(this._normals[i*3+0], this._normals[i*3+1], this._normals[i*3+2]);
-                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i*2+0], this._uvs[i*2+1]);
+                    it.element[pc.SEMANTIC_POSITION].set(this._positions[i * 3 + 0], this._positions[i * 3 + 1], this._positions[i * 3 + 2]);
+                    it.element[pc.SEMANTIC_NORMAL].set(this._normals[i * 3 + 0], this._normals[i * 3 + 1], this._normals[i * 3 + 2]);
+                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i * 2 + 0], this._uvs[i * 2 + 1]);
 
                     it.next();
                 }
@@ -832,7 +832,7 @@ pc.extend(pc, function () {
                 this._spriteFrame = value;
             }
 
-            var nineSlice = false
+            var nineSlice = false;
             var mesh = null;
 
             // take mesh from sprite

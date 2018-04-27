@@ -170,12 +170,12 @@ pc.extend(pc, (function () {
          * console.log(m.toString());
          */
         toString: function () {
-            var t = "[";
+            var t = '[';
             for (var i = 0; i < 9; i++) {
                 t += this.data[i];
-                t += (i !== 9) ? ", " : "";
+                t += (i !== 9) ? ', ' : '';
             }
-            t += "]";
+            t += ']';
             return t;
         },
 

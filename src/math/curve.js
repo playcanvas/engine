@@ -106,6 +106,7 @@ pc.extend(pc, (function () {
          * @returns {Number} The interpolated value
          */
         value: function (time) {
+            var i;
             var keys = this.keys;
 
             // no keys
@@ -126,7 +127,7 @@ pc.extend(pc, (function () {
             var rightTime = 1;
             var rightValue = 0;
 
-            for (var i = 0, len = keys.length; i < len; i++) {
+            for (i = 0, len = keys.length; i < len; i++) {
                 // early exit check
                 if (keys[i][0] === time) {
                     return keys[i][1];
@@ -183,9 +184,9 @@ pc.extend(pc, (function () {
 
                 if (this.type === CURVE_CATMULL) {
                     return this._interpolateCatmullRom(p0, p1, p2, p3, interpolation);
-                } else {
-                    return this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
                 }
+
+                return this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
             }
 
             return pc.math.lerp(leftValue, rightValue, interpolation);

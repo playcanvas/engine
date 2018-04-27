@@ -55,11 +55,7 @@ pc.extend(pc, function () {
          */
         get data() {
             var record = this.system.store[this.entity._guid];
-            if (record) {
-                return record.data;
-            } else {
-                return null;
-            }
+            return record ? record.data : null;
         },
 
         buildAccessors: function (schema) {

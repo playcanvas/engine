@@ -28,7 +28,7 @@ pc.extend(pc, function () {
     var Animation = function Animation() {
         this.name = '';
         this.duration = 0;
-        this._nodes = [ ];
+        this._nodes = [];
         this._nodeDict = {};
     };
 

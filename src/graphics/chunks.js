@@ -26,13 +26,13 @@ pc.extend(pc, (function () {
 
         var found = vsCode.indexOf("attribute");
         while (found >= 0) {
-            if (found > 0 && vsCode[found-1]==="/") break;
+            if (found > 0 && vsCode[found - 1] === "/") break;
             var endOfLine = vsCode.indexOf(';', found);
             var startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
             var attribName = vsCode.substr(startOfAttribName + 1, endOfLine - (startOfAttribName + 1));
 
             var semantic = attrib2Semantic[attribName];
-            if (semantic!==undefined) {
+            if (semantic !== undefined) {
                 attribs[attribName] = semantic;
             } else {
                 attribs[attribName] = "ATTR" + attrs;

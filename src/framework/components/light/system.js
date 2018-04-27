@@ -28,7 +28,7 @@ pc.extend(pc, function () {
             var data = {};
             var _props = pc._lightProps;
             var name;
-            for (var i=0; i<_props.length; i++) {
+            for (var i = 0; i < _props.length; i++) {
                 name = _props[i];
                 data[name] = _data[name];
             }
@@ -78,9 +78,9 @@ pc.extend(pc, function () {
             var data = [];
             var name;
             var _props = pc._lightProps;
-            for (var i=0; i<_props.length; i++) {
+            for (var i = 0; i < _props.length; i++) {
                 name = _props[i];
-                if (name==="light") continue;
+                if (name === "light") continue;
                 if (light[name] && light[name].clone) {
                     data[name] = light[name].clone();
                 } else {
@@ -92,7 +92,7 @@ pc.extend(pc, function () {
         },
 
         changeType: function (component, oldValue, newValue) {
-            if (oldValue!==newValue) {
+            if (oldValue !== newValue) {
                 component.light.type = lightTypes[newValue];
             }
         }

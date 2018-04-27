@@ -6,7 +6,7 @@ pc.extend(pc, function () {
         new pc.Mat4().setScale(0.5, 0.5, 0.5)
     );
 
-    var opChanId = {r: 1, g: 2, b: 3, a: 4};
+    var opChanId = { r: 1, g: 2, b: 3, a: 4 };
 
     var pointLightRotations = [
         new pc.Quat().setFromEulerAngles(0, 90, 180),
@@ -22,7 +22,7 @@ pc.extend(pc, function () {
 
     var directionalShadowEpsilon = 0.01;
     var pixelOffset = new pc.Vec2();
-    var blurScissorRect = {x: 1, y: 1, z: 0, w: 0};
+    var blurScissorRect = { x: 1, y: 1, z: 0, w: 0 };
 
     var shadowCamView = new pc.Mat4();
     var shadowCamViewProj = new pc.Mat4();
@@ -47,10 +47,9 @@ pc.extend(pc, function () {
     var viewProjMatR = new pc.Mat4();
 
     var frustumDiagonal = new pc.Vec3();
-    var tempSphere = {center: null, radius: 0};
+    var tempSphere = { center: null, radius: 0 };
     var meshPos;
     var visibleSceneAabb = new pc.BoundingBox();
-    var lightBounds = new pc.BoundingBox();
     var boneTextureSize = [0, 0];
     var boneTexture, instancingData, modelMatrix, normalMatrix;
 
@@ -61,7 +60,7 @@ pc.extend(pc, function () {
 
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
-    for (var i = 0; i < 8; i++) {
+    for (var fp = 0; fp < 8; fp++) {
         frustumPoints.push(new pc.Vec3());
     }
 
@@ -112,6 +111,7 @@ pc.extend(pc, function () {
         return points;
     }
 
+/*
     function StaticArray(size) {
         var data = new Array(size);
         var obj = function(idx) {
@@ -125,6 +125,7 @@ pc.extend(pc, function () {
         obj.data = data;
         return obj;
     }
+
     var intersectCache = {
         temp: [new pc.Vec3(), new pc.Vec3(), new pc.Vec3()],
         vertices: new Array(3),
@@ -133,6 +134,7 @@ pc.extend(pc, function () {
         intersections: new StaticArray(3),
         zCollection: new StaticArray(36)
     };
+
     function _groupVertices(coord, face, smallerIsNegative) {
         var intersections = intersectCache.intersections;
         var small, large;
@@ -149,7 +151,6 @@ pc.extend(pc, function () {
         large.size = 0;
 
         // Grouping vertices according to the position related to the face
-        var intersectCount = 0;
         var v;
         for (var j = 0; j < 3; ++j) {
             v = intersectCache.vertices[j];
@@ -163,6 +164,7 @@ pc.extend(pc, function () {
             }
         }
     }
+
     function _triXFace(zs, x, y, faceTest, yMin, yMax) {
 
         var negative = intersectCache.negative;
@@ -230,19 +232,23 @@ pc.extend(pc, function () {
         }
         return true;
     }
+*/
 
     var _sceneAABB_LS = [
         new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3(),
         new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()
     ];
+
+/*
     var iAABBTriIndexes = [
-        0,1,2,  1,2,3,
-        4,5,6,  5,6,7,
-        0,2,4,  2,4,6,
-        1,3,5,  3,5,7,
-        0,1,4,  1,4,5,
-        2,3,6,  3,6,7
+        0, 1, 2,  1, 2, 3,
+        4, 5, 6,  5, 6, 7,
+        0, 2, 4,  2, 4, 6,
+        1, 3, 5,  3, 5, 7,
+        0, 1, 4,  1, 4, 5,
+        2, 3, 6,  3, 6, 7
     ];
+
     function _getZFromAABB(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
         _sceneAABB_LS[0].x = _sceneAABB_LS[1].x = _sceneAABB_LS[2].x = _sceneAABB_LS[3].x = aabbMin.x;
         _sceneAABB_LS[1].y = _sceneAABB_LS[3].y = _sceneAABB_LS[7].y = _sceneAABB_LS[5].y = aabbMin.y;
@@ -300,6 +306,7 @@ pc.extend(pc, function () {
         }
         return { min: minz, max: maxz };
     }
+*/
 
     function _getZFromAABBSimple(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
         _sceneAABB_LS[0].x = _sceneAABB_LS[1].x = _sceneAABB_LS[2].x = _sceneAABB_LS[3].x = aabbMin.x;
@@ -400,7 +407,7 @@ pc.extend(pc, function () {
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
 
-        var targets = [ ];
+        var targets = [];
         var target;
         for (var i = 0; i < 6; i++) {
             target = new pc.RenderTarget({
@@ -419,7 +426,7 @@ pc.extend(pc, function () {
 
     function gaussWeights(kernelSize) {
         if (kernelSize > maxBlurSize) kernelSize = maxBlurSize;
-        var sigma = (kernelSize - 1) / (2*3);
+        var sigma = (kernelSize - 1) / (2 * 3);
         var i, values, sum, halfWidth;
 
         halfWidth = (kernelSize - 1) * 0.5;
@@ -470,7 +477,7 @@ pc.extend(pc, function () {
         var id = layer * 10000 + res;
         var shadowBuffer = shadowMapCache[mode][id];
         if (!shadowBuffer) {
-            shadowBuffer = createShadowMap(device, res, res, mode? mode : pc.SHADOW_PCF3);
+            shadowBuffer = createShadowMap(device, res, res, mode ? mode : pc.SHADOW_PCF3);
             shadowMapCache[mode][id] = shadowBuffer;
         }
         return shadowBuffer;
@@ -877,20 +884,18 @@ pc.extend(pc, function () {
             h = Math.floor(rect.height * pixelHeight);
             device.setScissor(x, y, w, h);
 
-            if (cullBorder) device.setScissor(1, 1, pixelWidth-2, pixelHeight-2); // optionally clip borders when rendering
+            if (cullBorder) device.setScissor(1, 1, pixelWidth - 2, pixelHeight - 2); // optionally clip borders when rendering
         },
 
         dispatchGlobalLights: function (scene) {
             var i;
             this.mainLight = -1;
 
-            var scope = this.device.scope;
-
             this.ambientColor[0] = scene.ambientLight.data[0];
             this.ambientColor[1] = scene.ambientLight.data[1];
             this.ambientColor[2] = scene.ambientLight.data[2];
             if (scene.gammaCorrection) {
-                for (i=0; i<3; i++) {
+                for (i = 0; i < 3; i++) {
                     this.ambientColor[i] = Math.pow(this.ambientColor[i], 2.2);
                 }
             }
@@ -939,7 +944,7 @@ pc.extend(pc, function () {
                     this._resolveLight(scope, cnt);
                 }
 
-                this.lightColorId[cnt].setValue(scene.gammaCorrection? directional._linearFinalColor.data : directional._finalColor.data);
+                this.lightColorId[cnt].setValue(scene.gammaCorrection ? directional._linearFinalColor.data : directional._finalColor.data);
 
                 // Directionals shine down the negative Y axis
                 wtm.getY(directional._direction).scale(-1);
@@ -953,7 +958,7 @@ pc.extend(pc, function () {
                     // make bias dependent on far plane because it's not constant for direct light
                     var bias;
                     if (directional._isVsm) {
-                        bias = -0.00001*20;
+                        bias = -0.00001 * 20;
                     } else {
                         bias = (directional.shadowBias / directional._shadowCamera._farClip) * 100;
                         if (!this.device.webgl2 && this.device.extStandardDerivatives) bias *= -100;
@@ -965,7 +970,7 @@ pc.extend(pc, function () {
                     this.lightShadowMapId[cnt].setValue(shadowMap);
                     this.lightShadowMatrixId[cnt].setValue(directional._shadowMatrix.data);
                     var params = directional._rendererParams;
-                    if (params.length!==3) params.length = 3;
+                    if (params.length !== 3) params.length = 3;
                     params[0] = directional._shadowResolution;
                     params[1] = normalBias;
                     params[2] = bias;
@@ -990,7 +995,7 @@ pc.extend(pc, function () {
             }
 
             this.lightRadiusId[cnt].setValue(point.attenuationEnd);
-            this.lightColorId[cnt].setValue(scene.gammaCorrection? point._linearFinalColor.data : point._finalColor.data);
+            this.lightColorId[cnt].setValue(scene.gammaCorrection ? point._linearFinalColor.data : point._finalColor.data);
             wtm.getTranslation(point._position);
             this.lightPosId[cnt].setValue(point._position.data);
 
@@ -998,7 +1003,7 @@ pc.extend(pc, function () {
                 var shadowMap = point._shadowCamera.renderTarget.colorBuffer;
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 var params = point._rendererParams;
-                if (params.length!==4) params.length = 4;
+                if (params.length !== 4) params.length = 4;
                 params[0] = point._shadowResolution;
                 params[1] = point._normalOffsetBias;
                 params[2] = point.shadowBias;
@@ -1022,7 +1027,7 @@ pc.extend(pc, function () {
             this.lightInAngleId[cnt].setValue(spot._innerConeAngleCos);
             this.lightOutAngleId[cnt].setValue(spot._outerConeAngleCos);
             this.lightRadiusId[cnt].setValue(spot.attenuationEnd);
-            this.lightColorId[cnt].setValue(scene.gammaCorrection? spot._linearFinalColor.data : spot._finalColor.data);
+            this.lightColorId[cnt].setValue(scene.gammaCorrection ? spot._linearFinalColor.data : spot._finalColor.data);
             wtm.getTranslation(spot._position);
             this.lightPosId[cnt].setValue(spot._position.data);
             // Spots shine down the negative Y axis
@@ -1032,7 +1037,7 @@ pc.extend(pc, function () {
             if (spot.castShadows) {
                 var bias;
                 if (spot._isVsm) {
-                    bias = -0.00001*20;
+                    bias = -0.00001 * 20;
                 } else {
                     bias = spot.shadowBias * 20; // approx remap from old bias values
                     if (!this.device.webgl2 && this.device.extStandardDerivatives) bias *= -100;
@@ -1047,7 +1052,7 @@ pc.extend(pc, function () {
                 this.lightShadowMapId[cnt].setValue(shadowMap);
                 this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
                 var params = spot._rendererParams;
-                if (params.length!==4) params.length = 4;
+                if (params.length !== 4) params.length = 4;
                 params[0] = spot._shadowResolution;
                 params[1] = normalBias;
                 params[2] = bias;
@@ -1203,7 +1208,7 @@ pc.extend(pc, function () {
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
                 type = light._type;
-                if (light.castShadows && light._enabled && light.shadowUpdateMode!==pc.SHADOWUPDATE_NONE) {
+                if (light.castShadows && light._enabled && light.shadowUpdateMode !== pc.SHADOWUPDATE_NONE) {
                     if (type !== pc.LIGHTTYPE_DIRECTIONAL) {
                         light.getBoundingSphere(tempSphere);
                         if (!camera.frustum.containsSphere(tempSphere)) continue;
@@ -1375,15 +1380,10 @@ pc.extend(pc, function () {
             // #ifdef PROFILER
             var shadowMapStartTime = pc.now();
             // #endif
-            var i, j, light, shadowShader, type, shadowCam, shadowCamNode, lightNode, pass, passes, frustumSize, shadowType, smode;
-            var unitPerTexel, delta, p;
-            var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
-            var opChan;
-            var visible, cullTime, numInstances;
+            var i, j, light, shadowShader, type, shadowCam, shadowCamNode, pass, passes, shadowType, smode;
+            var numInstances;
             var meshInstance, mesh, material;
             var style;
-            var emptyAabb;
-            var drawCallAabb;
             var settings;
             var visibleList, visibleLength;
 
@@ -1404,7 +1404,6 @@ pc.extend(pc, function () {
 
                     shadowCam = this.getShadowCamera(device, light);
                     shadowCamNode = shadowCam._node;
-                    lightNode = light._node;
                     pass = 0;
                     passes = 1;
 
@@ -1550,11 +1549,11 @@ pc.extend(pc, function () {
                             var tempRt = getShadowMapFromCache(device, light._shadowResolution, light._shadowType, 1);
 
                             var blurMode = light.vsmBlurMode;
-                            var blurShader = (light._shadowType === pc.SHADOW_VSM8? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize];
+                            var blurShader = (light._shadowType === pc.SHADOW_VSM8 ? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize];
                             if (!blurShader) {
                                 this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
                                 var chunks = pc.shaderChunks;
-                                (light._shadowType === pc.SHADOW_VSM8? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize] = blurShader =
+                                (light._shadowType === pc.SHADOW_VSM8 ? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize] = blurShader =
                                     chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS,
                                     "#define SAMPLES " + filterSize + "\n" +
                                     (light._shadowType === pc.SHADOW_VSM8 ? this.blurPackedVsmShaderCode : this.blurVsmShaderCode)[blurMode],
@@ -1615,11 +1614,11 @@ pc.extend(pc, function () {
             // #endif
 
             var i, drawCall, mesh, material, objDefs, variantKey, lightMask, style, usedDirLights;
-            var prevMeshInstance = null, prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
+            var prevMaterial = null, prevObjDefs, prevLightMask, prevStatic;
             var paramName, parameter, parameters;
             var stencilFront, stencilBack;
 
-            var halfWidth = device.width*0.5;
+            var halfWidth = device.width * 0.5;
 
             // Render the scene
             for (i = 0; i < drawCallsCount; i++) {
@@ -1820,7 +1819,7 @@ pc.extend(pc, function () {
                     }
 
                     // Unset meshInstance overrides back to material values if next draw call will use the same material
-                    if (i<drawCallsCount-1 && drawCalls[i+1].material === material) {
+                    if (i < drawCallsCount - 1 && drawCalls[i + 1].material === material) {
                         for (paramName in parameters) {
                             parameter = material.parameters[paramName];
                             if (parameter) {
@@ -1833,7 +1832,6 @@ pc.extend(pc, function () {
                     }
 
                     prevMaterial = material;
-                    prevMeshInstance = drawCall;
                     prevObjDefs = objDefs;
                     prevLightMask = lightMask;
                     prevStatic = drawCall.isStatic;
@@ -1865,13 +1863,14 @@ pc.extend(pc, function () {
         },
 
         revertStaticMeshes: function (meshInstances) {
+            var i;
             var drawCalls = meshInstances;
             var drawCallsCount = drawCalls.length;
             var drawCall;
             var newDrawCalls = [];
 
             var prevStaticSource;
-            for (var i=0; i<drawCallsCount; i++) {
+            for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (drawCall._staticSource) {
                     if (drawCall._staticSource !== prevStaticSource) {
@@ -1885,7 +1884,7 @@ pc.extend(pc, function () {
 
             // Set array to new
             meshInstances.length = newDrawCalls.length;
-            for (i=0; i<newDrawCalls.length; i++) {
+            for (i = 0; i < newDrawCalls.length; i++) {
                 meshInstances[i] = newDrawCalls[i];
             }
         },
@@ -1923,7 +1922,6 @@ pc.extend(pc, function () {
             var minv, maxv;
             var minVec = new pc.Vec3();
             var maxVec = new pc.Vec3();
-            var triAabb = new pc.BoundingBox();
             var localLightBounds = new pc.BoundingBox();
             var invMatrix = new pc.Mat4();
             var triLightComb = [];
@@ -1937,7 +1935,7 @@ pc.extend(pc, function () {
             var staticLights = [];
             var bit;
             var lht;
-            for (i=0; i<drawCallsCount; i++) {
+            for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (!drawCall.isStatic) {
                     newDrawCalls.push(drawCall);
@@ -1951,13 +1949,13 @@ pc.extend(pc, function () {
                     for (lightTypePass = pc.LIGHTTYPE_POINT; lightTypePass <= pc.LIGHTTYPE_SPOT; lightTypePass++) {
                         for (j = 0; j < lights.length; j++) {
                             light = lights[j];
-                            if (light._type!==lightTypePass) continue;
+                            if (light._type !== lightTypePass) continue;
                             if (light._enabled) {
                                 if (light._mask & drawCall.mask) {
                                     if (light.isStatic) {
                                         if (!lightAabb[j]) {
                                             lightAabb[j] = new pc.BoundingBox();
-                                            //light.getBoundingBox(lightAabb[j]); // box from sphere seems to give better granularity
+                                            // light.getBoundingBox(lightAabb[j]); // box from sphere seems to give better granularity
                                             light._node.getWorldTransform();
                                             light.getBoundingSphere(tempSphere);
                                             lightAabb[j].center.copy(tempSphere.center);
@@ -1987,14 +1985,14 @@ pc.extend(pc, function () {
                     mesh = drawCall.mesh;
                     vertexBuffer = mesh.vertexBuffer;
                     indexBuffer = mesh.indexBuffer[drawCall.renderStyle];
-                    indices = indexBuffer.bytesPerIndex === 2? new Uint16Array(indexBuffer.lock()) : new Uint32Array(indexBuffer.lock());
+                    indices = indexBuffer.bytesPerIndex === 2 ? new Uint16Array(indexBuffer.lock()) : new Uint32Array(indexBuffer.lock());
                     numTris = mesh.primitive[drawCall.renderStyle].count / 3;
                     baseIndex = mesh.primitive[drawCall.renderStyle].base;
                     elems = vertexBuffer.format.elements;
                     vertSize = vertexBuffer.format.size / 4; // / 4 because float
                     verts = new Float32Array(vertexBuffer.storage);
 
-                    for (k=0; k<elems.length; k++) {
+                    for (k = 0; k < elems.length; k++) {
                         if (elems[k].name === pc.SEMANTIC_POSITION) {
                             offsetP = elems[k].offset / 4; // / 4 because float
                         }
@@ -2008,22 +2006,22 @@ pc.extend(pc, function () {
                     // #endif
 
                     triLightComb.length = numTris;
-                    for (k=0; k<numTris; k++) {
-                        //triLightComb[k] = ""; // uncomment to remove 32 lights limit
+                    for (k = 0; k < numTris; k++) {
+                        // triLightComb[k] = ""; // uncomment to remove 32 lights limit
                         triLightComb[k] = 0; // comment to remove 32 lights limit
                     }
                     triLightCombUsed = false;
 
                     triBounds.length = numTris * 6;
-                    for (k=0; k<numTris; k++) {
+                    for (k = 0; k < numTris; k++) {
                         minx = Number.MAX_VALUE;
                         miny = Number.MAX_VALUE;
                         minz = Number.MAX_VALUE;
                         maxx = -Number.MAX_VALUE;
                         maxy = -Number.MAX_VALUE;
                         maxz = -Number.MAX_VALUE;
-                        for (v=0; v<3; v++) {
-                            index = indices[k*3 + v + baseIndex];
+                        for (v = 0; v < 3; v++) {
+                            index = indices[k * 3 + v + baseIndex];
                             index = index * vertSize + offsetP;
                             _x = verts[index];
                             _y = verts[index + 1];
@@ -2037,11 +2035,11 @@ pc.extend(pc, function () {
                         }
                         index = k * 6;
                         triBounds[index] = minx;
-                        triBounds[index+1] = miny;
-                        triBounds[index+2] = minz;
-                        triBounds[index+3] = maxx;
-                        triBounds[index+4] = maxy;
-                        triBounds[index+5] = maxz;
+                        triBounds[index + 1] = miny;
+                        triBounds[index + 2] = minz;
+                        triBounds[index + 3] = maxx;
+                        triBounds[index + 4] = maxy;
+                        triBounds[index + 5] = maxz;
                     }
                     // #ifdef PROFILER
                     triAabbTime += pc.now() - subTriAabbTime;
@@ -2050,7 +2048,7 @@ pc.extend(pc, function () {
                     // #ifdef PROFILER
                     subSearchTime = pc.now();
                     // #endif
-                    for (s=0; s<staticLights.length; s++) {
+                    for (s = 0; s < staticLights.length; s++) {
                         j = staticLights[s];
                         light = lights[j];
 
@@ -2060,13 +2058,13 @@ pc.extend(pc, function () {
                         maxv = localLightBounds.getMax().data;
                         bit = 1 << s;
 
-                        for (k=0; k<numTris; k++) {
+                        for (k = 0; k < numTris; k++) {
                             index = k * 6;
-                            if ((triBounds[index] <= maxv[0]) && (triBounds[index+3] >= minv[0]) &&
-                                (triBounds[index+1] <= maxv[1]) && (triBounds[index+4] >= minv[1]) &&
-                                (triBounds[index+2] <= maxv[2]) && (triBounds[index+5] >= minv[2])) {
+                            if ((triBounds[index] <= maxv[0]) && (triBounds[index + 3] >= minv[0]) &&
+                                (triBounds[index + 1] <= maxv[1]) && (triBounds[index + 4] >= minv[1]) &&
+                                (triBounds[index + 2] <= maxv[2]) && (triBounds[index + 5] >= minv[2])) {
 
-                                //triLightComb[k] += j + "_";  // uncomment to remove 32 lights limit
+                                // triLightComb[k] += j + "_";  // uncomment to remove 32 lights limit
                                 triLightComb[k] |= bit; // comment to remove 32 lights limit
                                 triLightCombUsed = true;
                             }
@@ -2076,21 +2074,21 @@ pc.extend(pc, function () {
                     searchTime += pc.now() - subSearchTime;
                     // #endif
 
-                    if (triLightCombUsed) {//.used) {
+                    if (triLightCombUsed) {
 
                         // #ifdef PROFILER
                         subCombineTime = pc.now();
                         // #endif
 
                         combIndices = {};
-                        for (k=0; k<numTris; k++) {
-                            j = k*3 + baseIndex; // can go beyond 0xFFFF if base was non-zero?
+                        for (k = 0; k < numTris; k++) {
+                            j = k * 3 + baseIndex; // can go beyond 0xFFFF if base was non-zero?
                             combIbName = triLightComb[k];
                             if (!combIndices[combIbName]) combIndices[combIbName] = [];
                             combIb = combIndices[combIbName];
                             combIb.push(indices[j]);
-                            combIb.push(indices[j+1]);
-                            combIb.push(indices[j+2]);
+                            combIb.push(indices[j + 1]);
+                            combIb.push(indices[j + 2]);
                         }
 
                         // #ifdef PROFILER
@@ -2104,7 +2102,7 @@ pc.extend(pc, function () {
                         for (combIbName in combIndices) {
                             combIb = combIndices[combIbName];
                             var ib = new pc.IndexBuffer(device, indexBuffer.format, combIb.length, indexBuffer.usage);
-                            var ib2 = ib.bytesPerIndex === 2? new Uint16Array(ib.lock()) : new Uint32Array(ib.lock());
+                            var ib2 = ib.bytesPerIndex === 2 ? new Uint16Array(ib.lock()) : new Uint32Array(ib.lock());
                             ib2.set(combIb);
                             ib.unlock();
 
@@ -2114,7 +2112,7 @@ pc.extend(pc, function () {
                             maxx = -Number.MAX_VALUE;
                             maxy = -Number.MAX_VALUE;
                             maxz = -Number.MAX_VALUE;
-                            for (k=0; k<combIb.length; k++) {
+                            for (k = 0; k < combIb.length; k++) {
                                 index = combIb[k];
                                 _x = verts[index * vertSize + offsetP];
                                 _y = verts[index * vertSize + offsetP + 1];
@@ -2160,17 +2158,19 @@ pc.extend(pc, function () {
                             }
 
                             // uncomment to remove 32 lights limit
-                            /*var lnames = combIbName.split("_");
+                            /*
+                            var lnames = combIbName.split("_");
                             lnames.length = lnames.length - 1;
                             for(k=0; k<lnames.length; k++) {
                                 instance._staticLightList[k] = lights[ parseInt(lnames[k]) ];
-                            }*/
+                            }
+                            */
 
                             // comment to remove 32 lights limit
-                            for (k=0; k<staticLights.length; k++) {
+                            for (k = 0; k < staticLights.length; k++) {
                                 bit = 1 << k;
                                 if (combIbName & bit) {
-                                    lht = lights[ staticLights[k] ];
+                                    lht = lights[staticLights[k]];
                                     if (instance._staticLightList.indexOf(lht) < 0) {
                                         instance._staticLightList.push(lht);
                                     }
@@ -2192,7 +2192,7 @@ pc.extend(pc, function () {
             }
             // Set array to new
             meshInstances.length = newDrawCalls.length;
-            for (i=0; i<newDrawCalls.length; i++) {
+            for (i = 0; i < newDrawCalls.length; i++) {
                 meshInstances[i] = newDrawCalls[i];
             }
             // #ifdef PROFILER
@@ -2260,12 +2260,12 @@ pc.extend(pc, function () {
 
             var i;
             var len = meshInstances.length;
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 meshInstances[i].visibleThisFrame = false;
             }
 
             len = lights.length;
-            for (i=0; i<len; i++) {
+            for (i = 0; i < len; i++) {
                 lights[i].visibleThisFrame = lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL;
             }
         },
@@ -2300,7 +2300,7 @@ pc.extend(pc, function () {
                 }
                 layer._postRenderCounterMax = layer._postRenderCounter;
 
-                for (j=0; j<layer.cameras.length; j++) {
+                for (j = 0; j < layer.cameras.length; j++) {
                     // Create visible arrays for every camera inside each layer if not present
                     if (!layer.instances.visibleOpaque[j]) layer.instances.visibleOpaque[j] = new pc.VisibleInstanceList();
                     if (!layer.instances.visibleTransparent[j]) layer.instances.visibleTransparent[j] = new pc.VisibleInstanceList();
@@ -2353,7 +2353,7 @@ pc.extend(pc, function () {
                 shadowCamNode.rotateLocal(-90, 0, 0); // Camera's look down negative Z, and directional lights point down negative Y // TODO: remove eulers
             }
 
-            for (pass=0; pass<passes; pass++) {
+            for (pass = 0; pass < passes; pass++) {
 
                 if (type === pc.LIGHTTYPE_POINT) {
                     shadowCamNode.setRotation(pointLightRotations[pass]);
@@ -2391,13 +2391,11 @@ pc.extend(pc, function () {
 
 
         cullDirectionalShadowmap: function(light, drawCalls, camera, pass) {
-            var i, j, shadowShader, type, shadowCam, shadowCamNode, lightNode, passes, frustumSize, shadowType, smode, vlen, visibleList;
+            var i, j, shadowCam, shadowCamNode, lightNode, frustumSize, vlen, visibleList;
             var unitPerTexel, delta, p;
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
-            var opChan;
-            var visible, cullTime, numInstances;
-            var meshInstance, mesh, material;
-            var style;
+            var visible, numInstances;
+            var meshInstance;
             var emptyAabb;
             var drawCallAabb;
             var device = this.device;
@@ -2560,8 +2558,8 @@ pc.extend(pc, function () {
             device.clear(options ? options : camera._clearOptions); // clear full RT
         },
 
-
         setSceneConstants: function () {
+            var i;
             var device = this.device;
             var scene = this.scene;
 
@@ -2574,7 +2572,7 @@ pc.extend(pc, function () {
                 this.fogColor[1] = scene.fogColor.data[1];
                 this.fogColor[2] = scene.fogColor.data[2];
                 if (scene.gammaCorrection) {
-                    for (i=0; i<3; i++) {
+                    for (i = 0; i < 3; i++) {
                         this.fogColor[i] = Math.pow(this.fogColor[i], 2.2);
                     }
                 }
@@ -2593,7 +2591,7 @@ pc.extend(pc, function () {
             this._screenSize.z = 1.0 / device.width;
             this._screenSize.w = 1.0 / device.height;
             this.screenSizeId.setValue(this._screenSize.data);
-            //var halfWidth = device.width*0.5;
+            // var halfWidth = device.width*0.5;
         },
 
         renderComposition: function (comp) {
@@ -2602,8 +2600,7 @@ pc.extend(pc, function () {
             var renderedRt = comp._renderedRt;
             var renderedByCam = comp._renderedByCam;
             var renderedLayer = comp._renderedLayer;
-            var i, layer, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt, visibleLength;
-
+            var i, layer, transparent, cameras, j, rt, k, processedThisCamera, processedThisCameraAndLayer, processedThisCameraAndRt;
 
             this.beginLayers(comp);
 
@@ -2620,7 +2617,7 @@ pc.extend(pc, function () {
                 stats.dynamicLights = 0;
                 stats.bakedLights = 0;
                 var l;
-                for (i=0; i<stats.lights; i++) {
+                for (i = 0; i < stats.lights; i++) {
                     l = comp._lights[i];
                     if (l._enabled) {
                         if ((l._mask & pc.MASK_DYNAMIC) || (l._mask & pc.MASK_BAKED)) { // if affects dynamic or baked objects in real-time
@@ -2646,14 +2643,14 @@ pc.extend(pc, function () {
             // Also applies meshInstance.visible and camera.cullingMask
             var renderedLength = 0;
             var objects, drawCalls, visible;
-            for (i=0; i<comp.layerList.length; i++) {
+            for (i = 0; i < comp.layerList.length; i++) {
                 layer = comp.layerList[i];
                 if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
                 transparent = comp.subLayerList[i];
                 objects = layer.instances;
 
                 cameras = layer.cameras;
-                for (j=0; j<cameras.length; j++) {
+                for (j = 0; j < cameras.length; j++) {
                     camera = cameras[j];
                     if (!camera) continue;
                     camera.frameBegin(layer.renderTarget);
@@ -2661,7 +2658,7 @@ pc.extend(pc, function () {
 
                     processedThisCamera = false;
                     processedThisCameraAndLayer = false;
-                    for (k=0; k<renderedLength; k++) {
+                    for (k = 0; k < renderedLength; k++) {
                         if (renderedByCam[k] === camera) {
                             processedThisCamera = true;
                             if (renderedLayer[k] === layer) {
@@ -2720,7 +2717,7 @@ pc.extend(pc, function () {
             var cullTime = pc.now();
             // #endif
 
-            for (i=0; i<comp._lights.length; i++) {
+            for (i = 0; i < comp._lights.length; i++) {
                 light = comp._lights[i];
                 if (!light.visibleThisFrame) continue;
                 if (light._type === pc.LIGHTTYPE_DIRECTIONAL) continue;
@@ -2733,14 +2730,14 @@ pc.extend(pc, function () {
             // culled once for each camera
             renderedLength = 0;
             var globalLightCounter = -1;
-            for (i=0; i<comp._lights.length; i++) {
+            for (i = 0; i < comp._lights.length; i++) {
                 light = comp._lights[i];
                 if (light._type !== pc.LIGHTTYPE_DIRECTIONAL) continue;
                 globalLightCounter++;
                 if (!light.castShadows || !light._enabled || light.shadowUpdateMode === pc.SHADOWUPDATE_NONE) continue;
                 casters = comp._lightShadowCasters[i];
                 cameras = comp._globalLightCameras[globalLightCounter];
-                for (j=0; j<cameras.length; j++) {
+                for (j = 0; j < cameras.length; j++) {
                     this.cullDirectionalShadowmap(light, casters, cameras[j].camera, comp._globalLightCameraIds[globalLightCounter][j]);
                 }
             }
@@ -2762,11 +2759,11 @@ pc.extend(pc, function () {
             renderedLength = 0;
             var cameraPass;
             var sortTime, draws, drawTime;
-            for (i=0; i<comp._renderList.length; i++) {
-                layer = comp.layerList[ comp._renderList[i] ];
-                if (!layer.enabled || !comp.subLayerEnabled[ comp._renderList[i] ]) continue;
+            for (i = 0; i < comp._renderList.length; i++) {
+                layer = comp.layerList[comp._renderList[i]];
+                if (!layer.enabled || !comp.subLayerEnabled[comp._renderList[i]]) continue;
                 objects = layer.instances;
-                transparent = comp.subLayerList[ comp._renderList[i] ];
+                transparent = comp.subLayerList[comp._renderList[i]];
                 cameraPass = comp._renderListCamera[i];
                 camera = layer.cameras[cameraPass];
 
@@ -2796,7 +2793,7 @@ pc.extend(pc, function () {
                     // Each camera must only clear each render target once
                     rt = layer.renderTarget;
                     processedThisCameraAndRt = false;
-                    for (k=0; k<renderedLength; k++) {
+                    for (k = 0; k < renderedLength; k++) {
                         if (renderedRt[k] === rt && renderedByCam[k] === camera) {
                             processedThisCameraAndRt = true;
                             break;

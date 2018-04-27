@@ -130,11 +130,13 @@ pc.extend(pc, function () {
         },
 
         _onAssetChange: function (asset, attribute, value) {
+            var frame;
+
             if (attribute === 'data' || attribute === 'data.frames') {
                 // set frames
                 var frames = {};
                 for (var key in value.frames) {
-                    var frame = value.frames[key];
+                    frame = value.frames[key];
                     frames[key] = {
                         rect: new pc.Vec4(frame.rect),
                         pivot: new pc.Vec2(frame.pivot),
@@ -154,9 +156,9 @@ pc.extend(pc, function () {
                                 rect: new pc.Vec4(value.rect),
                                 pivot: new pc.Vec2(value.pivot),
                                 border: new pc.Vec4(value.border)
-                            }
+                            };
                         } else {
-                            var frame = asset.resource.frames[frameKey];
+                            frame = asset.resource.frames[frameKey];
                             frame.rect.set(value.rect[0], value.rect[1], value.rect[2], value.rect[3]);
                             frame.pivot.set(value.pivot[0], value.pivot[1]);
                             frame.border.set(value.border[0], value.border[1], value.border[2], value.border[3]);
@@ -174,13 +176,10 @@ pc.extend(pc, function () {
 
                 }
             }
-
-
         }
     };
 
     return {
         TextureAtlasHandler: TextureAtlasHandler
     };
-
 }());

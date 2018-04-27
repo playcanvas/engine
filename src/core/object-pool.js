@@ -18,7 +18,7 @@ pc.extend(pc, (function () {
 
         allocate: function () {
             if (this._count >= this._pool.length) {
-                this._resize(this._pool.length*2);
+                this._resize(this._pool.length * 2);
             }
             return this._pool[this._count++];
         },

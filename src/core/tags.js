@@ -27,7 +27,7 @@ pc.extend(pc, (function() {
             // create index for tag
             if (! this._index[tag]) {
                 this._index[tag] = {
-                    list: [ ]
+                    list: []
                 };
                 // key indexing is available
                 if (this._key)
@@ -74,7 +74,7 @@ pc.extend(pc, (function() {
         find: function(args) {
             var self = this;
             var index = { };
-            var items = [ ];
+            var items = [];
             var i, n, t;
             var item, tag, tags, tagsRest, missingIndex;
 
@@ -177,7 +177,7 @@ pc.extend(pc, (function() {
 
     var Tags = function(parent) {
         this._index = { };
-        this._list = [ ];
+        this._list = [];
         this._parent = parent;
 
         pc.events.attach(this);
@@ -278,7 +278,7 @@ pc.extend(pc, (function() {
                 return;
 
             var tags = this._list.slice(0);
-            this._list = [ ];
+            this._list = [];
             this._index = { };
 
             for (var i = 0; i < tags.length; i++)
@@ -357,8 +357,8 @@ pc.extend(pc, (function() {
 
 
         _processArguments: function(args, flat) {
-            var tags = [ ];
-            var tmp = [ ];
+            var tags = [];
+            var tmp = [];
 
             if (! args || ! args.length)
                 return tags;
@@ -366,7 +366,7 @@ pc.extend(pc, (function() {
             for (var i = 0; i < args.length; i++) {
                 if (args[i] instanceof Array) {
                     if (! flat)
-                        tmp = [ ];
+                        tmp = [];
 
                     for (var t = 0; t < args[i].length; t++) {
                         if (typeof(args[i][t]) !== 'string')
@@ -385,7 +385,7 @@ pc.extend(pc, (function() {
                     if (flat) {
                         tags.push(args[i]);
                     } else {
-                        tags.push([ args[i] ]);
+                        tags.push([args[i]]);
                     }
                 }
             }

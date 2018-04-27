@@ -50,11 +50,11 @@ pc.extend(pc, function () {
 
             if ((! assetCubeMap.file || ! assetCubeMap._dds) && assetCubeMap.resources[1]) {
                 // unset prefiltered textures
-                assetCubeMap.resources = [ assetCubeMap.resources[0] ];
+                assetCubeMap.resources = [assetCubeMap.resources[0]];
 
                 loaded = true;
             } else if (assetCubeMap._dds && ! assetCubeMap.resources[1]) {
-                assetCubeMap.resources = [ assetCubeMap.resources[0] ];
+                assetCubeMap.resources = [assetCubeMap.resources[0]];
 
                 // set prefiltered textures
                 assetCubeMap._dds.fixCubemapSeams = true;
@@ -133,13 +133,13 @@ pc.extend(pc, function () {
                 return;
 
             var cubemap = assetCubeMap.resource;
-            var sources = [ ];
+            var sources = [];
             var count = 0;
             var levelsUpdated = false;
             var self = this;
 
             if (! assetCubeMap._levelsEvents)
-                assetCubeMap._levelsEvents = [ null, null, null, null, null, null ];
+                assetCubeMap._levelsEvents = [null, null, null, null, null, null];
 
             assetCubeMap.data.textures.forEach(function (id, index) {
                 var assetAdded = function(asset) {

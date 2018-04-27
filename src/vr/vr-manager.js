@@ -23,7 +23,7 @@ pc.extend(pc, function () {
             window.InitializeWebVRPolyfill();
 
         this._index = { };
-        this.displays = [ ];
+        this.displays = [];
         this.display = null; // primary display (usually the first in list)
 
         this._app = app;

@@ -1,6 +1,6 @@
 pc.extend(pc, function () {
 
-    var properties = [ ];
+    var properties = [];
 
     var AssetVariants = function(asset) {
         this.asset = asset;

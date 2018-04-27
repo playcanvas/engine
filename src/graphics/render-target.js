@@ -38,14 +38,17 @@ pc.extend(pc, function () {
      *     height: 512,
      *     format: pc.PIXELFORMAT_R8_G8_B8
      * });
-     * var renderTarget = new pc.RenderTarget(graphicsDevice, colorBuffer, {
+     * var renderTarget = new pc.RenderTarget({
+     *     colorBuffer: colorBuffer,
      *     depth: true
      * });
      *
      * // Set the render target on a layer
      * layer.renderTarget = renderTarget;
      */
-    var RenderTarget = function (options, _arg2, _arg3) {
+    var RenderTarget = function (options) {
+        var _arg2 = arguments[1];
+        var _arg3 = arguments[2];
 
         if (options instanceof pc.GraphicsDevice) {
             // old constructor
@@ -243,11 +246,7 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(RenderTarget.prototype, 'width', {
         get: function() {
-            if (this._colorBuffer) {
-                return this._colorBuffer.width;
-            } else {
-                return this._depthBuffer.width;
-            }
+            return this._colorBuffer ? this._colorBuffer.width : this._depthBuffer.width;
         }
     });
 
@@ -259,11 +258,7 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(RenderTarget.prototype, 'height', {
         get: function() {
-            if (this._colorBuffer) {
-                return this._colorBuffer.height;
-            } else {
-                return this._depthBuffer.height;
-            }
+            return this._colorBuffer ? this._colorBuffer.height : this._depthBuffer.height;
         }
     });
 

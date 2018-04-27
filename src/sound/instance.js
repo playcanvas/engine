@@ -964,14 +964,13 @@ pc.extend(pc, function () {
 
     Object.defineProperty(SoundInstance.prototype, 'duration', {
         get: function () {
-            if (! this._sound)
+            if (!this._sound) {
                 return 0;
-
+            }
             if (this._duration) {
                 return capTime(this._duration, this._sound.duration);
-            } else {
-                return this._sound.duration;
             }
+            return this._sound.duration;
         },
         set: function (value) {
             this._duration = Math.max(0, Number(value) || 0);

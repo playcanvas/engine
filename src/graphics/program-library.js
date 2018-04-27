@@ -59,7 +59,7 @@ pc.extend(pc, function () {
         var cache = this._cache;
         for (var key in cache) {
             if (cache.hasOwnProperty(key)) {
-                if (cache[key]===shader) {
+                if (cache[key] === shader) {
                     delete cache[key];
                     break;
                 }

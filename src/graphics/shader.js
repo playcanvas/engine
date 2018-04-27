@@ -6,7 +6,7 @@ pc.extend(pc, function () {
 
         // Chrome reports shader errors on lines indexed from 1
         for (var i = 0, len = chunks.length; i < len; i ++) {
-            chunks[i] = (i+1) + ":\t" + chunks[i];
+            chunks[i] = (i + 1) + ":\t" + chunks[i];
         }
 
         return chunks.join( "\n" );
@@ -107,7 +107,7 @@ pc.extend(pc, function () {
             this.device._shaderStats.vsCompiled++;
             this.device._shaderStats.fsCompiled++;
             this.device._shaderStats.linked++;
-            if (this.definition.tag===pc.SHADERTAG_MATERIAL) {
+            if (this.definition.tag === pc.SHADERTAG_MATERIAL) {
                 this.device._shaderStats.materialShaders++;
             }
 

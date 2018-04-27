@@ -119,7 +119,7 @@ pc.extend(pc, function () {
                 foundKey = false;
                 if (keys.length !== 1) {
                     // Otherwise, find the keyframe pair for this node
-                    for (var currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length-1 && currKeyIndex >= 0; currKeyIndex += offset) {
+                    for (var currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length - 1 && currKeyIndex >= 0; currKeyIndex += offset) {
                         k1 = keys[currKeyIndex];
                         k2 = keys[currKeyIndex + 1];
 

@@ -51,9 +51,8 @@ pc.extend(pc, function(){
     function toKeyCode(s){
         if (typeof(s) == "string") {
             return s.toUpperCase().charCodeAt(0);
-        } else {
-            return s;
         }
+        return s;
     }
 
     var _keyCodeToKeyIdentifier = {
@@ -208,7 +207,7 @@ pc.extend(pc, function(){
         this._keymap[id] = true;
 
         // Patch on the keyIdentifier property in non-webkit browsers
-        //event.keyIdentifier = event.keyIdentifier || id;
+        // event.keyIdentifier = event.keyIdentifier || id;
 
         this.fire("keydown", makeKeyboardEvent(event));
 
@@ -231,7 +230,7 @@ pc.extend(pc, function(){
         delete this._keymap[id];
 
         // Patch on the keyIdentifier property in non-webkit browsers
-        //event.keyIdentifier = event.keyIdentifier || id;
+        // event.keyIdentifier = event.keyIdentifier || id;
 
         this.fire("keyup", makeKeyboardEvent(event));
 

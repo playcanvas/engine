@@ -11,7 +11,7 @@ pc.extend(pc, function () {
         this._fontAsset = null;
         this._font = null;
 
-        this._color = new pc.Color(1,1,1,1);
+        this._color = new pc.Color(1, 1, 1, 1);
 
         this._spacing = 1;
         this._fontSize = 32;
@@ -96,7 +96,7 @@ pc.extend(pc, function () {
                 var i;
                 var len;
 
-                for (i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                for (i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     this._model.meshInstances[i].drawOrder = order;
                 }
             }
@@ -122,7 +122,7 @@ pc.extend(pc, function () {
 
             var charactersPerTexture = {};
 
-            for (i = 0; i<textLength; i++) {
+            for (i = 0; i < textLength; i++) {
                 var code = text.charCodeAt(i);
                 var info = this._font.data.chars[code];
                 if (! info) continue;
@@ -139,7 +139,7 @@ pc.extend(pc, function () {
 
             var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
 
-            for (i = 0, len = this._meshInfo.length; i<len; i++) {
+            for (i = 0, len = this._meshInfo.length; i < len; i++) {
                 var l = charactersPerTexture[i] || 0;
                 var meshInfo = this._meshInfo[i];
 
@@ -150,9 +150,9 @@ pc.extend(pc, function () {
                     }
 
                     meshInfo.count = l;
-                    meshInfo.positions.length = meshInfo.normals.length = l*3*4;
-                    meshInfo.indices.length = l*3*2;
-                    meshInfo.uvs.length = l*2*4;
+                    meshInfo.positions.length = meshInfo.normals.length = l * 3 * 4;
+                    meshInfo.indices.length = l * 3 * 2;
+                    meshInfo.uvs.length = l * 2 * 4;
 
                     // destroy old mesh
                     if (meshInfo.meshInstance) {
@@ -169,31 +169,31 @@ pc.extend(pc, function () {
                     for (var v = 0; v < l; v++) {
                         // create index and normal arrays since they don't change
                         // if the length doesn't change
-                        meshInfo.indices[v*3*2+0] = v*4;
-                        meshInfo.indices[v*3*2+1] = v*4 + 1;
-                        meshInfo.indices[v*3*2+2] = v*4 + 3;
-                        meshInfo.indices[v*3*2+3] = v*4 + 2;
-                        meshInfo.indices[v*3*2+4] = v*4 + 3;
-                        meshInfo.indices[v*3*2+5] = v*4 + 1;
+                        meshInfo.indices[v * 3 * 2 + 0] = v * 4;
+                        meshInfo.indices[v * 3 * 2 + 1] = v * 4 + 1;
+                        meshInfo.indices[v * 3 * 2 + 2] = v * 4 + 3;
+                        meshInfo.indices[v * 3 * 2 + 3] = v * 4 + 2;
+                        meshInfo.indices[v * 3 * 2 + 4] = v * 4 + 3;
+                        meshInfo.indices[v * 3 * 2 + 5] = v * 4 + 1;
 
-                        meshInfo.normals[v*4*3+0] = 0;
-                        meshInfo.normals[v*4*3+1] = 0;
-                        meshInfo.normals[v*4*3+2] = -1;
+                        meshInfo.normals[v * 4 * 3 + 0] = 0;
+                        meshInfo.normals[v * 4 * 3 + 1] = 0;
+                        meshInfo.normals[v * 4 * 3 + 2] = -1;
 
-                        meshInfo.normals[v*4*3+3] = 0;
-                        meshInfo.normals[v*4*3+4] = 0;
-                        meshInfo.normals[v*4*3+5] = -1;
+                        meshInfo.normals[v * 4 * 3 + 3] = 0;
+                        meshInfo.normals[v * 4 * 3 + 4] = 0;
+                        meshInfo.normals[v * 4 * 3 + 5] = -1;
 
-                        meshInfo.normals[v*4*3+6] = 0;
-                        meshInfo.normals[v*4*3+7] = 0;
-                        meshInfo.normals[v*4*3+8] = -1;
+                        meshInfo.normals[v * 4 * 3 + 6] = 0;
+                        meshInfo.normals[v * 4 * 3 + 7] = 0;
+                        meshInfo.normals[v * 4 * 3 + 8] = -1;
 
-                        meshInfo.normals[v*4*3+9] = 0;
-                        meshInfo.normals[v*4*3+10] = 0;
-                        meshInfo.normals[v*4*3+11] = -1;
+                        meshInfo.normals[v * 4 * 3 + 9] = 0;
+                        meshInfo.normals[v * 4 * 3 + 10] = 0;
+                        meshInfo.normals[v * 4 * 3 + 11] = -1;
                     }
 
-                    var mesh = pc.createMesh(this._system.app.graphicsDevice, meshInfo.positions, {uvs: meshInfo.uvs, normals: meshInfo.normals, indices: meshInfo.indices});
+                    var mesh = pc.createMesh(this._system.app.graphicsDevice, meshInfo.positions, { uvs: meshInfo.uvs, normals: meshInfo.normals, indices: meshInfo.indices });
 
                     var mi = new pc.MeshInstance(this._node, mesh, this._material);
                     mi.castShadow = false;
@@ -242,7 +242,7 @@ pc.extend(pc, function () {
                 }
 
                 if (oldMesh.indexBuffer) {
-                    for (ib = 0, iblen = oldMesh.indexBuffer.length; ib<iblen; ib++)
+                    for (ib = 0, iblen = oldMesh.indexBuffer.length; ib < iblen; ib++)
                         oldMesh.indexBuffer[ib].destroy();
                 }
             }
@@ -258,7 +258,7 @@ pc.extend(pc, function () {
 
             this._material = material;
             if (this._model) {
-                for (i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                for (i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.material = material;
                 }
@@ -277,7 +277,7 @@ pc.extend(pc, function () {
             }
 
             if (this._model) {
-                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.cull = cull;
                     mi.material = this._material;
@@ -366,8 +366,8 @@ pc.extend(pc, function () {
                 data = json.chars[charCode];
                 if (data && data.scale) {
                     var size = (data.width + data.height) / 2;
-                    scale = (size/MAGIC) * this._fontSize / size;
-                    quadsize = (size/MAGIC) * this._fontSize / data.scale;
+                    scale = (size / MAGIC) * this._fontSize / size;
+                    quadsize = (size / MAGIC) * this._fontSize / data.scale;
                     advance = data.xadvance * scale;
                     x = data.xoffset * scale;
                     y = data.yoffset * scale;
@@ -413,7 +413,7 @@ pc.extend(pc, function () {
                         // Move back to the beginning of the current word.
                         var backtrack = Math.max(i - wordStartIndex, 0);
                         i -= backtrack + 1;
-                        meshInfo.lines[lines-1] -= backtrack;
+                        meshInfo.lines[lines - 1] -= backtrack;
                         meshInfo.quad -= backtrack;
 
                         breakLine(wordStartIndex, wordStartX);
@@ -422,30 +422,30 @@ pc.extend(pc, function () {
                 }
 
                 quad = meshInfo.quad;
-                meshInfo.lines[lines-1] = quad;
+                meshInfo.lines[lines - 1] = quad;
 
-                meshInfo.positions[quad*4*3+0] = _x - x;
-                meshInfo.positions[quad*4*3+1] = _y - y;
-                meshInfo.positions[quad*4*3+2] = _z;
+                meshInfo.positions[quad * 4 * 3 + 0] = _x - x;
+                meshInfo.positions[quad * 4 * 3 + 1] = _y - y;
+                meshInfo.positions[quad * 4 * 3 + 2] = _z;
 
-                meshInfo.positions[quad*4*3+3] = _x - x + quadsize;
-                meshInfo.positions[quad*4*3+4] = _y - y;
-                meshInfo.positions[quad*4*3+5] = _z;
+                meshInfo.positions[quad * 4 * 3 + 3] = _x - x + quadsize;
+                meshInfo.positions[quad * 4 * 3 + 4] = _y - y;
+                meshInfo.positions[quad * 4 * 3 + 5] = _z;
 
-                meshInfo.positions[quad*4*3+6] = _x - x + quadsize;
-                meshInfo.positions[quad*4*3+7] = _y - y + quadsize;
-                meshInfo.positions[quad*4*3+8] = _z;
+                meshInfo.positions[quad * 4 * 3 + 6] = _x - x + quadsize;
+                meshInfo.positions[quad * 4 * 3 + 7] = _y - y + quadsize;
+                meshInfo.positions[quad * 4 * 3 + 8] = _z;
 
-                meshInfo.positions[quad*4*3+9]  = _x - x;
-                meshInfo.positions[quad*4*3+10] = _y - y + quadsize;
-                meshInfo.positions[quad*4*3+11] = _z;
+                meshInfo.positions[quad * 4 * 3 + 9]  = _x - x;
+                meshInfo.positions[quad * 4 * 3 + 10] = _y - y + quadsize;
+                meshInfo.positions[quad * 4 * 3 + 11] = _z;
 
 
                 this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
-                this.height = Math.max(this.height, fontMaxY - (_y+fontMinY));
+                this.height = Math.max(this.height, fontMaxY - (_y + fontMinY));
 
                 // advance cursor
-                _x = _x + (this._spacing*advance);
+                _x = _x + (this._spacing * advance);
 
                 // For proper alignment handling when a line wraps _on_ a whitespace character,
                 // we need to keep track of the width of the line without any trailing whitespace
@@ -465,17 +465,17 @@ pc.extend(pc, function () {
 
                 var uv = this._getUv(charCode);
 
-                meshInfo.uvs[quad*4*2+0] = uv[0];
-                meshInfo.uvs[quad*4*2+1] = uv[1];
+                meshInfo.uvs[quad * 4 * 2 + 0] = uv[0];
+                meshInfo.uvs[quad * 4 * 2 + 1] = uv[1];
 
-                meshInfo.uvs[quad*4*2+2] = uv[2];
-                meshInfo.uvs[quad*4*2+3] = uv[1];
+                meshInfo.uvs[quad * 4 * 2 + 2] = uv[2];
+                meshInfo.uvs[quad * 4 * 2 + 3] = uv[1];
 
-                meshInfo.uvs[quad*4*2+4] = uv[2];
-                meshInfo.uvs[quad*4*2+5] = uv[3];
+                meshInfo.uvs[quad * 4 * 2 + 4] = uv[2];
+                meshInfo.uvs[quad * 4 * 2 + 5] = uv[3];
 
-                meshInfo.uvs[quad*4*2+6] = uv[0];
-                meshInfo.uvs[quad*4*2+7] = uv[3];
+                meshInfo.uvs[quad * 4 * 2 + 6] = uv[0];
+                meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
 
                 meshInfo.quad++;
             }
@@ -509,26 +509,26 @@ pc.extend(pc, function () {
                     var voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
 
                     for (quad = prevQuad; quad <= index; quad++) {
-                        this._meshInfo[i].positions[quad*4*3] += hoffset;
-                        this._meshInfo[i].positions[quad*4*3 + 3] += hoffset;
-                        this._meshInfo[i].positions[quad*4*3 + 6] += hoffset;
-                        this._meshInfo[i].positions[quad*4*3 + 9] += hoffset;
+                        this._meshInfo[i].positions[quad * 4 * 3] += hoffset;
+                        this._meshInfo[i].positions[quad * 4 * 3 + 3] += hoffset;
+                        this._meshInfo[i].positions[quad * 4 * 3 + 6] += hoffset;
+                        this._meshInfo[i].positions[quad * 4 * 3 + 9] += hoffset;
 
-                        this._meshInfo[i].positions[quad*4*3 + 1] += voffset;
-                        this._meshInfo[i].positions[quad*4*3 + 4] += voffset;
-                        this._meshInfo[i].positions[quad*4*3 + 7] += voffset;
-                        this._meshInfo[i].positions[quad*4*3 + 10] += voffset;
+                        this._meshInfo[i].positions[quad * 4 * 3 + 1] += voffset;
+                        this._meshInfo[i].positions[quad * 4 * 3 + 4] += voffset;
+                        this._meshInfo[i].positions[quad * 4 * 3 + 7] += voffset;
+                        this._meshInfo[i].positions[quad * 4 * 3 + 10] += voffset;
                     }
 
                     prevQuad = index + 1;
                 }
 
                 // update vertex buffer
-                var numVertices = this._meshInfo[i].quad*4;
+                var numVertices = this._meshInfo[i].quad * 4;
                 var it = new pc.VertexIterator(this._meshInfo[i].meshInstance.mesh.vertexBuffer);
                 for (var v = 0; v < numVertices; v++) {
-                    it.element[pc.SEMANTIC_POSITION].set(this._meshInfo[i].positions[v*3+0], this._meshInfo[i].positions[v*3+1], this._meshInfo[i].positions[v*3+2]);
-                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v*2+0], this._meshInfo[i].uvs[v*2+1]);
+                    it.element[pc.SEMANTIC_POSITION].set(this._meshInfo[i].positions[v * 3 + 0], this._meshInfo[i].positions[v * 3 + 1], this._meshInfo[i].positions[v * 3 + 2]);
+                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v * 2 + 0], this._meshInfo[i].uvs[v * 2 + 1]);
                     it.next();
                 }
                 it.end();
@@ -571,7 +571,7 @@ pc.extend(pc, function () {
                 this._font.data = _new;
 
                 var maps = this._font.data.info.maps.length;
-                for (var i = 0; i<maps; i++) {
+                for (var i = 0; i < maps; i++) {
                     if (! this._meshInfo[i]) continue;
 
                     var mi = this._meshInfo[i].meshInstance;
@@ -609,7 +609,7 @@ pc.extend(pc, function () {
                     return this._getUv(32);
                 }
                 // otherwise - missing char
-                return [0,0,1,1];
+                return [0, 0, 1, 1];
             }
 
             var map = data.chars[char].map;
@@ -673,7 +673,7 @@ pc.extend(pc, function () {
             this._color.data[2] = value.data[2];
 
             if (this._model) {
-                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.setParameter('material_emissive', this._color.data3);
                 }
@@ -690,7 +690,7 @@ pc.extend(pc, function () {
             this._color.data[3] = value;
 
             if (this._model) {
-                for (var i = 0, len = this._model.meshInstances.length; i<len; i++) {
+                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.setParameter('material_opacity', value);
                 }
@@ -811,7 +811,7 @@ pc.extend(pc, function () {
 
             // make sure we have as many meshInfo entries
             // as the number of font textures
-            for (i = 0, len = this._font.textures.length; i<len; i++) {
+            for (i = 0, len = this._font.textures.length; i < len; i++) {
                 if (! this._meshInfo[i]) {
                     this._meshInfo[i] = {
                         count: 0,

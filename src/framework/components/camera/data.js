@@ -18,8 +18,8 @@ pc.extend(pc, function () {
         this.orthoHeight = 100;
         this.projection = pc.PROJECTION_PERSPECTIVE;
         this.priority = 0;
-        this.rect = new pc.Vec4(0,0,1,1);
-        this.scissorRect = new pc.Vec4(0,0,1,1);
+        this.rect = new pc.Vec4(0, 0, 1, 1);
+        this.scissorRect = new pc.Vec4(0, 0, 1, 1);
         this.enabled = true;
         this.frustumCulling = false;
         this.cullFaces = true;

@@ -59,7 +59,7 @@ pc.extend(pc, function () {
     var SpriteComponent = function SpriteComponent (system, entity) {
         this._type = pc.SPRITETYPE_SIMPLE;
         this._material = system.defaultMaterial;
-        this._color = new pc.Color(1,1,1,1);
+        this._color = new pc.Color(1, 1, 1, 1);
         this._speed = 1;
         this._flipX = false;
         this._flipY = false;
@@ -172,10 +172,10 @@ pc.extend(pc, function () {
 
             var meshInstances = [this._meshInstance];
 
-            for (i = 0, len = this._layers.length; i<len; i++) {
+            for (i = 0, len = this._layers.length; i < len; i++) {
                 var layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
-                    layer.addMeshInstances(meshInstances)
+                    layer.addMeshInstances(meshInstances);
                 }
             }
 
@@ -190,7 +190,7 @@ pc.extend(pc, function () {
 
             var meshInstances = [this._meshInstance];
 
-            for (i = 0, len = this._layers.length; i<len; i++) {
+            for (i = 0, len = this._layers.length; i < len; i++) {
                 var layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
                     layer.removeMeshInstances(meshInstances);
@@ -289,7 +289,7 @@ pc.extend(pc, function () {
                     );
 
                 } else {
-                    this._innerOffset.set(0,0,0,0);
+                    this._innerOffset.set(0, 0, 0, 0);
                 }
 
                 // set inner offset and atlas rect on mesh instance
@@ -362,7 +362,7 @@ pc.extend(pc, function () {
         // updates AABB while 9-slicing
         _updateAabb: function (aabb) {
             // pivot
-            aabb.center.set(0,0,0);
+            aabb.center.set(0, 0, 0);
             // size
             aabb.halfExtents.set(this._outerScale.x * 0.5, this._outerScale.y * 0.5, 0.001);
             // world transform
@@ -824,18 +824,14 @@ pc.extend(pc, function () {
             return this._layers;
         },
         set: function (value) {
-            var i;
-            var len;
-
             if (this._addedModel) {
                 this._hideModel();
             }
 
-            var prev = this._layers;
             this._layers = value;
 
             // early out
-            if (! this._meshInstance) {
+            if (!this._meshInstance) {
                 return;
             }
 
@@ -843,7 +839,6 @@ pc.extend(pc, function () {
                 this._showModel();
             }
         }
-
     });
 
     return {

@@ -86,7 +86,8 @@ pc.extend(pc, function () {
      * </ul>
      * @param {Object} data The initialization data for the specific component type. Refer to each
      * specific component's API reference page for details on valid values for this parameter.
-     * @returns {pc.Component} The new Component that was attached to the entity
+     * @returns {pc.Component} The new Component that was attached to the entity or null if there
+     * was an error.
      * @example
      * var entity = new pc.Entity();
      * entity.addComponent("light"); // Add a light component with default properties
@@ -97,16 +98,19 @@ pc.extend(pc, function () {
      */
     Entity.prototype.addComponent = function (type, data) {
         var system = this._app.systems[type];
-        if (system) {
-            if (!this.c[type]) {
-                return system.addComponent(this, data);
-            } else {
-                logERROR(pc.string.format("Entity already has {0} Component", type));
-            }
-        } else {
-            logERROR(pc.string.format("System: '{0}' doesn't exist", type));
+        if (!system) {
+            // #ifdef DEBUG
+            console.error("addComponent: System " + type + " doesn't exist");
+            // #endif
             return null;
         }
+        if (this.c[type]) {
+            // #ifdef DEBUG
+            console.warn("addComponent: Entity already has " + type + " component");
+            // #endif
+            return null;
+        }
+        return system.addComponent(this, data);
     };
 
     /**
@@ -122,15 +126,19 @@ pc.extend(pc, function () {
      */
     Entity.prototype.removeComponent = function (type) {
         var system = this._app.systems[type];
-        if (system) {
-            if (this.c[type]) {
-                system.removeComponent(this);
-            } else {
-                logERROR(pc.string.format("Entity doesn't have {0} Component", type));
-            }
-        } else {
-            logERROR(pc.string.format("System: '{0}' doesn't exist", type));
+        if (!system) {
+            // #ifdef DEBUG
+            console.error("removeComponent: System " + type + " doesn't exist");
+            // #endif
+            return;
         }
+        if (!this.c[type]) {
+            // #ifdef DEBUG
+            console.warn("removeComponent: Entity doesn't have " + type + " component");
+            // #endif
+            return;
+        }
+        system.removeComponent(this);
     };
 
     /**

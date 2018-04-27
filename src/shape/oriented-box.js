@@ -38,9 +38,9 @@ pc.extend(pc, function () {
                 var result = this._aabb._intersectsRay(tmpRay, point);
                 tmpMat4.copy(this._modelTransform).invert().transformPoint(point, point);
                 return result;
-            } else {
-                return this._aabb._fastIntersectsRay(tmpRay);
             }
+
+            return this._aabb._fastIntersectsRay(tmpRay);
         },
 
         /**

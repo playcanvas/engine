@@ -1,10 +1,26 @@
 /**
+ * @private
+ * @function
+ * @name _typeLookup
+ * @description Create look up table for types
+ */
+var _typeLookup = function () {
+    var result = { };
+    var names = ["Array", "Object", "Function", "Date", "RegExp", "Float32Array"];
+
+    for (var i = 0; i < names.length; i++)
+        result["[object " + names[i] + "]"] = names[i].toLowerCase();
+
+    return result;
+}();
+
+/**
  * @name pc
  * @namespace
  * @description Root namespace for the PlayCanvas Engine
  * @preserve PlayCanvas Engine v__CURRENT_SDK_VERSION__ revision __REVISION__
  * http://playcanvas.com
- * Copyright 2011-2017 PlayCanvas Ltd. All rights reserved.
+ * Copyright 2011-2018 PlayCanvas Ltd. All rights reserved.
 // #ifdef DEBUG
  * DEBUG BUILD
 // #endif
@@ -31,8 +47,8 @@ var pc = {
     },
 
     /**
-     * @function
      * @private
+     * @function
      * @name pc.makeArray
      * @description Convert an array-like object into a normal array.
      * For example, this is useful for converting the arguments object into an array.
@@ -123,22 +139,6 @@ var pc = {
         return (o !== a);
     }
 };
-
-/**
- * @private
- * @name pc._typeLookup
- * @function
- * @description Create look up table for types
- */
-var _typeLookup = function () {
-    var result = { };
-    var names = [ "Array", "Object", "Function", "Date", "RegExp", "Float32Array" ];
-
-    for (var i = 0; i < names.length; i++)
-        result["[object " + names[i] + "]"] = names[i].toLowerCase();
-
-    return result;
-}();
 
 if (typeof (exports) !== 'undefined')
     exports.pc = pc;

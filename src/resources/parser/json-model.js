@@ -177,11 +177,11 @@ pc.extend(pc, function () {
                             new pc.Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
                         );
 
-                        morphTarget = new pc.MorphTarget({indices: targets[j].indices,
+                        morphTarget = new pc.MorphTarget({ indices: targets[j].indices,
                             deltaPositions: targets[j].deltaPositions,
                             deltaNormals: targets[j].deltaNormals,
                             name: targets[j].name,
-                            aabb: aabb});
+                            aabb: aabb });
 
                         morphTargetArray.push(morphTarget);
                     }
@@ -402,10 +402,10 @@ pc.extend(pc, function () {
                     tnorm = new Float32Array(numVerts * 3);
                     tnorm.set(baseNorm);
 
-                    for (j=0; j<morphs.length; j++) {
+                    for (j = 0; j < morphs.length; j++) {
                         if (modelData.meshes[i].morph !== j) continue;
 
-                        for (k=0; k<morphs[j]._targets.length; k++) {
+                        for (k = 0; k < morphs[j]._targets.length; k++) {
                             target = morphs[j]._targets[k];
 
                             var mtIndices = target.indices;
@@ -418,17 +418,19 @@ pc.extend(pc, function () {
                             if (!flagged || flagged.length < numVerts) {
                                 flagged = new Uint8Array(numVerts);
                             } else {
-                                for (l=0; l>numVerts; l++) flagged[l] = 0;
+                                for (l = 0; l < numVerts; l++) {
+                                    flagged[l] = 0;
+                                }
                             }
 
-                            for (l=0; l<numMtIndices; l++) {
+                            for (l = 0; l < numMtIndices; l++) {
                                 index = mtIndices[l];
                                 flagged[index] = 1;
                             }
 
                             // Collect affected triangles
                             var numMtTriIndices = 0;
-                            for (l=0; l<numIndices; l += 3) {
+                            for (l = 0; l < numIndices; l += 3) {
                                 triA = indices[l];
                                 triB = indices[l + 1];
                                 triC = indices[l + 2];
@@ -444,16 +446,16 @@ pc.extend(pc, function () {
                             // Generate morphed position/normal
                             var deltaPos = target.deltaPositions;
                             var deltaNorm = target.deltaNormals;
-                            for (l=0; l<numMtIndices; l++) {
+                            for (l = 0; l < numMtIndices; l++) {
                                 index = mtIndices[l];
-                                tpos[index*3] += deltaPos[l*3];
-                                tpos[index*3+1] += deltaPos[l*3+1];
-                                tpos[index*3+2] += deltaPos[l*3+2];
+                                tpos[index * 3] += deltaPos[l * 3];
+                                tpos[index * 3 + 1] += deltaPos[l * 3 + 1];
+                                tpos[index * 3 + 2] += deltaPos[l * 3 + 2];
 
                                 // the result should be already almost normalized, so no additional normalize
-                                tnorm[index*3] += deltaNorm[l*3];
-                                tnorm[index*3+1] += deltaNorm[l*3+1];
-                                tnorm[index*3+2] += deltaNorm[l*3+2];
+                                tnorm[index * 3] += deltaNorm[l * 3];
+                                tnorm[index * 3 + 1] += deltaNorm[l * 3 + 1];
+                                tnorm[index * 3 + 2] += deltaNorm[l * 3 + 2];
                             }
 
                             // Generate tangents
@@ -465,12 +467,12 @@ pc.extend(pc, function () {
 
                             // Generate tangent deltas
                             var deltaTangents = target.deltaTangents;
-                            for (l=0; l<numMtIndices; l++) {
+                            for (l = 0; l < numMtIndices; l++) {
                                 index = mtIndices[l];
-                                deltaTangents[l*4] = targetTangents[l*4] - tangents[index*4];
-                                deltaTangents[l*4+1] = targetTangents[l*4+1] - tangents[index*4+1];
-                                deltaTangents[l*4+2] = targetTangents[l*4+2] - tangents[index*4+2];
-                                deltaTangents[l*4+3] = targetTangents[l*4+3] - tangents[index*4+3];
+                                deltaTangents[l * 4] = targetTangents[l * 4] - tangents[index * 4];
+                                deltaTangents[l * 4 + 1] = targetTangents[l * 4 + 1] - tangents[index * 4 + 1];
+                                deltaTangents[l * 4 + 2] = targetTangents[l * 4 + 2] - tangents[index * 4 + 2];
+                                deltaTangents[l * 4 + 3] = targetTangents[l * 4 + 3] - tangents[index * 4 + 3];
                             }
 
                             // If it's not the final morph target, do some clean up before the next one
@@ -500,15 +502,15 @@ pc.extend(pc, function () {
                                 tan2[triC * 3 + 1] = 0;
                                 tan2[triC * 3 + 2] = 0;
                             }
-                            for (l=0; l<numMtIndices; l++) {
+                            for (l = 0; l < numMtIndices; l++) {
                                 index = target.indices[l];
-                                tpos[index*3] = basePos[index*3];
-                                tpos[index*3+1] = basePos[index*3+1];
-                                tpos[index*3+2] = basePos[index*3+2];
+                                tpos[index * 3] = basePos[index * 3];
+                                tpos[index * 3 + 1] = basePos[index * 3 + 1];
+                                tpos[index * 3 + 2] = basePos[index * 3 + 2];
 
-                                tnorm[index*3] = baseNorm[index*3];
-                                tnorm[index*3+1] = baseNorm[index*3+1];
-                                tnorm[index*3+2] = baseNorm[index*3+2];
+                                tnorm[index * 3] = baseNorm[index * 3];
+                                tnorm[index * 3 + 1] = baseNorm[index * 3 + 1];
+                                tnorm[index * 3 + 2] = baseNorm[index * 3 + 2];
                             }
                         }
                     }

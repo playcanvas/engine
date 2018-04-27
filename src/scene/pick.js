@@ -4,6 +4,7 @@ pc.extend(pc, function () {
     var _getSelectionDeprecationWarning = false;
     var _prepareDeprecationWarning = false;
 
+/*
     function sortDrawCalls(drawCallA, drawCallB) {
 
         if (drawCallA.layer === drawCallB.layer) {
@@ -14,13 +15,14 @@ pc.extend(pc, function () {
 
         return drawCallB.key - drawCallA.key;
     }
+*/
 
     /**
      * @constructor
      * @name pc.Picker
      * @classdesc Picker object used to select mesh instances from screen coordinates.
      * @description Create a new instance of a Picker object
-     * @param {pc.Application} app
+     * @param {pc.Application} app The application managing this picker instance.
      * @param {Number} width The width of the pick buffer in pixels.
      * @param {Number} height The height of the pick buffer in pixels.
      * @property {Number} width Width of the pick buffer in pixels (read-only).
@@ -48,7 +50,7 @@ pc.extend(pc, function () {
         this.pickColor[3] = 1;
 
         this.scene = null;
-        this.drawCalls = [ ];
+        this.drawCalls = [];
         this.layer = null;
         this.layerComp = null;
 
@@ -131,7 +133,7 @@ pc.extend(pc, function () {
 
         var drawCalls = this.layer.instances.visibleOpaque[0].list;
 
-        var r, g, b, a, index;
+        var r, g, b, index;
         for (var i = 0; i < width * height; i++) {
             r = pixels[4 * i + 0];
             g = pixels[4 * i + 1];
@@ -173,6 +175,7 @@ pc.extend(pc, function () {
      */
     Picker.prototype.prepare = function (camera, scene, arg) {
         var device = this.device;
+        var i, j;
         var self = this;
 
         if (camera instanceof pc.Camera) {
@@ -263,18 +266,18 @@ pc.extend(pc, function () {
         }
 
         // Collect pickable mesh instances
+        var instanceList, instanceListLength, drawCall;
         if (!sourceLayer) {
             this.layer.clearMeshInstances();
             var layers = scene.layers.layerList;
             var subLayerEnabled = scene.layers.subLayerEnabled;
             var isTransparent = scene.layers.subLayerList;
             var layer;
-            var j;
-            var instanceList, layerCamId, instanceListLength, drawCall, transparent;
-            for (var i=0; i<layers.length; i++) {
+            var layerCamId, transparent;
+            for (i = 0; i < layers.length; i++) {
                 if (layers[i].overrideClear && layers[i]._clearDepthBuffer) layers[i]._pickerCleared = false;
             }
-            for (var i=0; i<layers.length; i++) {
+            for (i = 0; i < layers.length; i++) {
                 layer = layers[i];
                 if (layer.renderTarget !== sourceRt || !layer.enabled || !subLayerEnabled[i]) continue;
                 layerCamId = layer.cameras.indexOf(camera);
@@ -286,7 +289,7 @@ pc.extend(pc, function () {
                 transparent = isTransparent[i];
                 instanceList = transparent ? layer.instances.transparentMeshInstances : layer.instances.opaqueMeshInstances;
                 instanceListLength = instanceList.length;
-                for (j=0; j<instanceListLength; j++) {
+                for (j = 0; j < instanceListLength; j++) {
                     drawCall = instanceList[j];
                     if (drawCall.pick) {
                         this.meshInstances.push(drawCall);
@@ -296,9 +299,9 @@ pc.extend(pc, function () {
         } else {
             if (this._instancesVersion !== sourceLayer._version) {
                 this.layer.clearMeshInstances();
-                var instanceList = sourceLayer.instances.opaqueMeshInstances;
-                var instanceListLength = instanceList.length;
-                for (var j=0; j<instanceListLength; j++) {
+                instanceList = sourceLayer.instances.opaqueMeshInstances;
+                instanceListLength = instanceList.length;
+                for (j = 0; j < instanceListLength; j++) {
                     drawCall = instanceList[j];
                     if (drawCall.pick) {
                         this.meshInstances.push(drawCall);
@@ -306,7 +309,7 @@ pc.extend(pc, function () {
                 }
                 instanceList = sourceLayer.instances.transparentMeshInstances;
                 instanceListLength = instanceList.length;
-                for (j=0; j<instanceListLength; j++) {
+                for (j = 0; j < instanceListLength; j++) {
                     drawCall = instanceList[j];
                     if (drawCall.pick) {
                         this.meshInstances.push(drawCall);
