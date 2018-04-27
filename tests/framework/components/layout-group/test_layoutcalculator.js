@@ -275,7 +275,7 @@ test("takes into account each element's pivot when calculating horizontal positi
     this.calculate();
 
     this.assertValues('x', [50, 110, 150, 250, 270], { approx: true });
-    this.assertValues('y', [10,  10,  10,  10,  10], { approx: true });
+    this.assertValues('y', [10,  10,   0,   0,   0], { approx: true });
 });
 
 test("takes into account each element's pivot when calculating vertical positions", function () {
@@ -287,7 +287,7 @@ test("takes into account each element's pivot when calculating vertical position
 
     this.calculate();
 
-    this.assertValues('x', [10,  10,  10,  10,  10], { approx: true });
+    this.assertValues('x', [10,  10,   0,   0,   0], { approx: true });
     this.assertValues('y', [50, 110, 150, 250, 270], { approx: true });
 });
 

@@ -397,25 +397,25 @@ pc.extend(pc, function () {
                 var positionsThisLine = [];
                 var sizesThisLine = sizes[lineIndex];
 
-                // Move the cursor to account for the largest element's size and pivot
-                cursor[b.axis] -= minExtentB(line.largestElement, line.largestSize);
-
                 // Distribute elements along the line
                 for (var elementIndex = 0; elementIndex < line.length; ++elementIndex) {
                     var element = line[elementIndex];
+                    var sizesThisElement = sizesThisLine[elementIndex];
 
-                    cursor[a.axis] -= minExtentA(element, sizesThisLine[elementIndex]);
+                    cursor[b.axis] -= minExtentB(element, sizesThisElement);
+                    cursor[a.axis] -= minExtentA(element, sizesThisElement);
 
                     positionsThisLine[elementIndex] = {};
                     positionsThisLine[elementIndex][a.axis] = cursor[a.axis];
                     positionsThisLine[elementIndex][b.axis] = cursor[b.axis];
 
-                    cursor[a.axis] += maxExtentA(element, sizesThisLine[elementIndex]) + options.spacing[a.axis];
+                    cursor[b.axis] += minExtentB(element, sizesThisElement);
+                    cursor[a.axis] += maxExtentA(element, sizesThisElement) + options.spacing[a.axis];
                 }
 
                 // Record the size of the overall line
                 line[a.size] = cursor[a.axis] - options.spacing[a.axis];
-                line[b.size] = maxExtentB(line.largestElement, line.largestSize);
+                line[b.size] = line.largestSize[b.size];
 
                 // Move the cursor to the next line
                 cursor[a.axis] = 0;
