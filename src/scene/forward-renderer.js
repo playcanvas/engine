@@ -1058,12 +1058,14 @@ pc.extend(pc, function () {
                 params[2] = bias;
                 params[3] = 1.0 / spot.attenuationEnd;
                 this.lightShadowParamsId[cnt].setValue(params);
+/*
                 if (this.mainLight < 0) {
                     this.lightShadowMatrixVsId[cnt].setValue(spot._shadowMatrix.data);
                     this.lightShadowParamsVsId[cnt].setValue(params);
                     this.lightPosVsId[cnt].setValue(spot._position.data);
                     this.mainLight = i;
                 }
+*/
             }
             if (spot._cookie) {
                 this.lightCookieId[cnt].setValue(spot._cookie);

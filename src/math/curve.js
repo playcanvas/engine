@@ -106,7 +106,7 @@ pc.extend(pc, (function () {
          * @returns {Number} The interpolated value
          */
         value: function (time) {
-            var i;
+            var i, len;
             var keys = this.keys;
 
             // no keys
