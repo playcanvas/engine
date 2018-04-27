@@ -19,8 +19,6 @@ pc.extend(pc, function () {
 
         this.ComponentType = pc.LightComponent;
         this.DataType = pc.LightComponentData;
-
-        this.on('remove', this.onRemove, this);
     };
     LightComponentSystem = pc.inherits(LightComponentSystem, pc.ComponentSystem);
 
@@ -65,6 +63,13 @@ pc.extend(pc, function () {
             component.data.light = light;
 
             LightComponentSystem._super.initializeComponentData.call(this, component, data, _props);
+        },
+
+        removeComponent: function (entity) {
+            var data = entity.light.data;
+            data.light.destroy();
+
+            LightComponentSystem._super.removeComponent.call(this, entity);
         },
 
         cloneComponent: function (entity, clone) {

@@ -53,7 +53,8 @@ pc.extend(pc, function () {
         this._onScreenChange(this._element.screen);
 
         // listen for events
-        this._element.on('resize', this._onParentResize, this);
+        this._element.on('resize', this._onParentResizeOrPivotChange, this);
+        this._element.on('set:pivot', this._onParentResizeOrPivotChange, this);
         this._element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
         this._element.on('set:screen', this._onScreenChange, this);
         this._element.on('set:draworder', this._onDrawOrderChange, this);
@@ -72,7 +73,8 @@ pc.extend(pc, function () {
                 this._model = null;
             }
 
-            this._element.off('resize', this._onParentResize, this);
+            this._element.off('resize', this._onParentResizeOrPivotChange, this);
+            this._element.off('set:pivot', this._onParentResizeOrPivotChange, this);
             this._element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
             this._element.off('set:screen', this._onScreenChange, this);
             this._element.off('set:draworder', this._onDrawOrderChange, this);
@@ -82,7 +84,7 @@ pc.extend(pc, function () {
         _onResolutionChange: function (res) {
         },
 
-        _onParentResize: function () {
+        _onParentResizeOrPivotChange: function () {
             if (this._mesh) this._updateMesh(this._mesh);
         },
 
@@ -195,8 +197,8 @@ pc.extend(pc, function () {
 
         // build a quad for the image
         _createMesh: function () {
-            var w = this._element.width;
-            var h = this._element.height;
+            var w = this._element.calculatedWidth;
+            var h = this._element.calculatedHeight;
 
             this._positions[0] = 0;
             this._positions[1] = 0;
@@ -241,8 +243,8 @@ pc.extend(pc, function () {
 
         _updateMesh: function (mesh) {
             var i;
-            var w = this._element.width;
-            var h = this._element.height;
+            var w = this._element.calculatedWidth;
+            var h = this._element.calculatedHeight;
 
             // update material
             if (this._element.screen) {

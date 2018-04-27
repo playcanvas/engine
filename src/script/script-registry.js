@@ -103,6 +103,10 @@ pc.extend(pc, function () {
 
             // call postInitialize()
             for (i = 0; i < scriptInstancesInitialized.length; i++) {
+                if (! scriptInstancesInitialized[i].enabled || scriptInstancesInitialized[i]._postInitialized) {
+                    continue;
+                }
+
                 scriptInstancesInitialized[i]._postInitialized = true;
 
                 if (scriptInstancesInitialized[i].postInitialize)

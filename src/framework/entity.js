@@ -74,6 +74,8 @@ pc.extend(pc, function () {
      *   <li>"collision" - see {@link pc.CollisionComponent}</li>
      *   <li>"element" - see {@link pc.ElementComponent}</li>
      *   <li>"light" - see {@link pc.LightComponent}</li>
+     *   <li>"layoutchild" - see {@link pc.LayoutChildComponent}</li>
+     *   <li>"layoutgroup" - see {@link pc.LayoutGroupComponent}</li>
      *   <li>"model" - see {@link pc.ModelComponent}</li>
      *   <li>"particlesystem" - see {@link pc.ParticleSystemComponent}</li>
      *   <li>"rigidbody" - see {@link pc.RigidBodyComponent}</li>
@@ -168,6 +170,8 @@ pc.extend(pc, function () {
         if (node === this && this._app._enableList.length === 0)
             enableFirst = true;
 
+        node._beingEnabled = true;
+
         node._onHierarchyStateChanged(enabled);
 
         if (node._onHierarchyStatePostChanged)
@@ -179,6 +183,8 @@ pc.extend(pc, function () {
             if (c[i]._enabled)
                 this._notifyHierarchyStateChanged(c[i], enabled);
         }
+
+        node._beingEnabled = false;
 
         if (enableFirst) {
             for (i = 0, len = this._app._enableList.length; i < len; i++)

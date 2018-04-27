@@ -246,13 +246,24 @@ pc.extend(pc, function () {
                 component.margin = component._margin;
             }
 
+            var shouldForceSetAnchor = false;
+
             if (data.width !== undefined && ! splitHorAnchors) {
                 // force update
                 component.width = data.width;
+            } else if (splitHorAnchors) {
+                shouldForceSetAnchor = true;
             }
             if (data.height !== undefined && ! splitVerAnchors) {
                 // force update
                 component.height = data.height;
+            } else if (splitVerAnchors) {
+                shouldForceSetAnchor = true;
+            }
+
+            if (shouldForceSetAnchor) {
+                // force update
+                component.anchor = component.anchor;
             }
 
             if (data.enabled !== undefined) {

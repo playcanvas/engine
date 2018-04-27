@@ -341,6 +341,7 @@ pc.extend(pc, function () {
             this.entity = args.entity;
             this._enabled = typeof(args.enabled) === 'boolean' ? args.enabled : true;
             this._enabledOld = this.enabled;
+            this.__destroyed = false;
             this.__attributes = { };
             this.__attributesRaw = args.attributes || null;
             this.__scriptType = script;
@@ -520,17 +521,37 @@ pc.extend(pc, function () {
 
         Object.defineProperty(script.prototype, 'enabled', {
             get: function() {
-                return this._enabled && this.entity.script.enabled && this.entity.enabled;
+                return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
             },
             set: function(value) {
-                value = !!value;
-                if (this._enabled !== value)
-                    this._enabled = value;
+                this._enabled = !!value;
 
-                if (this.enabled !== this._enabledOld) {
-                    this._enabledOld = this.enabled;
-                    this.fire(this.enabled ? 'enable' : 'disable');
-                    this.fire('state', this.enabled);
+                if (this.enabled === this._enabledOld) return;
+
+                this._enabledOld = this.enabled;
+                this.fire(this.enabled ? 'enable' : 'disable');
+                this.fire('state', this.enabled);
+
+                // initialize script if not initialized yet and script is enabled
+                if (! this._initialized && this.enabled) {
+                    this._initialized = true;
+
+                    this.__initializeAttributes(true);
+
+                    if (this.initialize)
+                        this.entity.script._scriptMethod(this, pc.ScriptComponent.scriptMethods.initialize);
+                }
+
+                // post initialize script if not post initialized yet and still enabled
+                // (initilize might have disabled the script so check this.enabled again)
+                // Warning: Do not do this if the script component is currently being enabled
+                // because in this case post initialize must be called after all the scripts
+                // in the script component have been initialized first
+                if (this._initialized && ! this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
+                    this._postInitialized = true;
+
+                    if (this.postInitialize)
+                        this.entity.script._scriptMethod(this, pc.ScriptComponent.scriptMethods.postInitialize);
                 }
             }
         });
@@ -563,7 +584,7 @@ pc.extend(pc, function () {
 
     // reserved script attribute names
     createScript.reservedAttributes = [
-        'app', 'entity', 'enabled', '_enabled', '_enabledOld',
+        'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
         '__attributes', '__attributesRaw', '__scriptType',
         '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
     ];

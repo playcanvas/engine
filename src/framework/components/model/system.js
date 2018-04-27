@@ -146,6 +146,13 @@ pc.extend(pc, function () {
 
             var component = this.addComponent(clone, data);
 
+            // clone the original model if the original model component is of type asset but
+            // has no specified asset
+            if (entity.model.model && entity.model.type === 'asset' && ! entity.model.asset) {
+                component.model = entity.model.model.clone();
+                component._clonedModel = true;
+            }
+
             if (!data.materialAsset)
                 component.material = material;
 

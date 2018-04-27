@@ -682,14 +682,16 @@ pc.extend(pc, function () {
         var batchOffsetCF = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0);
         var batchOffsetEF = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0);
 
-        var batchData = new Float32Array(new ArrayBuffer(batchNumVerts * batchVertSizeF * 4));
+        var arrayBuffer = new ArrayBuffer(batchNumVerts * batchVertSizeF * 4);
+        var batchData = new Float32Array(arrayBuffer);
+        var batchData8 = new Uint8Array(arrayBuffer);
 
         var indexBuffer = new pc.IndexBuffer(this.device, pc.INDEXFORMAT_UINT16, batchNumIndices, pc.BUFFER_STATIC);
         var batchIndexData = new Uint16Array(indexBuffer.lock());
         var vertSizeF;
 
         // Fill vertex/index/matrix buffers
-        var data, indexBase, numIndices, indexData;
+        var data, data8, indexBase, numIndices, indexData;
         var verticesOffset = 0;
         var indexOffset = 0;
         var vbOffset = 0;
@@ -722,33 +724,38 @@ pc.extend(pc, function () {
                 }
             }
             data = new Float32Array(mesh.vertexBuffer.storage);
+            data8 = new Uint8Array(mesh.vertexBuffer.storage);
             if (dynamic) {
                 // Dynamic: store mesh instances without transformation (will be applied later in the shader)
                 for (j = 0; j < numVerts; j++) {
-                    batchData[j * batchVertSizeF + vbOffset] =          data[j * vertSizeF + offsetPF];
-                    batchData[j * batchVertSizeF + vbOffset + 1] =      data[j * vertSizeF + offsetPF + 1];
-                    batchData[j * batchVertSizeF + vbOffset + 2] =      data[j * vertSizeF + offsetPF + 2];
+                    batchData[j * batchVertSizeF + vbOffset] =     data[j * vertSizeF + offsetPF];
+                    batchData[j * batchVertSizeF + vbOffset + 1] = data[j * vertSizeF + offsetPF + 1];
+                    batchData[j * batchVertSizeF + vbOffset + 2] = data[j * vertSizeF + offsetPF + 2];
+
                     if (hasNormal) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF] =      data[j * vertSizeF + offsetNF];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 1] =      data[j * vertSizeF + offsetNF + 1];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 2] =      data[j * vertSizeF + offsetNF + 2];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF] =     data[j * vertSizeF + offsetNF];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 1] = data[j * vertSizeF + offsetNF + 1];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 2] = data[j * vertSizeF + offsetNF + 2];
                     }
                     if (hasUv) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF] =      data[j * vertSizeF + offsetUF];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF + 1] =      data[j * vertSizeF + offsetUF + 1];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF] =     data[j * vertSizeF + offsetUF];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF + 1] = data[j * vertSizeF + offsetUF + 1];
                     }
                     if (hasUv2) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F] =      data[j * vertSizeF + offsetU2F];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F + 1] =      data[j * vertSizeF + offsetU2F + 1];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F] =     data[j * vertSizeF + offsetU2F];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F + 1] = data[j * vertSizeF + offsetU2F + 1];
                     }
                     if (hasTangent) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF] =      data[j * vertSizeF + offsetTF];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 1] =      data[j * vertSizeF + offsetTF + 1];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 2] =      data[j * vertSizeF + offsetTF + 2];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 3] =      data[j * vertSizeF + offsetTF + 3];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF] =     data[j * vertSizeF + offsetTF];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 1] = data[j * vertSizeF + offsetTF + 1];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 2] = data[j * vertSizeF + offsetTF + 2];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 3] = data[j * vertSizeF + offsetTF + 3];
                     }
                     if (hasColor) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetCF] =      data[j * vertSizeF + offsetCF];
+                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4] =     data8[j * vertSizeF * 4 + offsetCF * 4];
+                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 1] = data8[j * vertSizeF * 4 + offsetCF * 4 + 1];
+                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 2] = data8[j * vertSizeF * 4 + offsetCF * 4 + 2];
+                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 3] = data8[j * vertSizeF * 4 + offsetCF * 4 + 3];
                     }
                     batchData[j * batchVertSizeF + batchOffsetEF + vbOffset] = i;
                 }
@@ -773,12 +780,12 @@ pc.extend(pc, function () {
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 2] = vecData[2];
                     }
                     if (hasUv) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF] =      data[j * vertSizeF + offsetUF];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF + 1] =      data[j * vertSizeF + offsetUF + 1];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF] =     data[j * vertSizeF + offsetUF];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF + 1] = data[j * vertSizeF + offsetUF + 1];
                     }
                     if (hasUv2) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F] =      data[j * vertSizeF + offsetU2F];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F + 1] =      data[j * vertSizeF + offsetU2F + 1];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F] =     data[j * vertSizeF + offsetU2F];
+                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F + 1] = data[j * vertSizeF + offsetU2F + 1];
                     }
                     if (hasTangent) {
                         vec.set(data[j * vertSizeF + offsetTF],
@@ -791,7 +798,10 @@ pc.extend(pc, function () {
                         batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 3] = data[j * vertSizeF + offsetTF + 3];
                     }
                     if (hasColor) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetCF] =      data[j * vertSizeF + offsetCF];
+                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4] =     data8[j * vertSizeF * 4 + offsetCF * 4];
+                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 1] = data8[j * vertSizeF * 4 + offsetCF * 4 + 1];
+                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 2] = data8[j * vertSizeF * 4 + offsetCF * 4 + 2];
+                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 3] = data8[j * vertSizeF * 4 + offsetCF * 4 + 3];
                     }
                 }
             }

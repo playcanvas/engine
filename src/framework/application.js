@@ -470,6 +470,8 @@ pc.extend(pc, function () {
         new pc.ScreenComponentSystem(this);
         new pc.ElementComponentSystem(this);
         new pc.SpriteComponentSystem(this);
+        new pc.LayoutGroupComponentSystem(this);
+        new pc.LayoutChildComponentSystem(this);
         new pc.ZoneComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
@@ -663,7 +665,10 @@ pc.extend(pc, function () {
 
                 // called after scripts are preloaded
                 var _loaded = function () {
+
+                    self.systems.script.preloading = true;
                     var entity = handler.open(url, data);
+                    self.systems.script.preloading = false;
 
                     // clear from cache because this data is modified by entity operations (e.g. destroy)
                     self.loader.clearCache(url, "hierarchy");
@@ -734,7 +739,9 @@ pc.extend(pc, function () {
                 if (!err) {
                     var _loaded = function () {
                         // parse and create scene
+                        self.systems.script.preloading = true;
                         var scene = handler.open(url, data);
+                        self.systems.script.preloading = false;
 
                         // clear scene from cache because we'll destroy it when we load another one
                         // so data will be invalid
@@ -850,7 +857,9 @@ pc.extend(pc, function () {
                 for (var key in props.layers) {
                     var data = props.layers[key];
                     data.id = parseInt(key, 10);
-                    data.enabled = true;
+                    // depth layer should only be enabled when needed
+                    // by incrementing its ref counter
+                    data.enabled = data.id !== pc.LAYERID_DEPTH;
                     layers[key] = new pc.Layer(data);
                 }
 
