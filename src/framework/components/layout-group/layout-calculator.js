@@ -1,9 +1,9 @@
 pc.extend(pc, function () {
     /**
      * @private
+     * @constructor
      * @name pc.LayoutCalculator
-     * @description Create a new LayoutCalculator
-     * @class Used to manage layout calculations for LayoutGroupComponents
+     * @classdesc Used to manage layout calculations for {@link pc.LayoutGroupComponent}s
      */
     function LayoutCalculator() {}
 
@@ -255,25 +255,25 @@ pc.extend(pc, function () {
                 case pc.FITTING_STRETCH:
                     if (currentSize < availableSize) {
                         return FITTING_ACTION.APPLY_STRETCHING;
-                    } else {
-                        return FITTING_ACTION.NONE;
                     }
+
+                    return FITTING_ACTION.NONE;
 
                 case pc.FITTING_SHRINK:
                     if (currentSize >= availableSize) {
                         return FITTING_ACTION.APPLY_SHRINKING;
-                    } else {
-                        return FITTING_ACTION.NONE;
                     }
+
+                    return FITTING_ACTION.NONE;
 
                 case pc.FITTING_BOTH:
                     if (currentSize < availableSize) {
                         return FITTING_ACTION.APPLY_STRETCHING;
                     } else if (currentSize >= availableSize) {
                         return FITTING_ACTION.APPLY_SHRINKING;
-                    } else {
-                        return FITTING_ACTION.NONE;
                     }
+
+                    return FITTING_ACTION.NONE;
 
                 default:
                     throw new Error('Unrecognized fitting mode: ' + fittingMode);
@@ -371,9 +371,9 @@ pc.extend(pc, function () {
 
             if (Math.abs(proportion) < 1e-5 && Math.abs(sumOfRemainingProportions) < 1e-5) {
                 return remainingAdjustment;
-            } else {
-                return remainingAdjustment * proportion / sumOfRemainingProportions;
             }
+
+            return remainingAdjustment * proportion / sumOfRemainingProportions;
         }
 
         // Calculate base positions based on the element sizes and spacing.
@@ -529,7 +529,7 @@ pc.extend(pc, function () {
         // on each element is optional, and each property value also has a set of fallback defaults
         // to be used in cases where no value is specified.
         function getProperty(element, propertyName) {
-            var layoutChildComponent = element.entity['layoutchild'];
+            var layoutChildComponent = element.entity.layoutchild;
 
             // First attempt to get the value from the element's LayoutChildComponent, if present.
             // TODO Should this check if the LayoutChildComponent is enabled?
@@ -537,9 +537,9 @@ pc.extend(pc, function () {
                 return layoutChildComponent[propertyName];
             } else if (element[propertyName] !== undefined) {
                 return element[propertyName];
-            } else {
-                return PROPERTY_DEFAULTS[propertyName];
             }
+
+            return PROPERTY_DEFAULTS[propertyName];
         }
 
         function clamp(value, min, max) {
@@ -590,12 +590,14 @@ pc.extend(pc, function () {
         function getTraversalOrder(items, orderBy, descending) {
             items.forEach(assignIndex);
 
+            /* eslint-disable dot-location */
             return items
                 .slice()
                 .sort(function(itemA, itemB) {
                     return descending ? itemB[orderBy] - itemA[orderBy] : itemA[orderBy] - itemB[orderBy];
                 })
                 .map(getIndex);
+            /* eslint-enable dot-location */
         }
 
         function assignIndex(item, index) {

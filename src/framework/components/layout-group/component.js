@@ -4,7 +4,7 @@ pc.extend(pc, function () {
      * @component
      * @name pc.LayoutGroupComponent
      * @description Create a new LayoutGroupComponent
-     * @class A LayoutGroupComponent enables the Entity to position and scale child {@link pc.ElementComponent}s according to configurable layout rules.
+     * @classdesc A LayoutGroupComponent enables the Entity to position and scale child {@link pc.ElementComponent}s according to configurable layout rules.
      * @param {pc.LayoutGroupComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @extends pc.Component
