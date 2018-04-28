@@ -36,10 +36,10 @@ pc.extend(pc, (function () {
         var chunks = pc.shaderChunks;
         var rgbmSource = sourceCubemap.rgbm;
         var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.rgbmPS +
-            chunks.prefilterCubemapPS.
-                replace(/\$METHOD/g, method === 0 ? "cos" : "phong").
-                replace(/\$NUMSAMPLES/g, samples).
-                replace(/\$textureCube/g, rgbmSource ? "textureCubeRGBM" : "textureCube"),
+            chunks.prefilterCubemapPS
+                .replace(/\$METHOD/g, method === 0 ? "cos" : "phong")
+                .replace(/\$NUMSAMPLES/g, samples)
+                .replace(/\$textureCube/g, rgbmSource ? "textureCubeRGBM" : "textureCube"),
                                                  "prefilter" + method + "" + samples + "" + rgbmSource);
         var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputCubemapPS, "outputCubemap");
         var constantTexSource = device.scope.resolve("source");
