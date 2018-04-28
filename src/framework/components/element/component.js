@@ -209,7 +209,7 @@ pc.extend(pc, function () {
             element._margin.data[0] = p[0] - element._calculatedWidth * pvt[0];
             element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._calculatedWidth - element._margin.data[0];
             element._margin.data[1] = p[1] - element._calculatedHeight * pvt[1];
-            element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._calculatedHeight - element._margin.data[1];
+            element._margin.data[3] = (element._localAnchor.data[3] - element._localAnchor.data[1]) - element._calculatedHeight - element._margin.data[1];
 
             if (! this._dirtyLocal)
                 this._dirtify(true);
@@ -264,7 +264,7 @@ pc.extend(pc, function () {
                 element._margin.data[0] = p[0] - element._calculatedWidth * pvt[0];
                 element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._calculatedWidth - element._margin.data[0];
                 element._margin.data[1] = p[1] - element._calculatedHeight * pvt[1];
-                element._margin.data[3] = (element._localAnchor.data[3]-element._localAnchor.data[1]) - element._calculatedHeight - element._margin.data[1];
+                element._margin.data[3] = (element._localAnchor.data[3] - element._localAnchor.data[1]) - element._calculatedHeight - element._margin.data[1];
 
                 this._dirtyLocal = false;
             }
@@ -789,7 +789,7 @@ pc.extend(pc, function () {
                 var p = this.entity.getLocalPosition().data;
                 var pvt = this._pivot.data;
                 this._margin.data[1] = p[1] - this._calculatedHeight * pvt[1];
-                this._margin.data[3] = (this._localAnchor.data[3]-this._localAnchor.data[1]) - this._calculatedHeight - this._margin.data[1];
+                this._margin.data[3] = (this._localAnchor.data[3] - this._localAnchor.data[1]) - this._calculatedHeight - this._margin.data[1];
             }
 
             this._flagChildrenAsDirty();
@@ -802,7 +802,7 @@ pc.extend(pc, function () {
         },
 
         _flagChildrenAsDirty: function() {
-            var i,l;
+            var i, l;
             var c = this.entity._children;
             for (i = 0, l = c.length; i < l; i++) {
                 if (c[i].element) {
@@ -967,7 +967,7 @@ pc.extend(pc, function () {
             this._setWidth(wr - wl);
 
             // update position
-            p.x = (this._localAnchor.data[2]-this._localAnchor.data[0]) - value - (this._calculatedWidth*(1-this._pivot.data[0]));
+            p.x = (this._localAnchor.data[2] - this._localAnchor.data[0]) - value - (this._calculatedWidth * (1 - this._pivot.data[0]));
             this.entity.setLocalPosition(p);
         }
     });
@@ -984,7 +984,7 @@ pc.extend(pc, function () {
             var wt = this._localAnchor.data[3] - value;
             this._setHeight(wt - wb);
 
-            p.y = (this._localAnchor.data[3] - this._localAnchor.data[1]) - value - this._calculatedHeight*(1-this._pivot.data[1]);
+            p.y = (this._localAnchor.data[3] - this._localAnchor.data[1]) - value - this._calculatedHeight * (1 - this._pivot.data[1]);
             this.entity.setLocalPosition(p);
         }
     });
@@ -1001,7 +1001,7 @@ pc.extend(pc, function () {
             var wb = this._localAnchor.data[1] + value;
             this._setHeight(wt - wb);
 
-            p.y = value + this._calculatedHeight*this._pivot.data[1];
+            p.y = value + this._calculatedHeight * this._pivot.data[1];
             this.entity.setLocalPosition(p);
         }
     });

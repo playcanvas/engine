@@ -1133,7 +1133,7 @@ pc.extend(pc, function () {
                 this._graphDepth = 0;
             }
 
-            for (var i=0, len=this._children.length; i<len; i++) {
+            for (var i = 0, len = this._children.length; i < len; i++) {
                 this._children[i]._updateGraphDepth();
             }
         },

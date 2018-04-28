@@ -1,11 +1,11 @@
 pc.extend(pc, function () {
-    var _schema = [ 'enabled' ];
+    var _schema = ['enabled'];
 
     /**
      * @private
      * @name pc.LayoutGroupComponentSystem
      * @description Create a new LayoutGroupComponentSystem
-     * @class Manages creation of {@link pc.LayoutGroupComponent}s.
+     * @classdesc Manages creation of {@link pc.LayoutGroupComponent}s.
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
