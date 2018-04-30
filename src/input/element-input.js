@@ -11,6 +11,11 @@ pc.extend(pc, function () {
     var _m = new pc.Vec3();
     var _sct = new pc.Vec3();
 
+    // pi x p2 * p3
+    var scalarTriple = function (p1, p2, p3) {
+        return _sct.cross(p1, p2).dot(p3);
+    };
+
     // Given line pq and ccw corners of a quad, return whether the line
     // intersects it. (from Real-Time Collision Detection book)
     var intersectLineQuad = function (p, q, corners) {
@@ -40,11 +45,6 @@ pc.extend(pc, function () {
         }
 
         return true;
-    };
-
-    // pi x p2 * p3
-    var scalarTriple = function (p1, p2, p3) {
-        return _sct.cross(p1, p2).dot(p3);
     };
 
     /**

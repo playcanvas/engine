@@ -145,7 +145,7 @@ pc.extend(pc, function () {
                         break;
                     }
                 }
-                for (i=start; i>=0; i--) {
+                for (i = start; i >= 0; i--) {
                     if (layerList[i].cameras.indexOf(this.camera) >= 0) {
                         if (order === 0) {
                             order = i + 1;
