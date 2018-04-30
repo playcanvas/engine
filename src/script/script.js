@@ -2,8 +2,6 @@ pc.extend(pc, function () {
     var rawToValue = function(app, args, value, old) {
         var i;
 
-        // TODO scripts2
-        // arrays
         switch (args.type) {
             case 'boolean':
                 return !! value;
@@ -223,7 +221,18 @@ pc.extend(pc, function () {
                 var old = this.__attributes[name];
 
                 // convert to appropriate type
-                this.__attributes[name] = rawToValue(this.app, args, raw, old);
+                if (args.array) {
+                    this.__attributes[name] = [];
+                    if (raw) {
+                        var i;
+                        var len;
+                        for (i = 0, len = raw.length; i < len; i++) {
+                            this.__attributes[name].push(rawToValue(this.app, args, raw[i], old ? old[i] : null));
+                        }
+                    }
+                } else {
+                    this.__attributes[name] = rawToValue(this.app, args, raw, old);
+                }
 
                 this.fire('attr', name, this.__attributes[name], old);
                 this.fire('attr:' + name, this.__attributes[name], old);
