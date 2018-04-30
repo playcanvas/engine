@@ -30,34 +30,14 @@ pc.extend(pc, function () {
                 }
                 break;
             case 'asset':
-                if (args.array) {
-                    var result = [ ];
-
-                    if (value instanceof Array) {
-                        for (i = 0; i < value.length; i++) {
-                            if (value[i] instanceof pc.Asset) {
-                                result.push(value[i]);
-                            } else if (typeof(value[i]) === 'number') {
-                                result.push(app.assets.get(value[i]) || null);
-                            } else if (typeof(value[i]) === 'string') {
-                                result.push(app.assets.get(parseInt(value[i], 10)) || null);
-                            } else {
-                                result.push(null);
-                            }
-                        }
-                    }
-
-                    return result;
+                if (value instanceof pc.Asset) {
+                    return value;
+                } else if (typeof(value) === 'number') {
+                    return app.assets.get(value) || null;
+                } else if (typeof(value) === 'string') {
+                    return app.assets.get(parseInt(value, 10)) || null;
                 } else {
-                    if (value instanceof pc.Asset) {
-                        return value;
-                    } else if (typeof(value) === 'number') {
-                        return app.assets.get(value) || null;
-                    } else if (typeof(value) === 'string') {
-                        return app.assets.get(parseInt(value, 10)) || null;
-                    } else {
-                        return null;
-                    }
+                    return null;
                 }
                 break;
             case 'entity':
