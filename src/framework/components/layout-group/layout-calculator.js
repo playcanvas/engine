@@ -593,14 +593,12 @@ pc.extend(pc, function () {
         function getTraversalOrder(items, orderBy, descending) {
             items.forEach(assignIndex);
 
-            /* eslint-disable dot-location */
             return items
                 .slice()
                 .sort(function(itemA, itemB) {
                     return descending ? itemB[orderBy] - itemA[orderBy] : itemA[orderBy] - itemB[orderBy];
                 })
                 .map(getIndex);
-            /* eslint-enable dot-location */
         }
 
         function assignIndex(item, index) {

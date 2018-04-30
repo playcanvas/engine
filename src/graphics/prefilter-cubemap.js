@@ -1,13 +1,6 @@
 pc.extend(pc, (function () {
     'use strict';
 
-    function fixChrome() {
-        // https://code.google.com/p/chromium/issues/detail?id=447419
-        // Workaround: wait a little
-        var endTime = Date.now() + 10;
-        while (Date.now() < endTime) {}
-    }
-
     function syncToCpu(device, targ, face) {
         var tex = targ._colorBuffer;
         if (tex.format != pc.PIXELFORMAT_R8_G8_B8_A8) return;
@@ -26,7 +19,6 @@ pc.extend(pc, (function () {
         var method = options.method;
         var samples = options.samples;
         var cpuSync = options.cpuSync;
-        var chromeFix = options.chromeFix;
 
         if (cpuSync && !sourceCubemap._levels[0]) {
             console.error("ERROR: prefilter: cubemap must have _levels");
@@ -36,10 +28,10 @@ pc.extend(pc, (function () {
         var chunks = pc.shaderChunks;
         var rgbmSource = sourceCubemap.rgbm;
         var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.rgbmPS +
-            chunks.prefilterCubemapPS.
-                replace(/\$METHOD/g, method === 0 ? "cos" : "phong").
-                replace(/\$NUMSAMPLES/g, samples).
-                replace(/\$textureCube/g, rgbmSource ? "textureCubeRGBM" : "textureCube"),
+            chunks.prefilterCubemapPS
+                .replace(/\$METHOD/g, method === 0 ? "cos" : "phong")
+                .replace(/\$NUMSAMPLES/g, samples)
+                .replace(/\$textureCube/g, rgbmSource ? "textureCubeRGBM" : "textureCube"),
                                                  "prefilter" + method + "" + samples + "" + rgbmSource);
         var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputCubemapPS, "outputCubemap");
         var constantTexSource = device.scope.resolve("source");
@@ -82,7 +74,6 @@ pc.extend(pc, (function () {
                 constantTexSource.setValue(sourceCubemap);
                 constantParams.setValue(params.data);
 
-                if (chromeFix) fixChrome();
                 pc.drawQuadWithShader(device, targ, shader2);
                 syncToCpu(device, targ, face);
             }
@@ -117,7 +108,6 @@ pc.extend(pc, (function () {
                     constantTexSource.setValue(sourceCubemap);
                     constantParams.setValue(params.data);
 
-                    if (chromeFix) fixChrome();
                     pc.drawQuadWithShader(device, targ, shader2);
                     if (i === steps - 1 && cpuSync) {
                         syncToCpu(device, targ, face);
@@ -148,7 +138,6 @@ pc.extend(pc, (function () {
                 constantTexSource.setValue(sourceCubemap);
                 constantParams.setValue(params.data);
 
-                if (chromeFix) fixChrome();
                 pc.drawQuadWithShader(device, targ, shader2);
                 syncToCpu(device, targ, face);
             }
@@ -203,7 +192,6 @@ pc.extend(pc, (function () {
                             method === 0 ? cmapsList[0][i - 1] : cmapsList[-1][i - 1]);
                         constantParams.setValue(params.data);
 
-                        if (chromeFix) fixChrome();
                         pc.drawQuadWithShader(device, targ, shader);
                         if (cpuSync) syncToCpu(device, targ, face);
                     }

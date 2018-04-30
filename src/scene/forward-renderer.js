@@ -1898,8 +1898,6 @@ pc.extend(pc, function () {
             var subSearchTime = 0;
             var cullTime = 0;
             var subCullTime = 0;
-            var readMeshTime = 0;
-            var subReadMeshTime = 0;
             var triAabbTime = 0;
             var subTriAabbTime = 0;
             var writeMeshTime = 0;
@@ -1981,9 +1979,6 @@ pc.extend(pc, function () {
                         continue;
                     }
 
-                    // #ifdef PROFILER
-                    subReadMeshTime = pc.now();
-                    // #endif
                     mesh = drawCall.mesh;
                     vertexBuffer = mesh.vertexBuffer;
                     indexBuffer = mesh.indexBuffer[drawCall.renderStyle];
@@ -1999,9 +1994,6 @@ pc.extend(pc, function () {
                             offsetP = elems[k].offset / 4; // / 4 because float
                         }
                     }
-                    // #ifdef PROFILER
-                    readMeshTime += pc.now() - subReadMeshTime;
-                    // #endif
 
                     // #ifdef PROFILER
                     subTriAabbTime = pc.now();
@@ -2328,7 +2320,7 @@ pc.extend(pc, function () {
         },
 
         cullLocalShadowmap: function (light, drawCalls) {
-            var i, type, shadowCam, shadowCamNode, passes, pass, j, numInstances, meshInstance, visibleList, vlen, visible;
+            var i, type, shadowCam, shadowCamNode, passes, pass, numInstances, meshInstance, visibleList, vlen, visible;
             var lightNode;
             type = light._type;
             if (type === pc.LIGHTTYPE_DIRECTIONAL) return;
@@ -2370,8 +2362,8 @@ pc.extend(pc, function () {
                 }
                 light._visibleLength[pass] = 0;
                 vlen = 0;
-                for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
-                    meshInstance = drawCalls[j];
+                for (i = 0, numInstances = drawCalls.length; i < numInstances; i++) {
+                    meshInstance = drawCalls[i];
                     visible = true;
                     if (meshInstance.cull) {
                         visible = this._isVisible(shadowCam, meshInstance);

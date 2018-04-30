@@ -274,12 +274,12 @@ pc.extend(pc, function () {
             if (! mesh) continue;
 
             mesh.vertexBuffer.destroy();
-            for (var j = 0, len2 = mesh.indexBuffer.length; j<len2; j++) {
+            for (var j = 0, len2 = mesh.indexBuffer.length; j < len2; j++) {
                 mesh.indexBuffer[j].destroy();
             }
         }
         this._meshes.length = 0;
-    },
+    };
 
     Object.defineProperty(Sprite.prototype, 'frameKeys', {
         get: function () {
