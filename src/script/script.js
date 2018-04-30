@@ -2,8 +2,6 @@ pc.extend(pc, function () {
     var rawToValue = function(app, args, value, old) {
         var i;
 
-        // TODO scripts2
-        // arrays
         switch (args.type) {
             case 'boolean':
                 return !! value;
@@ -28,33 +26,15 @@ pc.extend(pc, function () {
                     return null;
                 }
             case 'asset':
-                if (args.array) {
-                    var result = [];
-
-                    if (value instanceof Array) {
-                        for (i = 0; i < value.length; i++) {
-                            if (value[i] instanceof pc.Asset) {
-                                result.push(value[i]);
-                            } else if (typeof(value[i]) === 'number') {
-                                result.push(app.assets.get(value[i]) || null);
-                            } else if (typeof(value[i]) === 'string') {
-                                result.push(app.assets.get(parseInt(value[i], 10)) || null);
-                            } else {
-                                result.push(null);
-                            }
-                        }
-                    }
-
-                    return result;
-                }
                 if (value instanceof pc.Asset) {
                     return value;
                 } else if (typeof(value) === 'number') {
                     return app.assets.get(value) || null;
                 } else if (typeof(value) === 'string') {
                     return app.assets.get(parseInt(value, 10)) || null;
+                } else {
+                    return null;
                 }
-                return null;
             case 'entity':
                 if (value instanceof pc.GraphNode) {
                     return value;
@@ -212,7 +192,18 @@ pc.extend(pc, function () {
                 var old = this.__attributes[name];
 
                 // convert to appropriate type
-                this.__attributes[name] = rawToValue(this.app, args, raw, old);
+                if (args.array) {
+                    this.__attributes[name] = [];
+                    if (raw) {
+                        var i;
+                        var len;
+                        for (i = 0, len = raw.length; i < len; i++) {
+                            this.__attributes[name].push(rawToValue(this.app, args, raw[i], old ? old[i] : null));
+                        }
+                    }
+                } else {
+                    this.__attributes[name] = rawToValue(this.app, args, raw, old);
+                }
 
                 this.fire('attr', name, this.__attributes[name], old);
                 this.fire('attr:' + name, this.__attributes[name], old);
