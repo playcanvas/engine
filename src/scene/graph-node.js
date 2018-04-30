@@ -108,8 +108,6 @@ pc.extend(pc, function () {
 
         set: function (enabled) {
             if (this._enabled !== enabled) {
-                var prevValue = this._enabled;
-
                 this._enabled = enabled;
 
                 if (! this._parent || this._parent.enabled)
