@@ -275,7 +275,7 @@ test("takes into account each element's pivot when calculating horizontal positi
     this.calculate();
 
     this.assertValues('x', [50, 110, 150, 250, 270], { approx: true });
-    this.assertValues('y', [10,  10,  10,  10,  10], { approx: true });
+    this.assertValues('y', [10,  10,   0,   0,   0], { approx: true });
 });
 
 test("takes into account each element's pivot when calculating vertical positions", function () {
@@ -287,7 +287,7 @@ test("takes into account each element's pivot when calculating vertical position
 
     this.calculate();
 
-    this.assertValues('x', [10,  10,  10,  10,  10], { approx: true });
+    this.assertValues('x', [10,  10,   0,   0,   0], { approx: true });
     this.assertValues('y', [50, 110, 150, 250, 270], { approx: true });
 });
 
@@ -628,6 +628,26 @@ test("{ wrap: true } pc.FITTING_NONE includes spacing and padding in calculation
 
     this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
     this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+});
+
+test("{ wrap: true } pc.FITTING_NONE includes spacing when calculating line breaks", function () {
+    this.elements = this.mixedWidthElements;
+    this.elements[0].width = 100;
+    this.elements[1].width = 100;
+    this.elements[2].width = 100;
+    this.elements[3].width = 100;
+    this.elements[4].width = 100;
+
+    this.options.wrap = true;
+    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
+    this.options.widthFitting = pc.FITTING_NONE;
+    this.options.spacing.x = 20;
+    this.options.containerSize.x = 500;
+
+    this.calculate();
+
+    this.assertValues('x', [0, 120, 240, 360,   0]);
+    this.assertValues('y', [0,    0,  0,   0, 100]);
 });
 
 test("{ wrap: true } pc.FITTING_STRETCH stretches elements proportionally when natural widths are less than container size", function () {

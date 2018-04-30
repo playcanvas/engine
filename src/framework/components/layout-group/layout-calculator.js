@@ -100,7 +100,6 @@ pc.extend(pc, function () {
                 var anchor = element.anchor.data;
 
                 if (anchor[0] !== 0 || anchor[1] !== 0 || anchor[2] !== 0 || anchor[3] !== 0) {
-                    console.log('setting anchor to 0. curr: ', anchor);
                     element.anchor = [0, 0, 0, 0];
                 }
             }
@@ -115,17 +114,22 @@ pc.extend(pc, function () {
             }
 
             var lines = [[]];
-            var idealSizes = getProperties(allElements, a.size);
+            var sizes = getElementSizeProperties(allElements);
             var runningSize = 0;
             var allowOverrun = (options[a.fitting] === pc.FITTING_SHRINK);
 
             for (var i = 0; i < allElements.length; ++i) {
-                runningSize += idealSizes[i];
+                if (lines[lines.length - 1].length > 0) {
+                    runningSize += options.spacing[a.axis];
+                }
+
+                var idealElementSize = sizes[i][a.size];
+                runningSize += idealElementSize;
 
                 // For the None, Stretch and Both fitting modes, we should break to a new
                 // line before we overrun the available space in the container.
-                if (!allowOverrun && runningSize >= availableSpace[a.axis] && lines[lines.length - 1].length !== 0) {
-                    runningSize = idealSizes[i];
+                if (!allowOverrun && runningSize > availableSpace[a.axis] && lines[lines.length - 1].length !== 0) {
+                    runningSize = idealElementSize;
                     lines.push([]);
                 }
 
@@ -133,7 +137,7 @@ pc.extend(pc, function () {
 
                 // For the Shrink fitting mode, we should break to a new line immediately
                 // after we've overrun the available space in the container.
-                if (allowOverrun && runningSize >= availableSpace[a.axis] && i !== allElements.length - 1) {
+                if (allowOverrun && runningSize > availableSpace[a.axis] && i !== allElements.length - 1) {
                     runningSize = 0;
                     lines.push([]);
                 }
@@ -394,25 +398,25 @@ pc.extend(pc, function () {
                 var positionsThisLine = [];
                 var sizesThisLine = sizes[lineIndex];
 
-                // Move the cursor to account for the largest element's size and pivot
-                cursor[b.axis] -= minExtentB(line.largestElement, line.largestSize);
-
                 // Distribute elements along the line
                 for (var elementIndex = 0; elementIndex < line.length; ++elementIndex) {
                     var element = line[elementIndex];
+                    var sizesThisElement = sizesThisLine[elementIndex];
 
-                    cursor[a.axis] -= minExtentA(element, sizesThisLine[elementIndex]);
+                    cursor[b.axis] -= minExtentB(element, sizesThisElement);
+                    cursor[a.axis] -= minExtentA(element, sizesThisElement);
 
                     positionsThisLine[elementIndex] = {};
                     positionsThisLine[elementIndex][a.axis] = cursor[a.axis];
                     positionsThisLine[elementIndex][b.axis] = cursor[b.axis];
 
-                    cursor[a.axis] += maxExtentA(element, sizesThisLine[elementIndex]) + options.spacing[a.axis];
+                    cursor[b.axis] += minExtentB(element, sizesThisElement);
+                    cursor[a.axis] += maxExtentA(element, sizesThisElement) + options.spacing[a.axis];
                 }
 
                 // Record the size of the overall line
                 line[a.size] = cursor[a.axis] - options.spacing[a.axis];
-                line[b.size] = maxExtentB(line.largestElement, line.largestSize);
+                line[b.size] = line.largestSize[b.size];
 
                 // Move the cursor to the next line
                 cursor[a.axis] = 0;
@@ -532,8 +536,7 @@ pc.extend(pc, function () {
             var layoutChildComponent = element.entity.layoutchild;
 
             // First attempt to get the value from the element's LayoutChildComponent, if present.
-            // TODO Should this check if the LayoutChildComponent is enabled?
-            if (layoutChildComponent && layoutChildComponent[propertyName] !== undefined && layoutChildComponent[propertyName] !== null) {
+            if (layoutChildComponent && layoutChildComponent.enabled && layoutChildComponent[propertyName] !== undefined && layoutChildComponent[propertyName] !== null) {
                 return layoutChildComponent[propertyName];
             } else if (element[propertyName] !== undefined) {
                 return element[propertyName];

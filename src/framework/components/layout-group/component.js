@@ -53,11 +53,11 @@ pc.extend(pc, function () {
         this._layoutCalculator = new pc.LayoutCalculator();
 
         // Listen for the group container being resized
-        this._listenForResizeEvents(this.entity, 'on');
+        this._listenForReflowEvents(this.entity, 'on');
 
         // Listen to existing children being resized
         this.entity.children.forEach(function(child) {
-            this._listenForResizeEvents(child, 'on');
+            this._listenForReflowEvents(child, 'on');
         }.bind(this));
 
         // Listen to newly added children being resized
@@ -67,12 +67,10 @@ pc.extend(pc, function () {
         // Listen for ElementComponents and LayoutChildComponents being added
         // to self or to children - covers cases where they are not already
         // present at the point when this component is constructed.
-        system.app.systems.element.on('add', this._onElementComponentAdd, this);
-        system.app.systems.element.on('beforeremove', this._onElementComponentRemove, this);
-        system.app.systems.layoutchild.on('add', this._onLayoutChildComponentAdd, this);
-        system.app.systems.layoutchild.on('beforeremove', this._onLayoutChildComponentRemove, this);
-
-        this._scheduleReflow();
+        system.app.systems.element.on('add', this._onElementOrLayoutComponentAdd, this);
+        system.app.systems.element.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
+        system.app.systems.layoutchild.on('add', this._onElementOrLayoutComponentAdd, this);
+        system.app.systems.layoutchild.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
     };
     LayoutGroupComponent = pc.inherits(LayoutGroupComponent, pc.Component);
 
@@ -81,61 +79,46 @@ pc.extend(pc, function () {
             return (entity === this.entity) || (this.entity.children.indexOf(entity) !== -1);
         },
 
-        _listenForResizeEvents: function(target, onOff) {
+        _listenForReflowEvents: function(target, onOff) {
             if (target.element) {
-                target.element[onOff]('resize', this._onResize, this);
-                target.element[onOff]('set:pivot', this._onSetPivot, this);
+                target.element[onOff]('enableelement', this._scheduleReflow, this);
+                target.element[onOff]('disableelement', this._scheduleReflow, this);
+                target.element[onOff]('resize', this._scheduleReflow, this);
+                target.element[onOff]('set:pivot', this._scheduleReflow, this);
             }
 
             if (target.layoutchild) {
-                target.layoutchild[onOff]('resize', this._onResize, this);
+                target.layoutchild[onOff]('set_enabled', this._scheduleReflow, this);
+                target.layoutchild[onOff]('resize', this._scheduleReflow, this);
             }
         },
 
-        _onElementComponentAdd: function(entity, component) {
+        _onElementOrLayoutComponentAdd: function(entity) {
             if (this._isSelfOrChild(entity)) {
-                component.on('resize', this._onResize, this);
+                this._listenForReflowEvents(entity, 'on');
+                this._scheduleReflow();
             }
         },
 
-        _onElementComponentRemove: function(entity, component) {
+        _onElementOrLayoutComponentRemove: function(entity) {
             if (this._isSelfOrChild(entity)) {
-                component.off('resize', this._onResize, this);
+                this._listenForReflowEvents(entity, 'off');
+                this._scheduleReflow();
             }
-        },
-
-        _onLayoutChildComponentAdd: function(entity, component) {
-            if (this._isSelfOrChild(entity)) {
-                component.on('resize', this._onResize, this);
-            }
-        },
-
-        _onLayoutChildComponentRemove: function(entity, component) {
-            if (this._isSelfOrChild(entity)) {
-                component.off('resize', this._onResize, this);
-            }
-        },
-
-        _onResize: function() {
-            this._scheduleReflow();
-        },
-
-        _onSetPivot: function() {
-            this._scheduleReflow();
         },
 
         _onChildInsert: function(child) {
-            this._listenForResizeEvents(child, 'on');
+            this._listenForReflowEvents(child, 'on');
             this._scheduleReflow();
         },
 
         _onChildRemove: function(child) {
-            this._listenForResizeEvents(child, 'off');
+            this._listenForReflowEvents(child, 'off');
             this._scheduleReflow();
         },
 
         _scheduleReflow: function() {
-            if (!this._isPerformingReflow) {
+            if (this.enabled && this.entity && this.entity.enabled && !this._isPerformingReflow) {
                 this.system.scheduleReflow(this);
             }
         },
@@ -172,12 +155,24 @@ pc.extend(pc, function () {
             this._isPerformingReflow = false;
         },
 
+        onEnable: function() {
+            this._scheduleReflow();
+        },
+
         onRemove: function () {
-            this.entity.off('insert', this._onResize, this);
+            this.entity.off('childinsert', this._onChildInsert, this);
+            this.entity.off('childremove', this._onChildRemove, this);
+
+            this._listenForReflowEvents(this.entity, 'off');
 
             this.entity.children.forEach(function(child) {
-                this._listenForResizeEvents(child, 'off');
+                this._listenForReflowEvents(child, 'off');
             }.bind(this));
+
+            this.system.app.systems.element.off('add', this._onElementOrLayoutComponentAdd, this);
+            this.system.app.systems.element.off('beforeremove', this._onElementOrLayoutComponentRemove, this);
+            this.system.app.systems.layoutchild.off('add', this._onElementOrLayoutComponentAdd, this);
+            this.system.app.systems.layoutchild.off('beforeremove', this._onElementOrLayoutComponentRemove, this);
         }
     });
 

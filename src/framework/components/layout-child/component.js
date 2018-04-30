@@ -36,7 +36,6 @@ pc.extend(pc, function () {
             set: function (value) {
                 if (this[_name] !== value) {
                     this[_name] = value;
-                    this.fire('set:' + name, this[_name]);
                     this.fire('resize');
                 }
             }
