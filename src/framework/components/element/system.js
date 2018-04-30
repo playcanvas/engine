@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var _schema = [ 'enabled' ];
+    var _schema = ['enabled'];
 
     var nineSliceBasePS = [
         "varying vec2 vMask;",
@@ -35,7 +35,7 @@ pc.extend(pc, function () {
         this.schema = _schema;
 
         // default texture - make white so we can tint it with emissive color
-        this._defaultTexture = new pc.Texture(app.graphicsDevice, {width: 1, height: 1, format: pc.PIXELFORMAT_R8_G8_B8_A8});
+        this._defaultTexture = new pc.Texture(app.graphicsDevice, { width: 1, height: 1, format: pc.PIXELFORMAT_R8_G8_B8_A8 });
         var pixels = this._defaultTexture.lock();
         var pixelData = new Uint8Array(4);
         pixelData[0] = 255.0;
@@ -49,8 +49,8 @@ pc.extend(pc, function () {
         this._maskMaterials = {}; // cache for materials that mask elements
 
         this.defaultImageMaterial = new pc.StandardMaterial();
-        this.defaultImageMaterial.diffuse.set(0,0,0); // black diffuse color to prevent ambient light being included
-        this.defaultImageMaterial.emissive.set(0.5,0.5,0.5); // use non-white to compile shader correctly
+        this.defaultImageMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+        this.defaultImageMaterial.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
         this.defaultImageMaterial.emissiveMap = this._defaultTexture;
         this.defaultImageMaterial.emissiveTint = true;
         this.defaultImageMaterial.opacityMap = this._defaultTexture;
@@ -161,8 +161,8 @@ pc.extend(pc, function () {
         this.defaultTextMaterial.useGammaTonemap = false;
         this.defaultTextMaterial.useFog = false;
         this.defaultTextMaterial.useSkybox = false;
-        this.defaultTextMaterial.diffuse.set(0,0,0); // black diffuse color to prevent ambient light being included
-        this.defaultTextMaterial.emissive.set(1,1,1);
+        this.defaultTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+        this.defaultTextMaterial.emissive.set(1, 1, 1);
         this.defaultTextMaterial.opacity = 0.5;
         this.defaultTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
         this.defaultTextMaterial.depthWrite = false;
@@ -246,13 +246,24 @@ pc.extend(pc, function () {
                 component.margin = component._margin;
             }
 
+            var shouldForceSetAnchor = false;
+
             if (data.width !== undefined && ! splitHorAnchors) {
                 // force update
                 component.width = data.width;
+            } else if (splitHorAnchors) {
+                shouldForceSetAnchor = true;
             }
             if (data.height !== undefined && ! splitVerAnchors) {
                 // force update
                 component.height = data.height;
+            } else if (splitVerAnchors) {
+                shouldForceSetAnchor = true;
+            }
+
+            if (shouldForceSetAnchor) {
+                // force update
+                component.anchor = component.anchor;
             }
 
             if (data.enabled !== undefined) {
@@ -290,7 +301,7 @@ pc.extend(pc, function () {
                     // default to white
                     // force a value to update meshinstance parameters
                     var opacity = data.opacity || 1;
-                    component.color.set(1,1,1, opacity);
+                    component.color.set(1, 1, 1, opacity);
                     component.color = component.color;
                 }
 

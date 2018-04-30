@@ -185,7 +185,7 @@ pc.extend(pc, function () {
             // id cache
             this._cache[asset.id] = index;
             if (!this._names[asset.name])
-                this._names[asset.name] = [ ];
+                this._names[asset.name] = [];
 
             // name cache
             this._names[asset.name].push(index);
@@ -469,7 +469,7 @@ pc.extend(pc, function () {
                 var mappingUrl = pc.path.join(dir, basename.replace(".json", ".mapping.json"));
                 this._loader.load(mappingUrl, 'json', function (err, data) {
                     if (err) {
-                        asset.data = {mapping: []};
+                        asset.data = { mapping: [] };
                         _loadAsset(asset);
                         return;
                     }
@@ -584,9 +584,8 @@ pc.extend(pc, function () {
         findAll: function (name, type) {
             var self = this;
             var idxs = this._names[name];
-            var assets;
             if (idxs) {
-                assets = idxs.map(function (idx) {
+                var assets = idxs.map(function (idx) {
                     return self._assets[idx];
                 });
 
@@ -594,12 +593,12 @@ pc.extend(pc, function () {
                     return assets.filter(function (asset) {
                         return (asset.type === type);
                     });
-                } else {
-                    return assets;
                 }
-            } else {
-                return [];
+
+                return assets;
             }
+
+            return [];
         },
 
         _onTagAdd: function(tag, asset) {
@@ -649,7 +648,7 @@ pc.extend(pc, function () {
         * console.log("Found " + assets.length + " assets, where names contains 'monster'");
         */
         filter: function (callback) {
-            var items = [ ];
+            var items = [];
             for (var i = 0, len = this._assets.length; i < len; i++) {
                 if (callback(this._assets[i]))
                     items.push(this._assets[i]);

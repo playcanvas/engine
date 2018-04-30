@@ -37,7 +37,7 @@ pc.path = function () {
 
             for (index = 0; index < num - 1; ++index) {
                 var one = arguments[index];
-                var two = arguments[index+1];
+                var two = arguments[index + 1];
                 if (!pc.isDefined(one) || !pc.isDefined(two)) {
                     throw new Error("undefined argument to pc.path.join");
                 }
@@ -66,8 +66,8 @@ pc.path = function () {
          */
         split: function (path) {
             var parts = path.split(pc.path.delimiter);
-            var tail = parts.slice(parts.length-1)[0];
-            var head = parts.slice(0,parts.length-1).join(pc.path.delimiter);
+            var tail = parts.slice(parts.length - 1)[0];
+            var head = parts.slice(0, parts.length - 1).join(pc.path.delimiter);
             return [head, tail];
         },
 
@@ -95,16 +95,15 @@ pc.path = function () {
          */
         getDirectory: function(path) {
             var parts = path.split(pc.path.delimiter);
-            return parts.slice(0,parts.length-1).join(pc.path.delimiter);
+            return parts.slice(0, parts.length - 1).join(pc.path.delimiter);
         },
 
         getExtension: function (path) {
             var ext = path.split('?')[0].split('.').pop();
             if (ext !== path) {
                 return "." + ext;
-            } else {
-                return "";
             }
+            return "";
         },
 
         isRelativePath: function (s) {

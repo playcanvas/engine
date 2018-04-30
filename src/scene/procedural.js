@@ -133,9 +133,9 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
 
         area = s1 * t2 - s2 * t1;
 
-        //area can 0.0 for degenerate triangles or bad uv coordinates
+        // Area can 0.0 for degenerate triangles or bad uv coordinates
         if (area == 0.0) {
-            //fallback to default values
+            // Fallback to default values
             sdir.set(0.0, 1.0, 0.0);
             tdir.set(1.0, 0.0, 0.0);
         } else {
@@ -266,27 +266,27 @@ pc.createMesh = function (device, positions, opts) {
     // Write the vertex data into the vertex buffer
     var iterator = new pc.VertexIterator(vertexBuffer);
     for (var i = 0; i < numVertices; i++) {
-        iterator.element[pc.SEMANTIC_POSITION].set(positions[i*3], positions[i*3+1], positions[i*3+2]);
+        iterator.element[pc.SEMANTIC_POSITION].set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
         if (normals !== null) {
-            iterator.element[pc.SEMANTIC_NORMAL].set(normals[i*3], normals[i*3+1], normals[i*3+2]);
+            iterator.element[pc.SEMANTIC_NORMAL].set(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
         }
         if (tangents !== null) {
-            iterator.element[pc.SEMANTIC_TANGENT].set(tangents[i*4], tangents[i*4+1], tangents[i*4+2], tangents[i*4+3]);
+            iterator.element[pc.SEMANTIC_TANGENT].set(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2], tangents[i * 4 + 3]);
         }
         if (colors !== null) {
-            iterator.element[pc.SEMANTIC_COLOR].set(colors[i*4], colors[i*4+1], colors[i*4+2], colors[i*4+3]);
+            iterator.element[pc.SEMANTIC_COLOR].set(colors[i * 4], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 3]);
         }
         if (uvs !== null) {
-            iterator.element[pc.SEMANTIC_TEXCOORD0].set(uvs[i*2], uvs[i*2+1]);
+            iterator.element[pc.SEMANTIC_TEXCOORD0].set(uvs[i * 2], uvs[i * 2 + 1]);
         }
         if (uvs1 !== null) {
-            iterator.element[pc.SEMANTIC_TEXCOORD1].set(uvs1[i*2], uvs1[i*2+1]);
+            iterator.element[pc.SEMANTIC_TEXCOORD1].set(uvs1[i * 2], uvs1[i * 2 + 1]);
         }
         if (blendIndices !== null) {
-            iterator.element[pc.SEMANTIC_BLENDINDICES].set(blendIndices[i*2], blendIndices[i*2+1]);
+            iterator.element[pc.SEMANTIC_BLENDINDICES].set(blendIndices[i * 2], blendIndices[i * 2 + 1]);
         }
         if (blendWeights !== null) {
-            iterator.element[pc.SEMANTIC_BLENDWEIGHT].set(blendWeights[i*2], blendWeights[i*2+1]);
+            iterator.element[pc.SEMANTIC_BLENDWEIGHT].set(blendWeights[i * 2], blendWeights[i * 2 + 1]);
         }
         iterator.next();
     }
@@ -495,7 +495,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
         offset = (heightSegments + 1) * (capSegments + 1);
         for (lat = 0; lat < latitudeBands; ++lat) {
             for (lon = 0; lon < longitudeBands; ++lon) {
-                first  = (lat * (longitudeBands+1)) + lon;
+                first  = (lat * (longitudeBands + 1)) + lon;
                 second = first + longitudeBands + 1;
 
                 indices.push(offset + first + 1, offset + second, offset + first);
@@ -538,7 +538,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
         offset = (heightSegments + 1) * (capSegments + 1) + (longitudeBands + 1) * (latitudeBands + 1);
         for (lat = 0; lat < latitudeBands; ++lat) {
             for (lon = 0; lon < longitudeBands; ++lon) {
-                first  = (lat * (longitudeBands+1)) + lon;
+                first  = (lat * (longitudeBands + 1)) + lon;
                 second = first + longitudeBands + 1;
 
                 indices.push(offset + first + 1, offset + second, offset + first);
@@ -779,7 +779,7 @@ pc.createSphere = function (device, opts) {
 
     for (lat = 0; lat < latitudeBands; ++lat) {
         for (lon = 0; lon < longitudeBands; ++lon) {
-            first  = (lat * (longitudeBands+1)) + lon;
+            first  = (lat * (longitudeBands + 1)) + lon;
             second = first + longitudeBands + 1;
 
             indices.push(first + 1, second, first);
@@ -856,8 +856,8 @@ pc.createPlane = function (device, opts) {
             uvs.push(u, v);
 
             if ((i < ws) && (j < ls)) {
-                indices.push(vcounter+ls+1, vcounter+1, vcounter);
-                indices.push(vcounter+ls+1, vcounter+ls+2, vcounter+1);
+                indices.push(vcounter + ls + 1, vcounter + 1, vcounter);
+                indices.push(vcounter + ls + 1, vcounter + ls + 2, vcounter + 1);
             }
 
             vcounter++;
@@ -914,21 +914,21 @@ pc.createBox = function (device, opts) {
     ];
 
     var faceAxes = [
-        [ 0, 1, 3 ], // FRONT
-        [ 4, 5, 7 ], // BACK
-        [ 3, 2, 6 ], // TOP
-        [ 1, 0, 4 ], // BOTTOM
-        [ 1, 4, 2 ], // RIGHT
-        [ 5, 0, 6 ]  // LEFT
+        [0, 1, 3], // FRONT
+        [4, 5, 7], // BACK
+        [3, 2, 6], // TOP
+        [1, 0, 4], // BOTTOM
+        [1, 4, 2], // RIGHT
+        [5, 0, 6]  // LEFT
     ];
 
     var faceNormals = [
-        [  0,  0,  1 ], // FRONT
-        [  0,  0, -1 ], // BACK
-        [  0,  1,  0 ], // TOP
-        [  0, -1,  0 ], // BOTTOM
-        [  1,  0,  0 ], // RIGHT
-        [ -1,  0,  0 ]  // LEFT
+        [0,  0,  1], // FRONT
+        [0,  0, -1], // BACK
+        [0,  1,  0], // TOP
+        [0, -1,  0], // BOTTOM
+        [1,  0,  0], // RIGHT
+        [-1,  0,  0]  // LEFT
     ];
 
     var sides = {
@@ -950,7 +950,6 @@ pc.createBox = function (device, opts) {
     var generateFace = function (side, uSegments, vSegments) {
         var u, v;
         var i, j;
-        var offset = positions.length / 3;
 
         for (i = 0; i <= uSegments; i++) {
             for (j = 0; j <= vSegments; j++) {
@@ -980,8 +979,8 @@ pc.createBox = function (device, opts) {
                 uvs1.push(u, v);
 
                 if ((i < uSegments) && (j < vSegments)) {
-                    indices.push(vcounter+vSegments+1, vcounter+1, vcounter);
-                    indices.push(vcounter+vSegments+1, vcounter+vSegments+2, vcounter+1);
+                    indices.push(vcounter + vSegments + 1, vcounter + 1, vcounter);
+                    indices.push(vcounter + vSegments + 1, vcounter + vSegments + 2, vcounter + 1);
                 }
 
                 vcounter++;

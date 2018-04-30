@@ -50,7 +50,7 @@ pc.extend(pc, function () {
             var height = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
 
             var device = this.app.graphicsDevice;
-            var format = hdr? device.getHdrFormat() : pc.PIXELFORMAT_R8_G8_B8_A8;
+            var format = hdr ? device.getHdrFormat() : pc.PIXELFORMAT_R8_G8_B8_A8;
 
             var colorBuffer = new pc.Texture(device, {
                 format: format,
@@ -125,7 +125,7 @@ pc.extend(pc, function () {
                     renderTarget: this.camera.renderTarget,
                     clear: false,
                     onPostRender: function() {
-                        for (var i=0; i<this._commandList.length; i++) {
+                        for (var i = 0; i < this._commandList.length; i++) {
                             this._commandList[i]();
                         }
                     }
@@ -135,7 +135,7 @@ pc.extend(pc, function () {
                 var order = 0;
                 var i;
                 var start = layerList.length - 1;
-                for (i=start; i>=0; i--) {
+                for (i = start; i >= 0; i--) {
                     if (layerList[i].id === pc.LAYERID_UI) {
                         start = i - 1;
                         layerList[i].overrideClear = true;
@@ -145,7 +145,7 @@ pc.extend(pc, function () {
                         break;
                     }
                 }
-                for (i=start; i>=0; i--) {
+                for (i = start; i >= 0; i--) {
                     if (layerList[i].cameras.indexOf(this.camera) >= 0) {
                         if (order === 0) {
                             order = i + 1;
@@ -178,7 +178,7 @@ pc.extend(pc, function () {
         removeEffect: function (effect) {
             // find index of effect
             var index = -1;
-            for (var i=0,len=this.effects.length; i<len; i++) {
+            for (var i = 0, len = this.effects.length; i < len; i++) {
                 if (this.effects[i].effect === effect) {
                     index = i;
                     break;
@@ -188,8 +188,8 @@ pc.extend(pc, function () {
             if (index >= 0) {
                 if (index > 0)  {
                     // connect the previous effect with the effect after the one we're about to remove
-                    this.effects[index-1].outputTarget = (index + 1) < this.effects.length ?
-                        this.effects[index+1].inputTarget :
+                    this.effects[index - 1].outputTarget = (index + 1) < this.effects.length ?
+                        this.effects[index + 1].inputTarget :
                         null;
                 } else {
                     if (this.effects.length > 1) {
@@ -223,7 +223,7 @@ pc.extend(pc, function () {
         },
 
         requestDepthMap: function () {
-            for (var i=0,len=this.effects.length; i<len; i++) {
+            for (var i = 0, len = this.effects.length; i < len; i++) {
                 var effect = this.effects[i].effect;
                 if (effect.needsDepthBuffer) {
                     this.camera.camera.requestDepthMap();
@@ -232,7 +232,7 @@ pc.extend(pc, function () {
         },
 
         releaseDepthMap: function () {
-            for (var i=0,len=this.effects.length; i<len; i++) {
+            for (var i = 0, len = this.effects.length; i < len; i++) {
                 var effect = this.effects[i].effect;
                 if (effect.needsDepthBuffer) {
                     this.camera.releaseDepthMap();
@@ -247,7 +247,7 @@ pc.extend(pc, function () {
          */
         destroy: function () {
             // release memory for all effects
-            for (var i=0,len=this.effects.length; i<len; i++) {
+            for (var i = 0, len = this.effects.length; i < len; i++) {
                 this.effects[i].inputTarget.destroy();
             }
 
@@ -274,7 +274,7 @@ pc.extend(pc, function () {
                 // camera node instead of the component because we want to keep the old
                 // rect set in the component for restoring the camera to its original settings
                 // when the queue is disabled.
-                //self.camera.camera.setRect(0, 0, 1, 1);
+                // self.camera.camera.setRect(0, 0, 1, 1);
 
                 // create a new command that renders all of the effects one after the other
                 this.command = function () {
@@ -283,11 +283,11 @@ pc.extend(pc, function () {
                         var len = self.effects.length;
                         if (len) {
                             self.layer.renderTarget = self.effects[0].inputTarget;
-                            //self.depthTarget = self.camera.camera._depthTarget;
+                            // self.depthTarget = self.camera.camera._depthTarget;
 
-                            for (var i=0; i<len; i++) {
+                            for (var i = 0; i < len; i++) {
                                 var fx = self.effects[i];
-                                //if (self.depthTarget) fx.effect.depthMap = self.depthTarget.colorBuffer;
+                                // if (self.depthTarget) fx.effect.depthMap = self.depthTarget.colorBuffer;
                                 if (i === len - 1) {
                                     rect = self.camera.rect;
                                 }
@@ -315,9 +315,6 @@ pc.extend(pc, function () {
 
                 this.camera.renderTarget = null;
                 this.releaseDepthMap();
-
-                var rect = this.camera.rect;
-                //this.camera.camera.setRect(rect.x, rect.y, rect.z, rect.w);
 
                 // remove the draw command
                 var i = this.layer._commandList.indexOf(this.command);
@@ -359,7 +356,7 @@ pc.extend(pc, function () {
 
             var effects = this.effects;
 
-            for (var i=0,len=effects.length; i<len; i++) {
+            for (var i = 0, len = effects.length; i < len; i++) {
                 var fx = effects[i];
                 if (fx.inputTarget.width !== desiredWidth ||
                     fx.inputTarget.height !== desiredHeight)  {
@@ -372,7 +369,7 @@ pc.extend(pc, function () {
             if (this.enabled) {
                 // reset the camera node's rect to full screen otherwise
                 // post effect will not work correctly
-                //this.camera.camera.setRect(0, 0, 1, 1);
+                // this.camera.camera.setRect(0, 0, 1, 1);
                 this.resizeRenderTargets();
             }
         }

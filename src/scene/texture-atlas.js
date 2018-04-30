@@ -93,7 +93,7 @@ pc.extend(pc, function () {
         if (this._texture) {
             this._texture.destroy();
         }
-    },
+    };
 
     Object.defineProperty(TextureAtlas.prototype, 'texture', {
         get: function () {

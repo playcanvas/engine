@@ -53,7 +53,7 @@ pc.extend(pc, function () {
 
         // Create the clear options
         this._clearOptions = {
-            color: [ 0.5, 0.5, 0.5, 1.0 ],
+            color: [0.5, 0.5, 0.5, 1.0],
             depth: 1.0,
             stencil: 0,
             flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH | pc.CLEARFLAG_STENCIL

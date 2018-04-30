@@ -175,11 +175,7 @@ pc.extend(pc, function () {
             },
 
             getDuration: function () {
-                if (this.source) {
-                    return this.source.buffer.duration;
-                } else {
-                    return 0;
-                }
+                return this.source ? this.source.buffer.duration : 0;
             },
 
             _createSource: function () {
@@ -286,15 +282,7 @@ pc.extend(pc, function () {
             },
 
             getDuration: function () {
-                if (this.source) {
-                    var d = this.source.duration;
-                    if (d === d) {
-                        // Not NaN
-                        return d;
-                    }
-                }
-
-                return 0;
+                return this.source && !isNaN(this.source.duration) ? this.source.duration : 0;
             },
 
             isPlaying: function () {

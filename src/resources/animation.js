@@ -12,7 +12,7 @@ pc.extend(pc, function () {
                 } else {
                     callback(null, response);
                 }
-            }.bind(this));
+            });
         },
 
         open: function (url, data) {

@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var _schema = [ 'enabled' ];
+    var _schema = ['enabled'];
 
     // TODO: remove this once sprites are deployed
     var warningShown = false;
@@ -42,7 +42,7 @@ pc.extend(pc, function () {
         this.schema = _schema;
 
         // default texture - make white so we can tint it with emissive color
-        this._defaultTexture = new pc.Texture(app.graphicsDevice, {width: 1, height: 1, format: pc.PIXELFORMAT_R8_G8_B8_A8});
+        this._defaultTexture = new pc.Texture(app.graphicsDevice, { width: 1, height: 1, format: pc.PIXELFORMAT_R8_G8_B8_A8 });
         var pixels = this._defaultTexture.lock();
         var pixelData = new Uint8Array(4);
         pixelData[0] = 255.0;
@@ -54,8 +54,8 @@ pc.extend(pc, function () {
 
         // default material used by sprites
         this.defaultMaterial = new pc.StandardMaterial();
-        this.defaultMaterial.diffuse = new pc.Color(0,0,0,1); // black diffuse color to prevent ambient light being included
-        this.defaultMaterial.emissive = new pc.Color(0.5,0.5,0.5,1); // use non-white to compile shader correctly
+        this.defaultMaterial.diffuse = new pc.Color(0, 0, 0, 1); // black diffuse color to prevent ambient light being included
+        this.defaultMaterial.emissive = new pc.Color(0.5, 0.5, 0.5, 1); // use non-white to compile shader correctly
         this.defaultMaterial.emissiveMap = this._defaultTexture;
         this.defaultMaterial.emissiveMapTint = true;
         this.defaultMaterial.opacityMap = this._defaultTexture;

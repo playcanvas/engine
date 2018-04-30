@@ -225,11 +225,7 @@ pc.extend(pc, function () {
             }
 
             var ids = newValue.map(function (value) {
-                if (value instanceof pc.Asset) {
-                    return value.id;
-                } else {
-                    return value;
-                }
+                return (value instanceof pc.Asset) ? value.id : value;
             });
 
             this.loadAnimationAssets(ids);

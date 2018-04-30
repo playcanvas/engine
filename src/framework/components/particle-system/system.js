@@ -185,7 +185,7 @@ pc.extend(pc, function() {
                         if (emitter.lighting) {
                             var layer, lightCube;
                             var layers = data.layers;
-                            for (i=0; i<layers.length; i++) {
+                            for (i = 0; i < layers.length; i++) {
                                 layer = this.app.scene.layers.getLayerById(layers[i]);
                                 if (! layer) continue;
 
@@ -220,7 +220,7 @@ pc.extend(pc, function() {
                             }
                             if (numSteps) {
                                 numSteps = Math.min(numSteps, emitter.maxSubSteps);
-                                for (i=0; i<numSteps; i++) {
+                                for (i = 0; i < numSteps; i++) {
                                     emitter.addTime(emitter.fixedTimeStep);
                                 }
                                 stats._updatesPerFrame += numSteps;

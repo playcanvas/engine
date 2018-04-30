@@ -114,10 +114,35 @@
         LAYER_WORLD: 15,
 
         // New layers
+        /**
+         * @enum pc.LAYERID
+         * @name pc.LAYERID_WORLD
+         * @description The world layer.
+         */
         LAYERID_WORLD: 0,
+        /**
+         * @enum pc.LAYERID
+         * @name pc.LAYERID_DEPTH
+         * @description The depth layer.
+         */
         LAYERID_DEPTH: 1,
+        /**
+         * @enum pc.LAYERID
+         * @name pc.LAYERID_SKYBOX
+         * @description The skybox layer.
+         */
         LAYERID_SKYBOX: 2,
+        /**
+         * @enum pc.LAYERID
+         * @name pc.LAYERID_IMMEDIATE
+         * @description The immediate layer.
+         */
         LAYERID_IMMEDIATE: 3,
+        /**
+         * @enum pc.LAYERID
+         * @name pc.LAYERID_UI
+         * @description The UI layer.
+         */
         LAYERID_UI: 4,
 
         /**
@@ -393,7 +418,7 @@ pc.extend(pc, function () {
         this._toneMapping = 0;
         this.exposure = 1.0;
 
-        this._skyboxPrefiltered = [ null, null, null, null, null, null ];
+        this._skyboxPrefiltered = [null, null, null, null, null, null];
 
         this._skyboxCubeMap = null;
         this.skyboxModel = null;
@@ -627,21 +652,19 @@ pc.extend(pc, function () {
     };
 
     Scene.prototype._updateSkybox = function (device) {
-        var i;
-
         // Create skybox
         if (this._skyboxCubeMap && !this.skyboxModel) {
             var material = new pc.Material();
             var scene = this;
             material.updateShader = function(dev, sc, defs, staticLightList, pass) {
                 var library = device.getProgramLibrary();
-                var shader = library.getProgram('skybox', {rgbm: scene._skyboxCubeMap.rgbm,
-                    hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format===pc.PIXELFORMAT_RGBA32F),
-                    useIntensity: scene.skyboxIntensity!==1,
-                    mip: scene._skyboxCubeMap.fixCubemapSeams? scene.skyboxMip : 0,
+                var shader = library.getProgram('skybox', { rgbm: scene._skyboxCubeMap.rgbm,
+                    hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format === pc.PIXELFORMAT_RGBA32F),
+                    useIntensity: scene.skyboxIntensity !== 1,
+                    mip: scene._skyboxCubeMap.fixCubemapSeams ? scene.skyboxMip : 0,
                     fixSeams: scene._skyboxCubeMap.fixCubemapSeams,
-                    gamma: (pass === pc.SHADER_FORWARDHDR ? (scene.gammaCorrection? pc.GAMMA_SRGBHDR : pc.GAMMA_NONE) : scene.gammaCorrection),
-                    toneMapping: (pass === pc.SHADER_FORWARDHDR ? pc.TONEMAP_LINEAR : scene.toneMapping)});
+                    gamma: (pass === pc.SHADER_FORWARDHDR ? (scene.gammaCorrection ? pc.GAMMA_SRGBHDR : pc.GAMMA_NONE) : scene.gammaCorrection),
+                    toneMapping: (pass === pc.SHADER_FORWARDHDR ? pc.TONEMAP_LINEAR : scene.toneMapping) });
                 this.setShader(shader);
             };
 
@@ -668,7 +691,7 @@ pc.extend(pc, function () {
 
                 var model = new pc.Model();
                 model.graph = node;
-                model.meshInstances = [ meshInstance ];
+                model.meshInstances = [meshInstance];
                 this.skyboxModel = model;
 
                 skyLayer.addMeshInstances(model.meshInstances);
@@ -692,7 +715,7 @@ pc.extend(pc, function () {
     Scene.prototype.setSkybox = function (cubemaps) {
         var i;
         if (! cubemaps)
-            cubemaps = [ null, null, null, null, null, null, null ];
+            cubemaps = [null, null, null, null, null, null, null];
 
         // check if any values actually changed
         // to prevent unnecessary recompilations

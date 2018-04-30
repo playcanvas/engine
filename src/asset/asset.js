@@ -69,7 +69,7 @@ pc.extend(pc, function () {
 
         // This is where the loaded resource will be
         // this.resource = null;
-        this._resources = [ ];
+        this._resources = [];
 
         // is resource loaded
         this.loaded = false;

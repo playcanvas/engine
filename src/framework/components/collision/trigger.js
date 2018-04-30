@@ -58,7 +58,7 @@ pc.extend(pc, function () {
                 body.setRestitution(0);
                 body.setFriction(0);
                 body.setDamping(0, 0);
-                ammoVec1.setValue(0,0,0);
+                ammoVec1.setValue(0, 0, 0);
                 body.setLinearFactor(ammoVec1);
                 body.setAngularFactor(ammoVec1);
 

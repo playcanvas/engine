@@ -14,21 +14,17 @@ pc.extend(pc, function () {
                     return v;
                 } else if (typeof(value) === 'boolean') {
                     return 0 + value;
-                } else {
-                    return null;
                 }
-                break;
+                return null;
             case 'json':
                 if (typeof(value) === 'object') {
                     return value;
-                } else {
-                    try {
-                        return JSON.parse(value);
-                    } catch (ex) {
-                        return null;
-                    }
                 }
-                break;
+                try {
+                    return JSON.parse(value);
+                } catch (ex) {
+                    return null;
+                }
             case 'asset':
                 if (value instanceof pc.Asset) {
                     return value;
@@ -39,25 +35,21 @@ pc.extend(pc, function () {
                 } else {
                     return null;
                 }
-                break;
             case 'entity':
                 if (value instanceof pc.GraphNode) {
                     return value;
                 } else if (typeof(value) === 'string') {
                     return app.root.findByGuid(value);
-                } else {
-                    return null;
                 }
-                break;
+                return null;
             case 'rgb':
             case 'rgba':
                 if (value instanceof pc.Color) {
                     if (old instanceof pc.Color) {
                         old.copy(value);
                         return old;
-                    } else {
-                        return value.clone();
                     }
+                    return value.clone();
                 } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
                     for (i = 0; i < value.length; i++) {
                         if (typeof(value[i]) !== 'number')
@@ -75,10 +67,8 @@ pc.extend(pc, function () {
 
                     old.fromString(value);
                     return old;
-                } else {
-                    return null;
                 }
-                break;
+                return null;
             case 'vec2':
             case 'vec3':
             case 'vec4':
@@ -88,9 +78,8 @@ pc.extend(pc, function () {
                     if (old instanceof pc['Vec' + len]) {
                         old.copy(value);
                         return old;
-                    } else {
-                        return value.clone();
                     }
+                    return value.clone();
                 } else if (value instanceof Array && value.length === len) {
                     for (i = 0; i < value.length; i++) {
                         if (typeof(value[i]) !== 'number')
@@ -102,10 +91,8 @@ pc.extend(pc, function () {
                         old.data[i] = value[i];
 
                     return old;
-                } else {
-                    return null;
                 }
-                break;
+                return null;
             case 'curve':
                 if (value) {
                     var curve;
@@ -184,10 +171,14 @@ pc.extend(pc, function () {
      */
     ScriptAttributes.prototype.add = function(name, args) {
         if (this.index[name]) {
+            // #ifdef DEBUG
             console.warn('attribute \'' + name + '\' is already defined for script type \'' + this.scriptType.name + '\'');
+            // #endif
             return;
         } else if (pc.createScript.reservedAttributes[name]) {
+            // #ifdef DEBUG
             console.warn('attribute \'' + name + '\' is a reserved attribute name');
+            // #endif
             return;
         }
 
@@ -302,7 +293,9 @@ pc.extend(pc, function () {
     */
     var createScript = function(name, app) {
         if (pc.script.legacy) {
+            // #ifdef DEBUG
             console.error("This project is using the legacy script system. You cannot call pc.createScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/");
+            // #endif
             return null;
         }
 
@@ -327,8 +320,11 @@ pc.extend(pc, function () {
          * initialize and postInitialize methods will run once when the script instance is in `enabled` state during app tick.
          */
         var script = function(args) {
-            if (! args || ! args.app || ! args.entity)
-                console.warn('script \'' + name + '\' has missing arguments in consructor');
+            // #ifdef DEBUG
+            if (! args || ! args.app || ! args.entity) {
+                console.warn('script \'' + name + '\' has missing arguments in constructor');
+            }
+            // #endif
 
             pc.events.attach(this);
 
@@ -336,6 +332,7 @@ pc.extend(pc, function () {
             this.entity = args.entity;
             this._enabled = typeof(args.enabled) === 'boolean' ? args.enabled : true;
             this._enabledOld = this.enabled;
+            this.__destroyed = false;
             this.__attributes = { };
             this.__attributesRaw = args.attributes || null;
             this.__scriptType = script;
@@ -515,7 +512,7 @@ pc.extend(pc, function () {
 
         Object.defineProperty(script.prototype, 'enabled', {
             get: function() {
-                return this._enabled && this.entity.script.enabled && this.entity.enabled;
+                return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
             },
             set: function(value) {
                 this._enabled = !!value;
@@ -578,7 +575,7 @@ pc.extend(pc, function () {
 
     // reserved script attribute names
     createScript.reservedAttributes = [
-        'app', 'entity', 'enabled', '_enabled', '_enabledOld',
+        'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
         '__attributes', '__attributesRaw', '__scriptType',
         '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
     ];

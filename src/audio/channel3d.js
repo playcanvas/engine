@@ -105,18 +105,17 @@ pc.extend(pc, function () {
                 return 1;
             } else if (distance > maxDistance) {
                 return 0;
-            } else {
-                var result = 0;
-                if (distanceModel === pc.DISTANCE_LINEAR) {
-                    result = 1 - rolloffFactor * (distance - refDistance) / (maxDistance - refDistance);
-                } else if (distanceModel === pc.DISTANCE_INVERSE) {
-                    result = refDistance / (refDistance + rolloffFactor * (distance - refDistance));
-                } else if (distanceModel === pc.DISTANCE_EXPONENTIAL) {
-                    result = Math.pow(distance / refDistance, -rolloffFactor);
-                }
-
-                return pc.math.clamp(result, 0, 1);
             }
+
+            var result = 0;
+            if (distanceModel === pc.DISTANCE_LINEAR) {
+                result = 1 - rolloffFactor * (distance - refDistance) / (maxDistance - refDistance);
+            } else if (distanceModel === pc.DISTANCE_INVERSE) {
+                result = refDistance / (refDistance + rolloffFactor * (distance - refDistance));
+            } else if (distanceModel === pc.DISTANCE_EXPONENTIAL) {
+                result = Math.pow(distance / refDistance, -rolloffFactor);
+            }
+            return pc.math.clamp(result, 0, 1);
         };
 
         Channel3d = function (manager, sound) {

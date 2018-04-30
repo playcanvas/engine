@@ -160,9 +160,8 @@ pc.extend(pc, function () {
                        (this.blendDst === pc.BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
                        (this.blendEquation === pc.BLENDEQUATION_ADD)) {
                 return pc.BLEND_PREMULTIPLIED;
-            } else {
-                return pc.BLEND_NORMAL;
             }
+            return pc.BLEND_NORMAL;
         },
         set: function (type) {
             var prevBlend = this.blend !== pc.BLEND_NONE;
@@ -274,7 +273,7 @@ pc.extend(pc, function () {
         clone.slopeDepthBias = this.slopeDepthBias;
         if (this.stencilFront) clone.stencilFront = this.stencilFront.clone();
         if (this.stencilBack) {
-            if (this.stencilFront===this.stencilBack) {
+            if (this.stencilFront === this.stencilBack) {
                 clone.stencilBack = clone.stencilFront;
             } else {
                 clone.stencilBack = this.stencilBack.clone();
@@ -326,7 +325,7 @@ pc.extend(pc, function () {
         var j;
         for (var i = 0; i < this.meshInstances.length; i++) {
             meshInstance = this.meshInstances[i];
-            for (j=0; j<meshInstance._shader.length; j++) {
+            for (j = 0; j < meshInstance._shader.length; j++) {
                 meshInstance._shader[j] = null;
             }
         }
@@ -350,22 +349,20 @@ pc.extend(pc, function () {
      * @param {String} name The name of the parameter to set.
      * @param {Number|Array|pc.Texture} data The value for the specified parameter.
      */
-    Material.prototype.setParameter = function (arg, data, passFlags) {
+    Material.prototype.setParameter = function (name, data, passFlags) {
 
         if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
 
-        var name;
-        if (data === undefined && typeof(arg) === 'object') {
-            var uniformObject = arg;
+        if (data === undefined && typeof(name) === 'object') {
+            var uniformObject = name;
             if (uniformObject.length) {
-                for (var i=0; i<uniformObject.length; i++) this.setParameter(uniformObject[i]);
+                for (var i = 0; i < uniformObject.length; i++) {
+                    this.setParameter(uniformObject[i]);
+                }
                 return;
-            } else {
-                name = uniformObject.name;
-                data = uniformObject.value;
             }
-        } else {
-            name = arg;
+            name = uniformObject.name;
+            data = uniformObject.value;
         }
 
         var param = this.parameters[name];
@@ -403,9 +400,9 @@ pc.extend(pc, function () {
         for (var paramName in this.parameters) {
             var parameter = this.parameters[paramName];
             // TODO: Fix https://github.com/playcanvas/engine/issues/597
-            //if (!parameter.scopeId) {
+            // if (!parameter.scopeId) {
             //    parameter.scopeId = device.scope.resolve(paramName);
-            //}
+            // }
             parameter.scopeId.setValue(parameter.data);
         }
     };
@@ -501,7 +498,7 @@ pc.extend(pc, function () {
         for (var s in this.variants) {
             if (this.variants.hasOwnProperty(s)) {
                 variant = this.variants[s];
-                if (variant===this.shader) continue;
+                if (variant === this.shader) continue;
                 variant._refCount--;
                 if (variant._refCount < 1) {
                     variant.destroy();
@@ -514,11 +511,11 @@ pc.extend(pc, function () {
         var meshInstance, j;
         for (var i = 0; i < this.meshInstances.length; i++) {
             meshInstance = this.meshInstances[i];
-            for (j=0; j<meshInstance._shader.length; j++) {
+            for (j = 0; j < meshInstance._shader.length; j++) {
                 meshInstance._shader[j] = null;
             }
             meshInstance._material = null;
-            if (this!==pc.Scene.defaultMaterial) {
+            if (this !== pc.Scene.defaultMaterial) {
                 meshInstance.material = pc.Scene.defaultMaterial;
             }
         }

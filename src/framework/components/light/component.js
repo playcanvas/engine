@@ -116,7 +116,7 @@ pc.extend(pc, function () {
             set: function (value) {
                 var data = this.data;
                 var oldValue = data[name];
-                if (! skipEqualsCheck && oldValue===value) return;
+                if (! skipEqualsCheck && oldValue === value) return;
                 data[name] = value;
                 if (setFunc) setFunc.call(this, value, oldValue);
             },
@@ -223,7 +223,7 @@ pc.extend(pc, function () {
             this.light.cookieChannel = newValue;
         });
         _defineProperty("cookieAngle", 0, function(newValue, oldValue) {
-            if (newValue!==0 || this.cookieScale!==null) {
+            if (newValue !== 0 || this.cookieScale !== null) {
                 if (!this._cookieMatrix) this._cookieMatrix = new pc.Vec4();
                 var scx = 1;
                 var scy = 1;
@@ -233,20 +233,20 @@ pc.extend(pc, function () {
                 }
                 var c = Math.cos(newValue * pc.math.DEG_TO_RAD);
                 var s = Math.sin(newValue * pc.math.DEG_TO_RAD);
-                this._cookieMatrix.set(c/scx, -s/scx, s/scy, c/scy);
+                this._cookieMatrix.set(c / scx, -s / scx, s / scy, c / scy);
                 this.light.cookieTransform = this._cookieMatrix;
             } else {
                 this.light.cookieTransform = null;
             }
         });
         _defineProperty("cookieScale", null, function(newValue, oldValue) {
-            if (newValue!==null || this.cookieAngle!==0) {
+            if (newValue !== null || this.cookieAngle !== 0) {
                 if (!this._cookieMatrix) this._cookieMatrix = new pc.Vec4();
                 var scx = newValue.x;
                 var scy = newValue.y;
                 var c = Math.cos(this.cookieAngle * pc.math.DEG_TO_RAD);
                 var s = Math.sin(this.cookieAngle * pc.math.DEG_TO_RAD);
-                this._cookieMatrix.set(c/scx, -s/scx, s/scy, c/scy);
+                this._cookieMatrix.set(c / scx, -s / scx, s / scy, c / scy);
                 this.light.cookieTransform = this._cookieMatrix;
             } else {
                 this.light.cookieTransform = null;
@@ -297,12 +297,12 @@ pc.extend(pc, function () {
         });
         _defineProperty("layers", [pc.LAYERID_WORLD], function(newValue, oldValue) {
             var i, layer;
-            for (i=0; i<oldValue.length; i++) {
+            for (i = 0; i < oldValue.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
                 if (!layer) continue;
                 layer.removeLight(this);
             }
-            for (i=0; i<newValue.length; i++) {
+            for (i = 0; i < newValue.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(newValue[i]);
                 if (!layer) continue;
                 if (this.enabled && this.entity.enabled) {
@@ -329,7 +329,7 @@ pc.extend(pc, function () {
 
         addLightToLayers: function() {
             var layer;
-            for (var i=0; i<this.layers.length; i++) {
+            for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.addLight(this);
@@ -338,7 +338,7 @@ pc.extend(pc, function () {
 
         removeLightFromLayers: function() {
             var layer;
-            for (var i=0; i<this.layers.length; i++) {
+            for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.removeLight(this);
@@ -371,7 +371,7 @@ pc.extend(pc, function () {
 
         refreshProperties: function() {
             var name;
-            for (var i=0; i<_props.length; i++) {
+            for (var i = 0; i < _props.length; i++) {
                 name = _props[i];
                 this[name] = this[name];
             }

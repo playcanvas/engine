@@ -19,8 +19,6 @@ pc.extend(pc, function () {
 
         this.ComponentType = pc.LightComponent;
         this.DataType = pc.LightComponentData;
-
-        this.on('remove', this.onRemove, this);
     };
     LightComponentSystem = pc.inherits(LightComponentSystem, pc.ComponentSystem);
 
@@ -30,7 +28,7 @@ pc.extend(pc, function () {
             var data = {};
             var _props = pc._lightProps;
             var name;
-            for (var i=0; i<_props.length; i++) {
+            for (var i = 0; i < _props.length; i++) {
                 name = _props[i];
                 data[name] = _data[name];
             }
@@ -67,15 +65,22 @@ pc.extend(pc, function () {
             LightComponentSystem._super.initializeComponentData.call(this, component, data, _props);
         },
 
+        removeComponent: function (entity) {
+            var data = entity.light.data;
+            data.light.destroy();
+
+            LightComponentSystem._super.removeComponent.call(this, entity);
+        },
+
         cloneComponent: function (entity, clone) {
             var light = entity.light;
 
             var data = [];
             var name;
             var _props = pc._lightProps;
-            for (var i=0; i<_props.length; i++) {
+            for (var i = 0; i < _props.length; i++) {
                 name = _props[i];
-                if (name==="light") continue;
+                if (name === "light") continue;
                 if (light[name] && light[name].clone) {
                     data[name] = light[name].clone();
                 } else {
@@ -87,7 +92,7 @@ pc.extend(pc, function () {
         },
 
         changeType: function (component, oldValue, newValue) {
-            if (oldValue!==newValue) {
+            if (oldValue !== newValue) {
                 component.light.type = lightTypes[newValue];
             }
         }

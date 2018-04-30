@@ -81,7 +81,7 @@ pc.extend(pc, function () {
                     var w = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
                     var h = Math.max(leftEye.renderHeight, rightEye.renderHeight);
                     // set canvas resolution to the display resolution
-                    self._app.graphicsDevice.setResolution(w,h);
+                    self._app.graphicsDevice.setResolution(w, h);
                     // prevent window resizing from resizing it
                     self._app._allowResize = false;
                 } else {
@@ -145,17 +145,17 @@ pc.extend(pc, function () {
                 // Extract widest frustum plane and calculate fov
                 var nx = this.leftProj.data[3] + this.leftProj.data[0];
                 var nz = this.leftProj.data[11] + this.leftProj.data[8];
-                var l = 1.0 / Math.sqrt(nx*nx + nz*nz);
+                var l = 1.0 / Math.sqrt(nx * nx + nz * nz);
                 nx *= l;
                 nz *= l;
-                var maxFov = -Math.atan2(nz,nx);
+                var maxFov = -Math.atan2(nz, nx);
 
                 nx = this.rightProj.data[3] + this.rightProj.data[0];
                 nz = this.rightProj.data[11] + this.rightProj.data[8];
-                l = 1.0 / Math.sqrt(nx*nx + nz*nz);
+                l = 1.0 / Math.sqrt(nx * nx + nz * nz);
                 nx *= l;
                 nz *= l;
-                maxFov = Math.max(maxFov, -Math.atan2(nz,nx));
+                maxFov = Math.max(maxFov, -Math.atan2(nz, nx));
                 maxFov *= 2.0;
 
                 this.combinedFov = maxFov;
@@ -177,7 +177,7 @@ pc.extend(pc, function () {
                 var deltaX = pos[0] - view.data[12];
                 var deltaY = pos[1] - view.data[13];
                 var deltaZ = pos[2] - view.data[14];
-                var dist = Math.sqrt(deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ);
+                var dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
                 this.rightPos.data[0] = view.data[12];
                 this.rightPos.data[1] = view.data[13];
                 this.rightPos.data[2] = view.data[14];
@@ -227,7 +227,7 @@ pc.extend(pc, function () {
                 return;
             }
 
-            this.display.requestPresent([{source: this._device.canvas}]).then(function () {
+            this.display.requestPresent([{ source: this._device.canvas }]).then(function () {
                 if (callback) callback();
             }, function (err) {
                 if (callback) callback(err);
@@ -312,7 +312,7 @@ pc.extend(pc, function () {
         }
     };
 
-    Object.defineProperty(VrDisplay.prototype, "capabilities" ,{
+    Object.defineProperty(VrDisplay.prototype, "capabilities", {
         get: function () {
             if (this.display) return this.display.capabilities;
             return {};

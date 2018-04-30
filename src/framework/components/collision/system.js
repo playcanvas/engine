@@ -113,7 +113,9 @@ pc.extend(pc, function () {
                         impl = new CollisionMeshSystemImpl(this);
                         break;
                     default:
-                        throw "Invalid collision system type: " + type;
+                        // #ifdef DEBUG
+                        console.error("_createImplementation: Invalid collision system type: " + type);
+                        // #endif
                 }
                 this.implementations[type] = impl;
             }
@@ -274,9 +276,8 @@ pc.extend(pc, function () {
                 var he = data.halfExtents;
                 var ammoHe = new Ammo.btVector3(he ? he.x : 0.5, he ? he.y : 0.5, he ? he.z : 0.5);
                 return new Ammo.btBoxShape(ammoHe);
-            } else {
-                return undefined;
             }
+            return undefined;
         }
     });
 
@@ -289,9 +290,8 @@ pc.extend(pc, function () {
         createPhysicalShape: function (entity, data) {
             if (typeof Ammo !== 'undefined') {
                 return new Ammo.btSphereShape(data.radius);
-            } else {
-                return undefined;
             }
+            return undefined;
         }
     });
 
@@ -400,9 +400,9 @@ pc.extend(pc, function () {
                     var base = mesh.primitive[0].base;
                     var triMesh = new Ammo.btTriangleMesh();
                     for (j = 0; j < numTriangles; j++) {
-                        i1 = indices[base+j*3] * stride;
-                        i2 = indices[base+j*3+1] * stride;
-                        i3 = indices[base+j*3+2] * stride;
+                        i1 = indices[base + j * 3] * stride;
+                        i2 = indices[base + j * 3 + 1] * stride;
+                        i3 = indices[base + j * 3 + 2] * stride;
                         v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
                         v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
                         v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
@@ -437,9 +437,8 @@ pc.extend(pc, function () {
                 shape.setLocalScaling(vec);
 
                 return shape;
-            } else {
-                return undefined;
             }
+            return undefined;
         },
 
         recreatePhysicalShapes: function (component) {
@@ -500,7 +499,6 @@ pc.extend(pc, function () {
             } else {
                 this.remove(entity, data);
             }
-
         },
 
         updateTransform: function (component, position, rotation, scale) {
