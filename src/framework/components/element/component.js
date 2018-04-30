@@ -665,6 +665,8 @@ pc.extend(pc, function () {
                 this.system.app.scene.layers.on("add", this.onLayerAdded, this);
                 this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
             }
+
+            this.fire("enableelement");
         },
 
         onDisable: function () {
@@ -689,6 +691,8 @@ pc.extend(pc, function () {
                 if (index >= 0) topMasks.splice(index, 1);
                 this._topMask = false;
             }
+
+            this.fire("disableelement");
         },
 
         onRemove: function () {

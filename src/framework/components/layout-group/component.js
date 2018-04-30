@@ -80,12 +80,9 @@ pc.extend(pc, function () {
         },
 
         _listenForReflowEvents: function(target, onOff) {
-            if (target[onOff]) {
-                target[onOff]('set_enabled', this._scheduleReflow, this);
-            }
-
             if (target.element) {
-                target.element[onOff]('set_enabled', this._scheduleReflow, this);
+                target.element[onOff]('enableelement', this._scheduleReflow, this);
+                target.element[onOff]('disableelement', this._scheduleReflow, this);
                 target.element[onOff]('resize', this._scheduleReflow, this);
                 target.element[onOff]('set:pivot', this._scheduleReflow, this);
             }
