@@ -43,8 +43,8 @@ pc.extend(pc, function () {
     var LayoutGroupComponent = function LayoutGroupComponent(system, entity) {
         this._orientation = pc.ORIENTATION_HORIZONTAL;
         this._reverseX = false;
-        this._reverseY = false;
-        this._alignment = new pc.Vec2();
+        this._reverseY = true;
+        this._alignment = new pc.Vec2(0, 1);
         this._padding = new pc.Vec4();
         this._spacing = new pc.Vec2();
         this._widthFitting = pc.FITTING_NONE;
