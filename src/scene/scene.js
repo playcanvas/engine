@@ -336,7 +336,21 @@
         COMPUPDATED_BLEND: 8,
 
         ASPECT_AUTO: 0,
-        ASPECT_MANUAL: 1
+        ASPECT_MANUAL: 1,
+
+        /**
+         * @enum pc.GRAPHPATHTYPE
+         * @name pc.GRAPHPATHTYPE_NAMES
+         * @description A path of node names, i.e. of the form 'parent/child/sub-child'.
+         */
+        GRAPHPATHTYPE_NAMES: 0,
+
+        /**
+         * @enum pc.GRAPHPATHTYPE
+         * @name pc.GRAPHPATHTYPE_INDICES
+         * @description A path of node indices, i.e. of the form '0/2/0'.
+         */
+        GRAPHPATHTYPE_INDICES: 1
     };
 
     pc.extend(pc, enums);

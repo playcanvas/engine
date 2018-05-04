@@ -88,6 +88,19 @@ test('GraphNode: findByPath with slashes', function () {
     equal(found, grandchild);
 });
 
+test('GraphNode: findByPath with pathType = GRAPHPATHTYPE_INDICES', function () {
+    var g1 = buildGraph();
+    var g2 = g1.getChildren()[0];
+    var g3 = g2.getChildren()[0];
+
+    equal(g1.findByPath('0/0', pc.GRAPHPATHTYPE_INDICES), g3);
+
+    var g4 = new pc.GraphNode('g4');
+    g2.addChild(g4);
+
+    equal(g1.findByPath('0/1', pc.GRAPHPATHTYPE_INDICES), g4);
+});
+
 test('GraphNode: findByPath does not include same entity', function () {
     var node = buildGraph();
     var found = node.findByPath('g1/g2/g3');
@@ -106,6 +119,43 @@ test('GraphNode: getPath', function () {
     var grandchild = child.getChildren()[0];
 
     equal(grandchild.getPath(), 'g2/g3');
+});
+
+test('GraphNode: getPath with pathType = GRAPHPATHTYPE_INDICES', function () {
+    var g1 = buildGraph();
+    var g2 = g1.getChildren()[0];
+    var g3 = g2.getChildren()[0];
+
+    equal(g3.getPath(pc.GRAPHPATHTYPE_INDICES), '0/0');
+
+    var g4 = new pc.GraphNode('g4');
+    g2.addChild(g4);
+
+    equal(g4.getPath(pc.GRAPHPATHTYPE_INDICES), '0/1');
+});
+
+test('GraphNode: getPath with relativeTo', function () {
+    var g1 = buildGraph();
+    var g2 = g1.getChildren()[0];
+    var g3 = g2.getChildren()[0];
+
+    var g4 = new pc.GraphNode('g4');
+    g2.addChild(g4);
+
+    var g5 = new pc.GraphNode('g5');
+    g4.addChild(g5);
+
+    equal(g2.getPath(pc.GRAPHPATHTYPE_NAMES, g2), '');
+    equal(g3.getPath(pc.GRAPHPATHTYPE_NAMES, g2), 'g3');
+    equal(g4.getPath(pc.GRAPHPATHTYPE_NAMES, g2), 'g4');
+    equal(g4.getPath(pc.GRAPHPATHTYPE_NAMES, g1), 'g2/g4');
+    equal(g5.getPath(pc.GRAPHPATHTYPE_NAMES, g1), 'g2/g4/g5');
+
+    equal(g2.getPath(pc.GRAPHPATHTYPE_INDICES, g2), '');
+    equal(g3.getPath(pc.GRAPHPATHTYPE_INDICES, g2), '0');
+    equal(g4.getPath(pc.GRAPHPATHTYPE_INDICES, g2), '1');
+    equal(g4.getPath(pc.GRAPHPATHTYPE_INDICES, g1), '0/1');
+    equal(g5.getPath(pc.GRAPHPATHTYPE_INDICES, g1), '0/1/0');
 });
 
 test('GraphNode: getPath of root entity', function () {
