@@ -43,6 +43,17 @@ pc.extend(pc, function () {
 
             if (this.context) {
                 var context = this.context;
+
+                // resume AudioContext on user interaction because of new Chrome autoplay policy
+                var resumeContext = function () {
+                    context.resume();
+                    window.removeEventListener('mousedown', resumeContext);
+                    window.removeEventListener('touchend', resumeContext);
+                };
+
+                window.addEventListener('mousedown', resumeContext);
+                window.addEventListener('touchend', resumeContext);
+
                 // iOS only starts sound as a response to user interaction
                 if (pc.platform.ios) {
                     // Play an inaudible sound when the user touches the screen
