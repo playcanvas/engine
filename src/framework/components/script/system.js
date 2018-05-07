@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var _schema = [ 'enabled' ];
+    var _schema = ['enabled'];
 
     /**
      * @name pc.ScriptComponentSystem
@@ -20,7 +20,11 @@ pc.extend(pc, function () {
         this.schema = _schema;
 
         // list of all entities script components
-        this._components = [ ];
+        this._components = [];
+        this._destroyedComponents = [];
+        this._isLoopingThroughComponents = false;
+
+        this.preloading = true;
 
         this.on('beforeremove', this._onBeforeRemove, this);
         pc.ComponentSystem.on('initialize', this._onInitialize, this);
@@ -45,7 +49,7 @@ pc.extend(pc, function () {
                     component.create(data.order[i], {
                         enabled: data.scripts[data.order[i]].enabled,
                         attributes: data.scripts[data.order[i]].attributes,
-                        preloading: true
+                        preloading: this.preloading
                     });
                 }
             }
@@ -53,7 +57,7 @@ pc.extend(pc, function () {
 
         cloneComponent: function(entity, clone) {
             var i, key;
-            var order = [ ];
+            var order = [];
             var scripts = { };
 
             for (i = 0; i < entity.script._scripts.length; i++) {
@@ -86,15 +90,47 @@ pc.extend(pc, function () {
         },
 
         _callComponentMethod: function(name, dt) {
+            var wasLooping = this._beginLooping();
+
             for (var i = 0; i < this._components.length; i++) {
-                if (! this._components[i].entity.enabled || ! this._components[i].enabled)
+                if (this._components[i]._destroyed || ! this._components[i].entity.enabled || ! this._components[i].enabled) {
                     continue;
+                }
 
                 this._components[i][name](dt);
+            }
+
+            this._endLooping(wasLooping);
+        },
+
+        _beginLooping: function () {
+            var looping = this._isLoopingThroughComponents;
+            this._isLoopingThroughComponents = true;
+            return looping;
+        },
+
+        _endLooping: function (wasLooping) {
+            this._isLoopingThroughComponents = wasLooping;
+
+            if (! this._isLoopingThroughComponents) {
+                // remove destroyed components
+                var len = this._destroyedComponents.length;
+                if (len) {
+                    for (var i = 0; i < len; i++) {
+                        var idx = this._components.indexOf(this._destroyedComponents[i]);
+                        if (idx >= 0) {
+                            this._components.splice(idx, 1);
+                        }
+                    }
+
+                    this._destroyedComponents.length = 0;
+                }
             }
         },
 
         _onInitialize: function() {
+            this.preloading = false;
+
             // initialize attributes
             for (var i = 0; i < this._components.length; i++)
                 this._components[i]._onInitializeAttributes();
@@ -117,7 +153,16 @@ pc.extend(pc, function () {
 
             component._onBeforeRemove();
 
-            this._components.splice(ind, 1);
+            // if we are not currently looping through components then
+            // remove the components from our list
+            if (! this._isLoopingThroughComponents) {
+                this._components.splice(ind, 1);
+            } else {
+                // otherwise push it to be destroyed when
+                // the current loop is over
+                component._destroyed = true;
+                this._destroyedComponents.push(component);
+            }
         }
     });
 

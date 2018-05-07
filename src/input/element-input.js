@@ -11,6 +11,11 @@ pc.extend(pc, function () {
     var _m = new pc.Vec3();
     var _sct = new pc.Vec3();
 
+    // pi x p2 * p3
+    var scalarTriple = function (p1, p2, p3) {
+        return _sct.cross(p1, p2).dot(p3);
+    };
+
     // Given line pq and ccw corners of a quad, return whether the line
     // intersects it. (from Real-Time Collision Detection book)
     var intersectLineQuad = function (p, q, corners) {
@@ -39,12 +44,12 @@ pc.extend(pc, function () {
                 return false;
         }
 
-        return true;
-    };
+        // The algorithm above doesn't work if all the corners are the same
+        // So do that test here by checking if the diagonals are 0 (since these are rectangles we're checking against)
+        if (_pq.sub2(corners[0], corners[2]).lengthSq() < 0.0001 * 0.0001) return false;
+        if (_pq.sub2(corners[1], corners[3]).lengthSq() < 0.0001 * 0.0001) return false;
 
-    // pi x p2 * p3
-    var scalarTriple = function (p1, p2, p3) {
-        return _sct.cross(p1, p2).dot(p3);
+        return true;
     };
 
     /**
@@ -203,17 +208,17 @@ pc.extend(pc, function () {
             this._target = domElement;
             this._attached = true;
 
-            window.addEventListener('mouseup', this._upHandler, {passive: true});
-            window.addEventListener('mousedown', this._downHandler, {passive: true});
-            window.addEventListener('mousemove', this._moveHandler, {passive: true});
-            window.addEventListener('mousewheel', this._wheelHandler, {passive: true});
-            window.addEventListener('DOMMouseScroll', this._wheelHandler, {passive: true});
+            window.addEventListener('mouseup', this._upHandler, { passive: true });
+            window.addEventListener('mousedown', this._downHandler, { passive: true });
+            window.addEventListener('mousemove', this._moveHandler, { passive: true });
+            window.addEventListener('mousewheel', this._wheelHandler, { passive: true });
+            window.addEventListener('DOMMouseScroll', this._wheelHandler, { passive: true });
 
             if ('ontouchstart' in window) {
-                this._target.addEventListener('touchstart', this._touchstartHandler, {passive: true});
-                this._target.addEventListener('touchend', this._touchendHandler, {passive: true});
+                this._target.addEventListener('touchstart', this._touchstartHandler, { passive: true });
+                this._target.addEventListener('touchend', this._touchendHandler, { passive: true });
                 this._target.addEventListener('touchmove', this._touchmoveHandler, false);
-                this._target.addEventListener('touchcancel', this._touchcancelHandler, {passive: true});
+                this._target.addEventListener('touchcancel', this._touchcancelHandler, { passive: true });
             }
         },
 
@@ -306,15 +311,16 @@ pc.extend(pc, function () {
 
         _handleTouchStart: function (event) {
             var cameras = this.app.systems.camera.cameras;
+            var i, j, len;
 
             // check cameras from last to front
             // so that elements that are drawn above others
             // receive events first
-            for (var i = cameras.length - 1; i >= 0; i--) {
+            for (i = cameras.length - 1; i >= 0; i--) {
                 var camera = cameras[i];
 
                 var done = 0;
-                for (var j = 0, len = event.changedTouches.length; j < len; j++) {
+                for (j = 0, len = event.changedTouches.length; j < len; j++) {
                     if (this._touchedElements[event.changedTouches[j].identifier]) {
                         done++;
                         continue;
@@ -614,8 +620,9 @@ pc.extend(pc, function () {
 
                 // 3D screen
                 var worldCorners = element.worldCorners;
-                var start = camera.entity.getPosition();
-                var end = vecA;
+                var start = vecA;
+                var end = vecB;
+                camera.screenToWorld(_x, _y, camera.nearClip, start);
                 camera.screenToWorld(_x, _y, camera.farClip, end);
 
                 if (intersectLineQuad(start, end, worldCorners)) {

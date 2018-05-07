@@ -41,9 +41,8 @@ pc.extend(pc, function () {
 
             if (toMIME[ext]) {
                 return true;
-            } else {
-                return false;
             }
+            return false;
         },
 
         load: function (url, callback) {

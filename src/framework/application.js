@@ -167,11 +167,11 @@ pc.extend(pc, function () {
         this.scene = new pc.Scene();
         this.root = new pc.Entity(this);
         this.root._enabledInHierarchy = true;
-        this._enableList = [ ];
+        this._enableList = [];
         this._enableList.size = 0;
         this.assets = new pc.AssetRegistry(this.loader);
         if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
-        this.scriptsOrder = options.scriptsOrder || [ ];
+        this.scriptsOrder = options.scriptsOrder || [];
         this.scripts = new pc.ScriptRegistry(this);
 
         var self = this;
@@ -217,8 +217,7 @@ pc.extend(pc, function () {
                     var gl = self.graphicsDevice.gl;
                     this.srcFbo = gl.getParameter(gl.FRAMEBUFFER_BINDING);
 
-                    if (!this.renderTarget) return;
-                    if (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height) {
+                    if (! this.renderTarget || (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height)) {
                         this.onDisable();
                         this.onEnable();
                     }
@@ -296,7 +295,7 @@ pc.extend(pc, function () {
                     var layer;
                     var j;
                     var layerVisibleList, layerCamId, layerVisibleListLength, drawCall, transparent;
-                    for (var i=0; i<layers.length; i++) {
+                    for (var i = 0; i < layers.length; i++) {
                         layer = layers[i];
                         if (layer === this) break;
                         if (layer.renderTarget !== rt || !layer.enabled || !subLayerEnabled[i]) continue;
@@ -306,7 +305,7 @@ pc.extend(pc, function () {
                         layerVisibleList = transparent ? layer.instances.visibleTransparent[layerCamId] : layer.instances.visibleOpaque[layerCamId];
                         layerVisibleListLength = layerVisibleList.length;
                         layerVisibleList = layerVisibleList.list;
-                        for (j=0; j<layerVisibleListLength; j++) {
+                        for (j = 0; j < layerVisibleListLength; j++) {
                             drawCall = layerVisibleList[j];
                             if (drawCall.material && drawCall.material.depthWrite && !drawCall._noDepthDrawGl1) {
                                 visibleList[visibleLength] = drawCall;
@@ -318,8 +317,7 @@ pc.extend(pc, function () {
                 },
 
                 onPreRenderOpaque: function(cameraPass) { // resize depth map if needed
-                    if (!this.renderTarget) return;
-                    if (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height) {
+                    if (!this.renderTarget || (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height)) {
                         this.onDisable();
                         this.onEnable();
                     }
@@ -338,7 +336,7 @@ pc.extend(pc, function () {
 
             });
             this.defaultLayerDepth.rgbaDepthClearOptions = {
-                color: [ 254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255 ],
+                color: [254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255],
                 depth: 1.0,
                 flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
             };
@@ -382,7 +380,7 @@ pc.extend(pc, function () {
         this.scene.on('set:layers', function(oldComp, newComp) {
             var list = newComp.layerList;
             var layer;
-            for (var i=0; i<list.length; i++) {
+            for (var i = 0; i < list.length; i++) {
                 layer = list[i];
                 switch (layer.id) {
                     case pc.LAYERID_DEPTH:
@@ -472,6 +470,8 @@ pc.extend(pc, function () {
         new pc.ScreenComponentSystem(this);
         new pc.ElementComponentSystem(this);
         new pc.SpriteComponentSystem(this);
+        new pc.LayoutGroupComponentSystem(this);
+        new pc.LayoutChildComponentSystem(this);
         new pc.ZoneComponentSystem(this);
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
@@ -500,11 +500,7 @@ pc.extend(pc, function () {
     Application._currentApplication = null;
     Application._applications = {};
     Application.getApplication = function (id) {
-        if (id) {
-            return Application._applications[id];
-        } else {
-            return Application._currentApplication;
-        }
+        return id ? Application._applications[id] : Application._currentApplication;
     };
 
 
@@ -669,7 +665,10 @@ pc.extend(pc, function () {
 
                 // called after scripts are preloaded
                 var _loaded = function () {
+
+                    self.systems.script.preloading = true;
                     var entity = handler.open(url, data);
+                    self.systems.script.preloading = false;
 
                     // clear from cache because this data is modified by entity operations (e.g. destroy)
                     self.loader.clearCache(url, "hierarchy");
@@ -740,7 +739,9 @@ pc.extend(pc, function () {
                 if (!err) {
                     var _loaded = function () {
                         // parse and create scene
+                        self.systems.script.preloading = true;
                         var scene = handler.open(url, data);
+                        self.systems.script.preloading = false;
 
                         // clear scene from cache because we'll destroy it when we load another one
                         // so data will be invalid
@@ -856,11 +857,13 @@ pc.extend(pc, function () {
                 for (var key in props.layers) {
                     var data = props.layers[key];
                     data.id = parseInt(key, 10);
-                    data.enabled = true;
+                    // depth layer should only be enabled when needed
+                    // by incrementing its ref counter
+                    data.enabled = data.id !== pc.LAYERID_DEPTH;
                     layers[key] = new pc.Layer(data);
                 }
 
-                for (i = 0, len = props.layerOrder.length; i<len; i++) {
+                for (i = 0, len = props.layerOrder.length; i < len; i++) {
                     var sublayer = props.layerOrder[i];
                     var layer = layers[sublayer.layer];
                     if (! layer) continue;
@@ -923,7 +926,7 @@ pc.extend(pc, function () {
         // insert assets into registry
         _parseAssets: function (assets) {
             var i, id;
-            var list = [ ];
+            var list = [];
 
             var scriptsIndex = { };
 
@@ -1109,17 +1112,17 @@ pc.extend(pc, function () {
             stats.depthMapTime = this.renderer._depthMapTime;
             stats.forwardTime = this.renderer._forwardTime;
             var prims = this.graphicsDevice._primsPerFrame;
-            stats.triangles = prims[pc.PRIMITIVE_TRIANGLES]/3 +
-                Math.max(prims[pc.PRIMITIVE_TRISTRIP]-2, 0) +
-                Math.max(prims[pc.PRIMITIVE_TRIFAN]-2, 0);
+            stats.triangles = prims[pc.PRIMITIVE_TRIANGLES] / 3 +
+                Math.max(prims[pc.PRIMITIVE_TRISTRIP] - 2, 0) +
+                Math.max(prims[pc.PRIMITIVE_TRIFAN] - 2, 0);
             stats.cullTime = this.renderer._cullTime;
             stats.sortTime = this.renderer._sortTime;
             stats.skinTime = this.renderer._skinTime;
             stats.morphTime = this.renderer._morphTime;
             stats.instancingTime = this.renderer._instancingTime;
             stats.otherPrimitives = 0;
-            for (var i=0; i<prims.length; i++) {
-                if (i<pc.PRIMITIVE_TRIANGLES) {
+            for (var i = 0; i < prims.length; i++) {
+                if (i < pc.PRIMITIVE_TRIANGLES) {
                     stats.otherPrimitives += prims[i];
                 }
                 prims[i] = 0;
@@ -1335,7 +1338,7 @@ pc.extend(pc, function () {
                 this.graphicsDevice.resizeCanvas(width, height);
             } else {
                 if (this._fillMode === pc.FILLMODE_KEEP_ASPECT) {
-                    var r = this.graphicsDevice.canvas.width/this.graphicsDevice.canvas.height;
+                    var r = this.graphicsDevice.canvas.width / this.graphicsDevice.canvas.height;
                     var winR = windowWidth / windowHeight;
 
                     if (r > winR) {

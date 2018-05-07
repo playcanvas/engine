@@ -79,7 +79,7 @@ pc.extend(pc, function () {
             // copy data into new structure
             var data = {};
             var name;
-            for (var i=0; i < properties.length; i++) {
+            for (var i = 0; i < properties.length; i++) {
                 name = properties[i];
                 data[name] = _data[name];
             }
@@ -145,6 +145,13 @@ pc.extend(pc, function () {
             }
 
             var component = this.addComponent(clone, data);
+
+            // clone the original model if the original model component is of type asset but
+            // has no specified asset
+            if (entity.model.model && entity.model.type === 'asset' && ! entity.model.asset) {
+                component.model = entity.model.model.clone();
+                component._clonedModel = true;
+            }
 
             if (!data.materialAsset)
                 component.material = material;

@@ -2,8 +2,6 @@ pc.extend(pc, function () {
     var rawToValue = function(app, args, value, old) {
         var i;
 
-        // TODO scripts2
-        // arrays
         switch (args.type) {
             case 'boolean':
                 return !! value;
@@ -16,70 +14,42 @@ pc.extend(pc, function () {
                     return v;
                 } else if (typeof(value) === 'boolean') {
                     return 0 + value;
-                } else {
-                    return null;
                 }
-                break;
+                return null;
             case 'json':
                 if (typeof(value) === 'object') {
                     return value;
-                } else {
-                    try {
-                        return JSON.parse(value);
-                    } catch (ex) {
-                        return null;
-                    }
                 }
-                break;
+                try {
+                    return JSON.parse(value);
+                } catch (ex) {
+                    return null;
+                }
             case 'asset':
-                if (args.array) {
-                    var result = [ ];
-
-                    if (value instanceof Array) {
-                        for (i = 0; i < value.length; i++) {
-                            if (value[i] instanceof pc.Asset) {
-                                result.push(value[i]);
-                            } else if (typeof(value[i]) === 'number') {
-                                result.push(app.assets.get(value[i]) || null);
-                            } else if (typeof(value[i]) === 'string') {
-                                result.push(app.assets.get(parseInt(value[i], 10)) || null);
-                            } else {
-                                result.push(null);
-                            }
-                        }
-                    }
-
-                    return result;
+                if (value instanceof pc.Asset) {
+                    return value;
+                } else if (typeof(value) === 'number') {
+                    return app.assets.get(value) || null;
+                } else if (typeof(value) === 'string') {
+                    return app.assets.get(parseInt(value, 10)) || null;
                 } else {
-                    if (value instanceof pc.Asset) {
-                        return value;
-                    } else if (typeof(value) === 'number') {
-                        return app.assets.get(value) || null;
-                    } else if (typeof(value) === 'string') {
-                        return app.assets.get(parseInt(value, 10)) || null;
-                    } else {
-                        return null;
-                    }
+                    return null;
                 }
-                break;
             case 'entity':
                 if (value instanceof pc.GraphNode) {
                     return value;
                 } else if (typeof(value) === 'string') {
                     return app.root.findByGuid(value);
-                } else {
-                    return null;
                 }
-                break;
+                return null;
             case 'rgb':
             case 'rgba':
                 if (value instanceof pc.Color) {
                     if (old instanceof pc.Color) {
                         old.copy(value);
                         return old;
-                    } else {
-                        return value.clone();
                     }
+                    return value.clone();
                 } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
                     for (i = 0; i < value.length; i++) {
                         if (typeof(value[i]) !== 'number')
@@ -97,10 +67,8 @@ pc.extend(pc, function () {
 
                     old.fromString(value);
                     return old;
-                } else {
-                    return null;
                 }
-                break;
+                return null;
             case 'vec2':
             case 'vec3':
             case 'vec4':
@@ -110,9 +78,8 @@ pc.extend(pc, function () {
                     if (old instanceof pc['Vec' + len]) {
                         old.copy(value);
                         return old;
-                    } else {
-                        return value.clone();
                     }
+                    return value.clone();
                 } else if (value instanceof Array && value.length === len) {
                     for (i = 0; i < value.length; i++) {
                         if (typeof(value[i]) !== 'number')
@@ -124,10 +91,8 @@ pc.extend(pc, function () {
                         old.data[i] = value[i];
 
                     return old;
-                } else {
-                    return null;
                 }
-                break;
+                return null;
             case 'curve':
                 if (value) {
                     var curve;
@@ -206,10 +171,14 @@ pc.extend(pc, function () {
      */
     ScriptAttributes.prototype.add = function(name, args) {
         if (this.index[name]) {
+            // #ifdef DEBUG
             console.warn('attribute \'' + name + '\' is already defined for script type \'' + this.scriptType.name + '\'');
+            // #endif
             return;
         } else if (pc.createScript.reservedAttributes[name]) {
+            // #ifdef DEBUG
             console.warn('attribute \'' + name + '\' is a reserved attribute name');
+            // #endif
             return;
         }
 
@@ -223,7 +192,18 @@ pc.extend(pc, function () {
                 var old = this.__attributes[name];
 
                 // convert to appropriate type
-                this.__attributes[name] = rawToValue(this.app, args, raw, old);
+                if (args.array) {
+                    this.__attributes[name] = [];
+                    if (raw) {
+                        var i;
+                        var len;
+                        for (i = 0, len = raw.length; i < len; i++) {
+                            this.__attributes[name].push(rawToValue(this.app, args, raw[i], old ? old[i] : null));
+                        }
+                    }
+                } else {
+                    this.__attributes[name] = rawToValue(this.app, args, raw, old);
+                }
 
                 this.fire('attr', name, this.__attributes[name], old);
                 this.fire('attr:' + name, this.__attributes[name], old);
@@ -313,7 +293,9 @@ pc.extend(pc, function () {
     */
     var createScript = function(name, app) {
         if (pc.script.legacy) {
+            // #ifdef DEBUG
             console.error("This project is using the legacy script system. You cannot call pc.createScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/");
+            // #endif
             return null;
         }
 
@@ -338,8 +320,11 @@ pc.extend(pc, function () {
          * initialize and postInitialize methods will run once when the script instance is in `enabled` state during app tick.
          */
         var script = function(args) {
-            if (! args || ! args.app || ! args.entity)
-                console.warn('script \'' + name + '\' has missing arguments in consructor');
+            // #ifdef DEBUG
+            if (! args || ! args.app || ! args.entity) {
+                console.warn('script \'' + name + '\' has missing arguments in constructor');
+            }
+            // #endif
 
             pc.events.attach(this);
 
@@ -347,6 +332,7 @@ pc.extend(pc, function () {
             this.entity = args.entity;
             this._enabled = typeof(args.enabled) === 'boolean' ? args.enabled : true;
             this._enabledOld = this.enabled;
+            this.__destroyed = false;
             this.__attributes = { };
             this.__attributesRaw = args.attributes || null;
             this.__scriptType = script;
@@ -526,17 +512,37 @@ pc.extend(pc, function () {
 
         Object.defineProperty(script.prototype, 'enabled', {
             get: function() {
-                return this._enabled && this.entity.script.enabled && this.entity.enabled;
+                return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
             },
             set: function(value) {
-                value = !!value;
-                if (this._enabled !== value)
-                    this._enabled = value;
+                this._enabled = !!value;
 
-                if (this.enabled !== this._enabledOld) {
-                    this._enabledOld = this.enabled;
-                    this.fire(this.enabled ? 'enable' : 'disable');
-                    this.fire('state', this.enabled);
+                if (this.enabled === this._enabledOld) return;
+
+                this._enabledOld = this.enabled;
+                this.fire(this.enabled ? 'enable' : 'disable');
+                this.fire('state', this.enabled);
+
+                // initialize script if not initialized yet and script is enabled
+                if (! this._initialized && this.enabled) {
+                    this._initialized = true;
+
+                    this.__initializeAttributes(true);
+
+                    if (this.initialize)
+                        this.entity.script._scriptMethod(this, pc.ScriptComponent.scriptMethods.initialize);
+                }
+
+                // post initialize script if not post initialized yet and still enabled
+                // (initilize might have disabled the script so check this.enabled again)
+                // Warning: Do not do this if the script component is currently being enabled
+                // because in this case post initialize must be called after all the scripts
+                // in the script component have been initialized first
+                if (this._initialized && ! this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
+                    this._postInitialized = true;
+
+                    if (this.postInitialize)
+                        this.entity.script._scriptMethod(this, pc.ScriptComponent.scriptMethods.postInitialize);
                 }
             }
         });
@@ -569,7 +575,7 @@ pc.extend(pc, function () {
 
     // reserved script attribute names
     createScript.reservedAttributes = [
-        'app', 'entity', 'enabled', '_enabled', '_enabledOld',
+        'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
         '__attributes', '__attributesRaw', '__scriptType',
         '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
     ];

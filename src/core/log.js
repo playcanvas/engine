@@ -81,14 +81,13 @@ pc.extend(pc, function () {
          * @private
          * @function
          * @name pc.log.assert
-         * @description If condition is false, then write text to the log preceded by 'ASSERT:' and pop up a dialog box.
+         * @description If condition is false, then write text to the log preceded by 'ASSERT:'.
          * @param {Boolean} condition The condition to test.
          * @param {String} text The text to show if the condition is false.
          */
         assert: function (condition, text) {
             if (condition === false) {
                 pc.log.write("ASSERT:  " + text);
-                alert("ASSERT failed: " + text);
             }
         }
     };

@@ -47,8 +47,6 @@ pc.extend(pc, function () {
     ComponentSystem.prototype = {
         /**
          * @private
-         * @field
-         * @type Array
          * @name pc.ComponentSystem#store
          * @description The store where all {@link pc.ComponentData} objects are kept
          */
@@ -117,6 +115,7 @@ pc.extend(pc, function () {
          * @description Create a clone of component. This creates a copy all ComponentData variables.
          * @param {pc.Entity} entity The entity to clone the component from
          * @param {pc.Entity} clone The entity to clone the component into
+         * @returns {pc.Component} The newly cloned component.
          */
         cloneComponent: function (entity, clone) {
             // default clone is just to add a new component with existing data
@@ -130,6 +129,9 @@ pc.extend(pc, function () {
          * @name pc.ComponentSystem#initializeComponentData
          * @description Called during {@link pc.ComponentSystem#addComponent} to initialize the {@link pc.ComponentData} in the store
          * This can be overridden by derived Component Systems and either called by the derived System or replaced entirely
+         * @param {pc.Component} component The component being initialized.
+         * @param {Object} data The data block used to initialize the component.
+         * @param {Array} properties The array of property names of the component.
          */
         initializeComponentData: function (component, data, properties) {
             data = data || {};

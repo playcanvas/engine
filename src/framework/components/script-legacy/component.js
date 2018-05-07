@@ -84,7 +84,7 @@ pc.extend(pc, function () {
                 onlyUpdateAttributes = false;
             } else {
                 var i, len = newValue.length;
-                for (i=0; i<len; i++) {
+                for (i = 0; i < len; i++) {
                     if (oldValue[i].url !== newValue[i].url) {
                         onlyUpdateAttributes = false;
                         break;
@@ -124,9 +124,9 @@ pc.extend(pc, function () {
                 // all scripts with the resource loader
                 if (!type) {
                     return false;
-                } else {
-                    cached.push(type);
                 }
+
+                cached.push(type);
             }
 
             for (i = 0, len = cached.length; i < len; i++) {

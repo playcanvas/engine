@@ -157,7 +157,7 @@ pc.extend(pc, function () {
         this.schema = _schema;
 
         this.maxSubSteps = 10;
-        this.fixedTimeStep = 1/60;
+        this.fixedTimeStep = 1 / 60;
 
         this.on('remove', this.onRemove, this);
     };
@@ -267,16 +267,18 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.RigidBodyComponentSystem#setGravity
-         * @description Set the gravity vector for the 3D physics world
-         * @param {Number} x The x-component of the gravity vector
-         * @param {Number} y The y-component of the gravity vector
-         * @param {Number} z The z-component of the gravity vector
-         */
-        /**
-         * @function
-         * @name pc.RigidBodyComponentSystem#setGravity^2
-         * @description Set the gravity vector for the 3D physics world
-         * @param {pc.Vec3} gravity The gravity vector to use for the 3D physics world.
+         * @description Set the gravity vector for the 3D physics world. This function has two valid signatures.
+         * You can either specify the gravity with a 3D-vector or 3 numbers.
+         * @param {pc.Vec3|Number} x The x-component of the gravity vector
+         * @param {Number} [y] The y-component of the gravity vector
+         * @param {Number} [z] The z-component of the gravity vector
+         * @example
+         * // Set via vector
+         * var gravity = new pc.Vec3(0, -9.81, 0);
+         * this.app.systems.rigidbody.setGravity(gravity);
+         * @example
+         * // Set via numbers
+         * this.app.systems.rigidbody.setGravity(0, -9.81, 0);
          */
         setGravity: function () {
             var x, y, z;
@@ -302,7 +304,7 @@ pc.extend(pc, function () {
          * @param {pc.Vec3} end The world space point where the ray ends
          * @returns {pc.RaycastResult} The result of the raycasting or null if there was no hit.
          */
-        raycastFirst: function (start, end, callback /*callback is deprecated*/) {
+        raycastFirst: function (start, end) {
             var result = null;
 
             ammoRayStart.setValue(start.x, start.y, start.z);
@@ -324,7 +326,8 @@ pc.extend(pc, function () {
                     );
 
                     // keeping for backwards compatibility
-                    if (callback) {
+                    if (arguments.length > 2) {
+                        var callback = arguments[2];
                         callback(result);
 
                         if (! WARNED_RAYCAST_CALLBACK) {
@@ -353,14 +356,14 @@ pc.extend(pc, function () {
             var isNewCollision = false;
             var guid = entity._guid;
 
-            collisions[guid] = collisions[guid] || {others: [], entity: entity};
+            collisions[guid] = collisions[guid] || { others: [], entity: entity };
 
             if (collisions[guid].others.indexOf(other) < 0) {
                 collisions[guid].others.push(other);
                 isNewCollision = true;
             }
 
-            frameCollisions[guid] = frameCollisions[guid] || {others: [], entity: entity};
+            frameCollisions[guid] = frameCollisions[guid] || { others: [], entity: entity };
             frameCollisions[guid].others.push(other);
 
             return isNewCollision;
@@ -424,7 +427,7 @@ pc.extend(pc, function () {
                     var entityCollision = entity.collision;
                     var others = collisions[guid].others;
                     var length = others.length;
-                    var i=length;
+                    var i = length;
                     while (i--) {
                         var other = others[i];
                         // if the contact does not exist in the current frame collisions then fire event
@@ -568,7 +571,7 @@ pc.extend(pc, function () {
                             }
                         }
                     } else {
-                        e0Events = e0.collision ? e0.collision.hasEvent("collisionstart")  || e0.collision.hasEvent("collisionend")|| e0.collision.hasEvent("contact") : false;
+                        e0Events = e0.collision ? e0.collision.hasEvent("collisionstart")  || e0.collision.hasEvent("collisionend") || e0.collision.hasEvent("contact") : false;
                         e1Events = e1.collision ? e1.collision.hasEvent("collisionstart") || e1.collision.hasEvent("collisionend") || e1.collision.hasEvent("contact") : false;
                         var globalEvents = this.hasEvent("contact");
 

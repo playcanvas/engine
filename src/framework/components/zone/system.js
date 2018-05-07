@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var _schema = [ 'enabled' ];
+    var _schema = ['enabled'];
 
     /**
      * @name pc.ZoneComponentSystem

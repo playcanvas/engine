@@ -181,9 +181,9 @@ pc.extend(pc, function () {
         intersectsRay: function (ray, point) {
             if (point) {
                 return this._intersectsRay(ray, point);
-            } else {
-                return this._fastIntersectsRay(ray);
             }
+
+            return this._fastIntersectsRay(ray);
         },
 
         setMinMax: function (min, max) {

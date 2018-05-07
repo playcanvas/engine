@@ -11,10 +11,14 @@ pc.extend(pc, function () {
     */
 
     var ScriptComponent = function ScriptComponent(system, entity) {
-        this._scripts = [ ];
-        this._scriptsIndex = { };
+        this._scripts = [];
+        this._scriptsIndex = {};
+        this._destroyedScripts = [];
+        this._destroyed = false;
         this._scriptsData = null;
         this._oldState = true;
+        this._beingEnabled = false;
+        this._isLoopingThroughScripts = false;
         this.on('set_enabled', this._onSetEnabled, this);
     };
     ScriptComponent = pc.inherits(ScriptComponent, pc.Component);
@@ -160,7 +164,14 @@ pc.extend(pc, function () {
     pc.extend(ScriptComponent.prototype, {
         onEnable: function () {
             ScriptComponent._super.onEnable.call(this);
+            this._beingEnabled = true;
             this._checkState();
+
+            if (! this.entity._beingEnabled) {
+                this.onPostStateChange();
+            }
+
+            this._beingEnabled = false;
         },
 
         onDisable: function () {
@@ -170,20 +181,47 @@ pc.extend(pc, function () {
 
         onPostStateChange: function() {
             var script;
-            for (var i = 0; i < this.scripts.length; i++) {
+
+            var wasLooping = this._beginLooping();
+
+            for (var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
 
-                if (script._initialized && ! script._postInitialized) {
+                if (script._initialized && ! script._postInitialized && script.enabled) {
                     script._postInitialized = true;
 
                     if (script.postInitialize)
                         this._scriptMethod(script, ScriptComponent.scriptMethods.postInitialize);
                 }
             }
+
+            this._endLooping(wasLooping);
         },
 
+        // Sets isLoopingThroughScripts to false and returns
+        // its previous value
+        _beginLooping: function () {
+            var looping = this._isLoopingThroughScripts;
+            this._isLoopingThroughScripts = true;
+            return looping;
+        },
+
+        // Restores isLoopingThroughScripts to the specified parameter
+        // If all loops are over then remove destroyed scripts form the _scripts array
+        _endLooping: function (wasLoopingBefore) {
+            this._isLoopingThroughScripts = wasLoopingBefore;
+            if (! this._isLoopingThroughScripts) {
+                this._removeDestroyedScripts();
+            }
+        },
+
+        // We also need this handler because it is fired
+        // when value === old instead of onEnable and onDisable
+        // which are only fired when value !== old
         _onSetEnabled: function(prop, old, value) {
+            this._beingEnabled = true;
             this._checkState();
+            this._beingEnabled = false;
         },
 
         _checkState: function() {
@@ -193,32 +231,48 @@ pc.extend(pc, function () {
 
             this._oldState = state;
 
-            this.fire(this.enabled ? 'enable' : 'disable');
-            this.fire('state', this.enabled);
+            this.fire(state ? 'enable' : 'disable');
+            this.fire('state', state);
+
+            var wasLooping = this._beginLooping();
 
             var script;
             for (var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
                 script.enabled = script._enabled;
-
-                if (! script._initialized && script.enabled) {
-                    script._initialized = true;
-
-                    script.__initializeAttributes(true);
-
-                    if (script.initialize)
-                        this._scriptMethod(script, ScriptComponent.scriptMethods.initialize);
-                }
             }
+
+            this._endLooping(wasLooping);
         },
 
         _onBeforeRemove: function() {
             this.fire('remove');
 
+            var wasLooping = this._beginLooping();
+
             // destroy all scripts
-            var destroyed = true;
-            while (this.scripts.length > 0 && destroyed)
-                destroyed = this.destroy(this.scripts[0].__scriptType.__name);
+            for (var i = 0; i < this.scripts.length; i++) {
+                var script = this.scripts[i];
+                if (! script) continue;
+
+                this.destroy(script.__scriptType.__name);
+            }
+
+            this._endLooping(wasLooping);
+        },
+
+        _removeDestroyedScripts: function () {
+            var len = this._destroyedScripts.length;
+            if (! len) return;
+
+            for (var i = 0; i < len; i++) {
+                var idx = this._scripts.indexOf(this._destroyedScripts[i]);
+                if (idx >= 0) {
+                    this._scripts.splice(idx, 1);
+                }
+            }
+
+            this._destroyedScripts.length = 0;
         },
 
         _onInitializeAttributes: function() {
@@ -246,6 +300,8 @@ pc.extend(pc, function () {
         _onInitialize: function() {
             var script, scripts = this._scripts;
 
+            var wasLooping = this._beginLooping();
+
             for (var i = 0, len = scripts.length; i < len; i++) {
                 script = scripts[i];
                 if (! script._initialized && script.enabled) {
@@ -254,39 +310,43 @@ pc.extend(pc, function () {
                         this._scriptMethod(script, ScriptComponent.scriptMethods.initialize);
                 }
             }
+
+            this._endLooping(wasLooping);
         },
 
         _onPostInitialize: function() {
-            var script, scripts = this._scripts;
-
-            for (var i = 0, len = scripts.length; i < len; i++) {
-                script = scripts[i];
-                if (! script._postInitialized && script.enabled) {
-                    script._postInitialized = true;
-                    if (script.postInitialize)
-                        this._scriptMethod(script, ScriptComponent.scriptMethods.postInitialize);
-                }
-            }
+            this.onPostStateChange();
         },
 
         _onUpdate: function(dt) {
             var script, scripts = this._scripts;
+
+            var wasLooping = this._beginLooping();
 
             for (var i = 0, len = scripts.length; i < len; i++) {
                 script = scripts[i];
                 if (script.update && script.enabled)
                     this._scriptMethod(script, ScriptComponent.scriptMethods.update, dt);
             }
+
+            this._endLooping(wasLooping);
         },
 
         _onPostUpdate: function(dt) {
+            var i;
+            var len;
+
+            var wasLooping = this._beginLooping();
+
             var script, scripts = this._scripts;
 
-            for (var i = 0, len = scripts.length; i < len; i++) {
+            for (i = 0, len = scripts.length; i < len; i++) {
                 script = scripts[i];
                 if (script.postUpdate && script.enabled)
                     this._scriptMethod(script, ScriptComponent.scriptMethods.postUpdate, dt);
             }
+
+            this._endLooping(wasLooping);
         },
 
         /**
@@ -379,26 +439,33 @@ pc.extend(pc, function () {
 
                     this.system.app.scripts.on('swap:' + scriptType.__name, this._scriptsIndex[scriptType.__name].onSwap);
 
-                    if (! args.preloading && this.enabled && scriptInstance.enabled && ! scriptInstance._initialized) {
-                        scriptInstance._initialized = true;
-                        scriptInstance._postInitialized = true;
+                    if (! args.preloading) {
 
-                        if (scriptInstance.initialize)
-                            this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.initialize);
+                        if (scriptInstance.enabled && ! scriptInstance._initialized) {
+                            scriptInstance._initialized = true;
 
-                        if (scriptInstance.postInitialize)
-                            this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.postInitialize);
+                            if (scriptInstance.initialize)
+                                this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.initialize);
+                        }
+
+                        if (scriptInstance.enabled && ! scriptInstance._postInitialized) {
+                            scriptInstance._postInitialized = true;
+                            if (scriptInstance.postInitialize)
+                                this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.postInitialize);
+                        }
                     }
 
+
                     return scriptInstance;
-                } else {
-                    console.warn('script \'' + scriptName + '\' is already added to entity \'' + this.entity.name + '\'');
                 }
+
+                console.warn('script \'' + scriptName + '\' is already added to entity \'' + this.entity.name + '\'');
             } else {
                 this._scriptsIndex[scriptName] = {
                     awaiting: true,
                     ind: this._scripts.length
                 };
+
                 console.warn('script \'' + scriptName + '\' is not found, awaiting it to be added to registry');
             }
 
@@ -429,9 +496,20 @@ pc.extend(pc, function () {
             delete this._scriptsIndex[scriptName];
             if (! scriptData) return false;
 
-            if (scriptData.instance) {
-                var ind = this._scripts.indexOf(scriptData.instance);
-                this._scripts.splice(ind, 1);
+            if (scriptData.instance && ! scriptData.instance._destroyed) {
+                scriptData.instance.enabled = false;
+                scriptData.instance._destroyed = true;
+
+                // if we are not currently looping through our scripts
+                // then it's safe to remove the script
+                if (! this._isLoopingThroughScripts) {
+                    var ind = this._scripts.indexOf(scriptData.instance);
+                    this._scripts.splice(ind, 1);
+                } else {
+                    // otherwise push the script in _destroyedScripts and
+                    // remove it from _scripts when the loop is over
+                    this._destroyedScripts.push(scriptData.instance);
+                }
             }
 
             // remove swap event

@@ -49,7 +49,7 @@ pc.extend(pc, function () {
         this.schema = _schema;
 
         // holds all the active camera components
-        this.cameras = [ ];
+        this.cameras = [];
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
@@ -171,7 +171,6 @@ pc.extend(pc, function () {
                             cam._node.localTransform.copy(vrDisplay.combinedViewInv);
                             cam._node._dirtyLocal = false;
                             cam._node._dirtify();
-                            // cam._node.syncHierarchy();
                         }
                     }
                 }

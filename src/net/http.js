@@ -352,7 +352,6 @@ pc.extend(pc, function () {
                         break;
                     }
                     default: {
-                        //options.error(xhr.status, xhr, null);
                         this._onError(method, url, options, xhr);
                         break;
                     }
@@ -392,13 +391,11 @@ pc.extend(pc, function () {
                 }
             }
 
-            options.callback(null, response);//, xhr.status, xhr);
-            // options.success(response, xhr.status, xhr);
+            options.callback(null, response);
         },
 
         _onError: function (method, url, options, xhr) {
-            options.callback(xhr.status, null);//, xhr.status, xhr);
-            // options.error(xhr.status, xhr, null);
+            options.callback(xhr.status, null);
         }
     };
 

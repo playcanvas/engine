@@ -11,161 +11,6 @@ pc.extend(pc, function () {
         'model'
     ];
 
-    /**
-     * @constructor
-     * @name pc.CollisionComponentSystem
-     * @classdesc Manages creation of {@link pc.CollisionComponent}s.
-     * @description Creates a new CollisionComponentSystem.
-     * @param {pc.Application} app The running {pc.Application}
-     * @extends pc.ComponentSystem
-     */
-    var CollisionComponentSystem = function CollisionComponentSystem (app) {
-        this.id = "collision";
-        this.description = "Specifies a collision volume.";
-        app.systems.add(this.id, this);
-
-        this.ComponentType = pc.CollisionComponent;
-        this.DataType = pc.CollisionComponentData;
-
-        this.schema = _schema;
-
-        this.implementations = { };
-
-        this.on('remove', this.onRemove, this);
-
-        pc.ComponentSystem.on('update', this.onUpdate, this);
-    };
-
-    CollisionComponentSystem = pc.inherits(CollisionComponentSystem, pc.ComponentSystem);
-
-    pc.Component._buildAccessors(pc.CollisionComponent.prototype, _schema);
-
-    CollisionComponentSystem.prototype = pc.extend(CollisionComponentSystem.prototype, {
-        onLibraryLoaded: function () {
-            if (typeof Ammo !== 'undefined') {
-                //
-            } else {
-                // Unbind the update function if we haven't loaded Ammo by now
-                pc.ComponentSystem.off('update', this.onUpdate, this);
-            }
-        },
-
-        initializeComponentData: function (component, _data, properties) {
-            // duplicate the input data because we are modifying it
-            var idx;
-            var data = {};
-            properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
-            properties.forEach(function (prop) {
-                data[prop] = _data[prop];
-            });
-
-            // asset takes priority over model
-            // but they are both trying to change the mesh
-            // so remove one of them to avoid conflicts
-            if (_data.hasOwnProperty('asset')) {
-                idx = properties.indexOf('model');
-                if (idx !== -1) {
-                    properties.splice(idx, 1);
-                }
-            } else if (_data.hasOwnProperty('model')) {
-                idx = properties.indexOf('asset');
-                if (idx !== -1) {
-                    properties.splice(idx, 1);
-                }
-            }
-
-            if (!data.type) {
-                data.type = component.data.type;
-            }
-            component.data.type = data.type;
-
-            if (data.halfExtents && pc.type(data.halfExtents) === 'array') {
-                data.halfExtents = new pc.Vec3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]);
-            }
-
-            var impl = this._createImplementation(data.type);
-            impl.beforeInitialize(component, data);
-
-            CollisionComponentSystem._super.initializeComponentData.call(this.system, component, data, properties);
-
-            impl.afterInitialize(component, data);
-        },
-
-        // Creates an implementation based on the collision type and caches it
-        // in an internal implementations structure, before returning it.
-        _createImplementation: function (type) {
-            if (this.implementations[type] === undefined) {
-                var impl;
-                switch (type) {
-                    case 'box':
-                        impl = new CollisionBoxSystemImpl(this);
-                        break;
-                    case 'sphere':
-                        impl = new CollisionSphereSystemImpl(this);
-                        break;
-                    case 'capsule':
-                        impl = new CollisionCapsuleSystemImpl(this);
-                        break;
-                    case 'cylinder':
-                        impl = new CollisionCylinderSystemImpl(this);
-                        break;
-                    case 'mesh':
-                        impl = new CollisionMeshSystemImpl(this);
-                        break;
-                    default:
-                        throw "Invalid collision system type: " + type;
-                }
-                this.implementations[type] = impl;
-            }
-
-            return this.implementations[type];
-        },
-
-        // Gets an existing implementation for the specified entity
-        _getImplementation: function (entity) {
-            return this.implementations[entity.collision.data.type];
-        },
-
-        cloneComponent: function (entity, clone) {
-            return this._getImplementation(entity).clone(entity, clone);
-        },
-
-        onRemove: function (entity, data) {
-            this.implementations[data.type].remove(entity, data);
-        },
-
-        onUpdate: function (dt) {
-            var id, entity, data;
-            var components = this.store;
-
-            for (id in components) {
-                entity = components[id].entity;
-                data = components[id].data;
-
-                if (data.enabled && entity.enabled) {
-                    if (!entity.rigidbody && entity.trigger) {
-                        entity.trigger.syncEntityToBody();
-                    }
-                }
-            }
-        },
-
-        onTransformChanged: function(component, position, rotation, scale) {
-            this.implementations[component.data.type].updateTransform(component, position, rotation, scale);
-        },
-
-        // Destroys the previous collision type and creates a new one based on the new type provided
-        changeType: function (component, previousType, newType) {
-            this.implementations[previousType].remove( component.entity, component.data);
-            this._createImplementation(newType).reset(component, component.data);
-        },
-
-        // Recreates rigid bodies or triggers for the specified component
-        recreatePhysicalShapes: function (component) {
-            this.implementations[component.data.type].recreatePhysicalShapes(component);
-        }
-    });
-
     // Collision system implementations
     var CollisionSystemImpl = function (system) {
         this.system = system;
@@ -274,9 +119,8 @@ pc.extend(pc, function () {
                 var he = data.halfExtents;
                 var ammoHe = new Ammo.btVector3(he ? he.x : 0.5, he ? he.y : 0.5, he ? he.z : 0.5);
                 return new Ammo.btBoxShape(ammoHe);
-            } else {
-                return undefined;
             }
+            return undefined;
         }
     });
 
@@ -289,9 +133,8 @@ pc.extend(pc, function () {
         createPhysicalShape: function (entity, data) {
             if (typeof Ammo !== 'undefined') {
                 return new Ammo.btSphereShape(data.radius);
-            } else {
-                return undefined;
             }
+            return undefined;
         }
     });
 
@@ -400,9 +243,9 @@ pc.extend(pc, function () {
                     var base = mesh.primitive[0].base;
                     var triMesh = new Ammo.btTriangleMesh();
                     for (j = 0; j < numTriangles; j++) {
-                        i1 = indices[base+j*3] * stride;
-                        i2 = indices[base+j*3+1] * stride;
-                        i3 = indices[base+j*3+2] * stride;
+                        i1 = indices[base + j * 3] * stride;
+                        i2 = indices[base + j * 3 + 1] * stride;
+                        i3 = indices[base + j * 3 + 2] * stride;
                         v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
                         v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
                         v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
@@ -437,9 +280,8 @@ pc.extend(pc, function () {
                 shape.setLocalScaling(vec);
 
                 return shape;
-            } else {
-                return undefined;
             }
+            return undefined;
         },
 
         recreatePhysicalShapes: function (component) {
@@ -500,7 +342,6 @@ pc.extend(pc, function () {
             } else {
                 this.remove(entity, data);
             }
-
         },
 
         updateTransform: function (component, position, rotation, scale) {
@@ -518,6 +359,163 @@ pc.extend(pc, function () {
             }
 
             CollisionMeshSystemImpl._super.updateTransform.call(this, component, position, rotation, scale);
+        }
+    });
+
+    /**
+     * @constructor
+     * @name pc.CollisionComponentSystem
+     * @classdesc Manages creation of {@link pc.CollisionComponent}s.
+     * @description Creates a new CollisionComponentSystem.
+     * @param {pc.Application} app The running {pc.Application}
+     * @extends pc.ComponentSystem
+     */
+    var CollisionComponentSystem = function CollisionComponentSystem (app) {
+        this.id = "collision";
+        this.description = "Specifies a collision volume.";
+        app.systems.add(this.id, this);
+
+        this.ComponentType = pc.CollisionComponent;
+        this.DataType = pc.CollisionComponentData;
+
+        this.schema = _schema;
+
+        this.implementations = { };
+
+        this.on('remove', this.onRemove, this);
+
+        pc.ComponentSystem.on('update', this.onUpdate, this);
+    };
+
+    CollisionComponentSystem = pc.inherits(CollisionComponentSystem, pc.ComponentSystem);
+
+    pc.Component._buildAccessors(pc.CollisionComponent.prototype, _schema);
+
+    CollisionComponentSystem.prototype = pc.extend(CollisionComponentSystem.prototype, {
+        onLibraryLoaded: function () {
+            if (typeof Ammo !== 'undefined') {
+                //
+            } else {
+                // Unbind the update function if we haven't loaded Ammo by now
+                pc.ComponentSystem.off('update', this.onUpdate, this);
+            }
+        },
+
+        initializeComponentData: function (component, _data, properties) {
+            // duplicate the input data because we are modifying it
+            var idx;
+            var data = {};
+            properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
+            properties.forEach(function (prop) {
+                data[prop] = _data[prop];
+            });
+
+            // asset takes priority over model
+            // but they are both trying to change the mesh
+            // so remove one of them to avoid conflicts
+            if (_data.hasOwnProperty('asset')) {
+                idx = properties.indexOf('model');
+                if (idx !== -1) {
+                    properties.splice(idx, 1);
+                }
+            } else if (_data.hasOwnProperty('model')) {
+                idx = properties.indexOf('asset');
+                if (idx !== -1) {
+                    properties.splice(idx, 1);
+                }
+            }
+
+            if (!data.type) {
+                data.type = component.data.type;
+            }
+            component.data.type = data.type;
+
+            if (data.halfExtents && pc.type(data.halfExtents) === 'array') {
+                data.halfExtents = new pc.Vec3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]);
+            }
+
+            var impl = this._createImplementation(data.type);
+            impl.beforeInitialize(component, data);
+
+            CollisionComponentSystem._super.initializeComponentData.call(this.system, component, data, properties);
+
+            impl.afterInitialize(component, data);
+        },
+
+        // Creates an implementation based on the collision type and caches it
+        // in an internal implementations structure, before returning it.
+        _createImplementation: function (type) {
+            if (this.implementations[type] === undefined) {
+                var impl;
+                switch (type) {
+                    case 'box':
+                        impl = new CollisionBoxSystemImpl(this);
+                        break;
+                    case 'sphere':
+                        impl = new CollisionSphereSystemImpl(this);
+                        break;
+                    case 'capsule':
+                        impl = new CollisionCapsuleSystemImpl(this);
+                        break;
+                    case 'cylinder':
+                        impl = new CollisionCylinderSystemImpl(this);
+                        break;
+                    case 'mesh':
+                        impl = new CollisionMeshSystemImpl(this);
+                        break;
+                    default:
+                        // #ifdef DEBUG
+                        console.error("_createImplementation: Invalid collision system type: " + type);
+                        // #endif
+                }
+                this.implementations[type] = impl;
+            }
+
+            return this.implementations[type];
+        },
+
+        // Gets an existing implementation for the specified entity
+        _getImplementation: function (entity) {
+            return this.implementations[entity.collision.data.type];
+        },
+
+        cloneComponent: function (entity, clone) {
+            return this._getImplementation(entity).clone(entity, clone);
+        },
+
+        onRemove: function (entity, data) {
+            this.implementations[data.type].remove(entity, data);
+        },
+
+        onUpdate: function (dt) {
+            var id, entity, data;
+            var components = this.store;
+
+            for (id in components) {
+                entity = components[id].entity;
+                data = components[id].data;
+
+                if (data.enabled && entity.enabled) {
+                    if (!entity.rigidbody && entity.trigger) {
+                        entity.trigger.syncEntityToBody();
+                    }
+                }
+            }
+        },
+
+        onTransformChanged: function(component, position, rotation, scale) {
+            this.implementations[component.data.type].updateTransform(component, position, rotation, scale);
+        },
+
+        // Destroys the previous collision type and creates a new one based on the new type provided
+        changeType: function (component, previousType, newType) {
+            this.implementations[previousType].remove( component.entity, component.data);
+            this._createImplementation(newType).reset(component, component.data);
+        },
+
+        // Recreates rigid bodies or triggers for the specified component
+        recreatePhysicalShapes: function (component) {
+            this.implementations[component.data.type].recreatePhysicalShapes(component);
         }
     });
 

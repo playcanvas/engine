@@ -58,7 +58,7 @@ pc.events = {
             this._callbacks = { };
 
         if (! this._callbacks[name])
-            this._callbacks[name] = [ ];
+            this._callbacks[name] = [];
 
         if (! this._callbackActive)
             this._callbackActive = { };
@@ -208,14 +208,16 @@ pc.events = {
     },
 
     /**
-    * @function
-    * @name pc.events.hasEvent
-    * @description Test if there are any handlers bound to an event name
-    * @param {String} name The name of the event to test
-    * @example
-    * obj.on('test', function () { }); // bind an event to 'test'
-    * obj.hasEvent('test'); // returns true
-    */
+     * @function
+     * @name pc.events.hasEvent
+     * @description Test if there are any handlers bound to an event name
+     * @param {String} name The name of the event to test
+     * @returns {Boolean} true if the object has handlers bound to the specified event name.
+     * @example
+     * obj.on('test', function () { }); // bind an event to 'test'
+     * obj.hasEvent('test'); // returns true
+     * obj.hasEvent('hello'); // returns false
+     */
     hasEvent: function (name) {
         return (this._callbacks && this._callbacks[name] && this._callbacks[name].length !== 0) || false;
     }

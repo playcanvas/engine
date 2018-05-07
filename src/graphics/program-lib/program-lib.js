@@ -30,18 +30,16 @@ pc.programlib = {
             return pc.shaderChunks.fogExpPS;
         } else if (value === 'exp2') {
             return pc.shaderChunks.fogExp2PS;
-        } else {
-            return pc.shaderChunks.fogNonePS;
         }
+        return pc.shaderChunks.fogNonePS;
     },
 
     skinCode: function(device, chunks) {
         if (!chunks) chunks = pc.shaderChunks;
         if (device.supportsBoneTextures) {
             return chunks.skinTexVS;
-        } else {
-            return "#define BONE_LIMIT " + device.getBoneLimit() + "\n" + chunks.skinConstVS;
         }
+        return "#define BONE_LIMIT " + device.getBoneLimit() + "\n" + chunks.skinConstVS;
     },
 
     precisionCode: function(device) {

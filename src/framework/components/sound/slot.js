@@ -516,9 +516,8 @@ pc.extend(pc, function () {
             // != intentional
             if (this._duration != null) {
                 return this._duration % (assetDuration || 1);
-            } else {
-                return assetDuration;
             }
+            return assetDuration;
         },
         set: function (value) {
             this._duration = Math.max(0, Number(value) || 0) || null;

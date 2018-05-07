@@ -12,7 +12,7 @@ pc.extend(pc, function () {
 
         this.app = app;
         this._scripts = { };
-        this._list = [ ];
+        this._list = [];
     };
 
 
@@ -65,8 +65,8 @@ pc.extend(pc, function () {
 
             var components = self.app.systems.script._components;
             var i, scriptInstance, attributes;
-            var scriptInstances = [ ];
-            var scriptInstancesInitialized = [ ];
+            var scriptInstances = [];
+            var scriptInstancesInitialized = [];
 
             for (i = 0; i < components.length; i++) {
                 // check if awaiting for script
@@ -103,6 +103,10 @@ pc.extend(pc, function () {
 
             // call postInitialize()
             for (i = 0; i < scriptInstancesInitialized.length; i++) {
+                if (! scriptInstancesInitialized[i].enabled || scriptInstancesInitialized[i]._postInitialized) {
+                    continue;
+                }
+
                 scriptInstancesInitialized[i]._postInitialized = true;
 
                 if (scriptInstancesInitialized[i].postInitialize)
@@ -122,11 +126,9 @@ pc.extend(pc, function () {
      * @example
      * app.scripts.remove('playerController');
      */
-    ScriptRegistry.prototype.remove = function(script) {
-        var name = script;
-
-        if (typeof(script) === 'function')
-            name = script.__name;
+    ScriptRegistry.prototype.remove = function(name) {
+        if (typeof(name) === 'function')
+            name = name.__name;
 
         if (! this._scripts.hasOwnProperty(name))
             return false;
