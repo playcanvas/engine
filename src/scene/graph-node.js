@@ -423,20 +423,13 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#findByPath
          * @description Get the first node found in the graph by its full path in the graph.
-         * By default the full path has the form 'parent/child/sub-child', i.e. it is based on
-         * the names of each child. Paths of the form '0/2/0' (i.e. based on the indices of
-         * each child) may be used if the pathType argument is set to {@link pc.GRAPHPATHTYPE_INDICES}.
-         * The search is depth first.
+         * The full path has this form 'parent/child/sub-child'. The search is depth first.
          * @param {String} path The full path of the pc.GraphNode.
-         * @param {String} [pathType] The type of path to be used, either {@link pc.GRAPHPATHTYPE_NAMES}
-         * or {@link pc.GRAPHPATHTYPE_INDICES}. Defaults to {@link pc.GRAPHPATHTYPE_NAMES}.
          * @returns {pc.GraphNode} The first node to be found matching the supplied path.
          * @example
          * var path = this.entity.findByPath('child/another_child');
          */
-        findByPath: function (path, pathType) {
-            pathType = (pathType == null) ? pc.GRAPHPATHTYPE_NAMES : pathType;
-
+        findByPath: function (path) {
             // split the paths in parts. Each part represents a deeper hierarchy level
             var parts = path.split('/');
             var currentParent = this;
@@ -450,16 +443,9 @@ pc.extend(pc, function () {
                 // check all the children
                 var children = currentParent._children;
                 for (var j = 0, jmax = children.length; j < jmax; j++) {
-                    if (pathType === pc.GRAPHPATHTYPE_NAMES) {
-                        if (children[j].name == part) {
-                            result = children[j];
-                            break;
-                        }
-                    } else if (pathType === pc.GRAPHPATHTYPE_INDICES) {
-                        if (j == parseInt(part, 10)) {
-                            result = children[j];
-                            break;
-                        }
+                    if (children[j].name == part) {
+                        result = children[j];
+                        break;
                     }
                 }
 
@@ -474,31 +460,25 @@ pc.extend(pc, function () {
          * @function
          * @name  pc.GraphNode#getPath
          * @description Gets the path of the entity relative to the root of the hierarchy
-         * @param {String} [pathType] The type of path to be used, either {@link pc.GRAPHPATHTYPE_NAMES}
-         * or {@link pc.GRAPHPATHTYPE_INDICES}. Defaults to {@link pc.GRAPHPATHTYPE_NAMES}.
-         * @param {Entity} [relativeTo] An ancestor entity to which the path should be relative.
-         * Defaults to null, which means that the path will be relative to the root.
          * @returns {String} The path
          * @example
          * var path = this.entity.getPath();
          */
-        getPath: function (pathType, relativeTo) {
-            pathType = (pathType == null) ? pc.GRAPHPATHTYPE_NAMES : pathType;
+        getPath: function () {
+            var parent = this._parent;
+            if (parent) {
+                var path = this.name;
+                var format = "{0}/{1}";
 
-            var current = this;
-            var parts = [];
-
-            while (current && current._parent) {
-                if (relativeTo && current === relativeTo) {
-                    break;
+                while (parent && parent._parent) {
+                    path = pc.string.format(format, parent.name, path);
+                    parent = parent._parent;
                 }
 
-                var part = pathType === pc.GRAPHPATHTYPE_INDICES ? current._parent.children.indexOf(current) : current.name;
-                parts.push(part);
-                current = current._parent;
+                return path;
             }
+            return '';
 
-            return parts.reverse().join('/');
         },
 
 
