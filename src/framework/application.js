@@ -956,7 +956,7 @@ pc.extend(pc, function () {
             for (i = 0; i < list.length; i++) {
                 var data = list[i];
                 var asset = new pc.Asset(data.name, data.type, data.file, data.data);
-                asset.id = parseInt(data.id);
+                asset.id = parseInt(data.id, 10);
                 asset.preload = data.preload ? data.preload : false;
                 // tags
                 asset.tags.add(data.tags);
@@ -1598,6 +1598,9 @@ pc.extend(pc, function () {
         }
     };
 
+    // static data
+    var _frameEndData = {};
+
     // create tick function to be wrapped in closure
     var makeTick = function (_app) {
         var app = _app;
@@ -1653,8 +1656,6 @@ pc.extend(pc, function () {
             }
         };
     };
-    // static data
-    var _frameEndData = {};
 
     return {
         /**

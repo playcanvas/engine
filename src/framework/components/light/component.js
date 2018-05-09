@@ -1,8 +1,9 @@
 pc.extend(pc, function () {
     /**
      * @component
+     * @constructor
      * @name pc.LightComponent
-     * @class The Light Component enables the Entity to light the scene. There are three types
+     * @classdesc The Light Component enables the Entity to light the scene. There are three types
      * of light: directional, point and spot. Directional lights are global in that they are
      * considered to be infinitely far away and light the entire scene. Point and spot lights
      * are local in that they have a position and a range. A spot light is a specialization of
@@ -100,11 +101,18 @@ pc.extend(pc, function () {
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      * @extends pc.Component
      */
+    var LightComponent = function LightComponent(system, entity) {
+        this._cookieAsset = null;
+        this._cookieAssetId = null;
+        this._cookieAssetAdd = false;
+        this._cookieMatrix = null;
+    };
+    LightComponent = pc.inherits(LightComponent, pc.Component);
 
     var _props = [];
     var _propsDefault = [];
 
-    function _defineProperty(name, defaultValue, setFunc, skipEqualsCheck) {
+    var _defineProperty = function (name, defaultValue, setFunc, skipEqualsCheck) {
         var c = LightComponent.prototype;
         _props.push(name);
         _propsDefault.push(defaultValue);
@@ -122,17 +130,9 @@ pc.extend(pc, function () {
             },
             configurable: true
         });
-    }
-
-    var LightComponent = function LightComponent(system, entity) {
-        this._cookieAsset = null;
-        this._cookieAssetId = null;
-        this._cookieAssetAdd = false;
-        this._cookieMatrix = null;
     };
-    LightComponent = pc.inherits(LightComponent, pc.Component);
 
-    var _defineProps = function (c, d, s) {
+    var _defineProps = function () {
         _defineProperty("enabled", true, function(newValue, oldValue) {
             this.onSetEnabled(null, oldValue, newValue);
         });

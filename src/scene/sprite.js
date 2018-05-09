@@ -30,7 +30,7 @@ pc.extend(pc, function () {
     pc.SPRITE_RENDERMODE_TILED = 2;
 
     // normals are the same for every mesh
-    var normals = [
+    var spriteNormals = [
         0, 0, 1,
         0, 0, 1,
         0, 0, 1,
@@ -38,7 +38,7 @@ pc.extend(pc, function () {
     ];
 
     // indices are the same for every mesh
-    var indices = [
+    var spriteIndices = [
         0, 1, 3,
         2, 3, 1
     ];
@@ -147,8 +147,8 @@ pc.extend(pc, function () {
 
         var mesh = pc.createMesh(this._device, positions, {
             uvs: uvs,
-            normals: normals,
-            indices: indices
+            normals: spriteNormals,
+            indices: spriteIndices
         });
 
         return mesh;

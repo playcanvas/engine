@@ -44,6 +44,7 @@ pc.events = {
      * @param {String} name Name of the event to bind the callback to
      * @param {Function} callback Function that is called when event is fired. Note the callback is limited to 8 arguments.
      * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
+     * @returns {*} 'this' for chaining
      * @example
      * obj.on('test', function (a, b) {
      *     console.log(a + b);
@@ -82,6 +83,7 @@ pc.events = {
      * @param {String} [name] Name of the event to unbind
      * @param {Function} [callback] Function to be unbound
      * @param {Object} [scope] Scope that was used as the this when the event is fired
+     * @returns {*} 'this' for chaining
      * @example
      * var handler = function () {
      * };
@@ -145,6 +147,7 @@ pc.events = {
      * @description Fire an event, all additional arguments are passed on to the event listener
      * @param {Object} name Name of event to fire
      * @param {*} [...] Arguments that are passed to the event handler
+     * @returns {*} 'this' for chaining
      * @example
      * obj.fire('test', 'This is the message');
      */
@@ -194,6 +197,7 @@ pc.events = {
      * @param {String} name Name of the event to bind the callback to
      * @param {Function} callback Function that is called when event is fired. Note the callback is limited to 8 arguments.
      * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
+     * @returns {*} 'this' for chaining
      * @example
      * obj.once('test', function (a, b) {
      *     console.log(a + b);
