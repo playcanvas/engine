@@ -2,7 +2,6 @@ pc.extend(pc, function () {
     var _schema = [
         'active',
         'imageEntity',
-        'textEntity',
         { name: 'hitPadding', type: 'vec4' },
         'transitionMode',
         { name: 'hoverTint', type: 'rgba' },

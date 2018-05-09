@@ -22,7 +22,6 @@ pc.extend(pc, function () {
      * @extends pc.Component
      * @property {Boolean} active If set to false, the button will be visible but will not respond to hover or touch interactions.
      * @property {pc.Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.'
-     * @property {pc.Entity} textEntity A reference to the entity to be used as the button label. The entity must have a TextElement component.'
      * @property {pc.Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
      * @property {pc.BUTTON_TRANSITION_MODE} transitionMode Controls how the button responds when the user hovers over it/presses it.
      * @property {pc.Vec4} hoverTint Color to be used on the button image when the user hovers over it.
@@ -38,7 +37,6 @@ pc.extend(pc, function () {
         this._isHovering = false;
         this._isPressed = false;
         this._imageEntity = null;
-        this._textEntity = null;
 
         this._defaultTint = new pc.Color(1, 1, 1, 1);
 
@@ -57,7 +55,6 @@ pc.extend(pc, function () {
             this.on('set_pressedSprite', this._onSetTransitionValue, this);
             this.on('set_inactiveSprite', this._onSetTransitionValue, this);
             this.on('set_imageEntity', this._onSetImageEntity, this);
-            this.on('set_textEntity', this._onSetTextEntity, this);
 
             pc.ComponentSystem.on('postInitialize', this._onPostInitialize, this);
 
@@ -91,12 +88,6 @@ pc.extend(pc, function () {
         _onSetImageEntity: function(name, oldGuid, newGuid) {
             if (oldGuid !== newGuid) {
                 this._updateImageEntityReference();
-            }
-        },
-
-        _onSetTextEntity: function(name, oldGuid, newGuid) {
-            if (oldGuid !== newGuid) {
-                // TODO Do we actually need the text reference?
             }
         },
 
