@@ -1,6 +1,5 @@
 pc.extend(pc, function () {
     /**
-     * @private
      * @component
      * @name pc.LayoutGroupComponent
      * @description Create a new LayoutGroupComponent
