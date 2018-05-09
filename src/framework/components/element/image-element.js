@@ -582,6 +582,10 @@ pc.extend(pc, function () {
             if (this._meshInstance) {
                 this._meshInstance.setParameter('material_emissive', this._color.data3);
             }
+
+            if (this._element && this._element.fire) {
+                this._element.fire('set:color', this._color);
+            }
         }
     });
 
@@ -593,6 +597,10 @@ pc.extend(pc, function () {
         set: function (value) {
             this._color.data[3] = value;
             this._meshInstance.setParameter("material_opacity", value);
+
+            if (this._element && this._element.fire) {
+                this._element.fire('set:opacity', this._color.data[3]);
+            }
         }
     });
 
