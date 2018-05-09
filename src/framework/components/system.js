@@ -175,6 +175,8 @@ pc.extend(pc, function () {
     };
 
     function convertValue(value, type) {
+        value = (value && value.data) ? value.data : value;
+
         switch (type) {
             case 'rgb':
                 return new pc.Color(value[0], value[1], value[2]);

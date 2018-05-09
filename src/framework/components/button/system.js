@@ -1,5 +1,6 @@
 pc.extend(pc, function () {
     var _schema = [
+        'enabled',
         'active',
         'imageEntity',
         { name: 'hitPadding', type: 'vec4' },

@@ -40,12 +40,12 @@ pc.extend(pc, function () {
 
         this._defaultTint = new pc.Color(1, 1, 1, 1);
 
-        this._addOrRemoveLifecycleListeners('on', system);
+        this._toggleLifecycleListeners('on', system);
     };
     ButtonComponent = pc.inherits(ButtonComponent, pc.Component);
 
     pc.extend(ButtonComponent.prototype, {
-        _addOrRemoveLifecycleListeners: function(onOrOff, system) {
+        _toggleLifecycleListeners: function(onOrOff, system) {
             this.on('set_active', this._onSetActive, this);
             this.on('set_transitionMode', this._onSetTransitionMode, this);
             this.on('set_hoverTint', this._onSetTransitionValue, this);
@@ -60,9 +60,6 @@ pc.extend(pc, function () {
 
             system.app.systems.element.on('add', this._onElementComponentAdd, this);
             system.app.systems.element.on('beforeremove', this._onElementComponentRemove, this);
-
-            // TODO Also handle button component addition/removal
-            // TODO Also handle button component enable/disable
         },
 
         _onSetActive: function(name, oldValue, newValue) {
@@ -74,6 +71,7 @@ pc.extend(pc, function () {
 
         _onSetTransitionMode: function(name, oldValue, newValue) {
             if (oldValue !== newValue) {
+                console.log('_onSetTransitionMode');
                 this._resetToDefaultVisualState(oldValue);
                 this._forceReapplyVisualState();
             }
@@ -81,6 +79,7 @@ pc.extend(pc, function () {
 
         _onSetTransitionValue: function(name, oldValue, newValue) {
             if (oldValue !== newValue) {
+                console.log('_onSetTransitionValue', name, newValue && newValue.data);
                 this._forceReapplyVisualState();
             }
         },
@@ -92,7 +91,6 @@ pc.extend(pc, function () {
         },
 
         _onPostInitialize: function() {
-            this._postInitializeFired = true;
             this._updateImageEntityReference();
         },
 
@@ -102,15 +100,15 @@ pc.extend(pc, function () {
         // user interacts with it, etc. This method is called whenever the guid changes
         // in order to resolve the guid to an actual entity reference.
         _updateImageEntityReference: function() {
-            if (this._postInitializeFired) {
-                var imageGuid = this.data.imageEntity;
-                var hasChanged = !this._imageEntity || this._imageEntity.getGuid() !== imageGuid;
+            var imageGuid = this.data.imageEntity;
+            var hasChanged = !this._imageEntity || this._imageEntity.getGuid() !== imageGuid;
 
-                if (imageGuid && hasChanged) {
-                    this._onBeforeImageEntityChange();
-                    this._imageEntity = this.system.app.root.findByGuid(imageGuid);
-                    this._onAfterImageEntityChange();
-                }
+            if (imageGuid && hasChanged) {
+                console.log('_updateImageEntityReference');
+
+                this._onBeforeImageEntityChange();
+                this._imageEntity = this.system.app.root.findByGuid(imageGuid);
+                this._onAfterImageEntityChange();
             }
         },
 
@@ -122,13 +120,6 @@ pc.extend(pc, function () {
             }
         },
 
-        _onElementComponentAdd: function(entity) {
-            if (this._imageEntity === entity) {
-                console.log('_onElementComponentAdd');
-                this._onAfterImageEntityChange();
-            }
-        },
-
         _onElementComponentRemove: function(entity) {
             if (this._imageEntity === entity) {
                 console.log('_onElementComponentRemove');
@@ -136,20 +127,35 @@ pc.extend(pc, function () {
             }
         },
 
+        _onElementComponentAdd: function(entity) {
+            if (this._imageEntity === entity) {
+                console.log('_onElementComponentAdd');
+                this._onAfterImageEntityChange();
+            }
+        },
+
         _onBeforeImageEntityChange: function() {
-            this._addOrRemoveImageListeners('off');
+            this._toggleImageListeners('off');
             this._resetToDefaultVisualState(this.transitionMode);
         },
 
         _onAfterImageEntityChange: function() {
-            this._addOrRemoveImageListeners('on');
+            this._toggleImageListeners('on');
             this._storeDefaultTint();
             this._forceReapplyVisualState();
         },
 
-        _addOrRemoveImageListeners: function(onOrOff) {
+        _toggleImageListeners: function(onOrOff) {
             if (this._imageEntity && this._imageEntity.element) {
-                console.log('_addOrRemoveImageListeners YES', onOrOff);
+                console.log('_toggleImageListeners YES', onOrOff);
+
+                var isAdding = (onOrOff === 'on');
+
+                if (isAdding && this._hasImageListeners) {
+                    // TODO Remove or convert to console.warn()
+                    throw new Error('Attempted to add multiple image listeners - this should not happen');
+                    return;
+                }
 
                 this._imageEntity[onOrOff]('destroy', this._onImageEntityDestroy, this);
 
@@ -163,8 +169,10 @@ pc.extend(pc, function () {
                 this._imageEntity.element[onOrOff]('touchstart', this._onEnter, this);
                 this._imageEntity.element[onOrOff]('touchend', this._onTouchEnd, this);
                 this._imageEntity.element[onOrOff]('touchcancel', this._onTouchCancel, this);
+
+                this._hasImageListeners = isAdding;
             } else {
-                console.log('_addOrRemoveImageListeners NO', onOrOff, this._imageEntity, this._imageEntity && this._imageEntity.element);
+                console.log('_toggleImageListeners NO', onOrOff, this._imageEntity, this._imageEntity && this._imageEntity.element);
             }
         },
 
@@ -214,6 +222,8 @@ pc.extend(pc, function () {
             console.log('_onMouseUp');
             this._isPressed = false;
             this._updateVisualState();
+
+            // TODO Add click event
         },
 
         _onTouchStart: function() {
@@ -226,6 +236,8 @@ pc.extend(pc, function () {
             console.log('_onTouchEnd');
             this._isPressed = false;
             this._updateVisualState();
+
+            // TODO Add click event
         },
 
         _onTouchCancel: function() {
@@ -238,14 +250,17 @@ pc.extend(pc, function () {
             var oldVisualState = this._visualState;
             var newVisualState = this._determineVisualState();
 
-            if (oldVisualState !== newVisualState || force) {
+            if ((oldVisualState !== newVisualState || force) && this.enabled) {
                 this._visualState = newVisualState;
 
                 console.log('_updateVisualState', oldVisualState, '->', newVisualState);
 
                 switch (this.transitionMode) {
                     case pc.BUTTON_TRANSITION_MODE_TINT:
-                        this._applyTint();
+                        var tintName = STATES_TO_TINT_NAMES[this._visualState];
+                        console.log('_updateVisualState tintName:', tintName, this.data[tintName]);
+                        var tintColor = this[tintName];
+                        this._applyTint(tintColor, false);
                         break;
 
                     case pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE:
@@ -268,8 +283,7 @@ pc.extend(pc, function () {
             if (this._imageEntity && this._imageEntity.element) {
                 switch (transitionMode) {
                     case pc.BUTTON_TRANSITION_MODE_TINT:
-                        this._imageEntity.element.color = toColor3(this._defaultTint);
-                        this._imageEntity.element.opacity = this._defaultTint.a;
+                        this._applyTint(this._defaultTint, true);
                         break;
 
                     case pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE:
@@ -291,23 +305,41 @@ pc.extend(pc, function () {
             return VisualState.DEFAULT;
         },
 
-        _applyTint: function() {
-            var tintName = STATES_TO_TINT_NAMES[this._visualState];
-            var tintColor = this[tintName];
-
-            if (this._imageEntity && this._imageEntity.element) {
+        _applyTint: function(tintColor, applyImmediately) {
+            if (this._imageEntity && this._imageEntity.element && tintColor) {
                 console.log('_applyTint', tintColor.data);
 
-                // TODO Animate
-                this._isApplyingTint = true;
-                this._imageEntity.element.color = toColor3(tintColor);
-                this._imageEntity.element.opacity = tintColor.a;
-                this._isApplyingTint = false;
+                if (applyImmediately) {
+                    this._isApplyingTint = true;
+                    this._imageEntity.element.color = toColor3(tintColor);
+                    this._imageEntity.element.opacity = tintColor.a;
+                    this._isApplyingTint = false;
+                } else {
+                    // TODO Animate
+                    this._isApplyingTint = true;
+                    this._imageEntity.element.color = toColor3(tintColor);
+                    this._imageEntity.element.opacity = tintColor.a;
+                    this._isApplyingTint = false;
+                }
             }
         },
 
+        onEnable: function () {
+            console.log('onEnable');
+            this._updateImageEntityReference();
+            this._forceReapplyVisualState();
+        },
+
+        onDisable: function () {
+            console.log('onDisable');
+            this._resetToDefaultVisualState(this.transitionMode);
+            this._toggleImageListeners('off');
+        },
+
         onRemove: function () {
-            this._addOrRemoveLifecycleListeners('off', this.system);
+            console.log('onRemove');
+            this.onDisable();
+            this._toggleLifecycleListeners('off', this.system);
         }
     });
 
