@@ -17,20 +17,19 @@ pc.extend(pc, function () {
      * <ul>
      *     <li>{@link pc.FITTING_NONE}: Child elements will be rendered at their natural size.</li>
      *     <li>
-     *         {@link pc.FITTING_STRETCH}: When the natural size of all child elements is not sufficient to fill the width of the container, children will be stretched to fit. The rules for how each child will be stretched are outlined below:
+     *         {@link pc.FITTING_STRETCH}: When the natural size of all child elements does not fill the width of the container, children will be stretched to fit. The rules for how each child will be stretched are outlined below:
      *         <ol>
      *            <li>Sum the {@link pc.LayoutChildComponent#fitWidthProportion} values of each child and normalize so that all values sum to 1.</li>
-     *            <li>Apply the {@link pc.LayoutChildComponent#minWidth} for each child.</li>
-     *            <li>If there is space remaining in the container, apply the natural {@link pc.LayoutChildComponent#width} of each child.</li>
-     *            <li>If the new total width exceeds the available space of the container, reduce each child's width proportionally based on the normalized {@link pc.LayoutChildComponent#fitWidthProportion} values.</li>
+     *            <li>Apply the natural width of each child.</li>
      *            <li>If there is space remaining in the container, distribute it to each child based on the normalized {@link pc.LayoutChildComponent#fitWidthProportion} values, but do not exceed the {@link pc.LayoutChildComponent#maxWidth} of each child.</li>
      *         </ol>
      *     </li>
      *     <li>
-     *         {@link pc.FITTING_SHRINK}: When the natural size of all child elements overflows the width of the container, children will be shrunk to fit. The rules for how each child will be stretched are outlined below.
+     *         {@link pc.FITTING_SHRINK}: When the natural size of all child elements overflows the width of the container, children will be shrunk to fit. The rules for how each child will be stretched are outlined below:
      *         <ol>
      *            <li>Sum the {@link pc.LayoutChildComponent#fitWidthProportion} values of each child and normalize so that all values sum to 1.</li>
-     *            <li>Reduce each child's {@link pc.LayoutChildComponent#width} proportionally based on the normalized {@link pc.LayoutChildComponent#fitWidthProportion} values, but do not exceed the {@link pc.LayoutChildComponent#minWidth} of each child.</li>
+     *            <li>Apply the natural width of each child.</li>
+     *            <li>If the new total width of all children exceeds the available space of the container, reduce each child's width proportionally based on the normalized {@link pc.LayoutChildComponent#fitWidthProportion} values, but do not exceed the {@link pc.LayoutChildComponent#minWidth} of each child.</li>
      *         </ol>
      *     </li>
      *     <li>{@link pc.FITTING_BOTH}: Applies both STRETCH and SHRINK logic as necessary.</li>
