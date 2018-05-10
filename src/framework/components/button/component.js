@@ -84,14 +84,12 @@ pc.extend(pc, function () {
 
         _onSetActive: function(name, oldValue, newValue) {
             if (oldValue !== newValue) {
-                console.log('_onSetActive');
                 this._updateVisualState();
             }
         },
 
         _onSetTransitionMode: function(name, oldValue, newValue) {
             if (oldValue !== newValue) {
-                console.log('_onSetTransitionMode');
                 this._resetToDefaultVisualState(oldValue);
                 this._forceReapplyVisualState();
             }
@@ -99,7 +97,6 @@ pc.extend(pc, function () {
 
         _onSetTransitionValue: function(name, oldValue, newValue) {
             if (oldValue !== newValue) {
-                console.log('_onSetTransitionValue', name, newValue && newValue.data);
                 this._forceReapplyVisualState();
             }
         },
@@ -124,8 +121,6 @@ pc.extend(pc, function () {
             var hasChanged = !this._imageEntity || this._imageEntity.getGuid() !== imageGuid;
 
             if (imageGuid && hasChanged) {
-                console.log('_updateImageEntityReference');
-
                 this._onBeforeImageEntityChange();
                 this._imageEntity = this.system.app.root.findByGuid(imageGuid);
                 this._onAfterImageEntityChange();
@@ -134,7 +129,6 @@ pc.extend(pc, function () {
 
         _onImageEntityDestroy: function(entity) {
             if (this._imageEntity === entity) {
-                console.log('_onImageEntityDestroy');
                 this._onBeforeImageEntityChange();
                 this._imageEntity = null;
             }
@@ -142,14 +136,12 @@ pc.extend(pc, function () {
 
         _onElementComponentRemove: function(entity) {
             if (this._imageEntity === entity) {
-                console.log('_onElementComponentRemove');
                 this._onBeforeImageEntityChange();
             }
         },
 
         _onElementComponentAdd: function(entity) {
             if (this._imageEntity === entity) {
-                console.log('_onElementComponentAdd');
                 this._onAfterImageEntityChange();
             }
         },
@@ -167,18 +159,14 @@ pc.extend(pc, function () {
 
         _toggleImageListeners: function(onOrOff) {
             if (this._imageEntity && this._imageEntity.element) {
-                console.log('_toggleImageListeners YES', onOrOff);
-
                 var isAdding = (onOrOff === 'on');
 
                 if (isAdding && this._hasImageListeners) {
-                    // TODO Remove or convert to console.warn()
-                    throw new Error('Attempted to add multiple image listeners - this should not happen');
+                    console.warn('Attempted to add multiple image listeners - this should not happen');
                     return;
                 }
 
                 this._imageEntity[onOrOff]('destroy', this._onImageEntityDestroy, this);
-
                 this._imageEntity.element[onOrOff]('set:color', this._onSetColor, this);
                 this._imageEntity.element[onOrOff]('set:opacity', this._onSetOpacity, this);
                 this._imageEntity.element[onOrOff]('set:spriteAsset', this._onSetSpriteAsset, this);
@@ -187,15 +175,12 @@ pc.extend(pc, function () {
                 this._imageEntity.element[onOrOff]('mouseleave', this._onMouseLeave, this);
                 this._imageEntity.element[onOrOff]('mousedown', this._onMouseDown, this);
                 this._imageEntity.element[onOrOff]('mouseup', this._onMouseUp, this);
-                // TODO Test touch events on phone
                 this._imageEntity.element[onOrOff]('touchstart', this._onTouchStart, this);
                 this._imageEntity.element[onOrOff]('touchend', this._onTouchEnd, this);
                 this._imageEntity.element[onOrOff]('touchcancel', this._onTouchCancel, this);
                 this._imageEntity.element[onOrOff]('click', this._onClick, this);
 
                 this._hasImageListeners = isAdding;
-            } else {
-                console.log('_toggleImageListeners NO', onOrOff, this._imageEntity, this._imageEntity && this._imageEntity.element);
             }
         },
 
@@ -210,7 +195,6 @@ pc.extend(pc, function () {
 
         _onSetColor: function(color) {
             if (!this._isApplyingTint) {
-                console.log('_onSetColor', color.data);
                 this._defaultTint.r = color.r;
                 this._defaultTint.g = color.g;
                 this._defaultTint.b = color.b;
@@ -220,7 +204,6 @@ pc.extend(pc, function () {
 
         _onSetOpacity: function(opacity) {
             if (!this._isApplyingTint) {
-                console.log('_onSetOpacity', opacity);
                 this._defaultTint.a = opacity;
                 this._forceReapplyVisualState();
             }
@@ -228,7 +211,6 @@ pc.extend(pc, function () {
 
         _onSetSpriteAsset: function(spriteAsset) {
             if (!this._isApplyingSprite) {
-                console.log('_onSetSpriteAsset', spriteAsset);
                 this._defaultSpriteAsset = spriteAsset;
                 this._forceReapplyVisualState();
             }
@@ -236,7 +218,6 @@ pc.extend(pc, function () {
 
         _onSetSpriteFrame: function(spriteFrame) {
             if (!this._isApplyingSprite) {
-                console.log('_onSetSpriteFrame', spriteFrame);
                 this._defaultSpriteFrame = spriteFrame;
                 this._forceReapplyVisualState();
             }
@@ -303,8 +284,6 @@ pc.extend(pc, function () {
             if ((oldVisualState !== newVisualState || force) && this.enabled) {
                 this._visualState = newVisualState;
 
-                console.log('_updateVisualState', oldVisualState, '->', newVisualState);
-
                 switch (this.transitionMode) {
                     case pc.BUTTON_TRANSITION_MODE_TINT:
                         var tintName = STATES_TO_TINT_NAMES[this._visualState];
@@ -317,8 +296,6 @@ pc.extend(pc, function () {
                         var spriteFrameName = STATES_TO_SPRITE_FRAME_NAMES[this._visualState];
                         var spriteAsset = this[spriteAssetName];
                         var spriteFrame = this[spriteFrameName];
-                        console.log('_updateVisualState spriteAssetName:', spriteAssetName);
-                        console.log('_updateVisualState spriteFrameName:', spriteFrameName);
                         this._applySprite(spriteAsset, spriteFrame);
                         break;
                 }
@@ -365,15 +342,13 @@ pc.extend(pc, function () {
 
         _applyTint: function(tintColor, applyImmediately) {
             if (this._imageEntity && this._imageEntity.element && tintColor) {
-                console.log('_applyTint', tintColor.data);
-
-                if (applyImmediately) {
+                if (applyImmediately || this.fadeDuration === 0) {
                     this._isApplyingTint = true;
                     this._imageEntity.element.color = toColor3(tintColor);
                     this._imageEntity.element.opacity = tintColor.a;
                     this._isApplyingTint = false;
                 } else {
-                    // TODO Animate
+                    // TODO Implement tweening
                     this._isApplyingTint = true;
                     this._imageEntity.element.color = toColor3(tintColor);
                     this._imageEntity.element.opacity = tintColor.a;
@@ -386,8 +361,6 @@ pc.extend(pc, function () {
             spriteFrame = spriteFrame || 0;
 
             if (this._imageEntity && this._imageEntity.element) {
-                console.log('_applySprite', spriteAsset, spriteFrame);
-
                 this._isApplyingSprite = true;
                 this._imageEntity.element.spriteAsset = spriteAsset;
                 this._imageEntity.element.spriteFrame = spriteFrame;
@@ -396,19 +369,16 @@ pc.extend(pc, function () {
         },
 
         onEnable: function () {
-            console.log('onEnable');
             this._updateImageEntityReference();
             this._forceReapplyVisualState();
         },
 
         onDisable: function () {
-            console.log('onDisable');
             this._resetToDefaultVisualState(this.transitionMode);
             this._toggleImageListeners('off');
         },
 
         onRemove: function () {
-            console.log('onRemove');
             this.onDisable();
             this._toggleLifecycleListeners('off', this.system);
         }
