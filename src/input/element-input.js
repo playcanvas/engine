@@ -390,6 +390,8 @@ pc.extend(pc, function () {
                 if (element) {
                     this._fireEvent(event.type, new ElementTouchEvent(event, element, this));
                 }
+
+                // TODO Need to implement touchleave here
             }
         },
 
