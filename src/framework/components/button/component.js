@@ -12,11 +12,17 @@ pc.extend(pc, function () {
     STATES_TO_TINT_NAMES[VisualState.PRESSED] = 'pressedTint';
     STATES_TO_TINT_NAMES[VisualState.INACTIVE] = 'inactiveTint';
 
-    var STATES_TO_SPRITE_NAMES = {};
-    STATES_TO_SPRITE_NAMES[VisualState.DEFAULT] = '_defaultSprite';
-    STATES_TO_SPRITE_NAMES[VisualState.HOVER] = 'hoverAsset';
-    STATES_TO_SPRITE_NAMES[VisualState.PRESSED] = 'pressedAsset';
-    STATES_TO_SPRITE_NAMES[VisualState.INACTIVE] = 'inactiveAsset';
+    var STATES_TO_SPRITE_ASSET_NAMES = {};
+    STATES_TO_SPRITE_ASSET_NAMES[VisualState.DEFAULT] = '_defaultSpriteAsset';
+    STATES_TO_SPRITE_ASSET_NAMES[VisualState.HOVER] = 'hoverSpriteAsset';
+    STATES_TO_SPRITE_ASSET_NAMES[VisualState.PRESSED] = 'pressedSpriteAsset';
+    STATES_TO_SPRITE_ASSET_NAMES[VisualState.INACTIVE] = 'inactiveSpriteAsset';
+
+    var STATES_TO_SPRITE_FRAME_NAMES = {};
+    STATES_TO_SPRITE_FRAME_NAMES[VisualState.DEFAULT] = '_defaultSpriteFrame';
+    STATES_TO_SPRITE_FRAME_NAMES[VisualState.HOVER] = 'hoverSpriteFrame';
+    STATES_TO_SPRITE_FRAME_NAMES[VisualState.PRESSED] = 'pressedSpriteFrame';
+    STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
 
     /**
      * @component
@@ -34,9 +40,12 @@ pc.extend(pc, function () {
      * @property {pc.Vec4} pressedTint Color to be used on the button image when the user presses it.
      * @property {pc.Vec4} inactiveTint Color to be used on the button image when the button is not interactive.
      * @property {Number} fadeDuration Duration to be used when fading between tints, in milliseconds.
-     * @property {pc.Asset} hoverAsset Sprite to be used as the button image when the user hovers over it.
-     * @property {pc.Asset} pressedAsset Sprite to be used as the button image when the user presses it.
-     * @property {pc.Asset} inactiveAsset Sprite to be used as the button image when the button is not interactive.
+     * @property {pc.Asset} hoverSpriteAsset Sprite to be used as the button image when the user hovers over it.
+     * @property {Number} hoverSpriteFrame Frame to be used from the hover sprite.
+     * @property {pc.Asset} pressedSpriteAsset Sprite to be used as the button image when the user presses it.
+     * @property {Number} pressedSpriteFrame Frame to be used from the pressed sprite.
+     * @property {pc.Asset} inactiveSpriteAsset Sprite to be used as the button image when the button is not interactive.
+     * @property {Number} inactiveSpriteFrame Frame to be used from the inactive sprite.
      */
     var ButtonComponent = function ButtonComponent(system, entity) {
         this._visualState = VisualState.DEFAULT;
@@ -45,7 +54,8 @@ pc.extend(pc, function () {
         this._imageEntity = null;
 
         this._defaultTint = new pc.Color(1, 1, 1, 1);
-        this._defaultSprite = null;
+        this._defaultSpriteAsset = null;
+        this._defaultSpriteFrame = 0;
 
         this._toggleLifecycleListeners('on', system);
     };
@@ -58,9 +68,12 @@ pc.extend(pc, function () {
             this.on('set_hoverTint', this._onSetTransitionValue, this);
             this.on('set_pressedTint', this._onSetTransitionValue, this);
             this.on('set_inactiveTint', this._onSetTransitionValue, this);
-            this.on('set_hoverAsset', this._onSetTransitionValue, this);
-            this.on('set_pressedAsset', this._onSetTransitionValue, this);
-            this.on('set_inactiveAsset', this._onSetTransitionValue, this);
+            this.on('set_hoverSpriteAsset', this._onSetTransitionValue, this);
+            this.on('set_hoverSpriteFrame', this._onSetTransitionValue, this);
+            this.on('set_pressedSpriteAsset', this._onSetTransitionValue, this);
+            this.on('set_pressedSpriteFrame', this._onSetTransitionValue, this);
+            this.on('set_inactiveSpriteAsset', this._onSetTransitionValue, this);
+            this.on('set_inactiveSpriteFrame', this._onSetTransitionValue, this);
             this.on('set_imageEntity', this._onSetImageEntity, this);
 
             pc.ComponentSystem.on('postInitialize', this._onPostInitialize, this);
@@ -169,6 +182,7 @@ pc.extend(pc, function () {
                 this._imageEntity.element[onOrOff]('set:color', this._onSetColor, this);
                 this._imageEntity.element[onOrOff]('set:opacity', this._onSetOpacity, this);
                 this._imageEntity.element[onOrOff]('set:spriteAsset', this._onSetSpriteAsset, this);
+                this._imageEntity.element[onOrOff]('set:spriteFrame', this._onSetSpriteFrame, this);
                 this._imageEntity.element[onOrOff]('mouseenter', this._onMouseEnter, this);
                 this._imageEntity.element[onOrOff]('mouseleave', this._onMouseLeave, this);
                 this._imageEntity.element[onOrOff]('mousedown', this._onMouseDown, this);
@@ -189,29 +203,41 @@ pc.extend(pc, function () {
                 this._onSetColor(this._imageEntity.element.color);
                 this._onSetOpacity(this._imageEntity.element.opacity);
                 this._onSetSpriteAsset(this._imageEntity.element.spriteAsset);
+                this._onSetSpriteFrame(this._imageEntity.element.spriteFrame);
             }
         },
 
         _onSetColor: function(color) {
             if (!this._isApplyingTint) {
-                console.log('_onSetColor');
+                console.log('_onSetColor', color.data);
                 this._defaultTint.r = color.r;
                 this._defaultTint.g = color.g;
                 this._defaultTint.b = color.b;
+                this._forceReapplyVisualState();
             }
         },
 
         _onSetOpacity: function(opacity) {
             if (!this._isApplyingTint) {
-                console.log('_onSetOpacity');
+                console.log('_onSetOpacity', opacity);
                 this._defaultTint.a = opacity;
+                this._forceReapplyVisualState();
             }
         },
 
         _onSetSpriteAsset: function(spriteAsset) {
             if (!this._isApplyingSprite) {
-                console.log('_onSetSpriteAsset');
-                this._defaultSprite = spriteAsset;
+                console.log('_onSetSpriteAsset', spriteAsset);
+                this._defaultSpriteAsset = spriteAsset;
+                this._forceReapplyVisualState();
+            }
+        },
+
+        _onSetSpriteFrame: function(spriteFrame) {
+            if (!this._isApplyingSprite) {
+                console.log('_onSetSpriteFrame', spriteFrame);
+                this._defaultSpriteFrame = spriteFrame;
+                this._forceReapplyVisualState();
             }
         },
 
@@ -279,11 +305,13 @@ pc.extend(pc, function () {
                         break;
 
                     case pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE:
-                        var spriteName = STATES_TO_SPRITE_NAMES[this._visualState];
-                        var spriteAsset = this[spriteName];
-                        console.log('_updateVisualState spriteName:', spriteName);
-                        console.log('_updateVisualState spriteAsset:', spriteAsset);
-                        this._applySprite(spriteAsset);
+                        var spriteAssetName = STATES_TO_SPRITE_ASSET_NAMES[this._visualState];
+                        var spriteFrameName = STATES_TO_SPRITE_FRAME_NAMES[this._visualState];
+                        var spriteAsset = this[spriteAssetName];
+                        var spriteFrame = this[spriteFrameName];
+                        console.log('_updateVisualState spriteAssetName:', spriteAssetName);
+                        console.log('_updateVisualState spriteFrameName:', spriteFrameName);
+                        this._applySprite(spriteAsset, spriteFrame);
                         break;
                 }
             }
@@ -293,7 +321,9 @@ pc.extend(pc, function () {
         // even if the state enum has not changed. Examples of this are when the tint
         // value for one of the states is changed via the editor.
         _forceReapplyVisualState: function() {
-            this._updateVisualState(true);
+            if (this._visualState !== VisualState.DEFAULT) {
+                this._updateVisualState(true);
+            }
         },
 
         // Called before the image entity changes, in order to restore the previous
@@ -307,7 +337,7 @@ pc.extend(pc, function () {
                         break;
 
                     case pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE:
-                        this._applySprite(this._defaultSprite);
+                        this._applySprite(this._defaultSpriteAsset, this._defaultSpriteFrame);
                         break;
                 }
             }
@@ -344,12 +374,15 @@ pc.extend(pc, function () {
             }
         },
 
-        _applySprite: function(spriteAsset) {
-            if (this._imageEntity && this._imageEntity.element && spriteAsset) {
-                console.log('_applySprite', spriteAsset);
+        _applySprite: function(spriteAsset, spriteFrame) {
+            spriteFrame = spriteFrame || 0;
+
+            if (this._imageEntity && this._imageEntity.element) {
+                console.log('_applySprite', spriteAsset, spriteFrame);
 
                 this._isApplyingSprite = true;
                 this._imageEntity.element.spriteAsset = spriteAsset;
+                this._imageEntity.element.spriteFrame = spriteFrame;
                 this._isApplyingSprite = false;
             }
         },

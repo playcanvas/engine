@@ -9,9 +9,12 @@ pc.extend(pc, function () {
         { name: 'pressedTint', type: 'rgba' },
         { name: 'inactiveTint', type: 'rgba' },
         'fadeDuration',
-        'hoverAsset',
-        'pressedAsset',
-        'inactiveAsset'
+        'hoverSpriteAsset',
+        'hoverSpriteFrame',
+        'pressedSpriteAsset',
+        'pressedSpriteFrame',
+        'inactiveSpriteAsset',
+        'inactiveSpriteFrame'
     ];
 
     /**

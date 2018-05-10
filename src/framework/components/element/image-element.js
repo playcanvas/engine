@@ -785,7 +785,7 @@ pc.extend(pc, function () {
                 }
 
                 if (this._element && this._element.fire) {
-                    this._element.fire('set:spriteAsset', this._spriteAsset);
+                    this._element.fire('set:spriteAsset', _id);
                 }
             }
         }
@@ -858,6 +858,10 @@ pc.extend(pc, function () {
 
             if (this.mesh) {
                 this._updateMesh(this.mesh);
+            }
+
+            if (this._element && this._element.fire) {
+                this._element.fire('set:spriteFrame', value);
             }
         }
     });
