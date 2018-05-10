@@ -783,6 +783,10 @@ pc.extend(pc, function () {
                 } else {
                     this.sprite = null;
                 }
+
+                if (this._element && this._element.fire) {
+                    this._element.fire('set:spriteAsset', this._spriteAsset);
+                }
             }
         }
     });

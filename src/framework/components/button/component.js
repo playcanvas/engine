@@ -12,6 +12,12 @@ pc.extend(pc, function () {
     STATES_TO_TINT_NAMES[VisualState.PRESSED] = 'pressedTint';
     STATES_TO_TINT_NAMES[VisualState.INACTIVE] = 'inactiveTint';
 
+    var STATES_TO_SPRITE_NAMES = {};
+    STATES_TO_SPRITE_NAMES[VisualState.DEFAULT] = '_defaultSprite';
+    STATES_TO_SPRITE_NAMES[VisualState.HOVER] = 'hoverAsset';
+    STATES_TO_SPRITE_NAMES[VisualState.PRESSED] = 'pressedAsset';
+    STATES_TO_SPRITE_NAMES[VisualState.INACTIVE] = 'inactiveAsset';
+
     /**
      * @component
      * @name pc.ButtonComponent
@@ -39,6 +45,7 @@ pc.extend(pc, function () {
         this._imageEntity = null;
 
         this._defaultTint = new pc.Color(1, 1, 1, 1);
+        this._defaultSprite = null;
 
         this._toggleLifecycleListeners('on', system);
     };
@@ -51,9 +58,9 @@ pc.extend(pc, function () {
             this.on('set_hoverTint', this._onSetTransitionValue, this);
             this.on('set_pressedTint', this._onSetTransitionValue, this);
             this.on('set_inactiveTint', this._onSetTransitionValue, this);
-            this.on('set_hoverSprite', this._onSetTransitionValue, this);
-            this.on('set_pressedSprite', this._onSetTransitionValue, this);
-            this.on('set_inactiveSprite', this._onSetTransitionValue, this);
+            this.on('set_hoverAsset', this._onSetTransitionValue, this);
+            this.on('set_pressedAsset', this._onSetTransitionValue, this);
+            this.on('set_inactiveAsset', this._onSetTransitionValue, this);
             this.on('set_imageEntity', this._onSetImageEntity, this);
 
             pc.ComponentSystem.on('postInitialize', this._onPostInitialize, this);
@@ -141,7 +148,7 @@ pc.extend(pc, function () {
 
         _onAfterImageEntityChange: function() {
             this._toggleImageListeners('on');
-            this._storeDefaultTint();
+            this._storeDefaultVisualState();
             this._forceReapplyVisualState();
         },
 
@@ -161,6 +168,7 @@ pc.extend(pc, function () {
 
                 this._imageEntity.element[onOrOff]('set:color', this._onSetColor, this);
                 this._imageEntity.element[onOrOff]('set:opacity', this._onSetOpacity, this);
+                this._imageEntity.element[onOrOff]('set:spriteAsset', this._onSetSpriteAsset, this);
                 this._imageEntity.element[onOrOff]('mouseenter', this._onMouseEnter, this);
                 this._imageEntity.element[onOrOff]('mouseleave', this._onMouseLeave, this);
                 this._imageEntity.element[onOrOff]('mousedown', this._onMouseDown, this);
@@ -176,10 +184,11 @@ pc.extend(pc, function () {
             }
         },
 
-        _storeDefaultTint: function() {
+        _storeDefaultVisualState: function() {
             if (this._imageEntity && this._imageEntity.element) {
                 this._onSetColor(this._imageEntity.element.color);
                 this._onSetOpacity(this._imageEntity.element.opacity);
+                this._onSetSpriteAsset(this._imageEntity.element.spriteAsset);
             }
         },
 
@@ -196,6 +205,13 @@ pc.extend(pc, function () {
             if (!this._isApplyingTint) {
                 console.log('_onSetOpacity');
                 this._defaultTint.a = opacity;
+            }
+        },
+
+        _onSetSpriteAsset: function(spriteAsset) {
+            if (!this._isApplyingSprite) {
+                console.log('_onSetSpriteAsset');
+                this._defaultSprite = spriteAsset;
             }
         },
 
@@ -258,13 +274,17 @@ pc.extend(pc, function () {
                 switch (this.transitionMode) {
                     case pc.BUTTON_TRANSITION_MODE_TINT:
                         var tintName = STATES_TO_TINT_NAMES[this._visualState];
-                        console.log('_updateVisualState tintName:', tintName, this.data[tintName]);
                         var tintColor = this[tintName];
                         this._applyTint(tintColor, false);
                         break;
 
                     case pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE:
-                        throw new Error('Not yet implemented');
+                        var spriteName = STATES_TO_SPRITE_NAMES[this._visualState];
+                        var spriteAsset = this[spriteName];
+                        console.log('_updateVisualState spriteName:', spriteName);
+                        console.log('_updateVisualState spriteAsset:', spriteAsset);
+                        this._applySprite(spriteAsset);
+                        break;
                 }
             }
         },
@@ -287,7 +307,7 @@ pc.extend(pc, function () {
                         break;
 
                     case pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE:
-                        throw new Error('Not yet implemented');
+                        this._applySprite(this._defaultSprite);
                         break;
                 }
             }
@@ -321,6 +341,16 @@ pc.extend(pc, function () {
                     this._imageEntity.element.opacity = tintColor.a;
                     this._isApplyingTint = false;
                 }
+            }
+        },
+
+        _applySprite: function(spriteAsset) {
+            if (this._imageEntity && this._imageEntity.element && spriteAsset) {
+                console.log('_applySprite', spriteAsset);
+
+                this._isApplyingSprite = true;
+                this._imageEntity.element.spriteAsset = spriteAsset;
+                this._isApplyingSprite = false;
             }
         },
 
