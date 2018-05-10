@@ -188,9 +188,10 @@ pc.extend(pc, function () {
                 this._imageEntity.element[onOrOff]('mousedown', this._onMouseDown, this);
                 this._imageEntity.element[onOrOff]('mouseup', this._onMouseUp, this);
                 // TODO Test touch events on phone
-                this._imageEntity.element[onOrOff]('touchstart', this._onEnter, this);
+                this._imageEntity.element[onOrOff]('touchstart', this._onTouchStart, this);
                 this._imageEntity.element[onOrOff]('touchend', this._onTouchEnd, this);
                 this._imageEntity.element[onOrOff]('touchcancel', this._onTouchCancel, this);
+                this._imageEntity.element[onOrOff]('click', this._onClick, this);
 
                 this._hasImageListeners = isAdding;
             } else {
@@ -241,51 +242,58 @@ pc.extend(pc, function () {
             }
         },
 
-        _onMouseEnter: function() {
-            console.log('_onMouseEnter');
+        _onMouseEnter: function(event) {
             this._isHovering = true;
+
             this._updateVisualState();
+            this.fire('mouseenter', event);
         },
 
-        _onMouseLeave: function() {
-            console.log('_onMouseLeave');
+        _onMouseLeave: function(event) {
             this._isHovering = false;
             this._isPressed = false;
+
             this._updateVisualState();
+            this.fire('mouseleave', event);
         },
 
-        _onMouseDown: function() {
-            console.log('_onMouseDown');
+        _onMouseDown: function(event) {
             this._isPressed = true;
+
             this._updateVisualState();
+            this.fire('mousedown', event);
         },
 
-        _onMouseUp: function() {
-            console.log('_onMouseUp');
+        _onMouseUp: function(event) {
             this._isPressed = false;
-            this._updateVisualState();
 
-            // TODO Add click event
+            this._updateVisualState();
+            this.fire('mouseup', event);
         },
 
-        _onTouchStart: function() {
-            console.log('_onTouchStart');
+        _onTouchStart: function(event) {
             this._isPressed = true;
+
             this._updateVisualState();
+            this.fire('touchstart', event);
         },
 
-        _onTouchEnd: function() {
-            console.log('_onTouchEnd');
+        _onTouchEnd: function(event) {
             this._isPressed = false;
-            this._updateVisualState();
 
-            // TODO Add click event
+            this._updateVisualState();
+            this.fire('touchend', event);
         },
 
-        _onTouchCancel: function() {
-            console.log('_onTouchCancel');
+        _onTouchCancel: function(event) {
             this._isPressed = false;
+
             this._updateVisualState();
+            this.fire('touchcancel', event);
+        },
+
+        _onClick: function(event) {
+            this.fire('click', event);
         },
 
         _updateVisualState: function(force) {
