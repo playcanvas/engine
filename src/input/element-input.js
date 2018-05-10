@@ -11,6 +11,8 @@ pc.extend(pc, function () {
     var _m = new pc.Vec3();
     var _sct = new pc.Vec3();
 
+    var ZERO_VEC4 = new pc.Vec4();
+
     // pi x p2 * p3
     var scalarTriple = function (p1, p2, p3) {
         return _sct.cross(p1, p2).dot(p3);
@@ -552,6 +554,47 @@ pc.extend(pc, function () {
             return result;
         },
 
+        // In most cases the corners used for hit testing will just be the element's
+        // screen corners. However, in cases where the element has additional hit
+        // padding specified, we need to expand the screenCorners to incorporate the
+        // padding.
+        _buildHitCorners: function(element) {
+            var hitCorners = element.screenCorners;
+            var button = element.entity && element.entity.button;
+            var screen = element.screen && element.screen.screen;
+
+            if (button && screen) {
+                var hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
+                var scale = screen.screenSpace ? screen.scale : 1;
+
+                var paddingLeft = hitPadding.data[0] * scale;
+                var paddingBottom = hitPadding.data[1] * scale;
+                var paddingRight = hitPadding.data[2] * scale;
+                var paddingTop = hitPadding.data[3] * scale;
+
+                var cornerBottomLeft = new pc.Vec3(hitCorners[0].data);
+                var cornerBottomRight = new pc.Vec3(hitCorners[1].data);
+                var cornerTopRight = new pc.Vec3(hitCorners[2].data);
+                var cornerTopLeft = new pc.Vec3(hitCorners[3].data);
+
+                cornerBottomLeft.x -= paddingLeft;
+                cornerBottomLeft.y -= paddingBottom;
+
+                cornerBottomRight.x += paddingRight;
+                cornerBottomRight.y -= paddingBottom;
+
+                cornerTopRight.x += paddingRight;
+                cornerTopRight.y += paddingTop;
+
+                cornerTopLeft.x -= paddingLeft;
+                cornerTopLeft.y += paddingTop;
+
+                hitCorners = [cornerBottomLeft, cornerBottomRight, cornerTopRight, cornerTopLeft];
+            }
+
+            return hitCorners;
+        },
+
         _checkElement2d: function (x, y, element, camera) {
             var sw = this.app.graphicsDevice.width;
             var sh = this.app.graphicsDevice.height;
@@ -578,11 +621,11 @@ pc.extend(pc, function () {
                 // reverse _y
                 _y = sh - _y;
 
-                var screenCorners = element.screenCorners;
+                var hitCorners = this._buildHitCorners(element);
                 vecA.set(_x, _y, 1);
                 vecB.set(_x, _y, -1);
 
-                if (intersectLineQuad(vecA, vecB, screenCorners)) {
+                if (intersectLineQuad(vecA, vecB, hitCorners)) {
                     return true;
                 }
             }
@@ -614,6 +657,8 @@ pc.extend(pc, function () {
                 _y = sh * (_y - (cameraTop)) / cameraHeight;
 
                 // 3D screen
+                // TODO Should we also apply hit padding here? I wasn't sure whether UI
+                //      features such as buttons are intended to be used in 3D or not.
                 var worldCorners = element.worldCorners;
                 var start = vecA;
                 var end = vecB;
