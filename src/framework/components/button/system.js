@@ -46,14 +46,6 @@ pc.extend(pc, function () {
             ButtonComponentSystem._super.initializeComponentData.call(this, component, data, _schema);
         },
 
-        cloneComponent: function (entity, clone) {
-            // TODO Need to resolve imageEntity and textEntity references here (or on some
-            //      sort of post-clone callback) so that they are correctly resolved to the
-            //      corresponding newly-created image and text entities.
-
-            return ButtonComponentSystem._super.cloneComponent(entity, clone);
-        },
-
         _onRemoveComponent: function (entity, component) {
             component.onRemove();
         }
