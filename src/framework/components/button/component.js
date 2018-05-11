@@ -63,23 +63,23 @@ pc.extend(pc, function () {
 
     pc.extend(ButtonComponent.prototype, {
         _toggleLifecycleListeners: function(onOrOff, system) {
-            this.on('set_active', this._onSetActive, this);
-            this.on('set_transitionMode', this._onSetTransitionMode, this);
-            this.on('set_hoverTint', this._onSetTransitionValue, this);
-            this.on('set_pressedTint', this._onSetTransitionValue, this);
-            this.on('set_inactiveTint', this._onSetTransitionValue, this);
-            this.on('set_hoverSpriteAsset', this._onSetTransitionValue, this);
-            this.on('set_hoverSpriteFrame', this._onSetTransitionValue, this);
-            this.on('set_pressedSpriteAsset', this._onSetTransitionValue, this);
-            this.on('set_pressedSpriteFrame', this._onSetTransitionValue, this);
-            this.on('set_inactiveSpriteAsset', this._onSetTransitionValue, this);
-            this.on('set_inactiveSpriteFrame', this._onSetTransitionValue, this);
-            this.on('set_imageEntity', this._onSetImageEntity, this);
+            this[onOrOff]('set_active', this._onSetActive, this);
+            this[onOrOff]('set_transitionMode', this._onSetTransitionMode, this);
+            this[onOrOff]('set_hoverTint', this._onSetTransitionValue, this);
+            this[onOrOff]('set_pressedTint', this._onSetTransitionValue, this);
+            this[onOrOff]('set_inactiveTint', this._onSetTransitionValue, this);
+            this[onOrOff]('set_hoverSpriteAsset', this._onSetTransitionValue, this);
+            this[onOrOff]('set_hoverSpriteFrame', this._onSetTransitionValue, this);
+            this[onOrOff]('set_pressedSpriteAsset', this._onSetTransitionValue, this);
+            this[onOrOff]('set_pressedSpriteFrame', this._onSetTransitionValue, this);
+            this[onOrOff]('set_inactiveSpriteAsset', this._onSetTransitionValue, this);
+            this[onOrOff]('set_inactiveSpriteFrame', this._onSetTransitionValue, this);
+            this[onOrOff]('set_imageEntity', this._onSetImageEntity, this);
 
-            pc.ComponentSystem.on('postInitialize', this._onPostInitialize, this);
+            pc.ComponentSystem[onOrOff]('postInitialize', this._onPostInitialize, this);
 
-            system.app.systems.element.on('add', this._onElementComponentAdd, this);
-            system.app.systems.element.on('beforeremove', this._onElementComponentRemove, this);
+            system.app.systems.element[onOrOff]('add', this._onElementComponentAdd, this);
+            system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemoveOrImageEntityDestroy, this);
         },
 
         _onSetActive: function(name, oldValue, newValue) {
@@ -133,16 +133,10 @@ pc.extend(pc, function () {
             }
         },
 
-        _onImageEntityDestroy: function(entity) {
+        _onElementComponentRemoveOrImageEntityDestroy: function(entity) {
             if (this._imageEntity === entity) {
                 this._onBeforeImageEntityChange();
                 this._imageEntity = null;
-            }
-        },
-
-        _onElementComponentRemove: function(entity) {
-            if (this._imageEntity === entity) {
-                this._onBeforeImageEntityChange();
             }
         },
 
@@ -172,7 +166,7 @@ pc.extend(pc, function () {
                     return;
                 }
 
-                this._imageEntity[onOrOff]('destroy', this._onImageEntityDestroy, this);
+                this._imageEntity[onOrOff]('destroy', this._onElementComponentRemoveOrImageEntityDestroy, this);
                 this._imageEntity.element[onOrOff]('set:color', this._onSetColor, this);
                 this._imageEntity.element[onOrOff]('set:opacity', this._onSetOpacity, this);
                 this._imageEntity.element[onOrOff]('set:spriteAsset', this._onSetSpriteAsset, this);
@@ -403,13 +397,13 @@ pc.extend(pc, function () {
         },
 
         onDisable: function () {
-            this._resetToDefaultVisualState(this.transitionMode);
             this._toggleImageListeners('off');
+            this._resetToDefaultVisualState(this.transitionMode);
         },
 
         onRemove: function () {
-            this.onDisable();
             this._toggleLifecycleListeners('off', this.system);
+            this.onDisable();
         }
     });
 
