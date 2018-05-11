@@ -181,6 +181,7 @@ pc.extend(pc, function () {
         this._hoveredElement = null;
         this._pressedElement = null;
         this._touchedElements = {};
+        this._touchesForWhichTouchLeaveHasFired = {};
 
         if ('ontouchstart' in window) {
             this._clickedEntities = {};
@@ -306,7 +307,8 @@ pc.extend(pc, function () {
             this._onElementMouseEvent(event);
         },
 
-        _handleTouchStart: function (event) {
+        _determineTouchedElements: function(event) {
+            var touchedElements = {};
             var cameras = this.app.systems.camera.cameras;
             var i, j, len;
 
@@ -318,7 +320,7 @@ pc.extend(pc, function () {
 
                 var done = 0;
                 for (j = 0, len = event.changedTouches.length; j < len; j++) {
-                    if (this._touchedElements[event.changedTouches[j].identifier]) {
+                    if (touchedElements[event.changedTouches[j].identifier]) {
                         done++;
                         continue;
                     }
@@ -328,8 +330,7 @@ pc.extend(pc, function () {
                     var element = this._getTargetElement(camera, coords.x, coords.y);
                     if (element) {
                         done++;
-                        this._touchedElements[event.changedTouches[j].identifier] = element;
-                        this._fireEvent(event.type, new ElementTouchEvent(event, element, this));
+                        touchedElements[event.changedTouches[j].identifier] = element;
                     }
                 }
 
@@ -337,6 +338,25 @@ pc.extend(pc, function () {
                     break;
                 }
             }
+
+            return touchedElements;
+        },
+
+        _handleTouchStart: function (event) {
+            var newTouchedElements = this._determineTouchedElements(event);
+
+            for (var i = 0, len = event.changedTouches.length; i < len; i++) {
+                var touch = event.changedTouches[i];
+                var newTouchedElement = newTouchedElements[touch.identifier];
+                var oldTouchedElement = this._touchedElements[touch.identifier];
+
+                if (newTouchedElement && newTouchedElement !== oldTouchedElement) {
+                    this._fireEvent(event.type, new ElementTouchEvent(event, newTouchedElement, this));
+                    this._touchesForWhichTouchLeaveHasFired[touch.identifier] = false;
+                }
+            }
+
+            this._touchedElements = newTouchedElements;
         },
 
         _handleTouchEnd: function (event) {
@@ -385,13 +405,27 @@ pc.extend(pc, function () {
             // http://wilsonpage.co.uk/touch-events-in-chrome-android/
             event.preventDefault();
 
+            var newTouchedElements = this._determineTouchedElements(event);
+
             for (var i = 0, len = event.changedTouches.length; i < len; i++) {
-                var element = this._touchedElements[event.changedTouches[i].identifier];
-                if (element) {
-                    this._fireEvent(event.type, new ElementTouchEvent(event, element, this));
+                var touch = event.changedTouches[i];
+                var newTouchedElement = newTouchedElements[touch.identifier];
+                var oldTouchedElement = this._touchedElements[touch.identifier];
+
+                // Fire touchleave if we've left the previously touched element
+                if (newTouchedElement !== oldTouchedElement && !this._touchesForWhichTouchLeaveHasFired[touch.identifier]) {
+                    this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchedElement, this));
+
+                    // Flag that touchleave has been fired for this touch, so that we don't
+                    // re-fire it on the next touchmove. This is required because touchmove
+                    // events keep on firing for the same element until the touch ends, even
+                    // if the touch position moves away from the element. Touchleave, on the
+                    // other hand, should fire once when the touch position moves away from
+                    // the element and then not re-fire again within the same touch session.
+                    this._touchesForWhichTouchLeaveHasFired[touch.identifier] = true;
                 }
 
-                // TODO Need to implement touchleave here
+                this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchedElement, this));
             }
         },
 
