@@ -175,6 +175,10 @@ pc.extend(pc, function () {
     };
 
     function convertValue(value, type) {
+        if (!value) {
+            return value;
+        }
+
         value = (value && value.data) ? value.data : value;
 
         switch (type) {
@@ -188,6 +192,10 @@ pc.extend(pc, function () {
                 return new pc.Vec3(value[0], value[1], value[2]);
             case 'vec4':
                 return new pc.Vec4(value[0], value[1], value[2], value[3]);
+            case 'boolean':
+            case 'number':
+            case 'string':
+                return value;
             default:
                 throw new Error('Could not convert unhandled type: ' + type);
         }
