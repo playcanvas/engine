@@ -238,14 +238,12 @@ pc.extend(pc, function () {
 
         _onSetSpriteFrame: function(spriteFrame) {
             if (!this._isApplyingSprite) {
-                console.log('_onSetSpriteFrame', spriteFrame);
                 this._storeDefaultSpriteFrame(spriteFrame);
                 this._forceReapplyVisualState();
             }
         },
 
         _onMouseEnter: function(event) {
-            console.log('_onMouseEnter');
             this._isHovering = true;
 
             this._updateVisualState();
@@ -253,7 +251,6 @@ pc.extend(pc, function () {
         },
 
         _onMouseLeave: function(event) {
-            console.log('_onMouseEnter');
             this._isHovering = false;
             this._isPressed = false;
 
@@ -262,7 +259,6 @@ pc.extend(pc, function () {
         },
 
         _onMouseDown: function(event) {
-            console.log('_onMouseDown');
             this._isPressed = true;
 
             this._updateVisualState();
@@ -270,7 +266,6 @@ pc.extend(pc, function () {
         },
 
         _onMouseUp: function(event) {
-            console.log('_onMouseUp');
             this._isPressed = false;
 
             this._updateVisualState();
@@ -278,7 +273,6 @@ pc.extend(pc, function () {
         },
 
         _onTouchStart: function(event) {
-            console.log('_onTouchStart');
             this._isPressed = true;
 
             this._updateVisualState();
@@ -286,7 +280,6 @@ pc.extend(pc, function () {
         },
 
         _onTouchEnd: function(event) {
-            console.log('_onTouchEnd');
             this._isPressed = false;
 
             this._updateVisualState();
@@ -301,7 +294,6 @@ pc.extend(pc, function () {
         },
 
         _onTouchCancel: function(event) {
-            console.log('_onTouchCancel');
             this._isPressed = false;
 
             this._updateVisualState();
@@ -317,8 +309,6 @@ pc.extend(pc, function () {
             var newVisualState = this._determineVisualState();
 
             if ((oldVisualState !== newVisualState || force) && this.enabled) {
-                console.log('newVisualState', newVisualState);
-
                 this._visualState = newVisualState;
 
                 switch (this.transitionMode) {
