@@ -30,7 +30,7 @@ pc.extend(pc, function () {
         // Create getter/setter pairs for each property defined in the schema
         schema.forEach(function (descriptor) {
             // If the property descriptor is an object, it should have a `name`
-            // member. It not, it should just be the plain property name.
+            // member. If not, it should just be the plain property name.
             var name = (typeof descriptor === 'object') ? descriptor.name : descriptor;
 
             Object.defineProperty(obj, name, {
