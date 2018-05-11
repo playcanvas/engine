@@ -583,7 +583,7 @@ pc.extend(pc, function () {
                 this._meshInstance.setParameter('material_emissive', this._color.data3);
             }
 
-            if (this._element && this._element.fire) {
+            if (this._element) {
                 this._element.fire('set:color', this._color);
             }
         }
@@ -598,7 +598,7 @@ pc.extend(pc, function () {
             this._color.data[3] = value;
             this._meshInstance.setParameter("material_opacity", value);
 
-            if (this._element && this._element.fire) {
+            if (this._element) {
                 this._element.fire('set:opacity', this._color.data[3]);
             }
         }
@@ -784,7 +784,7 @@ pc.extend(pc, function () {
                     this.sprite = null;
                 }
 
-                if (this._element && this._element.fire) {
+                if (this._element) {
                     this._element.fire('set:spriteAsset', _id);
                 }
             }
@@ -860,7 +860,7 @@ pc.extend(pc, function () {
                 this._updateMesh(this.mesh);
             }
 
-            if (this._element && this._element.fire) {
+            if (this._element) {
                 this._element.fire('set:spriteFrame', value);
             }
         }

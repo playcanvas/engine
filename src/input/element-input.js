@@ -609,10 +609,10 @@ pc.extend(pc, function () {
                 var paddingRight = hitPadding.data[2] * scale;
                 var paddingTop = hitPadding.data[3] * scale;
 
-                var cornerBottomLeft = new pc.Vec3(hitCorners[0].data);
-                var cornerBottomRight = new pc.Vec3(hitCorners[1].data);
-                var cornerTopRight = new pc.Vec3(hitCorners[2].data);
-                var cornerTopLeft = new pc.Vec3(hitCorners[3].data);
+                var cornerBottomLeft = hitCorners[0].clone();
+                var cornerBottomRight = hitCorners[1].clone();
+                var cornerTopRight = hitCorners[2].clone();
+                var cornerTopLeft = hitCorners[3].clone();
 
                 cornerBottomLeft.x -= paddingLeft;
                 cornerBottomLeft.y -= paddingBottom;
