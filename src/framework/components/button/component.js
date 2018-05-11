@@ -120,10 +120,16 @@ pc.extend(pc, function () {
             var imageGuid = this.data.imageEntity;
             var hasChanged = !this._imageEntity || this._imageEntity.getGuid() !== imageGuid;
 
-            if (imageGuid && hasChanged) {
-                this._onBeforeImageEntityChange();
-                this._imageEntity = this.system.app.root.findByGuid(imageGuid);
-                this._onAfterImageEntityChange();
+            if (hasChanged) {
+                if (this._imageEntity) {
+                    this._onBeforeImageEntityChange();
+                }
+
+                this._imageEntity = imageGuid ? this.system.app.root.findByGuid(imageGuid) : null;
+
+                if (this._imageEntity) {
+                    this._onAfterImageEntityChange();
+                }
             }
         },
 
@@ -161,8 +167,8 @@ pc.extend(pc, function () {
             if (this._imageEntity && this._imageEntity.element) {
                 var isAdding = (onOrOff === 'on');
 
+                // Prevent duplicate listeners
                 if (isAdding && this._hasImageListeners) {
-                    console.warn('Attempted to add multiple image listeners - this should not happen');
                     return;
                 }
 
@@ -186,39 +192,55 @@ pc.extend(pc, function () {
 
         _storeDefaultVisualState: function() {
             if (this._imageEntity && this._imageEntity.element) {
-                this._onSetColor(this._imageEntity.element.color);
-                this._onSetOpacity(this._imageEntity.element.opacity);
-                this._onSetSpriteAsset(this._imageEntity.element.spriteAsset);
-                this._onSetSpriteFrame(this._imageEntity.element.spriteFrame);
+                this._storeDefaultColor(this._imageEntity.element.color);
+                this._storeDefaultOpacity(this._imageEntity.element.opacity);
+                this._storeDefaultSpriteAsset(this._imageEntity.element.spriteAsset);
+                this._storeDefaultSpriteFrame(this._imageEntity.element.spriteFrame);
             }
+        },
+
+        _storeDefaultColor: function(color) {
+            this._defaultTint.r = color.r;
+            this._defaultTint.g = color.g;
+            this._defaultTint.b = color.b;
+        },
+
+        _storeDefaultOpacity: function(opacity) {
+            this._defaultTint.a = opacity;
+        },
+
+        _storeDefaultSpriteAsset: function(spriteAsset) {
+            this._defaultSpriteAsset = spriteAsset;
+        },
+
+        _storeDefaultSpriteFrame: function(spriteFrame) {
+            this._defaultSpriteFrame = spriteFrame;
         },
 
         _onSetColor: function(color) {
             if (!this._isApplyingTint) {
-                this._defaultTint.r = color.r;
-                this._defaultTint.g = color.g;
-                this._defaultTint.b = color.b;
+                this._storeDefaultColor(color);
                 this._forceReapplyVisualState();
             }
         },
 
         _onSetOpacity: function(opacity) {
             if (!this._isApplyingTint) {
-                this._defaultTint.a = opacity;
+                this._storeDefaultOpacity(opacity);
                 this._forceReapplyVisualState();
             }
         },
 
         _onSetSpriteAsset: function(spriteAsset) {
             if (!this._isApplyingSprite) {
-                this._defaultSpriteAsset = spriteAsset;
+                this._storeDefaultSpriteAsset(spriteAsset);
                 this._forceReapplyVisualState();
             }
         },
 
         _onSetSpriteFrame: function(spriteFrame) {
             if (!this._isApplyingSprite) {
-                this._defaultSpriteFrame = spriteFrame;
+                this._storeDefaultSpriteFrame(spriteFrame);
                 this._forceReapplyVisualState();
             }
         },
@@ -306,9 +328,7 @@ pc.extend(pc, function () {
         // even if the state enum has not changed. Examples of this are when the tint
         // value for one of the states is changed via the editor.
         _forceReapplyVisualState: function() {
-            if (this._visualState !== VisualState.DEFAULT) {
-                this._updateVisualState(true);
-            }
+            this._updateVisualState(true);
         },
 
         // Called before the image entity changes, in order to restore the previous
@@ -370,6 +390,7 @@ pc.extend(pc, function () {
 
         onEnable: function () {
             this._updateImageEntityReference();
+            this._toggleImageListeners('on');
             this._forceReapplyVisualState();
         },
 
