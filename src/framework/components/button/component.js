@@ -77,6 +77,7 @@ pc.extend(pc, function () {
             this[onOrOff]('set_imageEntity', this._onSetImageEntity, this);
 
             pc.ComponentSystem[onOrOff]('postInitialize', this._onPostInitialize, this);
+            pc.ComponentSystem[onOrOff]('update', this._onUpdate, this);
 
             system.app.systems.element[onOrOff]('add', this._onElementComponentAdd, this);
             system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemoveOrImageEntityDestroy, this);
@@ -90,6 +91,7 @@ pc.extend(pc, function () {
 
         _onSetTransitionMode: function(name, oldValue, newValue) {
             if (oldValue !== newValue) {
+                this._cancelTween();
                 this._resetToDefaultVisualState(oldValue);
                 this._forceReapplyVisualState();
             }
@@ -312,7 +314,7 @@ pc.extend(pc, function () {
                     case pc.BUTTON_TRANSITION_MODE_TINT:
                         var tintName = STATES_TO_TINT_NAMES[this._visualState];
                         var tintColor = this[tintName];
-                        this._applyTint(tintColor, false);
+                        this._applyTint(tintColor);
                         break;
 
                     case pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE:
@@ -340,7 +342,8 @@ pc.extend(pc, function () {
             if (this._imageEntity && this._imageEntity.element) {
                 switch (transitionMode) {
                     case pc.BUTTON_TRANSITION_MODE_TINT:
-                        this._applyTint(this._defaultTint, true);
+                        this._cancelTween();
+                        this._applyTintImmediately(this._defaultTint);
                         break;
 
                     case pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE:
@@ -362,23 +365,6 @@ pc.extend(pc, function () {
             return VisualState.DEFAULT;
         },
 
-        _applyTint: function(tintColor, applyImmediately) {
-            if (this._imageEntity && this._imageEntity.element && tintColor) {
-                if (applyImmediately || this.fadeDuration === 0) {
-                    this._isApplyingTint = true;
-                    this._imageEntity.element.color = toColor3(tintColor);
-                    this._imageEntity.element.opacity = tintColor.a;
-                    this._isApplyingTint = false;
-                } else {
-                    // TODO Implement tweening
-                    this._isApplyingTint = true;
-                    this._imageEntity.element.color = toColor3(tintColor);
-                    this._imageEntity.element.opacity = tintColor.a;
-                    this._isApplyingTint = false;
-                }
-            }
-        },
-
         _applySprite: function(spriteAsset, spriteFrame) {
             spriteFrame = spriteFrame || 0;
 
@@ -387,6 +373,63 @@ pc.extend(pc, function () {
                 this._imageEntity.element.spriteAsset = spriteAsset;
                 this._imageEntity.element.spriteFrame = spriteFrame;
                 this._isApplyingSprite = false;
+            }
+        },
+
+        _applyTint: function(tintColor) {
+            this._cancelTween();
+
+            if (this.fadeDuration === 0) {
+                this._applyTintImmediately(tintColor);
+            } else {
+                this._applyTintWithTween(tintColor);
+            }
+        },
+
+        _applyTintImmediately: function(tintColor) {
+            if (this._imageEntity && this._imageEntity.element && tintColor) {
+                this._isApplyingTint = true;
+                this._imageEntity.element.color = toColor3(tintColor);
+                this._imageEntity.element.opacity = tintColor.a;
+                this._isApplyingTint = false;
+            }
+        },
+
+        _applyTintWithTween: function(tintColor) {
+            if (this._imageEntity && this._imageEntity.element && tintColor) {
+                var color = this._imageEntity.element.color;
+                var opacity = this._imageEntity.element.opacity;
+
+                this._tweenInfo = {
+                    startTime: pc.now(),
+                    from: new pc.Color(color.r, color.g, color.b, opacity),
+                    to: tintColor.clone(),
+                    lerpVec: new pc.Vec4()
+                };
+            }
+        },
+
+        _updateTintTween: function() {
+            var elapsedTime = pc.now() - this._tweenInfo.startTime;
+            var elapsedProportion = this.fadeDuration === 0 ? 1 : (elapsedTime / this.fadeDuration);
+            elapsedProportion = pc.math.clamp(elapsedProportion, 0, 1);
+
+            if (Math.abs(elapsedProportion - 1) > 1e-5) {
+                this._tweenInfo.lerpVec.lerp(this._tweenInfo.from, this._tweenInfo.to, elapsedProportion);
+                this._applyTintImmediately(new pc.Color(this._tweenInfo.lerpVec.data));
+            } else {
+                this._applyTintImmediately(this._tweenInfo.to);
+                this._cancelTween();
+            }
+        },
+
+        _cancelTween: function() {
+            delete this._tweenInfo;
+        },
+
+        _onUpdate: function() {
+            if (this._tweenInfo) {
+                this._updateTintTween();
             }
         },
 
