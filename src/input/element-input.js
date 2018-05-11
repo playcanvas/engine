@@ -375,6 +375,7 @@ pc.extend(pc, function () {
                     continue;
 
                 delete this._touchedElements[touch.identifier];
+                delete this._touchesForWhichTouchLeaveHasFired[touch.identifier];
 
                 this._fireEvent(event.type, new ElementTouchEvent(event, element, this));
 
