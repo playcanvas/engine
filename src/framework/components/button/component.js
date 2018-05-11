@@ -183,6 +183,7 @@ pc.extend(pc, function () {
                 this._imageEntity.element[onOrOff]('mouseup', this._onMouseUp, this);
                 this._imageEntity.element[onOrOff]('touchstart', this._onTouchStart, this);
                 this._imageEntity.element[onOrOff]('touchend', this._onTouchEnd, this);
+                this._imageEntity.element[onOrOff]('touchleave', this._onTouchLeave, this);
                 this._imageEntity.element[onOrOff]('touchcancel', this._onTouchCancel, this);
                 this._imageEntity.element[onOrOff]('click', this._onClick, this);
 
@@ -286,6 +287,13 @@ pc.extend(pc, function () {
 
             this._updateVisualState();
             this.fire('touchend', event);
+        },
+
+        _onTouchLeave: function(event) {
+            this._isPressed = false;
+
+            this._updateVisualState();
+            this.fire('touchleave', event);
         },
 
         _onTouchCancel: function(event) {
