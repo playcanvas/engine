@@ -595,19 +595,17 @@ pc.extend(pc, function () {
         // screen corners. However, in cases where the element has additional hit
         // padding specified, we need to expand the screenCorners to incorporate the
         // padding.
-        _buildHitCorners: function(element) {
-            var hitCorners = element.screenCorners;
+        _buildHitCorners: function(element, screenOrWorldCorners, scaleX, scaleY) {
+            var hitCorners = screenOrWorldCorners;
             var button = element.entity && element.entity.button;
-            var screen = element.screen && element.screen.screen;
 
-            if (button && screen) {
+            if (button) {
                 var hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
-                var scale = screen.screenSpace ? screen.scale : 1;
 
-                var paddingLeft = hitPadding.data[0] * scale;
-                var paddingBottom = hitPadding.data[1] * scale;
-                var paddingRight = hitPadding.data[2] * scale;
-                var paddingTop = hitPadding.data[3] * scale;
+                var paddingLeft = hitPadding.data[0] * scaleX;
+                var paddingBottom = hitPadding.data[1] * scaleY;
+                var paddingRight = hitPadding.data[2] * scaleX;
+                var paddingTop = hitPadding.data[3] * scaleY;
 
                 var cornerBottomLeft = hitCorners[0].clone();
                 var cornerBottomRight = hitCorners[1].clone();
@@ -658,7 +656,9 @@ pc.extend(pc, function () {
                 // reverse _y
                 _y = sh - _y;
 
-                var hitCorners = this._buildHitCorners(element);
+                var screen = element.screen && element.screen.screen;
+                var scale = (screen && screen.screenSpace) ? screen.scale : 1;
+                var hitCorners = this._buildHitCorners(element, element.screenCorners, scale, scale);
                 vecA.set(_x, _y, 1);
                 vecB.set(_x, _y, -1);
 
@@ -694,9 +694,8 @@ pc.extend(pc, function () {
                 _y = sh * (_y - (cameraTop)) / cameraHeight;
 
                 // 3D screen
-                // TODO Should we also apply hit padding here? I wasn't sure whether UI
-                //      features such as buttons are intended to be used in 3D or not.
-                var worldCorners = element.worldCorners;
+                var scale = element.entity.getWorldTransform().getScale();
+                var worldCorners = this._buildHitCorners(element, element.worldCorners, scale.x, scale.y);
                 var start = vecA;
                 var end = vecB;
                 camera.screenToWorld(_x, _y, camera.nearClip, start);
