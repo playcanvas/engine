@@ -11,6 +11,8 @@ pc.extend(pc, function () {
     var _m = new pc.Vec3();
     var _sct = new pc.Vec3();
 
+    var ZERO_VEC4 = new pc.Vec4();
+
     // pi x p2 * p3
     var scalarTriple = function (p1, p2, p3) {
         return _sct.cross(p1, p2).dot(p3);
@@ -589,6 +591,45 @@ pc.extend(pc, function () {
             return result;
         },
 
+        // In most cases the corners used for hit testing will just be the element's
+        // screen corners. However, in cases where the element has additional hit
+        // padding specified, we need to expand the screenCorners to incorporate the
+        // padding.
+        _buildHitCorners: function(element, screenOrWorldCorners, scaleX, scaleY) {
+            var hitCorners = screenOrWorldCorners;
+            var button = element.entity && element.entity.button;
+
+            if (button) {
+                var hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
+
+                var paddingLeft = hitPadding.data[0] * scaleX;
+                var paddingBottom = hitPadding.data[1] * scaleY;
+                var paddingRight = hitPadding.data[2] * scaleX;
+                var paddingTop = hitPadding.data[3] * scaleY;
+
+                var cornerBottomLeft = hitCorners[0].clone();
+                var cornerBottomRight = hitCorners[1].clone();
+                var cornerTopRight = hitCorners[2].clone();
+                var cornerTopLeft = hitCorners[3].clone();
+
+                cornerBottomLeft.x -= paddingLeft;
+                cornerBottomLeft.y -= paddingBottom;
+
+                cornerBottomRight.x += paddingRight;
+                cornerBottomRight.y -= paddingBottom;
+
+                cornerTopRight.x += paddingRight;
+                cornerTopRight.y += paddingTop;
+
+                cornerTopLeft.x -= paddingLeft;
+                cornerTopLeft.y += paddingTop;
+
+                hitCorners = [cornerBottomLeft, cornerBottomRight, cornerTopRight, cornerTopLeft];
+            }
+
+            return hitCorners;
+        },
+
         _checkElement2d: function (x, y, element, camera) {
             var sw = this.app.graphicsDevice.width;
             var sh = this.app.graphicsDevice.height;
@@ -615,11 +656,13 @@ pc.extend(pc, function () {
                 // reverse _y
                 _y = sh - _y;
 
-                var screenCorners = element.screenCorners;
+                var screen = element.screen && element.screen.screen;
+                var scale = (screen && screen.screenSpace) ? screen.scale : 1;
+                var hitCorners = this._buildHitCorners(element, element.screenCorners, scale, scale);
                 vecA.set(_x, _y, 1);
                 vecB.set(_x, _y, -1);
 
-                if (intersectLineQuad(vecA, vecB, screenCorners)) {
+                if (intersectLineQuad(vecA, vecB, hitCorners)) {
                     return true;
                 }
             }
@@ -651,7 +694,8 @@ pc.extend(pc, function () {
                 _y = sh * (_y - (cameraTop)) / cameraHeight;
 
                 // 3D screen
-                var worldCorners = element.worldCorners;
+                var scale = element.entity.getWorldTransform().getScale();
+                var worldCorners = this._buildHitCorners(element, element.worldCorners, scale.x, scale.y);
                 var start = vecA;
                 var end = vecB;
                 camera.screenToWorld(_x, _y, camera.nearClip, start);
