@@ -152,3 +152,34 @@ test("initializeComponentData() throws if provided an unknown type", function ()
         this.system.initializeComponentData(component, data, properties);
     }, 'Could not convert unhandled type: something');
 });
+
+test("getPropertiesOfType() returns properties of the specified type", function () {
+    this.system.schema = [
+        { name: 'foo', type: 'typeA' },
+        { name: 'bar', type: 'typeA' },
+        { name: 'baz', type: 'typeB' },
+        'bob'
+    ];
+
+    deepEqual(this.system.getPropertiesOfType('typeA'), [
+        { name: 'foo', type: 'typeA' },
+        { name: 'bar', type: 'typeA' }
+    ]);
+});
+
+test("getPropertiesOfType() returns an empty array if no properties match the specified type", function () {
+    this.system.schema = [
+        { name: 'foo', type: 'typeA' },
+        { name: 'bar', type: 'typeA' },
+        { name: 'baz', type: 'typeB' },
+        'bob'
+    ];
+
+    deepEqual(this.system.getPropertiesOfType('typeC'), []);
+});
+
+test("getPropertiesOfType() doesn't throw an error if the system doesn't have a schema", function () {
+    this.system.schema = null;
+
+    deepEqual(this.system.getPropertiesOfType('typeA'), []);
+});
