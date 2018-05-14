@@ -170,8 +170,28 @@ pc.extend(pc, function () {
             if (component.enabled && component.entity.enabled) {
                 component.onEnable();
             }
-        }
+        },
 
+        /**
+         * @private
+         * @function
+         * @name pc.ComponentSystem#getPropertiesOfType
+         * @description Searches the component schema for properties that match the specified type.
+         * @param {String} type The type to search for
+         * @returns {Array} An array of property descriptors matching the specified type.
+         */
+        getPropertiesOfType: function (type) {
+            var matchingProperties = [];
+            var schema = this.schema || [];
+
+            schema.forEach(function(descriptor) {
+                if (descriptor && typeof descriptor === 'object' && descriptor.type === type) {
+                    matchingProperties.push(descriptor);
+                }
+            });
+
+            return matchingProperties;
+        }
     };
 
     function convertValue(value, type) {
@@ -196,6 +216,8 @@ pc.extend(pc, function () {
             case 'number':
             case 'string':
                 return value;
+            case 'entity':
+                return value; // Entity fields should just be a string guid
             default:
                 throw new Error('Could not convert unhandled type: ' + type);
         }
