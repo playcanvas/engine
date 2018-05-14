@@ -158,6 +158,16 @@
         strictEqual(subtree2.a_a_a.dummy.myEntity2, subtree2.a_b.getGuid());
     });
 
+    test("clone() resolves entity property references that refer to the cloned entity itself", function () {
+        var subtree1 = this.createSubtree();
+        subtree1.a.addComponent('dummy', { myEntity1: subtree1.a.getGuid() });
+        subtree1.a_a_a.addComponent('dummy', { myEntity1: subtree1.a_a_a.getGuid() });
+
+        var subtree2 = this.cloneSubtree(subtree1);
+        strictEqual(subtree2.a.dummy.myEntity1, subtree2.a.getGuid());
+        strictEqual(subtree2.a_a_a.dummy.myEntity1, subtree2.a_a_a.getGuid());
+    });
+
     test("clone() does not attempt to resolve entity property references that refer to entities outside of the duplicated subtree", function () {
         var root = new pc.Entity('root', this.app);
         var sibling = new pc.Entity('sibling', this.app);

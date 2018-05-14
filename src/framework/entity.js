@@ -358,10 +358,10 @@ pc.extend(pc, function () {
         return c;
     };
 
-    // When an entity that has properties that contain references to some
+    // When an entity that has properties that contain references to other
     // entities within its subtree is duplicated, the expectation of the
     // user is likely that those properties will be updated to point to
-    // the corresponding entities within the newly created duplicate subtree.
+    // the corresponding entities within the newly-created duplicate subtree.
     //
     // To handle this, we need to search for properties that refer to entities
     // within the old duplicated structure, find their newly-cloned partners
@@ -379,14 +379,14 @@ pc.extend(pc, function () {
 
                 entityProperties.forEach(function(propertyDescriptor) {
                     var propertyName = propertyDescriptor.name;
-                    var oldEntityId = component[propertyName];
-                    var entityWithinOldSubtree = oldSubtreeRoot.findByGuid(oldEntityId);
+                    var oldEntityReferenceId = component[propertyName];
+                    var entityIsWithinOldSubtree = !!oldSubtreeRoot.findByGuid(oldEntityReferenceId);
 
-                    if (entityWithinOldSubtree) {
-                        var newEntityId = duplicatedIdsMap[oldEntityId];
+                    if (entityIsWithinOldSubtree) {
+                        var newEntityReferenceId = duplicatedIdsMap[oldEntityReferenceId];
 
-                        if (newEntityId) {
-                            newEntity.c[componentName][propertyName] = newEntityId;
+                        if (newEntityReferenceId) {
+                            newEntity.c[componentName][propertyName] = newEntityReferenceId;
                         } else {
                             console.warn('Could not find corresponding entity id when resolving duplicated entity references');
                         }
