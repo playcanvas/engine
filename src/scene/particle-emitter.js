@@ -994,13 +994,17 @@ pc.extend(pc, function() {
                     stride = meshData.length / this.mesh.vertexBuffer.numVertices;
                 }
 
-                var id, rnd;
+                var id;
+//              var rnd;
                 for (i = 0; i < psysVertCount; i++) {
                     id = Math.floor(i / this.numParticleVerts);
+/*
                     if (this.useCpu) {
-                        if (i % this.numParticleVerts === 0) rnd = this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
+                        if (i % this.numParticleVerts === 0) {
+                            rnd = this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
+                        }
                     }
-
+*/
                     if (!this.useMesh) {
                         var vertID = i % 4;
                         data[i * 4] = particleVerts[vertID][0];
@@ -1458,8 +1462,8 @@ pc.extend(pc, function() {
 
                     this.vbOld.set(this.vbCPU);
 
-                    this.vbToSort.sort(function(a, b) {
-                        return a[1] - b[1];
+                    this.vbToSort.sort(function(p1, p2) {
+                        return p1[1] - p2[1];
                     });
 
                     for (i = 0; i < this.numParticles; i++) {
