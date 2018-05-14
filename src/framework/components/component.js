@@ -28,16 +28,20 @@ pc.extend(pc, function () {
 
     Component._buildAccessors = function (obj, schema) {
         // Create getter/setter pairs for each property defined in the schema
-        schema.forEach(function (prop) {
-            Object.defineProperty(obj, prop, {
+        schema.forEach(function (descriptor) {
+            // If the property descriptor is an object, it should have a `name`
+            // member. If not, it should just be the plain property name.
+            var name = (typeof descriptor === 'object') ? descriptor.name : descriptor;
+
+            Object.defineProperty(obj, name, {
                 get: function () {
-                    return this.data[prop];
+                    return this.data[name];
                 },
                 set: function (value) {
                     var data = this.data;
-                    var oldValue = data[prop];
-                    data[prop] = value;
-                    this.fire('set', prop, oldValue, value);
+                    var oldValue = data[name];
+                    data[name] = value;
+                    this.fire('set', name, oldValue, value);
                 },
                 configurable: true
             });
