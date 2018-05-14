@@ -358,10 +358,10 @@ pc.extend(pc, function () {
         return c;
     };
 
-    // When an entity that has properties that contain references to some
+    // When an entity that has properties that contain references to other
     // entities within its subtree is duplicated, the expectation of the
     // user is likely that those properties will be updated to point to
-    // the corresponding entities within the newly created duplicate subtree.
+    // the corresponding entities within the newly-created duplicate subtree.
     //
     // To handle this, we need to search for properties that refer to entities
     // within the old duplicated structure, find their newly-cloned partners
