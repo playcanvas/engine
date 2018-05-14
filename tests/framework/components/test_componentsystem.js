@@ -33,7 +33,8 @@ test("initializeComponentData() works with a list of property descriptor objects
         vec4Property: new pc.Vec4(1, 2, 3, 4),
         booleanProperty: true,
         numberProperty: 42,
-        stringProperty: 'foo'
+        stringProperty: 'foo',
+        entityProperty: 'abcde-12345'
     };
     var properties = [
         { name: 'rgbProperty', type: 'rgb' },
@@ -43,7 +44,8 @@ test("initializeComponentData() works with a list of property descriptor objects
         { name: 'vec4Property', type: 'vec4' },
         { name: 'booleanProperty', type: 'boolean' },
         { name: 'numberProperty', type: 'number' },
-        { name: 'stringProperty', type: 'string' }
+        { name: 'stringProperty', type: 'string' },
+        { name: 'entityProperty', type: 'entity' }
     ];
 
     this.system.initializeComponentData(component, data, properties);
@@ -77,6 +79,7 @@ test("initializeComponentData() works with a list of property descriptor objects
     strictEqual(component.booleanProperty, true);
     strictEqual(component.numberProperty, 42);
     strictEqual(component.stringProperty, 'foo');
+    strictEqual(component.entityProperty, 'abcde-12345');
 });
 
 test("initializeComponentData() handles nulls", function () {
@@ -89,7 +92,8 @@ test("initializeComponentData() handles nulls", function () {
         vec4Property: null,
         booleanProperty: null,
         numberProperty: null,
-        stringProperty: null
+        stringProperty: null,
+        entityProperty: null
     };
     var properties = [
         { name: 'rgbProperty', type: 'rgb' },
@@ -99,7 +103,8 @@ test("initializeComponentData() handles nulls", function () {
         { name: 'vec4Property', type: 'vec4' },
         { name: 'booleanProperty', type: 'boolean' },
         { name: 'numberProperty', type: 'number' },
-        { name: 'stringProperty', type: 'string' }
+        { name: 'stringProperty', type: 'string' },
+        { name: 'entityProperty', type: 'string' }
     ];
 
     this.system.initializeComponentData(component, data, properties);
@@ -112,6 +117,7 @@ test("initializeComponentData() handles nulls", function () {
     strictEqual(component.booleanProperty, null);
     strictEqual(component.numberProperty, null);
     strictEqual(component.stringProperty, null);
+    strictEqual(component.entityProperty, null);
 });
 
 test("initializeComponentData() handles vec values being delivered as arrays", function () {
@@ -151,4 +157,35 @@ test("initializeComponentData() throws if provided an unknown type", function ()
     throws(function() {
         this.system.initializeComponentData(component, data, properties);
     }, 'Could not convert unhandled type: something');
+});
+
+test("getPropertiesOfType() returns properties of the specified type", function () {
+    this.system.schema = [
+        { name: 'foo', type: 'typeA' },
+        { name: 'bar', type: 'typeA' },
+        { name: 'baz', type: 'typeB' },
+        'bob'
+    ];
+
+    deepEqual(this.system.getPropertiesOfType('typeA'), [
+        { name: 'foo', type: 'typeA' },
+        { name: 'bar', type: 'typeA' }
+    ]);
+});
+
+test("getPropertiesOfType() returns an empty array if no properties match the specified type", function () {
+    this.system.schema = [
+        { name: 'foo', type: 'typeA' },
+        { name: 'bar', type: 'typeA' },
+        { name: 'baz', type: 'typeB' },
+        'bob'
+    ];
+
+    deepEqual(this.system.getPropertiesOfType('typeC'), []);
+});
+
+test("getPropertiesOfType() doesn't throw an error if the system doesn't have a schema", function () {
+    this.system.schema = null;
+
+    deepEqual(this.system.getPropertiesOfType('typeA'), []);
 });

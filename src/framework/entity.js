@@ -326,6 +326,16 @@ pc.extend(pc, function () {
     *   this.entity.parent.addChild(e); // Add it as a sibling to the original
     */
     Entity.prototype.clone = function () {
+        var duplicatedIdsMap = {};
+        var c = this._cloneRecursively(duplicatedIdsMap);
+        duplicatedIdsMap[this.getGuid()] = c.getGuid();
+
+        resolveDuplicatedEntityReferenceProperties(this, this, c, duplicatedIdsMap);
+
+        return c;
+    };
+
+    Entity.prototype._cloneRecursively = function(duplicatedIdsMap) {
         var type;
         var c = new pc.Entity(this._app);
         pc.Entity._super._cloneInternal.call(this, c);
@@ -337,14 +347,62 @@ pc.extend(pc, function () {
 
         var i;
         for (i = 0; i < this._children.length; i++) {
-            var child = this._children[i];
-            if (child instanceof pc.Entity) {
-                c.addChild(child.clone());
+            var oldChild = this._children[i];
+            if (oldChild instanceof pc.Entity) {
+                var newChild = oldChild._cloneRecursively(duplicatedIdsMap);
+                c.addChild(newChild);
+                duplicatedIdsMap[oldChild.getGuid()] = newChild.getGuid();
             }
         }
 
         return c;
     };
+
+    // When an entity that has properties that contain references to other
+    // entities within its subtree is duplicated, the expectation of the
+    // user is likely that those properties will be updated to point to
+    // the corresponding entities within the newly-created duplicate subtree.
+    //
+    // To handle this, we need to search for properties that refer to entities
+    // within the old duplicated structure, find their newly-cloned partners
+    // within the new structure, and update the references accordingly. This
+    // function implements that requirement.
+    function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, newEntity, duplicatedIdsMap) {
+        // TODO Would be nice to also make this work for entity script attributes
+
+        if (oldEntity instanceof pc.Entity) {
+            var components = oldEntity.c;
+
+            Object.keys(components).forEach(function(componentName) {
+                var component = components[componentName];
+                var entityProperties = component.system.getPropertiesOfType('entity');
+
+                entityProperties.forEach(function(propertyDescriptor) {
+                    var propertyName = propertyDescriptor.name;
+                    var oldEntityReferenceId = component[propertyName];
+                    var entityIsWithinOldSubtree = !!oldSubtreeRoot.findByGuid(oldEntityReferenceId);
+
+                    if (entityIsWithinOldSubtree) {
+                        var newEntityReferenceId = duplicatedIdsMap[oldEntityReferenceId];
+
+                        if (newEntityReferenceId) {
+                            newEntity.c[componentName][propertyName] = newEntityReferenceId;
+                        } else {
+                            console.warn('Could not find corresponding entity id when resolving duplicated entity references');
+                        }
+                    }
+                });
+            });
+
+            // Recurse into children. Note that we continue to pass in the same `oldSubtreeRoot`,
+            // in order to correctly handle cases where a child has an entity reference
+            // field that points to a parent or other ancestor that is still within the
+            // duplicated subtree.
+            oldEntity.children.forEach(function(oldChild, index) {
+                resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldChild, newEntity.children[index], duplicatedIdsMap);
+            });
+        }
+    }
 
     return {
         Entity: Entity
