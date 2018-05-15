@@ -628,6 +628,19 @@ pc.extend(pc, function () {
             return hitCorners;
         },
 
+        _calculateScaleToScreen: function(element) {
+            var current = element.entity;
+            var screenScale = element.screen.screen.scale;
+            var accumulatedScale = new pc.Vec2(screenScale, screenScale);
+
+            while (current && !current.screen) {
+                accumulatedScale.mul(current.getLocalScale());
+                current = current.parent;
+            }
+
+            return accumulatedScale;
+        },
+
         _checkElement2d: function (x, y, element, camera) {
             var sw = this.app.graphicsDevice.width;
             var sh = this.app.graphicsDevice.height;
@@ -654,9 +667,8 @@ pc.extend(pc, function () {
                 // reverse _y
                 _y = sh - _y;
 
-                var screen = element.screen && element.screen.screen;
-                var scale = (screen && screen.screenSpace) ? screen.scale : 1;
-                var hitCorners = this._buildHitCorners(element, element.screenCorners, scale, scale);
+                var scale = this._calculateScaleToScreen(element);
+                var hitCorners = this._buildHitCorners(element, element.screenCorners, scale.x, scale.y);
                 vecA.set(_x, _y, 1);
                 vecB.set(_x, _y, -1);
 
