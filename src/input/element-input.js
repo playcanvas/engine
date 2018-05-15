@@ -10,6 +10,15 @@ pc.extend(pc, function () {
     var _pd = new pc.Vec3();
     var _m = new pc.Vec3();
     var _sct = new pc.Vec3();
+    var _accumulatedScale = new pc.Vec2();
+    var _paddingTop = new pc.Vec3();
+    var _paddingBottom = new pc.Vec3();
+    var _paddingLeft = new pc.Vec3();
+    var _paddingRight = new pc.Vec3();
+    var _cornerBottomLeft = new pc.Vec3();
+    var _cornerBottomRight = new pc.Vec3();
+    var _cornerTopRight = new pc.Vec3();
+    var _cornerTopLeft = new pc.Vec3();
 
     var ZERO_VEC4 = new pc.Vec4();
 
@@ -609,32 +618,39 @@ pc.extend(pc, function () {
             if (button) {
                 var hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
 
-                var paddingLeft = hitPadding.data[0] * scaleX;
-                var paddingBottom = hitPadding.data[1] * scaleY;
-                var paddingRight = hitPadding.data[2] * scaleX;
-                var paddingTop = hitPadding.data[3] * scaleY;
+                _paddingTop.copy(element.entity.up);
+                _paddingBottom.copy(_paddingTop).scale(-1);
+                _paddingRight.copy(element.entity.right);
+                _paddingLeft.copy(_paddingRight).scale(-1);
 
-                var cornerBottomLeft = hitCorners[0].clone();
-                var cornerBottomRight = hitCorners[1].clone();
-                var cornerTopRight = hitCorners[2].clone();
-                var cornerTopLeft = hitCorners[3].clone();
+                _paddingTop.scale(hitPadding.data[3] * scaleY);
+                _paddingBottom.scale(hitPadding.data[1] * scaleY);
+                _paddingRight.scale(hitPadding.data[2] * scaleX);
+                _paddingLeft.scale(hitPadding.data[0] * scaleX);
 
-                cornerBottomLeft.x -= paddingLeft;
-                cornerBottomLeft.y -= paddingBottom;
+                _cornerBottomLeft.copy(hitCorners[0]).add(_paddingBottom).add(_paddingLeft);
+                _cornerBottomRight.copy(hitCorners[1]).add(_paddingBottom).add(_paddingRight);
+                _cornerTopRight.copy(hitCorners[2]).add(_paddingTop).add(_paddingRight);
+                _cornerTopLeft.copy(hitCorners[3]).add(_paddingTop).add(_paddingLeft);
 
-                cornerBottomRight.x += paddingRight;
-                cornerBottomRight.y -= paddingBottom;
-
-                cornerTopRight.x += paddingRight;
-                cornerTopRight.y += paddingTop;
-
-                cornerTopLeft.x -= paddingLeft;
-                cornerTopLeft.y += paddingTop;
-
-                hitCorners = [cornerBottomLeft, cornerBottomRight, cornerTopRight, cornerTopLeft];
+                hitCorners = [_cornerBottomLeft, _cornerBottomRight, _cornerTopRight, _cornerTopLeft];
             }
 
             return hitCorners;
+        },
+
+        _calculateScaleToScreen: function(element) {
+            var current = element.entity;
+            var screenScale = element.screen.screen.scale;
+
+            _accumulatedScale.set(screenScale, screenScale);
+
+            while (current && !current.screen) {
+                _accumulatedScale.mul(current.getLocalScale());
+                current = current.parent;
+            }
+
+            return _accumulatedScale;
         },
 
         _checkElement2d: function (x, y, element, camera) {
@@ -663,9 +679,8 @@ pc.extend(pc, function () {
                 // reverse _y
                 _y = sh - _y;
 
-                var screen = element.screen && element.screen.screen;
-                var scale = (screen && screen.screenSpace) ? screen.scale : 1;
-                var hitCorners = this._buildHitCorners(element, element.screenCorners, scale, scale);
+                var scale = this._calculateScaleToScreen(element);
+                var hitCorners = this._buildHitCorners(element, element.screenCorners, scale.x, scale.y);
                 vecA.set(_x, _y, 1);
                 vecB.set(_x, _y, -1);
 
