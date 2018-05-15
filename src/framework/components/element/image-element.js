@@ -635,10 +635,7 @@ pc.extend(pc, function () {
                 this._meshInstance.material = value;
 
                 // if this is not the default material then clear color and opacity overrides
-                if (value !== this._system.defaultScreenSpaceImageMaterial &&
-                    value !== this._system.defaultImageMaterial &&
-                    value !== this._system.defaultImageMaskMaterial &&
-                    value !== this._system.defaultScreenSpaceImageMaskMaterial) {
+                if (this._hasUserMaterial()) {
                     this._meshInstance.deleteParameter('material_opacity');
                     this._meshInstance.deleteParameter('material_emissive');
                 } else {
