@@ -10,6 +10,15 @@ pc.extend(pc, function () {
     var _pd = new pc.Vec3();
     var _m = new pc.Vec3();
     var _sct = new pc.Vec3();
+    var _accumulatedScale = new pc.Vec2();
+    var _paddingTop = new pc.Vec3();
+    var _paddingBottom = new pc.Vec3();
+    var _paddingLeft = new pc.Vec3();
+    var _paddingRight = new pc.Vec3();
+    var _cornerBottomLeft = new pc.Vec3();
+    var _cornerBottomRight = new pc.Vec3();
+    var _cornerTopRight = new pc.Vec3();
+    var _cornerTopLeft = new pc.Vec3();
 
     var ZERO_VEC4 = new pc.Vec4();
 
@@ -607,22 +616,22 @@ pc.extend(pc, function () {
             if (button) {
                 var hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
 
-                var paddingTop = element.entity.up.clone();
-                var paddingBottom = paddingTop.clone().scale(-1);
-                var paddingRight = element.entity.right.clone();
-                var paddingLeft = paddingRight.clone().scale(-1);
+                _paddingTop.copy(element.entity.up);
+                _paddingBottom.copy(_paddingTop).scale(-1);
+                _paddingRight.copy(element.entity.right);
+                _paddingLeft.copy(_paddingRight).scale(-1);
 
-                paddingTop.scale(hitPadding.data[3] * scaleY);
-                paddingBottom.scale(hitPadding.data[1] * scaleY);
-                paddingRight.scale(hitPadding.data[2] * scaleX);
-                paddingLeft.scale(hitPadding.data[0] * scaleX);
+                _paddingTop.scale(hitPadding.data[3] * scaleY);
+                _paddingBottom.scale(hitPadding.data[1] * scaleY);
+                _paddingRight.scale(hitPadding.data[2] * scaleX);
+                _paddingLeft.scale(hitPadding.data[0] * scaleX);
 
-                var cornerBottomLeft = hitCorners[0].clone().add(paddingBottom).add(paddingLeft);
-                var cornerBottomRight = hitCorners[1].clone().add(paddingBottom).add(paddingRight);
-                var cornerTopRight = hitCorners[2].clone().add(paddingTop).add(paddingRight);
-                var cornerTopLeft = hitCorners[3].clone().add(paddingTop).add(paddingLeft);
+                _cornerBottomLeft.copy(hitCorners[0]).add(_paddingBottom).add(_paddingLeft);
+                _cornerBottomRight.copy(hitCorners[1]).add(_paddingBottom).add(_paddingRight);
+                _cornerTopRight.copy(hitCorners[2]).add(_paddingTop).add(_paddingRight);
+                _cornerTopLeft.copy(hitCorners[3]).add(_paddingTop).add(_paddingLeft);
 
-                hitCorners = [cornerBottomLeft, cornerBottomRight, cornerTopRight, cornerTopLeft];
+                hitCorners = [_cornerBottomLeft, _cornerBottomRight, _cornerTopRight, _cornerTopLeft];
             }
 
             return hitCorners;
@@ -631,14 +640,15 @@ pc.extend(pc, function () {
         _calculateScaleToScreen: function(element) {
             var current = element.entity;
             var screenScale = element.screen.screen.scale;
-            var accumulatedScale = new pc.Vec2(screenScale, screenScale);
+
+            _accumulatedScale.set(screenScale, screenScale);
 
             while (current && !current.screen) {
-                accumulatedScale.mul(current.getLocalScale());
+                _accumulatedScale.mul(current.getLocalScale());
                 current = current.parent;
             }
 
-            return accumulatedScale;
+            return _accumulatedScale;
         },
 
         _checkElement2d: function (x, y, element, camera) {
