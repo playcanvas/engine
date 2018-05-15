@@ -418,20 +418,22 @@ pc.extend(pc, function () {
                 var newTouchedElement = newTouchedElements[touch.identifier];
                 var oldTouchedElement = this._touchedElements[touch.identifier];
 
-                // Fire touchleave if we've left the previously touched element
-                if (newTouchedElement !== oldTouchedElement && !this._touchesForWhichTouchLeaveHasFired[touch.identifier]) {
-                    this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchedElement, this));
+                if (oldTouchedElement) {
+                    // Fire touchleave if we've left the previously touched element
+                    if (newTouchedElement !== oldTouchedElement && !this._touchesForWhichTouchLeaveHasFired[touch.identifier]) {
+                        this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchedElement, this));
 
-                    // Flag that touchleave has been fired for this touch, so that we don't
-                    // re-fire it on the next touchmove. This is required because touchmove
-                    // events keep on firing for the same element until the touch ends, even
-                    // if the touch position moves away from the element. Touchleave, on the
-                    // other hand, should fire once when the touch position moves away from
-                    // the element and then not re-fire again within the same touch session.
-                    this._touchesForWhichTouchLeaveHasFired[touch.identifier] = true;
+                        // Flag that touchleave has been fired for this touch, so that we don't
+                        // re-fire it on the next touchmove. This is required because touchmove
+                        // events keep on firing for the same element until the touch ends, even
+                        // if the touch position moves away from the element. Touchleave, on the
+                        // other hand, should fire once when the touch position moves away from
+                        // the element and then not re-fire again within the same touch session.
+                        this._touchesForWhichTouchLeaveHasFired[touch.identifier] = true;
+                    }
+
+                    this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchedElement, this));
                 }
-
-                this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchedElement, this));
             }
         },
 
