@@ -607,27 +607,20 @@ pc.extend(pc, function () {
             if (button) {
                 var hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
 
-                var paddingLeft = hitPadding.data[0] * scaleX;
-                var paddingBottom = hitPadding.data[1] * scaleY;
-                var paddingRight = hitPadding.data[2] * scaleX;
-                var paddingTop = hitPadding.data[3] * scaleY;
+                var paddingTop = element.entity.up.clone();
+                var paddingBottom = paddingTop.clone().scale(-1);
+                var paddingRight = element.entity.right.clone();
+                var paddingLeft = paddingRight.clone().scale(-1);
 
-                var cornerBottomLeft = hitCorners[0].clone();
-                var cornerBottomRight = hitCorners[1].clone();
-                var cornerTopRight = hitCorners[2].clone();
-                var cornerTopLeft = hitCorners[3].clone();
+                paddingTop.scale(hitPadding.data[3] * scaleY);
+                paddingBottom.scale(hitPadding.data[1] * scaleY);
+                paddingRight.scale(hitPadding.data[2] * scaleX);
+                paddingLeft.scale(hitPadding.data[0] * scaleX);
 
-                cornerBottomLeft.x -= paddingLeft;
-                cornerBottomLeft.y -= paddingBottom;
-
-                cornerBottomRight.x += paddingRight;
-                cornerBottomRight.y -= paddingBottom;
-
-                cornerTopRight.x += paddingRight;
-                cornerTopRight.y += paddingTop;
-
-                cornerTopLeft.x -= paddingLeft;
-                cornerTopLeft.y += paddingTop;
+                var cornerBottomLeft = hitCorners[0].clone().add(paddingBottom).add(paddingLeft);
+                var cornerBottomRight = hitCorners[1].clone().add(paddingBottom).add(paddingRight);
+                var cornerTopRight = hitCorners[2].clone().add(paddingTop).add(paddingRight);
+                var cornerTopLeft = hitCorners[3].clone().add(paddingTop).add(paddingLeft);
 
                 hitCorners = [cornerBottomLeft, cornerBottomRight, cornerTopRight, cornerTopLeft];
             }
