@@ -807,9 +807,6 @@ pc.extend(pc, (function () {
 
             det = (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
             if (det === 0) {
-                // #ifdef DEBUG
-                console.warn('pc.Mat4#invert: Cannot invert matrix, determinant is 0');
-                // #endif
                 this.setIdentity();
             } else {
                 invDet = 1 / det;
@@ -1040,9 +1037,6 @@ pc.extend(pc, (function () {
 
             det =  m0 * a11 + m1 * a12 + m2 * a13;
             if (det === 0) { // no inverse
-                // #ifdef DEBUG
-                console.warn('pc.Mat4#invertTo3x3: Can\'t invert matrix, determinant is 0');
-                // #endif
                 return this;
             }
 
