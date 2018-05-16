@@ -234,7 +234,7 @@ pc.extend(pc, function () {
                         resy = this._parent.element.calculatedHeight;
                         px = this._parent.element.pivot.x;
                         py = this._parent.element.pivot.y;
-                    } else if (screen) {
+                    } else {
                         // use screen rect
                         var resolution = screen.screen.resolution;
                         resx = resolution.x / screen.screen.scale;
