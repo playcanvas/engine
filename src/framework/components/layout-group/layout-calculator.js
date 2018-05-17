@@ -50,12 +50,13 @@ pc.extend(pc, function () {
         APPLY_SHRINKING: 'APPLY_SHRINKING'
     };
 
+    var availableSpace = new pc.Vec2();
+
     // The layout logic is largely identical for the horizontal and vertical orientations,
     // with the exception of a few bits of swizzling re the primary and secondary axes to
     // use etc. This function generates a calculator for a given orientation, with each of
     // the swizzled properties conveniently placed in closure scope.
     function createCalculator(orientation) {
-        var availableSpace;
         var options;
 
         // Choose which axes to operate on based on the orientation that we're using. For
@@ -75,10 +76,8 @@ pc.extend(pc, function () {
         function calculateAll(allElements, layoutOptions) {
             options = layoutOptions;
 
-            availableSpace = new pc.Vec2(
-                options.containerSize.x - options.padding.data[0] - options.padding.data[2],
-                options.containerSize.y - options.padding.data[1] - options.padding.data[3]
-            );
+            availableSpace.x = options.containerSize.x - options.padding.data[0] - options.padding.data[2];
+            availableSpace.y = options.containerSize.y - options.padding.data[1] - options.padding.data[3];
 
             resetAnchors(allElements);
 
