@@ -152,8 +152,6 @@ pc.extend(pc, function () {
             var layoutInfo = this._layoutCalculator.calculateLayout(elements, options);
             this._isPerformingReflow = false;
 
-            console.log(layoutInfo);
-
             this.fire('reflow', layoutInfo);
         },
 
