@@ -73,6 +73,7 @@ pc.extend(pc, function () {
         function maxExtentB(element, size) { return  size[b.size] * (1 - element.pivot[b.axis]); } // eslint-disable-line
 
         function calculateAll(allElements, layoutOptions) {
+            allElements = allElements.filter(shouldIncludeInLayout);
             options = layoutOptions;
 
             availableSpace = new pc.Vec2(
@@ -88,6 +89,12 @@ pc.extend(pc, function () {
 
             applyAlignmentAndPadding(lines, sizes, positions);
             applySizesAndPositions(lines, sizes, positions);
+
+            return createLayoutInfo(lines, sizes, positions);
+        }
+
+        function shouldIncludeInLayout(element) {
+            return !element.entity.layoutchild || !element.entity.layoutchild.excludeFromLayout;
         }
 
         // Setting the anchors of child elements to anything other than 0,0,0,0 results
@@ -386,6 +393,8 @@ pc.extend(pc, function () {
             cursor[a.axis] = 0;
             cursor[b.axis] = 0;
 
+            lines[a.size] = Number.NEGATIVE_INFINITY;
+
             var positionsAllLines = [];
 
             for (var lineIndex = 0; lineIndex < lines.length; ++lineIndex) {
@@ -417,6 +426,9 @@ pc.extend(pc, function () {
                 // Record the size of the overall line
                 line[a.size] = cursor[a.axis] - options.spacing[a.axis];
                 line[b.size] = line.largestSize[b.size];
+
+                // Keep track of the longest line
+                lines[a.size] = Math.max(lines[a.size], line[a.size]);
 
                 // Move the cursor to the next line
                 cursor[a.axis] = 0;
@@ -484,6 +496,13 @@ pc.extend(pc, function () {
                     }
                 }
             }
+        }
+
+        function createLayoutInfo(lines) {
+            // TODO Implement properly
+            return {
+                bounds: new pc.Vec4(0, lines[b.size], lines[a.size], 0)
+            };
         }
 
         // Reads all size-related properties for each element and applies some basic
@@ -639,7 +658,7 @@ pc.extend(pc, function () {
             if (!calculateFn) {
                 throw new Error('Unrecognized orientation value: ' + options.orientation);
             } else {
-                calculateFn(elements, options);
+                return calculateFn(elements, options);
             }
         }
     };
