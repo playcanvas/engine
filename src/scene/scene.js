@@ -336,7 +336,20 @@
         COMPUPDATED_BLEND: 8,
 
         ASPECT_AUTO: 0,
-        ASPECT_MANUAL: 1
+        ASPECT_MANUAL: 1,
+
+        /**
+         * @enum pc.ORIENTATION
+         * @name pc.ORIENTATION_HORIZONTAL
+         * @description Horizontal orientation.
+         */
+        ORIENTATION_HORIZONTAL: 0,
+        /**
+         * @enum pc.ORIENTATION
+         * @name pc.ORIENTATION_VERTICAL
+         * @description Vertical orientation.
+         */
+        ORIENTATION_VERTICAL: 1
     };
 
     pc.extend(pc, enums);

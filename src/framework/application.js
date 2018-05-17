@@ -470,6 +470,8 @@ pc.extend(pc, function () {
         new pc.ScreenComponentSystem(this);
         new pc.ElementComponentSystem(this);
         new pc.ButtonComponentSystem(this);
+        new pc.ScrollViewComponentSystem(this);
+        new pc.ScrollbarComponentSystem(this);
         new pc.SpriteComponentSystem(this);
         new pc.LayoutGroupComponentSystem(this);
         new pc.LayoutChildComponentSystem(this);
