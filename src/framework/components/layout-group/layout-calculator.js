@@ -499,9 +499,19 @@ pc.extend(pc, function () {
         }
 
         function createLayoutInfo(lines) {
-            // TODO Implement properly
+            var layoutWidth = lines.width;
+            var layoutHeight = lines.height;
+
+            var xOffset = (availableSpace.x - layoutWidth) * options.alignment.x + options.padding.x;
+            var yOffset = (availableSpace.y - layoutHeight) * options.alignment.y + options.padding.y;
+
             return {
-                bounds: new pc.Vec4(0, lines[b.size], lines[a.size], 0)
+                bounds: new pc.Vec4(
+                    xOffset,
+                    yOffset,
+                    layoutWidth,
+                    layoutHeight
+                )
             };
         }
 
