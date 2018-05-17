@@ -291,6 +291,34 @@ test("takes into account each element's pivot when calculating vertical position
     this.assertValues('y', [50, 110, 150, 250, 270], { approx: true });
 });
 
+test("returns a layoutInfo object containing the layout bounds", function () {
+    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
+    this.options.wrap = true;
+    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
+    this.options.widthFitting = pc.FITTING_NONE;
+
+    var layoutInfo;
+
+    this.options.alignment.x = 0;
+    this.options.alignment.y = 0;
+    layoutInfo = this.calculate();
+    deepEqual(layoutInfo.bounds.data, new Float32Array([0, 0, 300, 100]));
+
+    this.options.alignment.x = 1;
+    this.options.alignment.y = 0.5;
+    layoutInfo = this.calculate();
+    deepEqual(layoutInfo.bounds.data, new Float32Array([200, 150, 300, 100]));
+
+    this.options.alignment.x = 0.5;
+    this.options.alignment.y = 1;
+    layoutInfo = this.calculate();
+    deepEqual(layoutInfo.bounds.data, new Float32Array([100, 300, 300, 100]));
+
+    this.options.widthFitting = pc.FITTING_STRETCH;
+    layoutInfo = this.calculate();
+    deepEqual(layoutInfo.bounds.data, new Float32Array([0, 300, 500, 100]));
+});
+
 test("{ wrap: false } pc.FITTING_NONE does not adjust the size or position of elements to match the container size", function () {
     this.elements = this.mixedWidthElements;
     this.options.orientation = pc.ORIENTATION_HORIZONTAL;
