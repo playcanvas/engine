@@ -513,8 +513,8 @@ test("{ wrap: false } can reverse elements on the x axis", function () {
 
     this.calculate();
 
-    this.assertValues('x', [0, 30, 50, 150, 200]);
-    this.assertValues('y', [0,  0,  0,   0,   0]);
+    this.assertValues('x', [200, 150, 50, 30, 0]);
+    this.assertValues('y', [0,     0,  0,  0, 0]);
 });
 
 test("{ wrap: false } can reverse elements on the y axis", function () {
@@ -526,8 +526,8 @@ test("{ wrap: false } can reverse elements on the y axis", function () {
 
     this.calculate();
 
-    this.assertValues('x', [0,  0,  0,   0,   0]);
-    this.assertValues('y', [0, 30, 50, 150, 200]);
+    this.assertValues('x', [0,     0,  0,  0, 0]);
+    this.assertValues('y', [200, 150, 50, 30, 0]);
 });
 
 test("{ wrap: false } can align to [1, 0.5]", function () {
@@ -558,6 +558,18 @@ test("{ wrap: false } can align to [0.5, 1]", function () {
 
     this.assertValues('x', [-20,  80, 130, 230, 250]);
     this.assertValues('y', [300, 300, 300, 300, 300]);
+});
+
+test("{ wrap: false } can exclude elements from the layout", function () {
+    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
+    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
+
+    this.elements[1].entity.layoutchild.excludeFromLayout = true;
+
+    this.calculate();
+
+    this.assertValues('x', [0, 0, 100, 200, 220]);
+    this.assertValues('y', [0, 0,   0,   0,   0]);
 });
 
 test("{ wrap: true } pc.FITTING_NONE does not adjust the size or position of elements to match the container size", function () {
@@ -773,4 +785,19 @@ test("{ wrap: true } can align to [0.5, 1]", function () {
 
     this.assertValues('x', [  5, 105, 155, 105, 125]);
     this.assertValues('y', [200, 200, 200, 300, 300]);
+});
+
+test("{ wrap: false } can exclude elements from the layout", function () {
+    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
+    this.options.wrap = true;
+    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
+    this.options.widthFitting = pc.FITTING_NONE;
+    this.options.containerSize.x = 260;
+
+    this.elements[1].entity.layoutchild.excludeFromLayout = true;
+
+    this.calculate();
+
+    this.assertValues('x', [0, 0, 100, 200, 220]);
+    this.assertValues('y', [0, 0,   0,   0,   0]);
 });
