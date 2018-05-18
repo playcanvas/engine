@@ -582,6 +582,10 @@ pc.extend(pc, function () {
             if (this._meshInstance) {
                 this._meshInstance.setParameter('material_emissive', this._color.data3);
             }
+
+            if (this._element) {
+                this._element.fire('set:color', this._color);
+            }
         }
     });
 
@@ -593,6 +597,10 @@ pc.extend(pc, function () {
         set: function (value) {
             this._color.data[3] = value;
             this._meshInstance.setParameter("material_opacity", value);
+
+            if (this._element) {
+                this._element.fire('set:opacity', this._color.data[3]);
+            }
         }
     });
 
@@ -627,10 +635,7 @@ pc.extend(pc, function () {
                 this._meshInstance.material = value;
 
                 // if this is not the default material then clear color and opacity overrides
-                if (value !== this._system.defaultScreenSpaceImageMaterial &&
-                    value !== this._system.defaultImageMaterial &&
-                    value !== this._system.defaultImageMaskMaterial &&
-                    value !== this._system.defaultScreenSpaceImageMaskMaterial) {
+                if (this._hasUserMaterial()) {
                     this._meshInstance.deleteParameter('material_opacity');
                     this._meshInstance.deleteParameter('material_emissive');
                 } else {
@@ -775,6 +780,10 @@ pc.extend(pc, function () {
                 } else {
                     this.sprite = null;
                 }
+
+                if (this._element) {
+                    this._element.fire('set:spriteAsset', _id);
+                }
             }
         }
     });
@@ -846,6 +855,10 @@ pc.extend(pc, function () {
 
             if (this.mesh) {
                 this._updateMesh(this.mesh);
+            }
+
+            if (this._element) {
+                this._element.fire('set:spriteFrame', value);
             }
         }
     });
