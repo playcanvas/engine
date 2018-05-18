@@ -231,10 +231,10 @@ pc.extend(pc, function () {
                     this.renderTarget = null;
                 },
 
-                onDrawCall: function(meshInstance, i) {
-                    self.pickColor[0] = ((i >> 16) & 0xff) / 255;
-                    self.pickColor[1] = ((i >> 8) & 0xff) / 255;
-                    self.pickColor[2] = (i & 0xff) / 255;
+                onDrawCall: function(meshInstance, index) {
+                    self.pickColor[0] = ((index >> 16) & 0xff) / 255;
+                    self.pickColor[1] = ((index >> 8) & 0xff) / 255;
+                    self.pickColor[2] = (index & 0xff) / 255;
                     pickColorId.setValue(self.pickColor);
                     device.setBlending(false);
                 },

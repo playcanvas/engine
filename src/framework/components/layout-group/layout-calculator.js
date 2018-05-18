@@ -518,16 +518,6 @@ pc.extend(pc, function () {
             return sizeProperties;
         }
 
-        function getProperties(elements, propertyName) {
-            var properties = [];
-
-            for (var i = 0; i < elements.length; ++i) {
-                properties.push(getProperty(elements[i], propertyName));
-            }
-
-            return properties;
-        }
-
         // When reading an element's width/height, minWidth/minHeight etc, we have to look in
         // a few different places in order. This is because the presence of a LayoutChildComponent
         // on each element is optional, and each property value also has a set of fallback defaults

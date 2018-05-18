@@ -816,13 +816,11 @@ pc.extend(pc, function () {
             gl.stencilMask(0xFF);
 
             this.alphaToCoverage = false;
+            this.raster = true;
             if (this.webgl2) {
                 gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
                 gl.disable(gl.RASTERIZER_DISCARD);
             }
-
-            this.raster = true;
-
 
             this.depthBiasEnabled = false;
             gl.disable(gl.POLYGON_OFFSET_FILL);
