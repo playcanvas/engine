@@ -187,6 +187,7 @@
 ../src/framework/components/zone/system.js
 ../src/framework/components/zone/data.js
 ../src/framework/entity.js
+../src/framework/utils/entity-reference.js
 ../src/resources/loader.js
 ../src/resources/animation.js
 ../src/resources/audio.js
