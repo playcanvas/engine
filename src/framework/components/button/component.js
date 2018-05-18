@@ -174,8 +174,6 @@ pc.extend(pc, function () {
                 this._imageEntity.element[onOrOff]('set:opacity', this._onSetOpacity, this);
                 this._imageEntity.element[onOrOff]('set:spriteAsset', this._onSetSpriteAsset, this);
                 this._imageEntity.element[onOrOff]('set:spriteFrame', this._onSetSpriteFrame, this);
-                this._imageEntity.element[onOrOff]('click', this._onClick, this);
-
                 this._imageEntity.element[onOrOff]('touchstart', this._onTouchStart, this);
                 this._imageEntity.element[onOrOff]('touchend', this._onTouchEnd, this);
                 this._imageEntity.element[onOrOff]('touchleave', this._onTouchLeave, this);
@@ -184,6 +182,7 @@ pc.extend(pc, function () {
                 this._imageEntity.element[onOrOff]('mouseleave', this._onMouseLeave, this);
                 this._imageEntity.element[onOrOff]('mousedown', this._onMouseDown, this);
                 this._imageEntity.element[onOrOff]('mouseup', this._onMouseUp, this);
+                this._imageEntity.element[onOrOff]('click', this._onClick, this);
 
                 this._hasImageListeners = isAdding;
             }
