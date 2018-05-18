@@ -176,6 +176,13 @@ pc.extend(pc, function () {
                 this._imageEntity.element[onOrOff]('set:spriteFrame', this._onSetSpriteFrame, this);
                 this._imageEntity.element[onOrOff]('click', this._onClick, this);
 
+                // Checking for browser touch support here fixes an issue whereby buttons would enter
+                // the `hover` state on mobile browsers after the `touchend` event was received, instead
+                // of going back to the `default` state. This was happening because the default behaviour
+                // of browser is to simulate a series of `mouseenter/down/up` events immediately after
+                // the `touchend` event, in order to ensure that websites that don't explicitly listen
+                // for touch events will still work on mobile (see https://www.html5rocks.com/en/mobile/touchandmouse/
+                // for reference).
                 if ('ontouchstart' in window) {
                     this._imageEntity.element[onOrOff]('touchstart', this._onTouchStart, this);
                     this._imageEntity.element[onOrOff]('touchend', this._onTouchEnd, this);
