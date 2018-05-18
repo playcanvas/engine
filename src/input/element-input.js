@@ -228,7 +228,9 @@ pc.extend(pc, function () {
 
             if ('ontouchstart' in window) {
                 this._target.addEventListener('touchstart', this._touchstartHandler, { passive: true });
-                this._target.addEventListener('touchend', this._touchendHandler, { passive: true });
+                // Passive is not used for the touchend event because some components need to be
+                // able to call preventDefault(). See notes in button/component.js for more details.
+                this._target.addEventListener('touchend', this._touchendHandler, false);
                 this._target.addEventListener('touchmove', this._touchmoveHandler, false);
                 this._target.addEventListener('touchcancel', this._touchcancelHandler, { passive: true });
             }
