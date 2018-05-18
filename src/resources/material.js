@@ -385,14 +385,6 @@ pc.extend(pc, function () {
                         asset = assets.get(param.data);
                     }
 
-                    var onAdd = function(asset) {
-                        if (data.shadingModel === pc.SPECULAR_PHONG)
-                            asset.loadFaces = true;
-
-                        asset.ready(onReady);
-                        assets.load(asset);
-                    };
-
                     var onReady = function(asset) {
                         param.data = asset.resource;
                         // if this is a prefiltered map, then extra resources are present
@@ -426,6 +418,14 @@ pc.extend(pc, function () {
 
                         asset.off('load', onCubemapAssetLoad, material);
                         asset.on('load', onCubemapAssetLoad, material);
+                    };
+
+                    var onAdd = function(asset) {
+                        if (data.shadingModel === pc.SPECULAR_PHONG)
+                            asset.loadFaces = true;
+
+                        asset.ready(onReady);
+                        assets.load(asset);
                     };
 
                     if (asset) {

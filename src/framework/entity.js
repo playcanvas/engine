@@ -398,8 +398,12 @@ pc.extend(pc, function () {
             // in order to correctly handle cases where a child has an entity reference
             // field that points to a parent or other ancestor that is still within the
             // duplicated subtree.
-            var _old = oldEntity.children.filter(function (e) { return (e instanceof pc.Entity); });
-            var _new = newEntity.children.filter(function (e) { return (e instanceof pc.Entity); });
+            var _old = oldEntity.children.filter(function (e) {
+                return (e instanceof pc.Entity);
+            });
+            var _new = newEntity.children.filter(function (e) {
+                return (e instanceof pc.Entity);
+            });
             _old.forEach(function(oldChild, index) {
                 resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldChild, _new[index], duplicatedIdsMap);
             });
