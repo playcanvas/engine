@@ -94,7 +94,9 @@ pc.extend(pc, function () {
         }
 
         function shouldIncludeInLayout(element) {
-            return !element.entity.layoutchild || !element.entity.layoutchild.excludeFromLayout;
+            var layoutChildComponent = element.entity.layoutchild;
+
+            return !layoutChildComponent || !layoutChildComponent.enabled || !layoutChildComponent.excludeFromLayout;
         }
 
         // Setting the anchors of child elements to anything other than 0,0,0,0 results
