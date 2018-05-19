@@ -15,13 +15,16 @@ pc.extend(pc, function () {
         // Indices of bones in this partition. skin matrices will be uploaded to the vertex shader in this order.
         this.boneIndices = [];
 
-        this.vertices = []; // Partitioned vertex attributes
-        this.indices = [];  // Partitioned vertex indices
-        this.indexMap = {}; // Maps the index of an un-partitioned vertex to that same vertex if it has been added
-                            /*
-                             * to this particular partition. speeds up checking for duplicate vertices so we don't
-                             * add the same vertex more than once.
-                             */
+        // Partitioned vertex attributes
+        this.vertices = [];
+        // Partitioned vertex indices
+        this.indices = [];
+        /*
+         * Maps the index of an un-partitioned vertex to that same vertex if it has been added
+         * to this particular partition. speeds up checking for duplicate vertices so we don't
+         * add the same vertex more than once.
+         */
+        this.indexMap = {};
     }
 
     SkinPartition.prototype = {

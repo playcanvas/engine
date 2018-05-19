@@ -350,10 +350,10 @@ pc.extend(pc, function () {
      * SUBLAYER GROUPS
      * If there are multiple sublayer with identical _cameraHash without anything in between, these are called a SUBLAYER GROUP
      * instead of
-     * for each sublayer
-     * for each camera
+     *     for each sublayer
+     *         for each camera
      * we go
-     * for each sublayerGroup
+     *     for each sublayerGroup
      */
 
     /**

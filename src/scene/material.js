@@ -399,12 +399,6 @@ pc.extend(pc, function () {
         // Push each shader parameter into scope
         for (var paramName in this.parameters) {
             var parameter = this.parameters[paramName];
-            /*
-             * TODO: Fix https://github.com/playcanvas/engine/issues/597
-             * if (!parameter.scopeId) {
-             *    parameter.scopeId = device.scope.resolve(paramName);
-             * }
-             */
             parameter.scopeId.setValue(parameter.data);
         }
     };

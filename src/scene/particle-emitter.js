@@ -134,18 +134,6 @@ pc.extend(pc, function() {
         return colors;
     }
 
-/*
- * function syncToCpu(device, targ) {
- * var tex = targ._colorBuffer;
- * var pixels = new Uint8Array(tex.width * tex.height * 4);
- * var gl = device.gl;
- * device.setFramebuffer(targ._glFrameBuffer);
- * gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
- * if (!tex._levels) tex._levels = [];
- * tex._levels[0] = pixels;
- * }
- */
-
     var ParticleEmitter = function (graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
         var gd = graphicsDevice;
@@ -429,11 +417,6 @@ pc.extend(pc, function() {
         calculateWorldBounds: function() {
             if (!this.node) return;
 
-            /*
-             * var pos = this.node.getPosition();
-             * if (this.prevPos.equals(pos)) return; // TODO: test whole matrix?
-             */
-
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
 
@@ -654,12 +637,6 @@ pc.extend(pc, function() {
             this.material.cullMode = pc.CULLFACE_NONE;
             this.material.alphaWrite = false;
             this.material.blend = true;
-
-            /*
-             * Premultiplied alpha. We can use it for both additive and alpha-transparent blending.
-             * this.material.blendSrc = pc.BLENDMODE_ONE;
-             * this.material.blendDst = pc.BLENDMODE_ONE_MINUS_SRC_ALPHA;
-             */
             this.material.blendType = this.blendType;
 
             this.material.depthWrite = this.depthWrite;
@@ -1002,16 +979,8 @@ pc.extend(pc, function() {
                 }
 
                 var id;
-//              var rnd;
                 for (i = 0; i < psysVertCount; i++) {
                     id = Math.floor(i / this.numParticleVerts);
-/*
- * if (this.useCpu) {
- * if (i % this.numParticleVerts === 0) {
- * rnd = this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
- * }
- * }
- */
                     if (!this.useMesh) {
                         var vertID = i % 4;
                         data[i * 4] = particleVerts[vertID][0];
@@ -1342,11 +1311,6 @@ pc.extend(pc, function() {
                         b = this.qVelocity2[cc + 2];
                         velocityVec2.data[2] = a + (b - a) * c;
 
-                        /*
-                         * localVelocityVec.data[0] = pc.math.lerp(localVelocityVec.data[0], localVelocityVec2.data[0], rndFactor3Vec.data[0]);
-                         * localVelocityVec.data[1] = pc.math.lerp(localVelocityVec.data[1], localVelocityVec2.data[1], rndFactor3Vec.data[1]);
-                         * localVelocityVec.data[2] = pc.math.lerp(localVelocityVec.data[2], localVelocityVec2.data[2], rndFactor3Vec.data[2]);
-                         */
                         localVelocityVec.data[0] = localVelocityVec.data[0] + (localVelocityVec2.data[0] - localVelocityVec.data[0]) * rndFactor3Vec.data[0];
                         localVelocityVec.data[1] = localVelocityVec.data[1] + (localVelocityVec2.data[1] - localVelocityVec.data[1]) * rndFactor3Vec.data[1];
                         localVelocityVec.data[2] = localVelocityVec.data[2] + (localVelocityVec2.data[2] - localVelocityVec.data[2]) * rndFactor3Vec.data[2];
@@ -1360,19 +1324,10 @@ pc.extend(pc, function() {
                             }
                         }
 
-                        /*
-                         * velocityVec.data[0] = pc.math.lerp(velocityVec.data[0], velocityVec2.data[0], rndFactor3Vec.data[0]);
-                         * velocityVec.data[1] = pc.math.lerp(velocityVec.data[1], velocityVec2.data[1], rndFactor3Vec.data[1]);
-                         * velocityVec.data[2] = pc.math.lerp(velocityVec.data[2], velocityVec2.data[2], rndFactor3Vec.data[2]);
-                         */
                         velocityVec.data[0] = velocityVec.data[0] + (velocityVec2.data[0] - velocityVec.data[0]) * rndFactor3Vec.data[0];
                         velocityVec.data[1] = velocityVec.data[1] + (velocityVec2.data[1] - velocityVec.data[1]) * rndFactor3Vec.data[1];
                         velocityVec.data[2] = velocityVec.data[2] + (velocityVec2.data[2] - velocityVec.data[2]) * rndFactor3Vec.data[2];
 
-                        /*
-                         * rotSpeed = pc.math.lerp(rotSpeed, rotSpeed2, rndFactor3Vec.data[1]);
-                         * scale = pc.math.lerp(scale, scale2, (rndFactor * 10000.0) % 1.0) * uniformScale;
-                         */
                         rotSpeed = rotSpeed + (rotSpeed2 - rotSpeed) * rndFactor3Vec.data[1];
                         scale = (scale + (scale2 - scale) * ((rndFactor * 10000.0) % 1.0)) * uniformScale;
                         alphaDiv = (alpha2 - alpha) * ((rndFactor * 1000.0) % 1.0);

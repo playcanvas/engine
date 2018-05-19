@@ -437,10 +437,7 @@ pc.extend(pc.Application.prototype, function () {
 
         this._initImmediate();
 
-        /*
-         * Init quad data once
-         * if (!this._immediateData.quadMesh) {
-         */
+        // Init quad data once
         if (!this._immediateData.quadMesh) {
             var format = new pc.VertexFormat(this.graphicsDevice, [
                 { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 }
@@ -462,10 +459,8 @@ pc.extend(pc.Application.prototype, function () {
             this._immediateData.quadMesh.primitive[0].count = 4;
             this._immediateData.quadMesh.primitive[0].indexed = false;
         }
-        /*
-         * }
-         * Issue quad drawcall
-         */
+
+        // Issue quad drawcall
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;
 
