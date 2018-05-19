@@ -112,8 +112,12 @@ pc.extend(pc, function () {
             });
 
             while (this._reflowQueue.length > 0) {
-                var component = this._reflowQueue.shift();
-                component.reflow();
+                // Note that we leave the current item in the queue while performing its reflow
+                // and then remove it afterwards, rather than removing it first and then reflowing
+                // it. This is safer because the item cannot re-enter the queue while it is
+                // already in there (due to the check performed in the scheduleReflow() method).
+                this._reflowQueue[0].reflow();
+                this._reflowQueue.shift();
             }
 
             this._reflowQueue = [];

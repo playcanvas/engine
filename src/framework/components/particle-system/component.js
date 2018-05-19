@@ -471,9 +471,12 @@ pc.extend(pc, function() {
 
 
         onEnable: function() {
+            // get data store once
+            var data = this.data;
+
             // load any assets that haven't been loaded yet
             for (var i = 0, len = ASSET_PROPERTIES.length; i < len; i++) {
-                var asset = this.data[ASSET_PROPERTIES[i]];
+                var asset = data[ASSET_PROPERTIES[i]];
                 if (asset) {
                     if (! (asset instanceof pc.Asset)) {
                         var id = parseInt(asset, 10);
@@ -491,8 +494,8 @@ pc.extend(pc, function() {
             }
 
             if (! this.emitter) {
+                var mesh = data.mesh;
 
-                var mesh = this.data.mesh;
                 /*
                  * mesh might be an asset id of an asset
                  * that hasn't been loaded yet
@@ -501,62 +504,62 @@ pc.extend(pc, function() {
                     mesh = null;
 
                 this.emitter = new pc.ParticleEmitter(this.system.app.graphicsDevice, {
-                    numParticles: this.data.numParticles,
-                    emitterExtents: this.data.emitterExtents,
-                    emitterRadius: this.data.emitterRadius,
-                    emitterShape: this.data.emitterShape,
-                    initialVelocity: this.data.initialVelocity,
-                    wrap: this.data.wrap,
-                    localSpace: this.data.localSpace,
-                    wrapBounds: this.data.wrapBounds,
-                    lifetime: this.data.lifetime,
-                    rate: this.data.rate,
-                    rate2: this.data.rate2,
+                    numParticles: data.numParticles,
+                    emitterExtents: data.emitterExtents,
+                    emitterRadius: data.emitterRadius,
+                    emitterShape: data.emitterShape,
+                    initialVelocity: data.initialVelocity,
+                    wrap: data.wrap,
+                    localSpace: data.localSpace,
+                    wrapBounds: data.wrapBounds,
+                    lifetime: data.lifetime,
+                    rate: data.rate,
+                    rate2: data.rate2,
 
-                    animTilesX: this.data.animTilesX,
-                    animTilesY: this.data.animTilesY,
-                    animNumFrames: this.data.animNumFrames,
-                    animSpeed: this.data.animSpeed,
-                    animLoop: this.data.animLoop,
+                    animTilesX: data.animTilesX,
+                    animTilesY: data.animTilesY,
+                    animNumFrames: data.animNumFrames,
+                    animSpeed: data.animSpeed,
+                    animLoop: data.animLoop,
 
-                    startAngle: this.data.startAngle,
-                    startAngle2: this.data.startAngle2,
+                    startAngle: data.startAngle,
+                    startAngle2: data.startAngle2,
 
-                    scaleGraph: this.data.scaleGraph,
-                    scaleGraph2: this.data.scaleGraph2,
+                    scaleGraph: data.scaleGraph,
+                    scaleGraph2: data.scaleGraph2,
 
-                    colorGraph: this.data.colorGraph,
-                    colorGraph2: this.data.colorGraph2,
+                    colorGraph: data.colorGraph,
+                    colorGraph2: data.colorGraph2,
 
-                    alphaGraph: this.data.alphaGraph,
-                    alphaGraph2: this.data.alphaGraph2,
+                    alphaGraph: data.alphaGraph,
+                    alphaGraph2: data.alphaGraph2,
 
-                    localVelocityGraph: this.data.localVelocityGraph,
-                    localVelocityGraph2: this.data.localVelocityGraph2,
+                    localVelocityGraph: data.localVelocityGraph,
+                    localVelocityGraph2: data.localVelocityGraph2,
 
-                    velocityGraph: this.data.velocityGraph,
-                    velocityGraph2: this.data.velocityGraph2,
+                    velocityGraph: data.velocityGraph,
+                    velocityGraph2: data.velocityGraph2,
 
-                    rotationSpeedGraph: this.data.rotationSpeedGraph,
-                    rotationSpeedGraph2: this.data.rotationSpeedGraph2,
+                    rotationSpeedGraph: data.rotationSpeedGraph,
+                    rotationSpeedGraph2: data.rotationSpeedGraph2,
 
-                    colorMap: this.data.colorMap,
-                    normalMap: this.data.normalMap,
-                    loop: this.data.loop,
-                    preWarm: this.data.preWarm,
-                    sort: this.data.sort,
-                    stretch: this.data.stretch,
-                    alignToMotion: this.data.alignToMotion,
-                    lighting: this.data.lighting,
-                    halfLambert: this.data.halfLambert,
-                    intensity: this.data.intensity,
-                    depthSoftening: this.data.depthSoftening,
+                    colorMap: data.colorMap,
+                    normalMap: data.normalMap,
+                    loop: data.loop,
+                    preWarm: data.preWarm,
+                    sort: data.sort,
+                    stretch: data.stretch,
+                    alignToMotion: data.alignToMotion,
+                    lighting: data.lighting,
+                    halfLambert: data.halfLambert,
+                    intensity: data.intensity,
+                    depthSoftening: data.depthSoftening,
                     scene: this.system.app.scene,
                     mesh: mesh,
-                    depthWrite: this.data.depthWrite,
-                    noFog: this.data.noFog,
+                    depthWrite: data.depthWrite,
+                    noFog: data.noFog,
                     node: this.entity,
-                    blendType: this.data.blendType
+                    blendType: data.blendType
                 });
 
                 this.emitter.meshInstance.node = this.entity;
@@ -565,16 +568,16 @@ pc.extend(pc, function() {
                 this.psys.graph = this.entity;
                 this.psys.emitter = this.emitter;
                 this.psys.meshInstances = [this.emitter.meshInstance];
-                this.data.model = this.psys;
+                data.model = this.psys;
                 this.emitter.psys = this.psys;
 
-                if (!this.data.autoPlay) {
+                if (!data.autoPlay) {
                     this.pause();
                     this.emitter.meshInstance.visible = false;
                 }
             }
 
-            if (this.data.model && this.emitter.colorMap) {
+            if (data.model && this.emitter.colorMap) {
                 this.addModelToLayers();
             }
 
@@ -584,7 +587,9 @@ pc.extend(pc, function() {
                 this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
             }
 
-            if (this.enabled && this.entity.enabled) this._requestDepth();
+            if (this.enabled && this.entity.enabled && data.depthSoftening) {
+                this._requestDepth();
+            }
 
             ParticleSystemComponent._super.onEnable.call(this);
         },

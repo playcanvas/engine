@@ -153,8 +153,10 @@ pc.extend(pc, function () {
              * we flag that a reflow is currently in progress.
              */
             this._isPerformingReflow = true;
-            this._layoutCalculator.calculateLayout(elements, options);
+            var layoutInfo = this._layoutCalculator.calculateLayout(elements, options);
             this._isPerformingReflow = false;
+
+            this.fire('reflow', layoutInfo);
         },
 
         onEnable: function() {
