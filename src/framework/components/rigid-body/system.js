@@ -454,49 +454,6 @@ pc.extend(pc, function () {
             }
         },
 
-        /**
-         * @private
-         * @name pc.RigidBodyComponentSystem#raycast
-         * @description Raycast the world and return all entities the ray hits. Fire a ray into the world from start to end,
-         * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.RaycastResult}.
-         * @param {pc.Vec3} start The world space point where the ray starts
-         * @param {pc.Vec3} end The world space point where the ray ends
-         * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.RaycastResult} object
-         */
-        /*
-         * raycast: function (start, end, callback) {
-         *     var rayFrom = new Ammo.btVector3(start.x, start.y, start.z);
-         *     var rayTo = new Ammo.btVector3(end.x, end.y, end.z);
-         *     var rayCallback = new Ammo.AllHitsRayResultCallback(rayFrom, rayTo);
-         */
-
-        /*
-         *     this.dynamicsWorld.rayTest(rayFrom, rayTo, rayCallback);
-         *     if (rayCallback.hasHit()) {
-         *         var body = Module.castObject(rayCallback.get_m_collisionObject(), Ammo.btRigidBody);
-         *         var point = rayCallback.get_m_hitPointWorld();
-         *         var normal = rayCallback.get_m_hitNormalWorld();
-         */
-
-        /*
-         *         if (body) {
-         *             callback(new RaycastResult(
-         *                             body.entity,
-         *                             new pc.Vec3(point.x(), point.y(), point.z()),
-         *                             new pc.Vec3(normal.x(), normal.y(), normal.z())
-         *                         )
-         *                     );
-         *         }
-         *     }
-         */
-
-        /*
-         *     Ammo.destroy(rayFrom);
-         *     Ammo.destroy(rayTo);
-         *     Ammo.destroy(rayCallback);
-         * },
-         */
-
         onUpdate: function (dt) {
             // #ifdef PROFILER
             this._stats.physicsStart = pc.now();

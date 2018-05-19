@@ -258,8 +258,9 @@ pc.extend(pc, function () {
                      * only called if layer order changed
                      * detect chains of posteffects and combine if possible
                      * won't work with uniform collisions
-                     * #ifdef DEBUG
                      */
+
+                    // #ifdef DEBUG
                     console.log("Trying to combine shaders...");
                     // #endif
                     var iterator = 0;
@@ -352,28 +353,26 @@ pc.extend(pc, function () {
 
                 /*
                  * getting from
-                 * world -> backbuffer
-                 * backbuffer -> post1 -> backbuffer
-                 * backbuffer -> post2 -> backbuffer
+                 *     world -> backbuffer
+                 *     backbuffer -> post1 -> backbuffer
+                 *     backbuffer -> post2 -> backbuffer
                  * to
-                 * world -> rt0
-                 * rt0 -> post1 -> rt1
-                 * rt1 -> post2 -> backbuffer
+                 *     world -> rt0
+                 *     rt0 -> post1 -> rt1
+                 *     rt1 -> post2 -> backbuffer
                  */
-
 
                 /*
                  * other case:
-                 * world -> backbuffer
-                 * backbuffer -> post -> someRt
-                 * otherObjects -> backbuffer
+                 *     world -> backbuffer
+                 *     backbuffer -> post -> someRt
+                 *     otherObjects -> backbuffer
                  * ->
-                 * world -> rt0
-                 * rt0 -> post -> someRt
-                 * otherObjects -> rt0
-                 * if no posteffects writing backbuffer, rt0 -> backbuffer
+                 *     world -> rt0
+                 *     rt0 -> post -> someRt
+                 *     otherObjects -> rt0
+                 *     if no posteffects writing backbuffer, rt0 -> backbuffer
                  */
-
                 for (i = 0; i < layers.length; i++) {
                     if (layers[i].isPostEffect && ((!layers[i].postEffect.srcRenderTarget && !layers[i]._postEffectCombined) ||
                                                    (!layers[i].postEffect._postEffectCombinedSrc && layers[i]._postEffectCombined >= 0))) { // layer i is posteffect reading from backbuffer
