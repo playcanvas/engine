@@ -2385,7 +2385,7 @@ pc.extend(pc, function () {
 
 
         cullDirectionalShadowmap: function(light, drawCalls, camera, pass) {
-            var i, j, shadowCam, shadowCamNode, lightNode, frustumSize, vlen, visibleList;
+            var i, shadowCam, shadowCamNode, lightNode, frustumSize, vlen, visibleList;
             var unitPerTexel, delta, p;
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
             var visible, numInstances;
@@ -2417,16 +2417,16 @@ pc.extend(pc, function () {
             // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
             shadowCamView.copy( shadowCamNode.getWorldTransform() ).invert();
             c2sc.copy( shadowCamView ).mul( camera._node.worldTransform );
-            for (j = 0; j < 8; j++) {
-                c2sc.transformPoint(frustumPoints[j], frustumPoints[j]);
+            for (i = 0; i < 8; i++) {
+                c2sc.transformPoint(frustumPoints[i], frustumPoints[i]);
             }
 
             // 4. Come up with a bounding box (in light-space) by calculating the min
             // and max X, Y, and Z values from your 8 light-space frustum coordinates.
             minx = miny = minz = 1000000;
             maxx = maxy = maxz = -1000000;
-            for (j = 0; j < 8; j++) {
-                p = frustumPoints[j];
+            for (i = 0; i < 8; i++) {
+                p = frustumPoints[i];
                 if (p.x < minx) minx = p.x;
                 if (p.x > maxx) maxx = p.x;
                 if (p.y < miny) miny = p.y;
@@ -2467,8 +2467,8 @@ pc.extend(pc, function () {
             }
             vlen = light._visibleLength[pass] = 0;
 
-            for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
-                meshInstance = drawCalls[j];
+            for (i = 0, numInstances = drawCalls.length; i < numInstances; i++) {
+                meshInstance = drawCalls[i];
                 visible = true;
                 if (meshInstance.cull) {
                     visible = this._isVisible(shadowCam, meshInstance);

@@ -32,9 +32,8 @@ pc.extend(pc, function () {
                     return app.assets.get(value) || null;
                 } else if (typeof(value) === 'string') {
                     return app.assets.get(parseInt(value, 10)) || null;
-                } else {
-                    return null;
                 }
+                return null;
             case 'entity':
                 if (value instanceof pc.GraphNode) {
                     return value;

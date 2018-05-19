@@ -402,7 +402,7 @@ pc.extend(pc, function () {
 
             lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize);
             for (i = 0; i < lists.length; i++) {
-                batch = this.create(lists[i], groupData.dynamic, parseInt(groupId));
+                batch = this.create(lists[i], groupData.dynamic, parseInt(groupId, 10));
                 for (j = 0; j < groupData.layers.length; j++) {
                     this.scene.layers.getLayerById(groupData.layers[j]).addMeshInstances(batch.model.meshInstances);
                 }
