@@ -422,9 +422,7 @@ pc.extend(pc, function () {
         throw Error("Not Implemented in base class");
     };
 
-    ////////////////
-    // DEPRECATED //
-    ////////////////
+    // DEPRECATED
     /**
      * @private
      * @function

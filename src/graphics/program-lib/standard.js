@@ -297,9 +297,7 @@ pc.programlib.standard = {
 
         this.options = options;
 
-        ////////////////////////////
-        // GENERATE VERTEX SHADER //
-        ////////////////////////////
+        // GENERATE VERTEX SHADER
         var code = '';
         var codeBody = '';
 
@@ -545,9 +543,7 @@ pc.programlib.standard = {
             vshader = startCode + vshader;
         }
 
-        //////////////////////////////
-        // GENERATE FRAGMENT SHADER //
-        //////////////////////////////
+        // GENERATE FRAGMENT SHADER
         if (options.forceFragmentPrecision && options.forceFragmentPrecision != "highp" &&
             options.forceFragmentPrecision !== "mediump" && options.forceFragmentPrecision !== "lowp")
             options.forceFragmentPrecision = null;

@@ -138,9 +138,8 @@ pc.extend(pc, function () {
         return { min: minz, max: maxz };
     }
 
-    //////////////////////////////////////
-    // Shadow mapping support functions //
-    //////////////////////////////////////
+    // SHADOW MAPPING SUPPORT FUNCTIONS
+
     function getShadowFormat(device, shadowType) {
         if (shadowType === pc.SHADOW_VSM32) {
             return pc.PIXELFORMAT_RGBA32F;
@@ -2639,7 +2638,7 @@ pc.extend(pc, function () {
 
                     // Render directional shadows once for each camera (will reject more than 1 attempt in this function)
 
-                    //#ifdef PROFILER
+                    // #ifdef PROFILER
                     draws = this._shadowDrawCalls;
                     // #endif
                     this.renderShadows(layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL], cameraPass);

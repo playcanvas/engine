@@ -40,41 +40,27 @@ pc.extend(pc, function () {
                 return null;
             }
 
-            ////////////////////
-            // NODE HIERARCHY //
-            ////////////////////
+            // NODE HIERARCHY
             var nodes = this._parseNodes(data);
 
-            ///////////
-            // SKINS //
-            ///////////
+            // SKINS
             var skins = this._parseSkins(data, nodes);
 
-            ///////////
-            // MORPHS //
-            ///////////
+            // MORPHS
             var morphs = this._parseMorphs(data, nodes);
 
-            ////////////////////
-            // VERTEX BUFFERS //
-            ////////////////////
+            // VERTEX BUFFERS
             var vertexBuffers = this._parseVertexBuffers(data);
 
-            //////////////////
-            // INDEX BUFFER //
-            //////////////////
+            // INDEX BUFFER
             var indices = this._parseIndexBuffers(data, vertexBuffers);
 
-            ////////////
-            // MESHES //
-            ////////////
+            // MESHES
             var meshes = this._parseMeshes(data, skins.skins, morphs.morphs, vertexBuffers, indices.buffer, indices.data);
 
             this._initMorphs(data, morphs.morphs, vertexBuffers, meshes);
 
-            ////////////////////
-            // MESH INSTANCES //
-            ////////////////////
+            // MESH INSTANCES
             var meshInstances = this._parseMeshInstances(data, nodes, meshes, skins.skins, skins.instances, morphs.morphs, morphs.instances);
 
             var model = new pc.Model();

@@ -319,9 +319,9 @@ pc.extend(pc, function () {
                     skins.push(splitSkin);
                 }
 
-                /////////////
-                // Phase 4 //
-                /////////////
+                /*
+                 * Phase 4
+                 */
 
                 // Create a partitioned vertex array
                 var attrib, attribName, data, components;
@@ -363,9 +363,9 @@ pc.extend(pc, function () {
                 // Replace original vertex array with split one
                 vertexArrays[vertexArrays.indexOf(vertexArray)] = splitVertexArray;
 
-                /////////////
-                // Phase 5 //
-                /////////////
+                /*
+                 * Phase 5
+                 */
 
                 // Build new mesh array
                 for (j = 0; j < partitions.length; j++) {

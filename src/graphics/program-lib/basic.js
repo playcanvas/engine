@@ -10,9 +10,7 @@ pc.programlib.basic = {
     },
 
     createShaderDefinition: function (device, options) {
-        /////////////////////////
-        // GENERATE ATTRIBUTES //
-        /////////////////////////
+        // GENERATE ATTRIBUTES
         var attributes = {
             vertex_position: pc.SEMANTIC_POSITION
         };
@@ -29,9 +27,7 @@ pc.programlib.basic = {
 
         var chunks = pc.shaderChunks;
 
-        ////////////////////////////
-        // GENERATE VERTEX SHADER //
-        ////////////////////////////
+        // GENERATE VERTEX SHADER
         var code = '';
 
         // VERTEX SHADER DECLARATIONS
@@ -85,9 +81,7 @@ pc.programlib.basic = {
 
         var vshader = code;
 
-        //////////////////////////////
-        // GENERATE FRAGMENT SHADER //
-        //////////////////////////////
+        // GENERATE FRAGMENT SHADER
         code = pc.programlib.precisionCode(device);
 
         // FRAGMENT SHADER DECLARATIONS
