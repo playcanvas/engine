@@ -346,13 +346,13 @@ pc.extend(pc, function () {
             var flags = 0;
 
             if (this.clearColorBuffer)
-                flags = flags | pc.CLEARFLAG_COLOR;
+                flags |= pc.CLEARFLAG_COLOR;
 
             if (this.clearDepthBuffer)
-                flags = flags | pc.CLEARFLAG_DEPTH;
+                flags |= pc.CLEARFLAG_DEPTH;
 
             if (this.clearStencilBuffer)
-                flags = flags | pc.CLEARFLAG_STENCIL;
+                flags |= pc.CLEARFLAG_STENCIL;
 
             this.data.camera.clearFlags = flags;
         },

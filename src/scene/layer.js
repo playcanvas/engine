@@ -264,13 +264,13 @@ pc.extend(pc, function () {
         var flags = 0;
 
         if (this._clearColorBuffer)
-            flags = flags | pc.CLEARFLAG_COLOR;
+            flags |= pc.CLEARFLAG_COLOR;
 
         if (this._clearDepthBuffer)
-            flags = flags | pc.CLEARFLAG_DEPTH;
+            flags |= pc.CLEARFLAG_DEPTH;
 
         if (this._clearStencilBuffer)
-            flags = flags | pc.CLEARFLAG_STENCIL;
+            flags |= pc.CLEARFLAG_STENCIL;
 
         this._clearOptions.flags = flags;
     };

@@ -1232,7 +1232,7 @@ pc.extend(pc, function() {
                         c = nlife * precision1;
                         cf = Math.floor(c);
                         cc = Math.ceil(c);
-                        c = c % 1;
+                        c %= 1;
 
                         // var rotSpeed =           tex1D(this.qRotSpeed, nlife);
                         a = this.qRotSpeed[cf];
@@ -1311,9 +1311,9 @@ pc.extend(pc, function() {
                         b = this.qVelocity2[cc + 2];
                         velocityVec2.data[2] = a + (b - a) * c;
 
-                        localVelocityVec.data[0] = localVelocityVec.data[0] + (localVelocityVec2.data[0] - localVelocityVec.data[0]) * rndFactor3Vec.data[0];
-                        localVelocityVec.data[1] = localVelocityVec.data[1] + (localVelocityVec2.data[1] - localVelocityVec.data[1]) * rndFactor3Vec.data[1];
-                        localVelocityVec.data[2] = localVelocityVec.data[2] + (localVelocityVec2.data[2] - localVelocityVec.data[2]) * rndFactor3Vec.data[2];
+                        localVelocityVec.data[0] += (localVelocityVec2.data[0] - localVelocityVec.data[0]) * rndFactor3Vec.data[0];
+                        localVelocityVec.data[1] += (localVelocityVec2.data[1] - localVelocityVec.data[1]) * rndFactor3Vec.data[1];
+                        localVelocityVec.data[2] += (localVelocityVec2.data[2] - localVelocityVec.data[2]) * rndFactor3Vec.data[2];
 
                         if (this.initialVelocity > 0) {
                             if (this.emitterShape === pc.EMITTERSHAPE_SPHERE) {
@@ -1324,11 +1324,11 @@ pc.extend(pc, function() {
                             }
                         }
 
-                        velocityVec.data[0] = velocityVec.data[0] + (velocityVec2.data[0] - velocityVec.data[0]) * rndFactor3Vec.data[0];
-                        velocityVec.data[1] = velocityVec.data[1] + (velocityVec2.data[1] - velocityVec.data[1]) * rndFactor3Vec.data[1];
-                        velocityVec.data[2] = velocityVec.data[2] + (velocityVec2.data[2] - velocityVec.data[2]) * rndFactor3Vec.data[2];
+                        velocityVec.data[0] += (velocityVec2.data[0] - velocityVec.data[0]) * rndFactor3Vec.data[0];
+                        velocityVec.data[1] += (velocityVec2.data[1] - velocityVec.data[1]) * rndFactor3Vec.data[1];
+                        velocityVec.data[2] += (velocityVec2.data[2] - velocityVec.data[2]) * rndFactor3Vec.data[2];
 
-                        rotSpeed = rotSpeed + (rotSpeed2 - rotSpeed) * rndFactor3Vec.data[1];
+                        rotSpeed += (rotSpeed2 - rotSpeed) * rndFactor3Vec.data[1];
                         scale = (scale + (scale2 - scale) * ((rndFactor * 10000.0) % 1.0)) * uniformScale;
                         alphaDiv = (alpha2 - alpha) * ((rndFactor * 1000.0) % 1.0);
 

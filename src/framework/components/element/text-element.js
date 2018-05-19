@@ -457,7 +457,7 @@ pc.extend(pc, function () {
                 this.height = Math.max(this.height, fontMaxY - (_y + fontMinY));
 
                 // advance cursor
-                _x = _x + (this._spacing * advance);
+                _x += (this._spacing * advance);
 
                 /*
                  * For proper alignment handling when a line wraps _on_ a whitespace character,
