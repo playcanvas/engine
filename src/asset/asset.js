@@ -67,13 +67,10 @@ pc.extend(pc, function () {
         this._file = null;
         this._data = data || { };
 
-        /*
-         * This is where the loaded resource will be
-         * this.resource = null;
-         */
+        // This is where the loaded resource(s) will be
         this._resources = [];
 
-        // is resource loaded
+        // Is resource loaded
         this.loaded = false;
         this.loading = false;
 
