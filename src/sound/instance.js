@@ -7,8 +7,10 @@ pc.extend(pc, function () {
     var STATE_PAUSED = 1;
     var STATE_STOPPED = 2;
 
-    // Return time % duration but always return a number
-    // instead of NaN when duration is 0
+    /*
+     * Return time % duration but always return a number
+     * instead of NaN when duration is 0
+     */
     var capTime = function (time, duration) {
         return (time % duration) || 0;
     };
@@ -71,22 +73,28 @@ pc.extend(pc, function () {
             this._startedAt = 0;
             this._startOffset = null;
 
-            // manually keep track of the playback position
-            // because the Web Audio API does not provide a way to do this
-            // accurately if the playbackRate is not 1
+            /*
+             * manually keep track of the playback position
+             * because the Web Audio API does not provide a way to do this
+             * accurately if the playbackRate is not 1
+             */
             this._currentTime = 0;
             this._currentOffset = 0;
 
-            // if true then the instance will start playing its source
-            // when its created
+            /*
+             * if true then the instance will start playing its source
+             * when its created
+             */
             this._playWhenLoaded = true;
 
             this._manager = manager;
 
             // The input node is the one that is connected to the source.
             this._inputNode = null;
-            // the connected node is the one that is connected to the destination (speakers). Any
-            // external nodes will be connected to this node.
+            /*
+             * the connected node is the one that is connected to the destination (speakers). Any
+             * external nodes will be connected to this node.
+             */
             this._connectorNode = null;
 
             // The first external node set by a user
@@ -203,8 +211,10 @@ pc.extend(pc, function () {
                 // set state to paused
                 this._state = STATE_PAUSED;
 
-                // Stop the source and re-create it because we cannot reuse the same source.
-                // Suspend the end event as we are manually stopping the source
+                /*
+                 * Stop the source and re-create it because we cannot reuse the same source.
+                 * Suspend the end event as we are manually stopping the source
+                 */
                 this._suspendEndEvent = true;
                 this.source.stop(0);
                 this.source = null;
@@ -238,8 +248,10 @@ pc.extend(pc, function () {
                 // start at point where sound was paused
                 var offset = this.currentTime;
 
-                // if the user set the 'currentTime' property while the sound
-                // was paused then use that as the offset instead
+                /*
+                 * if the user set the 'currentTime' property while the sound
+                 * was paused then use that as the offset instead
+                 */
                 if (this._startOffset !== null) {
                     offset = capTime(this._startOffset, this.duration);
                     offset = capTime(this._startTime + offset, this._sound.duration);
@@ -341,19 +353,25 @@ pc.extend(pc, function () {
                     lastNode = firstNode;
                 }
 
-                // connections are:
-                // source -> inputNode -> connectorNode -> [firstNode -> ... -> lastNode] -> speakers
+                /*
+                 * connections are:
+                 * source -> inputNode -> connectorNode -> [firstNode -> ... -> lastNode] -> speakers
+                 */
 
                 var speakers = this._manager.context.destination;
 
                 if (this._firstNode !== firstNode) {
                     if (this._firstNode) {
-                        // if firstNode already exists means the connector node
-                        // is connected to it so disconnect it
+                        /*
+                         * if firstNode already exists means the connector node
+                         * is connected to it so disconnect it
+                         */
                         this._connectorNode.disconnect(this._firstNode);
                     } else {
-                        // if firstNode does not exist means that its connected
-                        // to the speakers so disconnect it
+                        /*
+                         * if firstNode does not exist means that its connected
+                         * to the speakers so disconnect it
+                         */
                         this._connectorNode.disconnect(speakers);
                     }
 
@@ -442,11 +460,11 @@ pc.extend(pc, function () {
             },
 
             /**
-            * @private
-            * @function
-            * @name pc.SoundInstance#_updateCurrentTime
-            * @description Sets the current time taking into account the time the instance started playing, the current pitch and the current time offset.
-            */
+             * @private
+             * @function
+             * @name pc.SoundInstance#_updateCurrentTime
+             * @description Sets the current time taking into account the time the instance started playing, the current pitch and the current time offset.
+             */
             _updateCurrentTime: function () {
                 this._currentTime = capTime((this._manager.context.currentTime - this._startedAt) * this.pitch + this._currentOffset, this.duration);
             },
@@ -485,9 +503,11 @@ pc.extend(pc, function () {
             },
 
             set: function (pitch) {
-                // set offset to current time so that
-                // we calculate the rest of the time with the new pitch
-                // from now on
+                /*
+                 * set offset to current time so that
+                 * we calculate the rest of the time with the new pitch
+                 * from now on
+                 */
                 this._currentOffset = this.currentTime;
                 this._startedAt = this._manager.context.currentTime;
 
@@ -530,20 +550,26 @@ pc.extend(pc, function () {
 
         Object.defineProperty(SoundInstance.prototype, 'currentTime', {
             get: function () {
-                // if the user has set the currentTime and we have not used it yet
-                // then just return that
+                /*
+                 * if the user has set the currentTime and we have not used it yet
+                 * then just return that
+                 */
                 if (this._startOffset !== null) {
                     return this._startOffset;
                 }
 
-                // if the sound is paused return the currentTime calculated when
-                // pause() was called
+                /*
+                 * if the sound is paused return the currentTime calculated when
+                 * pause() was called
+                 */
                 if (this.isPaused) {
                     return this._currentTime;
                 }
 
-                // if the sound is paused or we don't have a source
-                // return 0
+                /*
+                 * if the sound is paused or we don't have a source
+                 * return 0
+                 */
                 if (this.isStopped || !this.source) {
                     return 0;
                 }
@@ -752,8 +778,10 @@ pc.extend(pc, function () {
                 if (!this._duration)
                     return;
 
-                // if the currentTime passes the end then if looping go back to the beginning
-                // otherwise manually stop
+                /*
+                 * if the currentTime passes the end then if looping go back to the beginning
+                 * otherwise manually stop
+                 */
                 if (this.source.currentTime > capTime(this._startTime + this._duration, this.source.duration)) {
                     if (this.loop) {
                         this.source.currentTime = capTime(this._startTime, this.source.duration);
@@ -892,9 +920,11 @@ pc.extend(pc, function () {
         },
 
         _onEnded: function () {
-            // the callback is not fired synchronously
-            // so only reset _suspendEndEvent to false when the
-            // callback is fired
+            /*
+             * the callback is not fired synchronously
+             * so only reset _suspendEndEvent to false when the
+             * callback is fired
+             */
             if (this._suspendEndEvent) {
                 this._suspendEndEvent = false;
                 return;
@@ -1017,31 +1047,31 @@ pc.extend(pc, function () {
 // Events Documentation
 
 /**
-* @event
-* @name pc.SoundInstance#play
-* @description Fired when the instance starts playing its source
-*/
+ * @event
+ * @name pc.SoundInstance#play
+ * @description Fired when the instance starts playing its source
+ */
 
 /**
-* @event
-* @name pc.SoundInstance#pause
-* @description Fired when the instance is paused.
-*/
+ * @event
+ * @name pc.SoundInstance#pause
+ * @description Fired when the instance is paused.
+ */
 
 /**
-* @event
-* @name pc.SoundInstance#resume
-* @description Fired when the instance is resumed.
-*/
+ * @event
+ * @name pc.SoundInstance#resume
+ * @description Fired when the instance is resumed.
+ */
 
 /**
-* @event
-* @name pc.SoundInstance#stop
-* @description Fired when the instance is stopped.
-*/
+ * @event
+ * @name pc.SoundInstance#stop
+ * @description Fired when the instance is stopped.
+ */
 
 /**
-* @event
-* @name pc.SoundInstance#end
-* @description Fired when the sound currently played by the instance ends.
-*/
+ * @event
+ * @name pc.SoundInstance#end
+ * @description Fired when the sound currently played by the instance ends.
+ */

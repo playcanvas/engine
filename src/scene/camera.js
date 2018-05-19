@@ -156,8 +156,10 @@ pc.extend(pc, function () {
             _invViewProjMat.copy(this._viewProjMat).invert();
 
             if (this._projection === pc.PROJECTION_PERSPECTIVE) {
-                // Calculate the screen click as a point on the far plane of the
-                // normalized device coordinate 'box' (z=1)
+                /*
+                 * Calculate the screen click as a point on the far plane of the
+                 * normalized device coordinate 'box' (z=1)
+                 */
                 _far.set(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
 
                 // Transform to world space
@@ -173,8 +175,10 @@ pc.extend(pc, function () {
                 var alpha = z / this._farClip;
                 worldCoord.lerp(this._node.getPosition(), _farW, alpha);
             } else {
-                // Calculate the screen click as a point on the far plane of the
-                // normalized device coordinate 'box' (z=1)
+                /*
+                 * Calculate the screen click as a point on the far plane of the
+                 * normalized device coordinate 'box' (z=1)
+                 */
                 var range = this._farClip - this._nearClip;
                 _deviceCoord.set(x / cw, (ch - y) / ch, z / range);
                 _deviceCoord.scale(2);

@@ -135,16 +135,16 @@ pc.extend(pc, function() {
     }
 
 /*
-    function syncToCpu(device, targ) {
-        var tex = targ._colorBuffer;
-        var pixels = new Uint8Array(tex.width * tex.height * 4);
-        var gl = device.gl;
-        device.setFramebuffer(targ._glFrameBuffer);
-        gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-        if (!tex._levels) tex._levels = [];
-        tex._levels[0] = pixels;
-    }
-*/
+ * function syncToCpu(device, targ) {
+ * var tex = targ._colorBuffer;
+ * var pixels = new Uint8Array(tex.width * tex.height * 4);
+ * var gl = device.gl;
+ * device.setFramebuffer(targ._glFrameBuffer);
+ * gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+ * if (!tex._levels) tex._levels = [];
+ * tex._levels[0] = pixels;
+ * }
+ */
 
     var ParticleEmitter = function (graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
@@ -156,8 +156,10 @@ pc.extend(pc, function() {
 
 
         if (!ParticleEmitter.DEFAULT_PARAM_TEXTURE) {
-            // 1x1 white opaque
-            // defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+            /*
+             * 1x1 white opaque
+             * defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+             */
 
             // white radial gradient
             var resolution = 16;
@@ -427,8 +429,10 @@ pc.extend(pc, function() {
         calculateWorldBounds: function() {
             if (!this.node) return;
 
-            // var pos = this.node.getPosition();
-            // if (this.prevPos.equals(pos)) return; // TODO: test whole matrix?
+            /*
+             * var pos = this.node.getPosition();
+             * if (this.prevPos.equals(pos)) return; // TODO: test whole matrix?
+             */
 
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
@@ -651,9 +655,11 @@ pc.extend(pc, function() {
             this.material.alphaWrite = false;
             this.material.blend = true;
 
-            // Premultiplied alpha. We can use it for both additive and alpha-transparent blending.
-            // this.material.blendSrc = pc.BLENDMODE_ONE;
-            // this.material.blendDst = pc.BLENDMODE_ONE_MINUS_SRC_ALPHA;
+            /*
+             * Premultiplied alpha. We can use it for both additive and alpha-transparent blending.
+             * this.material.blendSrc = pc.BLENDMODE_ONE;
+             * this.material.blendDst = pc.BLENDMODE_ONE_MINUS_SRC_ALPHA;
+             */
             this.material.blendType = this.blendType;
 
             this.material.depthWrite = this.depthWrite;
@@ -849,15 +855,16 @@ pc.extend(pc, function() {
             // updateShader is also called by pc.Scene when all shaders need to be updated
             this.material.updateShader = function() {
 
-                /* The app works like this:
-                 1. Emitter init
-                 2. Update. No camera is assigned to emitters
-                 3. Render; activeCamera = camera; shader init
-                 4. Update. activeCamera is set to emitters
-                 -----
-                 The problem with 1st frame render is that we init the shader without having any camera set to emitter -
-                 so wrong shader is being compiled.
-                 To fix it, we need to check activeCamera!=emitter.camera in shader init too
+                /*
+                 * The app works like this:
+                 * 1. Emitter init
+                 * 2. Update. No camera is assigned to emitters
+                 * 3. Render; activeCamera = camera; shader init
+                 * 4. Update. activeCamera is set to emitters
+                 * -----
+                 * The problem with 1st frame render is that we init the shader without having any camera set to emitter -
+                 * so wrong shader is being compiled.
+                 * To fix it, we need to check activeCamera!=emitter.camera in shader init too
                  */
                 if (this.emitter.scene) {
                     if (this.emitter.camera != this.emitter.scene._activeCamera) {
@@ -999,12 +1006,12 @@ pc.extend(pc, function() {
                 for (i = 0; i < psysVertCount; i++) {
                     id = Math.floor(i / this.numParticleVerts);
 /*
-                    if (this.useCpu) {
-                        if (i % this.numParticleVerts === 0) {
-                            rnd = this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
-                        }
-                    }
-*/
+ * if (this.useCpu) {
+ * if (i % this.numParticleVerts === 0) {
+ * rnd = this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
+ * }
+ * }
+ */
                     if (!this.useMesh) {
                         var vertID = i % 4;
                         data[i * 4] = particleVerts[vertID][0];
@@ -1335,9 +1342,11 @@ pc.extend(pc, function() {
                         b = this.qVelocity2[cc + 2];
                         velocityVec2.data[2] = a + (b - a) * c;
 
-                        // localVelocityVec.data[0] = pc.math.lerp(localVelocityVec.data[0], localVelocityVec2.data[0], rndFactor3Vec.data[0]);
-                        // localVelocityVec.data[1] = pc.math.lerp(localVelocityVec.data[1], localVelocityVec2.data[1], rndFactor3Vec.data[1]);
-                        // localVelocityVec.data[2] = pc.math.lerp(localVelocityVec.data[2], localVelocityVec2.data[2], rndFactor3Vec.data[2]);
+                        /*
+                         * localVelocityVec.data[0] = pc.math.lerp(localVelocityVec.data[0], localVelocityVec2.data[0], rndFactor3Vec.data[0]);
+                         * localVelocityVec.data[1] = pc.math.lerp(localVelocityVec.data[1], localVelocityVec2.data[1], rndFactor3Vec.data[1]);
+                         * localVelocityVec.data[2] = pc.math.lerp(localVelocityVec.data[2], localVelocityVec2.data[2], rndFactor3Vec.data[2]);
+                         */
                         localVelocityVec.data[0] = localVelocityVec.data[0] + (localVelocityVec2.data[0] - localVelocityVec.data[0]) * rndFactor3Vec.data[0];
                         localVelocityVec.data[1] = localVelocityVec.data[1] + (localVelocityVec2.data[1] - localVelocityVec.data[1]) * rndFactor3Vec.data[1];
                         localVelocityVec.data[2] = localVelocityVec.data[2] + (localVelocityVec2.data[2] - localVelocityVec.data[2]) * rndFactor3Vec.data[2];
@@ -1351,15 +1360,19 @@ pc.extend(pc, function() {
                             }
                         }
 
-                        // velocityVec.data[0] = pc.math.lerp(velocityVec.data[0], velocityVec2.data[0], rndFactor3Vec.data[0]);
-                        // velocityVec.data[1] = pc.math.lerp(velocityVec.data[1], velocityVec2.data[1], rndFactor3Vec.data[1]);
-                        // velocityVec.data[2] = pc.math.lerp(velocityVec.data[2], velocityVec2.data[2], rndFactor3Vec.data[2]);
+                        /*
+                         * velocityVec.data[0] = pc.math.lerp(velocityVec.data[0], velocityVec2.data[0], rndFactor3Vec.data[0]);
+                         * velocityVec.data[1] = pc.math.lerp(velocityVec.data[1], velocityVec2.data[1], rndFactor3Vec.data[1]);
+                         * velocityVec.data[2] = pc.math.lerp(velocityVec.data[2], velocityVec2.data[2], rndFactor3Vec.data[2]);
+                         */
                         velocityVec.data[0] = velocityVec.data[0] + (velocityVec2.data[0] - velocityVec.data[0]) * rndFactor3Vec.data[0];
                         velocityVec.data[1] = velocityVec.data[1] + (velocityVec2.data[1] - velocityVec.data[1]) * rndFactor3Vec.data[1];
                         velocityVec.data[2] = velocityVec.data[2] + (velocityVec2.data[2] - velocityVec.data[2]) * rndFactor3Vec.data[2];
 
-                        // rotSpeed = pc.math.lerp(rotSpeed, rotSpeed2, rndFactor3Vec.data[1]);
-                        // scale = pc.math.lerp(scale, scale2, (rndFactor * 10000.0) % 1.0) * uniformScale;
+                        /*
+                         * rotSpeed = pc.math.lerp(rotSpeed, rotSpeed2, rndFactor3Vec.data[1]);
+                         * scale = pc.math.lerp(scale, scale2, (rndFactor * 10000.0) % 1.0) * uniformScale;
+                         */
                         rotSpeed = rotSpeed + (rotSpeed2 - rotSpeed) * rndFactor3Vec.data[1];
                         scale = (scale + (scale2 - scale) * ((rndFactor * 10000.0) % 1.0)) * uniformScale;
                         alphaDiv = (alpha2 - alpha) * ((rndFactor * 1000.0) % 1.0);
@@ -1409,14 +1422,18 @@ pc.extend(pc, function() {
                         }
                     } else {
                         if (life >= particleLifetime) {
-                            // respawn particle by moving it's life back to zero.
-                            // OR below zero, if there are still unspawned particles to be emitted before this one.
-                            // such thing happens when you have an enormous amount of particles with short lifetime.
+                            /*
+                             * respawn particle by moving it's life back to zero.
+                             * OR below zero, if there are still unspawned particles to be emitted before this one.
+                             * such thing happens when you have an enormous amount of particles with short lifetime.
+                             */
                             life -= Math.max(particleLifetime, (this.numParticles - 1) * particleRate);
 
-                            // dead particles in a single-shot system continue their paths, but marked as invisible.
-                            // it is necessary for keeping correct separation between particles, based on emission rate.
-                            // dying again in a looped system they will become visible on next respawn.
+                            /*
+                             * dead particles in a single-shot system continue their paths, but marked as invisible.
+                             * it is necessary for keeping correct separation between particles, based on emission rate.
+                             * dying again in a looped system they will become visible on next respawn.
+                             */
                             this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = this.loop ? 1 : -1;
                         }
                         if (life < 0 && this.loop) {
@@ -1452,8 +1469,10 @@ pc.extend(pc, function() {
                     }
                 }
 
-                // Particle sorting
-                // TODO: optimize
+                /*
+                 * Particle sorting
+                 * TODO: optimize
+                 */
                 if (this.sort > pc.PARTICLESORT_NONE && this.camera) {
                     var particleDistance = this.particleDistance;
                     for (i = 0; i < this.numParticles; i++) {
@@ -1497,10 +1516,12 @@ pc.extend(pc, function() {
             if (this.rtParticleTexIN) this.rtParticleTexIN.destroy();
             if (this.rtParticleTexOUT) this.rtParticleTexOUT.destroy();
 
-            // TODO: delete shaders from cache with reference counting
-            // if (this.shaderParticleUpdateRespawn) this.shaderParticleUpdateRespawn.destroy();
-            // if (this.shaderParticleUpdateNoRespawn) this.shaderParticleUpdateNoRespawn.destroy();
-            // if (this.shaderParticleUpdateOnStop) this.shaderParticleUpdateOnStop.destroy();
+            /*
+             * TODO: delete shaders from cache with reference counting
+             * if (this.shaderParticleUpdateRespawn) this.shaderParticleUpdateRespawn.destroy();
+             * if (this.shaderParticleUpdateNoRespawn) this.shaderParticleUpdateNoRespawn.destroy();
+             * if (this.shaderParticleUpdateOnStop) this.shaderParticleUpdateOnStop.destroy();
+             */
 
             this.particleTexIN = null;
             this.particleTexOUT = null;

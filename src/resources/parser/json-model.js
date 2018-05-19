@@ -34,7 +34,9 @@ pc.extend(pc, function () {
             }
 
             if (modelData.version <= 1) {
-                logERROR(pc.string.format("Trying to parse unsupported model format."));
+                // #ifdef DEBUG
+                console.warn("JsonModelParser#parse: Trying to parse unsupported model format.");
+                // #endif
                 return null;
             }
 

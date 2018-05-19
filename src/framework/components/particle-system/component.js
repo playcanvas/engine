@@ -493,8 +493,10 @@ pc.extend(pc, function() {
             if (! this.emitter) {
 
                 var mesh = this.data.mesh;
-                // mesh might be an asset id of an asset
-                // that hasn't been loaded yet
+                /*
+                 * mesh might be an asset id of an asset
+                 * that hasn't been loaded yet
+                 */
                 if (! (mesh instanceof pc.Mesh))
                     mesh = null;
 
@@ -603,10 +605,10 @@ pc.extend(pc, function() {
         },
 
         /**
-        * @function
-        * @name pc.ParticleSystemComponent#reset
-        * @description Resets particle state, doesn't affect playing.
-        */
+         * @function
+         * @name pc.ParticleSystemComponent#reset
+         * @description Resets particle state, doesn't affect playing.
+         */
         reset: function() {
             if (this.emitter) {
                 this.emitter.reset();
@@ -614,10 +616,10 @@ pc.extend(pc, function() {
         },
 
         /**
-        * @function
-        * @name pc.ParticleSystemComponent#stop
-        * @description Disables the emission of new particles, lets existing to finish their simulation.
-        */
+         * @function
+         * @name pc.ParticleSystemComponent#stop
+         * @description Disables the emission of new particles, lets existing to finish their simulation.
+         */
         stop: function() {
             if (this.emitter) {
                 this.emitter.loop = false;
@@ -627,28 +629,28 @@ pc.extend(pc, function() {
         },
 
         /**
-        * @function
-        * @name pc.ParticleSystemComponent#pause
-        * @description Freezes the simulation.
-        */
+         * @function
+         * @name pc.ParticleSystemComponent#pause
+         * @description Freezes the simulation.
+         */
         pause: function() {
             this.data.paused = true;
         },
 
         /**
-        * @function
-        * @name pc.ParticleSystemComponent#unpause
-        * @description Unfreezes the simulation.
-        */
+         * @function
+         * @name pc.ParticleSystemComponent#unpause
+         * @description Unfreezes the simulation.
+         */
         unpause: function () {
             this.data.paused = false;
         },
 
         /**
-        * @function
-        * @name pc.ParticleSystemComponent#play
-        * @description Enables/unfreezes the simulation.
-        */
+         * @function
+         * @name pc.ParticleSystemComponent#play
+         * @description Enables/unfreezes the simulation.
+         */
         play: function() {
             this.data.paused = false;
             if (this.emitter) {
@@ -659,11 +661,11 @@ pc.extend(pc, function() {
         },
 
         /**
-        * @function
-        * @name pc.ParticleSystemComponent#isPlaying
-        * @description Checks if simulation is in progress.
-        * @returns {Boolean} true if the particle system is currently playing and false otherwise.
-        */
+         * @function
+         * @name pc.ParticleSystemComponent#isPlaying
+         * @description Checks if simulation is in progress.
+         * @returns {Boolean} true if the particle system is currently playing and false otherwise.
+         */
         isPlaying: function() {
             if (this.data.paused) {
                 return false;
@@ -672,17 +674,19 @@ pc.extend(pc, function() {
                 return true;
             }
 
-            // possible bug here what happens if the non looping emitter
-            // was paused in the meantime?
+            /*
+             * possible bug here what happens if the non looping emitter
+             * was paused in the meantime?
+             */
             return Date.now() <= this.emitter.endTime;
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.ParticleSystemComponent#rebuild
-        * @description Rebuilds all data used by this particle system.
-        */
+         * @private
+         * @function
+         * @name pc.ParticleSystemComponent#rebuild
+         * @description Rebuilds all data used by this particle system.
+         */
         rebuild: function() {
             var enabled = this.enabled;
             this.enabled = false;

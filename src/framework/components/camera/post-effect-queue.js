@@ -14,8 +14,10 @@ pc.extend(pc, function () {
         this.camera = camera;
         // stores all of the post effects
         this.effects = [];
-        // if the queue is enabled it will render all of its effects
-        // otherwise it will not render anything
+        /*
+         * if the queue is enabled it will render all of its effects
+         * otherwise it will not render anything
+         */
         this.enabled = false;
 
         // legacy
@@ -193,9 +195,11 @@ pc.extend(pc, function () {
                         null;
                 } else {
                     if (this.effects.length > 1) {
-                        // if we removed the first effect then make sure that
-                        // the input render target of the effect that will now become the first one
-                        // has a depth buffer
+                        /*
+                         * if we removed the first effect then make sure that
+                         * the input render target of the effect that will now become the first one
+                         * has a depth buffer
+                         */
                         if (!this.effects[1].inputTarget._depth) {
                             this.effects[1].inputTarget.destroy();
                             this.effects[1].inputTarget = this._createOffscreenTarget(true, this.effects[1].hdr);
@@ -270,11 +274,13 @@ pc.extend(pc, function () {
 
                 this.app.graphicsDevice.on('resizecanvas', this._onCanvasResized, this);
 
-                // set the camera's rect to full screen. Set it directly to the
-                // camera node instead of the component because we want to keep the old
-                // rect set in the component for restoring the camera to its original settings
-                // when the queue is disabled.
-                // self.camera.camera.setRect(0, 0, 1, 1);
+                /*
+                 * set the camera's rect to full screen. Set it directly to the
+                 * camera node instead of the component because we want to keep the old
+                 * rect set in the component for restoring the camera to its original settings
+                 * when the queue is disabled.
+                 * self.camera.camera.setRect(0, 0, 1, 1);
+                 */
 
                 // create a new command that renders all of the effects one after the other
                 this.command = function () {
@@ -367,9 +373,11 @@ pc.extend(pc, function () {
 
         onCameraRectChanged: function (name, oldValue, newValue) {
             if (this.enabled) {
-                // reset the camera node's rect to full screen otherwise
-                // post effect will not work correctly
-                // this.camera.camera.setRect(0, 0, 1, 1);
+                /*
+                 * reset the camera node's rect to full screen otherwise
+                 * post effect will not work correctly
+                 * this.camera.camera.setRect(0, 0, 1, 1);
+                 */
                 this.resizeRenderTargets();
             }
         }

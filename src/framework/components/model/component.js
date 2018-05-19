@@ -419,8 +419,10 @@ pc.extend(pc, function () {
                 if (this.entity.animation)
                     this.entity.animation.setModel(newValue);
 
-                // trigger event handler to load mapping
-                // for new model
+                /*
+                 * trigger event handler to load mapping
+                 * for new model
+                 */
                 if (this.data.type === 'asset') {
                     this.mapping = this.data.mapping;
                 } else {
@@ -742,29 +744,29 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.ModelComponent#hide
-        * @description Stop rendering model without removing it from the scene hierarchy.
-        * This method sets the {@link pc.MeshInstance#visible} property of every MeshInstance in the model to false
-        * Note, this does not remove the model or mesh instances from the scene hierarchy or draw call list.
-        * So the model component still incurs some CPU overhead.
-        * @example
-        *   this.timer = 0;
-        *   this.visible = true;
-        *   // ...
-        *   // blink model every 0.1 seconds
-        *   this.timer += dt;
-        *   if (this.timer > 0.1) {
-        *       if (!this.visible) {
-        *           this.entity.model.show();
-        *           this.visible = true;
-        *       } else {
-        *           this.entity.model.hide();
-        *           this.visible = false;
-        *       }
-        *       this.timer = 0;
-        *   }
-        */
+         * @function
+         * @name pc.ModelComponent#hide
+         * @description Stop rendering model without removing it from the scene hierarchy.
+         * This method sets the {@link pc.MeshInstance#visible} property of every MeshInstance in the model to false
+         * Note, this does not remove the model or mesh instances from the scene hierarchy or draw call list.
+         * So the model component still incurs some CPU overhead.
+         * @example
+         *   this.timer = 0;
+         *   this.visible = true;
+         *   // ...
+         *   // blink model every 0.1 seconds
+         *   this.timer += dt;
+         *   if (this.timer > 0.1) {
+         *       if (!this.visible) {
+         *           this.entity.model.show();
+         *           this.visible = true;
+         *       } else {
+         *           this.entity.model.hide();
+         *           this.visible = false;
+         *       }
+         *       this.timer = 0;
+         *   }
+         */
         hide: function () {
             var model = this.data.model;
             if (model) {
@@ -777,11 +779,11 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.ModelComponent#show
-        * @description Enable rendering of the model if hidden using {@link pc.ModelComponent#hide}.
-        * This method sets all the {@link pc.MeshInstance#visible} property on all mesh instances to true.
-        */
+         * @function
+         * @name pc.ModelComponent#show
+         * @description Enable rendering of the model if hidden using {@link pc.ModelComponent#hide}.
+         * This method sets all the {@link pc.MeshInstance#visible} property on all mesh instances to true.
+         */
         show: function () {
             var model = this.data.model;
             if (model) {

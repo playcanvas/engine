@@ -182,7 +182,7 @@ pc.extend(pc, function () {
      * @name pc.MorphInstance
      * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, holds morphed buffer and associated data.
      * @param {pc.Morph} morph The pc.Morph to instance.
-    */
+     */
     var MorphInstance = function (morph) {
         this.morph = morph;
 

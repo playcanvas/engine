@@ -60,8 +60,10 @@ pc.extend(pc, function () {
             }
         },
 
-        // When sprite asset is loaded make sure the texture atlas asset is loaded too
-        // If so then set the sprite, otherwise wait for the atlas to be loaded first
+        /*
+         * When sprite asset is loaded make sure the texture atlas asset is loaded too
+         * If so then set the sprite, otherwise wait for the atlas to be loaded first
+         */
         _onSpriteAssetLoad: function (asset) {
             if (! asset.resource) {
                 this.sprite = null;
@@ -91,8 +93,10 @@ pc.extend(pc, function () {
             this.sprite = null;
         },
 
-        // If the meshes are re-created make sure
-        // we update them in the mesh instance
+        /*
+         * If the meshes are re-created make sure
+         * we update them in the mesh instance
+         */
         _onSpriteMeshesChange: function () {
             if (this._component.currentClip === this) {
                 this._component._showFrame(this.frame);
@@ -109,12 +113,12 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SpriteAnimationClip#_update
-        * @param {Number} dt The delta time
-        * @description Advances the animation looping if necessary
-        */
+         * @private
+         * @function
+         * @name pc.SpriteAnimationClip#_update
+         * @param {Number} dt The delta time
+         * @description Advances the animation looping if necessary
+         */
         _update: function (dt) {
             if (this.fps === 0) return;
             if (!this._playing || this._paused || ! this._sprite) return;
@@ -192,11 +196,11 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SpriteAnimationClip#play
-        * @description Plays the animation. If it's already playing then this does nothing.
-        */
+         * @private
+         * @function
+         * @name pc.SpriteAnimationClip#play
+         * @description Plays the animation. If it's already playing then this does nothing.
+         */
         play: function () {
             if (this._playing)
                 return;
@@ -210,11 +214,11 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SpriteAnimationClip#pause
-        * @description Pauses the animation.
-        */
+         * @private
+         * @function
+         * @name pc.SpriteAnimationClip#pause
+         * @description Pauses the animation.
+         */
         pause: function () {
             if (! this._playing || this._paused)
                 return;
@@ -226,11 +230,11 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SpriteAnimationClip#resume
-        * @description Resumes the paused animation.
-        */
+         * @private
+         * @function
+         * @name pc.SpriteAnimationClip#resume
+         * @description Resumes the paused animation.
+         */
         resume: function () {
             if (! this._paused) return;
 
@@ -240,11 +244,11 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SpriteAnimationClip#stop
-        * @description Stops the animation and resets the animation to the first frame.
-        */
+         * @private
+         * @function
+         * @name pc.SpriteAnimationClip#stop
+         * @description Stops the animation and resets the animation to the first frame.
+         */
         stop: function () {
             if (! this._playing) return;
 
@@ -358,13 +362,17 @@ pc.extend(pc, function () {
                         }
                     }
 
-                    // if we have a time then force update
-                    // frame based on the time (check if fps is not 0 otherwise time will be Infinity)
+                    /*
+                     * if we have a time then force update
+                     * frame based on the time (check if fps is not 0 otherwise time will be Infinity)
+                     */
                     if (this.time && this.fps) {
                         this.time = this.time;
                     } else {
-                        // if we don't have a time
-                        // then force update frame counter
+                        /*
+                         * if we don't have a time
+                         * then force update frame counter
+                         */
                         this.frame = this.frame;
                     }
                 }
@@ -432,43 +440,43 @@ pc.extend(pc, function () {
 // Events Documentation
 
 /**
-* @private
-* @event
-* @name pc.SpriteAnimationClip#play
-* @description Fired when the clip starts playing
-*/
+ * @private
+ * @event
+ * @name pc.SpriteAnimationClip#play
+ * @description Fired when the clip starts playing
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteAnimationClip#pause
-* @description Fired when the clip is paused.
-*/
+ * @private
+ * @event
+ * @name pc.SpriteAnimationClip#pause
+ * @description Fired when the clip is paused.
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteAnimationClip#resume
-* @description Fired when the clip is resumed.
-*/
+ * @private
+ * @event
+ * @name pc.SpriteAnimationClip#resume
+ * @description Fired when the clip is resumed.
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteAnimationClip#stop
-* @description Fired when the clip is stopped.
-*/
+ * @private
+ * @event
+ * @name pc.SpriteAnimationClip#stop
+ * @description Fired when the clip is stopped.
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteAnimationClip#end
-* @description Fired when the clip stops playing because it reached its ending.
-*/
+ * @private
+ * @event
+ * @name pc.SpriteAnimationClip#end
+ * @description Fired when the clip stops playing because it reached its ending.
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteAnimationClip#loop
-* @description Fired when the clip reached the end of its current loop.
-*/
+ * @private
+ * @event
+ * @name pc.SpriteAnimationClip#loop
+ * @description Fired when the clip reached the end of its current loop.
+ */

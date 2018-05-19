@@ -146,26 +146,26 @@ pc.extend(pc, (function() {
 
 
     /**
-    * @name pc.Tags
-    * @class Set of tag names
-    * @description Create an instance of a Tags.
-    * @param {Object} [parent] Parent object who tags belong to.
-    * Note: Tags are used as addition of `pc.Entity` and `pc.Asset` as `tags` field.
-    */
+     * @name pc.Tags
+     * @class Set of tag names
+     * @description Create an instance of a Tags.
+     * @param {Object} [parent] Parent object who tags belong to.
+     * Note: Tags are used as addition of `pc.Entity` and `pc.Asset` as `tags` field.
+     */
 
     /**
      * @event
      * @name pc.Tags#add
      * @param {String} tag Name of a tag added to a set.
      * @param {Object} parent Parent object who tags belong to.
-    */
+     */
 
     /**
      * @event
      * @name pc.Tags#remove
      * @param {String} tag Name of a tag removed from a set.
      * @param {Object} parent Parent object who tags belong to.
-    */
+     */
 
     /**
      * @event
@@ -173,7 +173,7 @@ pc.extend(pc, (function() {
      * @param {Object} [parent] Parent object who tags belong to.
      * @description Fires when tags been added / removed.
      * It will fire once on bulk changes, while `add`/`remove` will fire on each tag operation
-    */
+     */
 
     var Tags = function(parent) {
         this._index = { };
@@ -185,18 +185,18 @@ pc.extend(pc, (function() {
 
     Tags.prototype = {
         /**
-        * @function
-        * @name pc.Tags#add
-        * @description Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
-        * @param {String} name Name of a tag, or array of tags
-        * @returns {Boolean} true if any tag were added
-        * @example
-        * tags.add('level-1');
-        * @example
-        * tags.add('ui', 'settings');
-        * @example
-        * tags.add([ 'level-2', 'mob' ]);
-        */
+         * @function
+         * @name pc.Tags#add
+         * @description Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
+         * @param {String} name Name of a tag, or array of tags
+         * @returns {Boolean} true if any tag were added
+         * @example
+         * tags.add('level-1');
+         * @example
+         * tags.add('ui', 'settings');
+         * @example
+         * tags.add([ 'level-2', 'mob' ]);
+         */
         add: function() {
             var changed = false;
             var tags = this._processArguments(arguments, true);
@@ -224,18 +224,18 @@ pc.extend(pc, (function() {
 
 
         /**
-        * @function
-        * @name pc.Tags#remove
-        * @description Remove tag.
-        * @param {String} name Name of a tag or array of tags
-        * @returns {Boolean} true if any tag were removed
-        * @example
-        * tags.remove('level-1');
-        * @example
-        * tags.remove('ui', 'settings');
-        * @example
-        * tags.remove([ 'level-2', 'mob' ]);
-        */
+         * @function
+         * @name pc.Tags#remove
+         * @description Remove tag.
+         * @param {String} name Name of a tag or array of tags
+         * @returns {Boolean} true if any tag were removed
+         * @example
+         * tags.remove('level-1');
+         * @example
+         * tags.remove('ui', 'settings');
+         * @example
+         * tags.remove([ 'level-2', 'mob' ]);
+         */
         remove: function() {
             var changed = false;
 
@@ -267,12 +267,12 @@ pc.extend(pc, (function() {
 
 
         /**
-        * @function
-        * @name pc.Tags#clear
-        * @description Remove all tags.
-        * @example
-        * tags.clear();
-        */
+         * @function
+         * @name pc.Tags#clear
+         * @description Remove all tags.
+         * @example
+         * tags.clear();
+         */
         clear: function() {
             if (! this._list.length)
                 return;
@@ -289,24 +289,24 @@ pc.extend(pc, (function() {
 
 
         /**
-        * @function
-        * @name pc.Tags#has
-        * @description Check if tags satisfy filters.
-        * Filters can be provided by simple name of tag, as well as by array of tags.
-        * When an array is provided it will check if tags contain each tag within the array.
-        * If any of comma separated argument is satisfied, then it will return true.
-        * Any number of combinations are valid, and order is irrelevant.
-        * @param {String} name of tag, or array of names
-        * @returns {Boolean} true if filters are satisfied
-        * @example
-        * tags.has('player'); // player
-        * @example
-        * tags.has('mob', 'player'); // player OR mob
-        * @example
-        * tags.has([ 'level-1', 'mob' ]); // monster AND level-1
-        * @example
-        * tags.has([ 'ui', 'settings' ], [ 'ui', 'levels' ]); // (ui AND settings) OR (ui AND levels)
-        */
+         * @function
+         * @name pc.Tags#has
+         * @description Check if tags satisfy filters.
+         * Filters can be provided by simple name of tag, as well as by array of tags.
+         * When an array is provided it will check if tags contain each tag within the array.
+         * If any of comma separated argument is satisfied, then it will return true.
+         * Any number of combinations are valid, and order is irrelevant.
+         * @param {String} name of tag, or array of names
+         * @returns {Boolean} true if filters are satisfied
+         * @example
+         * tags.has('player'); // player
+         * @example
+         * tags.has('mob', 'player'); // player OR mob
+         * @example
+         * tags.has([ 'level-1', 'mob' ]); // monster AND level-1
+         * @example
+         * tags.has([ 'ui', 'settings' ], [ 'ui', 'levels' ]); // (ui AND settings) OR (ui AND levels)
+         */
         has: function() {
             if (! this._list.length)
                 return false;
@@ -346,11 +346,11 @@ pc.extend(pc, (function() {
 
 
         /**
-        * @function
-        * @name pc.Tags#list
-        * @description Returns immutable array of tags
-        * @returns {String[]} copy of tags array
-        */
+         * @function
+         * @name pc.Tags#list
+         * @description Returns immutable array of tags
+         * @returns {String[]} copy of tags array
+         */
         list: function() {
             return this._list.slice(0);
         },

@@ -67,8 +67,10 @@ pc.extend(pc, function () {
         this._file = null;
         this._data = data || { };
 
-        // This is where the loaded resource will be
-        // this.resource = null;
+        /*
+         * This is where the loaded resource will be
+         * this.resource = null;
+         */
         this._resources = [];
 
         // is resource loaded
@@ -83,47 +85,47 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @event
-    * @name pc.Asset#load
-    * @description Fired when the asset has completed loading
-    * @param {pc.Asset} asset The asset that was loaded
-    */
+     * @event
+     * @name pc.Asset#load
+     * @description Fired when the asset has completed loading
+     * @param {pc.Asset} asset The asset that was loaded
+     */
 
     /**
-    * @event
-    * @name pc.Asset#remove
-    * @description Fired when the asset is removed from the asset registry
-    * @param {pc.Asset} asset The asset that was removed
-    */
+     * @event
+     * @name pc.Asset#remove
+     * @description Fired when the asset is removed from the asset registry
+     * @param {pc.Asset} asset The asset that was removed
+     */
 
     /**
-    * @event
-    * @name pc.Asset#error
-    * @description Fired if the asset encounters an error while loading
-    * @param {String} err The error message
-    * @param {pc.Asset} asset The asset that generated the error
-    */
+     * @event
+     * @name pc.Asset#error
+     * @description Fired if the asset encounters an error while loading
+     * @param {String} err The error message
+     * @param {pc.Asset} asset The asset that generated the error
+     */
 
     /**
-    * @event
-    * @name pc.Asset#change
-    * @description Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed
-    * @param {pc.Asset} asset The asset that was loaded
-    * @param {String} property The name of the property that changed
-    * @param {*} value The new property value
-    * @param {*} oldValue The old property value
-    */
+     * @event
+     * @name pc.Asset#change
+     * @description Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed
+     * @param {pc.Asset} asset The asset that was loaded
+     * @param {String} property The name of the property that changed
+     * @param {*} value The new property value
+     * @param {*} oldValue The old property value
+     */
 
     Asset.prototype = {
         /**
-        * @name pc.Asset#getFileUrl
-        * @function
-        * @description Return the URL required to fetch the file for this asset.
-        * @returns {String} The URL
-        * @example
-        * var assets = app.assets.find("My Image", "texture");
-        * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
-        */
+         * @name pc.Asset#getFileUrl
+         * @function
+         * @description Return the URL required to fetch the file for this asset.
+         * @returns {String} The URL
+         * @example
+         * var assets = app.assets.find("My Image", "texture");
+         * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
+         */
         getFileUrl: function () {
             var file = this.getPreferredFile();
 
@@ -164,17 +166,17 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Asset#ready
-        * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away
-        * @param {Function} callback The function called when the asset is ready. Passed the (asset) arguments
-        * @example
-        * var asset = app.assets.find("My Asset");
-        * asset.ready(function (asset) {
-        *   // asset loaded
-        * });
-        * app.assets.load(asset);
-        */
+         * @function
+         * @name pc.Asset#ready
+         * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away
+         * @param {Function} callback The function called when the asset is ready. Passed the (asset) arguments
+         * @example
+         * var asset = app.assets.find("My Asset");
+         * asset.ready(function (asset) {
+         *   // asset loaded
+         * });
+         * app.assets.load(asset);
+         */
         ready: function (callback, scope) {
             scope = scope || this;
 
@@ -201,14 +203,14 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Asset#unload
-        * @description Destroys the associated resource and marks asset as unloaded.
-        * @example
-        * var asset = app.assets.find("My Asset");
-        * asset.unload();
-        * // asset.resource is null
-        */
+         * @function
+         * @name pc.Asset#unload
+         * @description Destroys the associated resource and marks asset as unloaded.
+         * @example
+         * var asset = app.assets.find("My Asset");
+         * asset.unload();
+         * // asset.resource is null
+         */
         unload: function () {
             if (! this.loaded && ! this.resource)
                 return;
@@ -248,9 +250,11 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
-            // fire change event when the file changes
-            // so that we reload it if necessary
-            // set/unset file property of file hash been changed
+            /*
+             * fire change event when the file changes
+             * so that we reload it if necessary
+             * set/unset file property of file hash been changed
+             */
             var key;
             var valueAsBool = !!value;
             var fileAsBool = !!this._file;
@@ -305,8 +309,10 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
-            // fire change event when data changes
-            // because the asset might need reloading if that happens
+            /*
+             * fire change event when data changes
+             * because the asset might need reloading if that happens
+             */
             var old = this._data;
             this._data = value;
             if (value !== old) {

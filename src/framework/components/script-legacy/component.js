@@ -23,8 +23,10 @@ pc.extend(pc, function () {
         onEnable: function () {
             ScriptLegacyComponent._super.onEnable.call(this);
 
-            // if the scripts of the component have been loaded
-            // then call the appropriate methods on the component
+            /*
+             * if the scripts of the component have been loaded
+             * then call the appropriate methods on the component
+             */
             if (this.data.areScriptsLoaded && !this.system.preloading) {
                 if (!this.data.initialized) {
                     this.system._initializeScriptComponent(this);
@@ -75,8 +77,10 @@ pc.extend(pc, function () {
             }
         },
 
-        // Check if only script attributes need updating in which
-        // case just update the attributes and return otherwise return false
+        /*
+         * Check if only script attributes need updating in which
+         * case just update the attributes and return otherwise return false
+         */
         _updateScriptAttributes: function (oldValue, newValue) {
             var onlyUpdateAttributes = true;
 
@@ -103,8 +107,10 @@ pc.extend(pc, function () {
             return onlyUpdateAttributes;
         },
 
-        // Load each url from the cache synchronously. If one of the urls is not in the cache
-        // then stop and return false.
+        /*
+         * Load each url from the cache synchronously. If one of the urls is not in the cache
+         * then stop and return false.
+         */
         _loadFromCache: function (urls) {
             var i, len;
             var cached = [];
@@ -120,8 +126,10 @@ pc.extend(pc, function () {
 
                 var type = this.system.app.loader.getFromCache(url, 'script');
 
-                // if we cannot find the script in the cache then return and load
-                // all scripts with the resource loader
+                /*
+                 * if we cannot find the script in the cache then return and load
+                 * all scripts with the resource loader
+                 */
                 if (!type) {
                     return false;
                 }
@@ -137,11 +145,15 @@ pc.extend(pc, function () {
                     continue;
                 }
 
-                // ScriptType may be null if the script component is loading an ordinary JavaScript lib rather than a PlayCanvas script
-                // Make sure that script component hasn't been removed since we started loading
+                /*
+                 * ScriptType may be null if the script component is loading an ordinary JavaScript lib rather than a PlayCanvas script
+                 * Make sure that script component hasn't been removed since we started loading
+                 */
                 if (ScriptType && this.entity.script) {
-                    // Make sure that we haven't already instantiated another identical script while loading
-                    // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
+                    /*
+                     * Make sure that we haven't already instantiated another identical script while loading
+                     * e.g. if you do addComponent, removeComponent, addComponent, in quick succession
+                     */
                     if (!this.entity.script.instances[ScriptType._pcScriptName]) {
                         var instance = new ScriptType(this.entity);
                         this.system._preRegisterInstance(this.entity, urls[i], ScriptType._pcScriptName, instance);
@@ -153,8 +165,10 @@ pc.extend(pc, function () {
                 this.data.areScriptsLoaded = true;
             }
 
-            // We only need to initialize after preloading is complete
-            // During preloading all scripts are initialized after everything is loaded
+            /*
+             * We only need to initialize after preloading is complete
+             * During preloading all scripts are initialized after everything is loaded
+             */
             if (!this.system.preloading) {
                 this.system.onInitialize(this.entity);
                 this.system.onPostInitialize(this.entity);
@@ -195,8 +209,10 @@ pc.extend(pc, function () {
                     if (count === 0) {
                         this.data.areScriptsLoaded = true;
 
-                        // We only need to initialize after preloading is complete
-                        // During preloading all scripts are initialized after everything is loaded
+                        /*
+                         * We only need to initialize after preloading is complete
+                         * During preloading all scripts are initialized after everything is loaded
+                         */
                         if (!this.system.preloading) {
                             this.system.onInitialize(this.entity);
                             this.system.onPostInitialize(this.entity);

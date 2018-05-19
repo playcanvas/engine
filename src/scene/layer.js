@@ -346,13 +346,15 @@ pc.extend(pc, function () {
         this._refCounter--;
     };
 
-    // SUBLAYER GROUPS
-    // If there are multiple sublayer with identical _cameraHash without anything in between, these are called a SUBLAYER GROUP
-    // instead of
-        // for each sublayer
-            // for each camera
-    // we go
-        // for each sublayerGroup
+    /*
+     * SUBLAYER GROUPS
+     * If there are multiple sublayer with identical _cameraHash without anything in between, these are called a SUBLAYER GROUP
+     * instead of
+     * for each sublayer
+     * for each camera
+     * we go
+     * for each sublayerGroup
+     */
 
     /**
      * @function
@@ -545,8 +547,10 @@ pc.extend(pc, function () {
     };
 
     Layer.prototype._generateLightHash = function () {
-        // generate hash to check if layers have the same set of static lights
-        // order of lights shouldn't matter
+        /*
+         * generate hash to check if layers have the same set of static lights
+         * order of lights shouldn't matter
+         */
         if (this._lights.length > 0) {
             this._lights.sort(sortLights);
             var str = "";
@@ -579,8 +583,10 @@ pc.extend(pc, function () {
     };
 
     Layer.prototype._generateCameraHash = function () {
-        // generate hash to check if cameras in layers are identical
-        // order of cameras shouldn't matter
+        /*
+         * generate hash to check if cameras in layers are identical
+         * order of cameras shouldn't matter
+         */
         if (this.cameras.length > 1) {
             this.cameras.sort(sortCameras);
             var str = "";

@@ -1,8 +1,10 @@
 pc.extend(pc, function () {
     'use strict';
 
-    // temporary object for creating
-    // instances
+    /*
+     * temporary object for creating
+     * instances
+     */
     var instanceOptions = {
         volume: 0,
         pitch: 0,
@@ -101,8 +103,10 @@ pc.extend(pc, function () {
             var instance = this._createInstance();
             this.instances.push(instance);
 
-            // if not loaded then load first
-            // and then set sound resource on the created instance
+            /*
+             * if not loaded then load first
+             * and then set sound resource on the created instance
+             */
             if (! this.isLoaded) {
                 var onLoad = function (sound) {
                     var playWhenLoaded = instance._playWhenLoaded;
@@ -622,36 +626,36 @@ pc.extend(pc, function () {
 // Events Documentation
 
 /**
-* @event
-* @name pc.SoundSlot#play
-* @description Fired when a sound instance starts playing
-* @param {pc.SoundInstance} instance The instance that started playing
-*/
+ * @event
+ * @name pc.SoundSlot#play
+ * @description Fired when a sound instance starts playing
+ * @param {pc.SoundInstance} instance The instance that started playing
+ */
 
 /**
-* @event
-* @name pc.SoundSlot#pause
-* @description Fired when a sound instance is paused.
-* @param {pc.SoundInstance} instance The instance that was paused created to play the sound
-*/
+ * @event
+ * @name pc.SoundSlot#pause
+ * @description Fired when a sound instance is paused.
+ * @param {pc.SoundInstance} instance The instance that was paused created to play the sound
+ */
 
 /**
-* @event
-* @name pc.SoundSlot#resume
-* @description Fired when a sound instance is resumed..
-* @param {pc.SoundInstance} instance The instance that was resumed
-*/
+ * @event
+ * @name pc.SoundSlot#resume
+ * @description Fired when a sound instance is resumed..
+ * @param {pc.SoundInstance} instance The instance that was resumed
+ */
 
 /**
-* @event
-* @name pc.SoundSlot#stop
-* @description Fired when a sound instance is stopped.
-* @param {pc.SoundInstance} instance The instance that was stopped
-*/
+ * @event
+ * @name pc.SoundSlot#stop
+ * @description Fired when a sound instance is stopped.
+ * @param {pc.SoundInstance} instance The instance that was stopped
+ */
 
 /**
-* @event
-* @name pc.SoundSlot#load
-* @description Fired when the asset assigned to the slot is loaded
-* @param {pc.Sound} sound The sound resource that was loaded
-*/
+ * @event
+ * @name pc.SoundSlot#load
+ * @description Fired when the asset assigned to the slot is loaded
+ * @param {pc.Sound} sound The sound resource that was loaded
+ */

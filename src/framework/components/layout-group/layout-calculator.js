@@ -50,17 +50,21 @@ pc.extend(pc, function () {
         APPLY_SHRINKING: 'APPLY_SHRINKING'
     };
 
-    // The layout logic is largely identical for the horizontal and vertical orientations,
-    // with the exception of a few bits of swizzling re the primary and secondary axes to
-    // use etc. This function generates a calculator for a given orientation, with each of
-    // the swizzled properties conveniently placed in closure scope.
+    /*
+     * The layout logic is largely identical for the horizontal and vertical orientations,
+     * with the exception of a few bits of swizzling re the primary and secondary axes to
+     * use etc. This function generates a calculator for a given orientation, with each of
+     * the swizzled properties conveniently placed in closure scope.
+     */
     function createCalculator(orientation) {
         var availableSpace;
         var options;
 
-        // Choose which axes to operate on based on the orientation that we're using. For
-        // brevity as they are used a lot, these are shortened to just 'a' and 'b', which
-        // represent the primary and secondary axes.
+        /*
+         * Choose which axes to operate on based on the orientation that we're using. For
+         * brevity as they are used a lot, these are shortened to just 'a' and 'b', which
+         * represent the primary and secondary axes.
+         */
         var a = AXIS_MAPPINGS[orientation];
         var b = AXIS_MAPPINGS[OPPOSITE_ORIENTATION[orientation]];
 
@@ -90,10 +94,12 @@ pc.extend(pc, function () {
             applySizesAndPositions(lines, sizes, positions);
         }
 
-        // Setting the anchors of child elements to anything other than 0,0,0,0 results
-        // in positioning that is hard to reason about for the user. Forcing the anchors
-        // to 0,0,0,0 gives us more predictable positioning, and also has the benefit of
-        // ensuring that the element is not in split anchors mode on either axis.
+        /*
+         * Setting the anchors of child elements to anything other than 0,0,0,0 results
+         * in positioning that is hard to reason about for the user. Forcing the anchors
+         * to 0,0,0,0 gives us more predictable positioning, and also has the benefit of
+         * ensuring that the element is not in split anchors mode on either axis.
+         */
         function resetAnchors(allElements) {
             for (var i = 0; i < allElements.length; ++i) {
                 var element = allElements[i];
@@ -105,8 +111,10 @@ pc.extend(pc, function () {
             }
         }
 
-        // Returns a 2D array of elements broken down into lines, based on the size of
-        // each element and whether the `wrap` property is set.
+        /*
+         * Returns a 2D array of elements broken down into lines, based on the size of
+         * each element and whether the `wrap` property is set.
+         */
         function splitLines(allElements) {
             if (!options.wrap) {
                 // If wrapping is disabled, we just put all elements into a single line.
@@ -126,8 +134,10 @@ pc.extend(pc, function () {
                 var idealElementSize = sizes[i][a.size];
                 runningSize += idealElementSize;
 
-                // For the None, Stretch and Both fitting modes, we should break to a new
-                // line before we overrun the available space in the container.
+                /*
+                 * For the None, Stretch and Both fitting modes, we should break to a new
+                 * line before we overrun the available space in the container.
+                 */
                 if (!allowOverrun && runningSize > availableSpace[a.axis] && lines[lines.length - 1].length !== 0) {
                     runningSize = idealElementSize;
                     lines.push([]);
@@ -135,8 +145,10 @@ pc.extend(pc, function () {
 
                 lines[lines.length - 1].push(allElements[i]);
 
-                // For the Shrink fitting mode, we should break to a new line immediately
-                // after we've overrun the available space in the container.
+                /*
+                 * For the Shrink fitting mode, we should break to a new line immediately
+                 * after we've overrun the available space in the container.
+                 */
                 if (allowOverrun && runningSize > availableSpace[a.axis] && i !== allElements.length - 1) {
                     runningSize = 0;
                     lines.push([]);
@@ -168,8 +180,10 @@ pc.extend(pc, function () {
             return lines;
         }
 
-        // Calculate the required size for each element along axis A, based on the requested
-        // fitting mode.
+        /*
+         * Calculate the required size for each element along axis A, based on the requested
+         * fitting mode.
+         */
         function calculateSizesOnAxisA(lines) {
             var sizesAllLines = [];
 
@@ -191,8 +205,10 @@ pc.extend(pc, function () {
             return sizesAllLines;
         }
 
-        // Calculate the required size for each element on axis B, based on the requested
-        // fitting mode.
+        /*
+         * Calculate the required size for each element on axis B, based on the requested
+         * fitting mode.
+         */
         function calculateSizesOnAxisB(lines, sizesAllLines) {
             var largestElementsForEachLine = [];
             var largestSizesForEachLine = [];
@@ -296,34 +312,44 @@ pc.extend(pc, function () {
             var fittingProportions = getNormalizedValues(sizesThisLine, axis.fittingProportion);
             var fittingProportionSums = createSumArray(fittingProportions, ascendingMaxSizeOrder);
 
-            // Start by working out how much we have to stretch the child elements by
-            // in total in order to fill the available space in the container
+            /*
+             * Start by working out how much we have to stretch the child elements by
+             * in total in order to fill the available space in the container
+             */
             var remainingUndershoot = availableSpace[axis.axis] - idealRequiredSpace;
 
             for (var i = 0; i < sizesThisLine.length; ++i) {
-                // As some elements may have a maximum size defined, we might not be
-                // able to scale all elements by the ideal amount necessary in order
-                // to fill the available space. To account for this, we run through
-                // the elements in ascending order of their maximum size, redistributing
-                // any remaining space to the other elements that are more able to
-                // make use of it.
+                /*
+                 * As some elements may have a maximum size defined, we might not be
+                 * able to scale all elements by the ideal amount necessary in order
+                 * to fill the available space. To account for this, we run through
+                 * the elements in ascending order of their maximum size, redistributing
+                 * any remaining space to the other elements that are more able to
+                 * make use of it.
+                 */
                 var index = ascendingMaxSizeOrder[i];
 
-                // Work out how much we ideally want to stretch this element by, based
-                // on the amount of space remaining and the fitting proportion value that
-                // was specified.
+                /*
+                 * Work out how much we ideally want to stretch this element by, based
+                 * on the amount of space remaining and the fitting proportion value that
+                 * was specified.
+                 */
                 var targetIncrease = calculateAdjustment(index, remainingUndershoot, fittingProportions, fittingProportionSums);
                 var targetSize = sizesThisLine[index][axis.size] + targetIncrease;
 
-                // Work out how much we're actually able to stretch this element by,
-                // based on its maximum size, and apply the result.
+                /*
+                 * Work out how much we're actually able to stretch this element by,
+                 * based on its maximum size, and apply the result.
+                 */
                 var maxSize = sizesThisLine[index][axis.maxSize];
                 var actualSize = Math.min(targetSize, maxSize);
 
                 sizesThisLine[index][axis.size] = actualSize;
 
-                // Work out how much of the total undershoot value we've just used,
-                // and decrement the remaining value by this much.
+                /*
+                 * Work out how much of the total undershoot value we've just used,
+                 * and decrement the remaining value by this much.
+                 */
                 var actualIncrease = Math.max(targetSize - actualSize, 0);
                 var appliedIncrease = targetIncrease - actualIncrease;
 
@@ -331,10 +357,12 @@ pc.extend(pc, function () {
             }
         }
 
-        // This loop is very similar to the one in stretchSizesToFitContainer() above,
-        // but with some awkward inversions and use of min as opposed to max etc that
-        // mean a more generalized version would probably be harder to read/debug than
-        // just having a small amount of duplication.
+        /*
+         * This loop is very similar to the one in stretchSizesToFitContainer() above,
+         * but with some awkward inversions and use of min as opposed to max etc that
+         * mean a more generalized version would probably be harder to read/debug than
+         * just having a small amount of duplication.
+         */
         function shrinkSizesToFitContainer(sizesThisLine, idealRequiredSpace, axis) {
             var descendingMinSizeOrder = getTraversalOrder(sizesThisLine, axis.minSize, true);
             var fittingProportions = getNormalizedValues(sizesThisLine, axis.fittingProportion);
@@ -346,14 +374,16 @@ pc.extend(pc, function () {
             for (var i = 0; i < sizesThisLine.length; ++i) {
                 var index = descendingMinSizeOrder[i];
 
-                // Similar to the stretch calculation above, we calculate the ideal
-                // size reduction value for this element based on its fitting proportion.
-                //
-                // However, note that we're using the inverse of the fitting value, as
-                // using the regular value would mean that an element with a fitting
-                // value of, say, 0.4, ends up rendering very small when shrinking is
-                // being applied. Using the inverse means that the balance of sizes
-                // between elements is similar for both the Stretch and Shrink modes.
+                /*
+                 * Similar to the stretch calculation above, we calculate the ideal
+                 * size reduction value for this element based on its fitting proportion.
+                 *
+                 * However, note that we're using the inverse of the fitting value, as
+                 * using the regular value would mean that an element with a fitting
+                 * value of, say, 0.4, ends up rendering very small when shrinking is
+                 * being applied. Using the inverse means that the balance of sizes
+                 * between elements is similar for both the Stretch and Shrink modes.
+                 */
                 var targetReduction = calculateAdjustment(index, remainingOvershoot, inverseFittingProportions, inverseFittingProportionSums);
                 var targetSize = sizesThisLine[index][axis.size] - targetReduction;
 
@@ -486,9 +516,11 @@ pc.extend(pc, function () {
             }
         }
 
-        // Reads all size-related properties for each element and applies some basic
-        // sanitization to ensure that minWidth is greater than 0, maxWidth is greater
-        // than minWidth, etc.
+        /*
+         * Reads all size-related properties for each element and applies some basic
+         * sanitization to ensure that minWidth is greater than 0, maxWidth is greater
+         * than minWidth, etc.
+         */
         function getElementSizeProperties(elements) {
             var sizeProperties = [];
 
@@ -518,10 +550,12 @@ pc.extend(pc, function () {
             return sizeProperties;
         }
 
-        // When reading an element's width/height, minWidth/minHeight etc, we have to look in
-        // a few different places in order. This is because the presence of a LayoutChildComponent
-        // on each element is optional, and each property value also has a set of fallback defaults
-        // to be used in cases where no value is specified.
+        /*
+         * When reading an element's width/height, minWidth/minHeight etc, we have to look in
+         * a few different places in order. This is because the presence of a LayoutChildComponent
+         * on each element is optional, and each property value also has a set of fallback defaults
+         * to be used in cases where no value is specified.
+         */
         function getProperty(element, propertyName) {
             var layoutChildComponent = element.entity.layoutchild;
 
@@ -599,11 +633,13 @@ pc.extend(pc, function () {
             return item.index;
         }
 
-        // Returns a new array containing the sums of the values in the original array,
-        // running from right to left.
-        //
-        // For example, given: [0.2, 0.2, 0.3, 0.1, 0.2]
-        // Will return:        [1.0, 0.8, 0.6, 0.3, 0.2]
+        /*
+         * Returns a new array containing the sums of the values in the original array,
+         * running from right to left.
+         *
+         * For example, given: [0.2, 0.2, 0.3, 0.1, 0.2]
+         * Will return:        [1.0, 0.8, 0.6, 0.3, 0.2]
+         */
         function createSumArray(values, order) {
             var sumArray = [];
             sumArray[order[values.length - 1]] = values[order[values.length - 1]];

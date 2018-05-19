@@ -51,8 +51,10 @@ pc.extend(pc, function () {
         this.layers = layers === undefined ? [pc.LAYERID_WORLD] : layers;
     };
 
-    // Modified SkinInstance for batching
-    // Doesn't contain bind matrices, simplier
+    /*
+     * Modified SkinInstance for batching
+     * Doesn't contain bind matrices, simplier
+     */
     var SkinBatchInstance = function (device, nodes, rootNode) {
         this.device = device;
         this.rootNode = rootNode;
@@ -245,8 +247,10 @@ pc.extend(pc, function () {
                 if (!arr) arr = groupMeshInstances[node.model.batchGroupId] = [];
 
                 if (node.model.isStatic) {
-                    // static mesh instances can be in both drawCall array with _staticSource linking to original
-                    // and in the original array as well, if no triangle splitting was done
+                    /*
+                     * static mesh instances can be in both drawCall array with _staticSource linking to original
+                     * and in the original array as well, if no triangle splitting was done
+                     */
                     var drawCalls = this.scene.drawCalls;
                     var nodeMeshInstances = node.model.meshInstances;
                     for (i = 0; i < drawCalls.length; i++) {
@@ -511,9 +515,11 @@ pc.extend(pc, function () {
                         meshInstancesLeftB.push(meshInstancesLeftA[i]);
                         continue;
                     }
-                    // Split by static source
-                    //
-                    // Split by vert count
+                    /*
+                     * Split by static source
+                     *
+                     * Split by vert count
+                     */
                     if (vertCount + meshInstancesLeftA[i].mesh.vertexBuffer.getNumVertices() > 0xFFFF) {
                         meshInstancesLeftB.push(meshInstancesLeftA[i]);
                         continue;

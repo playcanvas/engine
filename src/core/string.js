@@ -52,50 +52,50 @@ pc.string = function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.string.startsWith
-        * @description Check if a string s starts with another string subs
-        * @param {String} s The string to look in
-        * @param {String} subs The string to look for
-        * @returns {Boolean} True if s starts with subs
-        * @deprecated
-        * @example
-        * var s = "abc";
-        * if (pc.string.startsWith(s, "a")) {
-        *   console.log('Starts with a');
-        * }
-        */
+         * @private
+         * @function
+         * @name pc.string.startsWith
+         * @description Check if a string s starts with another string subs
+         * @param {String} s The string to look in
+         * @param {String} subs The string to look for
+         * @returns {Boolean} True if s starts with subs
+         * @deprecated
+         * @example
+         * var s = "abc";
+         * if (pc.string.startsWith(s, "a")) {
+         *   console.log('Starts with a');
+         * }
+         */
         startsWith: function (s, subs) {
             console.warn("WARNING: startsWith: Function is deprecated. Use String.startsWith instead.");
             return s.startsWith(subs);
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.string.endsWith
-        * @description Check if a string s ends with another string subs
-        * @param {String} s The string to look in
-        * @param {String} subs The string to look for
-        * @returns {Boolean} True if s ends with subs
-        * @deprecated
-        */
+         * @private
+         * @function
+         * @name pc.string.endsWith
+         * @description Check if a string s ends with another string subs
+         * @param {String} s The string to look in
+         * @param {String} subs The string to look for
+         * @returns {Boolean} True if s ends with subs
+         * @deprecated
+         */
         endsWith: function (s, subs) {
             console.warn("WARNING: endsWith: Function is deprecated. Use String.endsWith instead.");
             return s.endsWith(subs);
         },
 
         /**
-        * @function
-        * @name pc.string.toBool
-        * @description Convert a string value to a boolean. In non-strict mode (the default), 'true' is converted to true, all other values
-        * are converted to false. In strict mode, 'true' is converted to true, 'false' is converted to false, all other values will throw
-        * an Exception.
-        * @param {String} s The string to convert
-        * @param {Boolean} [strict] In strict mode an Exception is thrown if s is not an accepted string value. Defaults to false
-        * @returns {Boolean} The converted value
-        */
+         * @function
+         * @name pc.string.toBool
+         * @description Convert a string value to a boolean. In non-strict mode (the default), 'true' is converted to true, all other values
+         * are converted to false. In strict mode, 'true' is converted to true, 'false' is converted to false, all other values will throw
+         * an Exception.
+         * @param {String} s The string to convert
+         * @param {Boolean} [strict] In strict mode an Exception is thrown if s is not an accepted string value. Defaults to false
+         * @returns {Boolean} The converted value
+         */
         toBool: function (s, strict) {
             if (s === 'true') {
                 return true;

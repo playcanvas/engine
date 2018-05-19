@@ -130,8 +130,10 @@ pc.extend(pc, function () {
         gl.bindFramebuffer(gl.FRAMEBUFFER, __fbo);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, __texture, 0);
         gl.bindTexture(gl.TEXTURE_2D, null);
-        // It is legal for a WebGL implementation exposing the OES_texture_float extension to
-        // support floating-point textures but not as attachments to framebuffer objects.
+        /*
+         * It is legal for a WebGL implementation exposing the OES_texture_float extension to
+         * support floating-point textures but not as attachments to framebuffer objects.
+         */
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
             gl.deleteTexture(__texture);
             return false;
@@ -183,7 +185,7 @@ pc.extend(pc, function () {
      * @description The 'resizecanvas' event is fired when the canvas is resized
      * @param {Number} width The new width of the canvas in pixels
      * @param {Number} height The new height of the canvas in pixels
-    */
+     */
 
     /**
      * @constructor
@@ -281,9 +283,11 @@ pc.extend(pc, function () {
         this.initializeCapabilities();
         this.initializeRenderState();
 
-        // put the rest of the constructor in a function
-        // so that the constructor remains small. Small constructors
-        // are optimized by Firefox due to type inference
+        /*
+         * put the rest of the constructor in a function
+         * so that the constructor remains small. Small constructors
+         * are optimized by Firefox due to type inference
+         */
         (function() {
             this.defaultClearOptions = {
                 color: [0, 0, 0, 1],
@@ -506,11 +510,13 @@ pc.extend(pc, function () {
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
             this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
 
-            // Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
-            // based on the number of available uniforms and the number of uniforms required for non-
-            // bone data.  This is based off of the Standard shader.  A user defined shader may have
-            // even less space available for bones so this calculated value can be overridden via
-            // pc.GraphicsDevice.setBoneLimit.
+            /*
+             * Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
+             * based on the number of available uniforms and the number of uniforms required for non-
+             * bone data.  This is based off of the Standard shader.  A user defined shader may have
+             * even less space available for bones so this calculated value can be overridden via
+             * pc.GraphicsDevice.setBoneLimit.
+             */
             var numUniforms = this.vertexUniformsCount;
             numUniforms -= 4 * 4; // Model, view, projection and shadow matrices
             numUniforms -= 8;     // 8 lights max, each specifying a position vector
@@ -518,9 +524,11 @@ pc.extend(pc, function () {
             numUniforms -= 4 * 4; // Up to 4 texture transforms
             this.boneLimit = Math.floor(numUniforms / 4);
 
-            // Put a limit on the number of supported bones before skin partitioning must be performed
-            // Some GPUs have demonstrated performance issues if the number of vectors allocated to the
-            // skin matrix palette is left unbounded
+            /*
+             * Put a limit on the number of supported bones before skin partitioning must be performed
+             * Some GPUs have demonstrated performance issues if the number of vectors allocated to the
+             * skin matrix palette is left unbounded
+             */
             this.boneLimit = Math.min(this.boneLimit, 128);
 
             if (this.unmaskedRenderer === 'Mali-450 MP') {
@@ -654,9 +662,11 @@ pc.extend(pc, function () {
             var gl = this.gl;
             var precision = "highp";
 
-            // Query the precision supported by ints and floats in vertex and fragment shaders.
-            // Note that getShaderPrecisionFormat is not guaranteed to be present (such as some
-            // instances of the default Android browser). In this case, assume highp is available.
+            /*
+             * Query the precision supported by ints and floats in vertex and fragment shaders.
+             * Note that getShaderPrecisionFormat is not guaranteed to be present (such as some
+             * instances of the default Android browser). In this case, assume highp is available.
+             */
             if (gl.getShaderPrecisionFormat) {
                 var vertexShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT);
                 var vertexShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT);
@@ -885,9 +895,11 @@ pc.extend(pc, function () {
             this.activeTexture = 0;
             this.textureUnits = [];
 
-            // Reset all render targets so they'll be recreated as required.
-            // TODO: a solution for the case where a render target contains something
-            // that was previously generated that needs to be re-rendered.
+            /*
+             * Reset all render targets so they'll be recreated as required.
+             * TODO: a solution for the case where a render target contains something
+             * that was previously generated that needs to be re-rendered.
+             */
             for (i = 0, len = this.targets.length; i < len; i++) {
                 this.targets[i]._glFrameBuffer = undefined;
                 this.targets[i]._glDepthBuffer = undefined;
@@ -1148,8 +1160,10 @@ pc.extend(pc, function () {
                                                     target._depthBuffer._glTextureId, 0);
                         }
                     } else if (target._depth) {
-                        // --- Init a new depth/stencil buffer (optional) ---
-                        // if this is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
+                        /*
+                         * --- Init a new depth/stencil buffer (optional) ---
+                         * if this is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
+                         */
                         var willRenderMsaa = target._samples > 1 && this.webgl2;
                         if (!willRenderMsaa) {
                             if (!target._glDepthBuffer) {
@@ -1241,9 +1255,6 @@ pc.extend(pc, function () {
             // Unset the render target
             var target = this.renderTarget;
             if (target) {
-                // Switch rendering back to the back buffer
-                // this.setFramebuffer(null); // disabled - not needed?
-
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
                 if (colorBuffer && colorBuffer._glTextureId && colorBuffer.mipmaps && colorBuffer._pot) {
@@ -1457,8 +1468,10 @@ pc.extend(pc, function () {
                 mipObject = texture._levels[mipLevel];
 
                 if (mipLevel == 1 && ! texture._compressed) {
-                    // We have more than one mip levels we want to assign, but we need all mips to make
-                    // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
+                    /*
+                     * We have more than one mip levels we want to assign, but we need all mips to make
+                     * the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
+                     */
                     gl.generateMipmap(texture._glTarget);
                     texture._mipmapsUploaded = true;
                 }
@@ -1531,9 +1544,11 @@ pc.extend(pc, function () {
                         }
                     }
                 } else if (texture._volume) {
-                    // ----- 3D -----
-                    // Image/canvas/video not supported (yet?)
-                    // Upload the byte array
+                    /*
+                     * ----- 3D -----
+                     * Image/canvas/video not supported (yet?)
+                     * Upload the byte array
+                     */
                     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                     resMult = 1 / Math.pow(2, mipLevel);
                     if (texture._compressed) {
@@ -2791,15 +2806,15 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.GraphicsDevice#resizeCanvas
-        * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
-        * Note that the specified width and height values will be multiplied by the value of
-        * {@link pc.GraphicsDevice#maxPixelRatio} to give the final resultant width and height for
-        * the canvas.
-        * @param {Number} width The new width of the canvas.
-        * @param {Number} height The new height of the canvas.
-        */
+         * @function
+         * @name pc.GraphicsDevice#resizeCanvas
+         * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
+         * Note that the specified width and height values will be multiplied by the value of
+         * {@link pc.GraphicsDevice#maxPixelRatio} to give the final resultant width and height for
+         * the canvas.
+         * @param {Number} width The new width of the canvas.
+         * @param {Number} height The new height of the canvas.
+         */
         resizeCanvas: function (width, height) {
             this._width = width;
             this._height = height;
@@ -2821,10 +2836,10 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.GraphicsDevice#clearShaderCache
-        * @description Frees memory from all shaders ever allocated with this device
-        */
+         * @function
+         * @name pc.GraphicsDevice#clearShaderCache
+         * @description Frees memory from all shaders ever allocated with this device
+         */
         clearShaderCache: function () {
             this.programLib.clearCache();
         },

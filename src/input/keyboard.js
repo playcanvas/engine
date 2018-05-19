@@ -74,34 +74,34 @@ pc.extend(pc, function(){
     };
 
     /**
-    * @event
-    * @name pc.Keyboard#keydown
-    * @description Event fired when a key is pressed.
-    * @param {pc.KeyboardEvent} event The Keyboard event object. Note, this event is only valid for the current callback.
-    * @example
-    * var onKeyDown = function (e) {
-    *     if (e.key === pc.KEY_SPACE) {
-    *         // space key pressed
-    *     }
-    *     e.event.preventDefault(); // Use original browser event to prevent browser action.
-    * };
-    * app.keyboard.on("keydown", onKeyDown, this);
-    */
+     * @event
+     * @name pc.Keyboard#keydown
+     * @description Event fired when a key is pressed.
+     * @param {pc.KeyboardEvent} event The Keyboard event object. Note, this event is only valid for the current callback.
+     * @example
+     * var onKeyDown = function (e) {
+     *     if (e.key === pc.KEY_SPACE) {
+     *         // space key pressed
+     *     }
+     *     e.event.preventDefault(); // Use original browser event to prevent browser action.
+     * };
+     * app.keyboard.on("keydown", onKeyDown, this);
+     */
 
     /**
-    * @event
-    * @name pc.Keyboard#keyup
-    * @description Event fired when a key is released.
-    * @param {pc.KeyboardEvent} event The Keyboard event object. Note, this event is only valid for the current callback.
-    * @example
-    * var onKeyUp = function (e) {
-    *     if (e.key === pc.KEY_SPACE) {
-    *         // space key released
-    *     }
-    *     e.event.preventDefault(); // Use original browser event to prevent browser action.
-    * };
-    * app.keyboard.on("keyup", onKeyUp, this);
-    */
+     * @event
+     * @name pc.Keyboard#keyup
+     * @description Event fired when a key is released.
+     * @param {pc.KeyboardEvent} event The Keyboard event object. Note, this event is only valid for the current callback.
+     * @example
+     * var onKeyUp = function (e) {
+     *     if (e.key === pc.KEY_SPACE) {
+     *         // space key released
+     *     }
+     *     e.event.preventDefault(); // Use original browser event to prevent browser action.
+     * };
+     * app.keyboard.on("keyup", onKeyUp, this);
+     */
 
     /**
      * @constructor
@@ -139,11 +139,11 @@ pc.extend(pc, function(){
     };
 
     /**
-    * @function
-    * @name pc.Keyboard#attach
-    * @description Attach the keyboard event handlers to an Element
-    * @param {Element} element The element to listen for keyboard events on.
-    */
+     * @function
+     * @name pc.Keyboard#attach
+     * @description Attach the keyboard event handlers to an Element
+     * @param {Element} element The element to listen for keyboard events on.
+     */
     Keyboard.prototype.attach = function (element) {
         if (this._element) {
             // remove previous attached element
@@ -156,10 +156,10 @@ pc.extend(pc, function(){
     };
 
     /**
-    * @function
-    * @name pc.Keyboard#detach
-    * @description Detach the keyboard event handlers from the element it is attached to.
-    */
+     * @function
+     * @name pc.Keyboard#detach
+     * @description Detach the keyboard event handlers from the element it is attached to.
+     */
     Keyboard.prototype.detach = function () {
         this._element.removeEventListener("keydown", this._keyDownHandler);
         this._element.removeEventListener("keypress", this._keyPressHandler);
@@ -206,8 +206,10 @@ pc.extend(pc, function(){
 
         this._keymap[id] = true;
 
-        // Patch on the keyIdentifier property in non-webkit browsers
-        // event.keyIdentifier = event.keyIdentifier || id;
+        /*
+         * Patch on the keyIdentifier property in non-webkit browsers
+         * event.keyIdentifier = event.keyIdentifier || id;
+         */
 
         this.fire("keydown", makeKeyboardEvent(event));
 
@@ -229,8 +231,10 @@ pc.extend(pc, function(){
 
         delete this._keymap[id];
 
-        // Patch on the keyIdentifier property in non-webkit browsers
-        // event.keyIdentifier = event.keyIdentifier || id;
+        /*
+         * Patch on the keyIdentifier property in non-webkit browsers
+         * event.keyIdentifier = event.keyIdentifier || id;
+         */
 
         this.fire("keyup", makeKeyboardEvent(event));
 

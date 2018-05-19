@@ -143,15 +143,15 @@ pc.extend(pc, function () {
      *
      * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
      * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
-        It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
+     * It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
      * @property {Number} shadingModel Defines the shading model.
      * <ul>
      *     <li>{@link pc.SPECULAR_PHONG}: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.</li>
      *     <li>{@link pc.SPECULAR_BLINN}: Energy-conserving Blinn-Phong.</li>
      * </ul>
      * @property {Number} fresnelModel Defines the formula used for Fresnel effect.
-     As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
-     When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
+     * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
+     * When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
      * <ul>
      *     <li>{@link pc.FRESNEL_NONE}: No Fresnel.</li>
      *     <li>{@link pc.FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.</li>
@@ -647,12 +647,12 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @name pc.PhoneMaterial#init
-        * @description Update material data from a data block, as found on a material Asset.
-        * @param {Object} data JSON material data.
-        * Note, init() expects texture parameters to contain a {@link pc.Texture} not a resource id.
-        */
+         * @private
+         * @name pc.PhoneMaterial#init
+         * @description Update material data from a data block, as found on a material Asset.
+         * @param {Object} data JSON material data.
+         * Note, init() expects texture parameters to contain a {@link pc.Texture} not a resource id.
+         */
         init: function (data) {
             this.reset();
 
@@ -1222,9 +1222,11 @@ pc.extend(pc, function () {
         _defineColor(obj, "emissive", new pc.Color(0, 0, 0), true);
 
         _defineFloat(obj, "shininess", 25, function(mat, shininess) {
-            // Shininess is 0-100 value
-            // which is actually a 0-1 glosiness value.
-            // Can be converted to specular power using exp2(shininess * 0.01 * 11)
+            /*
+             * Shininess is 0-100 value
+             * which is actually a 0-1 glosiness value.
+             * Can be converted to specular power using exp2(shininess * 0.01 * 11)
+             */
             var value;
             if (mat.shadingModel === pc.SPECULAR_PHONG) {
                 value = Math.pow(2, shininess * 0.01 * 11); // legacy: expand back to specular power

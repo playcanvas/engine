@@ -396,8 +396,10 @@ pc.extend(pc, function () {
                 for (i = 0; i < rcv.length; i++) {
                     shaderDefs.push(rcv[i]._shaderDefs);
                     rcv[i]._shaderDefs &= ~(pc.SHADERDEF_LM | pc.SHADERDEF_DIRLM);
-                    // rcv[i].mask |= pc.MASK_DYNAMIC;
-                    // rcv[i].mask &= ~pc.MASK_LIGHTMAP;
+                    /*
+                     * rcv[i].mask |= pc.MASK_DYNAMIC;
+                     * rcv[i].mask &= ~pc.MASK_LIGHTMAP;
+                     */
                 }
                 for (i = 0; i < sceneLightmapsNode.length; i++) {
                     if (sceneLightmapsNode[i] === allNodes[node]) {

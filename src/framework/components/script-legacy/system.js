@@ -25,8 +25,10 @@ pc.extend(pc, function () {
         this.DataType = pc.ScriptLegacyComponentData;
         this.schema = _schema;
 
-        // used by application during preloading phase to ensure scripts aren't
-        // initialized until everything is loaded
+        /*
+         * used by application during preloading phase to ensure scripts aren't
+         * initialized until everything is loaded
+         */
         this.preloading = false;
 
         // arrays to cache script instances for fast iteration
@@ -77,8 +79,10 @@ pc.extend(pc, function () {
                 enabled: src.data.enabled
             };
 
-            // manually clone scripts so that we don't clone attributes with pc.extend
-            // which will result in a stack overflow when extending 'entity' script attributes
+            /*
+             * manually clone scripts so that we don't clone attributes with pc.extend
+             * which will result in a stack overflow when extending 'entity' script attributes
+             */
             var scripts = src.data.scripts;
             for (var i = 0, len = scripts.length; i < len; i++) {
                 var attributes = scripts[i].attributes;
@@ -98,8 +102,10 @@ pc.extend(pc, function () {
         },
 
         onBeforeRemove: function (entity, component) {
-            // if the script component is enabled
-            // call onDisable on all its instances first
+            /*
+             * if the script component is enabled
+             * call onDisable on all its instances first
+             */
             if (component.enabled) {
                 this._disableScriptComponent(component);
             }
@@ -158,8 +164,10 @@ pc.extend(pc, function () {
             this._callInstancesMethod(script, INITIALIZE);
             script.data.initialized = true;
 
-            // check again if the script and the entity are enabled
-            // in case they got disabled during initialize
+            /*
+             * check again if the script and the entity are enabled
+             * in case they got disabled during initialize
+             */
             if (script.enabled && script.entity.enabled) {
                 this._enableScriptComponent(script);
             }
@@ -392,9 +400,11 @@ pc.extend(pc, function () {
         _createAccessor: function (attribute, instance) {
             var self = this;
 
-            // create copy of attribute data
-            // to avoid overwriting the same attribute values
-            // that are used by the Editor
+            /*
+             * create copy of attribute data
+             * to avoid overwriting the same attribute values
+             * that are used by the Editor
+             */
             attribute = {
                 name: attribute.name,
                 value: attribute.value,
@@ -443,8 +453,10 @@ pc.extend(pc, function () {
                             }
                         }
 
-                        // delete accessors for attributes that no longer exist
-                        // and fire onAttributeChange when an attribute value changed
+                        /*
+                         * delete accessors for attributes that no longer exist
+                         * and fire onAttributeChange when an attribute value changed
+                         */
                         previousAttributes = scriptComponent.data.attributes[name];
                         if (previousAttributes) {
                             for (key in previousAttributes) {

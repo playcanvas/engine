@@ -116,16 +116,22 @@ pc.extend(pc, function () {
         this._parentWorldTransform = new pc.Mat4();
         this._screenTransform = new pc.Mat4();
 
-        // the corners of the element relative to its screen component.
-        // Order is bottom left, bottom right, top right, top left
+        /*
+         * the corners of the element relative to its screen component.
+         * Order is bottom left, bottom right, top right, top left
+         */
         this._screenCorners = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
 
-        // canvas-space corners of the element.
-        // Order is bottom left, bottom right, top right, top left
+        /*
+         * canvas-space corners of the element.
+         * Order is bottom left, bottom right, top right, top left
+         */
         this._canvasCorners = [new pc.Vec2(), new pc.Vec2(), new pc.Vec2(), new pc.Vec2()];
 
-        // the world-space corners of the element
-        // Order is bottom left, bottom right, top right, top left
+        /*
+         * the world-space corners of the element
+         * Order is bottom left, bottom right, top right, top left
+         */
         this._worldCorners = [new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()];
 
         this._cornersDirty = true;
@@ -246,10 +252,12 @@ pc.extend(pc, function () {
                     element._calculateLocalAnchors();
                 }
 
-                // if element size is dirty
-                // recalculate its size
-                // WARNING: Order is important as calculateSize resets dirtyLocal
-                // so this needs to run before resetting dirtyLocal to false below
+                /*
+                 * if element size is dirty
+                 * recalculate its size
+                 * WARNING: Order is important as calculateSize resets dirtyLocal
+                 * so this needs to run before resetting dirtyLocal to false below
+                 */
                 if (element._sizeDirty) {
                     element._calculateSize();
                 }
@@ -311,8 +319,10 @@ pc.extend(pc, function () {
                             parentWorldTransform.mul2(parent.element._parentWorldTransform, matA);
                         }
 
-                        // update element transform
-                        // rotate and scale around pivot
+                        /*
+                         * update element transform
+                         * rotate and scale around pivot
+                         */
                         var depthOffset = vecA;
                         depthOffset.set(0, 0, this.localPosition.z);
 
@@ -431,9 +441,11 @@ pc.extend(pc, function () {
             if (!elem) return;
 
             if (mask) {
-                // if (elem._maskedBy && elem._maskedBy !== mask) {
-                //     // already masked by something else
-                // }
+                /*
+                 * if (elem._maskedBy && elem._maskedBy !== mask) {
+                 *     // already masked by something else
+                 * }
+                 */
 
                 var ref = mask.element._image._maskRef;
                 if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
@@ -450,8 +462,10 @@ pc.extend(pc, function () {
                 elem._maskedBy = mask;
             } else {
                 if (_debugLogging) console.log("no masking on: " + this.entity.name);
-                // remove mask
-                // restore default material
+                /*
+                 * remove mask
+                 * restore default material
+                 */
                 for (i = 0, len = elem._model.meshInstances.length; i < len; i++) {
                     mi = elem._model.meshInstances[i];
                     mi.stencilFront = mi.stencilBack = null;
@@ -537,9 +551,11 @@ pc.extend(pc, function () {
             return ref;
         },
 
-        // search up the parent hierarchy until we reach a screen
-        // this screen is the parent screen
-        // also searches for masked elements to get the relevant mask
+        /*
+         * search up the parent hierarchy until we reach a screen
+         * this screen is the parent screen
+         * also searches for masked elements to get the relevant mask
+         */
         _parseUpToScreen: function () {
             var result = {
                 screen: null,
@@ -713,10 +729,12 @@ pc.extend(pc, function () {
             }
         },
 
-        // recalculates
-        //   localAnchor, width, height, (local position is updated if anchors are split)
-        // assumes these properties are up to date
-        //   _margin
+        /*
+         * recalculates
+         *   localAnchor, width, height, (local position is updated if anchors are split)
+         * assumes these properties are up to date
+         *   _margin
+         */
         _calculateSize: function (propagateCalculatedWidth, propagateCalculatedHeight) {
             // can't calculate if local anchors are wrong
             if (!this.entity._parent && !this.screen) return;
@@ -1131,9 +1149,11 @@ pc.extend(pc, function () {
         }
     });
 
-    // Returns the 4 corners of the element relative to its screen component.
-    // Only works for elements that have a screen.
-    // Order is bottom left, bottom right, top right, top left.
+    /*
+     * Returns the 4 corners of the element relative to its screen component.
+     * Only works for elements that have a screen.
+     * Order is bottom left, bottom right, top right, top left.
+     */
     Object.defineProperty(ElementComponent.prototype, 'screenCorners', {
         get: function () {
             if (! this._cornersDirty || ! this.screen)
@@ -1168,9 +1188,11 @@ pc.extend(pc, function () {
         }
     });
 
-    // Returns the 4 corners of the element in canvas pixel space.
-    // Only works for 2D elements.
-    // Order of the corners is bottom left, bottom right, top right, top left.
+    /*
+     * Returns the 4 corners of the element in canvas pixel space.
+     * Only works for 2D elements.
+     * Order of the corners is bottom left, bottom right, top right, top left.
+     */
     Object.defineProperty(ElementComponent.prototype, 'canvasCorners', {
         get: function () {
             if (! this._canvasCornersDirty || ! this.screen || ! this.screen.screen.screenSpace)
@@ -1192,10 +1214,12 @@ pc.extend(pc, function () {
         }
     });
 
-    // Returns the 4 corners of the element in world space. Only works
-    // for 3D elements as the corners of 2D elements in world space will
-    // always depend on the camera that is rendering them. Order of the corners is
-    // bottom left, bottom right, top right, top left
+    /*
+     * Returns the 4 corners of the element in world space. Only works
+     * for 3D elements as the corners of 2D elements in world space will
+     * always depend on the camera that is rendering them. Order of the corners is
+     * bottom left, bottom right, top right, top left
+     */
     Object.defineProperty(ElementComponent.prototype, 'worldCorners', {
         get: function () {
             if (! this._worldCornersDirty) {
@@ -1369,76 +1393,76 @@ pc.extend(pc, function () {
 // Events Documentation
 
 /**
-* @event
-* @name pc.ElementComponent#mousedown
-* @description Fired when the mouse is pressed while the cursor is on the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#mousedown
+ * @description Fired when the mouse is pressed while the cursor is on the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#mouseup
-* @description Fired when the mouse is released while the cursor is on the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#mouseup
+ * @description Fired when the mouse is released while the cursor is on the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#mouseenter
-* @description Fired when the mouse cursor enters the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#mouseenter
+ * @description Fired when the mouse cursor enters the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent} event The event
+ */
 /**
-* @event
-* @name pc.ElementComponent#mouseleave
-* @description Fired when the mouse cursor leaves the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#mouseleave
+ * @description Fired when the mouse cursor leaves the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent} event The event
+ */
 /**
-* @event
-* @name pc.ElementComponent#mousemove
-* @description Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#mousemove
+ * @description Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#mousewheel
-* @description Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#mousewheel
+ * @description Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#click
-* @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent|pc.ElementTouchEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#click
+ * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent|pc.ElementTouchEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#touchstart
-* @description Fired when a touch starts on the component. Only fired when useInput is true.
-* @param {pc.ElementTouchEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#touchstart
+ * @description Fired when a touch starts on the component. Only fired when useInput is true.
+ * @param {pc.ElementTouchEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#touchend
-* @description Fired when a touch ends on the component. Only fired when useInput is true.
-* @param {pc.ElementTouchEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#touchend
+ * @description Fired when a touch ends on the component. Only fired when useInput is true.
+ * @param {pc.ElementTouchEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#touchmove
-* @description Fired when a touch moves after it started touching the component. Only fired when useInput is true.
-* @param {pc.ElementTouchEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#touchmove
+ * @description Fired when a touch moves after it started touching the component. Only fired when useInput is true.
+ * @param {pc.ElementTouchEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#touchcancel
-* @description Fired when a touch is cancelled on the component. Only fired when useInput is true.
-* @param {pc.ElementTouchEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#touchcancel
+ * @description Fired when a touch is cancelled on the component. Only fired when useInput is true.
+ * @param {pc.ElementTouchEvent} event The event
+ */

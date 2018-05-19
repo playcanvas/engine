@@ -1108,10 +1108,12 @@ pc.programlib.standard = {
             }
 
             for (i = 0; i < options.lights.length; i++) {
-                // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviours like:
-                // - different falloffs
-                // - different shadow coords (point shadows will use drastically different genShadowCoord)
-                // - different shadow filter modes
+                /*
+                 * The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviours like:
+                 * - different falloffs
+                 * - different shadow coords (point shadows will use drastically different genShadowCoord)
+                 * - different shadow filter modes
+                 */
 
                 // getLightDiffuse and getLightSpecular is BRDF itself.
 

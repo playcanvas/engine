@@ -147,7 +147,8 @@ pc.extend(pc, function () {
 
             gl.linkProgram(this.program);
 
-            // check for errors
+            // Check for errors
+
             // vshader
             if (! gl.getShaderParameter(this.vshader, gl.COMPILE_STATUS)) {
                 logERROR("Failed to compile vertex shader:\n\n" + addLineNumbers(this.definition.vshader) + "\n\n" + gl.getShaderInfoLog(this.vshader));
