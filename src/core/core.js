@@ -21,12 +21,12 @@ var _typeLookup = function () {
  * @preserve PlayCanvas Engine v__CURRENT_SDK_VERSION__ revision __REVISION__
  * http://playcanvas.com
  * Copyright 2011-2018 PlayCanvas Ltd. All rights reserved.
- * // #ifdef DEBUG
+ // #ifdef DEBUG
  * DEBUG BUILD
- * // #endif
- * // #ifdef PROFILER
+ // #endif
+ // #ifdef PROFILER
  * PROFILER BUILD
- * // #endif
+ // #endif
  */
 var pc = {
     version: "__CURRENT_SDK_VERSION__",
