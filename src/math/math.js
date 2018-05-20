@@ -267,13 +267,3 @@ pc.math = {
         return x * x * x * (x * (x * 6 - 15) + 10);
     }
 };
-
-pc.math.intToBytes = pc.math.intToBytes32;
-pc.math.bytesToInt = pc.math.bytesToInt32;
-
-// IE doesn't have native log2
-if (!Math.log2) {
-    Math.log2 = function (x) {
-        return Math.log(x) * pc.math.INV_LOG2;
-    };
-}

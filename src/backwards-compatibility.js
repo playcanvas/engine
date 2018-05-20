@@ -105,6 +105,9 @@ pc.extend(pc.input, {
     TouchEvent: pc.TouchEvent
 });
 
+pc.math.intToBytes = pc.math.intToBytes32;
+pc.math.bytesToInt = pc.math.bytesToInt32;
+
 pc.posteffect = {
     createFullscreenQuad: pc.createFullscreenQuad,
     drawFullscreenQuad: pc.drawFullscreenQuad,
