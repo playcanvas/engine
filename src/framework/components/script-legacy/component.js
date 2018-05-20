@@ -45,7 +45,7 @@ pc.extend(pc, function () {
             this.system._disableScriptComponent(this);
         },
 
-        onSetScripts: function(name, oldValue, newValue) {
+        onSetScripts: function (name, oldValue, newValue) {
             if (!this.system._inTools || this.runInTools) {
                 // if we only need to update script attributes then update them and return
                 if (this._updateScriptAttributes(oldValue, newValue)) {

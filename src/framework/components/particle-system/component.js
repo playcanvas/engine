@@ -1,4 +1,4 @@
-pc.extend(pc, function() {
+pc.extend(pc, function () {
 
     // properties that do not need rebuilding the particle system
     var SIMPLE_PROPERTIES = [
@@ -164,7 +164,7 @@ pc.extend(pc, function() {
     ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.Component);
 
     pc.extend(ParticleSystemComponent.prototype, {
-        addModelToLayers: function() {
+        addModelToLayers: function () {
             if (!this.data.model) return;
             var layer;
             for (var i = 0; i < this.layers.length; i++) {
@@ -175,7 +175,7 @@ pc.extend(pc, function() {
             }
         },
 
-        removeModelFromLayers: function(model) {
+        removeModelFromLayers: function (model) {
             if (!this.data.model) return;
             var layer;
             for (var i = 0; i < this.layers.length; i++) {
@@ -201,7 +201,7 @@ pc.extend(pc, function() {
             }
         },
 
-        onLayersChanged: function(oldComp, newComp) {
+        onLayersChanged: function (oldComp, newComp) {
             this.addModelToLayers();
             oldComp.off("add", this.onLayerAdded, this);
             oldComp.off("remove", this.onLayerRemoved, this);
@@ -209,14 +209,14 @@ pc.extend(pc, function() {
             newComp.on("remove", this.onLayerRemoved, this);
         },
 
-        onLayerAdded: function(layer) {
+        onLayerAdded: function (layer) {
             if (!this.data.model) return;
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             layer.addMeshInstances(this.data.model.meshInstances);
         },
 
-        onLayerRemoved: function(layer) {
+        onLayerRemoved: function (layer) {
             if (!this.data.model) return;
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
@@ -470,7 +470,7 @@ pc.extend(pc, function() {
         },
 
 
-        onEnable: function() {
+        onEnable: function () {
             // get data store once
             var data = this.data;
 
@@ -594,7 +594,7 @@ pc.extend(pc, function() {
             ParticleSystemComponent._super.onEnable.call(this);
         },
 
-        onDisable: function() {
+        onDisable: function () {
             ParticleSystemComponent._super.onDisable.call(this);
 
             this.system.app.scene.off("set:layers", this.onLayersChanged, this);
@@ -614,7 +614,7 @@ pc.extend(pc, function() {
          * @name pc.ParticleSystemComponent#reset
          * @description Resets particle state, doesn't affect playing.
          */
-        reset: function() {
+        reset: function () {
             if (this.emitter) {
                 this.emitter.reset();
             }
@@ -625,7 +625,7 @@ pc.extend(pc, function() {
          * @name pc.ParticleSystemComponent#stop
          * @description Disables the emission of new particles, lets existing to finish their simulation.
          */
-        stop: function() {
+        stop: function () {
             if (this.emitter) {
                 this.emitter.loop = false;
                 this.emitter.resetTime();
@@ -638,7 +638,7 @@ pc.extend(pc, function() {
          * @name pc.ParticleSystemComponent#pause
          * @description Freezes the simulation.
          */
-        pause: function() {
+        pause: function () {
             this.data.paused = true;
         },
 
@@ -656,7 +656,7 @@ pc.extend(pc, function() {
          * @name pc.ParticleSystemComponent#play
          * @description Enables/unfreezes the simulation.
          */
-        play: function() {
+        play: function () {
             this.data.paused = false;
             if (this.emitter) {
                 this.emitter.meshInstance.visible = true;
@@ -671,7 +671,7 @@ pc.extend(pc, function() {
          * @description Checks if simulation is in progress.
          * @returns {Boolean} true if the particle system is currently playing and false otherwise.
          */
-        isPlaying: function() {
+        isPlaying: function () {
             if (this.data.paused) {
                 return false;
             }
@@ -692,7 +692,7 @@ pc.extend(pc, function() {
          * @name pc.ParticleSystemComponent#rebuild
          * @description Rebuilds all data used by this particle system.
          */
-        rebuild: function() {
+        rebuild: function () {
             var enabled = this.enabled;
             this.enabled = false;
             if (this.emitter) {

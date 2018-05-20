@@ -23,6 +23,7 @@
   "eslintConfig": {
     "extends": "eslint-config-playcanvas"
   },
+  "eslintIgnore": ["src/polyfill/*"],
   "devDependencies": {
     "eslint": "^4.19.0",
     "eslint-config-playcanvas": "^1.0.0",

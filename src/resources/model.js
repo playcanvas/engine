@@ -69,7 +69,7 @@ pc.extend(pc, function () {
 
             asset.resource.meshInstances.forEach(function (meshInstance, i) {
                 if (data.mapping) {
-                    var handleMaterial = function(asset) {
+                    var handleMaterial = function (asset) {
                         if (asset.resource) {
                             meshInstance.material = asset.resource;
                         } else {
@@ -77,7 +77,7 @@ pc.extend(pc, function () {
                             assets.load(asset);
                         }
 
-                        asset.once('remove', function(asset) {
+                        asset.once('remove', function (asset) {
                             if (meshInstance.material === asset.resource)
                                 meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
                         });

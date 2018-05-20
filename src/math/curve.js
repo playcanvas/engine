@@ -263,7 +263,7 @@ pc.extend(pc, (function () {
     };
 
     Object.defineProperty(Curve.prototype, 'length', {
-        get: function() {
+        get: function () {
             return this.keys.length;
         }
     });

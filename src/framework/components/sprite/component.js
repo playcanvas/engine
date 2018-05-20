@@ -56,7 +56,7 @@ pc.extend(pc, function () {
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this sprite should belong.
      * @property {Number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components in the same layer.
      */
-    var SpriteComponent = function SpriteComponent (system, entity) {
+    var SpriteComponent = function SpriteComponent(system, entity) {
         this._type = pc.SPRITETYPE_SIMPLE;
         this._material = system.defaultMaterial;
         this._color = new pc.Color(1, 1, 1, 1);
@@ -383,7 +383,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onLayersChanged: function(oldComp, newComp) {
+        _onLayersChanged: function (oldComp, newComp) {
             oldComp.off("add", this.onLayerAdded, this);
             oldComp.off("remove", this.onLayerRemoved, this);
             newComp.on("add", this.onLayerAdded, this);
@@ -394,7 +394,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onLayerAdded: function(layer) {
+        _onLayerAdded: function (layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
 
@@ -403,7 +403,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onLayerRemoved: function(layer) {
+        _onLayerRemoved: function (layer) {
             if (!this._meshInstance) return;
 
             var index = this.layers.indexOf(layer.id);

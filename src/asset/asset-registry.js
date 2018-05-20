@@ -178,7 +178,7 @@ pc.extend(pc, function () {
          * var asset = new pc.Asset("My Asset", "texture", {url: "../path/to/image.jpg"});
          * app.assets.add(asset);
          */
-        add: function(asset) {
+        add: function (asset) {
             var index = this._assets.push(asset) - 1;
             var url;
 
@@ -505,7 +505,7 @@ pc.extend(pc, function () {
                 callback(null, materials);
             }
 
-            var onLoadAsset = function(err, asset) {
+            var onLoadAsset = function (err, asset) {
                 materials.push(asset);
                 count--;
                 if (count === 0)
@@ -558,7 +558,7 @@ pc.extend(pc, function () {
                 return;
             }
 
-            var onLoadAsset = function(err, texture) {
+            var onLoadAsset = function (err, texture) {
                 textures.push(texture);
                 count--;
 
@@ -603,11 +603,11 @@ pc.extend(pc, function () {
             return [];
         },
 
-        _onTagAdd: function(tag, asset) {
+        _onTagAdd: function (tag, asset) {
             this._tags.add(tag, asset);
         },
 
-        _onTagRemove: function(tag, asset) {
+        _onTagRemove: function (tag, asset) {
             this._tags.remove(tag, asset);
         },
 
@@ -633,7 +633,7 @@ pc.extend(pc, function () {
          * var assets = app.assets.findByTag([ "level-1", "monster" ], [ "level-2", "monster" ]);
          * // returns all assets that tagged by (`level-1` AND `monster`) OR (`level-2` AND `monster`)
          */
-        findByTag: function() {
+        findByTag: function () {
             return this._tags.find(arguments);
         },
 

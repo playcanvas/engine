@@ -1,4 +1,4 @@
-pc.extend(pc, function(){
+pc.extend(pc, function (){
     /**
      * @constructor
      * @name pc.KeyboardEvent
@@ -117,7 +117,7 @@ pc.extend(pc, function(){
      * @example
      * var keyboard = new pc.Keyboard(window); // attach keyboard listeners to the window
      */
-    var Keyboard = function(element, options) {
+    var Keyboard = function (element, options) {
         options = options || {};
         this._element = null;
 
@@ -175,7 +175,7 @@ pc.extend(pc, function(){
      * @param {Number} keyCode The key code.
      * @returns {String} The key identifier.
      */
-    Keyboard.prototype.toKeyIdentifier = function(keyCode){
+    Keyboard.prototype.toKeyIdentifier = function (keyCode){
         keyCode = toKeyCode(keyCode);
         var count;
         var hex;
@@ -196,7 +196,7 @@ pc.extend(pc, function(){
         return 'U+' + hex;
     };
 
-    Keyboard.prototype._handleKeyDown = function(event) {
+    Keyboard.prototype._handleKeyDown = function (event) {
         var code = event.keyCode || event.charCode;
 
         // Google Chrome auto-filling of login forms could raise a malformed event
@@ -221,7 +221,7 @@ pc.extend(pc, function(){
         }
     };
 
-    Keyboard.prototype._handleKeyUp = function(event){
+    Keyboard.prototype._handleKeyUp = function (event){
         var code = event.keyCode || event.charCode;
 
         // Google Chrome auto-filling of login forms could raise a malformed event
@@ -246,7 +246,7 @@ pc.extend(pc, function(){
         }
     };
 
-    Keyboard.prototype._handleKeyPress = function(event){
+    Keyboard.prototype._handleKeyPress = function (event){
         this.fire("keypress", makeKeyboardEvent(event));
 
         if (this.preventDefault) {

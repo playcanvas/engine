@@ -1,5 +1,5 @@
 // Mr F
-pc.extend(pc, function() {
+pc.extend(pc, function () {
     var particleVerts = [
         [-1, -1],
         [1, -1],
@@ -7,7 +7,7 @@ pc.extend(pc, function() {
         [-1, 1]
     ];
 
-    var _createTexture = function(device, width, height, pixelData, format, mult8Bit, filter) {
+    var _createTexture = function (device, width, height, pixelData, format, mult8Bit, filter) {
         if (!format) format = pc.PIXELFORMAT_RGBA32F;
 
         var mipFilter = pc.FILTER_NEAREST;
@@ -393,12 +393,12 @@ pc.extend(pc, function() {
 
     ParticleEmitter.prototype = {
 
-        onChangeCamera: function() {
+        onChangeCamera: function () {
             this.regenShader();
             this.resetMaterial();
         },
 
-        calculateBoundsMad: function() {
+        calculateBoundsMad: function () {
             this.worldBoundsMul.x = 1.0 / this.worldBoundsSize.x;
             this.worldBoundsMul.y = 1.0 / this.worldBoundsSize.y;
             this.worldBoundsMul.z = 1.0 / this.worldBoundsSize.z;
@@ -409,7 +409,7 @@ pc.extend(pc, function() {
             this.worldBoundsAdd.z += 0.5;
         },
 
-        calculateWorldBounds: function() {
+        calculateWorldBounds: function () {
             if (!this.node) return;
 
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
@@ -438,7 +438,7 @@ pc.extend(pc, function() {
             if (this.pack8) this.calculateBoundsMad();
         },
 
-        calculateLocalBounds: function() {
+        calculateLocalBounds: function () {
             var minx = Number.MAX_VALUE;
             var miny = Number.MAX_VALUE;
             var minz = Number.MAX_VALUE;
@@ -512,7 +512,7 @@ pc.extend(pc, function() {
             this.localBounds.setMinMax(bMin, bMax);
         },
 
-        rebuild: function() {
+        rebuild: function () {
             var i;
             var gd = this.graphicsDevice;
 
@@ -662,7 +662,7 @@ pc.extend(pc, function() {
                    (this.colorMap && this.colorMap !== ParticleEmitter.DEFAULT_PARAM_TEXTURE || this.normalMap);
         },
 
-        calcSpawnPosition: function(emitterPos, i) {
+        calcSpawnPosition: function (emitterPos, i) {
             var rX = Math.random();
             var rY = Math.random();
             var rZ = Math.random();
@@ -736,7 +736,7 @@ pc.extend(pc, function() {
             }
         },
 
-        rebuildGraphs: function() {
+        rebuildGraphs: function () {
             var precision = this.precision;
             var gd = this.graphicsDevice;
             var i;
@@ -817,7 +817,7 @@ pc.extend(pc, function() {
             }
         },
 
-        regenShader: function() {
+        regenShader: function () {
             var programLib = this.graphicsDevice.getProgramLibrary();
             var hasNormal = (this.normalMap !== null);
             this.normalOption = 0;
@@ -825,7 +825,7 @@ pc.extend(pc, function() {
                 this.normalOption = hasNormal ? 2 : 1;
             }
             // updateShader is also called by pc.Scene when all shaders need to be updated
-            this.material.updateShader = function() {
+            this.material.updateShader = function () {
 
                 /*
                  * The app works like this:
@@ -868,7 +868,7 @@ pc.extend(pc, function() {
             this.material.updateShader();
         },
 
-        resetMaterial: function() {
+        resetMaterial: function () {
             var material = this.material;
 
             material.setParameter('stretch', this.stretch);
@@ -922,7 +922,7 @@ pc.extend(pc, function() {
 
 
         // Declares vertex format, creates VB and IB
-        _allocate: function(numParticles) {
+        _allocate: function (numParticles) {
             var psysVertCount = numParticles * this.numParticleVerts;
             var psysIndexCount = numParticles * this.numParticleIndices;
             var elements, particleFormat;
@@ -1025,7 +1025,7 @@ pc.extend(pc, function() {
             }
         },
 
-        reset: function() {
+        reset: function () {
             this.beenReset = true;
             this.seed = Math.random();
             this.material.setParameter('seed', this.seed);
@@ -1046,7 +1046,7 @@ pc.extend(pc, function() {
             }
         },
 
-        prewarm: function(time) {
+        prewarm: function (time) {
             var lifetimeFraction = time / this.lifetime;
             var iterations = Math.min(Math.floor(lifetimeFraction * this.precision), this.precision);
             var stepDelta = time / iterations;
@@ -1055,15 +1055,15 @@ pc.extend(pc, function() {
             }
         },
 
-        resetTime: function() {
+        resetTime: function () {
             this.endTime = calcEndTime(this);
         },
 
-        finishFrame: function() {
+        finishFrame: function () {
             if (this.useCpu) this.vertexBuffer.unlock();
         },
 
-        addTime: function(delta, isOnStop) {
+        addTime: function (delta, isOnStop) {
             var a, b, c, i, j;
             var device = this.graphicsDevice;
 
@@ -1431,7 +1431,7 @@ pc.extend(pc, function() {
 
                     this.vbOld.set(this.vbCPU);
 
-                    this.vbToSort.sort(function(p1, p2) {
+                    this.vbToSort.sort(function (p1, p2) {
                         return p1[1] - p2[1];
                     });
 
@@ -1494,7 +1494,7 @@ function frac(f) {
     return f - Math.floor(f);
 }
 
-function encodeFloatRGBA ( v ) {
+function encodeFloatRGBA( v ) {
     var encX = frac(v);
     var encY = frac(255.0 * v);
     var encZ = frac(65025.0 * v);
@@ -1508,7 +1508,7 @@ function encodeFloatRGBA ( v ) {
     return [encX, encY, encZ, encW];
 }
 
-function encodeFloatRG ( v ) {
+function encodeFloatRG( v ) {
     var encX = frac(v);
     var encY = frac(255.0 * v);
 

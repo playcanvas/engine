@@ -44,7 +44,7 @@ pc.extend(pc, function () {
      *
      * @extends pc.GraphNode
      */
-    var Entity = function(name, app){
+    var Entity = function (name, app){
         if (name instanceof pc.Application) app = name;
         this._guid = pc.guid.create(); // Globally Unique Identifier
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
@@ -337,7 +337,7 @@ pc.extend(pc, function () {
         return c;
     };
 
-    Entity.prototype._cloneRecursively = function(duplicatedIdsMap) {
+    Entity.prototype._cloneRecursively = function (duplicatedIdsMap) {
         var type;
         var c = new pc.Entity(this._app);
         pc.Entity._super._cloneInternal.call(this, c);
@@ -377,11 +377,11 @@ pc.extend(pc, function () {
         if (oldEntity instanceof pc.Entity) {
             var components = oldEntity.c;
 
-            Object.keys(components).forEach(function(componentName) {
+            Object.keys(components).forEach(function (componentName) {
                 var component = components[componentName];
                 var entityProperties = component.system.getPropertiesOfType('entity');
 
-                entityProperties.forEach(function(propertyDescriptor) {
+                entityProperties.forEach(function (propertyDescriptor) {
                     var propertyName = propertyDescriptor.name;
                     var oldEntityReferenceId = component[propertyName];
                     var entityIsWithinOldSubtree = !!oldSubtreeRoot.findByGuid(oldEntityReferenceId);
@@ -410,7 +410,7 @@ pc.extend(pc, function () {
             var _new = newEntity.children.filter(function (e) {
                 return (e instanceof pc.Entity);
             });
-            _old.forEach(function(oldChild, index) {
+            _old.forEach(function (oldChild, index) {
                 resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldChild, _new[index], duplicatedIdsMap);
             });
         }

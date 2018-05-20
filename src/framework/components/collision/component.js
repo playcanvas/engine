@@ -66,7 +66,7 @@ pc.extend(pc, function () {
      * @property {pc.Model} model The model that is added to the scene graph for the mesh collision volume.
      * @extends pc.Component
      */
-    var CollisionComponent = function CollisionComponent (system, entity) {
+    var CollisionComponent = function CollisionComponent(system, entity) {
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         this.on('set_radius', this.onSetRadius, this);

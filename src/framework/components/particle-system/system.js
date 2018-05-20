@@ -1,4 +1,4 @@
-pc.extend(pc, function() {
+pc.extend(pc, function () {
     var _schema = [
         'enabled',
         'autoPlay',
@@ -96,7 +96,7 @@ pc.extend(pc, function() {
 
     pc.extend(ParticleSystemComponentSystem.prototype, {
 
-        initializeComponentData: function(component, _data, properties) {
+        initializeComponentData: function (component, _data, properties) {
             var data = {};
 
             properties = [];
@@ -164,7 +164,7 @@ pc.extend(pc, function() {
             return this.addComponent(clone, data);
         },
 
-        onUpdate: function(dt) {
+        onUpdate: function (dt) {
             var components = this.store;
             var numSteps, i, j, c;
             var stats = this.app.stats.particles;
@@ -237,7 +237,7 @@ pc.extend(pc, function() {
             }
         },
 
-        onRemove: function(entity, component) {
+        onRemove: function (entity, component) {
             var data = component.data;
             if (data.model) {
                 entity.removeChild(data.model.getGraph());

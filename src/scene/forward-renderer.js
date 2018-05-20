@@ -451,7 +451,7 @@ pc.extend(pc, function () {
 
     pc.extend(ForwardRenderer.prototype, {
 
-        sortCompare: function(drawCallA, drawCallB) {
+        sortCompare: function (drawCallA, drawCallB) {
             if (drawCallA.layer === drawCallB.layer) {
                 if (drawCallA.drawOrder && drawCallB.drawOrder) {
                     return drawCallA.drawOrder - drawCallB.drawOrder;
@@ -465,7 +465,7 @@ pc.extend(pc, function () {
             return drawCallB._key[pc.SORTKEY_FORWARD] - drawCallA._key[pc.SORTKEY_FORWARD];
         },
 
-        sortCompareMesh: function(drawCallA, drawCallB) {
+        sortCompareMesh: function (drawCallA, drawCallB) {
             if (drawCallA.layer === drawCallB.layer) {
                 if (drawCallA.drawOrder && drawCallB.drawOrder) {
                     return drawCallA.drawOrder - drawCallB.drawOrder;
@@ -484,7 +484,7 @@ pc.extend(pc, function () {
             return keyB - keyA;
         },
 
-        depthSortCompare: function(drawCallA, drawCallB) {
+        depthSortCompare: function (drawCallA, drawCallB) {
             keyA = drawCallA._key[pc.SORTKEY_DEPTH];
             keyB = drawCallB._key[pc.SORTKEY_DEPTH];
 
@@ -495,11 +495,11 @@ pc.extend(pc, function () {
             return keyB - keyA;
         },
 
-        lightCompare: function(lightA, lightB) {
+        lightCompare: function (lightA, lightB) {
             return lightA.key - lightB.key;
         },
 
-        _isVisible: function(camera, meshInstance) {
+        _isVisible: function (camera, meshInstance) {
             if (!meshInstance.visible) return false;
 
             meshPos = meshInstance.aabb.center;
@@ -514,7 +514,7 @@ pc.extend(pc, function () {
             return camera.frustum.containsSphere(tempSphere);
         },
 
-        getShadowCamera: function(device, light) {
+        getShadowCamera: function (device, light) {
             var shadowCam = light._shadowCamera;
             var shadowBuffer;
 
@@ -531,7 +531,7 @@ pc.extend(pc, function () {
             return shadowCam;
         },
 
-        updateCameraFrustum: function(camera) {
+        updateCameraFrustum: function (camera) {
             if (camera.vrDisplay && camera.vrDisplay.presenting) {
                 projMat = camera.vrDisplay.combinedProj;
                 var parent = camera._node.getParent();
@@ -945,7 +945,7 @@ pc.extend(pc, function () {
             }
         },
 
-        cull: function(camera, drawCalls, visibleList) {
+        cull: function (camera, drawCalls, visibleList) {
             // #ifdef PROFILER
             var cullTime = pc.now();
             // #endif
@@ -1004,7 +1004,7 @@ pc.extend(pc, function () {
             return visibleLength;
         },
 
-        cullLights: function(camera, lights) {
+        cullLights: function (camera, lights) {
             var i, light, type;
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
@@ -1019,7 +1019,7 @@ pc.extend(pc, function () {
             }
         },
 
-        updateCpuSkinMatrices: function(drawCalls) {
+        updateCpuSkinMatrices: function (drawCalls) {
             var drawCallsCount = drawCalls.length;
             if (drawCallsCount === 0) return;
 
@@ -1041,7 +1041,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        updateGpuSkinMatrices: function(drawCalls) {
+        updateGpuSkinMatrices: function (drawCalls) {
             // #ifdef PROFILER
             var skinTime = pc.now();
             // #endif
@@ -1064,7 +1064,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        updateMorphedBounds: function(drawCalls) {
+        updateMorphedBounds: function (drawCalls) {
             // #ifdef PROFILER
             var morphTime = pc.now();
             // #endif
@@ -1082,7 +1082,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        updateMorphing: function(drawCalls) {
+        updateMorphing: function (drawCalls) {
             // #ifdef PROFILER
             var morphTime = pc.now();
             // #endif
@@ -1102,7 +1102,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        setBaseConstants: function(device, material) {
+        setBaseConstants: function (device, material) {
             // Cull mode
             device.setCullMode(material.cull);
             // Alpha test
@@ -1112,7 +1112,7 @@ pc.extend(pc, function () {
             }
         },
 
-        setSkinning: function(device, meshInstance, material) {
+        setSkinning: function (device, meshInstance, material) {
             if (meshInstance.skinInstance) {
                 this._skinDrawCalls++;
                 if (device.supportsBoneTextures) {
@@ -1127,7 +1127,7 @@ pc.extend(pc, function () {
             }
         },
 
-        drawInstance: function(device, meshInstance, mesh, style, normal) {
+        drawInstance: function (device, meshInstance, mesh, style, normal) {
             instancingData = meshInstance.instancingData;
             if (instancingData) {
                 this._instancedDrawCalls++;
@@ -1158,7 +1158,7 @@ pc.extend(pc, function () {
         },
 
         // used for stereo
-        drawInstance2: function(device, meshInstance, mesh, style) {
+        drawInstance2: function (device, meshInstance, mesh, style) {
             instancingData = meshInstance.instancingData;
             if (instancingData) {
                 this._instancedDrawCalls++;
@@ -1176,7 +1176,7 @@ pc.extend(pc, function () {
             }
         },
 
-        renderShadows: function(lights, cameraPass) {
+        renderShadows: function (lights, cameraPass) {
             var device = this.device;
             // #ifdef PROFILER
             var shadowMapStartTime = pc.now();
@@ -1407,13 +1407,13 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        updateShader: function(meshInstance, objDefs, staticLightList, pass, sortedLights) {
+        updateShader: function (meshInstance, objDefs, staticLightList, pass, sortedLights) {
             meshInstance.material._scene = this.scene;
             meshInstance.material.updateShader(this.device, this.scene, objDefs, staticLightList, pass, sortedLights);
             meshInstance._shader[pass] = meshInstance.material.shader;
         },
 
-        renderForward: function(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer) {
+        renderForward: function (camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer) {
             var device = this.device;
             var scene = this.scene;
             var vrDisplay = camera.vrDisplay;
@@ -1656,7 +1656,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        setupInstancing: function(device) {
+        setupInstancing: function (device) {
             if (!pc._instanceVertexFormat) {
                 var formatDesc = [
                     { semantic: pc.SEMANTIC_TEXCOORD2, components: 4, type: pc.TYPE_FLOAT32 },
@@ -2196,7 +2196,7 @@ pc.extend(pc, function () {
         },
 
 
-        cullDirectionalShadowmap: function(light, drawCalls, camera, pass) {
+        cullDirectionalShadowmap: function (light, drawCalls, camera, pass) {
             var i, shadowCam, shadowCamNode, lightNode, frustumSize, vlen, visibleList;
             var unitPerTexel, delta, p;
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;

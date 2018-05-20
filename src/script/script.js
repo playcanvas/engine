@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var rawToValue = function(app, args, value, old) {
+    var rawToValue = function (app, args, value, old) {
         var i;
 
         switch (args.type) {
@@ -118,7 +118,7 @@ pc.extend(pc, function () {
      * Note: An instance of pc.ScriptAttributes is created automatically by each {@link ScriptType}.
      * @param {ScriptType} scriptType Script Type that attributes relate to.
      */
-    var ScriptAttributes = function(scriptType) {
+    var ScriptAttributes = function (scriptType) {
         this.scriptType = scriptType;
         this.index = { };
     };
@@ -168,7 +168,7 @@ pc.extend(pc, function () {
      *     ]
      * });
      */
-    ScriptAttributes.prototype.add = function(name, args) {
+    ScriptAttributes.prototype.add = function (name, args) {
         if (this.index[name]) {
             // #ifdef DEBUG
             console.warn('attribute \'' + name + '\' is already defined for script type \'' + this.scriptType.name + '\'');
@@ -184,10 +184,10 @@ pc.extend(pc, function () {
         this.index[name] = args;
 
         Object.defineProperty(this.scriptType.prototype, name, {
-            get: function() {
+            get: function () {
                 return this.__attributes[name];
             },
-            set: function(raw) {
+            set: function (raw) {
                 var old = this.__attributes[name];
 
                 // convert to appropriate type
@@ -219,7 +219,7 @@ pc.extend(pc, function () {
      * @example
      * PlayerController.attributes.remove('fullName');
      */
-    ScriptAttributes.prototype.remove = function(name) {
+    ScriptAttributes.prototype.remove = function (name) {
         if (! this.index[name])
             return false;
 
@@ -239,7 +239,7 @@ pc.extend(pc, function () {
      *     // attribute `fullName` is defined
      * });
      */
-    ScriptAttributes.prototype.has = function(name) {
+    ScriptAttributes.prototype.has = function (name) {
         return !! this.index[name];
     };
 
@@ -255,7 +255,7 @@ pc.extend(pc, function () {
      * var attr = PlayerController.attributes.get('fullName');
      * if (attr) attr.default = 'Unknown';
      */
-    ScriptAttributes.prototype.get = function(name) {
+    ScriptAttributes.prototype.get = function (name) {
         return this.index[name] || null;
     };
 
@@ -290,7 +290,7 @@ pc.extend(pc, function () {
      *     this.entity.rotate(0, this.speed * dt, 0);
      * };
      */
-    var createScript = function(name, app) {
+    var createScript = function (name, app) {
         if (pc.script.legacy) {
             // #ifdef DEBUG
             console.error("This project is using the legacy script system. You cannot call pc.createScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/");
@@ -318,7 +318,7 @@ pc.extend(pc, function () {
          * When disabled no update methods will be called on each tick.
          * initialize and postInitialize methods will run once when the script instance is in `enabled` state during app tick.
          */
-        var script = function(args) {
+        var script = function (args) {
             // #ifdef DEBUG
             if (! args || ! args.app || ! args.entity) {
                 console.warn('script \'' + name + '\' has missing arguments in constructor');
@@ -367,7 +367,7 @@ pc.extend(pc, function () {
         script.attributes = new ScriptAttributes(script);
 
         // initialize attributes
-        script.prototype.__initializeAttributes = function(force) {
+        script.prototype.__initializeAttributes = function (force) {
             if (! force && ! this.__attributesRaw)
                 return;
 
@@ -406,7 +406,7 @@ pc.extend(pc, function () {
          *     }
          * })
          */
-        script.extend = function(methods) {
+        script.extend = function (methods) {
             for (var key in methods) {
                 if (! methods.hasOwnProperty(key))
                     continue;
@@ -510,10 +510,10 @@ pc.extend(pc, function () {
          */
 
         Object.defineProperty(script.prototype, 'enabled', {
-            get: function() {
+            get: function () {
                 return this._enabled && !this._destroyed && this.entity.script.enabled && this.entity.enabled;
             },
-            set: function(value) {
+            set: function (value) {
                 this._enabled = !!value;
 
                 if (this.enabled === this._enabledOld) return;

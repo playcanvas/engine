@@ -237,13 +237,13 @@ pc.extend(pc, function () {
             }
         },
 
-        updateShadow: function() {
+        updateShadow: function () {
             if (this.shadowUpdateMode !== pc.SHADOWUPDATE_REALTIME) {
                 this.shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
             }
         },
 
-        updateKey: function() {
+        updateKey: function () {
             /*
              * Key definition:
              * Bit
@@ -281,10 +281,10 @@ pc.extend(pc, function () {
     };
 
     Object.defineProperty(Light.prototype, 'enabled', {
-        get: function() {
+        get: function () {
             return this._type;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._type === value)
                 return;
 
@@ -295,10 +295,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'type', {
-        get: function() {
+        get: function () {
             return this._type;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._type === value)
                 return;
 
@@ -317,10 +317,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'mask', {
-        get: function() {
+        get: function () {
             return this._mask;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._mask === value)
                 return;
 
@@ -331,10 +331,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'shadowType', {
-        get: function() {
+        get: function () {
             return this._shadowType;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._shadowType === value)
                 return;
 
@@ -365,10 +365,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'castShadows', {
-        get: function() {
+        get: function () {
             return this._castShadows && this._mask !== pc.MASK_LIGHTMAP && this._mask !== 0;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._castShadows === value)
                 return;
 
@@ -380,10 +380,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'shadowResolution', {
-        get: function() {
+        get: function () {
             return this._shadowResolution;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._shadowResolution === value)
                 return;
 
@@ -398,10 +398,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'vsmBlurSize', {
-        get: function() {
+        get: function () {
             return this._vsmBlurSize;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._vsmBlurSize === value)
                 return;
 
@@ -411,10 +411,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'normalOffsetBias', {
-        get: function() {
+        get: function () {
             return this._normalOffsetBias;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._normalOffsetBias === value)
                 return;
 
@@ -428,10 +428,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'falloffMode', {
-        get: function() {
+        get: function () {
             return this._falloffMode;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._falloffMode === value)
                 return;
 
@@ -443,10 +443,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'innerConeAngle', {
-        get: function() {
+        get: function () {
             return this._innerConeAngle;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._innerConeAngle === value)
                 return;
 
@@ -456,10 +456,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'outerConeAngle', {
-        get: function() {
+        get: function () {
             return this._outerConeAngle;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._outerConeAngle === value)
                 return;
 
@@ -469,10 +469,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'intensity', {
-        get: function() {
+        get: function () {
             return this._intensity;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._intensity === value)
                 return;
 
@@ -496,10 +496,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'cookie', {
-        get: function() {
+        get: function () {
             return this._cookie;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookie === value)
                 return;
 
@@ -511,10 +511,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'cookieFalloff', {
-        get: function() {
+        get: function () {
             return this._cookieFalloff;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookieFalloff === value)
                 return;
 
@@ -526,10 +526,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'cookieChannel', {
-        get: function() {
+        get: function () {
             return this._cookieChannel;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookieChannel === value)
                 return;
 
@@ -547,10 +547,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'cookieTransform', {
-        get: function() {
+        get: function () {
             return this._cookieTransform;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookieTransform === value)
                 return;
 
@@ -571,10 +571,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'cookieOffset', {
-        get: function() {
+        get: function () {
             return this._cookieOffset;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookieOffset === value)
                 return;
 

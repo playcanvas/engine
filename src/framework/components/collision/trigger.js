@@ -12,7 +12,7 @@ pc.extend(pc, function () {
      * @param {pc.Component} component The component for which the trigger will be created
      * @param {pc.ComponentData} data The data for the component
      */
-    var Trigger = function Trigger (app, component, data) {
+    var Trigger = function Trigger(app, component, data) {
         this.entity = component.entity;
         this.component = component;
         this.app = app;

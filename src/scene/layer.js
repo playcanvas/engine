@@ -640,7 +640,7 @@ pc.extend(pc, function () {
         this._generateCameraHash();
     };
 
-    Layer.prototype._calculateSortDistances = function(drawCalls, drawCallsCount, camPos, camFwd) {
+    Layer.prototype._calculateSortDistances = function (drawCalls, drawCallsCount, camPos, camFwd) {
         var i, drawCall, meshPos;
         var tempx, tempy, tempz;
         for (i = 0; i < drawCallsCount; i++) {

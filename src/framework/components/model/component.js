@@ -34,7 +34,7 @@ pc.extend(pc, function () {
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
 
-    var ModelComponent = function ModelComponent (system, entity)   {
+    var ModelComponent = function ModelComponent(system, entity)   {
         this.on("set_type", this.onSetType, this);
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
@@ -74,14 +74,14 @@ pc.extend(pc, function () {
             this.enabled = visible;
         },
 
-        _onAssetLoad: function(asset) {
+        _onAssetLoad: function (asset) {
             if (asset.resource) {
                 this._onModelLoaded(asset.resource.clone());
                 this._clonedModel = true;
             }
         },
 
-        addModelToLayers: function() {
+        addModelToLayers: function () {
             var layer;
             for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
@@ -90,7 +90,7 @@ pc.extend(pc, function () {
             }
         },
 
-        removeModelFromLayers: function(model) {
+        removeModelFromLayers: function (model) {
             var layer;
             for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
@@ -99,13 +99,13 @@ pc.extend(pc, function () {
             }
         },
 
-        _onAssetUnload: function(asset) {
+        _onAssetUnload: function (asset) {
             if (!this.model) return;
             this.removeModelFromLayers(this.model);
             this.model = null;
         },
 
-        _onAssetChange: function(asset, attribute, newValue, oldValue) {
+        _onAssetChange: function (asset, attribute, newValue, oldValue) {
             // reset mapping
             if (attribute === 'data')
                 this.mapping = this.data.mapping;
@@ -136,7 +136,7 @@ pc.extend(pc, function () {
                 assets.once("add:" + id, this._onModelAsset, this);
         },
 
-        _onModelAsset: function(asset) {
+        _onModelAsset: function (asset) {
             var assets = this.system.app.assets;
 
             // clear old assets bindings
@@ -175,7 +175,7 @@ pc.extend(pc, function () {
             }
         },
 
-        remove: function() {
+        remove: function () {
             this._onModelAsset(null);
         },
 
@@ -353,7 +353,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onLayersChanged: function(oldComp, newComp) {
+        onLayersChanged: function (oldComp, newComp) {
             this.addModelToLayers();
             oldComp.off("add", this.onLayerAdded, this);
             oldComp.off("remove", this.onLayerRemoved, this);
@@ -361,13 +361,13 @@ pc.extend(pc, function () {
             newComp.on("remove", this.onLayerRemoved, this);
         },
 
-        onLayerAdded: function(layer) {
+        onLayerAdded: function (layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             layer.addMeshInstances(this.meshInstances);
         },
 
-        onLayerRemoved: function(layer) {
+        onLayerRemoved: function (layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             layer.removeMeshInstances(this.meshInstances);
@@ -433,7 +433,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onMaterialAssetRemove: function(asset) {
+        _onMaterialAssetRemove: function (asset) {
             var assets = this.system.app.assets;
             var id = isNaN(asset) ? asset.id : asset;
 
@@ -446,7 +446,7 @@ pc.extend(pc, function () {
             assets.off('remove:' + id, this._onMaterialAssetRemove, this);
         },
 
-        _onMaterialAssetAdd: function(asset) {
+        _onMaterialAssetAdd: function (asset) {
             var assets = this.system.app.assets;
 
             if (asset.resource) {
@@ -458,7 +458,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onMaterialAssetLoad: function(asset) {
+        _onMaterialAssetLoad: function (asset) {
             var assets = this.system.app.assets;
 
             if (asset.resource) {

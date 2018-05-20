@@ -141,7 +141,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The Application
      * @extends pc.ComponentSystem
      */
-    var RigidBodyComponentSystem = function RigidBodyComponentSystem (app) {
+    var RigidBodyComponentSystem = function RigidBodyComponentSystem(app) {
         this.id = 'rigidbody';
         this.description = "Adds the entity to the scene's physical simulation.";
         app.systems.add(this.id, this);

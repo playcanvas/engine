@@ -105,7 +105,7 @@ pc.extend(pc, function () {
 
     Lightmapper.prototype = {
 
-        calculateLightmapSize: function(node) {
+        calculateLightmapSize: function (node) {
             var data, parent;
             var sizeMult = this.scene.lightmapSizeMultiplier || 16;
             var scale = tempVec;
@@ -166,7 +166,7 @@ pc.extend(pc, function () {
          * </ul>
          * Only lights with bakeDir=true will be used for generating the dominant light direction.
          */
-        bake: function(nodes, mode) {
+        bake: function (nodes, mode) {
 
             // #ifdef PROFILER
             var startTime = pc.now();

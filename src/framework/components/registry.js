@@ -32,7 +32,7 @@ pc.extend(pc, function () {
          * @description Remove a Component type
          * @param {Object} name The name of the Component remove
          */
-        remove: function(name) {
+        remove: function (name) {
             if (!this[name]) {
                 throw new Error(pc.string.format("No ComponentSystem named '{0}' registered", name));
             }

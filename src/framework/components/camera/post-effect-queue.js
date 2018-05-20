@@ -27,7 +27,7 @@ pc.extend(pc, function () {
         this.resizeTimeout = null;
         this.resizeLast = 0;
 
-        this._resizeTimeoutCallback = function() {
+        this._resizeTimeoutCallback = function () {
             self.resizeRenderTargets();
         };
 
@@ -126,7 +126,7 @@ pc.extend(pc, function () {
                     name: "PostEffectQueue",
                     renderTarget: this.camera.renderTarget,
                     clear: false,
-                    onPostRender: function() {
+                    onPostRender: function () {
                         for (var i = 0; i < this._commandList.length; i++) {
                             this._commandList[i]();
                         }

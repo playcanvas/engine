@@ -107,7 +107,7 @@ pc.extend(pc, function () {
              * any layout groups which are children of other layout groups will always have their
              * new size set before their own reflow is calculated.
              */
-            this._reflowQueue.sort(function(componentA, componentB) {
+            this._reflowQueue.sort(function (componentA, componentB) {
                 return componentA.entity.graphDepth < componentB.entity.graphDepth;
             });
 

@@ -69,7 +69,7 @@ pc.path = function () {
          * pc.path.getBasename("/path/to/file.txt"); // returns "path.txt"
          * pc.path.getBasename("/path/to/dir"); // returns "dir"
          */
-        getBasename: function(path) {
+        getBasename: function (path) {
             return pc.path.split(path)[1];
         },
 
@@ -80,7 +80,7 @@ pc.path = function () {
          * @param {String} path The path to get the directory from
          * @returns {String} The directory part of the path.
          */
-        getDirectory: function(path) {
+        getDirectory: function (path) {
             var parts = path.split(pc.path.delimiter);
             return parts.slice(0, parts.length - 1).join(pc.path.delimiter);
         },

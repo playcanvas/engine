@@ -171,7 +171,7 @@ pc.ELEMENTTYPE_UINT32 = pc.TYPE_UINT32;
 pc.ELEMENTTYPE_FLOAT32 = pc.TYPE_FLOAT32;
 
 Object.defineProperty(pc.shaderChunks, "transformSkinnedVS", {
-    get: function() {
+    get: function () {
         return "#define SKIN\n" + pc.shaderChunks.transformVS;
     }
 });

@@ -121,7 +121,7 @@ pc.extend(pc, function () {
 
         _getDisplays: function (callback) {
             if (navigator.getVRDisplays) {
-                navigator.getVRDisplays().then(function(displays) {
+                navigator.getVRDisplays().then(function (displays) {
                     if (callback) callback(null, displays);
                 });
             } else {
@@ -129,7 +129,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _addDisplay: function(vrDisplay) {
+        _addDisplay: function (vrDisplay) {
             if (this._index[vrDisplay.displayId])
                 return;
 

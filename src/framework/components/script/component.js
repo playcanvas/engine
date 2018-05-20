@@ -179,7 +179,7 @@ pc.extend(pc, function () {
             this._checkState();
         },
 
-        onPostStateChange: function() {
+        onPostStateChange: function () {
             var script;
 
             var wasLooping = this._beginLooping();
@@ -224,13 +224,13 @@ pc.extend(pc, function () {
          * when value === old instead of onEnable and onDisable
          * which are only fired when value !== old
          */
-        _onSetEnabled: function(prop, old, value) {
+        _onSetEnabled: function (prop, old, value) {
             this._beingEnabled = true;
             this._checkState();
             this._beingEnabled = false;
         },
 
-        _checkState: function() {
+        _checkState: function () {
             var state = this.enabled && this.entity.enabled;
             if (state === this._oldState)
                 return;
@@ -251,7 +251,7 @@ pc.extend(pc, function () {
             this._endLooping(wasLooping);
         },
 
-        _onBeforeRemove: function() {
+        _onBeforeRemove: function () {
             this.fire('remove');
 
             var wasLooping = this._beginLooping();
@@ -281,12 +281,12 @@ pc.extend(pc, function () {
             this._destroyedScripts.length = 0;
         },
 
-        _onInitializeAttributes: function() {
+        _onInitializeAttributes: function () {
             for (var i = 0, len = this.scripts.length; i < len; i++)
                 this.scripts[i].__initializeAttributes();
         },
 
-        _scriptMethod: function(script, method, arg) {
+        _scriptMethod: function (script, method, arg) {
             try {
                 script[method](arg);
             } catch (ex) {
@@ -303,7 +303,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onInitialize: function() {
+        _onInitialize: function () {
             var script, scripts = this._scripts;
 
             var wasLooping = this._beginLooping();
@@ -320,11 +320,11 @@ pc.extend(pc, function () {
             this._endLooping(wasLooping);
         },
 
-        _onPostInitialize: function() {
+        _onPostInitialize: function () {
             this.onPostStateChange();
         },
 
-        _onUpdate: function(dt) {
+        _onUpdate: function (dt) {
             var script, scripts = this._scripts;
 
             var wasLooping = this._beginLooping();
@@ -338,7 +338,7 @@ pc.extend(pc, function () {
             this._endLooping(wasLooping);
         },
 
-        _onPostUpdate: function(dt) {
+        _onPostUpdate: function (dt) {
             var i;
             var len;
 
@@ -366,7 +366,7 @@ pc.extend(pc, function () {
          *     // entity has script
          * }
          */
-        has: function(name) {
+        has: function (name) {
             var scriptType = name;
 
             // shorthand using script name
@@ -394,7 +394,7 @@ pc.extend(pc, function () {
          *     }
          * });
          */
-        create: function(name, args) {
+        create: function (name, args) {
             var self = this;
             args = args || { };
 
@@ -430,7 +430,7 @@ pc.extend(pc, function () {
 
                     this._scriptsIndex[scriptType.__name] = {
                         instance: scriptInstance,
-                        onSwap: function() {
+                        onSwap: function () {
                             self.swap(scriptType.__name);
                         }
                     };
@@ -487,7 +487,7 @@ pc.extend(pc, function () {
          * @example
          * entity.script.destroy('playerController');
          */
-        destroy: function(name) {
+        destroy: function (name) {
             var scriptName = name;
             var scriptType = name;
 
@@ -536,7 +536,7 @@ pc.extend(pc, function () {
             return true;
         },
 
-        swap: function(script) {
+        swap: function (script) {
             var scriptType = script;
 
             // shorthand using script name
@@ -584,7 +584,7 @@ pc.extend(pc, function () {
          * @example
          * entity.script.move('playerController', 0);
          */
-        move: function(name, ind) {
+        move: function (name, ind) {
             if (ind >= this._scripts.length)
                 return false;
 
@@ -613,10 +613,10 @@ pc.extend(pc, function () {
 
 
     Object.defineProperty(ScriptComponent.prototype, 'scripts', {
-        get: function() {
+        get: function () {
             return this._scripts;
         },
-        set: function(value) {
+        set: function (value) {
             this._scriptsData = value;
 
             for (var key in value) {

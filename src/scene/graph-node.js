@@ -62,7 +62,7 @@ pc.extend(pc, function () {
      * @type pc.Vec3
      */
     Object.defineProperty(GraphNode.prototype, 'right', {
-        get: function() {
+        get: function () {
             return this.getWorldTransform().getX(this._right).normalize();
         }
     });
@@ -74,7 +74,7 @@ pc.extend(pc, function () {
      * @type pc.Vec3
      */
     Object.defineProperty(GraphNode.prototype, 'up', {
-        get: function() {
+        get: function () {
             return this.getWorldTransform().getY(this._up).normalize();
         }
     });
@@ -86,7 +86,7 @@ pc.extend(pc, function () {
      * @type pc.Vec3
      */
     Object.defineProperty(GraphNode.prototype, 'forward', {
-        get: function() {
+        get: function () {
             return this.getWorldTransform().getZ(this._forward).normalize().scale(-1);
         }
     });
@@ -319,7 +319,7 @@ pc.extend(pc, function () {
          * // Finds the first node that has the name property set to 'Test'
          * var node = parent.findOne('name', 'Test');
          */
-        findOne: function(attr, value) {
+        findOne: function (attr, value) {
             var i;
             var len = this._children.length;
             var result = null;
@@ -381,12 +381,12 @@ pc.extend(pc, function () {
          * // Return all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
          * var meatEatingMammalsAndReptiles = node.findByTag([ "carnivore", "mammal" ], [ "carnivore", "reptile" ]);
          */
-        findByTag: function() {
+        findByTag: function () {
             var tags = this.tags._processArguments(arguments);
             return this._findByTag(tags);
         },
 
-        _findByTag: function(tags) {
+        _findByTag: function (tags) {
             var result = [];
             var i, len = this._children.length;
             var descendants;
@@ -896,7 +896,7 @@ pc.extend(pc, function () {
             this.name = name;
         },
 
-        _dirtify: function(local) {
+        _dirtify: function (local) {
             if ((! local || (local && this._dirtyLocal)) && this._dirtyWorld)
                 return;
 
@@ -1060,7 +1060,7 @@ pc.extend(pc, function () {
             this._onInsertChild(node);
         },
 
-        addChildAndSaveTransform: function(node) {
+        addChildAndSaveTransform: function (node) {
             var wPos = node.getPosition();
             var wRot = node.getRotation();
 
@@ -1132,7 +1132,7 @@ pc.extend(pc, function () {
             if (this.fire) this.fire('childinsert', node);
         },
 
-        _updateGraphDepth: function() {
+        _updateGraphDepth: function () {
             if (this._parent) {
                 this._graphDepth = this._parent._graphDepth + 1;
             } else {

@@ -126,13 +126,13 @@ pc.extend(pc, function () {
             data.camera._component = component;
 
             var self = component;
-            data.camera.calculateTransform = function(mat, mode) {
+            data.camera.calculateTransform = function (mat, mode) {
                 if (!self._calculateTransform)
                     return null;
 
                 return self._calculateTransform(mat, mode);
             };
-            data.camera.calculateProjection = function(mat, mode) {
+            data.camera.calculateProjection = function (mat, mode) {
                 if (!self._calculateProjection)
                     return null;
 

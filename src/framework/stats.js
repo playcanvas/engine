@@ -4,7 +4,7 @@
  * @name pc.ApplicationStats
  * @param {pc.GraphicsDevice} device The graphics device.
  */
-pc.ApplicationStats = function(device) {
+pc.ApplicationStats = function (device) {
     this.frame = {
         fps: 0,
         ms: 0,
@@ -64,25 +64,25 @@ pc.ApplicationStats = function(device) {
     this.shaders = device._shaderStats;
 
     Object.defineProperty(this.vram, 'totalUsed', {
-        get: function() {
+        get: function () {
             return this.tex + this.vb + this.ib;
         }
     });
 
     Object.defineProperty(this, 'scene', {
-        get: function() {
+        get: function () {
             return pc.Application._currentApplication.scene._stats;
         }
     });
 
     Object.defineProperty(this, 'lightmapper', {
-        get: function() {
+        get: function () {
             return pc.Application._currentApplication.lightmapper._stats;
         }
     });
 
     Object.defineProperty(this, 'batcher', {
-        get: function() {
+        get: function () {
             return pc.Application._currentApplication.batcher._stats;
         }
     });

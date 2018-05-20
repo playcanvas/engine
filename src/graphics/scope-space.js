@@ -11,7 +11,7 @@ pc.extend(pc, function () {
     };
 
     ScopeSpace.prototype = {
-        resolve: function(name) {
+        resolve: function (name) {
             // Check if the ScopeId already exists
             if (!this.variables.hasOwnProperty(name)) {
                 // Create and add to the table
@@ -22,7 +22,7 @@ pc.extend(pc, function () {
             return this.variables[name];
         },
 
-        getSubSpace: function(name) {
+        getSubSpace: function (name) {
             // Check if the nested namespace already exists
             if (!this.namespaces.hasOwnProperty(name)) {
                 // Create and add to the table

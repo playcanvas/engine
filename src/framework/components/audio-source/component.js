@@ -42,7 +42,7 @@ pc.extend(pc, function () {
          * @description Begin playback of an audio asset in the component attached to an entity
          * @param {String} name The name of the Asset to play
          */
-        play: function(name) {
+        play: function (name) {
             if (!this.enabled || !this.entity.enabled) {
                 return;
             }
@@ -74,7 +74,7 @@ pc.extend(pc, function () {
          * @name pc.AudioSourceComponent#pause
          * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link pc.AudioSourceComponent#unpause}
          */
-        pause: function() {
+        pause: function () {
             if (this.channel) {
                 this.channel.pause();
             }
@@ -98,7 +98,7 @@ pc.extend(pc, function () {
          * @name pc.AudioSourceComponent#stop
          * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
          */
-        stop: function() {
+        stop: function () {
             if (this.channel) {
                 this.channel.stop();
                 this.channel = null;
@@ -325,7 +325,7 @@ pc.extend(pc, function () {
 
                     asset.off('error', _error, this);
                     asset.on('error', _error, this);
-                    asset.ready(function(asset) {
+                    asset.ready(function (asset) {
                         sources[asset.name] = asset.resource;
                         count--;
                         if (count === 0) {

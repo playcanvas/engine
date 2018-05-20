@@ -66,7 +66,7 @@ pc.extend(pc, function () {
             return undefined;
         },
 
-        updateTransform: function(component, position, rotation, scale) {
+        updateTransform: function (component, position, rotation, scale) {
             if (component.entity.trigger) {
                 component.entity.trigger.syncEntityToBody();
             }
@@ -374,7 +374,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The running {pc.Application}
      * @extends pc.ComponentSystem
      */
-    var CollisionComponentSystem = function CollisionComponentSystem (app) {
+    var CollisionComponentSystem = function CollisionComponentSystem(app) {
         this.id = "collision";
         this.description = "Specifies a collision volume.";
         app.systems.add(this.id, this);
@@ -511,7 +511,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onTransformChanged: function(component, position, rotation, scale) {
+        onTransformChanged: function (component, position, rotation, scale) {
             this.implementations[component.data.type].updateTransform(component, position, rotation, scale);
         },
 

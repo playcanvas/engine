@@ -26,7 +26,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The Application.
      * @extends pc.ComponentSystem
      */
-    var ModelComponentSystem = function ModelComponentSystem (app) {
+    var ModelComponentSystem = function ModelComponentSystem(app) {
         this.id = 'model';
         this.description = "Renders a 3D model at the location of the Entity.";
         app.systems.add(this.id, this);
@@ -172,7 +172,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onRemove: function(entity, component) {
+        onRemove: function (entity, component) {
             // Unhook any material asset events
             entity.model.materialAsset = null;
             component.remove();

@@ -40,7 +40,7 @@ pc.math = {
      * @param {Number} max Max value
      * @returns {Number} The clamped value
      */
-    clamp: function(value, min, max) {
+    clamp: function (value, min, max) {
         if (value >= max) return max;
         if (value <= min) return min;
         return value;
@@ -198,7 +198,7 @@ pc.math = {
      * @param {Number} val The value for which to calculate the next power of 2.
      * @returns {Number} The next power of 2.
      */
-    nextPowerOfTwo: function(val) {
+    nextPowerOfTwo: function (val) {
         val--;
         val |= (val >> 1);
         val |= (val >> 2);
@@ -273,7 +273,7 @@ pc.math.bytesToInt = pc.math.bytesToInt32;
 
 // IE doesn't have native log2
 if (!Math.log2) {
-    Math.log2 = function(x) {
+    Math.log2 = function (x) {
         return Math.log(x) * pc.math.INV_LOG2;
     };
 }

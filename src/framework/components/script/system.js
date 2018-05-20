@@ -37,7 +37,7 @@ pc.extend(pc, function () {
     pc.Component._buildAccessors(pc.ScriptComponent.prototype, _schema);
 
     pc.extend(ScriptComponentSystem.prototype, {
-        initializeComponentData: function(component, data, properties) {
+        initializeComponentData: function (component, data, properties) {
             this._components.push(component);
 
             component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
@@ -55,7 +55,7 @@ pc.extend(pc, function () {
             }
         },
 
-        cloneComponent: function(entity, clone) {
+        cloneComponent: function (entity, clone) {
             var i, key;
             var order = [];
             var scripts = { };
@@ -89,7 +89,7 @@ pc.extend(pc, function () {
             return this.addComponent(clone, data);
         },
 
-        _callComponentMethod: function(name, dt) {
+        _callComponentMethod: function (name, dt) {
             var wasLooping = this._beginLooping();
 
             for (var i = 0; i < this._components.length; i++) {
@@ -128,7 +128,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onInitialize: function() {
+        _onInitialize: function () {
             this.preloading = false;
 
             // initialize attributes
@@ -137,17 +137,17 @@ pc.extend(pc, function () {
 
             this._callComponentMethod('_onInitialize');
         },
-        _onPostInitialize: function() {
+        _onPostInitialize: function () {
             this._callComponentMethod('_onPostInitialize');
         },
-        _onUpdate: function(dt) {
+        _onUpdate: function (dt) {
             this._callComponentMethod('_onUpdate', dt);
         },
-        _onPostUpdate: function(dt) {
+        _onPostUpdate: function (dt) {
             this._callComponentMethod('_onPostUpdate', dt);
         },
 
-        _onBeforeRemove: function(entity, component) {
+        _onBeforeRemove: function (entity, component) {
             var ind = this._components.indexOf(component);
             if (ind === -1) return;
 

@@ -117,7 +117,7 @@ pc.extend(pc, function () {
                 self.animations = self.animations; // assigning ensures set_animations event is fired
             };
 
-            var onAssetAdd = function(asset) {
+            var onAssetAdd = function (asset) {
                 asset.off('change', self.onAssetChanged, self);
                 asset.on('change', self.onAssetChanged, self);
 
@@ -270,7 +270,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onBeforeRemove: function() {
+        onBeforeRemove: function () {
             for (var i = 0; i < this.assets.length; i++) {
                 var asset = this.system.app.assets.get(this.assets[i]);
                 if (! asset) continue;
