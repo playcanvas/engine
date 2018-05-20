@@ -119,14 +119,6 @@ pc.extend(pc, function () {
                     this._system.defaultImageMaterials.indexOf(this._material) === -1);
         },
 
-        /*
-         * assign a material internally without updating everything
-         * _setMaterial: function (material) {
-         *     this._material = material;
-         *     this._meshInstance.material = material;
-         * },
-         */
-
         _use9Slicing: function () {
             return this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED);
         },

@@ -161,7 +161,7 @@ pc.extend(pc, (function () {
 
                 // back up index to left key
                 if (i > 0) {
-                    i -= 1;
+                    i--;
                 }
 
                 if (i > 0) {

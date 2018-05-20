@@ -441,12 +441,6 @@ pc.extend(pc, function () {
             if (!elem) return;
 
             if (mask) {
-                /*
-                 * if (elem._maskedBy && elem._maskedBy !== mask) {
-                 *     // already masked by something else
-                 * }
-                 */
-
                 var ref = mask.element._image._maskRef;
                 if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
                 var sp = new pc.StencilParameters({

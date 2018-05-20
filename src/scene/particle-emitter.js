@@ -144,12 +144,7 @@ pc.extend(pc, function() {
 
 
         if (!ParticleEmitter.DEFAULT_PARAM_TEXTURE) {
-            /*
-             * 1x1 white opaque
-             * defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
-             */
-
-            // white radial gradient
+            // White radial gradient
             var resolution = 16;
             var centerPoint = resolution * 0.5 + 0.5;
             var dtex = new Float32Array(resolution * resolution * 4);
