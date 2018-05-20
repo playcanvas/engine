@@ -167,10 +167,12 @@ pc.extend(pc, function () {
         open: function (url, data) {
             var material = new pc.StandardMaterial();
 
-            // TODO: this is a bit of a mess,
-            // Probably should create a new data block for the material
-            // and put it on the asset. This preserves originally loaded asset data
-            // and can be removed/cleared when asset is unloaded.
+            /*
+             * TODO: this is a bit of a mess,
+             * Probably should create a new data block for the material
+             * and put it on the asset. This preserves originally loaded asset data
+             * and can be removed/cleared when asset is unloaded.
+             */
             if (!data.parameters) {
                 this._createParameters(data);
             }
@@ -180,8 +182,10 @@ pc.extend(pc, function () {
             return material;
         },
 
-        // creates placeholders for textures
-        // that are used while texture is loading
+        /*
+         * creates placeholders for textures
+         * that are used while texture is loading
+         */
         _createPlaceholders: function() {
             var textures = {
                 white: [255, 255, 255, 255],
@@ -284,9 +288,11 @@ pc.extend(pc, function () {
 
             data.chunks = asset.resource.chunks;
 
-            // Replace texture ids with actual textures
-            // Should we copy 'data' here instead of updating in place?
-            // TODO: This calls material.init() for _every_ texture and cubemap field in the texture with an asset. Combine this into one call to init!
+            /*
+             * Replace texture ids with actual textures
+             * Should we copy 'data' here instead of updating in place?
+             * TODO: This calls material.init() for _every_ texture and cubemap field in the texture with an asset. Combine this into one call to init!
+             */
             data.parameters.forEach(function (param, i) {
                 var id;
 
@@ -322,8 +328,10 @@ pc.extend(pc, function () {
                             id: id,
                             url: pathMapping ? pc.path.join(dir, param.data) : '',
                             bind: function(asset) {
-                                // TODO
-                                // update specific param instead of all of them
+                                /*
+                                 * TODO
+                                 * update specific param instead of all of them
+                                 */
                                 data.parameters[i].data = asset.resource;
                                 material[data.parameters[i].name] = asset.resource;
                                 material.update();
@@ -435,8 +443,10 @@ pc.extend(pc, function () {
                     } else if (pathMapping) {
                         assets.once("add:url:" + pc.path.join(dir, param.data), function (asset) {
                             asset.ready(function (asset) {
-                                // TODO
-                                // update specific param instead of all of them
+                                /*
+                                 * TODO
+                                 * update specific param instead of all of them
+                                 */
                                 data.parameters[i].data = asset.resource;
                                 material.init(data);
 

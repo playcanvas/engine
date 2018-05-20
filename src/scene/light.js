@@ -121,13 +121,15 @@ pc.extend(pc, function () {
             clone.shadowResolution = this._shadowResolution;
             clone.shadowDistance = this.shadowDistance;
 
-            // Cookies properties
-            // clone.cookie = this._cookie;
-            // clone.cookieIntensity = this.cookieIntensity;
-            // clone.cookieFalloff = this._cookieFalloff;
-            // clone.cookieChannel = this._cookieChannel;
-            // clone.cookieTransform = this._cookieTransform;
-            // clone.cookieOffset = this._cookieOffset;
+            /*
+             * Cookies properties
+             * clone.cookie = this._cookie;
+             * clone.cookieIntensity = this.cookieIntensity;
+             * clone.cookieFalloff = this._cookieFalloff;
+             * clone.cookieChannel = this._cookieChannel;
+             * clone.cookieTransform = this._cookieTransform;
+             * clone.cookieOffset = this._cookieOffset;
+             */
 
             return clone;
         },
@@ -242,20 +244,22 @@ pc.extend(pc, function () {
         },
 
         updateKey: function() {
-            // Key definition:
-            // Bit
-            // 31      : sign bit (leave)
-            // 29 - 30 : type
-            // 28      : cast shadows
-            // 25 - 27 : shadow type
-            // 23 - 24 : falloff mode
-            // 22      : normal offset bias
-            // 21      : cookie
-            // 20      : cookie falloff
-            // 18 - 19 : cookie channel R
-            // 16 - 17 : cookie channel G
-            // 14 - 15 : cookie channel B
-            // 12      : cookie transform
+            /*
+             * Key definition:
+             * Bit
+             * 31      : sign bit (leave)
+             * 29 - 30 : type
+             * 28      : cast shadows
+             * 25 - 27 : shadow type
+             * 23 - 24 : falloff mode
+             * 22      : normal offset bias
+             * 21      : cookie
+             * 20      : cookie falloff
+             * 18 - 19 : cookie channel R
+             * 16 - 17 : cookie channel G
+             * 14 - 15 : cookie channel B
+             * 12      : cookie transform
+             */
             var key =
                    (this._type                                << 29) |
                    ((this._castShadows ? 1 : 0)               << 28) |

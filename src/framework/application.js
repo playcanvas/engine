@@ -1,135 +1,135 @@
 pc.extend(pc, function () {
     /**
-    * @name pc.Application
-    * @class Default application which performs general setup code and initiates the main game loop.
-    * @description Create a new Application.
-    * @param {Element} canvas The canvas element
-    * @param {Object} options
-    * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input
-    * @param {pc.Mouse} [options.mouse] Mouse handler for input
-    * @param {pc.TouchDevice} [options.touch] TouchDevice handler for input
-    * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
-    * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
-    * @param {String} [options.assetPrefix] Prefix to apply to asset urls before loading
-    * @param {Object} [options.graphicsDeviceOptions] Options object that is passed into the {@link pc.GraphicsDevice} constructor
-    *
-    * @example
-    * // Create application
-    * var app = new pc.Application(canvas, options);
-    * // Start game loop
-    * app.start()
-    */
+     * @name pc.Application
+     * @class Default application which performs general setup code and initiates the main game loop.
+     * @description Create a new Application.
+     * @param {Element} canvas The canvas element
+     * @param {Object} options
+     * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input
+     * @param {pc.Mouse} [options.mouse] Mouse handler for input
+     * @param {pc.TouchDevice} [options.touch] TouchDevice handler for input
+     * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
+     * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
+     * @param {String} [options.assetPrefix] Prefix to apply to asset urls before loading
+     * @param {Object} [options.graphicsDeviceOptions] Options object that is passed into the {@link pc.GraphicsDevice} constructor
+     *
+     * @example
+     * // Create application
+     * var app = new pc.Application(canvas, options);
+     * // Start game loop
+     * app.start()
+     */
 
     // PROPERTIES
 
     /**
-    * @name pc.Application#scene
-    * @type {pc.Scene}
-    * @description The current {@link pc.Scene}
-    */
+     * @name pc.Application#scene
+     * @type {pc.Scene}
+     * @description The current {@link pc.Scene}
+     */
 
     /**
-    * @name pc.Application#timeScale
-    * @type {Number}
-    * @description Scales the global time delta.
-    */
+     * @name pc.Application#timeScale
+     * @type {Number}
+     * @description Scales the global time delta.
+     */
 
     /**
-    * @name pc.Application#maxDeltaTime
-    * @type {Number}
-    * @description Clamps per-frame delta time to an upper bound. Useful since returning from a tab
-    * deactivation can generate huge values for dt, which can adversely affect game state. Defaults
-    * to 0.1 (seconds).
-    */
+     * @name pc.Application#maxDeltaTime
+     * @type {Number}
+     * @description Clamps per-frame delta time to an upper bound. Useful since returning from a tab
+     * deactivation can generate huge values for dt, which can adversely affect game state. Defaults
+     * to 0.1 (seconds).
+     */
 
     /**
-    * @name pc.Application#assets
-    * @type {pc.AssetRegistry}
-    * @description The assets available to the application.
-    */
+     * @name pc.Application#assets
+     * @type {pc.AssetRegistry}
+     * @description The assets available to the application.
+     */
 
     /**
-    * @name pc.Application#graphicsDevice
-    * @type {pc.GraphicsDevice}
-    * @description The graphics device used by the application.
-    */
+     * @name pc.Application#graphicsDevice
+     * @type {pc.GraphicsDevice}
+     * @description The graphics device used by the application.
+     */
 
     /**
-    * @name pc.Application#systems
-    * @type {pc.ComponentSystemRegistry}
-    * @description The component systems.
-    */
+     * @name pc.Application#systems
+     * @type {pc.ComponentSystemRegistry}
+     * @description The component systems.
+     */
 
     /**
-    * @name pc.Application#loader
-    * @type {pc.ResourceLoader}
-    * @description The resource loader.
-    */
+     * @name pc.Application#loader
+     * @type {pc.ResourceLoader}
+     * @description The resource loader.
+     */
 
     /**
-    * @name pc.Application#root
-    * @type {pc.Entity}
-    * @description The root {@link pc.Entity} of the application.
-    */
+     * @name pc.Application#root
+     * @type {pc.Entity}
+     * @description The root {@link pc.Entity} of the application.
+     */
 
     /**
-    * @name pc.Application#keyboard
-    * @type {pc.Keyboard}
-    * @description The keyboard device.
-    */
+     * @name pc.Application#keyboard
+     * @type {pc.Keyboard}
+     * @description The keyboard device.
+     */
 
     /**
-    * @name pc.Application#mouse
-    * @type {pc.Mouse}
-    * @description The mouse device.
-    */
+     * @name pc.Application#mouse
+     * @type {pc.Mouse}
+     * @description The mouse device.
+     */
 
     /**
-    * @name pc.Application#touch
-    * @type {pc.TouchDevice}
-    * @description Used to get touch events input.
-    */
+     * @name pc.Application#touch
+     * @type {pc.TouchDevice}
+     * @description Used to get touch events input.
+     */
 
     /**
-    * @name pc.Application#gamepads
-    * @type {pc.GamePads}
-    * @description Used to access GamePad input.
-    */
+     * @name pc.Application#gamepads
+     * @type {pc.GamePads}
+     * @description Used to access GamePad input.
+     */
 
     /**
-    * @name pc.Application#elementInput
-    * @type {pc.ElementInput}
-    * @description Used to handle input for {@link pc.ElementComponent}s.
-    */
+     * @name pc.Application#elementInput
+     * @type {pc.ElementInput}
+     * @description Used to handle input for {@link pc.ElementComponent}s.
+     */
 
     /**
-    * @name pc.Application#scripts
-    * @type pc.ScriptRegistry
-    * @description The Script Registry of the Application
-    */
+     * @name pc.Application#scripts
+     * @type pc.ScriptRegistry
+     * @description The Script Registry of the Application
+     */
 
     /**
-    * @name pc.Application#batcher
-    * @type pc.BatchManager
-    * @description The Batch Manager of the Application
-    */
+     * @name pc.Application#batcher
+     * @type pc.BatchManager
+     * @description The Batch Manager of the Application
+     */
 
     /**
-    * @name pc.Application#autoRender
-    * @type Boolean
-    * @description When true (the default) the application's render function is called every frame.
-    */
+     * @name pc.Application#autoRender
+     * @type Boolean
+     * @description When true (the default) the application's render function is called every frame.
+     */
 
     /**
-    * @name pc.Application#renderNextFrame
-    * @type Boolean
-    * @description If {@link pc.Application#autoRender} is false, set `app.renderNextFrame` true to force application to render the scene once next frame.
-    * @example
-    * // render the scene only while space key is pressed
-    * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
-    *    this.app.renderNextFrame = true;
-    * }
-    */
+     * @name pc.Application#renderNextFrame
+     * @type Boolean
+     * @description If {@link pc.Application#autoRender} is false, set `app.renderNextFrame` true to force application to render the scene once next frame.
+     * @example
+     * // render the scene only while space key is pressed
+     * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
+     *    this.app.renderNextFrame = true;
+     * }
+     */
 
     var Application = function (canvas, options) {
         options = options || {};
@@ -477,8 +477,10 @@ pc.extend(pc, function () {
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
-        // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
-        // in this._hiddenAttr.
+        /*
+         * Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
+         * in this._hiddenAttr.
+         */
         if (document.hidden !== undefined) {
             this._hiddenAttr = 'hidden';
             document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
@@ -521,12 +523,12 @@ pc.extend(pc, function () {
 
     Application.prototype = {
         /**
-        * @function
-        * @name pc.Application#configure
-        * @description Load the application configuration file and apply application properties and fill the asset registry
-        * @param {String} url The URL of the configuration file to load
-        * @param {Function} callback The Function called when the configuration file is loaded and parsed
-        */
+         * @function
+         * @name pc.Application#configure
+         * @description Load the application configuration file and apply application properties and fill the asset registry
+         * @param {String} url The URL of the configuration file to load
+         * @param {Function} callback The Function called when the configuration file is loaded and parsed
+         */
         configure: function (url, callback) {
             var self = this;
             pc.http.get(url, function (err, response) {
@@ -551,11 +553,11 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Application#preload
-        * @description Load all assets in the asset registry that are marked as 'preload'
-        * @param {Function} callback Function called when all assets are loaded
-        */
+         * @function
+         * @name pc.Application#preload
+         * @description Load all assets in the asset registry that are marked as 'preload'
+         * @param {Function} callback Function called when all assets are loaded
+         */
         preload: function (callback) {
             var self = this;
 
@@ -629,28 +631,30 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Application#loadSceneHierarchy
-        * @description Load a scene file, create and initialize the Entity hierarchy
-        * and add the hierarchy to the application root Entity.
-        * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
-        * @param {Function} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
-        * @example
-        *
-        * app.loadSceneHierarchy("1000.json", function (err, entity) {
-        *     if (!err) {
-        *       var e = app.root.find("My New Entity");
-        *     } else {
-        *       // error
-        *     }
-        *   }
-        * });
-        */
+         * @function
+         * @name pc.Application#loadSceneHierarchy
+         * @description Load a scene file, create and initialize the Entity hierarchy
+         * and add the hierarchy to the application root Entity.
+         * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
+         * @param {Function} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
+         * @example
+         *
+         * app.loadSceneHierarchy("1000.json", function (err, entity) {
+         *     if (!err) {
+         *       var e = app.root.find("My New Entity");
+         *     } else {
+         *       // error
+         *     }
+         *   }
+         * });
+         */
         loadSceneHierarchy: function (url, callback) {
             var self = this;
 
-            // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
-            // Split loading into load and open
+            /*
+             * Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
+             * Split loading into load and open
+             */
             var handler = this.loader.getHandler("hierarchy");
 
             // include asset prefix if present
@@ -690,21 +694,21 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Application#loadSceneSettings
-        * @description Load a scene file and apply the scene settings to the current scene
-        * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
-        * @param {Function} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
-        * @example
-        * app.loadSceneSettings("1000.json", function (err) {
-        *     if (!err) {
-        *       // success
-        *     } else {
-        *       // error
-        *     }
-        *   }
-        * });
-        */
+         * @function
+         * @name pc.Application#loadSceneSettings
+         * @description Load a scene file and apply the scene settings to the current scene
+         * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
+         * @param {Function} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
+         * @example
+         * app.loadSceneSettings("1000.json", function (err) {
+         *     if (!err) {
+         *       // success
+         *     } else {
+         *       // error
+         *     }
+         *   }
+         * });
+         */
         loadSceneSettings: function (url, callback) {
             // include asset prefix if present
             if (this.assets && this.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
@@ -744,8 +748,10 @@ pc.extend(pc, function () {
                         var scene = handler.open(url, data);
                         self.systems.script.preloading = false;
 
-                        // clear scene from cache because we'll destroy it when we load another one
-                        // so data will be invalid
+                        /*
+                         * clear scene from cache because we'll destroy it when we load another one
+                         * so data will be invalid
+                         */
                         self.loader.clearCache(url, "scene");
 
                         self.loader.patch({
@@ -842,8 +848,10 @@ pc.extend(pc, function () {
             this.setCanvasResolution(props.resolutionMode, this._width, this._height);
             this.setCanvasFillMode(props.fillMode, this._width, this._height);
 
-            // if VR is enabled in the project and there is no native VR support
-            // load the polyfill
+            /*
+             * if VR is enabled in the project and there is no native VR support
+             * load the polyfill
+             */
             if (props.vr && props.vrPolyfillUrl) {
                 if (!pc.VrManager.isSupported || pc.platform.android) {
                     props.libraries.push(props.vrPolyfillUrl);
@@ -858,8 +866,10 @@ pc.extend(pc, function () {
                 for (var key in props.layers) {
                     var data = props.layers[key];
                     data.id = parseInt(key, 10);
-                    // depth layer should only be enabled when needed
-                    // by incrementing its ref counter
+                    /*
+                     * depth layer should only be enabled when needed
+                     * by incrementing its ref counter
+                     */
                     data.enabled = data.id !== pc.LAYERID_DEPTH;
                     layers[key] = new pc.Layer(data);
                 }
@@ -1171,35 +1181,35 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Application#setCanvasFillMode
-        * @description Controls how the canvas fills the window and resizes when the window changes.
-        * @param {String} mode The mode to use when setting the size of the canvas. Can be:
-        * <ul>
-        *     <li>pc.FILLMODE_NONE: the canvas will always match the size provided.</li>
-        *     <li>pc.FILLMODE_FILL_WINDOW: the canvas will simply fill the window, changing aspect ratio.</li>
-        *     <li>pc.FILLMODE_KEEP_ASPECT: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.</li>
-        * </ul>
-        * @param {Number} [width] The width of the canvas (only used when mode is pc.FILLMODE_NONE).
-        * @param {Number} [height] The height of the canvas (only used when mode is pc.FILLMODE_NONE).
-        */
+         * @function
+         * @name pc.Application#setCanvasFillMode
+         * @description Controls how the canvas fills the window and resizes when the window changes.
+         * @param {String} mode The mode to use when setting the size of the canvas. Can be:
+         * <ul>
+         *     <li>pc.FILLMODE_NONE: the canvas will always match the size provided.</li>
+         *     <li>pc.FILLMODE_FILL_WINDOW: the canvas will simply fill the window, changing aspect ratio.</li>
+         *     <li>pc.FILLMODE_KEEP_ASPECT: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.</li>
+         * </ul>
+         * @param {Number} [width] The width of the canvas (only used when mode is pc.FILLMODE_NONE).
+         * @param {Number} [height] The height of the canvas (only used when mode is pc.FILLMODE_NONE).
+         */
         setCanvasFillMode: function (mode, width, height) {
             this._fillMode = mode;
             this.resizeCanvas(width, height);
         },
 
         /**
-        * @function
-        * @name pc.Application#setCanvasResolution
-        * @description Change the resolution of the canvas, and set the way it behaves when the window is resized
-        * @param {String} mode The mode to use when setting the resolution. Can be:
-        * <ul>
-        *     <li>pc.RESOLUTION_AUTO: if width and height are not provided, canvas will be resized to match canvas client size.</li>
-        *     <li>pc.RESOLUTION_FIXED: resolution of canvas will be fixed.</li>
-        * </ul>
-        * @param {Number} [width] The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used
-        * @param {Number} [height] The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used
-        */
+         * @function
+         * @name pc.Application#setCanvasResolution
+         * @description Change the resolution of the canvas, and set the way it behaves when the window is resized
+         * @param {String} mode The mode to use when setting the resolution. Can be:
+         * <ul>
+         *     <li>pc.RESOLUTION_AUTO: if width and height are not provided, canvas will be resized to match canvas client size.</li>
+         *     <li>pc.RESOLUTION_FIXED: resolution of canvas will be fixed.</li>
+         * </ul>
+         * @param {Number} [width] The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used
+         * @param {Number} [height] The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used
+         */
         setCanvasResolution: function (mode, width, height) {
             this._resolutionMode = mode;
 
@@ -1213,33 +1223,33 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Application#isFullscreen
-        * @description Returns true if the application is currently running fullscreen
-        * @returns {Boolean} True if the application is running fullscreen
-        */
+         * @function
+         * @name pc.Application#isFullscreen
+         * @description Returns true if the application is currently running fullscreen
+         * @returns {Boolean} True if the application is running fullscreen
+         */
         isFullscreen: function () {
             return !!document.fullscreenElement;
         },
 
         /**
-        * @function
-        * @name pc.Application#enableFullscreen
-        * @description Request that the browser enters fullscreen mode. This is not available on all browsers.
-        * Note: Switching to fullscreen can only be initiated by a user action, e.g. in the event hander for a mouse or keyboard input
-        * @param {Element} [element] The element to display in fullscreen, if element is not provided the application canvas is used
-        * @param {Function} [success] Function called if the request for fullscreen was successful
-        * @param {Function} [error] Function called if the request for fullscreen was unsuccessful
-        * @example
-        * var button = document.getElementById('my-button');
-        * button.addEventListener('click', function () {
-        *     app.enableFullscreen(canvas, function () {
-        *         console.log('Now fullscreen');
-        *     }, function () {
-        *         console.log('Something went wrong!');
-        *     });
-        * }, false);
-        */
+         * @function
+         * @name pc.Application#enableFullscreen
+         * @description Request that the browser enters fullscreen mode. This is not available on all browsers.
+         * Note: Switching to fullscreen can only be initiated by a user action, e.g. in the event hander for a mouse or keyboard input
+         * @param {Element} [element] The element to display in fullscreen, if element is not provided the application canvas is used
+         * @param {Function} [success] Function called if the request for fullscreen was successful
+         * @param {Function} [error] Function called if the request for fullscreen was unsuccessful
+         * @example
+         * var button = document.getElementById('my-button');
+         * button.addEventListener('click', function () {
+         *     app.enableFullscreen(canvas, function () {
+         *         console.log('Now fullscreen');
+         *     }, function () {
+         *         console.log('Something went wrong!');
+         *     });
+         * }, false);
+         */
         enableFullscreen: function (element, success, error) {
             element = element || this.graphicsDevice.canvas;
 
@@ -1272,11 +1282,11 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Application#disableFullscreen
-        * @description If application is currently displaying an element as fullscreen, then stop and return to normal.
-        * @param {Function} [success] Function called when transition to normal mode is finished
-        */
+         * @function
+         * @name pc.Application#disableFullscreen
+         * @description If application is currently displaying an element as fullscreen, then stop and return to normal.
+         * @param {Function} [success] Function called when transition to normal mode is finished
+         */
         disableFullscreen: function (success) {
             // success callback
             var s = function () {
@@ -1292,21 +1302,21 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Application#isHidden
-        * @description Queries the visibility of the window or tab in which the application is running.
-        * @returns {Boolean} True if the application is not visible and false otherwise.
-        */
+         * @function
+         * @name pc.Application#isHidden
+         * @description Queries the visibility of the window or tab in which the application is running.
+         * @returns {Boolean} True if the application is not visible and false otherwise.
+         */
         isHidden: function () {
             return document[this._hiddenAttr];
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.Application#onVisibilityChange
-        * @description Called when the visibility state of the current tab/window changes
-        */
+         * @private
+         * @function
+         * @name pc.Application#onVisibilityChange
+         * @description Called when the visibility state of the current tab/window changes
+         */
         onVisibilityChange: function () {
             if (this.isHidden()) {
                 this._audioManager.suspend();
@@ -1316,16 +1326,16 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Application#resizeCanvas
-        * @description Resize the canvas in line with the current FillMode
-        * In KEEP_ASPECT mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio
-        * In FILL_WINDOW mode, the canvas will simply fill the window, changing aspect ratio
-        * In NONE mode, the canvas will always match the size provided
-        * @param {Number} [width] The width of the canvas, only used in NONE mode
-        * @param {Number} [height] The height of the canvas, only used in NONE mode
-        * @returns {Object} A object containing the values calculated to use as width and height
-        */
+         * @function
+         * @name pc.Application#resizeCanvas
+         * @description Resize the canvas in line with the current FillMode
+         * In KEEP_ASPECT mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio
+         * In FILL_WINDOW mode, the canvas will simply fill the window, changing aspect ratio
+         * In NONE mode, the canvas will always match the size provided
+         * @param {Number} [width] The width of the canvas, only used in NONE mode
+         * @param {Number} [height] The height of the canvas, only used in NONE mode
+         * @returns {Object} A object containing the values calculated to use as width and height
+         */
         resizeCanvas: function (width, height) {
             if (!this._allowResize) return; // prevent resizing (e.g. if presenting in VR HMD)
 
@@ -1373,12 +1383,12 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @name pc.Application#onLibrariesLoaded
-        * @description Event handler called when all code libraries have been loaded
-        * Code libraries are passed into the constructor of the Application and the application won't start running or load packs until all libraries have
-        * been loaded
-        */
+         * @private
+         * @name pc.Application#onLibrariesLoaded
+         * @description Event handler called when all code libraries have been loaded
+         * Code libraries are passed into the constructor of the Application and the application won't start running or load packs until all libraries have
+         * been loaded
+         */
         onLibrariesLoaded: function () {
             this._librariesLoaded = true;
             this.systems.rigidbody.onLibraryLoaded();
@@ -1411,11 +1421,11 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Application#setSkybox
-        * @description Sets the skybox asset to current scene, and subscribes to asset load/change events
-        * @param {pc.Asset} asset Asset of type `skybox` to be set to, or null to remove skybox
-        */
+         * @function
+         * @name pc.Application#setSkybox
+         * @description Sets the skybox asset to current scene, and subscribes to asset load/change events
+         * @param {pc.Asset} asset Asset of type `skybox` to be set to, or null to remove skybox
+         */
         setSkybox: function(asset) {
             if (asset) {
                 if (this._skyboxLast === asset.id) {
@@ -1502,10 +1512,10 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Application#destroy
-        * @description Destroys application and removes all event listeners.
-        */
+         * @function
+         * @name pc.Application#destroy
+         * @description Destroys application and removes all event listeners.
+         */
         destroy: function () {
             Application._applications[this.graphicsDevice.canvas.id] = null;
 
@@ -1678,16 +1688,16 @@ pc.extend(pc, function () {
          */
         FILLMODE_KEEP_ASPECT: 'KEEP_ASPECT',
         /**
-        * @enum pc.RESOLUTION
-        * @name pc.RESOLUTION_AUTO
-        * @description When the canvas is resized the resolution of the canvas will change to match the size of the canvas.
-        */
+         * @enum pc.RESOLUTION
+         * @name pc.RESOLUTION_AUTO
+         * @description When the canvas is resized the resolution of the canvas will change to match the size of the canvas.
+         */
         RESOLUTION_AUTO: 'AUTO',
         /**
-        * @enum pc.RESOLUTION
-        * @name pc.RESOLUTION_FIXED
-        * @description When the canvas is resized the resolution of the canvas will remain at the same value and the output will just be scaled to fit the canvas.
-        */
+         * @enum pc.RESOLUTION
+         * @name pc.RESOLUTION_FIXED
+         * @description When the canvas is resized the resolution of the canvas will remain at the same value and the output will just be scaled to fit the canvas.
+         */
         RESOLUTION_FIXED: 'FIXED',
 
         Application: Application

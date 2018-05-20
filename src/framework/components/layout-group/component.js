@@ -62,9 +62,11 @@ pc.extend(pc, function () {
         this.entity.on('childinsert', this._onChildInsert, this);
         this.entity.on('childremove', this._onChildRemove, this);
 
-        // Listen for ElementComponents and LayoutChildComponents being added
-        // to self or to children - covers cases where they are not already
-        // present at the point when this component is constructed.
+        /*
+         * Listen for ElementComponents and LayoutChildComponents being added
+         * to self or to children - covers cases where they are not already
+         * present at the point when this component is constructed.
+         */
         system.app.systems.element.on('add', this._onElementOrLayoutComponentAdd, this);
         system.app.systems.element.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
         system.app.systems.layoutchild.on('add', this._onElementOrLayoutComponentAdd, this);
@@ -145,9 +147,11 @@ pc.extend(pc, function () {
                 containerSize: new pc.Vec2(containerWidth, containerHeight)
             };
 
-            // In order to prevent recursive reflow (i.e. whereby setting the size of
-            // a child element triggers another reflow on the next frame, and so on)
-            // we flag that a reflow is currently in progress.
+            /*
+             * In order to prevent recursive reflow (i.e. whereby setting the size of
+             * a child element triggers another reflow on the next frame, and so on)
+             * we flag that a reflow is currently in progress.
+             */
             this._isPerformingReflow = true;
             var layoutInfo = this._layoutCalculator.calculateLayout(elements, options);
             this._isPerformingReflow = false;

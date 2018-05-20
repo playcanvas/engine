@@ -111,202 +111,10 @@ pc.extend(pc, function () {
         return points;
     }
 
-/*
-    function StaticArray(size) {
-        var data = new Array(size);
-        var obj = function(idx) {
-            return data[idx];
-        };
-        obj.size = 0;
-        obj.push = function(v) {
-            data[this.size] = v;
-            ++this.size;
-        };
-        obj.data = data;
-        return obj;
-    }
-
-    var intersectCache = {
-        temp: [new pc.Vec3(), new pc.Vec3(), new pc.Vec3()],
-        vertices: new Array(3),
-        negative: new StaticArray(3),
-        positive: new StaticArray(3),
-        intersections: new StaticArray(3),
-        zCollection: new StaticArray(36)
-    };
-
-    function _groupVertices(coord, face, smallerIsNegative) {
-        var intersections = intersectCache.intersections;
-        var small, large;
-        if (smallerIsNegative) {
-            small = intersectCache.negative;
-            large = intersectCache.positive;
-        } else {
-            small = intersectCache.positive;
-            large = intersectCache.negative;
-        }
-
-        intersections.size = 0;
-        small.size = 0;
-        large.size = 0;
-
-        // Grouping vertices according to the position related to the face
-        var v;
-        for (var j = 0; j < 3; ++j) {
-            v = intersectCache.vertices[j];
-
-            if (v[coord] < face) {
-                small.push(v);
-            } else if (v[coord] === face) {
-                intersections.push(intersectCache.temp[intersections.size].copy(v));
-            } else {
-                large.push(v);
-            }
-        }
-    }
-
-    function _triXFace(zs, x, y, faceTest, yMin, yMax) {
-
-        var negative = intersectCache.negative;
-        var positive = intersectCache.positive;
-        var intersections = intersectCache.intersections;
-
-        // Find intersections
-        if (negative.size === 3) {
-            // Everything is on the negative side of the left face.
-            // The triangle won't intersect with the frustum. So ignore it
-            return false;
-        }
-
-        if (negative.size && positive.size) {
-            intersections.push(intersectCache.temp[intersections.size].lerp(
-                negative(0), positive(0), (faceTest - negative(0)[x]) / (positive(0)[x] - negative(0)[x])
-            ));
-            if (negative.size === 2) {
-                // 2 on the left, 1 on the right
-                intersections.push(intersectCache.temp[intersections.size].lerp(
-                    negative(1), positive(0), (faceTest - negative(1)[x]) / (positive(0)[x] - negative(1)[x])
-                ));
-            } else if (positive.size === 2) {
-                // 1 on the left, 2 on the right
-                intersections.push(intersectCache.temp[intersections.size].lerp(
-                    negative(0), positive(1), (faceTest - negative(0)[x]) / (positive(1)[x] - negative(0)[x])
-                ));
-            }
-        }
-
-        // Get the z of the intersections
-        if (intersections.size === 0) {
-            return true;
-        }
-        if (intersections.size === 1) {
-            // If there's only one vertex intersect the face
-            // Test if it's within the range of top/bottom faces.
-            if (yMin <= intersections(0)[y] && intersections(0)[y] <= yMax) {
-                zs.push(intersections(0).z);
-            }
-            return true;
-        }
-        // There's multiple intersections ( should only be two intersections. )
-        if (intersections(1)[y] === intersections(0)[y]) {
-            if (yMin <= intersections(0)[y] && intersections(0)[y] <= yMax) {
-                zs.push(intersections(0).z);
-                zs.push(intersections(1).z);
-            }
-        } else {
-            var delta = (intersections(1).z - intersections(0).z) / (intersections(1)[y] - intersections(0)[y]);
-            if (intersections(0)[y] > yMax) {
-                zs.push(intersections(0).z + delta * (yMax - intersections(0)[y]));
-            } else if (intersections(0)[y] < yMin) {
-                zs.push(intersections(0).z + delta * (yMin - intersections(0)[y]));
-            } else {
-                zs.push(intersections(0).z);
-            }
-            if (intersections(1)[y] > yMax) {
-                zs.push(intersections(1).z + delta * (yMax - intersections(1)[y]));
-            } else if (intersections(1)[y] < yMin) {
-                zs.push(intersections(1).z + delta * (yMin - intersections(1)[y]));
-            } else {
-                zs.push(intersections(1).z);
-            }
-        }
-        return true;
-    }
-*/
-
     var _sceneAABB_LS = [
         new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3(),
         new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()
     ];
-
-/*
-    var iAABBTriIndexes = [
-        0, 1, 2,  1, 2, 3,
-        4, 5, 6,  5, 6, 7,
-        0, 2, 4,  2, 4, 6,
-        1, 3, 5,  3, 5, 7,
-        0, 1, 4,  1, 4, 5,
-        2, 3, 6,  3, 6, 7
-    ];
-
-    function _getZFromAABB(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
-        _sceneAABB_LS[0].x = _sceneAABB_LS[1].x = _sceneAABB_LS[2].x = _sceneAABB_LS[3].x = aabbMin.x;
-        _sceneAABB_LS[1].y = _sceneAABB_LS[3].y = _sceneAABB_LS[7].y = _sceneAABB_LS[5].y = aabbMin.y;
-        _sceneAABB_LS[2].z = _sceneAABB_LS[3].z = _sceneAABB_LS[6].z = _sceneAABB_LS[7].z = aabbMin.z;
-        _sceneAABB_LS[4].x = _sceneAABB_LS[5].x = _sceneAABB_LS[6].x = _sceneAABB_LS[7].x = aabbMax.x;
-        _sceneAABB_LS[0].y = _sceneAABB_LS[2].y = _sceneAABB_LS[4].y = _sceneAABB_LS[6].y = aabbMax.y;
-        _sceneAABB_LS[0].z = _sceneAABB_LS[1].z = _sceneAABB_LS[4].z = _sceneAABB_LS[5].z = aabbMax.z;
-
-        for ( var i = 0; i < 8; ++i ) {
-            w2sc.transformPoint( _sceneAABB_LS[i], _sceneAABB_LS[i] );
-        }
-
-        var minz = 9999999999;
-        var maxz = -9999999999;
-
-        var vertices = intersectCache.vertices;
-        var positive = intersectCache.positive;
-        var zs       = intersectCache.zCollection;
-        zs.size = 0;
-
-        for (var AABBTriIter = 0; AABBTriIter < 12; ++AABBTriIter) {
-            vertices[0] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 0]];
-            vertices[1] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 1]];
-            vertices[2] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 2]];
-
-            var verticesWithinBound = 0;
-
-            _groupVertices("x", lcamMinX, true);
-            if (!_triXFace(zs, "x", "y", lcamMinX, lcamMinY, lcamMaxY)) continue;
-            verticesWithinBound += positive.size;
-
-            _groupVertices("x", lcamMaxX, false);
-            if (!_triXFace(zs, "x", "y", lcamMaxX, lcamMinY, lcamMaxY)) continue;
-            verticesWithinBound += positive.size;
-
-            _groupVertices("y", lcamMinY, true);
-            if (!_triXFace(zs, "y", "x", lcamMinY, lcamMinX, lcamMaxX)) continue;
-            verticesWithinBound += positive.size;
-
-            _groupVertices("y", lcamMaxY, false);
-            _triXFace(zs, "y", "x", lcamMaxY, lcamMinX, lcamMaxX);
-            if ( verticesWithinBound + positive.size == 12 ) {
-            // The triangle does not go outside of the frustum bound.
-                zs.push( vertices[0].z );
-                zs.push( vertices[1].z );
-                zs.push( vertices[2].z );
-            }
-        }
-
-        var z;
-        for (var j = 0, len = zs.size; j < len; j++) {
-            z = zs(j);
-            if (z < minz) minz = z;
-            if (z > maxz) maxz = z;
-        }
-        return { min: minz, max: maxz };
-    }
-*/
 
     function _getZFromAABBSimple(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
         _sceneAABB_LS[0].x = _sceneAABB_LS[1].x = _sceneAABB_LS[2].x = _sceneAABB_LS[3].x = aabbMin.x;
@@ -330,9 +138,8 @@ pc.extend(pc, function () {
         return { min: minz, max: maxz };
     }
 
-    //////////////////////////////////////
-    // Shadow mapping support functions //
-    //////////////////////////////////////
+    // SHADOW MAPPING SUPPORT FUNCTIONS
+
     function getShadowFormat(device, shadowType) {
         if (shadowType === pc.SHADOW_VSM32) {
             return pc.PIXELFORMAT_RGBA32F;
@@ -1058,14 +865,6 @@ pc.extend(pc, function () {
                 params[2] = bias;
                 params[3] = 1.0 / spot.attenuationEnd;
                 this.lightShadowParamsId[cnt].setValue(params);
-/*
-                if (this.mainLight < 0) {
-                    this.lightShadowMatrixVsId[cnt].setValue(spot._shadowMatrix.data);
-                    this.lightShadowParamsVsId[cnt].setValue(params);
-                    this.lightPosVsId[cnt].setValue(spot._position.data);
-                    this.mainLight = i;
-                }
-*/
             }
             if (spot._cookie) {
                 this.lightCookieId[cnt].setValue(spot._cookie);
@@ -1550,16 +1349,27 @@ pc.extend(pc, function () {
                             var origShadowMap = shadowCam.renderTarget;
                             var tempRt = getShadowMapFromCache(device, light._shadowResolution, light._shadowType, 1);
 
+                            var isVsm8 = light._shadowType === pc.SHADOW_VSM8;
                             var blurMode = light.vsmBlurMode;
-                            var blurShader = (light._shadowType === pc.SHADOW_VSM8 ? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize];
+                            var blurShader = (isVsm8 ? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize];
                             if (!blurShader) {
                                 this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
-                                var chunks = pc.shaderChunks;
-                                (light._shadowType === pc.SHADOW_VSM8 ? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize] = blurShader =
-                                    chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS,
-                                    "#define SAMPLES " + filterSize + "\n" +
-                                    (light._shadowType === pc.SHADOW_VSM8 ? this.blurPackedVsmShaderCode : this.blurVsmShaderCode)[blurMode],
-                                    "blurVsm" + blurMode + "" + filterSize + "" + (light._shadowType === pc.SHADOW_VSM8));
+
+                                var blurVS = pc.shaderChunks.fullscreenQuadVS;
+                                var blurFS = "#define SAMPLES " + filterSize + "\n";
+                                if (isVsm8) {
+                                    blurFS += this.blurPackedVsmShaderCode[blurMode];
+                                } else {
+                                    blurFS += this.blurVsmShaderCode[blurMode];
+                                }
+                                var blurShaderName = "blurVsm" + blurMode + "" + filterSize + "" + isVsm8;
+                                blurShader = pc.shaderChunks.createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
+
+                                if (isVsm8) {
+                                    this.blurPackedVsmShader[blurMode][filterSize] = blurShader;
+                                } else {
+                                    this.blurVsmShader[blurMode][filterSize] = blurShader;
+                                }
                             }
 
                             blurScissorRect.z = light._shadowResolution - 2;
@@ -2153,12 +1963,12 @@ pc.extend(pc, function () {
 
                             // uncomment to remove 32 lights limit
                             /*
-                            var lnames = combIbName.split("_");
-                            lnames.length = lnames.length - 1;
-                            for(k=0; k<lnames.length; k++) {
-                                instance._staticLightList[k] = lights[ parseInt(lnames[k]) ];
-                            }
-                            */
+                             * var lnames = combIbName.split("_");
+                             * lnames.length = lnames.length - 1;
+                             * for(k=0; k<lnames.length; k++) {
+                             * instance._staticLightList[k] = lights[ parseInt(lnames[k]) ];
+                             * }
+                             */
 
                             // comment to remove 32 lights limit
                             for (k = 0; k < staticLights.length; k++) {
@@ -2240,8 +2050,10 @@ pc.extend(pc, function () {
                 scene.updateSkybox = false;
             }
 
-            // Update shaders if needed
-            // all mesh instances (TODO: ideally can update less if only lighting changed)
+            /*
+             * Update shaders if needed
+             * all mesh instances (TODO: ideally can update less if only lighting changed)
+             */
             if (scene.updateShaders) {
                 this.updateShaders(meshInstances);
                 scene.updateShaders = false;
@@ -2403,9 +2215,11 @@ pc.extend(pc, function () {
             shadowCamNode.setRotation(lightNode.getRotation());
             shadowCamNode.rotateLocal(-90, 0, 0); // Camera's look down negative Z, and directional lights point down negative Y
 
-            // Positioning directional light frustum I
-            // Construct light's orthographic frustum around camera frustum
-            // Use very large near/far planes this time
+            /*
+             * Positioning directional light frustum I
+             * Construct light's orthographic frustum around camera frustum
+             * Use very large near/far planes this time
+             */
 
             // 1. Get the frustum of the camera
             _getFrustumPoints(camera, light.shadowDistance || camera._farClip, frustumPoints);
@@ -2421,8 +2235,10 @@ pc.extend(pc, function () {
                 c2sc.transformPoint(frustumPoints[i], frustumPoints[i]);
             }
 
-            // 4. Come up with a bounding box (in light-space) by calculating the min
-            // and max X, Y, and Z values from your 8 light-space frustum coordinates.
+            /*
+             * 4. Come up with a bounding box (in light-space) by calculating the min
+             * and max X, Y, and Z values from your 8 light-space frustum coordinates.
+             */
             minx = miny = minz = 1000000;
             maxx = maxy = maxz = -1000000;
             for (i = 0; i < 8; i++) {
@@ -2435,9 +2251,11 @@ pc.extend(pc, function () {
                 if (p.z > maxz) maxz = p.z;
             }
 
-            // 5. Enlarge the light's frustum so that the frustum will be the same size
-            // no matter how the view frustum moves.
-            // And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
+            /*
+             * 5. Enlarge the light's frustum so that the frustum will be the same size
+             * no matter how the view frustum moves.
+             * And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
+             */
             unitPerTexel = frustumSize / light._shadowResolution;
             delta = (frustumSize - (maxx - minx)) * 0.5;
             minx = Math.floor( (minx - delta) / unitPerTexel ) * unitPerTexel;
@@ -2494,14 +2312,18 @@ pc.extend(pc, function () {
             }
             visibleList.sort(this.depthSortCompare); // sort shadowmap drawcalls here, not in render
 
-            // Positioning directional light frustum II
-            // Fit clipping planes tightly around visible shadow casters
+            /*
+             * Positioning directional light frustum II
+             * Fit clipping planes tightly around visible shadow casters
+             */
 
             // 1. Calculate minz/maxz based on casters' AABB
             var z = _getZFromAABBSimple( shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy );
 
-            // Always use the scene's aabb's Z value
-            // Otherwise object between the light and the frustum won't cast shadow.
+            /*
+             * Always use the scene's aabb's Z value
+             * Otherwise object between the light and the frustum won't cast shadow.
+             */
             maxz = z.max;
             if (z.min > minz) minz = z.min;
 
@@ -2633,8 +2455,10 @@ pc.extend(pc, function () {
             this.beginFrame(comp);
             this.setSceneConstants();
 
-            // Camera culling (once for each camera + layer)
-            // Also applies meshInstance.visible and camera.cullingMask
+            /*
+             * Camera culling (once for each camera + layer)
+             * Also applies meshInstance.visible and camera.cullingMask
+             */
             var renderedLength = 0;
             var objects, drawCalls, visible;
             for (i = 0; i < comp.layerList.length; i++) {
@@ -2666,8 +2490,10 @@ pc.extend(pc, function () {
                         this._camerasRendered++;
                     }
                     if (!processedThisCameraAndLayer) {
-                        // cull each layer's lights once with each camera
-                        // lights aren't collected anywhere, but marked as visible
+                        /*
+                         * cull each layer's lights once with each camera
+                         * lights aren't collected anywhere, but marked as visible
+                         */
                         this.cullLights(camera.camera, layer._lights);
                     }
                     if (!processedThisCamera || !processedThisCameraAndLayer) {
@@ -2676,9 +2502,11 @@ pc.extend(pc, function () {
                         renderedLength++;
                     }
 
-                    // cull mesh instances
-                    // collected into layer arrays
-                    // shared objects are only culled once
+                    /*
+                     * cull mesh instances
+                     * collected into layer arrays
+                     * shared objects are only culled once
+                     */
                     visible = transparent ? objects.visibleTransparent[j] : objects.visibleOpaque[j];
                     if (!visible.done) {
                         if (layer.onPreCull) {
@@ -2698,14 +2526,18 @@ pc.extend(pc, function () {
                 }
             }
 
-            // Shadowmap culling for directional and visible local lights
-            // collected into light._visibleList
-            // objects are also globally marked as visible
-            // Also sets up local shadow camera matrices
+            /*
+             * Shadowmap culling for directional and visible local lights
+             * collected into light._visibleList
+             * objects are also globally marked as visible
+             * Also sets up local shadow camera matrices
+             */
             var light, casters;
 
-            // Local lights
-            // culled once for the whole frame
+            /*
+             * Local lights
+             * culled once for the whole frame
+             */
 
             // #ifdef PROFILER
             var cullTime = pc.now();
@@ -2720,8 +2552,10 @@ pc.extend(pc, function () {
                 this.cullLocalShadowmap(light, casters);
             }
 
-            // Directional lights
-            // culled once for each camera
+            /*
+             * Directional lights
+             * culled once for each camera
+             */
             renderedLength = 0;
             var globalLightCounter = -1;
             for (i = 0; i < comp._lights.length; i++) {
@@ -2803,6 +2637,7 @@ pc.extend(pc, function () {
                     }
 
                     // Render directional shadows once for each camera (will reject more than 1 attempt in this function)
+
                     // #ifdef PROFILER
                     draws = this._shadowDrawCalls;
                     // #endif

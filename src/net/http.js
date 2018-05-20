@@ -1,10 +1,11 @@
 pc.extend(pc, function () {
     /**
-    * @name pc.Http
-    * @class Used to send and receive HTTP requests.
-    * @description Create a new Http instance. By default, a PlayCanvas application creates an instance of this
-    * object at `pc.http`.
-    */
+     * @constructor
+     * @name pc.Http
+     * @classdesc Used to send and receive HTTP requests.
+     * @description Create a new Http instance. By default, a PlayCanvas application creates an instance of this
+     * object at `pc.http`.
+     */
     var Http = function Http() {
     };
 
@@ -53,7 +54,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Http#get
          * @description Perform an HTTP GET request to the given url.
-         * @param {String} url
+         * @param {String} url The URL to make the request to.
          * @param {Object} [options] Additional options
          * @param {Object} [options.headers] HTTP headers to add to the request
          * @param {Boolean} [options.async] Make the request asynchronously. Defaults to true.
@@ -71,6 +72,7 @@ pc.extend(pc, function () {
          * pc.http.get("http://example.com/", function (err, response) {
          *     console.log(response);
          * });
+         * @returns {XMLHttpRequest} The request object.
          */
         get: function (url, options, callback) {
             if (typeof(options) === "function") {
@@ -83,8 +85,8 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.Http#post
-         * @description Perform an HTTP POST request to the given url
-         * @param {String} url The URL to make the request to
+         * @description Perform an HTTP POST request to the given url.
+         * @param {String} url The URL to make the request to.
          * @param {Object} data Data to send in the body of the request.
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
          * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
@@ -98,6 +100,7 @@ pc.extend(pc, function () {
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
+         * @returns {XMLHttpRequest} The request object.
          */
         post: function (url, data, options, callback) {
             if (typeof(options) === "function") {
@@ -111,8 +114,8 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.Http#put
-         * @description Perform an HTTP PUT request to the given url
-         * @param {String} url The URL to make the request to
+         * @description Perform an HTTP PUT request to the given url.
+         * @param {String} url The URL to make the request to.
          * @param {Document | Object} data Data to send in the body of the request.
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
          * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
@@ -126,6 +129,7 @@ pc.extend(pc, function () {
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
+         * @returns {XMLHttpRequest} The request object.
          */
         put: function (url, data, options, callback) {
             if (typeof(options) === "function") {
@@ -154,6 +158,7 @@ pc.extend(pc, function () {
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
+         * @returns {XMLHttpRequest} The request object.
          */
         del: function (url, options, callback) {
             if (typeof(options) === "function") {
@@ -182,6 +187,7 @@ pc.extend(pc, function () {
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
+         * @returns {XMLHttpRequest} The request object.
          */
         request: function (method, url, options, callback) {
             var uri, query, timestamp, postdata, xhr;
@@ -205,8 +211,10 @@ pc.extend(pc, function () {
 
             if (options.postdata != null) {
                 if (options.postdata instanceof Document) {
-                    // It's an XML document, so we can send it directly.
-                    // XMLHttpRequest will set the content type correctly.
+                    /*
+                     * It's an XML document, so we can send it directly.
+                     * XMLHttpRequest will set the content type correctly.
+                     */
                     postdata = options.postdata;
                 } else if (options.postdata instanceof FormData) {
                     postdata = options.postdata;
@@ -297,8 +305,10 @@ pc.extend(pc, function () {
             try {
                 xhr.send(postdata);
             } catch (e) {
-                // DWE: Don't callback on exceptions as behaviour is inconsistent, e.g. cross-domain request errors don't throw an exception.
-                // Error callback should be called by xhr.onerror() callback instead.
+                /*
+                 * DWE: Don't callback on exceptions as behaviour is inconsistent, e.g. cross-domain request errors don't throw an exception.
+                 * Error callback should be called by xhr.onerror() callback instead.
+                 */
                 if (!errored) {
                     options.error(xhr.status, xhr, e);
                 }
@@ -336,8 +346,10 @@ pc.extend(pc, function () {
             if (xhr.readyState === 4) {
                 switch (xhr.status) {
                     case 0: {
-                        // If this is a local resource then continue (IOS) otherwise the request
-                        // didn't complete, possibly an exception or attempt to do cross-domain request
+                        /*
+                         * If this is a local resource then continue (IOS) otherwise the request
+                         * didn't complete, possibly an exception or attempt to do cross-domain request
+                         */
                         if (url[0] != '/') {
                             this._onSuccess(method, url, options, xhr);
                         }

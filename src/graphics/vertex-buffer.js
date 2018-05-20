@@ -14,14 +14,9 @@ pc.extend(pc, function () {
      * @param {ArrayBuffer} [initialData] Initial data.
      */
     var VertexBuffer = function (graphicsDevice, format, numVertices, usage, initialData) {
-        // Initialize optional parameters
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
         this.usage = usage || pc.BUFFER_STATIC;
-
-        // Store the vertex format
         this.format = format;
-
-        // Store the number of vertices
         this.numVertices = numVertices;
 
         // Calculate the size

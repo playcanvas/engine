@@ -83,21 +83,21 @@ pc.extend(pc, function () {
      * @name pc.CollisionComponent#contact
      * @description The 'contact' event is fired when a contact occurs between two rigid bodies
      * @param {pc.ContactResult} result Details of the contact between the two rigid bodies.
-    */
+     */
 
     /**
      * @event
      * @name pc.CollisionComponent#collisionstart
      * @description The 'collisionstart' event is fired when two rigid bodies start touching.
      * @param {pc.ContactResult} result Details of the contact between the two Entities.
-    */
+     */
 
     /**
      * @event
      * @name pc.CollisionComponent#collisionend
      * @description The 'collisionend' event is fired two rigid-bodies stop touching.
      * @param {pc.Entity} other The {@link pc.Entity} that stopped touching this collision volume.
-    */
+     */
 
     /**
      * @event
@@ -105,7 +105,7 @@ pc.extend(pc, function () {
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
      * a {@link pc.RigidBodyComponent} attached.
      * @param {pc.Entity} other The {@link pc.Entity} that entered this collision volume.
-    */
+     */
 
     /**
      * @event
@@ -113,7 +113,7 @@ pc.extend(pc, function () {
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
      * a {@link pc.RigidBodyComponent} attached.
      * @param {pc.Entity} other The {@link pc.Entity} that exited this collision volume.
-    */
+     */
 
     pc.extend(CollisionComponent.prototype, {
 
@@ -174,8 +174,10 @@ pc.extend(pc, function () {
 
             if (this.data.initialized && this.data.type === 'mesh') {
                 if (! newValue) {
-                    // if asset is null set model to null
-                    // so that it's going to be removed from the simulation
+                    /*
+                     * if asset is null set model to null
+                     * so that it's going to be removed from the simulation
+                     */
                     this.data.model = null;
                 }
                 this.system.recreatePhysicalShapes(this);
@@ -184,9 +186,11 @@ pc.extend(pc, function () {
 
         onSetModel: function (name, oldValue, newValue) {
             if (this.data.initialized && this.data.type === 'mesh') {
-                // recreate physical shapes skipping loading the model
-                // from the 'asset' as the model passed in newValue might
-                // have been created procedurally
+                /*
+                 * recreate physical shapes skipping loading the model
+                 * from the 'asset' as the model passed in newValue might
+                 * have been created procedurally
+                 */
                 this.system.implementations.mesh.doRecreatePhysicalShape(this);
             }
         },
@@ -203,8 +207,10 @@ pc.extend(pc, function () {
 
             if (this.data.type === 'mesh' && this.data.asset && this.data.initialized) {
                 var asset = this.system.app.assets.get(this.data.asset);
-                // recreate the collision shape if the model asset is not loaded
-                // or the shape does not exist
+                /*
+                 * recreate the collision shape if the model asset is not loaded
+                 * or the shape does not exist
+                 */
                 if (asset && (!asset.resource || !this.data.shape)) {
                     this.system.recreatePhysicalShapes(this);
                     return;

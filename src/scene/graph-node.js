@@ -100,9 +100,11 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(GraphNode.prototype, 'enabled', {
         get: function () {
-            // make sure to check this._enabled too because if that
-            // was false when a parent was updated the _enabledInHierarchy
-            // flag may not have been updated for optimization purposes
+            /*
+             * make sure to check this._enabled too because if that
+             * was false when a parent was updated the _enabledInHierarchy
+             * flag may not have been updated for optimization purposes
+             */
             return this._enabled && this._enabledInHierarchy;
         },
 
@@ -1100,16 +1102,20 @@ pc.extend(pc, function () {
         _onInsertChild: function (node) {
             node._parent = this;
 
-            // the child node should be enabled in the hierarchy only if itself is enabled and if
-            // this parent is enabled
+            /*
+             * the child node should be enabled in the hierarchy only if itself is enabled and if
+             * this parent is enabled
+             */
             var enabledInHierarchy = (node._enabled && this.enabled);
             if (node._enabledInHierarchy !== enabledInHierarchy) {
                 node._enabledInHierarchy = enabledInHierarchy;
 
-                // propagate the change to the children - necessary if we reparent a node
-                // under a parent with a different enabled state (if we reparent a node that is
-                // not active in the hierarchy under a parent who is active in the hierarchy then
-                // we want our node to be activated)
+                /*
+                 * propagate the change to the children - necessary if we reparent a node
+                 * under a parent with a different enabled state (if we reparent a node that is
+                 * not active in the hierarchy under a parent who is active in the hierarchy then
+                 * we want our node to be activated)
+                 */
                 node._notifyHierarchyStateChanged(node, enabledInHierarchy);
             }
 

@@ -50,8 +50,10 @@ pc.extend(pc, function () {
             return;
         }
 
-        // FF uses 'detail' and returns a value in 'no. of lines' to scroll
-        // WebKit and Opera use 'wheelDelta', WebKit goes in multiples of 120 per wheel notch
+        /*
+         * FF uses 'detail' and returns a value in 'no. of lines' to scroll
+         * WebKit and Opera use 'wheelDelta', WebKit goes in multiples of 120 per wheel notch
+         */
         if (event.detail) {
             this.wheel = -1 * event.detail;
         } else if (event.wheelDelta) {
@@ -87,32 +89,32 @@ pc.extend(pc, function () {
 
     // Events Documentation
     /**
-    * @event
-    * @name pc.Mouse#mousemove
-    * @description Fired when the mouse is moved
-    * @param {pc.MouseEvent} event The MouseEvent object
-    */
+     * @event
+     * @name pc.Mouse#mousemove
+     * @description Fired when the mouse is moved
+     * @param {pc.MouseEvent} event The MouseEvent object
+     */
 
     /**
-    * @event
-    * @name pc.Mouse#mousedown
-    * @description Fired when a mouse button is pressed
-    * @param {pc.MouseEvent} event The MouseEvent object
-    */
+     * @event
+     * @name pc.Mouse#mousedown
+     * @description Fired when a mouse button is pressed
+     * @param {pc.MouseEvent} event The MouseEvent object
+     */
 
     /**
-    * @event
-    * @name pc.Mouse#mouseup
-    * @description Fired when a mouse button is released
-    * @param {pc.MouseEvent} event The MouseEvent object
-    */
+     * @event
+     * @name pc.Mouse#mouseup
+     * @description Fired when a mouse button is released
+     * @param {pc.MouseEvent} event The MouseEvent object
+     */
 
     /**
-    * @event
-    * @name pc.Mouse#mousewheel
-    * @description Fired when a mouse wheel is moved
-    * @param {pc.MouseEvent} event The MouseEvent object
-    */
+     * @event
+     * @name pc.Mouse#mousewheel
+     * @description Fired when a mouse wheel is moved
+     * @param {pc.MouseEvent} event The MouseEvent object
+     */
 
     /**
      * @constructor
@@ -148,11 +150,11 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @function
-    * @name pc.Mouse.isPointerLocked
-    * @description Check if the mouse pointer has been locked, using {@link pc.Mouse#enabledPointerLock}
-    * @returns {Boolean} True if locked
-    */
+     * @function
+     * @name pc.Mouse.isPointerLocked
+     * @description Check if the mouse pointer has been locked, using {@link pc.Mouse#enabledPointerLock}
+     * @returns {Boolean} True if locked
+     */
     Mouse.isPointerLocked = function () {
         return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
     };
@@ -214,18 +216,18 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Mouse#enablePointerLock
-        * @description Request that the browser hides the mouse cursor and locks the mouse to the element.
-        * Allowing raw access to mouse movement input without risking the mouse exiting the element.
-        * Notes: <br />
-        * <ul>
-        * <li>In some browsers this will only work when the browser is running in fullscreen mode. See {@link pc.Application#enableFullscreen}
-        * <li>Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
-        * </ul>
-        * @param {Function} [success] Function called if the request for mouse lock is successful.
-        * @param {Function} [error] Function called if the request for mouse lock is unsuccessful.
-        */
+         * @function
+         * @name pc.Mouse#enablePointerLock
+         * @description Request that the browser hides the mouse cursor and locks the mouse to the element.
+         * Allowing raw access to mouse movement input without risking the mouse exiting the element.
+         * Notes: <br />
+         * <ul>
+         * <li>In some browsers this will only work when the browser is running in fullscreen mode. See {@link pc.Application#enableFullscreen}
+         * <li>Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
+         * </ul>
+         * @param {Function} [success] Function called if the request for mouse lock is successful.
+         * @param {Function} [error] Function called if the request for mouse lock is unsuccessful.
+         */
         enablePointerLock: function (success, error) {
             if (! document.body.requestPointerLock) {
                 if (error)
@@ -255,11 +257,11 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Mouse#disablePointerLock
-        * @description Return control of the mouse cursor to the user
-        * @param {Function} [success] Function called when the mouse lock is disabled
-        */
+         * @function
+         * @name pc.Mouse#disablePointerLock
+         * @description Return control of the mouse cursor to the user
+         * @param {Function} [success] Function called when the mouse lock is disabled
+         */
         disablePointerLock: function (success) {
             if (! document.exitPointerLock) {
                 return;

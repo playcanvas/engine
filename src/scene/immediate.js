@@ -328,8 +328,10 @@ pc.extend(pc.Application.prototype, function () {
         this._addLines(position, color, options);
     }
 
-    // Draw lines forming a transformed unit-sized cube at this frame
-    // lineType is optional
+    /*
+     * Draw lines forming a transformed unit-sized cube at this frame
+     * lineType is optional
+     */
     function renderWireCube(matrix, color, options) {
         // if (lineType===undefined) lineType = pc.LINEBATCH_WORLD;
 
@@ -436,7 +438,6 @@ pc.extend(pc.Application.prototype, function () {
         this._initImmediate();
 
         // Init quad data once
-        // if (!this._immediateData.quadMesh) {
         if (!this._immediateData.quadMesh) {
             var format = new pc.VertexFormat(this.graphicsDevice, [
                 { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 }
@@ -458,7 +459,7 @@ pc.extend(pc.Application.prototype, function () {
             this._immediateData.quadMesh.primitive[0].count = 4;
             this._immediateData.quadMesh.primitive[0].indexed = false;
         }
-        // }
+
         // Issue quad drawcall
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;

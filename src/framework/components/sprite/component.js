@@ -654,8 +654,10 @@ pc.extend(pc, function () {
                 return;
             }
 
-            // remove existing clips not in new value
-            // and update clips in both objects
+            /*
+             * remove existing clips not in new value
+             * and update clips in both objects
+             */
             for (name in this._clips) {
                 var found = false;
                 for (key in value) {

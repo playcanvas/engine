@@ -73,8 +73,10 @@ pc.extend(pc, function () {
                 // new request
                 this._requests[key] = [callback];
                 handler.load(url, function (err, data, extra) {
-                    // make sure key exists because loader
-                    // might have been destroyed by now
+                    /*
+                     * make sure key exists because loader
+                     * might have been destroyed by now
+                     */
                     if (!this._requests[key])
                         return;
 

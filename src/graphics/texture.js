@@ -735,7 +735,11 @@ pc.extend(pc, function () {
          * @description Unlocks the currently locked mip level and uploads it to VRAM.
          */
         unlock: function () {
-            logASSERT(this._lockedLevel !== -1, "Attempting to unlock a texture that is not locked");
+            // #ifdef DEBUG
+            if (this._lockedLevel !== -1) {
+                console.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.");
+            }
+            // #endif
 
             // Upload the new pixel data
             this.upload();

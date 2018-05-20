@@ -346,13 +346,13 @@ pc.extend(pc, function () {
             var flags = 0;
 
             if (this.clearColorBuffer)
-                flags = flags | pc.CLEARFLAG_COLOR;
+                flags |= pc.CLEARFLAG_COLOR;
 
             if (this.clearDepthBuffer)
-                flags = flags | pc.CLEARFLAG_DEPTH;
+                flags |= pc.CLEARFLAG_DEPTH;
 
             if (this.clearStencilBuffer)
-                flags = flags | pc.CLEARFLAG_STENCIL;
+                flags |= pc.CLEARFLAG_STENCIL;
 
             this.data.camera.clearFlags = flags;
         },
@@ -479,9 +479,11 @@ pc.extend(pc, function () {
                     display.requestPresent(function (err) {
                         if (!err) {
                             self.vrDisplay = display;
-                            // camera component uses internal 'before' event
-                            // this means display nulled before anyone other
-                            // code gets to update
+                            /*
+                             * camera component uses internal 'before' event
+                             * this means display nulled before anyone other
+                             * code gets to update
+                             */
                             self.vrDisplay.once('beforepresentchange', function (display) {
                                 if (!display.presenting) {
                                     self.vrDisplay = null;

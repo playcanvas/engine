@@ -70,8 +70,10 @@ pc.extend(pc, function () {
         this._frameKeys = options && options.frameKeys !== undefined ? options.frameKeys : null;
         this._meshes = [];
 
-        // set to true to update multiple
-        // properties without re-creating meshes
+        /*
+         * set to true to update multiple
+         * properties without re-creating meshes
+         */
         this._updatingProperties = false;
         // if true, endUpdate() will re-create meshes when it's called
         this._meshesDirty = false;
@@ -131,8 +133,10 @@ pc.extend(pc, function () {
             -hp * w,      (1 - vp) * h, 0
         ];
 
-        // uvs based on frame rect
-        // uvs
+        /*
+         * uvs based on frame rect
+         * uvs
+         */
         var lu = rect.data[0] / texWidth;
         var bv = rect.data[1] / texHeight;
         var ru = (rect.data[0] + rect.data[2]) / texWidth;
@@ -168,15 +172,17 @@ pc.extend(pc, function () {
         var uvs = [];
         var indices = [];
 
-        // Generate plane as follows (assigned UVs denoted at corners):
-        // (0,1)x---------x(1,1)
-        //      |         |
-        //      |         |
-        //      |    O--X |length
-        //      |    |    |
-        //      |    Z    |
-        // (0,0)x---------x(1,0)
-        //         width
+        /*
+         * Generate plane as follows (assigned UVs denoted at corners):
+         * (0,1)x---------x(1,1)
+         *      |         |
+         *      |         |
+         *      |    O--X |length
+         *      |    |    |
+         *      |    Z    |
+         * (0,0)x---------x(1,0)
+         *         width
+         */
         var vcounter = 0;
         for (i = 0; i <= ws; i++) {
             u = (i === 0 || i === ws) ? 0 : 1;
@@ -224,8 +230,10 @@ pc.extend(pc, function () {
         if (idx < 0) return;
 
         if (frame) {
-            // only re-create frame for simple render mode, since
-            // 9-sliced meshes don't need frame info to create their mesh
+            /*
+             * only re-create frame for simple render mode, since
+             * 9-sliced meshes don't need frame info to create their mesh
+             */
             if (this.renderMode === pc.SPRITE_RENDERMODE_SIMPLE) {
                 this._meshes[idx] = this._createSimpleMesh(frame);
             }
@@ -259,11 +267,11 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @private
-    * @function
-    * @name pc.Sprite#destroy
-    * @description Free up the meshes created by the sprite.
-    */
+     * @private
+     * @function
+     * @name pc.Sprite#destroy
+     * @description Free up the meshes created by the sprite.
+     */
     Sprite.prototype.destroy = function () {
         var i;
         var len;

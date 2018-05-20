@@ -4,19 +4,6 @@ pc.extend(pc, function () {
     var _getSelectionDeprecationWarning = false;
     var _prepareDeprecationWarning = false;
 
-/*
-    function sortDrawCalls(drawCallA, drawCallB) {
-
-        if (drawCallA.layer === drawCallB.layer) {
-            if (drawCallA.drawOrder && drawCallB.drawOrder) {
-                return drawCallA.drawOrder - drawCallB.drawOrder;
-            }
-        }
-
-        return drawCallB.key - drawCallA.key;
-    }
-*/
-
     /**
      * @constructor
      * @name pc.Picker
@@ -239,8 +226,10 @@ pc.extend(pc, function () {
                     device.setBlending(false);
                 },
 
-                // could probably move updateCameraFrustum into onLayerPreRender function
-                // and remove everything else
+                /*
+                 * could probably move updateCameraFrustum into onLayerPreRender function
+                 * and remove everything else
+                 */
                 onPreCull: function() {
                     this.oldAspectMode = this.cameras[0].aspectRatioMode;
                     this.oldAspect = this.cameras[0].aspectRatio;
@@ -250,8 +239,10 @@ pc.extend(pc, function () {
                     self.app.renderer.updateCameraFrustum(this.cameras[0].camera);
                 },
 
-                // could probably remove this because we've moved
-                // prerender/postrender to be outside of renderComposition
+                /*
+                 * could probably remove this because we've moved
+                 * prerender/postrender to be outside of renderComposition
+                 */
                 onPostCull: function() {
                     this.cameras[0].aspectRatioMode = this.oldAspectMode;
                     this.cameras[0].aspectRatio = this.oldAspect;

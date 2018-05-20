@@ -29,7 +29,9 @@ pc.extend(pc, function () {
     ProgramLibrary.prototype.getProgram = function (name, options) {
         var generator = this._generators[name];
         if (generator === undefined) {
-            logERROR("No program library functions registered for: " + name);
+            // #ifdef DEBUG
+            console.warn("ProgramLibrary#getProgram: No program library functions registered for: " + name);
+            // #endif
             return null;
         }
         var gd = this._device;

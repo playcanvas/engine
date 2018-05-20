@@ -1,14 +1,14 @@
 pc.extend(pc, function () {
     /**
-    * @component
-    * @name pc.ScriptComponent
-    * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own Script Types defined in JavaScript files
-    * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
-    * @param {pc.ScriptComponentSystem} system The ComponentSystem that created this Component
-    * @param {pc.Entity} entity The Entity that this Component is attached to.
-    * @extends pc.Component
-    * @property {ScriptType[]} scripts An array of all script instances attached to an entity. This Array shall not be modified by developer.
-    */
+     * @component
+     * @name pc.ScriptComponent
+     * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own Script Types defined in JavaScript files
+     * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
+     * @param {pc.ScriptComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @extends pc.Component
+     * @property {ScriptType[]} scripts An array of all script instances attached to an entity. This Array shall not be modified by developer.
+     */
 
     var ScriptComponent = function ScriptComponent(system, entity) {
         this._scripts = [];
@@ -32,134 +32,134 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @event
-    * @name pc.ScriptComponent#enable
-    * @description Fired when Component becomes enabled
-    * Note: this event does not take in account entity or any of its parent enabled state
-    * @example
-    * entity.script.on('enable', function () {
-    *     // component is enabled
-    * });
-    */
+     * @event
+     * @name pc.ScriptComponent#enable
+     * @description Fired when Component becomes enabled
+     * Note: this event does not take in account entity or any of its parent enabled state
+     * @example
+     * entity.script.on('enable', function () {
+     *     // component is enabled
+     * });
+     */
 
     /**
-    * @event
-    * @name pc.ScriptComponent#disable
-    * @description Fired when Component becomes disabled
-    * Note: this event does not take in account entity or any of its parent enabled state
-    * @example
-    * entity.script.on('disable', function () {
-    *     // component is disabled
-    * });
-    */
+     * @event
+     * @name pc.ScriptComponent#disable
+     * @description Fired when Component becomes disabled
+     * Note: this event does not take in account entity or any of its parent enabled state
+     * @example
+     * entity.script.on('disable', function () {
+     *     // component is disabled
+     * });
+     */
 
     /**
-    * @event
-    * @name pc.ScriptComponent#state
-    * @description Fired when Component changes state to enabled or disabled
-    * Note: this event does not take in account entity or any of its parent enabled state
-    * @param {Boolean} enabled True if now enabled, False if disabled
-    * @example
-    * entity.script.on('state', function (enabled) {
-    *     // component changed state
-    * });
-    */
+     * @event
+     * @name pc.ScriptComponent#state
+     * @description Fired when Component changes state to enabled or disabled
+     * Note: this event does not take in account entity or any of its parent enabled state
+     * @param {Boolean} enabled True if now enabled, False if disabled
+     * @example
+     * entity.script.on('state', function (enabled) {
+     *     // component changed state
+     * });
+     */
 
     /**
-    * @event
-    * @name pc.ScriptComponent#remove
-    * @description Fired when Component is removed from entity
-    * @example
-    * entity.script.on('remove', function () {
-    *     // entity has no more script component
-    * });
-    */
+     * @event
+     * @name pc.ScriptComponent#remove
+     * @description Fired when Component is removed from entity
+     * @example
+     * entity.script.on('remove', function () {
+     *     // entity has no more script component
+     * });
+     */
 
     /**
-    * @event
-    * @name pc.ScriptComponent#create
-    * @description Fired when a script instance is created and attached to component
-    * @param {String} name The name of the Script Type
-    * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been created
-    * @example
-    * entity.script.on('create', function (name, scriptInstance) {
-    *     // new script instance added to component
-    * });
-    */
+     * @event
+     * @name pc.ScriptComponent#create
+     * @description Fired when a script instance is created and attached to component
+     * @param {String} name The name of the Script Type
+     * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been created
+     * @example
+     * entity.script.on('create', function (name, scriptInstance) {
+     *     // new script instance added to component
+     * });
+     */
 
     /**
-    * @event
-    * @name pc.ScriptComponent#create:[name]
-    * @description Fired when a script instance is created and attached to component
-    * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been created
-    * @example
-    * entity.script.on('create:playerController', function (scriptInstance) {
-    *     // new script instance 'playerController' is added to component
-    * });
-    */
+     * @event
+     * @name pc.ScriptComponent#create:[name]
+     * @description Fired when a script instance is created and attached to component
+     * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been created
+     * @example
+     * entity.script.on('create:playerController', function (scriptInstance) {
+     *     // new script instance 'playerController' is added to component
+     * });
+     */
 
     /**
-    * @event
-    * @name pc.ScriptComponent#destroy
-    * @description Fired when a script instance is destroyed and removed from component
-    * @param {String} name The name of the Script Type
-    * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been destroyed
-    * @example
-    * entity.script.on('destroy', function (name, scriptInstance) {
-    *     // script instance has been destroyed and removed from component
-    * });
-    */
+     * @event
+     * @name pc.ScriptComponent#destroy
+     * @description Fired when a script instance is destroyed and removed from component
+     * @param {String} name The name of the Script Type
+     * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been destroyed
+     * @example
+     * entity.script.on('destroy', function (name, scriptInstance) {
+     *     // script instance has been destroyed and removed from component
+     * });
+     */
 
     /**
-    * @event
-    * @name pc.ScriptComponent#destroy:[name]
-    * @description Fired when a script instance is destroyed and removed from component
-    * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been destroyed
-    * @example
-    * entity.script.on('destroy:playerController', function (scriptInstance) {
-    *     // script instance 'playerController' has been destroyed and removed from component
-    * });
-    */
+     * @event
+     * @name pc.ScriptComponent#destroy:[name]
+     * @description Fired when a script instance is destroyed and removed from component
+     * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been destroyed
+     * @example
+     * entity.script.on('destroy:playerController', function (scriptInstance) {
+     *     // script instance 'playerController' has been destroyed and removed from component
+     * });
+     */
 
     /**
-    * @event
-    * @name pc.ScriptComponent#move
-    * @description Fired when a script instance is moved in component
-    * @param {String} name The name of the Script Type
-    * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been moved
-    * @param {Number} ind New position index
-    * @param {Number} indOld Old position index
-    * @example
-    * entity.script.on('move', function (name, scriptInstance, ind, indOld) {
-    *     // script instance has been moved in component
-    * });
-    */
+     * @event
+     * @name pc.ScriptComponent#move
+     * @description Fired when a script instance is moved in component
+     * @param {String} name The name of the Script Type
+     * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been moved
+     * @param {Number} ind New position index
+     * @param {Number} indOld Old position index
+     * @example
+     * entity.script.on('move', function (name, scriptInstance, ind, indOld) {
+     *     // script instance has been moved in component
+     * });
+     */
 
     /**
-    * @event
-    * @name pc.ScriptComponent#move:[name]
-    * @description Fired when a script instance is moved in component
-    * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been moved
-    * @param {Number} ind New position index
-    * @param {Number} indOld Old position index
-    * @example
-    * entity.script.on('move:playerController', function (scriptInstance, ind, indOld) {
-    *     // script instance 'playerController' has been moved in component
-    * });
-    */
+     * @event
+     * @name pc.ScriptComponent#move:[name]
+     * @description Fired when a script instance is moved in component
+     * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that has been moved
+     * @param {Number} ind New position index
+     * @param {Number} indOld Old position index
+     * @example
+     * entity.script.on('move:playerController', function (scriptInstance, ind, indOld) {
+     *     // script instance 'playerController' has been moved in component
+     * });
+     */
 
     /**
-    * @event
-    * @name pc.ScriptComponent#error
-    * @description Fired when a script instance had an exception
-    * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that raised the exception
-    * @param {Error} err Native JS Error object with details of an error
-    * @param {String} method The method of the script instance that the exception originated from.
-    * @example
-    * entity.script.on('error', function (scriptInstance, err, method) {
-    *     // script instance caught an exception
-    * });
-    */
+     * @event
+     * @name pc.ScriptComponent#error
+     * @description Fired when a script instance had an exception
+     * @param {ScriptType} scriptInstance The instance of the {@link ScriptType} that raised the exception
+     * @param {Error} err Native JS Error object with details of an error
+     * @param {String} method The method of the script instance that the exception originated from.
+     * @example
+     * entity.script.on('error', function (scriptInstance, err, method) {
+     *     // script instance caught an exception
+     * });
+     */
 
     pc.extend(ScriptComponent.prototype, {
         onEnable: function () {
@@ -198,16 +198,20 @@ pc.extend(pc, function () {
             this._endLooping(wasLooping);
         },
 
-        // Sets isLoopingThroughScripts to false and returns
-        // its previous value
+        /*
+         * Sets isLoopingThroughScripts to false and returns
+         * its previous value
+         */
         _beginLooping: function () {
             var looping = this._isLoopingThroughScripts;
             this._isLoopingThroughScripts = true;
             return looping;
         },
 
-        // Restores isLoopingThroughScripts to the specified parameter
-        // If all loops are over then remove destroyed scripts form the _scripts array
+        /*
+         * Restores isLoopingThroughScripts to the specified parameter
+         * If all loops are over then remove destroyed scripts form the _scripts array
+         */
         _endLooping: function (wasLoopingBefore) {
             this._isLoopingThroughScripts = wasLoopingBefore;
             if (! this._isLoopingThroughScripts) {
@@ -215,9 +219,11 @@ pc.extend(pc, function () {
             }
         },
 
-        // We also need this handler because it is fired
-        // when value === old instead of onEnable and onDisable
-        // which are only fired when value !== old
+        /*
+         * We also need this handler because it is fired
+         * when value === old instead of onEnable and onDisable
+         * which are only fired when value !== old
+         */
         _onSetEnabled: function(prop, old, value) {
             this._beingEnabled = true;
             this._checkState();
@@ -500,14 +506,18 @@ pc.extend(pc, function () {
                 scriptData.instance.enabled = false;
                 scriptData.instance._destroyed = true;
 
-                // if we are not currently looping through our scripts
-                // then it's safe to remove the script
+                /*
+                 * if we are not currently looping through our scripts
+                 * then it's safe to remove the script
+                 */
                 if (! this._isLoopingThroughScripts) {
                     var ind = this._scripts.indexOf(scriptData.instance);
                     this._scripts.splice(ind, 1);
                 } else {
-                    // otherwise push the script in _destroyedScripts and
-                    // remove it from _scripts when the loop is over
+                    /*
+                     * otherwise push the script in _destroyedScripts and
+                     * remove it from _scripts when the loop is over
+                     */
                     this._destroyedScripts.push(scriptData.instance);
                 }
             }
@@ -639,8 +649,10 @@ pc.extend(pc, function () {
                         }
                     }
                 } else {
-                    // TODO scripts2
-                    // new script
+                    /*
+                     * TODO scripts2
+                     * new script
+                     */
                     console.log(this.order);
                 }
             }

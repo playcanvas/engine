@@ -167,8 +167,10 @@ pc.extend(pc, function () {
 
                     // set up indices and normals whose values don't change when we call _updateMeshes
                     for (var v = 0; v < l; v++) {
-                        // create index and normal arrays since they don't change
-                        // if the length doesn't change
+                        /*
+                         * create index and normal arrays since they don't change
+                         * if the length doesn't change
+                         */
                         meshInfo.indices[v * 3 * 2 + 0] = v * 4;
                         meshInfo.indices[v * 3 * 2 + 1] = v * 4 + 1;
                         meshInfo.indices[v * 3 * 2 + 2] = v * 4 + 3;
@@ -218,8 +220,10 @@ pc.extend(pc, function () {
                 }
             }
 
-            // after creating new meshes
-            // re-apply masking stencil params
+            /*
+             * after creating new meshes
+             * re-apply masking stencil params
+             */
             if (this._maskedBy) {
                 this._element._setMaskedBy(this._maskedBy);
             }
@@ -314,8 +318,10 @@ pc.extend(pc, function () {
                 maxLineWidth = Number.POSITIVE_INFINITY;
             }
 
-            // todo: move this into font asset?
-            // calculate max font extents from all available chars
+            /*
+             * todo: move this into font asset?
+             * calculate max font extents from all available chars
+             */
             var fontMinY = 0;
             var fontMaxY = 0;
             var scale = 1;
@@ -323,8 +329,10 @@ pc.extend(pc, function () {
 
             var char, charCode, data, i, quad;
 
-            // TODO: Optimize this as it loops through all the chars in the asset
-            // every time the text changes...
+            /*
+             * TODO: Optimize this as it loops through all the chars in the asset
+             * every time the text changes...
+             */
             for (charCode in json.chars) {
                 data = json.chars[charCode];
                 scale = (data.height / MAGIC) * this._fontSize / data.height;
@@ -401,11 +409,15 @@ pc.extend(pc, function () {
                 var meshInfo = this._meshInfo[(data && data.map) || 0];
                 var candidateLineWidth = _x + glyphWidth + glyphMinX;
 
-                // If we've exceeded the maximum line width, move everything from the beginning of
-                // the current word onwards down onto a new line.
+                /*
+                 * If we've exceeded the maximum line width, move everything from the beginning of
+                 * the current word onwards down onto a new line.
+                 */
                 if (candidateLineWidth >= maxLineWidth && numCharsThisLine > 0 && !isWhitespace) {
-                    // Handle the case where a line containing only a single long word needs to be
-                    // broken onto multiple lines.
+                    /*
+                     * Handle the case where a line containing only a single long word needs to be
+                     * broken onto multiple lines.
+                     */
                     if (numWordsThisLine === 0) {
                         wordStartIndex = i;
                         breakLine(i, _xMinusTrailingWhitespace);
@@ -445,12 +457,14 @@ pc.extend(pc, function () {
                 this.height = Math.max(this.height, fontMaxY - (_y + fontMinY));
 
                 // advance cursor
-                _x = _x + (this._spacing * advance);
+                _x += (this._spacing * advance);
 
-                // For proper alignment handling when a line wraps _on_ a whitespace character,
-                // we need to keep track of the width of the line without any trailing whitespace
-                // characters. This applies to both single whitespaces and also multiple sequential
-                // whitespaces.
+                /*
+                 * For proper alignment handling when a line wraps _on_ a whitespace character,
+                 * we need to keep track of the width of the line without any trailing whitespace
+                 * characters. This applies to both single whitespaces and also multiple sequential
+                 * whitespaces.
+                 */
                 if (!isWhitespace && !isLineBreak) {
                     _xMinusTrailingWhitespace = _x;
                 }
@@ -480,9 +494,11 @@ pc.extend(pc, function () {
                 meshInfo.quad++;
             }
 
-            // As we only break lines when the text becomes too wide for the container,
-            // there will almost always be some leftover text on the final line which has
-            // not yet been pushed to _lineContents.
+            /*
+             * As we only break lines when the text becomes too wide for the container,
+             * there will almost always be some leftover text on the final line which has
+             * not yet been pushed to _lineContents.
+             */
             if (lineStartIndex < l) {
                 breakLine(l, _x);
             }
@@ -809,8 +825,10 @@ pc.extend(pc, function () {
             this._font = value;
             if (! value) return;
 
-            // make sure we have as many meshInfo entries
-            // as the number of font textures
+            /*
+             * make sure we have as many meshInfo entries
+             * as the number of font textures
+             */
             for (i = 0, len = this._font.textures.length; i < len; i++) {
                 if (! this._meshInfo[i]) {
                     this._meshInfo[i] = {
@@ -840,8 +858,10 @@ pc.extend(pc, function () {
             for (i = this._font.textures.length; i < this._meshInfo.length; i++) {
                 if (this._meshInfo[i].meshInstance) {
                     if (! removedModel) {
-                        // remove model from scene so that excess mesh instances are removed
-                        // from the scene as well
+                        /*
+                         * remove model from scene so that excess mesh instances are removed
+                         * from the scene as well
+                         */
                         this._element.removeModelFromLayers(this._model);
                         removedModel = true;
                     }
@@ -881,8 +901,10 @@ pc.extend(pc, function () {
         set: function (value) {
             this._autoWidth = value;
 
-            // change width of element to match text width but only if the element
-            // does not have split horizontal anchors
+            /*
+             * change width of element to match text width but only if the element
+             * does not have split horizontal anchors
+             */
             if (value && Math.abs(this._element.anchor.x - this._element.anchor.z) < 0.0001) {
                 this._element.width = this.width;
             }
@@ -897,8 +919,10 @@ pc.extend(pc, function () {
         set: function (value) {
             this._autoHeight = value;
 
-            // change height of element to match text height but only if the element
-            // does not have split vertical anchors
+            /*
+             * change height of element to match text height but only if the element
+             * does not have split vertical anchors
+             */
             if (value && Math.abs(this._element.anchor.y - this._element.anchor.w) < 0.0001) {
                 this._element.height = this.height;
             }

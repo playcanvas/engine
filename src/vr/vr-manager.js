@@ -49,26 +49,26 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @event
-    * @name pc.VrManager#displayconnect
-    * @description Fired when an VR display is connected
-    * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been connected
-    * @example
-    * this.app.vr.on("displayconnect", function (display) {
-    *     // use `display` here
-    * });
-    */
+     * @event
+     * @name pc.VrManager#displayconnect
+     * @description Fired when an VR display is connected
+     * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been connected
+     * @example
+     * this.app.vr.on("displayconnect", function (display) {
+     *     // use `display` here
+     * });
+     */
 
     /**
-    * @event
-    * @name pc.VrManager#displaydisconnect
-    * @description Fired when an VR display is disconnected
-    * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been disconnected
-    * @example
-    * this.app.vr.on("displaydisconnect", function (display) {
-    *     // `display` is no longer connected
-    * });
-    */
+     * @event
+     * @name pc.VrManager#displaydisconnect
+     * @description Fired when an VR display is disconnected
+     * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been disconnected
+     * @example
+     * this.app.vr.on("displaydisconnect", function (display) {
+     *     // `display` is no longer connected
+     * });
+     */
 
     /**
      * @static

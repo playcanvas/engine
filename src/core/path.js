@@ -10,26 +10,13 @@ pc.path = function () {
          */
         delimiter: "/",
         /**
-         * Join two sections of file path together, insert a delimiter if needed.
-         * @param {String} one First part of path to join
-         * @param {String} two Second part of path to join
          * @function
          * @name pc.path.join
+         * @description Join two sections of file path together, insert a delimiter if needed.
+         * @param {String} one First part of path to join.
+         * @param {String} two Second part of path to join.
+         * @returns {String} The joined file path.
          */
-        /*
-        join: function(one, two) {
-            if(two[0] === pc.path.delimiter) {
-                return two;
-            }
-
-            if(one && two && one[one.length - 1] !== pc.path.delimiter && two[0] !== pc.path.delimiter) {
-                return one + pc.path.delimiter + two;
-            }
-            else {
-                return one + two;
-            }
-        },
-        */
         join: function () {
             var index;
             var num = arguments.length;
