@@ -277,4 +277,3 @@ if (!Math.log2) {
         return Math.log(x) * pc.math.INV_LOG2;
     };
 }
-

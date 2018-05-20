@@ -918,4 +918,3 @@ pc.extend(pc, function () {
         ImageElement: ImageElement
     };
 }());
-

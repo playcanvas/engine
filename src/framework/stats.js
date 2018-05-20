@@ -89,4 +89,3 @@ pc.ApplicationStats = function(device) {
 
     pc.events.attach(this);
 };
-
