@@ -1,25 +1,25 @@
-pc.extend(pc, (function() {
-    var TagsCache = function(key) {
+pc.extend(pc, (function () {
+    var TagsCache = function (key) {
         this._index = { };
         this._key = key || null;
     };
 
     TagsCache.prototype = {
-        addItem: function(item) {
+        addItem: function (item) {
             var tags = item.tags._list;
 
             for (var i = 0; i < tags.length; i++)
                 this.add(tags[i], item);
         },
 
-        removeItem: function(item) {
+        removeItem: function (item) {
             var tags = item.tags._list;
 
             for (var i = 0; i < tags.length; i++)
                 this.remove(tags[i], item);
         },
 
-        add: function(tag, item) {
+        add: function (tag, item) {
             // already in cache
             if (this._index[tag] && this._index[tag].list.indexOf(item) !== -1)
                 return;
@@ -42,7 +42,7 @@ pc.extend(pc, (function() {
                 this._index[tag].keys[item[this._key]] = item;
         },
 
-        remove: function(tag, item) {
+        remove: function (tag, item) {
             // no index created for that tag
             if (! this._index[tag])
                 return;
@@ -71,14 +71,14 @@ pc.extend(pc, (function() {
                 delete this._index[tag];
         },
 
-        find: function(args) {
+        find: function (args) {
             var self = this;
             var index = { };
             var items = [];
             var i, n, t;
             var item, tag, tags, tagsRest, missingIndex;
 
-            var sort = function(a, b) {
+            var sort = function (a, b) {
                 return self._index[a].list.length - self._index[b].list.length;
             };
 
@@ -175,7 +175,7 @@ pc.extend(pc, (function() {
      * It will fire once on bulk changes, while `add`/`remove` will fire on each tag operation
      */
 
-    var Tags = function(parent) {
+    var Tags = function (parent) {
         this._index = { };
         this._list = [];
         this._parent = parent;
@@ -197,7 +197,7 @@ pc.extend(pc, (function() {
          * @example
          * tags.add([ 'level-2', 'mob' ]);
          */
-        add: function() {
+        add: function () {
             var changed = false;
             var tags = this._processArguments(arguments, true);
 
@@ -236,7 +236,7 @@ pc.extend(pc, (function() {
          * @example
          * tags.remove([ 'level-2', 'mob' ]);
          */
-        remove: function() {
+        remove: function () {
             var changed = false;
 
             if (! this._list.length)
@@ -273,7 +273,7 @@ pc.extend(pc, (function() {
          * @example
          * tags.clear();
          */
-        clear: function() {
+        clear: function () {
             if (! this._list.length)
                 return;
 
@@ -307,7 +307,7 @@ pc.extend(pc, (function() {
          * @example
          * tags.has([ 'ui', 'settings' ], [ 'ui', 'levels' ]); // (ui AND settings) OR (ui AND levels)
          */
-        has: function() {
+        has: function () {
             if (! this._list.length)
                 return false;
 
@@ -315,7 +315,7 @@ pc.extend(pc, (function() {
         },
 
 
-        _has: function(tags) {
+        _has: function (tags) {
             if (! this._list.length || ! tags.length)
                 return false;
 
@@ -351,12 +351,12 @@ pc.extend(pc, (function() {
          * @description Returns immutable array of tags
          * @returns {String[]} copy of tags array
          */
-        list: function() {
+        list: function () {
             return this._list.slice(0);
         },
 
 
-        _processArguments: function(args, flat) {
+        _processArguments: function (args, flat) {
             var tags = [];
             var tmp = [];
 

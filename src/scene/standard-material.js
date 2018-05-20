@@ -312,7 +312,7 @@ pc.extend(pc, function () {
         pc._matTex2D[name] = channels;
 
         Object.defineProperty(StandardMaterial.prototype, privMap.substring(1), {
-            get: function() {
+            get: function () {
                 return this[privMap];
             },
             set: function (value) {
@@ -332,7 +332,7 @@ pc.extend(pc, function () {
         var mapOffset = privMapOffset.substring(1);
 
         Object.defineProperty(StandardMaterial.prototype, mapTiling, {
-            get: function() {
+            get: function () {
                 return this[privMapTiling];
             },
             set: function (value) {
@@ -351,7 +351,7 @@ pc.extend(pc, function () {
 
 
         Object.defineProperty(StandardMaterial.prototype, mapOffset, {
-            get: function() {
+            get: function () {
                 return this[privMapOffset];
             },
             set: function (value) {
@@ -370,7 +370,7 @@ pc.extend(pc, function () {
 
 
         Object.defineProperty(StandardMaterial.prototype, privMapUv.substring(1), {
-            get: function() {
+            get: function () {
                 return this[privMapUv];
             },
             set: function (value) {
@@ -379,7 +379,7 @@ pc.extend(pc, function () {
             }
         });
         Object.defineProperty(StandardMaterial.prototype, privMapChannel.substring(1), {
-            get: function() {
+            get: function () {
                 return this[privMapChannel];
             },
             set: function (value) {
@@ -388,7 +388,7 @@ pc.extend(pc, function () {
             }
         });
         Object.defineProperty(StandardMaterial.prototype, privMapVertexColor.substring(1), {
-            get: function() {
+            get: function () {
                 return this[privMapVertexColor];
             },
             set: function (value) {
@@ -397,7 +397,7 @@ pc.extend(pc, function () {
             }
         });
         Object.defineProperty(StandardMaterial.prototype, privMapVertexColorChannel.substring(1), {
-            get: function() {
+            get: function () {
                 return this[privMapVertexColorChannel];
             },
             set: function (value) {
@@ -425,7 +425,7 @@ pc.extend(pc, function () {
         obj[priv] = defaultValue;
         obj[uform] = new Float32Array(3);
         Object.defineProperty(StandardMaterial.prototype, name, {
-            get: function() {
+            get: function () {
                 this.dirtyColor = true;
                 this.dirtyShader = true;
                 return this[priv];
@@ -463,7 +463,7 @@ pc.extend(pc, function () {
         if (hasMultiplier) {
             obj[pmult] = 1;
             Object.defineProperty(StandardMaterial.prototype, mult, {
-                get: function() {
+                get: function () {
                     return this[pmult];
                 },
                 set: function (value) {
@@ -500,7 +500,7 @@ pc.extend(pc, function () {
         var priv = "_" + name;
         obj[priv] = defaultValue;
         Object.defineProperty(StandardMaterial.prototype, name, {
-            get: function() {
+            get: function () {
                 return this[priv];
             },
             set: function (value) {
@@ -524,7 +524,7 @@ pc.extend(pc, function () {
         var priv = "_" + name;
         obj[priv] = null;
         Object.defineProperty(StandardMaterial.prototype, name, {
-            get: function() {
+            get: function () {
                 return this[priv];
             },
             set: function (value) {
@@ -539,7 +539,7 @@ pc.extend(pc, function () {
 
     var _defineAlias = function (obj, newName, oldName) {
         Object.defineProperty(StandardMaterial.prototype, oldName, {
-            get: function() {
+            get: function () {
                 return this[newName];
             },
             set: function (value) {
@@ -551,7 +551,7 @@ pc.extend(pc, function () {
     var _defineChunks = function (obj) {
         this._chunks = null;
         Object.defineProperty(StandardMaterial.prototype, "chunks", {
-            get: function() {
+            get: function () {
                 this.dirtyShader = true;
                 return this._chunks;
             },
@@ -567,7 +567,7 @@ pc.extend(pc, function () {
         var priv = "_" + name;
         obj[priv] = defaultValue;
         Object.defineProperty(StandardMaterial.prototype, name, {
-            get: function() {
+            get: function () {
                 return this[priv];
             },
             set: function (value) {
@@ -578,8 +578,8 @@ pc.extend(pc, function () {
         _propsSerial.push(name);
     };
 
-    var Chunks = function() { };
-    Chunks.prototype.copy = function(from) {
+    var Chunks = function () { };
+    Chunks.prototype.copy = function (from) {
         for (var p in from) {
             if (from.hasOwnProperty(p) && p !== 'copy')
                 this[p] = from[p];
@@ -692,7 +692,7 @@ pc.extend(pc, function () {
             return transform;
         },
 
-        _collectLights: function(lType, lights, lightsFiltered, mask, staticLightList) {
+        _collectLights: function (lType, lights, lightsFiltered, mask, staticLightList) {
             var light;
             var i;
             for (i = 0; i < lights.length; i++) {
@@ -719,12 +719,12 @@ pc.extend(pc, function () {
             }
         },
 
-        _setParameter: function(name, value) {
+        _setParameter: function (name, value) {
             this.setParameter(name, value);
             this._propsSet.push(name);
         },
 
-        _clearParameters: function() {
+        _clearParameters: function () {
             var props = this._propsSet;
             for (var i = 0; i < props.length; i++) {
                 delete this.parameters[props[i]];
@@ -749,7 +749,7 @@ pc.extend(pc, function () {
             }
         },
 
-        getUniform: function(varName, value, changeMat) {
+        getUniform: function (varName, value, changeMat) {
             var func = _prop2Uniform[varName];
             if (func) {
                 return func(this, value, changeMat);
@@ -899,7 +899,7 @@ pc.extend(pc, function () {
             this.dirtyColor = false;
         },
 
-        _getMapTransformID: function(xform, uv) {
+        _getMapTransformID: function (xform, uv) {
             if (!xform) return 0;
             if (!this._mapXForms[uv]) this._mapXForms[uv] = [];
 
@@ -1221,7 +1221,7 @@ pc.extend(pc, function () {
         _defineColor(obj, "specular", new pc.Color(0, 0, 0));
         _defineColor(obj, "emissive", new pc.Color(0, 0, 0), true);
 
-        _defineFloat(obj, "shininess", 25, function(mat, shininess) {
+        _defineFloat(obj, "shininess", 25, function (mat, shininess) {
             /*
              * Shininess is 0-100 value
              * which is actually a 0-1 glosiness value.
@@ -1235,7 +1235,7 @@ pc.extend(pc, function () {
             }
             return { name: "material_shininess", value: value };
         });
-        _defineFloat(obj, "heightMapFactor", 1, function(mat, height) {
+        _defineFloat(obj, "heightMapFactor", 1, function (mat, height) {
             return { name: 'material_heightMapFactor', value: height * 0.025 };
         });
         _defineFloat(obj, "opacity", 1);

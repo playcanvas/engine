@@ -90,7 +90,7 @@ pc.extend(pc.Application.prototype, function () {
             }
         },
 
-        addLines: function(position, color) {
+        addLines: function (position, color) {
             // Append lines to buffer
             var multiColor = !!color.length;
             var offset = this.linesUsed * 2 * this.vertexFormat.size;
@@ -108,7 +108,7 @@ pc.extend(pc.Application.prototype, function () {
             this.linesUsed += position.length / 2;
         },
 
-        finalize: function() {
+        finalize: function () {
             // Update batch vertex buffer/issue drawcall if there are any lines
             if (this.linesUsed > 0) {
                 this.vb.setData(this.vbRam.buffer);

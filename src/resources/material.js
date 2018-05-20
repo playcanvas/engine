@@ -151,7 +151,7 @@ pc.extend(pc, function () {
     MaterialHandler.prototype = {
         load: function (url, callback) {
             // Loading from URL (engine-only)
-            pc.http.get(url, function(err, response) {
+            pc.http.get(url, function (err, response) {
                 if (!err) {
                     if (callback) {
                         callback(null, response);
@@ -186,7 +186,7 @@ pc.extend(pc, function () {
          * creates placeholders for textures
          * that are used while texture is loading
          */
-        _createPlaceholders: function() {
+        _createPlaceholders: function () {
             var textures = {
                 white: [255, 255, 255, 255],
                 gray: [128, 128, 128, 255],
@@ -327,7 +327,7 @@ pc.extend(pc, function () {
                         handler = material._assetHandlers[param.name] = {
                             id: id,
                             url: pathMapping ? pc.path.join(dir, param.data) : '',
-                            bind: function(asset) {
+                            bind: function (asset) {
                                 /*
                                  * TODO
                                  * update specific param instead of all of them
@@ -336,7 +336,7 @@ pc.extend(pc, function () {
                                 material[data.parameters[i].name] = asset.resource;
                                 material.update();
                             },
-                            add: function(asset) {
+                            add: function (asset) {
                                 assets.load(asset);
                             },
                             remove: function (asset) {
@@ -393,7 +393,7 @@ pc.extend(pc, function () {
                         asset = assets.get(param.data);
                     }
 
-                    var onReady = function(asset) {
+                    var onReady = function (asset) {
                         param.data = asset.resource;
                         // if this is a prefiltered map, then extra resources are present
                         if (asset.resources.length > 1) {
@@ -428,7 +428,7 @@ pc.extend(pc, function () {
                         asset.on('load', onCubemapAssetLoad, material);
                     };
 
-                    var onAdd = function(asset) {
+                    var onAdd = function (asset) {
                         if (data.shadingModel === pc.SPECULAR_PHONG)
                             asset.loadFaces = true;
 

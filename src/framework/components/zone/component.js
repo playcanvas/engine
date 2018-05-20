@@ -73,11 +73,11 @@ pc.extend(pc, function () {
             this._checkState();
         },
 
-        _onSetEnabled: function(prop, old, value) {
+        _onSetEnabled: function (prop, old, value) {
             this._checkState();
         },
 
-        _checkState: function() {
+        _checkState: function () {
             var state = this.enabled && this.entity.enabled;
             if (state === this._oldState)
                 return;
@@ -88,20 +88,20 @@ pc.extend(pc, function () {
             this.fire('state', this.enabled);
         },
 
-        _onBeforeRemove: function() {
+        _onBeforeRemove: function () {
             this.fire('remove');
         }
     });
 
     Object.defineProperty(ZoneComponent.prototype, 'size', {
-        set: function(data) {
+        set: function (data) {
             if (data instanceof pc.Vec3) {
                 this._size.copy(data);
             } else if (data instanceof Array && data.length >= 3) {
                 this.size.set(data[0], data[1], data[2]);
             }
         },
-        get: function() {
+        get: function () {
             return this._size;
         }
     });

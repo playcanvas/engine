@@ -25,7 +25,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application managing this system.
      * @extends pc.ComponentSystem
      */
-    var AnimationComponentSystem = function AnimationComponentSystem (app) {
+    var AnimationComponentSystem = function AnimationComponentSystem(app) {
         this.id = 'animation';
         this.description = "Specifies the animation assets that can run on the model specified by the Entity's model Component.";
 

@@ -192,7 +192,7 @@ pc.extend(pc, function () {
         get: function () {
             return this._animation;
         },
-        set: function(value) {
+        set: function (value) {
             this._animation = value;
             this.currentTime = 0;
         }
@@ -220,7 +220,7 @@ pc.extend(pc, function () {
         get: function () {
             return this._time;
         },
-        set: function(value) {
+        set: function (value) {
             this._time = value;
             var numNodes = this._interpolatedKeys.length;
             for (var i = 0; i < numNodes; i++) {

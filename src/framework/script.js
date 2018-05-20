@@ -138,10 +138,10 @@ pc.script = (function () {
     };
 
     Object.defineProperty(script, 'legacy', {
-        get: function() {
+        get: function () {
             return _legacy;
         },
-        set: function(value) {
+        set: function (value) {
             _legacy = value;
         }
     });

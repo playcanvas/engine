@@ -94,7 +94,7 @@ pc.extend(pc, function () {
             return this.addComponent(clone, newData);
         },
 
-        onUpdate: function(dt) {
+        onUpdate: function (dt) {
             var store = this.store;
 
             for (var id in store) {

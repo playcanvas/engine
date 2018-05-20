@@ -91,7 +91,7 @@ pc.extend(pc, function () {
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
-    var ElementComponent = function ElementComponent (system, entity) {
+    var ElementComponent = function ElementComponent(system, entity) {
         this._anchor = new pc.Vec4();
         this._localAnchor = new pc.Vec4();
 
@@ -624,7 +624,7 @@ pc.extend(pc, function () {
             return p;
         },
 
-        onLayersChanged: function(oldComp, newComp) {
+        onLayersChanged: function (oldComp, newComp) {
             this.addModelToLayers(this._image ? this._image._model : this._text._model);
             oldComp.off("add", this.onLayerAdded, this);
             oldComp.off("remove", this.onLayerRemoved, this);
@@ -632,7 +632,7 @@ pc.extend(pc, function () {
             newComp.on("remove", this.onLayerRemoved, this);
         },
 
-        onLayerAdded: function(layer) {
+        onLayerAdded: function (layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             if (this._image) {
@@ -642,7 +642,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onLayerRemoved: function(layer) {
+        onLayerRemoved: function (layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             if (this._image) {
@@ -775,7 +775,7 @@ pc.extend(pc, function () {
             this.fire('set:height', this._height);
         },
 
-        _setCalculatedWidth: function(value, updateMargins) {
+        _setCalculatedWidth: function (value, updateMargins) {
             var didChange = Math.abs(value - this._calculatedWidth) > 1e-4;
 
             this._calculatedWidth = value;
@@ -796,7 +796,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _setCalculatedHeight: function(value, updateMargins) {
+        _setCalculatedHeight: function (value, updateMargins) {
             var didChange = Math.abs(value - this._calculatedHeight) > 1e-4;
 
             this._calculatedHeight = value;
@@ -817,7 +817,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _flagChildrenAsDirty: function() {
+        _flagChildrenAsDirty: function () {
             var i, l;
             var c = this.entity._children;
             for (i = 0, l = c.length; i < l; i++) {
@@ -828,7 +828,7 @@ pc.extend(pc, function () {
             }
         },
 
-        addModelToLayers: function(model) {
+        addModelToLayers: function (model) {
             var layer;
             this._addedModel = model;
             for (var i = 0; i < this.layers.length; i++) {
@@ -838,7 +838,7 @@ pc.extend(pc, function () {
             }
         },
 
-        removeModelFromLayers: function(model) {
+        removeModelFromLayers: function (model) {
             var layer;
             this._addedModel = null;
             for (var i = 0; i < this.layers.length; i++) {

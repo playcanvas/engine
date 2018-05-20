@@ -84,7 +84,7 @@ pc.extend(pc, function () {
 
         onDisable: function () { },
 
-        onPostStateChange: function() { }
+        onPostStateChange: function () { }
     };
 
     return {

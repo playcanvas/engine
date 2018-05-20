@@ -124,11 +124,11 @@ pc.extend(pc, function () {
             }
         },
 
-        _patchTexture: function() {
+        _patchTexture: function () {
             this.registry._loader._handlers.cubemap._patchTextureFaces(this, this.registry);
         },
 
-        _patchTextureFaces: function(assetCubeMap, assets) {
+        _patchTextureFaces: function (assetCubeMap, assets) {
             if (! assetCubeMap.loadFaces && assetCubeMap.file)
                 return;
 
@@ -142,7 +142,7 @@ pc.extend(pc, function () {
                 assetCubeMap._levelsEvents = [null, null, null, null, null, null];
 
             assetCubeMap.data.textures.forEach(function (id, index) {
-                var assetReady = function(asset) {
+                var assetReady = function (asset) {
                     count++;
                     sources[index] = asset && asset.resource.getSource() || null;
 
@@ -172,7 +172,7 @@ pc.extend(pc, function () {
                     }
                 };
 
-                var assetAdded = function(asset) {
+                var assetAdded = function (asset) {
                     asset.ready(assetReady);
                     assets.load(asset);
                 };

@@ -604,7 +604,7 @@ pc.extend(pc, function () {
         }
 
         function sumValues(items, propertyName) {
-            return items.reduce(function(accumulator, current) {
+            return items.reduce(function (accumulator, current) {
                 return accumulator + current[propertyName];
             }, 0);
         }
@@ -649,7 +649,7 @@ pc.extend(pc, function () {
 
             return items
                 .slice()
-                .sort(function(itemA, itemB) {
+                .sort(function (itemA, itemB) {
                     return descending ? itemB[orderBy] - itemA[orderBy] : itemA[orderBy] - itemB[orderBy];
                 })
                 .map(getIndex);

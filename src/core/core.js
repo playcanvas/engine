@@ -107,7 +107,7 @@ var pc = {
      * A.b();
      * // logs "b"
      */
-    extend: function(target, ex) {
+    extend: function (target, ex) {
         var prop,
             copy;
 
@@ -134,7 +134,7 @@ var pc = {
      * @param {Object} o The Object to test
      * @returns {Boolean} True if the Object is not undefined
      */
-    isDefined: function(o) {
+    isDefined: function (o) {
         var a;
         return (o !== a);
     }

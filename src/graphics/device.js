@@ -288,7 +288,7 @@ pc.extend(pc, function () {
          * so that the constructor remains small. Small constructors
          * are optimized by Firefox due to type inference
          */
-        (function() {
+        (function () {
             this.defaultClearOptions = {
                 color: [0, 0, 0, 1],
                 depth: 1,
@@ -2739,7 +2739,7 @@ pc.extend(pc, function () {
          * @param {pc.Shader} shader The shader to set to assign to the device.
          * @returns {Boolean} true if the shader was successfully set, false otherwise.
          */
-        setShader: function(shader) {
+        setShader: function (shader) {
             if (shader !== this.shader) {
                 this.shader = shader;
 
@@ -2758,7 +2758,7 @@ pc.extend(pc, function () {
             return true;
         },
 
-        getHdrFormat: function() {
+        getHdrFormat: function () {
             if (this.extTextureHalfFloatRenderable) {
                 return pc.PIXELFORMAT_RGB16F;
             } else if (this.extTextureFloatRenderable) {

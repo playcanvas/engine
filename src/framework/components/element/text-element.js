@@ -1,6 +1,6 @@
 pc.extend(pc, function () {
 
-    var TextElement = function TextElement (element) {
+    var TextElement = function TextElement(element) {
         this._element = element;
         this._system = element.system;
         this._entity = element.entity;
@@ -777,7 +777,7 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(TextElement.prototype, "fontAsset", {
-        get function () {
+        get function() {
             return this._fontAsset;
         },
 

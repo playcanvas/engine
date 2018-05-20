@@ -53,7 +53,7 @@ pc.extend(pc, function () {
          *     // use texture here
          * });
          */
-        load: function(url, type, callback, asset) {
+        load: function (url, type, callback, asset) {
             var handler = this._handlers[type];
             if (!handler) {
                 var err = "No handler for asset type: " + type;

@@ -25,7 +25,7 @@ pc.extend(pc, function () {
     var _regexColorBufferSample = /(texture2D|texture)[ \t\n\r]*\([ \t\n\r]*uColorBuffer/g;
     var _regexMain = /void[ \t\n\r]+main/g;
 
-    var _createBackbufferRt = function(id, device, format) {
+    var _createBackbufferRt = function (id, device, format) {
         var tex = new pc.Texture(device, {
             format: format,
             width: device.width,
@@ -39,12 +39,12 @@ pc.extend(pc, function () {
         _backbufferRt[id]._colorBuffer = tex;
     };
 
-    var _destroyBackbufferRt = function(id) {
+    var _destroyBackbufferRt = function (id) {
         _backbufferRt[id].colorBuffer.destroy();
         _backbufferRt[id].destroy();
     };
 
-    var _collectUniforms = function(code) {
+    var _collectUniforms = function (code) {
         var strs = code.match(_regexUniforms) || []; // look ma I know regexp
         var start, end, uname;
         var uniforms = [];
@@ -59,7 +59,7 @@ pc.extend(pc, function () {
         return uniforms;
     };
 
-    var _uniformsCollide = function(layers, chain, count, shader) {
+    var _uniformsCollide = function (layers, chain, count, shader) {
         var uniforms = _collectUniforms(shader.definition.fshader);
         if (uniforms.length === 0) return false;
 
@@ -81,7 +81,7 @@ pc.extend(pc, function () {
     };
 
     // collect global vars and return collisions with what's already in the list
-    var _collectGlobalTempVars = function(code, list) {
+    var _collectGlobalTempVars = function (code, list) {
         // Get code without any scoped stuff
         var len = code.length;
         var chr;
@@ -173,7 +173,7 @@ pc.extend(pc, function () {
             passThrough: true,
             name: options.name,
 
-            onPostRender: function() {
+            onPostRender: function () {
                 if (self.srcRenderTarget) {
                     _constScreenSizeValue.x = self.srcRenderTarget.width;
                     _constScreenSizeValue.y = self.srcRenderTarget.height;
@@ -242,7 +242,7 @@ pc.extend(pc, function () {
                 });
                 _backbufferRt[i].name = "backbuffer" + i;
             }
-            app.on("prerender", function() { // before every app.render, if any effect reads from backbuffer, we must replace real backbuffer with our backbuffer RTs prior to effect
+            app.on("prerender", function () { // before every app.render, if any effect reads from backbuffer, we must replace real backbuffer with our backbuffer RTs prior to effect
 
                 var layers = app.scene.layers.layerList;
                 var i, j;
@@ -428,7 +428,7 @@ pc.extend(pc, function () {
 
             }, this);
 
-            app.on("postrender", function() { // after every app.render test if there were no effect writing to actual backbuffer, and if so, copy it from replaced backbuffer
+            app.on("postrender", function () { // after every app.render test if there were no effect writing to actual backbuffer, and if so, copy it from replaced backbuffer
                 var device = app.graphicsDevice;
                 if (_backbufferRtUsed && !_backbufferRtWrittenByPost) {
                     var layers = app.scene.layers.layerList;
@@ -450,7 +450,7 @@ pc.extend(pc, function () {
         }
     }
 
-    PostEffectPass.prototype.addToComposition = function(order) {
+    PostEffectPass.prototype.addToComposition = function (order) {
         this.app.scene.layers.insertTransparent(this.layer, order);
     };
 

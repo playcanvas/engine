@@ -660,7 +660,7 @@ pc.extend(pc, function () {
         if (this._skyboxCubeMap && !this.skyboxModel) {
             var material = new pc.Material();
             var scene = this;
-            material.updateShader = function(dev, sc, defs, staticLightList, pass) {
+            material.updateShader = function (dev, sc, defs, staticLightList, pass) {
                 var library = device.getProgramLibrary();
                 var shader = library.getProgram('skybox', { rgbm: scene._skyboxCubeMap.rgbm,
                     hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format === pc.PIXELFORMAT_RGBA32F),

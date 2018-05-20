@@ -143,7 +143,7 @@ pc.extend(pc, function () {
             return url;
         },
 
-        getPreferredFile: function() {
+        getPreferredFile: function () {
             if (! this.file)
                 return null;
 
@@ -186,7 +186,7 @@ pc.extend(pc, function () {
             }
         },
 
-        reload: function() {
+        reload: function () {
             // no need to be reloaded
             if (! this.loaded)
                 return;
@@ -230,7 +230,7 @@ pc.extend(pc, function () {
 
 
     Object.defineProperty(Asset.prototype, 'id', {
-        get: function() {
+        get: function () {
             return this._id;
         },
 
@@ -242,7 +242,7 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Asset.prototype, 'file', {
-        get: function() {
+        get: function () {
             return this._file;
         },
 

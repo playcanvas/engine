@@ -187,7 +187,7 @@ pc.extend(pc, function () {
                 name: "Depth",
                 id: pc.LAYERID_DEPTH,
 
-                onEnable: function() {
+                onEnable: function () {
                     if (this.renderTarget) return;
                     var depthBuffer = new pc.Texture(self.graphicsDevice, {
                         format: pc.PIXELFORMAT_DEPTHSTENCIL,
@@ -206,14 +206,14 @@ pc.extend(pc, function () {
                     self.graphicsDevice.scope.resolve("uDepthMap").setValue(depthBuffer);
                 },
 
-                onDisable: function() {
+                onDisable: function () {
                     if (!this.renderTarget) return;
                     this.renderTarget._depthBuffer.destroy();
                     this.renderTarget.destroy();
                     this.renderTarget = null;
                 },
 
-                onPreRenderOpaque: function(cameraPass) { // resize depth map if needed
+                onPreRenderOpaque: function (cameraPass) { // resize depth map if needed
                     var gl = self.graphicsDevice.gl;
                     this.srcFbo = gl.getParameter(gl.FRAMEBUFFER_BINDING);
 
@@ -227,7 +227,7 @@ pc.extend(pc, function () {
                     this.cameras[cameraPass].camera._clearOptions = this.depthClearOptions;
                 },
 
-                onPostRenderOpaque: function(cameraPass) { // copy depth
+                onPostRenderOpaque: function (cameraPass) { // copy depth
                     if (! this.renderTarget) return;
 
                     this.cameras[cameraPass].camera._clearOptions = this.oldClear;
@@ -257,7 +257,7 @@ pc.extend(pc, function () {
                 id: pc.LAYERID_DEPTH,
                 shaderPass: pc.SHADER_DEPTH,
 
-                onEnable: function() {
+                onEnable: function () {
                     if (this.renderTarget) return;
                     var colorBuffer = new pc.Texture(self.graphicsDevice, {
                         format: pc.PIXELFORMAT_R8_G8_B8_A8,
@@ -275,14 +275,14 @@ pc.extend(pc, function () {
                     self.graphicsDevice.scope.resolve("uDepthMap").setValue(colorBuffer);
                 },
 
-                onDisable: function() {
+                onDisable: function () {
                     if (!this.renderTarget) return;
                     this.renderTarget._colorBuffer.destroy();
                     this.renderTarget.destroy();
                     this.renderTarget = null;
                 },
 
-                onPostCull: function(cameraPass) {
+                onPostCull: function (cameraPass) {
                     // Collect all rendered mesh instances with the same render target as World has, depthWrite == true and prior to this layer to replicate blitFramebuffer on WebGL2
                     var visibleObjects = this.instances.visibleOpaque[cameraPass];
                     var visibleList = visibleObjects.list;
@@ -316,7 +316,7 @@ pc.extend(pc, function () {
                     visibleObjects.length = visibleLength;
                 },
 
-                onPreRenderOpaque: function(cameraPass) { // resize depth map if needed
+                onPreRenderOpaque: function (cameraPass) { // resize depth map if needed
                     if (!this.renderTarget || (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height)) {
                         this.onDisable();
                         this.onEnable();
@@ -325,11 +325,11 @@ pc.extend(pc, function () {
                     this.cameras[cameraPass].camera._clearOptions = this.rgbaDepthClearOptions;
                 },
 
-                onDrawCall: function() {
+                onDrawCall: function () {
                     self.graphicsDevice.setColorWrite(true, true, true, true);
                 },
 
-                onPostRenderOpaque: function(cameraPass) {
+                onPostRenderOpaque: function (cameraPass) {
                     if (!this.renderTarget) return;
                     this.cameras[cameraPass].camera._clearOptions = this.oldClear;
                 }
@@ -377,7 +377,7 @@ pc.extend(pc, function () {
         this._immediateLayer = this.defaultLayerImmediate;
 
         // Default layers patch
-        this.scene.on('set:layers', function(oldComp, newComp) {
+        this.scene.on('set:layers', function (oldComp, newComp) {
             var list = newComp.layerList;
             var layer;
             for (var i = 0; i < list.length; i++) {
@@ -594,7 +594,7 @@ pc.extend(pc, function () {
 
             var i;
             if (_assets.length) {
-                var onAssetLoad = function(asset) {
+                var onAssetLoad = function (asset) {
                     _assets.inc();
                     self.fire('preload:progress', count() / total);
 
@@ -602,7 +602,7 @@ pc.extend(pc, function () {
                         done();
                 };
 
-                var onAssetError = function(err, asset) {
+                var onAssetError = function (err, asset) {
                     _assets.inc();
                     self.fire('preload:progress', count() / total);
 
@@ -911,7 +911,7 @@ pc.extend(pc, function () {
             var regex = /^http(s)?:\/\//;
 
             if (len) {
-                var onLoad = function(err, script) {
+                var onLoad = function (err, script) {
                     count--;
                     if (err) {
                         callback(err);
@@ -1101,7 +1101,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        _fillFrameStats: function(now, dt, ms) {
+        _fillFrameStats: function (now, dt, ms) {
             // Timing stats
             var stats = this.stats.frame;
             stats.dt = dt;
@@ -1426,7 +1426,7 @@ pc.extend(pc, function () {
          * @description Sets the skybox asset to current scene, and subscribes to asset load/change events
          * @param {pc.Asset} asset Asset of type `skybox` to be set to, or null to remove skybox
          */
-        setSkybox: function(asset) {
+        setSkybox: function (asset) {
             if (asset) {
                 if (this._skyboxLast === asset.id) {
                     if (this.scene.skyboxMip === 0 && ! asset.loadFaces) {
@@ -1475,11 +1475,11 @@ pc.extend(pc, function () {
             }
         },
 
-        _onSkyboxChange: function(asset) {
+        _onSkyboxChange: function (asset) {
             this.scene.setSkybox(asset.resources);
         },
 
-        _skyboxLoad: function(asset) {
+        _skyboxLoad: function (asset) {
             if (this.scene.skyboxMip === 0)
                 asset.loadFaces = true;
 
@@ -1488,7 +1488,7 @@ pc.extend(pc, function () {
             this._onSkyboxChange(asset);
         },
 
-        _skyboxRemove: function(asset) {
+        _skyboxRemove: function (asset) {
             if (! this._skyboxLast)
                 return;
 
@@ -1499,11 +1499,11 @@ pc.extend(pc, function () {
             this._skyboxLast = null;
         },
 
-        _firstBake: function() {
+        _firstBake: function () {
             this.lightmapper.bake(null, this.scene.lightmapMode);
         },
 
-        _firstBatch: function() {
+        _firstBatch: function () {
             if (this.scene._needsStaticPrepare) {
                 this.renderer.prepareStaticMeshes(this.graphicsDevice, this.scene);
                 this.scene._needsStaticPrepare = false;

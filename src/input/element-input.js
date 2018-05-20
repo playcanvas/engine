@@ -327,7 +327,7 @@ pc.extend(pc, function () {
             this._onElementMouseEvent(event);
         },
 
-        _determineTouchedElements: function(event) {
+        _determineTouchedElements: function (event) {
             var touchedElements = {};
             var cameras = this.app.systems.camera.cameras;
             var i, j, len;
@@ -631,7 +631,7 @@ pc.extend(pc, function () {
          * padding specified, we need to expand the screenCorners to incorporate the
          * padding.
          */
-        _buildHitCorners: function(element, screenOrWorldCorners, scaleX, scaleY) {
+        _buildHitCorners: function (element, screenOrWorldCorners, scaleX, scaleY) {
             var hitCorners = screenOrWorldCorners;
             var button = element.entity && element.entity.button;
 
@@ -659,7 +659,7 @@ pc.extend(pc, function () {
             return hitCorners;
         },
 
-        _calculateScaleToScreen: function(element) {
+        _calculateScaleToScreen: function (element) {
             var current = element.entity;
             var screenScale = element.screen.screen.scale;
 

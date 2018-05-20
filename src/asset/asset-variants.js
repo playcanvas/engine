@@ -2,19 +2,19 @@ pc.extend(pc, function () {
 
     var properties = [];
 
-    var AssetVariants = function(asset) {
+    var AssetVariants = function (asset) {
         this.asset = asset;
     };
 
-    var defineVariantProperty = function(name) {
+    var defineVariantProperty = function (name) {
         var field = '_' + name;
         properties.push(field);
 
         Object.defineProperty(AssetVariants.prototype, name, {
-            get: function() {
+            get: function () {
                 return this[field] || null;
             },
-            set: function(value) {
+            set: function (value) {
                 var fieldAsBool = !!this[field];
                 var valueAsBool = !!value;
                 if (fieldAsBool !== valueAsBool || (this[field] && value && this[field].hash !== value.hash)) {
@@ -45,7 +45,7 @@ pc.extend(pc, function () {
     defineVariantProperty('pvr');
     defineVariantProperty('etc1');
 
-    AssetVariants.prototype.clear = function() {
+    AssetVariants.prototype.clear = function () {
         for (var i = 0; i < properties.length; i++)
             this[properties[i]] = null;
     };
