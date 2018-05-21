@@ -1,6 +1,7 @@
 pc.extend(pc, function () {
     /**
      * @component
+     * @constructor
      * @name pc.LayoutChildComponent
      * @description Create a new LayoutChildComponent
      * @classdesc A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent {@link pc.LayoutGroupComponent}.
