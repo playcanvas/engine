@@ -370,7 +370,7 @@ pc.extend(pc, function () {
             var scriptType = name;
 
             // shorthand using script name
-            if (typeof (scriptType) === 'string')
+            if (typeof scriptType === 'string')
                 scriptType = this.system.app.scripts.get(scriptType);
 
             return !!this._scriptsIndex[scriptType.__name];
@@ -402,7 +402,7 @@ pc.extend(pc, function () {
             var scriptName = name;
 
             // shorthand using script name
-            if (typeof (scriptType) === 'string') {
+            if (typeof scriptType === 'string') {
                 scriptType = this.system.app.scripts.get(scriptType);
             } else if (scriptType) {
                 scriptName = scriptType.__name;
@@ -419,7 +419,7 @@ pc.extend(pc, function () {
                     });
 
                     var ind = -1;
-                    if (typeof (args.ind) === 'number' && args.ind !== -1 && this._scripts.length > args.ind)
+                    if (typeof args.ind === 'number' && args.ind !== -1 && this._scripts.length > args.ind)
                         ind = args.ind;
 
                     if (ind === -1) {
@@ -492,7 +492,7 @@ pc.extend(pc, function () {
             var scriptType = name;
 
             // shorthand using script name
-            if (typeof (scriptType) === 'string') {
+            if (typeof scriptType === 'string') {
                 scriptType = this.system.app.scripts.get(scriptType);
                 if (scriptType)
                     scriptName = scriptType.__name;
@@ -540,7 +540,7 @@ pc.extend(pc, function () {
             var scriptType = script;
 
             // shorthand using script name
-            if (typeof (scriptType) === 'string')
+            if (typeof scriptType === 'string')
                 scriptType = this.system.app.scripts.get(scriptType);
 
             var old = this._scriptsIndex[scriptType.__name];
@@ -590,7 +590,7 @@ pc.extend(pc, function () {
 
             var scriptName = name;
 
-            if (typeof (scriptName) !== 'string')
+            if (typeof scriptName !== 'string')
                 scriptName = name.__name;
 
             var scriptData = this._scriptsIndex[scriptName];
@@ -628,11 +628,11 @@ pc.extend(pc, function () {
                     // existing script
 
                     // enabled
-                    if (typeof (value[key].enabled) === 'boolean')
+                    if (typeof value[key].enabled === 'boolean')
                         script.enabled = !!value[key].enabled;
 
                     // attributes
-                    if (typeof (value[key].attributes) === 'object') {
+                    if (typeof value[key].attributes === 'object') {
                         for (var attr in value[key].attributes) {
                             if (pc.createScript.reservedAttributes[attr])
                                 continue;

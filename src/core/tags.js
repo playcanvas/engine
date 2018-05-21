@@ -124,7 +124,7 @@ pc.extend(pc, (function () {
                     }
                 }
 
-                if (tag && typeof (tag) === 'string' && this._index[tag]) {
+                if (tag && typeof tag === 'string' && this._index[tag]) {
                     for (n = 0; n < this._index[tag].list.length; n++) {
                         item = this._index[tag].list[n];
 
@@ -369,7 +369,7 @@ pc.extend(pc, (function () {
                         tmp = [];
 
                     for (var t = 0; t < args[i].length; t++) {
-                        if (typeof (args[i][t]) !== 'string')
+                        if (typeof args[i][t] !== 'string')
                             continue;
 
                         if (flat) {
@@ -381,7 +381,7 @@ pc.extend(pc, (function () {
 
                     if (!flat && tmp.length)
                         tags.push(tmp);
-                } else if (typeof (args[i]) === 'string') {
+                } else if (typeof args[i] === 'string') {
                     if (flat) {
                         tags.push(args[i]);
                     } else {

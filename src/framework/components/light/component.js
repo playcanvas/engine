@@ -201,7 +201,7 @@ pc.extend(pc, function () {
                 this.data.cookieAsset = newValue.id;
                 this._cookieAssetId = newValue.id;
                 this.onCookieAssetAdd(newValue);
-            } else if (typeof (newValue) === 'number') {
+            } else if (typeof newValue === 'number') {
                 this._cookieAssetId = newValue;
                 var asset = this.system.app.assets.get(newValue);
                 if (asset) {

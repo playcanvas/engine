@@ -80,9 +80,9 @@ var pc = {
             return "null";
         }
 
-        var type = typeof(obj);
+        var type = typeof obj;
 
-        if (type == "undefined" || type == "number" || type == "string" || type == "boolean") {
+        if (type === "undefined" || type === "number" || type === "string" || type === "boolean") {
             return type;
         }
 
@@ -140,5 +140,5 @@ var pc = {
     }
 };
 
-if (typeof (exports) !== 'undefined')
+if (typeof exports !== 'undefined')
     exports.pc = pc;

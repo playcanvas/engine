@@ -52,7 +52,7 @@ pc.events = {
      * obj.fire('test', 1, 2); // prints 3 to the console
      */
     on: function (name, callback, scope) {
-        if (!name || typeof (name) !== 'string' || !callback)
+        if (!name || typeof name !== 'string' || !callback)
             return this;
 
         if (!this._callbacks)

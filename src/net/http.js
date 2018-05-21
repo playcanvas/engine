@@ -75,7 +75,7 @@ pc.extend(pc, function () {
          * @returns {XMLHttpRequest} The request object.
          */
         get: function (url, options, callback) {
-            if (typeof (options) === "function") {
+            if (typeof options === "function") {
                 callback = options;
                 options = {};
             }
@@ -103,7 +103,7 @@ pc.extend(pc, function () {
          * @returns {XMLHttpRequest} The request object.
          */
         post: function (url, data, options, callback) {
-            if (typeof (options) === "function") {
+            if (typeof options === "function") {
                 callback = options;
                 options = {};
             }
@@ -132,7 +132,7 @@ pc.extend(pc, function () {
          * @returns {XMLHttpRequest} The request object.
          */
         put: function (url, data, options, callback) {
-            if (typeof (options) === "function") {
+            if (typeof options === "function") {
                 callback = options;
                 options = {};
             }
@@ -161,7 +161,7 @@ pc.extend(pc, function () {
          * @returns {XMLHttpRequest} The request object.
          */
         del: function (url, options, callback) {
-            if (typeof (options) === "function") {
+            if (typeof options === "function") {
                 callback = options;
                 options = {};
             }
@@ -193,7 +193,7 @@ pc.extend(pc, function () {
             var uri, query, timestamp, postdata, xhr;
             var errored = false;
 
-            if (typeof (options) === "function") {
+            if (typeof options === "function") {
                 callback = options;
                 options = {};
             }

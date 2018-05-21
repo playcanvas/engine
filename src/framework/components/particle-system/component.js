@@ -326,7 +326,7 @@ pc.extend(pc, function () {
             var asset;
             var assets = this.system.app.assets;
 
-            if (oldValue && typeof (oldValue) === 'number') {
+            if (oldValue && typeof oldValue === 'number') {
                 asset = assets.get(oldValue);
                 if (asset) {
                     asset.off('remove', this.onMeshRemoved, this);
@@ -339,7 +339,7 @@ pc.extend(pc, function () {
                     newValue = newValue.id;
                 }
 
-                if (typeof (newValue) === 'number') {
+                if (typeof newValue === 'number') {
                     asset = assets.get(newValue);
                     if (asset) {
                         asset.on('remove', this.onMeshRemoved, this);

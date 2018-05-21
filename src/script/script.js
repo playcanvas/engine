@@ -6,18 +6,18 @@ pc.extend(pc, function () {
             case 'boolean':
                 return !!value;
             case 'number':
-                if (typeof (value) === 'number') {
+                if (typeof value === 'number') {
                     return value;
-                } else if (typeof (value) === 'string') {
+                } else if (typeof value === 'string') {
                     var v = parseInt(value, 10);
                     if (isNaN(v)) return null;
                     return v;
-                } else if (typeof (value) === 'boolean') {
+                } else if (typeof value === 'boolean') {
                     return 0 + value;
                 }
                 return null;
             case 'json':
-                if (typeof (value) === 'object') {
+                if (typeof value === 'object') {
                     return value;
                 }
                 try {
@@ -28,16 +28,16 @@ pc.extend(pc, function () {
             case 'asset':
                 if (value instanceof pc.Asset) {
                     return value;
-                } else if (typeof (value) === 'number') {
+                } else if (typeof value === 'number') {
                     return app.assets.get(value) || null;
-                } else if (typeof (value) === 'string') {
+                } else if (typeof value === 'string') {
                     return app.assets.get(parseInt(value, 10)) || null;
                 }
                 return null;
             case 'entity':
                 if (value instanceof pc.GraphNode) {
                     return value;
-                } else if (typeof (value) === 'string') {
+                } else if (typeof value === 'string') {
                     return app.root.findByGuid(value);
                 }
                 return null;
@@ -51,7 +51,7 @@ pc.extend(pc, function () {
                     return value.clone();
                 } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
                     for (i = 0; i < value.length; i++) {
-                        if (typeof (value[i]) !== 'number')
+                        if (typeof value[i] !== 'number')
                             return null;
                     }
                     if (!old) old = new pc.Color();
@@ -60,7 +60,7 @@ pc.extend(pc, function () {
                         old.data[i] = (i === 4 && value.length === 3) ? 1 : value[i];
 
                     return old;
-                } else if (typeof (value) === 'string' && /#([0-9abcdef]{2}){3,4}/i.test(value)) {
+                } else if (typeof value === 'string' && /#([0-9abcdef]{2}){3,4}/i.test(value)) {
                     if (!old)
                         old = new pc.Color();
 
@@ -81,7 +81,7 @@ pc.extend(pc, function () {
                     return value.clone();
                 } else if (value instanceof Array && value.length === len) {
                     for (i = 0; i < value.length; i++) {
-                        if (typeof (value[i]) !== 'number')
+                        if (typeof value[i] !== 'number')
                             return null;
                     }
                     if (!old) old = new pc['Vec' + len]();
@@ -329,7 +329,7 @@ pc.extend(pc, function () {
 
             this.app = args.app;
             this.entity = args.entity;
-            this._enabled = typeof (args.enabled) === 'boolean' ? args.enabled : true;
+            this._enabled = typeof args.enabled === 'boolean' ? args.enabled : true;
             this._enabledOld = this.enabled;
             this.__destroyed = false;
             this.__attributes = { };
