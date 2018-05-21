@@ -77,7 +77,7 @@ pc.extend(pc, function () {
         var mips = 1;
         if (tex._pot && (tex._mipmaps || tex._minFilter === pc.FILTER_NEAREST_MIPMAP_NEAREST ||
             tex._minFilter === pc.FILTER_NEAREST_MIPMAP_LINEAR || tex._minFilter === pc.FILTER_LINEAR_MIPMAP_NEAREST ||
-            tex._minFilter === pc.FILTER_LINEAR_MIPMAP_LINEAR) && ! (tex._compressed && tex._levels.length === 1)) {
+            tex._minFilter === pc.FILTER_LINEAR_MIPMAP_LINEAR) && !(tex._compressed && tex._levels.length === 1)) {
 
             mips = Math.round(Math.log2(Math.max(tex._width, tex._height)) + 1);
         }
@@ -87,7 +87,7 @@ pc.extend(pc, function () {
         var size = 0;
 
         for (var i = 0; i < mips; i++) {
-            if (! tex._compressed) {
+            if (!tex._compressed) {
                 size += mipWidth * mipHeight * mipDepth * _pixelFormat2Size[tex._format];
             } else if (tex._format === pc.PIXELFORMAT_ETC1) {
                 size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8 * mipDepth;
@@ -1448,7 +1448,7 @@ pc.extend(pc, function () {
         uploadTexture: function (texture) {
             var gl = this.gl;
 
-            if (! texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || ! texture._pot))
+            if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture._pot))
                 return;
 
             var mipLevel = 0;
@@ -1458,16 +1458,16 @@ pc.extend(pc, function () {
             while (texture._levels[mipLevel] || mipLevel === 0) {
                 // Upload all existing mip levels. Initialize 0 mip anyway.
 
-                if (! texture._needsUpload && mipLevel === 0) {
+                if (!texture._needsUpload && mipLevel === 0) {
                     mipLevel++;
                     continue;
-                } else if (mipLevel && (! texture._needsMipmapsUpload || ! texture._mipmaps)) {
+                } else if (mipLevel && (!texture._needsMipmapsUpload || !texture._mipmaps)) {
                     break;
                 }
 
                 mipObject = texture._levels[mipLevel];
 
-                if (mipLevel == 1 && ! texture._compressed) {
+                if (mipLevel == 1 && !texture._compressed) {
                     /*
                      * We have more than one mip levels we want to assign, but we need all mips to make
                      * the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
@@ -1486,7 +1486,7 @@ pc.extend(pc, function () {
                     if ((mipObject[0] instanceof HTMLCanvasElement) || (mipObject[0] instanceof HTMLImageElement) || (mipObject[0] instanceof HTMLVideoElement)) {
                         // Upload the image, canvas or video
                         for (face = 0; face < 6; face++) {
-                            if (! texture._levelsUpdated[0][face])
+                            if (!texture._levelsUpdated[0][face])
                                 continue;
 
                             var src = mipObject[face];
@@ -1514,7 +1514,7 @@ pc.extend(pc, function () {
                         // Upload the byte array
                         resMult = 1 / Math.pow(2, mipLevel);
                         for (face = 0; face < 6; face++) {
-                            if (! texture._levelsUpdated[0][face])
+                            if (!texture._levelsUpdated[0][face])
                                 continue;
 
                             var texData = mipObject[face];
@@ -1644,7 +1644,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (! texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && texture._pot && texture._levels.length === 1) {
+            if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && texture._pot && texture._levels.length === 1) {
                 gl.generateMipmap(texture._glTarget);
                 texture._mipmapsUploaded = true;
             }
@@ -1697,7 +1697,7 @@ pc.extend(pc, function () {
             if (paramDirty) {
                 if (texture._minFilterDirty) {
                     var filter = texture._minFilter;
-                    if (! texture._pot || ! texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
+                    if (!texture._pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
                         if (filter === pc.FILTER_NEAREST_MIPMAP_NEAREST || filter === pc.FILTER_NEAREST_MIPMAP_LINEAR) {
                             filter = pc.FILTER_NEAREST;
                         } else if (filter === pc.FILTER_LINEAR_MIPMAP_NEAREST || filter === pc.FILTER_LINEAR_MIPMAP_LINEAR) {

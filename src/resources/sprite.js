@@ -80,7 +80,7 @@ pc.extend(pc, function () {
         // Load atlas
         _updateAtlas: function (asset) {
             var sprite = asset.resource;
-            if (! asset.data.textureAtlasAsset) {
+            if (!asset.data.textureAtlasAsset) {
                 sprite.atlas = null;
                 return;
             }

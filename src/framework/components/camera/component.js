@@ -458,7 +458,7 @@ pc.extend(pc, function () {
          * });
          */
         enterVr: function (display, callback) {
-            if ((display instanceof Function) && ! callback) {
+            if ((display instanceof Function) && !callback) {
                 callback = display;
                 display = null;
             }

@@ -4,20 +4,20 @@ pc.extend(pc, function () {
 
         switch (args.type) {
             case 'boolean':
-                return !! value;
+                return !!value;
             case 'number':
-                if (typeof(value) === 'number') {
+                if (typeof (value) === 'number') {
                     return value;
-                } else if (typeof(value) === 'string') {
+                } else if (typeof (value) === 'string') {
                     var v = parseInt(value, 10);
                     if (isNaN(v)) return null;
                     return v;
-                } else if (typeof(value) === 'boolean') {
+                } else if (typeof (value) === 'boolean') {
                     return 0 + value;
                 }
                 return null;
             case 'json':
-                if (typeof(value) === 'object') {
+                if (typeof (value) === 'object') {
                     return value;
                 }
                 try {
@@ -28,16 +28,16 @@ pc.extend(pc, function () {
             case 'asset':
                 if (value instanceof pc.Asset) {
                     return value;
-                } else if (typeof(value) === 'number') {
+                } else if (typeof (value) === 'number') {
                     return app.assets.get(value) || null;
-                } else if (typeof(value) === 'string') {
+                } else if (typeof (value) === 'string') {
                     return app.assets.get(parseInt(value, 10)) || null;
                 }
                 return null;
             case 'entity':
                 if (value instanceof pc.GraphNode) {
                     return value;
-                } else if (typeof(value) === 'string') {
+                } else if (typeof (value) === 'string') {
                     return app.root.findByGuid(value);
                 }
                 return null;
@@ -51,17 +51,17 @@ pc.extend(pc, function () {
                     return value.clone();
                 } else if (value instanceof Array && value.length >= 3 && value.length <= 4) {
                     for (i = 0; i < value.length; i++) {
-                        if (typeof(value[i]) !== 'number')
+                        if (typeof (value[i]) !== 'number')
                             return null;
                     }
-                    if (! old) old = new pc.Color();
+                    if (!old) old = new pc.Color();
 
                     for (i = 0; i < 4; i++)
                         old.data[i] = (i === 4 && value.length === 3) ? 1 : value[i];
 
                     return old;
-                } else if (typeof(value) === 'string' && /#([0-9abcdef]{2}){3,4}/i.test(value)) {
-                    if (! old)
+                } else if (typeof (value) === 'string' && /#([0-9abcdef]{2}){3,4}/i.test(value)) {
+                    if (!old)
                         old = new pc.Color();
 
                     old.fromString(value);
@@ -81,10 +81,10 @@ pc.extend(pc, function () {
                     return value.clone();
                 } else if (value instanceof Array && value.length === len) {
                     for (i = 0; i < value.length; i++) {
-                        if (typeof(value[i]) !== 'number')
+                        if (typeof (value[i]) !== 'number')
                             return null;
                     }
-                    if (! old) old = new pc['Vec' + len]();
+                    if (!old) old = new pc['Vec' + len]();
 
                     for (i = 0; i < len; i++)
                         old.data[i] = value[i];
@@ -220,7 +220,7 @@ pc.extend(pc, function () {
      * PlayerController.attributes.remove('fullName');
      */
     ScriptAttributes.prototype.remove = function (name) {
-        if (! this.index[name])
+        if (!this.index[name])
             return false;
 
         delete this.index[name];
@@ -240,7 +240,7 @@ pc.extend(pc, function () {
      * });
      */
     ScriptAttributes.prototype.has = function (name) {
-        return !! this.index[name];
+        return !!this.index[name];
     };
 
     /**
@@ -320,7 +320,7 @@ pc.extend(pc, function () {
          */
         var script = function (args) {
             // #ifdef DEBUG
-            if (! args || ! args.app || ! args.entity) {
+            if (!args || !args.app || !args.entity) {
                 console.warn('script \'' + name + '\' has missing arguments in constructor');
             }
             // #endif
@@ -329,7 +329,7 @@ pc.extend(pc, function () {
 
             this.app = args.app;
             this.entity = args.entity;
-            this._enabled = typeof(args.enabled) === 'boolean' ? args.enabled : true;
+            this._enabled = typeof (args.enabled) === 'boolean' ? args.enabled : true;
             this._enabledOld = this.enabled;
             this.__destroyed = false;
             this.__attributes = { };
@@ -368,14 +368,14 @@ pc.extend(pc, function () {
 
         // initialize attributes
         script.prototype.__initializeAttributes = function (force) {
-            if (! force && ! this.__attributesRaw)
+            if (!force && !this.__attributesRaw)
                 return;
 
             // set attributes values
             for (var key in script.attributes.index) {
                 if (this.__attributesRaw && this.__attributesRaw.hasOwnProperty(key)) {
                     this[key] = this.__attributesRaw[key];
-                } else if (! this.__attributes.hasOwnProperty(key)) {
+                } else if (!this.__attributes.hasOwnProperty(key)) {
                     if (script.attributes.index[key].hasOwnProperty('default')) {
                         this[key] = script.attributes.index[key].default;
                     } else {
@@ -408,7 +408,7 @@ pc.extend(pc, function () {
          */
         script.extend = function (methods) {
             for (var key in methods) {
-                if (! methods.hasOwnProperty(key))
+                if (!methods.hasOwnProperty(key))
                     continue;
 
                 script.prototype[key] = methods[key];
@@ -523,7 +523,7 @@ pc.extend(pc, function () {
                 this.fire('state', this.enabled);
 
                 // initialize script if not initialized yet and script is enabled
-                if (! this._initialized && this.enabled) {
+                if (!this._initialized && this.enabled) {
                     this._initialized = true;
 
                     this.__initializeAttributes(true);
@@ -539,7 +539,7 @@ pc.extend(pc, function () {
                  * because in this case post initialize must be called after all the scripts
                  * in the script component have been initialized first
                  */
-                if (this._initialized && ! this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
+                if (this._initialized && !this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
                     this._postInitialized = true;
 
                     if (this.postInitialize)

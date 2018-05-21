@@ -173,7 +173,7 @@ pc.extend(pc, function () {
             }
 
             if (this.data.initialized && this.data.type === 'mesh') {
-                if (! newValue) {
+                if (!newValue) {
                     /*
                      * if asset is null set model to null
                      * so that it's going to be removed from the simulation

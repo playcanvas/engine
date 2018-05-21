@@ -104,7 +104,7 @@ pc.extend(pc, function () {
         },
 
         loadAnimationAssets: function (ids) {
-            if (! ids || ! ids.length)
+            if (!ids || !ids.length)
                 return;
 
             var self = this;
@@ -195,7 +195,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (! data.currAnim && data.activate && data.enabled && this.entity.enabled) {
+            if (!data.currAnim && data.activate && data.enabled && this.entity.enabled) {
                 for (var animName in data.animations) {
                     // Set the first loaded animation as the current
                     this.play(animName, 0);
@@ -254,7 +254,7 @@ pc.extend(pc, function () {
             if (assets) {
                 for (var i = 0, len = assets.length; i < len; i++) {
                     var asset = assets[i];
-                    if (! (asset instanceof pc.Asset))
+                    if (!(asset instanceof pc.Asset))
                         asset = registry.get(asset);
 
                     if (asset && !asset.resource)
@@ -262,7 +262,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (this.data.activate && ! this.data.currAnim) {
+            if (this.data.activate && !this.data.currAnim) {
                 for (var animName in this.data.animations) {
                     this.play(animName, 0);
                     break;
@@ -273,7 +273,7 @@ pc.extend(pc, function () {
         onBeforeRemove: function () {
             for (var i = 0; i < this.assets.length; i++) {
                 var asset = this.system.app.assets.get(this.assets[i]);
-                if (! asset) continue;
+                if (!asset) continue;
 
                 asset.off('change', this.onAssetChanged, this);
                 asset.off('remove', this.onAssetRemoved, this);

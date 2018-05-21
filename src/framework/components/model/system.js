@@ -152,7 +152,7 @@ pc.extend(pc, function () {
              * clone the original model if the original model component is of type asset but
              * has no specified asset
              */
-            if (entity.model.model && entity.model.type === 'asset' && ! entity.model.asset) {
+            if (entity.model.model && entity.model.type === 'asset' && !entity.model.asset) {
                 component.model = entity.model.model.clone();
                 component._clonedModel = true;
             }

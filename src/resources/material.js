@@ -195,7 +195,7 @@ pc.extend(pc, function () {
             };
 
             for (var key in textures) {
-                if (! textures.hasOwnProperty(key))
+                if (!textures.hasOwnProperty(key))
                     continue;
 
                 // create texture
@@ -297,7 +297,7 @@ pc.extend(pc, function () {
                 var id;
 
                 if (param.type === 'texture') {
-                    if (! material._assetHandlers)
+                    if (!material._assetHandlers)
                         material._assetHandlers = { };
 
                     // asset handler
@@ -374,7 +374,7 @@ pc.extend(pc, function () {
                         } else if (pathMapping) {
                             assets.once('add:url:' + handler.url, handler.add);
                         }
-                    } else if (handler && ! param.data) {
+                    } else if (handler && !param.data) {
                         // unbind events
                         assets.off('load:' + handler.id, handler.bind);
                         assets.off('add:' + handler.id, handler.add);

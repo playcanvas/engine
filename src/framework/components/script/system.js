@@ -93,7 +93,7 @@ pc.extend(pc, function () {
             var wasLooping = this._beginLooping();
 
             for (var i = 0; i < this._components.length; i++) {
-                if (this._components[i]._destroyed || ! this._components[i].entity.enabled || ! this._components[i].enabled) {
+                if (this._components[i]._destroyed || !this._components[i].entity.enabled || !this._components[i].enabled) {
                     continue;
                 }
 
@@ -112,7 +112,7 @@ pc.extend(pc, function () {
         _endLooping: function (wasLooping) {
             this._isLoopingThroughComponents = wasLooping;
 
-            if (! this._isLoopingThroughComponents) {
+            if (!this._isLoopingThroughComponents) {
                 // remove destroyed components
                 var len = this._destroyedComponents.length;
                 if (len) {
@@ -157,7 +157,7 @@ pc.extend(pc, function () {
              * if we are not currently looping through components then
              * remove the components from our list
              */
-            if (! this._isLoopingThroughComponents) {
+            if (!this._isLoopingThroughComponents) {
                 this._components.splice(ind, 1);
             } else {
                 /*

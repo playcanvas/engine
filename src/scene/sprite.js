@@ -91,7 +91,7 @@ pc.extend(pc, function () {
         // destroy old meshes
         for (i = 0, len = this._meshes.length; i < len; i++) {
             var mesh = this._meshes[i];
-            if (! mesh) continue;
+            if (!mesh) continue;
 
             mesh.vertexBuffer.destroy();
             for (var j = 0, len2 = mesh.indexBuffer.length; j < len2; j++) {
@@ -279,7 +279,7 @@ pc.extend(pc, function () {
         // destroy old meshes
         for (i = 0, len = this._meshes.length; i < len; i++) {
             var mesh = this._meshes[i];
-            if (! mesh) continue;
+            if (!mesh) continue;
 
             mesh.vertexBuffer.destroy();
             for (var j = 0, len2 = mesh.indexBuffer.length; j < len2; j++) {

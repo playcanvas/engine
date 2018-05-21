@@ -49,7 +49,7 @@ pc.extend(pc, function (){
      * @returns {Number} The character code.
      */
     function toKeyCode(s){
-        if (typeof(s) == "string") {
+        if (typeof (s) == "string") {
             return s.toUpperCase().charCodeAt(0);
         }
         return s;

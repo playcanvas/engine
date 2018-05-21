@@ -353,7 +353,7 @@ pc.extend(pc, function () {
             } else if (this.node._aabbVer !== this._aabbVer) {
                  // if there is no mesh then reset aabb
                 aabb = this.mesh ? this.mesh.aabb : this._aabb;
-                if (! this.mesh) {
+                if (!this.mesh) {
                     aabb.center.set(0, 0, 0);
                     aabb.halfExtents.set(0, 0, 0);
                 }

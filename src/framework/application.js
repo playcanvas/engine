@@ -217,7 +217,7 @@ pc.extend(pc, function () {
                     var gl = self.graphicsDevice.gl;
                     this.srcFbo = gl.getParameter(gl.FRAMEBUFFER_BINDING);
 
-                    if (! this.renderTarget || (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height)) {
+                    if (!this.renderTarget || (this.renderTarget.width !== self.graphicsDevice.width || this.renderTarget.height !== self.graphicsDevice.height)) {
                         this.onDisable();
                         this.onEnable();
                     }
@@ -228,7 +228,7 @@ pc.extend(pc, function () {
                 },
 
                 onPostRenderOpaque: function (cameraPass) { // copy depth
-                    if (! this.renderTarget) return;
+                    if (!this.renderTarget) return;
 
                     this.cameras[cameraPass].camera._clearOptions = this.oldClear;
 
@@ -782,7 +782,7 @@ pc.extend(pc, function () {
         },
 
         _preloadScripts: function (sceneData, callback) {
-            if (! pc.script.legacy) {
+            if (!pc.script.legacy) {
                 callback();
                 return;
             }
@@ -830,13 +830,13 @@ pc.extend(pc, function () {
             var len;
 
             // TODO: remove this temporary block after migrating properties
-            if (! props.useDevicePixelRatio)
+            if (!props.useDevicePixelRatio)
                 props.useDevicePixelRatio = props.use_device_pixel_ratio;
-            if (! props.resolutionMode)
+            if (!props.resolutionMode)
                 props.resolutionMode = props.resolution_mode;
-            if (! props.fillMode)
+            if (!props.fillMode)
                 props.fillMode = props.fill_mode;
-            if (! props.vrPolyfillUrl)
+            if (!props.vrPolyfillUrl)
                 props.vrPolyfillUrl = props.vr_polyfill_url;
 
             this._width = props.width;
@@ -877,7 +877,7 @@ pc.extend(pc, function () {
                 for (i = 0, len = props.layerOrder.length; i < len; i++) {
                     var sublayer = props.layerOrder[i];
                     var layer = layers[sublayer.layer];
-                    if (! layer) continue;
+                    if (!layer) continue;
 
                     if (sublayer.transparent) {
                         composition.pushTransparent(layer);
@@ -941,11 +941,11 @@ pc.extend(pc, function () {
 
             var scriptsIndex = { };
 
-            if (! pc.script.legacy) {
+            if (!pc.script.legacy) {
                 // add scripts in order of loading first
                 for (i = 0; i < this.scriptsOrder.length; i++) {
                     id = this.scriptsOrder[i];
-                    if (! assets[id])
+                    if (!assets[id])
                         continue;
 
                     scriptsIndex[id] = true;
@@ -1429,7 +1429,7 @@ pc.extend(pc, function () {
         setSkybox: function (asset) {
             if (asset) {
                 if (this._skyboxLast === asset.id) {
-                    if (this.scene.skyboxMip === 0 && ! asset.loadFaces) {
+                    if (this.scene.skyboxMip === 0 && !asset.loadFaces) {
                         this._skyboxLoad(asset);
                     } else {
                         this._onSkyboxChange(asset);
@@ -1453,7 +1453,7 @@ pc.extend(pc, function () {
 
                 this._skyboxLoad(asset);
             } else {
-                if (! this._skyboxLast)
+                if (!this._skyboxLast)
                     return;
 
                 this._skyboxRemove({
@@ -1489,7 +1489,7 @@ pc.extend(pc, function () {
         },
 
         _skyboxRemove: function (asset) {
-            if (! this._skyboxLast)
+            if (!this._skyboxLast)
                 return;
 
             this.assets.off('add:' + asset.id, this.setSkybox, this);

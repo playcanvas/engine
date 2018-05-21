@@ -718,7 +718,7 @@ pc.extend(pc, function () {
 
     Scene.prototype.setSkybox = function (cubemaps) {
         var i;
-        if (! cubemaps)
+        if (!cubemaps)
             cubemaps = [null, null, null, null, null, null, null];
 
         /*

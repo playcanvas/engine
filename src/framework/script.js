@@ -40,7 +40,7 @@ pc.script = (function () {
          * }
          */
         create: function (name, callback) {
-            if (! _legacy)
+            if (!_legacy)
                 return;
 
             // get the ScriptType from the callback

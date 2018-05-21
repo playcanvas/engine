@@ -640,7 +640,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (! clone.shader)
+            if (!clone.shader)
                 clone.update();
 
             return clone;

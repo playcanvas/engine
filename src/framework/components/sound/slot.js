@@ -107,7 +107,7 @@ pc.extend(pc, function () {
              * if not loaded then load first
              * and then set sound resource on the created instance
              */
-            if (! this.isLoaded) {
+            if (!this.isLoaded) {
                 var onLoad = function (sound) {
                     var playWhenLoaded = instance._playWhenLoaded;
                     instance.sound = sound;
@@ -187,11 +187,11 @@ pc.extend(pc, function () {
          * @description Loads the asset assigned to this slot.
          */
         load: function () {
-            if (! this._hasAsset())
+            if (!this._hasAsset())
                 return;
 
             var asset = this._assets.get(this._asset);
-            if (! asset) {
+            if (!asset) {
                 this._assets.off('add:' + this._asset, this._onAssetAdd, this);
                 this._assets.once('add:' + this._asset, this._onAssetAdd, this);
                 return;
@@ -232,12 +232,12 @@ pc.extend(pc, function () {
          * slot.setExternalNodes(analyzer, filter);
          */
         setExternalNodes: function (firstNode, lastNode) {
-            if (! (firstNode)) {
+            if (!(firstNode)) {
                 console.error('The firstNode must have a valid AudioNode');
                 return;
             }
 
-            if (! lastNode) {
+            if (!lastNode) {
                 lastNode = firstNode;
             }
 
@@ -245,7 +245,7 @@ pc.extend(pc, function () {
             this._lastNode = lastNode;
 
             // update instances if not overlapping
-            if (! this._overlap) {
+            if (!this._overlap) {
                 var instances = this.instances;
                 for (var i = 0, len = instances.length; i < len; i++) {
                     instances[i].setExternalNodes(firstNode, lastNode);
@@ -263,7 +263,7 @@ pc.extend(pc, function () {
             this._lastNode = null;
 
             // update instances if not overlapping
-            if (! this._overlap) {
+            if (!this._overlap) {
                 var instances = this.instances;
                 for (var i = 0, len = instances.length; i < len; i++) {
                     instances[i].clearExternalNodes();
@@ -433,7 +433,7 @@ pc.extend(pc, function () {
             this._volume = pc.math.clamp(Number(value) || 0, 0, 1);
 
             // update instances if non overlapping
-            if (! this._overlap) {
+            if (!this._overlap) {
                 var instances = this.instances;
                 for (var i = 0, len = instances.length; i < len; i++) {
                     instances[i].volume = this._volume * this._component.volume;
@@ -450,7 +450,7 @@ pc.extend(pc, function () {
             this._pitch = Math.max(Number(value) || 0, 0.01);
 
             // update instances if non overlapping
-            if (! this._overlap) {
+            if (!this._overlap) {
                 var instances = this.instances;
                 for (var i = 0, len = instances.length; i < len; i++) {
                     instances[i].pitch = this.pitch * this._component.pitch;
@@ -500,7 +500,7 @@ pc.extend(pc, function () {
             this._startTime = Math.max(0, Number(value) || 0);
 
             // update instances if non overlapping
-            if (! this._overlap) {
+            if (!this._overlap) {
                 var instances = this.instances;
                 for (var i = 0, len = instances.length; i < len; i++) {
                     instances[i].startTime = this._startTime;
@@ -527,7 +527,7 @@ pc.extend(pc, function () {
             this._duration = Math.max(0, Number(value) || 0) || null;
 
             // update instances if non overlapping
-            if (! this._overlap) {
+            if (!this._overlap) {
                 var instances = this.instances;
                 for (var i = 0, len = instances.length; i < len; i++) {
                     instances[i].duration = this._duration;
@@ -596,7 +596,7 @@ pc.extend(pc, function () {
                 return false;
 
             for (var i = 0; i < len; i++) {
-                if (! instances[i].isPaused)
+                if (!instances[i].isPaused)
                     return false;
             }
 
@@ -608,7 +608,7 @@ pc.extend(pc, function () {
         get: function () {
             var instances = this.instances;
             for (var i = 0, len = instances.length; i < len; i++) {
-                if (! instances[i].isStopped)
+                if (!instances[i].isStopped)
                     return false;
             }
 

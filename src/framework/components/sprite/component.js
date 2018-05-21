@@ -165,7 +165,7 @@ pc.extend(pc, function () {
 
         _showModel: function () {
             if (this._addedModel) return;
-            if (! this._meshInstance) return;
+            if (!this._meshInstance) return;
 
             var i;
             var len;
@@ -183,7 +183,7 @@ pc.extend(pc, function () {
         },
 
         _hideModel: function () {
-            if (! this._addedModel || ! this._meshInstance) return;
+            if (!this._addedModel || !this._meshInstance) return;
 
             var i;
             var len;
@@ -202,11 +202,11 @@ pc.extend(pc, function () {
 
         // Set the desired mesh on the mesh instance
         _showFrame: function (frame) {
-            if (! this.sprite) return;
+            if (!this.sprite) return;
 
             var mesh = this.sprite.meshes[frame];
             // if mesh is null then hide the mesh instance
-            if (! mesh) {
+            if (!mesh) {
                 if (this._meshInstance) {
                     this._meshInstance.mesh = null;
                     this._meshInstance.visible = false;
@@ -223,7 +223,7 @@ pc.extend(pc, function () {
             }
 
             // create mesh instance if it doesn't exist yet
-            if (! this._meshInstance) {
+            if (!this._meshInstance) {
                 this._meshInstance = new pc.MeshInstance(this._node, mesh, this._material);
                 this._meshInstance.castShadow = false;
                 this._meshInstance.receiveShadow = false;
@@ -371,12 +371,12 @@ pc.extend(pc, function () {
         },
 
         _tryAutoPlay: function () {
-            if (! this._autoPlayClip) return;
+            if (!this._autoPlayClip) return;
             if (this.type !== pc.SPRITETYPE_ANIMATED) return;
 
             var clip = this._clips[this._autoPlayClip];
             // if the clip exists and nothing else is playing play it
-            if (clip && ! clip.isPlaying && (!this._currentClip || !this._currentClip.isPlaying)) {
+            if (clip && !clip.isPlaying && (!this._currentClip || !this._currentClip.isPlaying)) {
                 if (this.enabled && this.entity.enabled) {
                     this.play(clip.name);
                 }
@@ -647,7 +647,7 @@ pc.extend(pc, function () {
             var name, key;
 
             // if value is null remove all clips
-            if (! value) {
+            if (!value) {
                 for (name in this._clips) {
                     this.removeClip(name);
                 }
@@ -676,7 +676,7 @@ pc.extend(pc, function () {
                     }
                 }
 
-                if (! found) {
+                if (!found) {
                     this.removeClip(name);
                 }
             }
@@ -694,7 +694,7 @@ pc.extend(pc, function () {
             }
 
             // if the current clip doesn't have a sprite then hide the model
-            if (! this._currentClip || !this._currentClip.sprite) {
+            if (!this._currentClip || !this._currentClip.sprite) {
                 this._hideModel();
             }
         }

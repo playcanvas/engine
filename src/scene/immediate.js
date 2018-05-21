@@ -219,7 +219,7 @@ pc.extend(pc.Application.prototype, function () {
             // passed in end color
             endColor = arg3;
 
-            if (typeof(arg4) === 'number') {
+            if (typeof (arg4) === 'number') {
                 if (!_deprecationWarning) {
                     console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
                     _deprecationWarning = true;
@@ -240,7 +240,7 @@ pc.extend(pc.Application.prototype, function () {
                 // use passed in options
                 options = arg4;
             }
-        } else if (typeof(arg3) === 'number') {
+        } else if (typeof (arg3) === 'number') {
             if (!_deprecationWarning) {
                 console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
                 _deprecationWarning = true;
@@ -294,7 +294,7 @@ pc.extend(pc.Application.prototype, function () {
                 layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
                 depthTest: true
             };
-        } else if (typeof(options) === 'number') {
+        } else if (typeof (options) === 'number') {
             if (!_deprecationWarning) {
                 console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
                 _deprecationWarning = true;

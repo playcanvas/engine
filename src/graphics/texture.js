@@ -644,12 +644,12 @@ pc.extend(pc, function () {
 
                     for (i = 0; i < 6; i++) {
                         // cubemap becomes invalid if any condition is not satisfied
-                        if (! source[i] || // face is missing
+                        if (!source[i] || // face is missing
                             source[i].width !== width || // face is different width
                             source[i].height !== height || // face is different height
-                            (! (source[i] instanceof HTMLImageElement) && // not image and
-                            ! (source[i] instanceof HTMLCanvasElement) && // not canvas and
-                            ! (source[i] instanceof HTMLVideoElement))) { // not video
+                            (!(source[i] instanceof HTMLImageElement) && // not image and
+                            !(source[i] instanceof HTMLCanvasElement) && // not canvas and
+                            !(source[i] instanceof HTMLVideoElement))) { // not video
 
                             invalid = true;
                             break;
@@ -669,7 +669,7 @@ pc.extend(pc, function () {
                 }
             } else {
                 // check if source is valid type of element
-                if (! (source instanceof HTMLImageElement) && ! (source instanceof HTMLCanvasElement) && ! (source instanceof HTMLVideoElement))
+                if (!(source instanceof HTMLImageElement) && !(source instanceof HTMLCanvasElement) && !(source instanceof HTMLVideoElement))
                     invalid = true;
 
                 if (!invalid) {
@@ -710,7 +710,7 @@ pc.extend(pc, function () {
             }
 
             // valid or changed state of validity
-            if (this._invalid !== invalid || ! invalid) {
+            if (this._invalid !== invalid || !invalid) {
                 this._invalid = invalid;
 
                 // reupload
@@ -778,7 +778,7 @@ pc.extend(pc, function () {
                     fsize += mipSize;
                 } else {
                     for (face = 0; face < 6; face++) {
-                        if (! this._levels[i][face]) {
+                        if (!this._levels[i][face]) {
                             console.error('No level data for mip ' + i + ', face ' + face);
                             return;
                         }

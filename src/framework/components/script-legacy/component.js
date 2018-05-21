@@ -120,7 +120,7 @@ pc.extend(pc, function () {
 
             for (i = 0, len = urls.length; i < len; i++) {
                 var url = urls[i];
-                if (! regex.test(url)) {
+                if (!regex.test(url)) {
                     url = pc.path.join(prefix, url);
                 }
 

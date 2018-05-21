@@ -330,7 +330,7 @@ pc.extend(pc, function () {
                         var callback = arguments[2];
                         callback(result);
 
-                        if (! WARNED_RAYCAST_CALLBACK) {
+                        if (!WARNED_RAYCAST_CALLBACK) {
                             console.warn('[DEPRECATED]: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
                             WARNED_RAYCAST_CALLBACK = true;
                         }

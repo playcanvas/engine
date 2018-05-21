@@ -124,7 +124,7 @@ pc.extend(pc, function () {
             set: function (value) {
                 var data = this.data;
                 var oldValue = data[name];
-                if (! skipEqualsCheck && oldValue === value) return;
+                if (!skipEqualsCheck && oldValue === value) return;
                 data[name] = value;
                 if (setFunc) setFunc.call(this, value, oldValue);
             },
@@ -201,7 +201,7 @@ pc.extend(pc, function () {
                 this.data.cookieAsset = newValue.id;
                 this._cookieAssetId = newValue.id;
                 this.onCookieAssetAdd(newValue);
-            } else if (typeof(newValue) === 'number') {
+            } else if (typeof (newValue) === 'number') {
                 this._cookieAssetId = newValue;
                 var asset = this.system.app.assets.get(newValue);
                 if (asset) {
@@ -388,12 +388,12 @@ pc.extend(pc, function () {
         onCookieAssetSet: function () {
             var forceLoad = false;
 
-            if (this._cookieAsset.type === 'cubemap' && ! this._cookieAsset.loadFaces) {
+            if (this._cookieAsset.type === 'cubemap' && !this._cookieAsset.loadFaces) {
                 this._cookieAsset.loadFaces = true;
                 forceLoad = true;
             }
 
-            if (! this._cookieAsset.resource || forceLoad)
+            if (!this._cookieAsset.resource || forceLoad)
                 this.system.app.assets.load(this._cookieAsset);
 
             if (this._cookieAsset.resource)
@@ -414,14 +414,14 @@ pc.extend(pc, function () {
         },
 
         onCookieAssetLoad: function () {
-            if (! this._cookieAsset || ! this._cookieAsset.resource)
+            if (!this._cookieAsset || !this._cookieAsset.resource)
                 return;
 
             this.cookie = this._cookieAsset.resource;
         },
 
         onCookieAssetRemove: function () {
-            if (! this._cookieAssetId)
+            if (!this._cookieAssetId)
                 return;
 
             if (this._cookieAssetAdd) {
@@ -452,7 +452,7 @@ pc.extend(pc, function () {
                 this.addLightToLayers();
             }
 
-            if (this._cookieAsset && ! this.cookie)
+            if (this._cookieAsset && !this.cookie)
                 this.onCookieAssetSet();
         },
 

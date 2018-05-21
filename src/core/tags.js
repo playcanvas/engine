@@ -25,7 +25,7 @@ pc.extend(pc, (function () {
                 return;
 
             // create index for tag
-            if (! this._index[tag]) {
+            if (!this._index[tag]) {
                 this._index[tag] = {
                     list: []
                 };
@@ -44,13 +44,13 @@ pc.extend(pc, (function () {
 
         remove: function (tag, item) {
             // no index created for that tag
-            if (! this._index[tag])
+            if (!this._index[tag])
                 return;
 
             // check if item not in cache
             if (this._key) {
                 // by key
-                if (! this._index[tag].keys[item[this._key]])
+                if (!this._index[tag].keys[item[this._key]])
                     return;
             }
 
@@ -95,7 +95,7 @@ pc.extend(pc, (function () {
                         // check if all indexes are in present
                         missingIndex = false;
                         for (t = 0; t < tag.length; t++) {
-                            if (! this._index[tag[t]]) {
+                            if (!this._index[tag[t]]) {
                                 missingIndex = true;
                                 break;
                             }
@@ -113,7 +113,7 @@ pc.extend(pc, (function () {
 
                         for (n = 0; n < this._index[tags[0]].list.length; n++) {
                             item = this._index[tags[0]].list[n];
-                            if ((this._key ? ! index[item[this._key]] : (items.indexOf(item) === -1)) && item.tags.has(tagsRest)) {
+                            if ((this._key ? !index[item[this._key]] : (items.indexOf(item) === -1)) && item.tags.has(tagsRest)) {
                                 if (this._key)
                                     index[item[this._key]] = true;
                                 items.push(item);
@@ -124,12 +124,12 @@ pc.extend(pc, (function () {
                     }
                 }
 
-                if (tag && typeof(tag) === 'string' && this._index[tag]) {
+                if (tag && typeof (tag) === 'string' && this._index[tag]) {
                     for (n = 0; n < this._index[tag].list.length; n++) {
                         item = this._index[tag].list[n];
 
                         if (this._key) {
-                            if (! index[item[this._key]]) {
+                            if (!index[item[this._key]]) {
                                 index[item[this._key]] = true;
                                 items.push(item);
                             }
@@ -201,7 +201,7 @@ pc.extend(pc, (function () {
             var changed = false;
             var tags = this._processArguments(arguments, true);
 
-            if (! tags.length)
+            if (!tags.length)
                 return changed;
 
             for (var i = 0; i < tags.length; i++) {
@@ -239,16 +239,16 @@ pc.extend(pc, (function () {
         remove: function () {
             var changed = false;
 
-            if (! this._list.length)
+            if (!this._list.length)
                 return changed;
 
             var tags = this._processArguments(arguments, true);
 
-            if (! tags.length)
+            if (!tags.length)
                 return changed;
 
             for (var i = 0; i < tags.length; i++) {
-                if (! this._index[tags[i]])
+                if (!this._index[tags[i]])
                     continue;
 
                 changed = true;
@@ -274,7 +274,7 @@ pc.extend(pc, (function () {
          * tags.clear();
          */
         clear: function () {
-            if (! this._list.length)
+            if (!this._list.length)
                 return;
 
             var tags = this._list.slice(0);
@@ -308,7 +308,7 @@ pc.extend(pc, (function () {
          * tags.has([ 'ui', 'settings' ], [ 'ui', 'levels' ]); // (ui AND settings) OR (ui AND levels)
          */
         has: function () {
-            if (! this._list.length)
+            if (!this._list.length)
                 return false;
 
             return this._has(this._processArguments(arguments));
@@ -316,7 +316,7 @@ pc.extend(pc, (function () {
 
 
         _has: function (tags) {
-            if (! this._list.length || ! tags.length)
+            if (!this._list.length || !tags.length)
                 return false;
 
             for (var i = 0; i < tags.length; i++) {
@@ -360,16 +360,16 @@ pc.extend(pc, (function () {
             var tags = [];
             var tmp = [];
 
-            if (! args || ! args.length)
+            if (!args || !args.length)
                 return tags;
 
             for (var i = 0; i < args.length; i++) {
                 if (args[i] instanceof Array) {
-                    if (! flat)
+                    if (!flat)
                         tmp = [];
 
                     for (var t = 0; t < args[i].length; t++) {
-                        if (typeof(args[i][t]) !== 'string')
+                        if (typeof (args[i][t]) !== 'string')
                             continue;
 
                         if (flat) {
@@ -379,9 +379,9 @@ pc.extend(pc, (function () {
                         }
                     }
 
-                    if (! flat && tmp.length)
+                    if (!flat && tmp.length)
                         tags.push(tmp);
-                } else if (typeof(args[i]) === 'string') {
+                } else if (typeof (args[i]) === 'string') {
                     if (flat) {
                         tags.push(args[i]);
                     } else {

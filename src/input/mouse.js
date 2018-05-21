@@ -185,7 +185,7 @@ pc.extend(pc, function () {
          * @description Remove mouse events from the element that it is attached to
          */
         detach: function () {
-            if (! this._attached) return;
+            if (!this._attached) return;
             this._attached = false;
 
             window.removeEventListener("mouseup", this._upHandler);
@@ -201,7 +201,7 @@ pc.extend(pc, function () {
          * @description Disable the context menu usually activated with right-click
          */
         disableContextMenu: function () {
-            if (! this._target) return;
+            if (!this._target) return;
             this._target.addEventListener("contextmenu", this._contextMenuHandler);
         },
 
@@ -211,7 +211,7 @@ pc.extend(pc, function () {
          * @description Enable the context menu usually activated with right-click. This option is active by default.
          */
         enableContextMenu: function () {
-            if (! this._target) return;
+            if (!this._target) return;
             this._target.removeEventListener("contextmenu", this._contextMenuHandler);
         },
 
@@ -229,7 +229,7 @@ pc.extend(pc, function () {
          * @param {Function} [error] Function called if the request for mouse lock is unsuccessful.
          */
         enablePointerLock: function (success, error) {
-            if (! document.body.requestPointerLock) {
+            if (!document.body.requestPointerLock) {
                 if (error)
                     error();
 
@@ -263,7 +263,7 @@ pc.extend(pc, function () {
          * @param {Function} [success] Function called when the mouse lock is disabled
          */
         disablePointerLock: function (success) {
-            if (! document.exitPointerLock) {
+            if (!document.exitPointerLock) {
                 return;
             }
 
@@ -342,7 +342,7 @@ pc.extend(pc, function () {
             this._buttons[event.button] = false;
 
             var e = new MouseEvent(this, event);
-            if (! e.event) return;
+            if (!e.event) return;
 
             // send 'mouseup' event
             this.fire(pc.EVENT_MOUSEUP, e);
@@ -353,14 +353,14 @@ pc.extend(pc, function () {
             this._buttons[event.button] = true;
 
             var e = new MouseEvent(this, event);
-            if (! e.event) return;
+            if (!e.event) return;
 
             this.fire(pc.EVENT_MOUSEDOWN, e);
         },
 
         _handleMove: function (event) {
             var e = new MouseEvent(this, event);
-            if (! e.event) return;
+            if (!e.event) return;
 
             this.fire(pc.EVENT_MOUSEMOVE, e);
 
@@ -371,7 +371,7 @@ pc.extend(pc, function () {
 
         _handleWheel: function (event) {
             var e = new MouseEvent(this, event);
-            if (! e.event) return;
+            if (!e.event) return;
 
             this.fire(pc.EVENT_MOUSEWHEEL, e);
         },

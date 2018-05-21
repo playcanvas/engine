@@ -189,7 +189,7 @@ pc.extend(pc, function () {
                             var layers = data.layers;
                             for (i = 0; i < layers.length; i++) {
                                 layer = this.app.scene.layers.getLayerById(layers[i]);
-                                if (! layer) continue;
+                                if (!layer) continue;
 
                                 if (!layer._lightCube) {
                                     layer._lightCube = new Float32Array(6 * 3);

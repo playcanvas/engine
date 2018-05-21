@@ -112,7 +112,7 @@ pc.extend(pc, function () {
             if (this._enabled !== enabled) {
                 this._enabled = enabled;
 
-                if (! this._parent || this._parent.enabled)
+                if (!this._parent || this._parent.enabled)
                     this._notifyHierarchyStateChanged(this, enabled);
             }
         }
@@ -139,7 +139,7 @@ pc.extend(pc, function () {
     Object.defineProperty(GraphNode.prototype, 'root', {
         get: function () {
             var parent = this._parent;
-            if (! parent)
+            if (!parent)
                 return this;
 
             while (parent._parent)
@@ -732,7 +732,7 @@ pc.extend(pc, function () {
          * var transform = this.entity.getWorldTransform();
          */
         getWorldTransform: function () {
-            if (! this._dirtyLocal && ! this._dirtyWorld)
+            if (!this._dirtyLocal && !this._dirtyWorld)
                 return this.worldTransform;
 
             if (this._parent)
@@ -790,7 +790,7 @@ pc.extend(pc, function () {
                 this.localRotation.setFromEulerAngles(x, y, z);
             }
 
-            if (! this._dirtyLocal)
+            if (!this._dirtyLocal)
                 this._dirtify(true);
         },
 
@@ -819,7 +819,7 @@ pc.extend(pc, function () {
                 this.localPosition.set(x, y, z);
             }
 
-            if (! this._dirtyLocal)
+            if (!this._dirtyLocal)
                 this._dirtify(true);
         },
 
@@ -849,7 +849,7 @@ pc.extend(pc, function () {
                 this.localRotation.set(x, y, z, w);
             }
 
-            if (! this._dirtyLocal)
+            if (!this._dirtyLocal)
                 this._dirtify(true);
         },
 
@@ -878,7 +878,7 @@ pc.extend(pc, function () {
                 this.localScale.set(x, y, z);
             }
 
-            if (! this._dirtyLocal)
+            if (!this._dirtyLocal)
                 this._dirtify(true);
         },
 
@@ -897,13 +897,13 @@ pc.extend(pc, function () {
         },
 
         _dirtify: function (local) {
-            if ((! local || (local && this._dirtyLocal)) && this._dirtyWorld)
+            if ((!local || (local && this._dirtyLocal)) && this._dirtyWorld)
                 return;
 
             if (local)
                 this._dirtyLocal = true;
 
-            if (! this._dirtyWorld) {
+            if (!this._dirtyWorld) {
                 this._dirtyWorld = true;
 
                 var i = this._children.length;
@@ -955,7 +955,7 @@ pc.extend(pc, function () {
                     invParentWtm.transformPoint(position, this.localPosition);
                 }
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }(),
@@ -998,7 +998,7 @@ pc.extend(pc, function () {
                     this.localRotation.copy(invParentRot).mul(rotation);
                 }
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }(),
@@ -1038,7 +1038,7 @@ pc.extend(pc, function () {
                     this.localRotation.mul2(invParentRot, this.localRotation);
                 }
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }(),
@@ -1316,7 +1316,7 @@ pc.extend(pc, function () {
          * @description Updates the world transformation matrices at this node and all of its descendants.
          */
         syncHierarchy: function () {
-            if (! this._enabled)
+            if (!this._enabled)
                 return;
 
             if (this._dirtyLocal || this._dirtyWorld)
@@ -1452,7 +1452,7 @@ pc.extend(pc, function () {
                 this.localRotation.transformVector(translation, translation);
                 this.localPosition.add(translation);
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }(),
@@ -1497,7 +1497,7 @@ pc.extend(pc, function () {
                     this.localRotation.mul2(quaternion, rot);
                 }
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }(),
@@ -1532,7 +1532,7 @@ pc.extend(pc, function () {
 
                 this.localRotation.mul(quaternion);
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }()

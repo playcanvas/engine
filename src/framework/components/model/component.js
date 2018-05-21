@@ -132,7 +132,7 @@ pc.extend(pc, function () {
 
             this._onModelAsset(asset || null);
 
-            if (! asset && id !== null)
+            if (!asset && id !== null)
                 assets.once("add:" + id, this._onModelAsset, this);
         },
 
@@ -539,7 +539,7 @@ pc.extend(pc, function () {
             // unsubscribe from old events
             this._unsetMaterialEvents();
 
-            if (! newValue)
+            if (!newValue)
                 newValue = {};
 
             var meshInstances = this.data.model.meshInstances;
@@ -583,11 +583,11 @@ pc.extend(pc, function () {
         _unsetMaterialEvents: function () {
             var assets = this.system.app.assets;
             var events = this._materialEvents;
-            if (! events)
+            if (!events)
                 return;
 
             for (var i = 0, len = events.length; i < len; i++) {
-                if (! events[i]) continue;
+                if (!events[i]) continue;
                 var evt = events[i];
                 for (var key in evt) {
                     assets.off(key, evt[key].handler, this);
@@ -630,7 +630,7 @@ pc.extend(pc, function () {
 
             // get asset by id or url
             var asset = this._getAssetByIdOrPath(idOrPath);
-            if (! asset)
+            if (!asset)
                 return;
 
             var handleMaterial = function (asset) {
@@ -693,7 +693,7 @@ pc.extend(pc, function () {
                 this.addModelToLayers();
             } else if (isAsset && this._dirtyModelAsset) {
                 asset = this.data.asset;
-                if (! asset)
+                if (!asset)
                     return;
 
                 asset = this.system.app.assets.get(asset);
@@ -799,13 +799,13 @@ pc.extend(pc, function () {
 
     Object.defineProperty(ModelComponent.prototype, 'meshInstances', {
         get: function () {
-            if (! this.model)
+            if (!this.model)
                 return null;
 
             return this.model.meshInstances;
         },
         set: function (value) {
-            if (! this.model)
+            if (!this.model)
                 return;
 
             this.model.meshInstances = value;

@@ -189,7 +189,7 @@ pc.extend(pc, function () {
                     this._onManagerSuspend();
                 }
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onPlay();
 
                 return true;
@@ -224,7 +224,7 @@ pc.extend(pc, function () {
                 // reset user-set start offset
                 this._startOffset = null;
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onPause();
 
                 return true;
@@ -279,7 +279,7 @@ pc.extend(pc, function () {
                 this.pitch = this._pitch;
                 this._playWhenLoaded = false;
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onResume();
 
                 return true;
@@ -318,7 +318,7 @@ pc.extend(pc, function () {
                 // set the state to stopped
                 this._state = STATE_STOPPED;
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onStop();
 
                 return true;
@@ -344,12 +344,12 @@ pc.extend(pc, function () {
              * instance.setExternalNodes(analyzer, filter);
              */
             setExternalNodes: function (firstNode, lastNode) {
-                if (! firstNode) {
+                if (!firstNode) {
                     console.error('The firstNode must be a valid Audio Node');
                     return;
                 }
 
-                if (! lastNode) {
+                if (!lastNode) {
                     lastNode = firstNode;
                 }
 
@@ -433,7 +433,7 @@ pc.extend(pc, function () {
              */
 
             _createSource: function () {
-                if (! this._sound) {
+                if (!this._sound) {
                     return null;
                 }
 
@@ -646,8 +646,8 @@ pc.extend(pc, function () {
                     this.stop();
                 }
 
-                if (! this.source) {
-                    if (! this._createSource()) {
+                if (!this.source) {
+                    if (!this._createSource()) {
                         return false;
                     }
                 }
@@ -669,7 +669,7 @@ pc.extend(pc, function () {
                 if (this._manager.suspended)
                     this._onManagerSuspend();
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onPlay();
 
                 return true;
@@ -677,7 +677,7 @@ pc.extend(pc, function () {
             },
 
             pause: function () {
-                if (! this.source || this._state !== STATE_PLAYING)
+                if (!this.source || this._state !== STATE_PLAYING)
                     return false;
 
                 this._suspendEndEvent = true;
@@ -686,14 +686,14 @@ pc.extend(pc, function () {
                 this._state = STATE_PAUSED;
                 this._startOffset = null;
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onPause();
 
                 return true;
             },
 
             resume: function () {
-                if (! this.source || this._state !== STATE_PAUSED)
+                if (!this.source || this._state !== STATE_PAUSED)
                     return false;
 
                 this._state = STATE_PLAYING;
@@ -701,7 +701,7 @@ pc.extend(pc, function () {
                 if (this.source.paused) {
                     this.source.play();
 
-                    if (! this._suspendInstanceEvents)
+                    if (!this._suspendInstanceEvents)
                         this._onResume();
                 }
 
@@ -709,7 +709,7 @@ pc.extend(pc, function () {
             },
 
             stop: function () {
-                if (! this.source || this._state === STATE_STOPPED)
+                if (!this.source || this._state === STATE_STOPPED)
                     return false;
 
                 this._manager.off('volumechange', this._onManagerVolumeChange, this);
@@ -723,7 +723,7 @@ pc.extend(pc, function () {
                 this._state = STATE_STOPPED;
                 this._startOffset = null;
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onStop();
 
                 return true;

@@ -183,7 +183,7 @@ pc.extend(pc, function () {
             var invParentWtm = new pc.Mat4();
 
             return function (x, y, z) {
-                if (! this.element.screen)
+                if (!this.element.screen)
                     return pc.Entity.prototype.setPosition.call(this, x, y, z);
 
                 if (x instanceof pc.Vec3) {
@@ -196,7 +196,7 @@ pc.extend(pc, function () {
                 invParentWtm.copy(this.element._screenToWorld).invert();
                 invParentWtm.transformPoint(position, this.localPosition);
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }(),
@@ -217,7 +217,7 @@ pc.extend(pc, function () {
             element._margin.data[1] = p[1] - element._calculatedHeight * pvt[1];
             element._margin.data[3] = (element._localAnchor.data[3] - element._localAnchor.data[1]) - element._calculatedHeight - element._margin.data[1];
 
-            if (! this._dirtyLocal)
+            if (!this._dirtyLocal)
                 this._dirtify(true);
         },
 
@@ -277,7 +277,7 @@ pc.extend(pc, function () {
                 this._dirtyLocal = false;
             }
 
-            if (! screen) {
+            if (!screen) {
                 if (this._dirtyWorld) {
                     element._cornersDirty = true;
                     element._canvasCornersDirty = true;
@@ -895,7 +895,7 @@ pc.extend(pc, function () {
 
             this._layers = value;
 
-            if (!this.enabled || !this.entity.enabled || ! this._addedModel) return;
+            if (!this.enabled || !this.entity.enabled || !this._addedModel) return;
             for (i = 0; i < this._layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
@@ -1124,7 +1124,7 @@ pc.extend(pc, function () {
 
             this._anchorDirty = true;
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire('set:anchor', this._anchor);
@@ -1150,7 +1150,7 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(ElementComponent.prototype, 'screenCorners', {
         get: function () {
-            if (! this._cornersDirty || ! this.screen)
+            if (!this._cornersDirty || !this.screen)
                 return this._screenCorners;
 
             var parentBottomLeft = this.entity.parent && this.entity.parent.element && this.entity.parent.element.screenCorners[0];
@@ -1189,7 +1189,7 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(ElementComponent.prototype, 'canvasCorners', {
         get: function () {
-            if (! this._canvasCornersDirty || ! this.screen || ! this.screen.screen.screenSpace)
+            if (!this._canvasCornersDirty || !this.screen || !this.screen.screen.screenSpace)
                 return this._canvasCorners;
 
             var device = this.system.app.graphicsDevice;
@@ -1216,14 +1216,14 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(ElementComponent.prototype, 'worldCorners', {
         get: function () {
-            if (! this._worldCornersDirty) {
+            if (!this._worldCornersDirty) {
                 return this._worldCorners;
             }
 
             if (this.screen) {
                 var screenCorners = this.screenCorners;
 
-                if (! this.screen.screen.screenSpace) {
+                if (!this.screen.screen.screenSpace) {
                     matA.copy(this.screen.screen._screenMatrix);
 
                     // flip screen matrix along the horizontal axis

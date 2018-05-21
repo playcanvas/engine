@@ -26,7 +26,7 @@ pc.extend(pc, (function () {
 
         this.data = new Float32Array(9);
 
-        if (typeof(v0) === typeNumber) {
+        if (typeof (v0) === typeNumber) {
             this.data[0] = v0;
             this.data[1] = v1;
             this.data[2] = v2;

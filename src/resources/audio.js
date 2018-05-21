@@ -87,7 +87,7 @@ pc.extend(pc, function () {
         AudioHandler.prototype._createSound = function (url, success, error) {
             var manager = this.manager;
 
-            if (! manager.context) {
+            if (!manager.context) {
                 error('Audio manager has no audio context');
                 return;
             }

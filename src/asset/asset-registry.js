@@ -303,7 +303,7 @@ pc.extend(pc, function () {
                 return;
             }
 
-            var load = !! asset.file;
+            var load = !!asset.file;
 
             var file = asset.getPreferredFile();
 
@@ -328,7 +328,7 @@ pc.extend(pc, function () {
                         asset.resource = resource;
                     }
 
-                    if (! pc.script.legacy && asset.type === 'script') {
+                    if (!pc.script.legacy && asset.type === 'script') {
                         var loader = self._loader.getHandler('script');
 
                         if (loader._cache[asset.id] && loader._cache[asset.id].parentNode === document.head) {
@@ -393,7 +393,7 @@ pc.extend(pc, function () {
                 });
             }
 
-            if (! file) {
+            if (!file) {
                 _open();
             } else if (load) {
                 this.fire("load:start", asset);

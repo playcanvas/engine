@@ -119,7 +119,7 @@ pc.extend(pc, function () {
             var slots = component.slots;
             // stop non overlapping sounds
             for (var key in slots) {
-                if (! slots[key].overlap) {
+                if (!slots[key].overlap) {
                     slots[key].stop();
                 }
             }
@@ -137,7 +137,7 @@ pc.extend(pc, function () {
 
     Object.defineProperty(SoundComponentSystem.prototype, 'context', {
         get: function () {
-            if (! pc.SoundManager.hasAudioContext()) {
+            if (!pc.SoundManager.hasAudioContext()) {
                 console.warn('WARNING: Audio context is not supported on this browser');
                 return null;
             }

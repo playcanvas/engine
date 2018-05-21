@@ -76,7 +76,7 @@ pc.extend(pc, function () {
      * @type Boolean
      * @description Reports whether this device supports the WebVR API
      */
-    VrManager.isSupported = !! navigator.getVRDisplays;
+    VrManager.isSupported = !!navigator.getVRDisplays;
 
     /**
      * @static
@@ -84,7 +84,7 @@ pc.extend(pc, function () {
      * @type Boolean
      * @description Reports whether this device supports the WebVR API using a polyfill
      */
-    VrManager.usesPolyfill = !! window.InitializeWebVRPolyfill;
+    VrManager.usesPolyfill = !!window.InitializeWebVRPolyfill;
 
     VrManager.prototype = {
         _attach: function () {
@@ -137,7 +137,7 @@ pc.extend(pc, function () {
             this._index[display.id] = display;
             this.displays.push(display);
 
-            if (! this.display)
+            if (!this.display)
                 this.display = display;
 
             this.fire('displayconnect', display);
@@ -165,7 +165,7 @@ pc.extend(pc, function () {
             }
 
             var display = this._index[id];
-            if (! display)
+            if (!display)
                 return;
 
             display.destroy();

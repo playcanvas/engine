@@ -126,12 +126,12 @@ pc.extend(pc, function () {
         getFileUrl: function () {
             var file = this.getPreferredFile();
 
-            if (! file || ! file.url)
+            if (!file || !file.url)
                 return null;
 
             var url = file.url;
 
-            if (this.registry && this.registry.prefix && ! ABSOLUTE_URL.test(url))
+            if (this.registry && this.registry.prefix && !ABSOLUTE_URL.test(url))
                 url = this.registry.prefix + url;
 
             // add file hash to avoid hard-caching problems
@@ -144,7 +144,7 @@ pc.extend(pc, function () {
         },
 
         getPreferredFile: function () {
-            if (! this.file)
+            if (!this.file)
                 return null;
 
             if (this.type === 'texture' || this.type === 'textureatlas') {
@@ -188,7 +188,7 @@ pc.extend(pc, function () {
 
         reload: function () {
             // no need to be reloaded
-            if (! this.loaded)
+            if (!this.loaded)
                 return;
 
             if (this.type === 'cubemap') {
@@ -209,7 +209,7 @@ pc.extend(pc, function () {
          * // asset.resource is null
          */
         unload: function () {
-            if (! this.loaded && ! this.resource)
+            if (!this.loaded && !this.resource)
                 return;
 
             this.fire('unload', this);
@@ -257,7 +257,7 @@ pc.extend(pc, function () {
             var fileAsBool = !!this._file;
             if (valueAsBool !== fileAsBool || (value && this._file && value.hash !== this._file)) {
                 if (value) {
-                    if (! this._file)
+                    if (!this._file)
                         this._file = { };
 
                     this._file.url = value.url;
@@ -271,7 +271,7 @@ pc.extend(pc, function () {
 
                         if (value.variants) {
                             for (key in value.variants) {
-                                if (! value.variants[key])
+                                if (!value.variants[key])
                                     continue;
 
                                 this.variants[key] = value.variants[key];
@@ -290,7 +290,7 @@ pc.extend(pc, function () {
 
                 if (value.variants) {
                     for (key in value.variants) {
-                        if (! value.variants[key])
+                        if (!value.variants[key])
                             continue;
 
                         this.variants[key] = value.variants[key];

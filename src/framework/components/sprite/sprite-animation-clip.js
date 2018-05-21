@@ -65,10 +65,10 @@ pc.extend(pc, function () {
          * If so then set the sprite, otherwise wait for the atlas to be loaded first
          */
         _onSpriteAssetLoad: function (asset) {
-            if (! asset.resource) {
+            if (!asset.resource) {
                 this.sprite = null;
             } else {
-                if (! asset.resource.atlas) {
+                if (!asset.resource.atlas) {
                     var atlasAssetId = asset.data.textureAtlasAsset;
                     var assets = this._component.system.app.assets;
                     assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
@@ -121,7 +121,7 @@ pc.extend(pc, function () {
          */
         _update: function (dt) {
             if (this.fps === 0) return;
-            if (!this._playing || this._paused || ! this._sprite) return;
+            if (!this._playing || this._paused || !this._sprite) return;
 
             var dir = this.fps < 0 ? -1 : 1;
             var time = this._time + dt * this._component.speed * dir;
@@ -220,7 +220,7 @@ pc.extend(pc, function () {
          * @description Pauses the animation.
          */
         pause: function () {
-            if (! this._playing || this._paused)
+            if (!this._playing || this._paused)
                 return;
 
             this._paused = true;
@@ -236,7 +236,7 @@ pc.extend(pc, function () {
          * @description Resumes the paused animation.
          */
         resume: function () {
-            if (! this._paused) return;
+            if (!this._paused) return;
 
             this._paused = false;
             this.fire('resume');
@@ -250,7 +250,7 @@ pc.extend(pc, function () {
          * @description Stops the animation and resets the animation to the first frame.
          */
         stop: function () {
-            if (! this._playing) return;
+            if (!this._playing) return;
 
             this._playing = false;
             this._paused = false;
@@ -295,7 +295,7 @@ pc.extend(pc, function () {
                 // bind sprite asset
                 if (this._spriteAsset) {
                     var asset = assets.get(this._spriteAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.sprite = null;
                         assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
                     } else {

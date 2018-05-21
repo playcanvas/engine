@@ -326,7 +326,7 @@ pc.extend(pc, function () {
             var asset;
             var assets = this.system.app.assets;
 
-            if (oldValue && typeof(oldValue) === 'number') {
+            if (oldValue && typeof (oldValue) === 'number') {
                 asset = assets.get(oldValue);
                 if (asset) {
                     asset.off('remove', this.onMeshRemoved, this);
@@ -339,7 +339,7 @@ pc.extend(pc, function () {
                     newValue = newValue.id;
                 }
 
-                if (typeof(newValue) === 'number') {
+                if (typeof (newValue) === 'number') {
                     asset = assets.get(newValue);
                     if (asset) {
                         asset.on('remove', this.onMeshRemoved, this);
@@ -373,7 +373,7 @@ pc.extend(pc, function () {
         },
 
         _onMeshChanged: function (mesh) {
-            if (mesh && ! (mesh instanceof pc.Mesh)) {
+            if (mesh && !(mesh instanceof pc.Mesh)) {
                 if (mesh.meshInstances[0]) {
                     mesh = mesh.meshInstances[0].mesh;
                 } else {
@@ -478,7 +478,7 @@ pc.extend(pc, function () {
             for (var i = 0, len = ASSET_PROPERTIES.length; i < len; i++) {
                 var asset = data[ASSET_PROPERTIES[i]];
                 if (asset) {
-                    if (! (asset instanceof pc.Asset)) {
+                    if (!(asset instanceof pc.Asset)) {
                         var id = parseInt(asset, 10);
                         if (id >= 0) {
                             asset = this.system.app.assets.get(asset);
@@ -493,14 +493,14 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (! this.emitter) {
+            if (!this.emitter) {
                 var mesh = data.mesh;
 
                 /*
                  * mesh might be an asset id of an asset
                  * that hasn't been loaded yet
                  */
-                if (! (mesh instanceof pc.Mesh))
+                if (!(mesh instanceof pc.Mesh))
                     mesh = null;
 
                 this.emitter = new pc.ParticleEmitter(this.system.app.graphicsDevice, {

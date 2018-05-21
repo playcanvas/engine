@@ -167,7 +167,7 @@ pc.extend(pc, function () {
             this._beingEnabled = true;
             this._checkState();
 
-            if (! this.entity._beingEnabled) {
+            if (!this.entity._beingEnabled) {
                 this.onPostStateChange();
             }
 
@@ -187,7 +187,7 @@ pc.extend(pc, function () {
             for (var i = 0, len = this.scripts.length; i < len; i++) {
                 script = this.scripts[i];
 
-                if (script._initialized && ! script._postInitialized && script.enabled) {
+                if (script._initialized && !script._postInitialized && script.enabled) {
                     script._postInitialized = true;
 
                     if (script.postInitialize)
@@ -214,7 +214,7 @@ pc.extend(pc, function () {
          */
         _endLooping: function (wasLoopingBefore) {
             this._isLoopingThroughScripts = wasLoopingBefore;
-            if (! this._isLoopingThroughScripts) {
+            if (!this._isLoopingThroughScripts) {
                 this._removeDestroyedScripts();
             }
         },
@@ -259,7 +259,7 @@ pc.extend(pc, function () {
             // destroy all scripts
             for (var i = 0; i < this.scripts.length; i++) {
                 var script = this.scripts[i];
-                if (! script) continue;
+                if (!script) continue;
 
                 this.destroy(script.__scriptType.__name);
             }
@@ -269,7 +269,7 @@ pc.extend(pc, function () {
 
         _removeDestroyedScripts: function () {
             var len = this._destroyedScripts.length;
-            if (! len) return;
+            if (!len) return;
 
             for (var i = 0; i < len; i++) {
                 var idx = this._scripts.indexOf(this._destroyedScripts[i]);
@@ -293,7 +293,7 @@ pc.extend(pc, function () {
                 // disable script if it fails to call method
                 script.enabled = false;
 
-                if (! script._callbacks || ! script._callbacks.error) {
+                if (!script._callbacks || !script._callbacks.error) {
                     console.warn('unhandled exception while calling "' + method + '" for "' + script.__scriptType.__name + '" script: ', ex);
                     console.error(ex);
                 }
@@ -310,7 +310,7 @@ pc.extend(pc, function () {
 
             for (var i = 0, len = scripts.length; i < len; i++) {
                 script = scripts[i];
-                if (! script._initialized && script.enabled) {
+                if (!script._initialized && script.enabled) {
                     script._initialized = true;
                     if (script.initialize)
                         this._scriptMethod(script, ScriptComponent.scriptMethods.initialize);
@@ -370,10 +370,10 @@ pc.extend(pc, function () {
             var scriptType = name;
 
             // shorthand using script name
-            if (typeof(scriptType) === 'string')
+            if (typeof (scriptType) === 'string')
                 scriptType = this.system.app.scripts.get(scriptType);
 
-            return !! this._scriptsIndex[scriptType.__name];
+            return !!this._scriptsIndex[scriptType.__name];
         },
 
         /**
@@ -402,14 +402,14 @@ pc.extend(pc, function () {
             var scriptName = name;
 
             // shorthand using script name
-            if (typeof(scriptType) === 'string') {
+            if (typeof (scriptType) === 'string') {
                 scriptType = this.system.app.scripts.get(scriptType);
             } else if (scriptType) {
                 scriptName = scriptType.__name;
             }
 
             if (scriptType) {
-                if (! this._scriptsIndex[scriptType.__name] || ! this._scriptsIndex[scriptType.__name].instance) {
+                if (!this._scriptsIndex[scriptType.__name] || !this._scriptsIndex[scriptType.__name].instance) {
                     // create script instance
                     var scriptInstance = new scriptType({
                         app: this.system.app,
@@ -419,7 +419,7 @@ pc.extend(pc, function () {
                     });
 
                     var ind = -1;
-                    if (typeof(args.ind) === 'number' && args.ind !== -1 && this._scripts.length > args.ind)
+                    if (typeof (args.ind) === 'number' && args.ind !== -1 && this._scripts.length > args.ind)
                         ind = args.ind;
 
                     if (ind === -1) {
@@ -437,7 +437,7 @@ pc.extend(pc, function () {
 
                     this[scriptType.__name] = scriptInstance;
 
-                    if (! args.preloading)
+                    if (!args.preloading)
                         scriptInstance.__initializeAttributes();
 
                     this.fire('create', scriptType.__name, scriptInstance);
@@ -445,16 +445,16 @@ pc.extend(pc, function () {
 
                     this.system.app.scripts.on('swap:' + scriptType.__name, this._scriptsIndex[scriptType.__name].onSwap);
 
-                    if (! args.preloading) {
+                    if (!args.preloading) {
 
-                        if (scriptInstance.enabled && ! scriptInstance._initialized) {
+                        if (scriptInstance.enabled && !scriptInstance._initialized) {
                             scriptInstance._initialized = true;
 
                             if (scriptInstance.initialize)
                                 this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.initialize);
                         }
 
-                        if (scriptInstance.enabled && ! scriptInstance._postInitialized) {
+                        if (scriptInstance.enabled && !scriptInstance._postInitialized) {
                             scriptInstance._postInitialized = true;
                             if (scriptInstance.postInitialize)
                                 this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.postInitialize);
@@ -492,7 +492,7 @@ pc.extend(pc, function () {
             var scriptType = name;
 
             // shorthand using script name
-            if (typeof(scriptType) === 'string') {
+            if (typeof (scriptType) === 'string') {
                 scriptType = this.system.app.scripts.get(scriptType);
                 if (scriptType)
                     scriptName = scriptType.__name;
@@ -500,9 +500,9 @@ pc.extend(pc, function () {
 
             var scriptData = this._scriptsIndex[scriptName];
             delete this._scriptsIndex[scriptName];
-            if (! scriptData) return false;
+            if (!scriptData) return false;
 
-            if (scriptData.instance && ! scriptData.instance._destroyed) {
+            if (scriptData.instance && !scriptData.instance._destroyed) {
                 scriptData.instance.enabled = false;
                 scriptData.instance._destroyed = true;
 
@@ -510,7 +510,7 @@ pc.extend(pc, function () {
                  * if we are not currently looping through our scripts
                  * then it's safe to remove the script
                  */
-                if (! this._isLoopingThroughScripts) {
+                if (!this._isLoopingThroughScripts) {
                     var ind = this._scripts.indexOf(scriptData.instance);
                     this._scripts.splice(ind, 1);
                 } else {
@@ -540,11 +540,11 @@ pc.extend(pc, function () {
             var scriptType = script;
 
             // shorthand using script name
-            if (typeof(scriptType) === 'string')
+            if (typeof (scriptType) === 'string')
                 scriptType = this.system.app.scripts.get(scriptType);
 
             var old = this._scriptsIndex[scriptType.__name];
-            if (! old || ! old.instance) return false;
+            if (!old || !old.instance) return false;
 
             var scriptInstanceOld = old.instance;
             var ind = this._scripts.indexOf(scriptInstanceOld);
@@ -556,7 +556,7 @@ pc.extend(pc, function () {
                 attributes: scriptInstanceOld.__attributes
             });
 
-            if (! scriptInstance.swap)
+            if (!scriptInstance.swap)
                 return false;
 
             scriptInstance.__initializeAttributes();
@@ -590,11 +590,11 @@ pc.extend(pc, function () {
 
             var scriptName = name;
 
-            if (typeof(scriptName) !== 'string')
+            if (typeof (scriptName) !== 'string')
                 scriptName = name.__name;
 
             var scriptData = this._scriptsIndex[scriptName];
-            if (! scriptData || ! scriptData.instance)
+            if (!scriptData || !scriptData.instance)
                 return false;
 
             var indOld = this._scripts.indexOf(scriptData.instance);
@@ -620,7 +620,7 @@ pc.extend(pc, function () {
             this._scriptsData = value;
 
             for (var key in value) {
-                if (! value.hasOwnProperty(key))
+                if (!value.hasOwnProperty(key))
                     continue;
 
                 var script = this._scriptsIndex[key];
@@ -628,16 +628,16 @@ pc.extend(pc, function () {
                     // existing script
 
                     // enabled
-                    if (typeof(value[key].enabled) === 'boolean')
-                        script.enabled = !! value[key].enabled;
+                    if (typeof (value[key].enabled) === 'boolean')
+                        script.enabled = !!value[key].enabled;
 
                     // attributes
-                    if (typeof(value[key].attributes) === 'object') {
+                    if (typeof (value[key].attributes) === 'object') {
                         for (var attr in value[key].attributes) {
                             if (pc.createScript.reservedAttributes[attr])
                                 continue;
 
-                            if (! script.__attributes.hasOwnProperty(attr)) {
+                            if (!script.__attributes.hasOwnProperty(attr)) {
                                 // new attribute
                                 var scriptType = this.system.app.scripts.get(key);
                                 if (scriptType)

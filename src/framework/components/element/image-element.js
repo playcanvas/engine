@@ -501,10 +501,10 @@ pc.extend(pc, function () {
          * If so then set the sprite, otherwise wait for the atlas to be loaded first
          */
         _onSpriteAssetLoad: function (asset) {
-            if (! asset.resource) {
+            if (!asset.resource) {
                 this.sprite = null;
             } else {
-                if (! asset.resource.atlas) {
+                if (!asset.resource.atlas) {
                     var atlasAssetId = asset.data.textureAtlasAsset;
                     var assets = this._system.app.assets;
                     assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
@@ -628,7 +628,7 @@ pc.extend(pc, function () {
             return this._material;
         },
         set: function (value) {
-            if (! value) {
+            if (!value) {
                 var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
                 value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
                 value = this._mask ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
@@ -677,7 +677,7 @@ pc.extend(pc, function () {
                 this._materialAsset = _id;
                 if (this._materialAsset) {
                     var asset = assets.get(this._materialAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.material = null;
                         assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
                     } else {
@@ -737,7 +737,7 @@ pc.extend(pc, function () {
                 this._textureAsset = _id;
                 if (this._textureAsset) {
                     var asset = assets.get(this._textureAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.texture = null;
                         assets.on('add:' + this._textureAsset, this._onTextureAdded, this);
                     } else {
@@ -775,7 +775,7 @@ pc.extend(pc, function () {
                 this._spriteAsset = _id;
                 if (this._spriteAsset) {
                     var asset = assets.get(this._spriteAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.sprite = null;
                         assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
                     } else {

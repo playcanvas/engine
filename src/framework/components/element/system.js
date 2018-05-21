@@ -248,13 +248,13 @@ pc.extend(pc, function () {
 
             var shouldForceSetAnchor = false;
 
-            if (data.width !== undefined && ! splitHorAnchors) {
+            if (data.width !== undefined && !splitHorAnchors) {
                 // force update
                 component.width = data.width;
             } else if (splitHorAnchors) {
                 shouldForceSetAnchor = true;
             }
-            if (data.height !== undefined && ! splitVerAnchors) {
+            if (data.height !== undefined && !splitVerAnchors) {
                 // force update
                 component.height = data.height;
             } else if (splitVerAnchors) {

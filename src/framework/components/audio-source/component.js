@@ -261,7 +261,7 @@ pc.extend(pc, function () {
 
                 for (var i = 0, len = assets.length; i < len; i++) {
                     var asset = assets[i];
-                    if (! (asset instanceof pc.Asset))
+                    if (!(asset instanceof pc.Asset))
                         asset = registry.get(asset);
 
                     if (asset && !asset.resource) {
@@ -333,7 +333,7 @@ pc.extend(pc, function () {
                         }
                     });
 
-                    if (! asset.resource && self.enabled && self.entity.enabled)
+                    if (!asset.resource && self.enabled && self.entity.enabled)
                         this.system.app.assets.load(asset);
                 } else {
                     // don't wait for assets that aren't in the registry
@@ -347,7 +347,7 @@ pc.extend(pc, function () {
                             self.data.sources[asset.name] = asset.resource;
                         });
 
-                        if (! asset.resource)
+                        if (!asset.resource)
                             self.system.app.assets.load(asset);
                     });
                 }

@@ -353,7 +353,7 @@ pc.extend(pc, function () {
 
         if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
 
-        if (data === undefined && typeof(name) === 'object') {
+        if (data === undefined && typeof (name) === 'object') {
             var uniformObject = name;
             if (uniformObject.length) {
                 for (var i = 0; i < uniformObject.length; i++) {

@@ -342,7 +342,7 @@ pc.extend(pc, function () {
                     transform.localRotation.copy(interpKey._quat);
                     transform.localScale.copy(interpKey._scale);
 
-                    if (! transform._dirtyLocal)
+                    if (!transform._dirtyLocal)
                         transform._dirtify(true);
 
                     interpKey._written = false;

@@ -132,7 +132,7 @@ pc.extend(pc, function () {
 
             this._calcProjectionMatrix();
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire("set:resolution", this._resolution);
@@ -148,7 +148,7 @@ pc.extend(pc, function () {
             this._updateScale();
             this._calcProjectionMatrix();
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire("set:referenceresolution", this._resolution);
@@ -170,7 +170,7 @@ pc.extend(pc, function () {
             }
             this.resolution = this._resolution; // force update either way
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire('set:screenspace', this._screenSpace);
@@ -207,7 +207,7 @@ pc.extend(pc, function () {
             this._updateScale();
             this._calcProjectionMatrix();
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire("set:scaleblend", this._scaleBlend);

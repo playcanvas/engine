@@ -347,10 +347,10 @@ pc.extend(pc, function () {
                 value = pc.SHADOW_PCF3; // fallback from HW PCF to old PCF
             }
 
-            if (value === pc.SHADOW_VSM32 && ! device.extTextureFloatRenderable) // fallback from vsm32 to vsm16
+            if (value === pc.SHADOW_VSM32 && !device.extTextureFloatRenderable) // fallback from vsm32 to vsm16
                 value = pc.SHADOW_VSM16;
 
-            if (value === pc.SHADOW_VSM16 && ! device.extTextureHalfFloatRenderable) // fallback from vsm16 to vsm8
+            if (value === pc.SHADOW_VSM16 && !device.extTextureHalfFloatRenderable) // fallback from vsm16 to vsm8
                 value = pc.SHADOW_VSM8;
 
             this._isVsm = value >= pc.SHADOW_VSM8 && value <= pc.SHADOW_VSM32;
@@ -418,7 +418,7 @@ pc.extend(pc, function () {
             if (this._normalOffsetBias === value)
                 return;
 
-            if ((! this._normalOffsetBias && value) || (this._normalOffsetBias && ! value)) {
+            if ((!this._normalOffsetBias && value) || (this._normalOffsetBias && !value)) {
                 if (this._scene !== null)
                     this._scene.updateShaders = true;
                 this.updateKey();
@@ -554,15 +554,15 @@ pc.extend(pc, function () {
             if (this._cookieTransform === value)
                 return;
 
-            var xformOld = !! (this._cookieTransformSet || this._cookieOffsetSet);
-            var xformNew = !! (value || this._cookieOffsetSet);
+            var xformOld = !!(this._cookieTransformSet || this._cookieOffsetSet);
+            var xformNew = !!(value || this._cookieOffsetSet);
             if (xformOld !== xformNew) {
                 if (this._scene !== null)
                     this._scene.updateShaders = true;
             }
             this._cookieTransform = value;
-            this._cookieTransformSet = !! value;
-            if (value && ! this._cookieOffset) {
+            this._cookieTransformSet = !!value;
+            if (value && !this._cookieOffset) {
                 this.cookieOffset = new pc.Vec2(); // using transform forces using offset code
                 this._cookieOffsetSet = false;
             }
@@ -578,8 +578,8 @@ pc.extend(pc, function () {
             if (this._cookieOffset === value)
                 return;
 
-            var xformOld = !! (this._cookieTransformSet || this._cookieOffsetSet);
-            var xformNew = !! (this._cookieTransformSet || value);
+            var xformOld = !!(this._cookieTransformSet || this._cookieOffsetSet);
+            var xformNew = !!(this._cookieTransformSet || value);
             if (xformOld !== xformNew) {
                 if (this._scene !== null)
                     this._scene.updateShaders = true;
@@ -589,8 +589,8 @@ pc.extend(pc, function () {
             } else {
                 this._cookieOffset = value;
             }
-            this._cookieOffsetSet = !! value;
-            if (value && ! this._cookieTransform) {
+            this._cookieOffsetSet = !!value;
+            if (value && !this._cookieTransform) {
                 this.cookieTransform = new pc.Vec4(1, 1, 0, 0); // using offset forces using matrix code
                 this._cookieTransformSet = false;
             }

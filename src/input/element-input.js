@@ -246,7 +246,7 @@ pc.extend(pc, function () {
          * @description Remove mouse and touch events from the DOM element that it is attached to
          */
         detach: function () {
-            if (! this._attached) return;
+            if (!this._attached) return;
             this._attached = false;
 
             window.removeEventListener('mouseup', this._upHandler, false);
@@ -397,7 +397,7 @@ pc.extend(pc, function () {
             for (var i = 0, len = event.changedTouches.length; i < len; i++) {
                 var touch = event.changedTouches[i];
                 var element = this._touchedElements[touch.identifier];
-                if (! element)
+                if (!element)
                     continue;
 
                 delete this._touchedElements[touch.identifier];
@@ -416,7 +416,7 @@ pc.extend(pc, function () {
                         var hovered = this._getTargetElement(cameras[c], coords.x, coords.y);
                         if (hovered === element) {
 
-                            if (! this._clickedEntities[element.entity.getGuid()]) {
+                            if (!this._clickedEntities[element.entity.getGuid()]) {
                                 this._fireEvent('click', new ElementTouchEvent(event, element, this));
                                 this._clickedEntities[element.entity.getGuid()] = true;
                             }
@@ -529,11 +529,11 @@ pc.extend(pc, function () {
                 if (evt._stopPropagation)
                     break;
 
-                if (! element.entity.parent)
+                if (!element.entity.parent)
                     break;
 
                 element = element.entity.parent.element;
-                if (! element)
+                if (!element)
                     break;
             }
 
@@ -582,16 +582,16 @@ pc.extend(pc, function () {
         },
 
         _sortElements: function (a, b) {
-            if (a.screen && ! b.screen)
+            if (a.screen && !b.screen)
                 return -1;
             if (!a.screen && b.screen)
                 return 1;
-            if (! a.screen && ! b.screen)
+            if (!a.screen && !b.screen)
                 return 0;
 
-            if (a.screen.screen.screenSpace && ! b.screen.screen.screenSpace)
+            if (a.screen.screen.screenSpace && !b.screen.screen.screenSpace)
                 return -1;
-            if (b.screen.screen.screenSpace && ! a.screen.screen.screenSpace)
+            if (b.screen.screen.screenSpace && !a.screen.screen.screenSpace)
                 return 1;
             return b.drawOrder - a.drawOrder;
         },

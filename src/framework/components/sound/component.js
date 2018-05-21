@@ -45,7 +45,7 @@ pc.extend(pc, function () {
 
             // convert data to slots
             for (key in newValue) {
-                if (! (newValue[key] instanceof pc.SoundSlot)) {
+                if (!(newValue[key] instanceof pc.SoundSlot)) {
                     if (newValue[key].name) {
                         slots[newValue[key].name] = new pc.SoundSlot(this, newValue[key].name, newValue[key]);
                     }
@@ -66,7 +66,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // change volume of non-overlapping instances
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         instances[i].volume = slot.volume * newValue;
@@ -80,7 +80,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // change pitch of non-overlapping instances
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         instances[i].pitch = slot.pitch * newValue;
@@ -94,7 +94,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // change refDistance of non-overlapping instances
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         instances[i].refDistance = newValue;
@@ -108,7 +108,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // change maxDistance of non-overlapping instances
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         instances[i].maxDistance = newValue;
@@ -122,7 +122,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // change rollOffFactor of non-overlapping instances
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         instances[i].rollOffFactor = newValue;
@@ -136,7 +136,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // change distanceModel of non-overlapping instances
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         instances[i].distanceModel = newValue;
@@ -150,7 +150,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // recreate non overlapping sounds
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         var isPlaying = instances[i].isPlaying || instances[i].isSuspended;
@@ -204,7 +204,7 @@ pc.extend(pc, function () {
             var playingBeforeDisable = {};
             for (var key in slots) {
                 // pause non-overlapping sounds
-                if (! slots[key].overlap) {
+                if (!slots[key].overlap) {
                     if (slots[key].isPlaying) {
                         slots[key].pause();
                         /*
@@ -314,7 +314,7 @@ pc.extend(pc, function () {
             }
 
             var slot = this.slots[name];
-            if (! slot) {
+            if (!slot) {
                 logWARNING('Trying to play sound slot with name ' + name + ' which does not exist');
                 return null;
             }
@@ -339,7 +339,7 @@ pc.extend(pc, function () {
 
             if (name) {
                 slot = slots[name];
-                if (! slot) {
+                if (!slot) {
                     logWARNING('Trying to pause sound slot with name ' + name + ' which does not exist');
                     return;
                 }
@@ -369,7 +369,7 @@ pc.extend(pc, function () {
 
             if (name) {
                 slot = slots[name];
-                if (! slot) {
+                if (!slot) {
                     logWARNING('Trying to resume sound slot with name ' + name + ' which does not exist');
                     return;
                 }
@@ -401,7 +401,7 @@ pc.extend(pc, function () {
 
             if (name) {
                 slot = slots[name];
-                if (! slot) {
+                if (!slot) {
                     logWARNING('Trying to stop sound slot with name ' + name + ' which does not exist');
                     return;
                 }

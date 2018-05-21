@@ -62,7 +62,7 @@ pc.extend(pc, function () {
          * create script instance
          */
         setTimeout(function () {
-            if (! self._scripts.hasOwnProperty(script.__name))
+            if (!self._scripts.hasOwnProperty(script.__name))
                 return;
 
             var components = self.app.systems.script._components;
@@ -105,7 +105,7 @@ pc.extend(pc, function () {
 
             // call postInitialize()
             for (i = 0; i < scriptInstancesInitialized.length; i++) {
-                if (! scriptInstancesInitialized[i].enabled || scriptInstancesInitialized[i]._postInitialized) {
+                if (!scriptInstancesInitialized[i].enabled || scriptInstancesInitialized[i]._postInitialized) {
                     continue;
                 }
 
@@ -129,10 +129,10 @@ pc.extend(pc, function () {
      * app.scripts.remove('playerController');
      */
     ScriptRegistry.prototype.remove = function (name) {
-        if (typeof(name) === 'function')
+        if (typeof (name) === 'function')
             name = name.__name;
 
-        if (! this._scripts.hasOwnProperty(name))
+        if (!this._scripts.hasOwnProperty(name))
             return false;
 
         var item = this._scripts[name];

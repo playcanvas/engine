@@ -52,7 +52,7 @@ pc.extend(pc, function () {
      */
     TextureAtlas.prototype.setFrame = function (key, data) {
         var frame = this._frames[key];
-        if (! frame) {
+        if (!frame) {
             frame = {
                 rect: data.rect.clone(),
                 pivot: data.pivot.clone(),
