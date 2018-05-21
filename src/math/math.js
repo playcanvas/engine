@@ -25,13 +25,6 @@ pc.math = {
     RAD_TO_DEG: 180 / Math.PI,
 
     /**
-     * @name pc.math.INV_LOG2
-     * @description Inverse log 2
-     * @type Number
-     */
-    INV_LOG2: 1 / Math.log(2),
-
-    /**
      * @function
      * @name pc.math.clamp
      * @description Clamp a number between min and max inclusive.

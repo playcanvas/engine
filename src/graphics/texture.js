@@ -736,7 +736,7 @@ pc.extend(pc, function () {
          */
         unlock: function () {
             // #ifdef DEBUG
-            if (this._lockedLevel !== -1) {
+            if (this._lockedLevel === -1) {
                 console.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.");
             }
             // #endif

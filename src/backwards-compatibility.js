@@ -105,6 +105,15 @@ pc.extend(pc.input, {
     TouchEvent: pc.TouchEvent
 });
 
+/**
+ * @private
+ * @deprecated
+ * @name pc.math.INV_LOG2
+ * @description Inverse log 2. Use Math.LOG2E instead.
+ * @type Number
+ */
+pc.math.INV_LOG2 = Math.LOG2E;
+
 pc.math.intToBytes = pc.math.intToBytes32;
 pc.math.bytesToInt = pc.math.bytesToInt32;
 
