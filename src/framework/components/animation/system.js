@@ -25,7 +25,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application managing this system.
      * @extends pc.ComponentSystem
      */
-    var AnimationComponentSystem = function AnimationComponentSystem (app) {
+    var AnimationComponentSystem = function AnimationComponentSystem(app) {
         this.id = 'animation';
         this.description = "Specifies the animation assets that can run on the model specified by the Entity's model Component.";
 
@@ -102,8 +102,10 @@ pc.extend(pc, function () {
                                 var alpha = 1.0 - (componentData.blendTimeRemaining / componentData.blendTime);
                                 skeleton.blend(componentData.fromSkel, componentData.toSkel, alpha);
                             } else {
-                                // Advance the animation, interpolating keyframes at each animated node in
-                                // skeleton
+                                /*
+                                 * Advance the animation, interpolating keyframes at each animated node in
+                                 * skeleton
+                                 */
                                 var delta = dt * componentData.speed;
                                 skeleton.addTime(delta);
                                 if ((skeleton._time === skeleton._animation.duration) && !componentData.loop) {

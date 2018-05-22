@@ -45,8 +45,10 @@ pc.extend(pc, function () {
                 var context = this.context;
                 // iOS only starts sound as a response to user interaction
                 if (pc.platform.ios) {
-                    // Play an inaudible sound when the user touches the screen
-                    // This only happens once
+                    /*
+                     * Play an inaudible sound when the user touches the screen
+                     * This only happens once
+                     */
                     var unlock = function () {
                         var buffer = context.createBuffer(1, 1, 44100);
                         var source = context.createBufferSource();
@@ -66,7 +68,7 @@ pc.extend(pc, function () {
             console.warn('No support for 3D audio found');
         }
 
-        if (! hasAudio())
+        if (!hasAudio())
             console.warn('No support for 2D audio found');
 
         this.listener = new pc.Listener(this);
@@ -116,16 +118,16 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SoundManager#playSound
-        * @description Create a new pc.Channel and begin playback of the sound.
-        * @param {pc.Sound} sound The Sound object to play.
-        * @param {Object} options Optional options object.
-        * @param {Number} [options.volume] The volume to playback at, between 0 and 1.
-        * @param {Boolean} [options.loop] Whether to loop the sound when it reaches the end.
-        * @returns {pc.Channel} The channel playing the sound.
-        */
+         * @private
+         * @function
+         * @name pc.SoundManager#playSound
+         * @description Create a new pc.Channel and begin playback of the sound.
+         * @param {pc.Sound} sound The Sound object to play.
+         * @param {Object} options Optional options object.
+         * @param {Number} [options.volume] The volume to playback at, between 0 and 1.
+         * @param {Boolean} [options.loop] Whether to loop the sound when it reaches the end.
+         * @returns {pc.Channel} The channel playing the sound.
+         */
         playSound: function (sound, options) {
             options = options || {};
             var channel = null;
@@ -137,17 +139,17 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SoundManager#playSound3d
-        * @description Create a new pc.Channel3d and begin playback of the sound at the position specified
-        * @param {pc.Sound} sound The Sound object to play.
-        * @param {pc.Vec3} position The position of the sound in 3D space.
-        * @param {Object} options Optional options object.
-        * @param {Number} [options.volume] The volume to playback at, between 0 and 1.
-        * @param {Boolean} [options.loop] Whether to loop the sound when it reaches the end.
-        * @returns {pc.Channel3d} The 3D channel playing the sound.
-        */
+         * @private
+         * @function
+         * @name pc.SoundManager#playSound3d
+         * @description Create a new pc.Channel3d and begin playback of the sound at the position specified
+         * @param {pc.Sound} sound The Sound object to play.
+         * @param {pc.Vec3} position The position of the sound in 3D space.
+         * @param {Object} options Optional options object.
+         * @param {Number} [options.volume] The volume to playback at, between 0 and 1.
+         * @param {Boolean} [options.loop] Whether to loop the sound when it reaches the end.
+         * @returns {pc.Channel3d} The 3D channel playing the sound.
+         */
         playSound3d: function (sound, position, options) {
             options = options || {};
             var channel = null;

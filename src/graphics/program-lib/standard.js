@@ -1,85 +1,85 @@
-var _oldChunkWarn = function(oldName, newName) {
+var _oldChunkWarn = function (oldName, newName) {
     // #ifdef DEBUG
     console.warn("Shader chunk " + oldName + " is deprecated - override " + newName + " instead");
     // #endif
 };
 
-var _oldChunkFloat = function(s, o, p) {
+var _oldChunkFloat = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkColor = function(s, o, p) {
+var _oldChunkColor = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTex = function(s, o, p) {
+var _oldChunkTex = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPTEXTURE\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTexColor = function(s, o, p) {
+var _oldChunkTexColor = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPTEXTURECOLOR\n#ifdef MAPTEXTURE\n#ifdef MAPCOLOR\n#define MAPTEXTURECOLOR\n#endif\n#endif\n" +
             "#ifdef MAPTEXTURECOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTexFloat = function(s, o, p) {
+var _oldChunkTexFloat = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPTEXTUREFLOAT\n#ifdef MAPTEXTURE\n#ifdef MAPFLOAT\n#define MAPTEXTUREFLOAT\n#endif\n#endif\n" +
             "#ifdef MAPTEXTUREFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkVert = function(s, o, p) {
+var _oldChunkVert = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPVERTEX\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkVertColor = function(s, o, p) {
+var _oldChunkVertColor = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPVERTEXCOLOR\n#ifdef MAPVERTEX\n#ifdef MAPCOLOR\n#define MAPVERTEXCOLOR\n#endif\n#endif\n" +
             "#ifdef MAPVERTEXCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkVertFloat = function(s, o, p) {
+var _oldChunkVertFloat = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPVERTEXFLOAT\n#ifdef MAPVERTEX\n#ifdef MAPFLOAT\n#define MAPVERTEXFLOAT\n#endif\n#endif\n" +
             "#ifdef MAPVERTEXFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformSkin = function(s, o, p) {
+var _oldChunkTransformSkin = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef SKIN\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformDynbatch = function(s, o, p) {
+var _oldChunkTransformDynbatch = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef DYNAMICBATCH\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformInstanced = function(s, o, p) {
+var _oldChunkTransformInstanced = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef INSTANCING\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformPixelSnap = function(s, o, p) {
+var _oldChunkTransformPixelSnap = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef PIXELSNAP\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformScreenSpace = function(s, o, p) {
+var _oldChunkTransformScreenSpace = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef SCREENSPACE\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformScreenSpaceBatch = function(s, o, p) {
+var _oldChunkTransformScreenSpaceBatch = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef SCREENSPACEBATCH\n#ifdef SCREENSPACE\n#ifdef BATCH\n#define SCREENSPACEBATCH\n#endif\n#endif\n" +
             "#ifdef SCREENSPACEBATCH\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformUv1 = function(s, o, p) {
+var _oldChunkTransformUv1 = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef UV1LAYOUT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
@@ -172,7 +172,7 @@ pc.programlib.standard = {
         return pc.hashCode(key);
     },
 
-    _correctChannel: function(p, chan) {
+    _correctChannel: function (p, chan) {
         if (pc._matTex2D[p] > 0) {
             if (pc._matTex2D[p] < chan.length) {
                 return chan.substring(0, pc._matTex2D[p]);
@@ -199,17 +199,17 @@ pc.programlib.standard = {
         return codes;
     },
 
-    _uvSource: function(id, uv) {
+    _uvSource: function (id, uv) {
         return (id === 0) ? "vUv" + uv : ("vUV" + uv + "_" + id);
     },
 
-    _addMapDef: function(name, enabled) {
+    _addMapDef: function (name, enabled) {
         var s = "\n#undef " + name + "\n";
         if (enabled) s += " #define " + name + "\n";
         return s;
     },
 
-    _addMapDefs: function(float, color, vertex, map) {
+    _addMapDefs: function (float, color, vertex, map) {
         var s = "";
         s += this._addMapDef("MAPFLOAT", float);
         s += this._addMapDef("MAPCOLOR", color);
@@ -218,7 +218,7 @@ pc.programlib.standard = {
         return s;
     },
 
-    _addMap: function(p, options, chunks, uvOffset, subCode, format) {
+    _addMap: function (p, options, chunks, uvOffset, subCode, format) {
         var mname = p + "Map";
         var tint = options[p + "Tint"];
         var vert = options[p + "VertexColor"];
@@ -243,7 +243,7 @@ pc.programlib.standard = {
         return subCode.replace(/\$/g, "");
     },
 
-    _nonPointShadowMapProjection: function(device, light, shadowCoordArgs) {
+    _nonPointShadowMapProjection: function (device, light, shadowCoordArgs) {
         if (!light._normalOffsetBias || light._isVsm) {
             if (light._type === pc.LIGHTTYPE_SPOT) {
                 if (light._isPcf && (device.webgl2 || device.extStandardDerivatives)) {
@@ -262,7 +262,7 @@ pc.programlib.standard = {
         return "       getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
     },
 
-    _addVaryingIfNeeded: function(code, type, name) {
+    _addVaryingIfNeeded: function (code, type, name) {
         return code.indexOf(name) >= 0 ? ("varying " + type + " " + name + ";\n") : "";
     },
 
@@ -297,9 +297,7 @@ pc.programlib.standard = {
 
         this.options = options;
 
-        ////////////////////////////
-        // GENERATE VERTEX SHADER //
-        ////////////////////////////
+        // GENERATE VERTEX SHADER
         var code = '';
         var codeBody = '';
 
@@ -545,9 +543,7 @@ pc.programlib.standard = {
             vshader = startCode + vshader;
         }
 
-        //////////////////////////////
-        // GENERATE FRAGMENT SHADER //
-        //////////////////////////////
+        // GENERATE FRAGMENT SHADER
         if (options.forceFragmentPrecision && options.forceFragmentPrecision != "highp" &&
             options.forceFragmentPrecision !== "mediump" && options.forceFragmentPrecision !== "lowp")
             options.forceFragmentPrecision = null;
@@ -1108,10 +1104,12 @@ pc.programlib.standard = {
             }
 
             for (i = 0; i < options.lights.length; i++) {
-                // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviours like:
-                // - different falloffs
-                // - different shadow coords (point shadows will use drastically different genShadowCoord)
-                // - different shadow filter modes
+                /*
+                 * The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviours like:
+                 * - different falloffs
+                 * - different shadow coords (point shadows will use drastically different genShadowCoord)
+                 * - different shadow filter modes
+                 */
 
                 // getLightDiffuse and getLightSpecular is BRDF itself.
 

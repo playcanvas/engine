@@ -13,7 +13,7 @@ pc.extend(pc, function () {
     };
 
     ScopeId.prototype = {
-        setValue: function(value) {
+        setValue: function (value) {
             // Set the new value
             this.value = value;
 
@@ -21,7 +21,7 @@ pc.extend(pc, function () {
             this.versionObject.increment();
         },
 
-        getValue: function(value) {
+        getValue: function (value) {
             return this.value;
         }
     };

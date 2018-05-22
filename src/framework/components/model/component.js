@@ -34,7 +34,7 @@ pc.extend(pc, function () {
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
 
-    var ModelComponent = function ModelComponent (system, entity)   {
+    var ModelComponent = function ModelComponent(system, entity)   {
         this.on("set_type", this.onSetType, this);
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
@@ -74,14 +74,14 @@ pc.extend(pc, function () {
             this.enabled = visible;
         },
 
-        _onAssetLoad: function(asset) {
+        _onAssetLoad: function (asset) {
             if (asset.resource) {
                 this._onModelLoaded(asset.resource.clone());
                 this._clonedModel = true;
             }
         },
 
-        addModelToLayers: function() {
+        addModelToLayers: function () {
             var layer;
             for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
@@ -90,7 +90,7 @@ pc.extend(pc, function () {
             }
         },
 
-        removeModelFromLayers: function(model) {
+        removeModelFromLayers: function (model) {
             var layer;
             for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
@@ -99,13 +99,13 @@ pc.extend(pc, function () {
             }
         },
 
-        _onAssetUnload: function(asset) {
+        _onAssetUnload: function (asset) {
             if (!this.model) return;
             this.removeModelFromLayers(this.model);
             this.model = null;
         },
 
-        _onAssetChange: function(asset, attribute, newValue, oldValue) {
+        _onAssetChange: function (asset, attribute, newValue, oldValue) {
             // reset mapping
             if (attribute === 'data')
                 this.mapping = this.data.mapping;
@@ -132,11 +132,11 @@ pc.extend(pc, function () {
 
             this._onModelAsset(asset || null);
 
-            if (! asset && id !== null)
+            if (!asset && id !== null)
                 assets.once("add:" + id, this._onModelAsset, this);
         },
 
-        _onModelAsset: function(asset) {
+        _onModelAsset: function (asset) {
             var assets = this.system.app.assets;
 
             // clear old assets bindings
@@ -175,7 +175,7 @@ pc.extend(pc, function () {
             }
         },
 
-        remove: function() {
+        remove: function () {
             this._onModelAsset(null);
         },
 
@@ -353,7 +353,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onLayersChanged: function(oldComp, newComp) {
+        onLayersChanged: function (oldComp, newComp) {
             this.addModelToLayers();
             oldComp.off("add", this.onLayerAdded, this);
             oldComp.off("remove", this.onLayerRemoved, this);
@@ -361,13 +361,13 @@ pc.extend(pc, function () {
             newComp.on("remove", this.onLayerRemoved, this);
         },
 
-        onLayerAdded: function(layer) {
+        onLayerAdded: function (layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             layer.addMeshInstances(this.meshInstances);
         },
 
-        onLayerRemoved: function(layer) {
+        onLayerRemoved: function (layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             layer.removeMeshInstances(this.meshInstances);
@@ -419,8 +419,10 @@ pc.extend(pc, function () {
                 if (this.entity.animation)
                     this.entity.animation.setModel(newValue);
 
-                // trigger event handler to load mapping
-                // for new model
+                /*
+                 * trigger event handler to load mapping
+                 * for new model
+                 */
                 if (this.data.type === 'asset') {
                     this.mapping = this.data.mapping;
                 } else {
@@ -431,7 +433,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onMaterialAssetRemove: function(asset) {
+        _onMaterialAssetRemove: function (asset) {
             var assets = this.system.app.assets;
             var id = isNaN(asset) ? asset.id : asset;
 
@@ -444,7 +446,7 @@ pc.extend(pc, function () {
             assets.off('remove:' + id, this._onMaterialAssetRemove, this);
         },
 
-        _onMaterialAssetAdd: function(asset) {
+        _onMaterialAssetAdd: function (asset) {
             var assets = this.system.app.assets;
 
             if (asset.resource) {
@@ -456,7 +458,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onMaterialAssetLoad: function(asset) {
+        _onMaterialAssetLoad: function (asset) {
             var assets = this.system.app.assets;
 
             if (asset.resource) {
@@ -537,7 +539,7 @@ pc.extend(pc, function () {
             // unsubscribe from old events
             this._unsetMaterialEvents();
 
-            if (! newValue)
+            if (!newValue)
                 newValue = {};
 
             var meshInstances = this.data.model.meshInstances;
@@ -581,11 +583,11 @@ pc.extend(pc, function () {
         _unsetMaterialEvents: function () {
             var assets = this.system.app.assets;
             var events = this._materialEvents;
-            if (! events)
+            if (!events)
                 return;
 
             for (var i = 0, len = events.length; i < len; i++) {
-                if (! events[i]) continue;
+                if (!events[i]) continue;
                 var evt = events[i];
                 for (var key in evt) {
                     assets.off(key, evt[key].handler, this);
@@ -628,7 +630,7 @@ pc.extend(pc, function () {
 
             // get asset by id or url
             var asset = this._getAssetByIdOrPath(idOrPath);
-            if (! asset)
+            if (!asset)
                 return;
 
             var handleMaterial = function (asset) {
@@ -691,7 +693,7 @@ pc.extend(pc, function () {
                 this.addModelToLayers();
             } else if (isAsset && this._dirtyModelAsset) {
                 asset = this.data.asset;
-                if (! asset)
+                if (!asset)
                     return;
 
                 asset = this.system.app.assets.get(asset);
@@ -742,29 +744,29 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.ModelComponent#hide
-        * @description Stop rendering model without removing it from the scene hierarchy.
-        * This method sets the {@link pc.MeshInstance#visible} property of every MeshInstance in the model to false
-        * Note, this does not remove the model or mesh instances from the scene hierarchy or draw call list.
-        * So the model component still incurs some CPU overhead.
-        * @example
-        *   this.timer = 0;
-        *   this.visible = true;
-        *   // ...
-        *   // blink model every 0.1 seconds
-        *   this.timer += dt;
-        *   if (this.timer > 0.1) {
-        *       if (!this.visible) {
-        *           this.entity.model.show();
-        *           this.visible = true;
-        *       } else {
-        *           this.entity.model.hide();
-        *           this.visible = false;
-        *       }
-        *       this.timer = 0;
-        *   }
-        */
+         * @function
+         * @name pc.ModelComponent#hide
+         * @description Stop rendering model without removing it from the scene hierarchy.
+         * This method sets the {@link pc.MeshInstance#visible} property of every MeshInstance in the model to false
+         * Note, this does not remove the model or mesh instances from the scene hierarchy or draw call list.
+         * So the model component still incurs some CPU overhead.
+         * @example
+         *   this.timer = 0;
+         *   this.visible = true;
+         *   // ...
+         *   // blink model every 0.1 seconds
+         *   this.timer += dt;
+         *   if (this.timer > 0.1) {
+         *       if (!this.visible) {
+         *           this.entity.model.show();
+         *           this.visible = true;
+         *       } else {
+         *           this.entity.model.hide();
+         *           this.visible = false;
+         *       }
+         *       this.timer = 0;
+         *   }
+         */
         hide: function () {
             var model = this.data.model;
             if (model) {
@@ -777,11 +779,11 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.ModelComponent#show
-        * @description Enable rendering of the model if hidden using {@link pc.ModelComponent#hide}.
-        * This method sets all the {@link pc.MeshInstance#visible} property on all mesh instances to true.
-        */
+         * @function
+         * @name pc.ModelComponent#show
+         * @description Enable rendering of the model if hidden using {@link pc.ModelComponent#hide}.
+         * This method sets all the {@link pc.MeshInstance#visible} property on all mesh instances to true.
+         */
         show: function () {
             var model = this.data.model;
             if (model) {
@@ -797,13 +799,13 @@ pc.extend(pc, function () {
 
     Object.defineProperty(ModelComponent.prototype, 'meshInstances', {
         get: function () {
-            if (! this.model)
+            if (!this.model)
                 return null;
 
             return this.model.meshInstances;
         },
         set: function (value) {
-            if (! this.model)
+            if (!this.model)
                 return;
 
             this.model.meshInstances = value;

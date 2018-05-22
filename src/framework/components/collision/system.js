@@ -57,14 +57,16 @@ pc.extend(pc, function () {
             }
         },
 
-        // Creates a physical shape for the collision. This consists
-        // of the actual shape that will be used for the rigid bodies / triggers of
-        // the collision.
+        /*
+         * Creates a physical shape for the collision. This consists
+         * of the actual shape that will be used for the rigid bodies / triggers of
+         * the collision.
+         */
         createPhysicalShape: function (entity, data) {
             return undefined;
         },
 
-        updateTransform: function(component, position, rotation, scale) {
+        updateTransform: function (component, position, rotation, scale) {
             if (component.entity.trigger) {
                 component.entity.trigger.syncEntityToBody();
             }
@@ -206,8 +208,10 @@ pc.extend(pc, function () {
     CollisionMeshSystemImpl = pc.inherits(CollisionMeshSystemImpl, CollisionSystemImpl);
 
     CollisionMeshSystemImpl.prototype = pc.extend(CollisionMeshSystemImpl.prototype, {
-        // override for the mesh implementation because the asset model needs
-        // special handling
+        /*
+         * override for the mesh implementation because the asset model needs
+         * special handling
+         */
         beforeInitialize: function (component, data) {},
 
         createPhysicalShape: function (entity, data) {
@@ -370,7 +374,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The running {pc.Application}
      * @extends pc.ComponentSystem
      */
-    var CollisionComponentSystem = function CollisionComponentSystem (app) {
+    var CollisionComponentSystem = function CollisionComponentSystem(app) {
         this.id = "collision";
         this.description = "Specifies a collision volume.";
         app.systems.add(this.id, this);
@@ -410,9 +414,11 @@ pc.extend(pc, function () {
                 data[prop] = _data[prop];
             });
 
-            // asset takes priority over model
-            // but they are both trying to change the mesh
-            // so remove one of them to avoid conflicts
+            /*
+             * asset takes priority over model
+             * but they are both trying to change the mesh
+             * so remove one of them to avoid conflicts
+             */
             if (_data.hasOwnProperty('asset')) {
                 idx = properties.indexOf('model');
                 if (idx !== -1) {
@@ -442,8 +448,10 @@ pc.extend(pc, function () {
             impl.afterInitialize(component, data);
         },
 
-        // Creates an implementation based on the collision type and caches it
-        // in an internal implementations structure, before returning it.
+        /*
+         * Creates an implementation based on the collision type and caches it
+         * in an internal implementations structure, before returning it.
+         */
         _createImplementation: function (type) {
             if (this.implementations[type] === undefined) {
                 var impl;
@@ -503,7 +511,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onTransformChanged: function(component, position, rotation, scale) {
+        onTransformChanged: function (component, position, rotation, scale) {
             this.implementations[component.data.type].updateTransform(component, position, rotation, scale);
         },
 

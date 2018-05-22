@@ -183,7 +183,7 @@ Specific engine versions:
 
 [**Forums**](https://forum.playcanvas.com) - Use the forum to ask/answer questions about PlayCanvas.
 
-[**Discord**](https://discord.gg/Abgck8a) - Real-time text, voice and video chat for the PlayCanvas developer community.
+[**Discord**](https://discord.gg/N67tQuU) - Real-time text, voice and video chat for the PlayCanvas developer community.
 
 ## Contributing
 

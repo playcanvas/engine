@@ -15,11 +15,16 @@ pc.extend(pc, function () {
         // Indices of bones in this partition. skin matrices will be uploaded to the vertex shader in this order.
         this.boneIndices = [];
 
-        this.vertices = []; // Partitioned vertex attributes
-        this.indices = [];  // Partitioned vertex indices
-        this.indexMap = {}; // Maps the index of an un-partitioned vertex to that same vertex if it has been added
-                            // to this particular partition. speeds up checking for duplicate vertices so we don't
-                            // add the same vertex more than once.
+        // Partitioned vertex attributes
+        this.vertices = [];
+        // Partitioned vertex indices
+        this.indices = [];
+        /*
+         * Maps the index of an un-partitioned vertex to that same vertex if it has been added
+         * to this particular partition. speeds up checking for duplicate vertices so we don't
+         * add the same vertex more than once.
+         */
+        this.indexMap = {};
     }
 
     SkinPartition.prototype = {
@@ -139,8 +144,10 @@ pc.extend(pc, function () {
     function partitionSkin(model, materialMappings, boneLimit) {
         var i, j, k, index;
 
-        // Replace object indices with actual object references
-        // This simplifies insertion/removal of array items
+        /*
+         * Replace object indices with actual object references
+         * This simplifies insertion/removal of array items
+         */
         indicesToReferences(model);
 
         var vertexArrays = model.vertices;
@@ -190,10 +197,12 @@ pc.extend(pc, function () {
                 var partition;
                 var partitions = [];
 
-                // Phase 1:
-                // Build the skin partitions
-                // Go through index list and extract primitives and add them to bone partitions
-                // Since we are working with a single triangle list, everything is a triangle
+                /*
+                 * Phase 1:
+                 * Build the skin partitions
+                 * Go through index list and extract primitives and add them to bone partitions
+                 * Since we are working with a single triangle list, everything is a triangle
+                 */
                 var primitiveVertices = [];
                 var primitiveIndices = [];
                 var basePartition = 0;
@@ -202,9 +211,11 @@ pc.extend(pc, function () {
                     mesh = meshesToSplit[j];
                     var indices = mesh.indices;
                     for (var iIndex = mesh.base; iIndex < mesh.base + mesh.count; ) {
-                        // Extract primitive
-                        // Convert vertices
-                        // There is a little bit of wasted time here if the vertex was already added previously
+                        /*
+                         * Extract primitive
+                         * Convert vertices
+                         * There is a little bit of wasted time here if the vertex was already added previously
+                         */
                         index = indices[iIndex++];
                         primitiveVertices[0] = getVertex(index);
                         primitiveIndices[0] = index;
@@ -239,8 +250,10 @@ pc.extend(pc, function () {
                     basePartition = partitions.length;
                 }
 
-                // Phase 2:
-                // Gather vertex and index lists from all the partitions, then upload to GPU
+                /*
+                 * Phase 2:
+                 * Gather vertex and index lists from all the partitions, then upload to GPU
+                 */
                 var partitionedVertices = [];
                 var partitionedIndices = [];
 
@@ -283,8 +296,10 @@ pc.extend(pc, function () {
                     }
                 }
 
-                // Phase 3:
-                // Create the split skins
+                /*
+                 * Phase 3:
+                 * Create the split skins
+                 */
                 var splitSkins = [];
                 for (j = 0; j < partitions.length; j++) {
                     partition = partitions[j];
@@ -304,9 +319,9 @@ pc.extend(pc, function () {
                     skins.push(splitSkin);
                 }
 
-                /////////////
-                // Phase 4 //
-                /////////////
+                /*
+                 * Phase 4
+                 */
 
                 // Create a partitioned vertex array
                 var attrib, attribName, data, components;
@@ -321,8 +336,10 @@ pc.extend(pc, function () {
                     };
                 }
 
-                // Copy across the vertex data. Everything is the same as the source data except the remapped
-                // bone indices
+                /*
+                 * Copy across the vertex data. Everything is the same as the source data except the remapped
+                 * bone indices
+                 */
                 for (attribName in vertexArray) {
                     if (attribName === 'blendIndices') {
                         var dstBoneIndices = splitVertexArray[attribName].data;
@@ -346,9 +363,9 @@ pc.extend(pc, function () {
                 // Replace original vertex array with split one
                 vertexArrays[vertexArrays.indexOf(vertexArray)] = splitVertexArray;
 
-                /////////////
-                // Phase 5 //
-                /////////////
+                /*
+                 * Phase 5
+                 */
 
                 // Build new mesh array
                 for (j = 0; j < partitions.length; j++) {

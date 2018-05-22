@@ -30,7 +30,7 @@ pc.extend(pc, (function () {
          * @name pc.Timer#stop
          * @description Stop the timer
          */
-        stop: function() {
+        stop: function () {
             this._isRunning = false;
             this._b = pc.now();
         },
@@ -42,7 +42,7 @@ pc.extend(pc, (function () {
          * @description Get the number of milliseconds that passed between start() and stop() being called
          * @returns {Number} The elapsed milliseconds.
          */
-        getMilliseconds: function() {
+        getMilliseconds: function () {
             return this._b - this._a;
         }
     };

@@ -56,8 +56,10 @@ pc.extend(pc, function () {
             if (data.model) {
                 data.blending = blendTime > 0 && data.prevAnim;
                 if (data.blending) {
-                    // Blend from the current time of the current animation to the start of
-                    // the newly specified animation over the specified blend time period.
+                    /*
+                     * Blend from the current time of the current animation to the start of
+                     * the newly specified animation over the specified blend time period.
+                     */
                     data.blendTime = blendTime;
                     data.blendTimeRemaining = blendTime;
                     data.fromSkel.animation = data.animations[data.prevAnim];
@@ -72,12 +74,12 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.AnimationComponent#getAnimation
-        * @description Return an animation
-        * @param {String} name The name of the animation asset
-        * @returns {pc.Animation} An Animation
-        */
+         * @function
+         * @name pc.AnimationComponent#getAnimation
+         * @description Return an animation
+         * @param {String} name The name of the animation asset
+         * @returns {pc.Animation} An Animation
+         */
         getAnimation: function (name) {
             return this.data.animations[name];
         },
@@ -102,7 +104,7 @@ pc.extend(pc, function () {
         },
 
         loadAnimationAssets: function (ids) {
-            if (! ids || ! ids.length)
+            if (!ids || !ids.length)
                 return;
 
             var self = this;
@@ -115,7 +117,7 @@ pc.extend(pc, function () {
                 self.animations = self.animations; // assigning ensures set_animations event is fired
             };
 
-            var onAssetAdd = function(asset) {
+            var onAssetAdd = function (asset) {
                 asset.off('change', self.onAssetChanged, self);
                 asset.on('change', self.onAssetChanged, self);
 
@@ -193,7 +195,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (! data.currAnim && data.activate && data.enabled && this.entity.enabled) {
+            if (!data.currAnim && data.activate && data.enabled && this.entity.enabled) {
                 for (var animName in data.animations) {
                     // Set the first loaded animation as the current
                     this.play(animName, 0);
@@ -252,7 +254,7 @@ pc.extend(pc, function () {
             if (assets) {
                 for (var i = 0, len = assets.length; i < len; i++) {
                     var asset = assets[i];
-                    if (! (asset instanceof pc.Asset))
+                    if (!(asset instanceof pc.Asset))
                         asset = registry.get(asset);
 
                     if (asset && !asset.resource)
@@ -260,7 +262,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (this.data.activate && ! this.data.currAnim) {
+            if (this.data.activate && !this.data.currAnim) {
                 for (var animName in this.data.animations) {
                     this.play(animName, 0);
                     break;
@@ -268,10 +270,10 @@ pc.extend(pc, function () {
             }
         },
 
-        onBeforeRemove: function() {
+        onBeforeRemove: function () {
             for (var i = 0; i < this.assets.length; i++) {
                 var asset = this.system.app.assets.get(this.assets[i]);
-                if (! asset) continue;
+                if (!asset) continue;
 
                 asset.off('change', this.onAssetChanged, this);
                 asset.off('remove', this.onAssetRemoved, this);

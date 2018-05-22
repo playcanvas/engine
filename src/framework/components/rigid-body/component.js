@@ -45,7 +45,7 @@ pc.extend(pc, function () {
      * </ul>
      * Defaults to pc.BODYTYPE_STATIC.
      */
-    var RigidBodyComponent = function RigidBodyComponent (system, entity) {
+    var RigidBodyComponent = function RigidBodyComponent(system, entity) {
         // Lazily create shared variable
         if (typeof Ammo !== 'undefined' && !ammoTransform) {
             ammoTransform = new Ammo.btTransform();
@@ -76,18 +76,18 @@ pc.extend(pc, function () {
     RigidBodyComponent = pc.inherits(RigidBodyComponent, pc.Component);
 
     Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
-        get: function() {
+        get: function () {
             console.warn("WARNING: bodyType: Function is deprecated. Query type property instead.");
             return this.type;
         },
-        set: function(type) {
+        set: function (type) {
             console.warn("WARNING: bodyType: Function is deprecated. Set type property instead.");
             this.type = type;
         }
     });
 
     Object.defineProperty(RigidBodyComponent.prototype, "linearVelocity", {
-        get: function() {
+        get: function () {
             if (!this.isKinematic()) {
                 if (this.body) {
                     var vel = this.body.getLinearVelocity();
@@ -96,7 +96,7 @@ pc.extend(pc, function () {
             }
             return this._linearVelocity;
         },
-        set: function(lv) {
+        set: function (lv) {
             this.activate();
             if (!this.isKinematic()) {
                 if (this.body) {
@@ -109,7 +109,7 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(RigidBodyComponent.prototype, "angularVelocity", {
-        get: function() {
+        get: function () {
             if (!this.isKinematic()) {
                 if (this.body) {
                     var vel = this.body.getAngularVelocity();
@@ -118,7 +118,7 @@ pc.extend(pc, function () {
             }
             return this._angularVelocity;
         },
-        set: function(av) {
+        set: function (av) {
             this.activate();
             if (!this.isKinematic()) {
                 if (this.body) {
@@ -144,8 +144,10 @@ pc.extend(pc, function () {
             if (entity.collision) {
                 shape = entity.collision.shape;
 
-                // if a trigger was already created from the collision system
-                // destroy it
+                /*
+                 * if a trigger was already created from the collision system
+                 * destroy it
+                 */
                 if (entity.trigger) {
                     entity.trigger.destroy();
                     delete entity.trigger;
@@ -256,8 +258,10 @@ pc.extend(pc, function () {
             var body = this.body;
             if (body && this.data.simulationEnabled) {
                 this.system.removeBody(body);
-                // set activation state to disable simulation to avoid body.isActive() to return
-                // true even if it's not in the dynamics world
+                /*
+                 * set activation state to disable simulation to avoid body.isActive() to return
+                 * true even if it's not in the dynamics world
+                 */
                 body.forceActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
 
                 this.data.simulationEnabled = false;
@@ -493,7 +497,7 @@ pc.extend(pc, function () {
          * @example
          * // Apply via numbers
          * entity.rigidbody.applyTorqueImpulse(0, 10, 0);
-        */
+         */
         applyTorqueImpulse: function () {
             var x, y, z;
             switch (arguments.length) {

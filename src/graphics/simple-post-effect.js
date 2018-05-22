@@ -90,4 +90,3 @@ pc.extend(pc, (function () {
         destroyPostEffectQuad: destroyPostEffectQuad
     };
 }()));
-

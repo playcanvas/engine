@@ -10,26 +10,13 @@ pc.path = function () {
          */
         delimiter: "/",
         /**
-         * Join two sections of file path together, insert a delimiter if needed.
-         * @param {String} one First part of path to join
-         * @param {String} two Second part of path to join
          * @function
          * @name pc.path.join
+         * @description Join two sections of file path together, insert a delimiter if needed.
+         * @param {String} one First part of path to join.
+         * @param {String} two Second part of path to join.
+         * @returns {String} The joined file path.
          */
-        /*
-        join: function(one, two) {
-            if(two[0] === pc.path.delimiter) {
-                return two;
-            }
-
-            if(one && two && one[one.length - 1] !== pc.path.delimiter && two[0] !== pc.path.delimiter) {
-                return one + pc.path.delimiter + two;
-            }
-            else {
-                return one + two;
-            }
-        },
-        */
         join: function () {
             var index;
             var num = arguments.length;
@@ -82,7 +69,7 @@ pc.path = function () {
          * pc.path.getBasename("/path/to/file.txt"); // returns "path.txt"
          * pc.path.getBasename("/path/to/dir"); // returns "dir"
          */
-        getBasename: function(path) {
+        getBasename: function (path) {
             return pc.path.split(path)[1];
         },
 
@@ -93,7 +80,7 @@ pc.path = function () {
          * @param {String} path The path to get the directory from
          * @returns {String} The directory part of the path.
          */
-        getDirectory: function(path) {
+        getDirectory: function (path) {
             var parts = path.split(pc.path.delimiter);
             return parts.slice(0, parts.length - 1).join(pc.path.delimiter);
         },

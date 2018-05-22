@@ -26,7 +26,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The Application.
      * @extends pc.ComponentSystem
      */
-    var ModelComponentSystem = function ModelComponentSystem (app) {
+    var ModelComponentSystem = function ModelComponentSystem(app) {
         this.id = 'model';
         this.description = "Renders a 3D model at the location of the Entity.";
         app.systems.add(this.id, this);
@@ -127,9 +127,11 @@ pc.extend(pc, function () {
                 mapping: pc.extend({}, entity.model.mapping)
             };
 
-            // if original has a different material
-            // than the assigned materialAsset then make sure we
-            // clone that one instead of the materialAsset one
+            /*
+             * if original has a different material
+             * than the assigned materialAsset then make sure we
+             * clone that one instead of the materialAsset one
+             */
             var materialAsset = entity.model.materialAsset;
             if (!(materialAsset instanceof pc.Asset) && materialAsset != null) {
                 materialAsset = this.app.assets.get(materialAsset);
@@ -146,9 +148,11 @@ pc.extend(pc, function () {
 
             var component = this.addComponent(clone, data);
 
-            // clone the original model if the original model component is of type asset but
-            // has no specified asset
-            if (entity.model.model && entity.model.type === 'asset' && ! entity.model.asset) {
+            /*
+             * clone the original model if the original model component is of type asset but
+             * has no specified asset
+             */
+            if (entity.model.model && entity.model.type === 'asset' && !entity.model.asset) {
                 component.model = entity.model.model.clone();
                 component._clonedModel = true;
             }
@@ -168,7 +172,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onRemove: function(entity, component) {
+        onRemove: function (entity, component) {
             // Unhook any material asset events
             entity.model.materialAsset = null;
             component.remove();
