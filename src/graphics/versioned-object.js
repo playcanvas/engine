@@ -3,7 +3,7 @@ pc.extend(pc, function () {
 
     var idCounter = 0;
 
-    var VersionedObject = function () {
+    function VersionedObject() {
         // Increment the global object ID counter
         idCounter++;
 
@@ -12,9 +12,11 @@ pc.extend(pc, function () {
 
         // Set the unique object ID
         this.version.globalId = idCounter;
-    };
+    }
 
     VersionedObject.prototype = {
+        constructor: VersionedObject,
+
         increment: function () {
             // Increment the revision number
             this.version.revision++;

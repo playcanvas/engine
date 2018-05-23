@@ -46,7 +46,7 @@ pc.extend(pc, function () {
      * // Set the render target on a layer
      * layer.renderTarget = renderTarget;
      */
-    var RenderTarget = function (options) {
+    function RenderTarget(options) {
         var _arg2 = arguments[1];
         var _arg3 = arguments[2];
 
@@ -92,9 +92,11 @@ pc.extend(pc, function () {
         this._glResolveFrameBuffer = null;
         this._glMsaaColorBuffer = null;
         this._glMsaaDepthBuffer = null;
-    };
+    }
 
     RenderTarget.prototype = {
+        constructor: RenderTarget,
+
         /**
          * @function
          * @name pc.RenderTarget#destroy

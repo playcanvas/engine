@@ -65,7 +65,7 @@ pc.extend(pc, function () {
      * @param {pc.VertexBuffer} inputBuffer The input vertex buffer
      * @param {Number} [usage] The optional usage type of the output vertex buffer (see pc.BUFFER_*). pc.BUFFER_GPUDYNAMIC is recommended for continuous update, and is the default value.
      */
-    var TransformFeedback = function (inputBuffer, usage) {
+    function TransformFeedback(inputBuffer, usage) {
         usage = usage || pc.BUFFER_GPUDYNAMIC;
         this.device = inputBuffer.device;
         var gl = this.device.gl;
@@ -78,7 +78,7 @@ pc.extend(pc, function () {
         }
 
         this._outputBuffer = new pc.VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, usage, inputBuffer.storage);
-    };
+    }
 
     /**
      * @function
@@ -94,6 +94,8 @@ pc.extend(pc, function () {
     };
 
     TransformFeedback.prototype = {
+        constructor: TransformFeedback,
+
         /**
          * @function
          * @name pc.TransformFeedback#destroy

@@ -9,8 +9,8 @@ pc.extend(pc, function () {
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @extends pc.Component
      */
-    var AudioListenerComponent = function (system, entity) {
-    };
+    function AudioListenerComponent(system, entity) {
+    }
 
     AudioListenerComponent = pc.inherits(AudioListenerComponent, pc.Component);
 

@@ -17,7 +17,7 @@ pc.extend(pc, function () {
      * @param {Number} [usage] The usage type of the vertex buffer (see pc.BUFFER_*).
      * @param {ArrayBuffer} [initialData] Initial data.
      */
-    var IndexBuffer = function (graphicsDevice, format, numIndices, usage, initialData) {
+    function IndexBuffer(graphicsDevice, format, numIndices, usage, initialData) {
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
         this.usage = usage || pc.BUFFER_STATIC;
         this.format = format;
@@ -51,9 +51,11 @@ pc.extend(pc, function () {
         graphicsDevice._vram.ib += this.numBytes;
 
         this.device.buffers.push(this);
-    };
+    }
 
     IndexBuffer.prototype = {
+        constructor: IndexBuffer,
+
         /**
          * @function
          * @name pc.IndexBuffer#destroy

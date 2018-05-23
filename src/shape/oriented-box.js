@@ -13,15 +13,17 @@ pc.extend(pc, function () {
      * @param {pc.Mat4} [worldTransform] Transform that has the orientation and position of the box. Scale is assumed to be one.
      * @param {pc.Vec3} [halfExtents] Half the distance across the box in each local axis. The constructor takes a reference of this parameter.
      */
-    var OrientedBox = function OrientedBox(worldTransform, halfExtents) {
+    function OrientedBox(worldTransform, halfExtents) {
         this.halfExtents = halfExtents || new pc.Vec3(0.5, 0.5, 0.5);
 
         worldTransform = worldTransform || tmpMat4.setIdentity();
         this._modelTransform = worldTransform.clone().invert();
         this._aabb = new pc.BoundingBox(new pc.Vec3(), this.halfExtents);
-    };
+    }
 
     OrientedBox.prototype = {
+        constructor: OrientedBox,
+
         /**
          * @function
          * @name pc.OrientedBox#intersectsRay

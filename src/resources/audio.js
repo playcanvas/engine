@@ -21,11 +21,13 @@ pc.extend(pc, function () {
         return false;
     })();
 
-    var AudioHandler = function (manager) {
+    function AudioHandler(manager) {
         this.manager = manager;
-    };
+    }
 
     AudioHandler.prototype = {
+        constructor: AudioHandler,
+
         _isSupported: function (url) {
             var toMIME = {
                 '.ogg': 'audio/ogg',

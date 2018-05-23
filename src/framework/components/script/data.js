@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
-    var ScriptComponentData = function () {
+    function ScriptComponentData() {
         this.enabled = true;
-    };
+    }
     ScriptComponentData = pc.inherits(ScriptComponentData, pc.ComponentData);
 
     return {

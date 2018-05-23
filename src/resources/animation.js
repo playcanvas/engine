@@ -1,10 +1,12 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var AnimationHandler = function () {
-    };
+    function AnimationHandler() {
+    }
 
     AnimationHandler.prototype = {
+        constructor: AnimationHandler,
+
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
                 if (err) {

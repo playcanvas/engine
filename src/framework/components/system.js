@@ -5,13 +5,13 @@ pc.extend(pc, function () {
      * @classdesc Component Systems contain the logic and functionality to update all Components of a particular type.
      * @param {pc.Application} app The application managing this system.
      */
-    var ComponentSystem = function (app) {
+    function ComponentSystem(app) {
         this.app = app;
         this.dataStore = {};
         this.schema = [];
 
         pc.events.attach(this);
-    };
+    }
 
     // Class methods
     pc.extend(ComponentSystem, {
@@ -45,6 +45,8 @@ pc.extend(pc, function () {
 
     // Instance methods
     ComponentSystem.prototype = {
+        constructor: ComponentSystem,
+
         /**
          * @private
          * @name pc.ComponentSystem#store

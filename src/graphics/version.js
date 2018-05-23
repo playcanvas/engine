@@ -1,13 +1,15 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var Version = function () {
+    function Version() {
         // Set the variables
         this.globalId = 0;
         this.revision = 0;
-    };
+    }
 
     Version.prototype = {
+        constructor: Version,
+
         equals: function (other) {
             return this.globalId === other.globalId &&
                    this.revision === other.revision;

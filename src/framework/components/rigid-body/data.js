@@ -7,7 +7,7 @@ pc.extend(pc, function () {
      * @description Create a new data structure for a RigidBodyComponent
      * @extends pc.ComponentData
      */
-    var RigidBodyComponentData = function () {
+    function RigidBodyComponentData() {
         this.enabled = true;
         this.mass = 1;
         this.linearDamping = 0;
@@ -26,7 +26,7 @@ pc.extend(pc, function () {
         // Non-serialized properties
         this.body = null;
         this.simulationEnabled = false;
-    };
+    }
     RigidBodyComponentData = pc.inherits(RigidBodyComponentData, pc.ComponentData);
 
     return {

@@ -5,8 +5,8 @@ pc.extend(pc, function () {
      * @name pc.ComponentData
      * @classdesc Base class for Component data storage.
      */
-    var ComponentData = function () {
-    };
+    function ComponentData() {
+    }
 
     return {
         ComponentData: ComponentData

@@ -6,8 +6,8 @@ pc.extend(pc, function () {
      * @name pc.DepthMaterial
      * @classdesc A Depth material is for rendering linear depth values to a render target.
      */
-    var DepthMaterial = function () {
-    };
+    function DepthMaterial() {
+    }
 
     DepthMaterial = pc.inherits(DepthMaterial, pc.Material);
 

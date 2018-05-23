@@ -9,11 +9,11 @@ pc.extend(pc, function () {
      * or regular JavaScript files, such as third-party libraries.
      * @param {pc.Application} app The running {pc.Application}
      */
-    var ScriptHandler = function (app) {
+    function ScriptHandler(app) {
         this._app = app;
         this._scripts = { };
         this._cache = { };
-    };
+    }
 
     ScriptHandler._types = [];
     ScriptHandler._push = function (Type) {
@@ -25,6 +25,8 @@ pc.extend(pc, function () {
     };
 
     ScriptHandler.prototype = {
+        constructor: ScriptHandler,
+
         load: function (url, callback) {
             var self = this;
             pc.script.app = this._app;

@@ -9,7 +9,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-    var LayoutChildComponentSystem = function LayoutChildComponentSystem(app) {
+    function LayoutChildComponentSystem(app) {
         this.id = 'layoutchild';
         this.app = app;
         app.systems.add(this.id, this);
@@ -18,7 +18,7 @@ pc.extend(pc, function () {
         this.DataType = pc.LayoutChildComponentData;
 
         this.schema = _schema;
-    };
+    }
     LayoutChildComponentSystem = pc.inherits(LayoutChildComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.LayoutChildComponent.prototype, _schema);

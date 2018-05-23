@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
-    var ScriptLegacyComponent = function ScriptLegacyComponent(system, entity) {
+    function ScriptLegacyComponent(system, entity) {
         this.on("set_scripts", this.onSetScripts, this);
-    };
+    }
     ScriptLegacyComponent = pc.inherits(ScriptLegacyComponent, pc.Component);
 
     pc.extend(ScriptLegacyComponent.prototype, {

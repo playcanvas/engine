@@ -16,7 +16,7 @@ pc.extend(pc, function () {
      * @property {Number} height Height of the pick buffer in pixels (read-only).
      * @property {pc.RenderTarget} renderTarget The render target used by the picker internally (read-only).
      */
-    var Picker = function (app, width, height) {
+    function Picker(app, width, height) {
         if (app instanceof pc.GraphicsDevice) {
             app = pc.Application.getApplication();
             if (!_deviceDeprecationWarning) {
@@ -59,307 +59,311 @@ pc.extend(pc, function () {
         this.resize(width, height);
 
         this._ignoreOpacityFor = null; // meshInstance
-    };
+    }
 
-    /**
-     * @function
-     * @name pc.Picker#getSelection
-     * @description Return the list of mesh instances selected by the specified rectangle in the
-     * previously prepared pick buffer.The rectangle using top-left coordinate system.
-     * @param {Number} x The left edge of the rectangle
-     * @param {Number} y The top edge of the rectangle
-     * @param {Number} [width] The width of the rectangle
-     * @param {Number} [height] The height of the rectangle
-     * @returns {pc.MeshInstance[]} An array of mesh instances that are in the selection
-     * @example
-     * // Get the selection at the point (10,20)
-     * var selection = picker.getSelection(10, 20);
-     *
-     * // Get all models in rectangle with corners at (10,20) and (20,40)
-     * var selection = picker.getSelection(10, 20, 10, 20);
-     */
-    Picker.prototype.getSelection = function (x, y, width, height) {
-        var device = this.device;
+    Picker.prototype = {
+        constructor: Picker,
 
-        if (typeof x === 'object') {
-            // #ifdef DEBUG
-            if (!_prepareDeprecationWarning) {
-                _prepareDeprecationWarning = true;
-                console.warn("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
-            }
-            // #endif
+        /**
+         * @function
+         * @name pc.Picker#getSelection
+         * @description Return the list of mesh instances selected by the specified rectangle in the
+         * previously prepared pick buffer.The rectangle using top-left coordinate system.
+         * @param {Number} x The left edge of the rectangle
+         * @param {Number} y The top edge of the rectangle
+         * @param {Number} [width] The width of the rectangle
+         * @param {Number} [height] The height of the rectangle
+         * @returns {pc.MeshInstance[]} An array of mesh instances that are in the selection
+         * @example
+         * // Get the selection at the point (10,20)
+         * var selection = picker.getSelection(10, 20);
+         *
+         * // Get all models in rectangle with corners at (10,20) and (20,40)
+         * var selection = picker.getSelection(10, 20, 10, 20);
+         */
+        getSelection: function (x, y, width, height) {
+            var device = this.device;
 
-            var rect = x;
-            x = rect.x;
-            y = rect.y;
-            width = rect.width;
-            height = rect.height;
-        } else {
-            y = this.layer.renderTarget.height - (y + (height || 1));
-        }
-
-        width = width || 1;
-        height = height || 1;
-
-        // Cache active render target
-        var prevRenderTarget = device.renderTarget;
-
-        // Ready the device for rendering to the pick buffer
-        device.setRenderTarget(this.layer.renderTarget);
-        device.updateBegin();
-
-        var pixels = new Uint8Array(4 * width * height);
-        device.readPixels(x, y, width, height, pixels);
-
-        device.updateEnd();
-
-        // Restore render target
-        device.setRenderTarget(prevRenderTarget);
-
-        var selection = [];
-
-        var drawCalls = this.layer.instances.visibleOpaque[0].list;
-
-        var r, g, b, index;
-        for (var i = 0; i < width * height; i++) {
-            r = pixels[4 * i + 0];
-            g = pixels[4 * i + 1];
-            b = pixels[4 * i + 2];
-            index = r << 16 | g << 8 | b;
-            // White is 'no selection'
-            if (index !== 0xffffff) {
-                var selectedMeshInstance = drawCalls[index];
-                if (selection.indexOf(selectedMeshInstance) === -1) {
-                    selection.push(selectedMeshInstance);
+            if (typeof x === 'object') {
+                // #ifdef DEBUG
+                if (!_prepareDeprecationWarning) {
+                    _prepareDeprecationWarning = true;
+                    console.warn("Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.");
                 }
-            }
-        }
+                // #endif
 
-        return selection;
-    };
-
-    /**
-     * @function
-     * @name pc.Picker#prepare
-     * @description Primes the pick buffer with a rendering of the specified models from the point of view
-     * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
-     * called multiple times on the same picker object. Therefore, if the models or camera do not change
-     * in any way, pc.Picker#prepare does not need to be called again.
-     * @param {pc.CameraComponent} camera The camera component used to render the scene.
-     * @param {pc.Scene} scene The scene containing the pickable mesh instances.
-     * @param {pc.Layer} [layer] Layer from which objects will be picked. If not supplied, all layers rendering to backbuffer before this layer will be used.
-     */
-    /**
-     * @function
-     * @name pc.Picker#prepare^2
-     * @description Primes the pick buffer with a rendering of the specified models from the point of view
-     * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
-     * called multiple times on the same picker object. Therefore, if the models or camera do not change
-     * in any way, pc.Picker#prepare does not need to be called again.
-     * @param {pc.CameraComponent} camera The camera component used to render the scene.
-     * @param {pc.Scene} scene The scene containing the pickable mesh instances.
-     * @param {pc.RenderTarget} [renderTarget] Render target with mesh instances to pick. If not supplied, backbuffer is assumed.
-     */
-    Picker.prototype.prepare = function (camera, scene, arg) {
-        var device = this.device;
-        var i, j;
-        var self = this;
-
-        if (camera instanceof pc.Camera) {
-            // #ifdef DEBUG
-            if (!_getSelectionDeprecationWarning) {
-                _getSelectionDeprecationWarning = true;
-                console.warn("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
+                var rect = x;
+                x = rect.x;
+                y = rect.y;
+                width = rect.width;
+                height = rect.height;
+            } else {
+                y = this.layer.renderTarget.height - (y + (height || 1));
             }
 
-            // #endif
-            camera = camera._component;
-        }
+            width = width || 1;
+            height = height || 1;
 
-        this.scene = scene;
-        var sourceLayer = null;
-        var sourceRt = null;
+            // Cache active render target
+            var prevRenderTarget = device.renderTarget;
 
-        if (arg instanceof pc.Layer) {
-            sourceLayer = arg;
-        } else {
-            sourceRt = arg;
-        }
+            // Ready the device for rendering to the pick buffer
+            device.setRenderTarget(this.layer.renderTarget);
+            device.updateBegin();
 
-        // Setup picker rendering once
-        if (!this.layer) {
-            var pickColorId = device.scope.resolve('uColor');
+            var pixels = new Uint8Array(4 * width * height);
+            device.readPixels(x, y, width, height, pixels);
 
-            this.layer = new pc.Layer({
-                name: "Picker",
-                shaderPass: pc.SHADER_PICK,
-                opaqueSortMode: pc.SORTMODE_NONE,
+            device.updateEnd();
 
-                onEnable: function () {
-                    if (this.renderTarget) return;
-                    var colorBuffer = new pc.Texture(device, {
-                        format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                        width: self.width,
-                        height: self.height
-                    });
-                    colorBuffer.minFilter = pc.FILTER_NEAREST;
-                    colorBuffer.magFilter = pc.FILTER_NEAREST;
-                    colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                    colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                    this.renderTarget = new pc.RenderTarget(device, colorBuffer, {
-                        depth: true
-                    });
-                },
+            // Restore render target
+            device.setRenderTarget(prevRenderTarget);
 
-                onDisable: function () {
-                    if (!this.renderTarget) return;
-                    this.renderTarget._colorBuffer.destroy();
-                    this.renderTarget.destroy();
-                    this.renderTarget = null;
-                },
+            var selection = [];
 
-                onDrawCall: function (meshInstance, index) {
-                    self.pickColor[0] = ((index >> 16) & 0xff) / 255;
-                    self.pickColor[1] = ((index >> 8) & 0xff) / 255;
-                    self.pickColor[2] = (index & 0xff) / 255;
-                    pickColorId.setValue(self.pickColor);
-                    device.setBlending(false);
-                },
+            var drawCalls = this.layer.instances.visibleOpaque[0].list;
 
-                /*
-                 * could probably move updateCameraFrustum into onLayerPreRender function
-                 * and remove everything else
-                 */
-                onPreCull: function () {
-                    this.oldAspectMode = this.cameras[0].aspectRatioMode;
-                    this.oldAspect = this.cameras[0].aspectRatio;
-                    this.cameras[0].aspectRatioMode = pc.ASPECT_MANUAL;
-                    var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
-                    this.cameras[0].aspectRatio = this.cameras[0].calculateAspectRatio(rt);
-                    self.app.renderer.updateCameraFrustum(this.cameras[0].camera);
-                },
-
-                /*
-                 * could probably remove this because we've moved
-                 * prerender/postrender to be outside of renderComposition
-                 */
-                onPostCull: function () {
-                    this.cameras[0].aspectRatioMode = this.oldAspectMode;
-                    this.cameras[0].aspectRatio = this.oldAspect;
-                }
-            });
-
-            this.layerComp = new pc.LayerComposition();
-            this.layerComp.pushOpaque(this.layer);
-
-            this.meshInstances = this.layer.opaqueMeshInstances;
-            this._instancesVersion = -1;
-        }
-
-        // Collect pickable mesh instances
-        var instanceList, instanceListLength, drawCall;
-        if (!sourceLayer) {
-            this.layer.clearMeshInstances();
-            var layers = scene.layers.layerList;
-            var subLayerEnabled = scene.layers.subLayerEnabled;
-            var isTransparent = scene.layers.subLayerList;
-            var layer;
-            var layerCamId, transparent;
-            for (i = 0; i < layers.length; i++) {
-                if (layers[i].overrideClear && layers[i]._clearDepthBuffer) layers[i]._pickerCleared = false;
-            }
-            for (i = 0; i < layers.length; i++) {
-                layer = layers[i];
-                if (layer.renderTarget !== sourceRt || !layer.enabled || !subLayerEnabled[i]) continue;
-                layerCamId = layer.cameras.indexOf(camera);
-                if (layerCamId < 0) continue;
-                if (layer.overrideClear && layer._clearDepthBuffer && !layer._pickerCleared) {
-                    this.meshInstances.push(this.clearDepthCommand);
-                    layer._pickerCleared = true;
-                }
-                transparent = isTransparent[i];
-                instanceList = transparent ? layer.instances.transparentMeshInstances : layer.instances.opaqueMeshInstances;
-                instanceListLength = instanceList.length;
-                for (j = 0; j < instanceListLength; j++) {
-                    drawCall = instanceList[j];
-                    if (drawCall.pick) {
-                        this.meshInstances.push(drawCall);
+            var r, g, b, index;
+            for (var i = 0; i < width * height; i++) {
+                r = pixels[4 * i + 0];
+                g = pixels[4 * i + 1];
+                b = pixels[4 * i + 2];
+                index = r << 16 | g << 8 | b;
+                // White is 'no selection'
+                if (index !== 0xffffff) {
+                    var selectedMeshInstance = drawCalls[index];
+                    if (selection.indexOf(selectedMeshInstance) === -1) {
+                        selection.push(selectedMeshInstance);
                     }
                 }
             }
-        } else {
-            if (this._instancesVersion !== sourceLayer._version) {
+
+            return selection;
+        },
+
+        /**
+         * @function
+         * @name pc.Picker#prepare
+         * @description Primes the pick buffer with a rendering of the specified models from the point of view
+         * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
+         * called multiple times on the same picker object. Therefore, if the models or camera do not change
+         * in any way, pc.Picker#prepare does not need to be called again.
+         * @param {pc.CameraComponent} camera The camera component used to render the scene.
+         * @param {pc.Scene} scene The scene containing the pickable mesh instances.
+         * @param {pc.Layer} [layer] Layer from which objects will be picked. If not supplied, all layers rendering to backbuffer before this layer will be used.
+         */
+        /**
+         * @function
+         * @name pc.Picker#prepare^2
+         * @description Primes the pick buffer with a rendering of the specified models from the point of view
+         * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
+         * called multiple times on the same picker object. Therefore, if the models or camera do not change
+         * in any way, pc.Picker#prepare does not need to be called again.
+         * @param {pc.CameraComponent} camera The camera component used to render the scene.
+         * @param {pc.Scene} scene The scene containing the pickable mesh instances.
+         * @param {pc.RenderTarget} [renderTarget] Render target with mesh instances to pick. If not supplied, backbuffer is assumed.
+         */
+        prepare: function (camera, scene, arg) {
+            var device = this.device;
+            var i, j;
+            var self = this;
+
+            if (camera instanceof pc.Camera) {
+                // #ifdef DEBUG
+                if (!_getSelectionDeprecationWarning) {
+                    _getSelectionDeprecationWarning = true;
+                    console.warn("pc.Picker#prepare now takes pc.CameraComponent as first argument. Passing pc.Camera is deprecated.");
+                }
+
+                // #endif
+                camera = camera._component;
+            }
+
+            this.scene = scene;
+            var sourceLayer = null;
+            var sourceRt = null;
+
+            if (arg instanceof pc.Layer) {
+                sourceLayer = arg;
+            } else {
+                sourceRt = arg;
+            }
+
+            // Setup picker rendering once
+            if (!this.layer) {
+                var pickColorId = device.scope.resolve('uColor');
+
+                this.layer = new pc.Layer({
+                    name: "Picker",
+                    shaderPass: pc.SHADER_PICK,
+                    opaqueSortMode: pc.SORTMODE_NONE,
+
+                    onEnable: function () {
+                        if (this.renderTarget) return;
+                        var colorBuffer = new pc.Texture(device, {
+                            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                            width: self.width,
+                            height: self.height
+                        });
+                        colorBuffer.minFilter = pc.FILTER_NEAREST;
+                        colorBuffer.magFilter = pc.FILTER_NEAREST;
+                        colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                        colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                        this.renderTarget = new pc.RenderTarget(device, colorBuffer, {
+                            depth: true
+                        });
+                    },
+
+                    onDisable: function () {
+                        if (!this.renderTarget) return;
+                        this.renderTarget._colorBuffer.destroy();
+                        this.renderTarget.destroy();
+                        this.renderTarget = null;
+                    },
+
+                    onDrawCall: function (meshInstance, index) {
+                        self.pickColor[0] = ((index >> 16) & 0xff) / 255;
+                        self.pickColor[1] = ((index >> 8) & 0xff) / 255;
+                        self.pickColor[2] = (index & 0xff) / 255;
+                        pickColorId.setValue(self.pickColor);
+                        device.setBlending(false);
+                    },
+
+                    /*
+                     * could probably move updateCameraFrustum into onLayerPreRender function
+                     * and remove everything else
+                     */
+                    onPreCull: function () {
+                        this.oldAspectMode = this.cameras[0].aspectRatioMode;
+                        this.oldAspect = this.cameras[0].aspectRatio;
+                        this.cameras[0].aspectRatioMode = pc.ASPECT_MANUAL;
+                        var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
+                        this.cameras[0].aspectRatio = this.cameras[0].calculateAspectRatio(rt);
+                        self.app.renderer.updateCameraFrustum(this.cameras[0].camera);
+                    },
+
+                    /*
+                     * could probably remove this because we've moved
+                     * prerender/postrender to be outside of renderComposition
+                     */
+                    onPostCull: function () {
+                        this.cameras[0].aspectRatioMode = this.oldAspectMode;
+                        this.cameras[0].aspectRatio = this.oldAspect;
+                    }
+                });
+
+                this.layerComp = new pc.LayerComposition();
+                this.layerComp.pushOpaque(this.layer);
+
+                this.meshInstances = this.layer.opaqueMeshInstances;
+                this._instancesVersion = -1;
+            }
+
+            // Collect pickable mesh instances
+            var instanceList, instanceListLength, drawCall;
+            if (!sourceLayer) {
                 this.layer.clearMeshInstances();
-                instanceList = sourceLayer.instances.opaqueMeshInstances;
-                instanceListLength = instanceList.length;
-                for (j = 0; j < instanceListLength; j++) {
-                    drawCall = instanceList[j];
-                    if (drawCall.pick) {
-                        this.meshInstances.push(drawCall);
+                var layers = scene.layers.layerList;
+                var subLayerEnabled = scene.layers.subLayerEnabled;
+                var isTransparent = scene.layers.subLayerList;
+                var layer;
+                var layerCamId, transparent;
+                for (i = 0; i < layers.length; i++) {
+                    if (layers[i].overrideClear && layers[i]._clearDepthBuffer) layers[i]._pickerCleared = false;
+                }
+                for (i = 0; i < layers.length; i++) {
+                    layer = layers[i];
+                    if (layer.renderTarget !== sourceRt || !layer.enabled || !subLayerEnabled[i]) continue;
+                    layerCamId = layer.cameras.indexOf(camera);
+                    if (layerCamId < 0) continue;
+                    if (layer.overrideClear && layer._clearDepthBuffer && !layer._pickerCleared) {
+                        this.meshInstances.push(this.clearDepthCommand);
+                        layer._pickerCleared = true;
+                    }
+                    transparent = isTransparent[i];
+                    instanceList = transparent ? layer.instances.transparentMeshInstances : layer.instances.opaqueMeshInstances;
+                    instanceListLength = instanceList.length;
+                    for (j = 0; j < instanceListLength; j++) {
+                        drawCall = instanceList[j];
+                        if (drawCall.pick) {
+                            this.meshInstances.push(drawCall);
+                        }
                     }
                 }
-                instanceList = sourceLayer.instances.transparentMeshInstances;
-                instanceListLength = instanceList.length;
-                for (j = 0; j < instanceListLength; j++) {
-                    drawCall = instanceList[j];
-                    if (drawCall.pick) {
-                        this.meshInstances.push(drawCall);
+            } else {
+                if (this._instancesVersion !== sourceLayer._version) {
+                    this.layer.clearMeshInstances();
+                    instanceList = sourceLayer.instances.opaqueMeshInstances;
+                    instanceListLength = instanceList.length;
+                    for (j = 0; j < instanceListLength; j++) {
+                        drawCall = instanceList[j];
+                        if (drawCall.pick) {
+                            this.meshInstances.push(drawCall);
+                        }
                     }
+                    instanceList = sourceLayer.instances.transparentMeshInstances;
+                    instanceListLength = instanceList.length;
+                    for (j = 0; j < instanceListLength; j++) {
+                        drawCall = instanceList[j];
+                        if (drawCall.pick) {
+                            this.meshInstances.push(drawCall);
+                        }
+                    }
+                    this._instancesVersion = sourceLayer._version;
                 }
-                this._instancesVersion = sourceLayer._version;
             }
+
+            // Setup picker camera if changed
+            if (this.layer.cameras[0] !== camera) {
+                this.layer.clearCameras();
+                this.layer.addCamera(camera);
+            }
+
+            // save old camera state
+            this.onLayerPreRender(this.layer, sourceLayer, sourceRt);
+
+            // Render
+            this.app.renderer.renderComposition(this.layerComp);
+
+            // restore old camera state
+            this.onLayerPostRender(this.layer);
+        },
+
+        onLayerPreRender: function (layer, sourceLayer, sourceRt) {
+            if (this.width !== layer.renderTarget.width || this.height !== layer.renderTarget.height) {
+                layer.onDisable();
+                layer.onEnable();
+            }
+            layer.oldClear = layer.cameras[0].camera._clearOptions;
+            layer.oldAspectMode = layer.cameras[0].aspectRatioMode;
+            layer.oldAspect = layer.cameras[0].aspectRatio;
+            layer.cameras[0].camera._clearOptions = this.clearOptions;
+            layer.cameras[0].aspectRatioMode = pc.ASPECT_MANUAL;
+            var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
+            layer.cameras[0].aspectRatio = layer.cameras[0].calculateAspectRatio(rt);
+        },
+
+        onLayerPostRender: function (layer) {
+            layer.cameras[0].camera._clearOptions = layer.oldClear;
+            layer.cameras[0].aspectRatioMode = layer.oldAspectMode;
+            layer.cameras[0].aspectRatio = layer.oldAspect;
+        },
+
+        /**
+         * @function
+         * @name pc.Picker#resize
+         * @description Sets the resolution of the pick buffer. The pick buffer resolution does not need
+         * to match the resolution of the corresponding frame buffer use for general rendering of the
+         * 3D scene. However, the lower the resolution of the pick buffer, the less accurate the selection
+         * results returned by pc.Picker#getSelection. On the other hand, smaller pick buffers will
+         * yield greater performance, so there is a trade off.
+         * @param {Number} width The width of the pick buffer in pixels.
+         * @param {Number} height The height of the pick buffer in pixels.
+         */
+        resize: function (width, height) {
+            this.width = width;
+            this.height = height;
         }
-
-        // Setup picker camera if changed
-        if (this.layer.cameras[0] !== camera) {
-            this.layer.clearCameras();
-            this.layer.addCamera(camera);
-        }
-
-        // save old camera state
-        this.onLayerPreRender(this.layer, sourceLayer, sourceRt);
-
-        // Render
-        this.app.renderer.renderComposition(this.layerComp);
-
-        // restore old camera state
-        this.onLayerPostRender(this.layer);
-    };
-
-    Picker.prototype.onLayerPreRender = function (layer, sourceLayer, sourceRt) {
-        if (this.width !== layer.renderTarget.width || this.height !== layer.renderTarget.height) {
-            layer.onDisable();
-            layer.onEnable();
-        }
-        layer.oldClear = layer.cameras[0].camera._clearOptions;
-        layer.oldAspectMode = layer.cameras[0].aspectRatioMode;
-        layer.oldAspect = layer.cameras[0].aspectRatio;
-        layer.cameras[0].camera._clearOptions = this.clearOptions;
-        layer.cameras[0].aspectRatioMode = pc.ASPECT_MANUAL;
-        var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
-        layer.cameras[0].aspectRatio = layer.cameras[0].calculateAspectRatio(rt);
-    };
-
-    Picker.prototype.onLayerPostRender = function (layer) {
-        layer.cameras[0].camera._clearOptions = layer.oldClear;
-        layer.cameras[0].aspectRatioMode = layer.oldAspectMode;
-        layer.cameras[0].aspectRatio = layer.oldAspect;
-    };
-
-    /**
-     * @function
-     * @name pc.Picker#resize
-     * @description Sets the resolution of the pick buffer. The pick buffer resolution does not need
-     * to match the resolution of the corresponding frame buffer use for general rendering of the
-     * 3D scene. However, the lower the resolution of the pick buffer, the less accurate the selection
-     * results returned by pc.Picker#getSelection. On the other hand, smaller pick buffers will
-     * yield greater performance, so there is a trade off.
-     * @param {Number} width The width of the pick buffer in pixels.
-     * @param {Number} height The height of the pick buffer in pixels.
-     */
-    Picker.prototype.resize = function (width, height) {
-        this.width = width;
-        this.height = height;
     };
 
     Object.defineProperty(Picker.prototype, 'renderTarget', {

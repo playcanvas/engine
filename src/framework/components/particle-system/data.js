@@ -1,6 +1,5 @@
 pc.extend(pc, function () {
-    var ParticleSystemComponentData = function () {
-
+    function ParticleSystemComponentData() {
         this.numParticles = 1;                  // Amount of particles allocated (max particles = max GL texture width at this moment)
         this.rate = 1;                          // Emission rate
         this.rate2 = null;
@@ -69,7 +68,7 @@ pc.extend(pc, function () {
         this.autoPlay = true;
 
         this.layers = [pc.LAYERID_WORLD]; // assign to the default world layer
-    };
+    }
     ParticleSystemComponentData = pc.inherits(ParticleSystemComponentData, pc.ComponentData);
 
     return {

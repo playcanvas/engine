@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var CollisionComponentData = function () {
+    function CollisionComponentData() {
         this.enabled = true;
         this.type = 'box';
         this.halfExtents = new pc.Vec3(0.5, 0.5, 0.5);
@@ -12,7 +12,7 @@ pc.extend(pc, function () {
         this.shape = null;
         this.model = null;
         this.initialized = false;
-    };
+    }
     CollisionComponentData = pc.inherits(CollisionComponentData, pc.ComponentData);
 
     return {

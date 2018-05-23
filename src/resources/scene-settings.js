@@ -1,11 +1,13 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var SceneSettingsHandler = function (app) {
+    function SceneSettingsHandler(app) {
         this._app = app;
-    };
+    }
 
     SceneSettingsHandler.prototype = {
+        constructor: SceneSettingsHandler,
+
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
                 if (!err) {

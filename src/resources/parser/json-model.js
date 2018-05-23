@@ -22,11 +22,13 @@ pc.extend(pc, function () {
     };
 
     // Take PlayCanvas JSON model data and create pc.Model
-    var JsonModelParser = function (device) {
+    function JsonModelParser(device) {
         this._device = device;
-    };
+    }
 
     JsonModelParser.prototype = {
+        constructor: JsonModelParser,
+
         parse: function (data) {
             var modelData = data.model;
             if (!modelData) {

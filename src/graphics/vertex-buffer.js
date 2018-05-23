@@ -13,7 +13,7 @@ pc.extend(pc, function () {
      * @param {Number} [usage] The usage type of the vertex buffer (see pc.BUFFER_*).
      * @param {ArrayBuffer} [initialData] Initial data.
      */
-    var VertexBuffer = function (graphicsDevice, format, numVertices, usage, initialData) {
+    function VertexBuffer(graphicsDevice, format, numVertices, usage, initialData) {
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
         this.usage = usage || pc.BUFFER_STATIC;
         this.format = format;
@@ -34,9 +34,11 @@ pc.extend(pc, function () {
         }
 
         this.device.buffers.push(this);
-    };
+    }
 
     VertexBuffer.prototype = {
+        constructor: VertexBuffer,
+
         /**
          * @function
          * @name pc.VertexBuffer#destroy

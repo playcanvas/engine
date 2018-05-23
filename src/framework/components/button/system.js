@@ -25,7 +25,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-    var ButtonComponentSystem = function ButtonComponentSystem(app) {
+    function ButtonComponentSystem(app) {
         this.id = 'button';
         this.app = app;
         app.systems.add(this.id, this);
@@ -36,7 +36,7 @@ pc.extend(pc, function () {
         this.schema = _schema;
 
         this.on('beforeremove', this._onRemoveComponent, this);
-    };
+    }
     ButtonComponentSystem = pc.inherits(ButtonComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.ButtonComponent.prototype, _schema);

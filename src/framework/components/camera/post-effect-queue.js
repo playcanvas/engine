@@ -35,6 +35,8 @@ pc.extend(pc, function () {
     }
 
     PostEffectQueue.prototype = {
+        constructor: PostEffectQueue,
+
         /**
          * @private
          * @function

@@ -8,8 +8,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-
-    var ScriptComponentSystem = function ScriptComponentSystem(app) {
+    function ScriptComponentSystem(app) {
         this.id = 'script';
         this.app = app;
         app.systems.add(this.id, this);
@@ -31,7 +30,7 @@ pc.extend(pc, function () {
         pc.ComponentSystem.on('postInitialize', this._onPostInitialize, this);
         pc.ComponentSystem.on('update', this._onUpdate, this);
         pc.ComponentSystem.on('postUpdate', this._onPostUpdate, this);
-    };
+    }
     ScriptComponentSystem = pc.inherits(ScriptComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.ScriptComponent.prototype, _schema);

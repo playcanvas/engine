@@ -4,14 +4,14 @@ pc.extend(pc, function () {
      * @name pc.GamePads
      * @classdesc Input handler for accessing GamePad input.
      */
-    var GamePads = function () {
+    function GamePads() {
         this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
 
         this.current = [];
         this.previous = [];
 
         this.deadZone = 0.25;
-    };
+    }
 
     var MAPS = {
         DEFAULT: {
@@ -97,6 +97,8 @@ pc.extend(pc, function () {
     };
 
     GamePads.prototype = {
+        constructor: GamePads,
+
         /**
          * @function
          * @name pc.GamePads#update

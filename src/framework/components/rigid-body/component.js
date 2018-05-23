@@ -45,7 +45,7 @@ pc.extend(pc, function () {
      * </ul>
      * Defaults to pc.BODYTYPE_STATIC.
      */
-    var RigidBodyComponent = function RigidBodyComponent(system, entity) {
+    function RigidBodyComponent(system, entity) {
         // Lazily create shared variable
         if (typeof Ammo !== 'undefined' && !ammoTransform) {
             ammoTransform = new Ammo.btTransform();
@@ -72,7 +72,7 @@ pc.extend(pc, function () {
         this._displacement = new pc.Vec3(0, 0, 0);
         this._linearVelocity = new pc.Vec3(0, 0, 0);
         this._angularVelocity = new pc.Vec3(0, 0, 0);
-    };
+    }
     RigidBodyComponent = pc.inherits(RigidBodyComponent, pc.Component);
 
     Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {

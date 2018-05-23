@@ -1,11 +1,13 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var HierarchyHandler = function (app) {
+    function HierarchyHandler(app) {
         this._app = app;
-    };
+    }
 
     HierarchyHandler.prototype = {
+        constructor: HierarchyHandler,
+
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
                 if (!err) {

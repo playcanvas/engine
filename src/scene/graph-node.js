@@ -14,7 +14,7 @@ pc.extend(pc, function () {
      * @property {String} name The non-unique name of a graph node.
      * @property {pc.Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link pc.GraphNode#findByTag} function.
      */
-    var GraphNode = function GraphNode(name) {
+    function GraphNode(name) {
         this.name = typeof name === "string" ? name : "Untitled"; // Non-unique human readable name
         this.tags = new pc.Tags(this);
 
@@ -53,7 +53,7 @@ pc.extend(pc, function () {
         this._enabledInHierarchy = false;
 
         this.scaleCompensation = false;
-    };
+    }
 
     /**
      * @readonly

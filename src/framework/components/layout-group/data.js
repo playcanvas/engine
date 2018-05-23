@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
-    var LayoutGroupComponentData = function () {
+    function LayoutGroupComponentData() {
         this.enabled = true;
-    };
+    }
     LayoutGroupComponentData = pc.inherits(LayoutGroupComponentData, pc.ComponentData);
 
     return {

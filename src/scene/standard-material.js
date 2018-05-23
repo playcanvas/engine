@@ -241,25 +241,24 @@ pc.extend(pc, function () {
      *
      * @extends pc.Material
      */
-
-    var StandardMaterial = function () {
+    function StandardMaterial() {
         this.reset();
         this.update();
-    };
+    }
 
-    var _createTexture = function (param) {
+    function _createTexture(param) {
         return (param.data instanceof pc.Texture) ? param.data : null;
-    };
+    }
 
-    var _createCubemap = function (param) {
+    function _createCubemap(param) {
         return (param.data instanceof pc.Texture) ? param.data : null;
-    };
+    }
 
-    var _createVec2 = function (param) {
+    function _createVec2(param) {
         return new pc.Vec2(param.data[0], param.data[1]);
-    };
+    }
 
-    var _createBoundingBox = function (param) {
+    function _createBoundingBox(param) {
         var center, halfExtents;
 
         if (param.data && param.data.center) {
@@ -274,11 +273,11 @@ pc.extend(pc, function () {
             halfExtents = new pc.Vec3(0.5, 0.5, 0.5);
         }
         return new pc.BoundingBox(center, halfExtents);
-    };
+    }
 
-    var _createRgb = function (param) {
+    function _createRgb(param) {
         return new pc.Color(param.data[0], param.data[1], param.data[2]);
-    };
+    }
 
     var _propsSerial = [];
     var _propsSerialDefaultVal = [];
@@ -286,7 +285,7 @@ pc.extend(pc, function () {
     var _propsInternalVec3 = [];
     var _prop2Uniform = {};
 
-    var _defineTex2D = function (obj, name, uv, channels, defChannel) {
+    function _defineTex2D(obj, name, uv, channels, defChannel) {
         var privMap = "_" + name + "Map";
         var privMapTiling = privMap + "Tiling";
         var privMapOffset = privMap + "Offset";
@@ -414,10 +413,10 @@ pc.extend(pc, function () {
         _propsSerial.push(privMapVertexColor.substring(1));
         _propsSerial.push(privMapVertexColorChannel.substring(1));
         _propsInternalNull.push(mapTransform);
-    };
+    }
 
     var _propsColor = [];
-    var _defineColor = function (obj, name, defaultValue, hasMultiplier) {
+    function _defineColor(obj, name, defaultValue, hasMultiplier) {
         var priv = "_" + name;
         var uform = name + "Uniform";
         var mult = name + "Intensity";
@@ -494,9 +493,9 @@ pc.extend(pc, function () {
                 return { name: ("material_" + name), value: arr };
             };
         }
-    };
+    }
 
-    var _defineFloat = function (obj, name, defaultValue, func) {
+    function _defineFloat(obj, name, defaultValue, func) {
         var priv = "_" + name;
         obj[priv] = defaultValue;
         Object.defineProperty(StandardMaterial.prototype, name, {
@@ -518,9 +517,9 @@ pc.extend(pc, function () {
                 value: val
             };
         };
-    };
+    }
 
-    var _defineObject = function (obj, name, func) {
+    function _defineObject(obj, name, func) {
         var priv = "_" + name;
         obj[priv] = null;
         Object.defineProperty(StandardMaterial.prototype, name, {
@@ -535,9 +534,9 @@ pc.extend(pc, function () {
         });
         _propsSerial.push(name);
         _prop2Uniform[name] = func;
-    };
+    }
 
-    var _defineAlias = function (obj, newName, oldName) {
+    function _defineAlias(obj, newName, oldName) {
         Object.defineProperty(StandardMaterial.prototype, oldName, {
             get: function () {
                 return this[newName];
@@ -546,9 +545,9 @@ pc.extend(pc, function () {
                 this[newName] = value;
             }
         });
-    };
+    }
 
-    var _defineChunks = function (obj) {
+    function _defineChunks(obj) {
         this._chunks = null;
         Object.defineProperty(StandardMaterial.prototype, "chunks", {
             get: function () {
@@ -561,9 +560,9 @@ pc.extend(pc, function () {
             }
         });
         _propsSerial.push("chunks");
-    };
+    }
 
-    var _defineFlag = function (obj, name, defaultValue) {
+    function _defineFlag(obj, name, defaultValue) {
         var priv = "_" + name;
         obj[priv] = defaultValue;
         Object.defineProperty(StandardMaterial.prototype, name, {
@@ -576,9 +575,9 @@ pc.extend(pc, function () {
             }
         });
         _propsSerial.push(name);
-    };
+    }
 
-    var Chunks = function () { };
+    function Chunks() {}
     Chunks.prototype.copy = function (from) {
         for (var p in from) {
             if (from.hasOwnProperty(p) && p !== 'copy')
@@ -1209,7 +1208,7 @@ pc.extend(pc, function () {
         }
     });
 
-    var _defineMaterialProps = function (obj) {
+    function _defineMaterialProps(obj) {
 
         obj.dirtyShader = true;
         obj.dirtyColor = true;
@@ -1333,7 +1332,7 @@ pc.extend(pc, function () {
         }
 
         obj._propsSet = [];
-    };
+    }
 
     _defineMaterialProps(StandardMaterial.prototype);
 

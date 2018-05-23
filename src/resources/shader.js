@@ -1,9 +1,12 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var ShaderHandler = function () {};
+    function ShaderHandler() {
+    }
 
     ShaderHandler.prototype = {
+        constructor: ShaderHandler,
+
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
                 if (!err) {

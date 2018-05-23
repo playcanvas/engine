@@ -1,11 +1,12 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var BinaryHandler = function () {
-
-    };
+    function BinaryHandler() {
+    }
 
     BinaryHandler.prototype = {
+        constructor: BinaryHandler,
+
         load: function (url, callback) {
             pc.http.get(url, { responseType: pc.Http.ResponseType.ARRAY_BUFFER }, function (err, response) {
                 if (!err) {

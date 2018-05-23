@@ -119,6 +119,8 @@ pc.extend(pc, function () {
         };
 
         SoundInstance.prototype = {
+            constructor: SoundInstance,
+
             /**
              * @function
              * @private
@@ -641,6 +643,8 @@ pc.extend(pc, function () {
         };
 
         SoundInstance.prototype = {
+            constructor: SoundInstance,
+
             play: function () {
                 if (this._state !== STATE_STOPPED) {
                     this.stop();
@@ -1037,7 +1041,6 @@ pc.extend(pc, function () {
             return this._suspended;
         }
     });
-
 
     return {
         SoundInstance: SoundInstance

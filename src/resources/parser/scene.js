@@ -1,11 +1,13 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var SceneParser = function (app) {
+    function SceneParser(app) {
         this._app = app;
-    };
+    }
 
     SceneParser.prototype = {
+        constructor: SceneParser,
+
         parse: function (data) {
             var entities = {};
             var id, i;

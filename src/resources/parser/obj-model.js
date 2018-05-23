@@ -18,11 +18,13 @@ pc.extend(pc, function () {
      * this.app.assets.add(asset);
      * this.app.assets.load(asset);
      */
-    var ObjModelParser = function (device) {
+    function ObjModelParser(device) {
         this._device = device;
-    };
+    }
 
     ObjModelParser.prototype = {
+        constructor: ObjModelParser,
+
         /*
          * First draft obj parser
          * probably doesn't handle a lot of the obj spec
@@ -132,7 +134,6 @@ pc.extend(pc, function () {
             return result;
         }
     };
-
 
     return {
         ObjModelParser: ObjModelParser

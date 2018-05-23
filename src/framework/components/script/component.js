@@ -9,8 +9,7 @@ pc.extend(pc, function () {
      * @extends pc.Component
      * @property {ScriptType[]} scripts An array of all script instances attached to an entity. This Array shall not be modified by developer.
      */
-
-    var ScriptComponent = function ScriptComponent(system, entity) {
+    function ScriptComponent(system, entity) {
         this._scripts = [];
         this._scriptsIndex = {};
         this._destroyedScripts = [];
@@ -20,7 +19,7 @@ pc.extend(pc, function () {
         this._beingEnabled = false;
         this._isLoopingThroughScripts = false;
         this.on('set_enabled', this._onSetEnabled, this);
-    };
+    }
     ScriptComponent = pc.inherits(ScriptComponent, pc.Component);
 
     ScriptComponent.scriptMethods = {

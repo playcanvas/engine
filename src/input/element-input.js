@@ -23,15 +23,15 @@ pc.extend(pc, function () {
     var ZERO_VEC4 = new pc.Vec4();
 
     // pi x p2 * p3
-    var scalarTriple = function (p1, p2, p3) {
+    function scalarTriple(p1, p2, p3) {
         return _sct.cross(p1, p2).dot(p3);
-    };
+    }
 
     /*
      * Given line pq and ccw corners of a quad, return whether the line
      * intersects it. (from Real-Time Collision Detection book)
      */
-    var intersectLineQuad = function (p, q, corners) {
+    function intersectLineQuad(p, q, corners) {
         _pq.sub2(q, p);
         _pa.sub2(corners[0], p);
         _pb.sub2(corners[1], p);
@@ -65,7 +65,7 @@ pc.extend(pc, function () {
         if (_pq.sub2(corners[1], corners[3]).lengthSq() < 0.0001 * 0.0001) return false;
 
         return true;
-    };
+    }
 
     /**
      * @constructor
@@ -78,13 +78,15 @@ pc.extend(pc, function () {
      * @property {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
      * @property {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
      */
-    var ElementInputEvent = function (event, element) {
+    function ElementInputEvent(event, element) {
         this.event = event;
         this.element = element;
         this._stopPropagation = false;
-    };
+    }
 
     ElementInputEvent.prototype = {
+        constructor: ElementInputEvent,
+
         /**
          * @function
          * @name pc.ElementInputEvent#stopPropagation
@@ -95,7 +97,6 @@ pc.extend(pc, function () {
             this.event.stopImmediatePropagation();
             this.event.stopPropagation();
         }
-
     };
 
     /**
@@ -119,7 +120,7 @@ pc.extend(pc, function () {
      * @property {Number} dy The amount of vertical movement of the cursor
      * @property {Number} wheel The amount of the wheel movement
      */
-    var ElementMouseEvent = function (event, element, x, y, lastX, lastY) {
+    function ElementMouseEvent(event, element, x, y, lastX, lastY) {
         this.x = x;
         this.y = y;
 
@@ -149,7 +150,7 @@ pc.extend(pc, function () {
         } else {
             this.wheel = 0;
         }
-    };
+    }
 
     ElementMouseEvent = pc.inherits(ElementMouseEvent, ElementInputEvent);
 
@@ -165,10 +166,10 @@ pc.extend(pc, function () {
      * @property {Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
      * @property {Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
      */
-    var ElementTouchEvent = function (event, element, input) {
+    function ElementTouchEvent(event, element, input) {
         this.touches = event.touches;
         this.changedTouches = event.changedTouches;
-    };
+    }
 
     ElementTouchEvent = pc.inherits(ElementTouchEvent, ElementInputEvent);
 
@@ -180,7 +181,7 @@ pc.extend(pc, function () {
      * @description Create a new pc.ElementInput instance.
      * @param {Element} domElement The DOM element
      */
-    var ElementInput = function (domElement) {
+    function ElementInput(domElement) {
         this._app = null;
         this._attached = false;
         this._target = null;
@@ -211,9 +212,11 @@ pc.extend(pc, function () {
         }
 
         this.attach(domElement);
-    };
+    }
 
     ElementInput.prototype = {
+        constructor: ElementInput,
+
         /**
          * @function
          * @name pc.ElementInput#attach

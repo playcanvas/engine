@@ -1,10 +1,12 @@
 pc.extend(pc, (function () {
-    var TagsCache = function (key) {
+    function TagsCache(key) {
         this._index = { };
         this._key = key || null;
-    };
+    }
 
     TagsCache.prototype = {
+        constructor: TagsCache,
+
         addItem: function (item) {
             var tags = item.tags._list;
 
@@ -175,15 +177,17 @@ pc.extend(pc, (function () {
      * It will fire once on bulk changes, while `add`/`remove` will fire on each tag operation
      */
 
-    var Tags = function (parent) {
+    function Tags(parent) {
         this._index = { };
         this._list = [];
         this._parent = parent;
 
         pc.events.attach(this);
-    };
+    }
 
     Tags.prototype = {
+        constructor: Tags,
+
         /**
          * @function
          * @name pc.Tags#add

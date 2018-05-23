@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
-    var SpriteComponentData = function () {
+    function SpriteComponentData() {
         this.enabled = true;
-    };
+    }
     SpriteComponentData = pc.inherits(SpriteComponentData, pc.ComponentData);
 
     return {

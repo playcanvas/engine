@@ -10,12 +10,11 @@ pc.extend(pc, function () {
      * @param {pc.ZoneComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Vec3} size The Size of Box of a Zone.
      */
-
-    var ZoneComponent = function ZoneComponent(system, entity) {
+    function ZoneComponent(system, entity) {
         this._oldState = true;
         this._size = new pc.Vec3();
         this.on('set_enabled', this._onSetEnabled, this);
-    };
+    }
     ZoneComponent = pc.inherits(ZoneComponent, pc.Component);
 
     /**

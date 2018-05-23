@@ -1,11 +1,13 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var FontHandler = function (loader) {
+    function FontHandler(loader) {
         this._loader = loader;
-    };
+    }
 
     FontHandler.prototype = {
+        constructor: FontHandler,
+
         load: function (url, callback, asset) {
             var self = this;
             if (pc.path.getExtension(url) === '.json') {

@@ -1,6 +1,6 @@
 pc.extend(pc, function () {
 
-    var ImageElement = function ImageElement(element) {
+    function ImageElement(element) {
         this._element = element;
         this._entity = element.entity;
         this._system = element.system;
@@ -59,7 +59,7 @@ pc.extend(pc, function () {
         this._element.on('set:screen', this._onScreenChange, this);
         this._element.on('set:draworder', this._onDrawOrderChange, this);
         this._element.on('screen:set:resolution', this._onResolutionChange, this);
-    };
+    }
 
     pc.extend(ImageElement.prototype, {
         destroy: function () {

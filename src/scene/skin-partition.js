@@ -28,6 +28,8 @@ pc.extend(pc, function () {
     }
 
     SkinPartition.prototype = {
+        constructor: SkinPartition,
+
         addVertex: function (vertex, idx, vertexArray) {
             var remappedIndex = -1;
             if (this.indexMap[idx] !== undefined) {

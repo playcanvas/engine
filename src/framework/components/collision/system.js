@@ -12,11 +12,13 @@ pc.extend(pc, function () {
     ];
 
     // Collision system implementations
-    var CollisionSystemImpl = function (system) {
+    function CollisionSystemImpl(system) {
         this.system = system;
-    };
+    }
 
     CollisionSystemImpl.prototype = {
+        constructor: CollisionSystemImpl,
+
         // Called before the call to system.super.initializeComponentData is made
         beforeInitialize: function (component, data) {
             data.shape = this.createPhysicalShape(component.entity, data);
@@ -111,7 +113,7 @@ pc.extend(pc, function () {
     };
 
     // Box Collision System
-    var CollisionBoxSystemImpl = function (system) {};
+    function CollisionBoxSystemImpl(system) {}
 
     CollisionBoxSystemImpl = pc.inherits(CollisionBoxSystemImpl, CollisionSystemImpl);
 
@@ -127,11 +129,11 @@ pc.extend(pc, function () {
     });
 
     // Sphere Collision System
-    var CollisionSphereSystemImpl = function (system) {};
+    function CollisionSphereSystemImpl(system) {}
 
     CollisionSphereSystemImpl = pc.inherits(CollisionSphereSystemImpl, CollisionSystemImpl);
 
-    CollisionSphereSystemImpl.prototype = pc.extend(CollisionSphereSystemImpl.prototype, {
+    pc.extend(CollisionSphereSystemImpl.prototype, {
         createPhysicalShape: function (entity, data) {
             if (typeof Ammo !== 'undefined') {
                 return new Ammo.btSphereShape(data.radius);
@@ -141,11 +143,11 @@ pc.extend(pc, function () {
     });
 
     // Capsule Collision System
-    var CollisionCapsuleSystemImpl = function (system) {};
+    function CollisionCapsuleSystemImpl(system) {}
 
     CollisionCapsuleSystemImpl = pc.inherits(CollisionCapsuleSystemImpl, CollisionSystemImpl);
 
-    CollisionCapsuleSystemImpl.prototype = pc.extend(CollisionCapsuleSystemImpl.prototype, {
+    pc.extend(CollisionCapsuleSystemImpl.prototype, {
         createPhysicalShape: function (entity, data) {
             var shape = null;
             var axis = (data.axis !== undefined) ? data.axis : 1;
@@ -170,11 +172,11 @@ pc.extend(pc, function () {
     });
 
     // Cylinder Collision System
-    var CollisionCylinderSystemImpl = function (system) {};
+    function CollisionCylinderSystemImpl(system) {}
 
     CollisionCylinderSystemImpl = pc.inherits(CollisionCylinderSystemImpl, CollisionSystemImpl);
 
-    CollisionCylinderSystemImpl.prototype = pc.extend(CollisionCylinderSystemImpl.prototype, {
+    pc.extend(CollisionCylinderSystemImpl.prototype, {
         createPhysicalShape: function (entity, data) {
             var halfExtents = null;
             var shape = null;
@@ -203,11 +205,11 @@ pc.extend(pc, function () {
     });
 
     // Mesh Collision System
-    var CollisionMeshSystemImpl = function (system) { };
+    function CollisionMeshSystemImpl(system) {}
 
     CollisionMeshSystemImpl = pc.inherits(CollisionMeshSystemImpl, CollisionSystemImpl);
 
-    CollisionMeshSystemImpl.prototype = pc.extend(CollisionMeshSystemImpl.prototype, {
+    pc.extend(CollisionMeshSystemImpl.prototype, {
         /*
          * override for the mesh implementation because the asset model needs
          * special handling
@@ -374,7 +376,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The running {pc.Application}
      * @extends pc.ComponentSystem
      */
-    var CollisionComponentSystem = function CollisionComponentSystem(app) {
+    function CollisionComponentSystem(app) {
         this.id = "collision";
         this.description = "Specifies a collision volume.";
         app.systems.add(this.id, this);
@@ -389,13 +391,13 @@ pc.extend(pc, function () {
         this.on('remove', this.onRemove, this);
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
-    };
+    }
 
     CollisionComponentSystem = pc.inherits(CollisionComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.CollisionComponent.prototype, _schema);
 
-    CollisionComponentSystem.prototype = pc.extend(CollisionComponentSystem.prototype, {
+    pc.extend(CollisionComponentSystem.prototype, {
         onLibraryLoaded: function () {
             if (typeof Ammo !== 'undefined') {
                 //

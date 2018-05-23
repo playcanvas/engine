@@ -26,7 +26,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The Application.
      * @extends pc.ComponentSystem
      */
-    var ModelComponentSystem = function ModelComponentSystem(app) {
+    function ModelComponentSystem(app) {
         this.id = 'model';
         this.description = "Renders a 3D model at the location of the Entity.";
         app.systems.add(this.id, this);
@@ -65,7 +65,7 @@ pc.extend(pc, function () {
         this.defaultMaterial = new pc.StandardMaterial();
 
         this.on('beforeremove', this.onRemove, this);
-    };
+    }
     ModelComponentSystem = pc.inherits(ModelComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.ModelComponent.prototype, _schema);

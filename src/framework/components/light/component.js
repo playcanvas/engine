@@ -101,12 +101,12 @@ pc.extend(pc, function () {
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      * @extends pc.Component
      */
-    var LightComponent = function LightComponent(system, entity) {
+    function LightComponent(system, entity) {
         this._cookieAsset = null;
         this._cookieAssetId = null;
         this._cookieAssetAdd = false;
         this._cookieMatrix = null;
-    };
+    }
     LightComponent = pc.inherits(LightComponent, pc.Component);
 
     var _props = [];

@@ -60,7 +60,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The Application.
      * @extends pc.ComponentSystem
      */
-    var ParticleSystemComponentSystem = function ParticleSystemComponentSystem(app) {
+    function ParticleSystemComponentSystem(app) {
         this.id = 'particlesystem';
         this.description = "Updates and renders particle system in the scene.";
         app.systems.add(this.id, this);
@@ -89,7 +89,7 @@ pc.extend(pc, function () {
 
         this.on('beforeremove', this.onRemove, this);
         pc.ComponentSystem.on('update', this.onUpdate, this);
-    };
+    }
     ParticleSystemComponentSystem = pc.inherits(ParticleSystemComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.ParticleSystemComponent.prototype, _schema);

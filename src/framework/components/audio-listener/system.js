@@ -10,7 +10,7 @@ pc.extend(pc, function () {
      * @param {pc.SoundManager} manager A sound manager instance.
      * @extends pc.ComponentSystem
      */
-    var AudioListenerComponentSystem = function (app, manager) {
+    function AudioListenerComponentSystem(app, manager) {
         this.id = "audiolistener";
         this.description = "Specifies the location of the listener for 3D audio playback.";
         app.systems.add(this.id, this);
@@ -24,7 +24,7 @@ pc.extend(pc, function () {
         this.current = null;
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
-    };
+    }
     AudioListenerComponentSystem = pc.inherits(AudioListenerComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.AudioListenerComponent.prototype, _schema);

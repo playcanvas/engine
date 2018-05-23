@@ -6,13 +6,15 @@ pc.extend(pc, (function () {
      * @description Create a new Timer instance.
      * @classdesc A Timer counts milliseconds from when start() is called until when stop() is called.
      */
-    var Timer = function Timer() {
+    function Timer() {
         this._isRunning = false;
         this._a = 0;
         this._b = 0;
-    };
+    }
 
     Timer.prototype = {
+        constructor: Timer,
+
         /**
          * @private
          * @function

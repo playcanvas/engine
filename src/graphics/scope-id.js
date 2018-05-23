@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var ScopeId = function (name) {
+    function ScopeId(name) {
         // Set the name
         this.name = name;
 
@@ -10,9 +10,11 @@ pc.extend(pc, function () {
 
         // Create the version object
         this.versionObject = new pc.VersionedObject();
-    };
+    }
 
     ScopeId.prototype = {
+        constructor: ScopeId,
+
         setValue: function (value) {
             // Set the new value
             this.value = value;

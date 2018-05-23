@@ -9,7 +9,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-    var ScreenComponentSystem = function ScreenComponentSystem(app) {
+    function ScreenComponentSystem(app) {
         this.id = 'screen';
         this.app = app;
         app.systems.add(this.id, this);
@@ -25,7 +25,7 @@ pc.extend(pc, function () {
         pc.ComponentSystem.on('update', this._onUpdate, this);
 
         this.on('beforeremove', this.onRemoveComponent, this);
-    };
+    }
     ScreenComponentSystem = pc.inherits(ScreenComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.ScreenComponent.prototype, _schema);

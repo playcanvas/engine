@@ -8,7 +8,7 @@ pc.extend(pc, function () {
      * @param {pc.ResourceLoader} loader The ResourceLoader used to load the asset files.
      * @property {String} prefix A URL prefix that will be added to all asset loading requests.
      */
-    var AssetRegistry = function (loader) {
+    function AssetRegistry(loader) {
         this._loader = loader;
 
         this._assets = []; // list of all assets
@@ -20,7 +20,7 @@ pc.extend(pc, function () {
         this.prefix = null;
 
         pc.extend(this, pc.events);
-    };
+    }
 
     /**
      * @event
@@ -151,6 +151,8 @@ pc.extend(pc, function () {
      */
 
     AssetRegistry.prototype = {
+        constructor: AssetRegistry,
+
         /**
          * @function
          * @name pc.AssetRegistry#list

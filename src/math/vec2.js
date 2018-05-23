@@ -11,7 +11,7 @@ pc.extend(pc, (function () {
      * @example
      * var v = new pc.Vec2(1, 2);
      */
-    var Vec2 = function (x, y) {
+    function Vec2(x, y) {
         if (x && x.length === 2) {
             this.data = new Float32Array(x);
             return;
@@ -21,9 +21,11 @@ pc.extend(pc, (function () {
 
         this.data[0] = x || 0;
         this.data[1] = y || 0;
-    };
+    }
 
     Vec2.prototype = {
+        constructor: Vec2,
+
         /**
          * @function
          * @name pc.Vec2#add

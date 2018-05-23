@@ -82,7 +82,7 @@ pc.extend(pc, function () {
      * @param {pc.ForwardRenderer} renderer The renderer.
      * @param {Array} assets Array of assets to lightmap.
      */
-    var Lightmapper = function (device, root, scene, renderer, assets) {
+    function Lightmapper(device, root, scene, renderer, assets) {
         this.device = device;
         this.root = root;
         this.scene = scene;
@@ -101,9 +101,10 @@ pc.extend(pc, function () {
             shadersLinked: 0
         };
         // #endif
-    };
+    }
 
     Lightmapper.prototype = {
+        constructor: Lightmapper,
 
         calculateLightmapSize: function (node) {
             var data, parent;

@@ -689,6 +689,8 @@ pc.extend(pc, function () {
     CALCULATE_FNS[pc.ORIENTATION_VERTICAL] = createCalculator(pc.ORIENTATION_VERTICAL);
 
     LayoutCalculator.prototype = {
+        constructor: LayoutCalculator,
+
         calculateLayout: function (elements, options) {
             var calculateFn = CALCULATE_FNS[options.orientation];
 

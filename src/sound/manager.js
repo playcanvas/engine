@@ -33,7 +33,7 @@ pc.extend(pc, function () {
      * @param {Boolean} [options.forceWebAudioApi] Always use the Web Audio API even check indicates that it if not available
      * @property {Number} volume Global volume for the manager. All {@link pc.SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
      */
-    var SoundManager = function (options) {
+    function SoundManager(options) {
         if (hasAudioContext() || options.forceWebAudioApi) {
             if (typeof AudioContext !== 'undefined') {
                 this.context = new AudioContext();
@@ -77,12 +77,13 @@ pc.extend(pc, function () {
         this.suspended = false;
 
         pc.events.attach(this);
-    };
+    }
 
     SoundManager.hasAudio = hasAudio;
     SoundManager.hasAudioContext = hasAudioContext;
 
     SoundManager.prototype = {
+        constructor: SoundManager,
 
         suspend: function  () {
             this.suspended = true;

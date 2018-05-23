@@ -54,7 +54,7 @@ pc.extend(pc, function () {
      * @property {Boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
      * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
      */
-    var Asset = function (name, type, file, data) {
+    function Asset(name, type, file, data) {
         this._id = ++assetIdCounter;
 
         this.name = name || '';
@@ -79,7 +79,7 @@ pc.extend(pc, function () {
         pc.events.attach(this);
 
         if (file) this.file = file;
-    };
+    }
 
     /**
      * @event
@@ -114,6 +114,8 @@ pc.extend(pc, function () {
      */
 
     Asset.prototype = {
+        constructor: Asset,
+
         /**
          * @name pc.Asset#getFileUrl
          * @function
@@ -227,7 +229,6 @@ pc.extend(pc, function () {
             }
         }
     };
-
 
     Object.defineProperty(Asset.prototype, 'id', {
         get: function () {

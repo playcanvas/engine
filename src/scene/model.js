@@ -11,7 +11,7 @@ pc.extend(pc, function () {
      * @property {pc.GraphNode} graph The root node of the model's graph node hierarchy.
      * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in this model.
      */
-    var Model = function Model() {
+    function Model() {
         this.graph = null;
         this.meshInstances = [];
         this.skinInstances = [];
@@ -21,9 +21,11 @@ pc.extend(pc, function () {
         this.lights = [];
 
         this._shadersVersion = 0;
-    };
+    }
 
     Model.prototype = {
+        constructor: Model,
+
         getGraph: function () {
             return this.graph;
         },

@@ -36,7 +36,7 @@ pc.extend(pc, (function () {
      * value second)
      * @property {Number} length The number of keys in the curve. [read only]
      */
-    var Curve = function (data) {
+    function Curve(data) {
         this.keys = [];
         this.type = CURVE_SMOOTHSTEP;
 
@@ -49,9 +49,11 @@ pc.extend(pc, (function () {
         }
 
         this.sort();
-    };
+    }
 
     Curve.prototype = {
+        constructor: Curve,
+
         /**
          * @function
          * @name pc.Curve#add

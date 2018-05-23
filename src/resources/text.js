@@ -1,11 +1,12 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var TextHandler = function () {
-
-    };
+    function TextHandler() {
+    }
 
     TextHandler.prototype = {
+        constructor: TextHandler,
+
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
                 if (!err) {

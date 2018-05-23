@@ -25,7 +25,7 @@ pc.extend(pc, (function () {
      * @param {Number} [v14] The value in row 2, column 3.
      * @param {Number} [v15] The value in row 3, column 3.
      */
-    var Mat4 = function (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15) {
+    function Mat4(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15) {
         if (v0 && v0.length === 16) {
             this.data = new Float32Array(v0);
             return;
@@ -53,9 +53,11 @@ pc.extend(pc, (function () {
         } else {
             this.setIdentity();
         }
-    };
+    }
 
     Mat4.prototype = {
+        constructor: Mat4,
+
         /**
          * @function
          * @name pc.Mat4#add2

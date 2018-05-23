@@ -50,7 +50,7 @@ pc.extend(pc, function () {
         };
         SoundInstance3d = pc.inherits(SoundInstance3d, pc.SoundInstance);
 
-        SoundInstance3d.prototype = pc.extend(SoundInstance3d.prototype, {
+        pc.extend(SoundInstance3d.prototype, {
             _initializeNodes: function () {
                 this.gain = this._manager.context.createGain();
                 this.panner = this._manager.context.createPanner();

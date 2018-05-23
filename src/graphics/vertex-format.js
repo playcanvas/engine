@@ -66,7 +66,7 @@ pc.extend(pc, function () {
      *     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
      * ]);
      */
-    var VertexFormat = function (graphicsDevice, description) {
+    function VertexFormat(graphicsDevice, description) {
         var i, len, element;
 
         this.elements = [];
@@ -109,7 +109,7 @@ pc.extend(pc, function () {
 
             offset += element.size;
         }
-    };
+    }
 
     return {
         VertexFormat: VertexFormat

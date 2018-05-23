@@ -87,6 +87,8 @@ pc.extend(pc, function () {
     }
 
     VertexIterator.prototype = {
+        constructor: VertexIterator,
+
         /**
          * @function
          * @name pc.VertexIterator#next

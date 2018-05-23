@@ -177,6 +177,54 @@ pc.extend(pc.scene, {
     SkinInstance: pc.SkinInstance
 });
 
+// DEPRECATED
+/**
+ * @private
+ * @function
+ * @name pc.Material#getName
+ * @description Returns the string name of the specified material. This name is not
+ * necessarily unique. Material names set by an artist within the modelling application
+ * should be preserved in the PlayCanvas runtime.
+ * @returns {String} The name of the material.
+ */
+pc.Material.prototype.getName = function () {
+    return this.name;
+};
+
+/**
+ * @private
+ * @function
+ * @name pc.Material#setName
+ * @description Sets the string name of the specified material. This name does not
+ * have to be unique.
+ * @param {String} name The name of the material.
+ */
+pc.Material.prototype.setName = function (name) {
+    this.name = name;
+};
+
+/**
+ * @private
+ * @function
+ * @name pc.Material#getShader
+ * @description Retrieves the shader assigned to the specified material.
+ * @returns {pc.Shader} The shader assigned to the material.
+ */
+pc.Material.prototype.getShader = function () {
+    return this.shader;
+};
+
+/**
+ * @private
+ * @function
+ * @name pc.Material#setShader
+ * @description Assigns a shader to the specified material.
+ * @param {pc.Shader} shader The shader to assign to the material.
+ */
+pc.Material.prototype.setShader = function (shader) {
+    this.shader = shader;
+};
+
 pc.shape = {
     Aabb: pc.BoundingBox,
     Sphere: pc.BoundingSphere,

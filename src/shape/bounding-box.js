@@ -13,14 +13,15 @@ pc.extend(pc, function () {
      * @param {pc.Vec3} [center] Center of box. The constructor takes a reference of this parameter.
      * @param {pc.Vec3} [halfExtents] Half the distance across the box in each axis. The constructor takes a reference of this parameter.
      */
-    var BoundingBox = function BoundingBox(center, halfExtents) {
+    function BoundingBox(center, halfExtents) {
         this.center = center || new pc.Vec3(0, 0, 0);
         this.halfExtents = halfExtents || new pc.Vec3(0.5, 0.5, 0.5);
         this._min = new pc.Vec3();
         this._max = new pc.Vec3();
-    };
+    }
 
     BoundingBox.prototype = {
+        constructor: BoundingBox,
 
         /**
          * @function

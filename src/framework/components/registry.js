@@ -5,10 +5,12 @@ pc.extend(pc, function () {
      * @classdesc Store, access and delete instances of the various ComponentSystems
      * @description Create a new ComponentSystemRegistry
      */
-    var ComponentSystemRegistry = function () {
-    };
+    function ComponentSystemRegistry() {
+    }
 
     ComponentSystemRegistry.prototype = {
+        constructor: ComponentSystemRegistry,
+
         /**
          * @private
          * @function

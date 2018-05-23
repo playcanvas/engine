@@ -9,7 +9,7 @@ pc.extend(pc, (function () {
      * @param {Array} [curveKeys] An array of arrays of keys (pairs of numbers with
      * the time first and value second).
      */
-    var CurveSet = function () {
+    function CurveSet() {
         var i;
 
         this.curves = [];
@@ -35,9 +35,11 @@ pc.extend(pc, (function () {
                 }
             }
         }
-    };
+    }
 
     CurveSet.prototype = {
+        constructor: CurveSet,
+
         /**
          * @function
          * @name pc.CurveSet#get

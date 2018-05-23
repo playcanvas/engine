@@ -14,7 +14,7 @@ pc.extend(pc, function () {
      * @param {pc.Mat4} projectionMatrix The projection matrix describing the shape of the frustum.
      * @param {pc.Mat4} viewMatrix The inverse of the world transformation matrix for the frustum.
      */
-    var Frustum = function Frustum(projectionMatrix, viewMatrix) {
+    function Frustum(projectionMatrix, viewMatrix) {
         projectionMatrix = projectionMatrix || new pc.Mat4().setPerspective(90, 16 / 9, 0.1, 1000);
         viewMatrix = viewMatrix || new pc.Mat4();
 
@@ -23,9 +23,11 @@ pc.extend(pc, function () {
             this.planes[i] = [];
 
         this.update(projectionMatrix, viewMatrix);
-    };
+    }
 
     Frustum.prototype = {
+        constructor: Frustum,
+
         /**
          * @function
          * @name pc.Frustum#update

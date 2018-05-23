@@ -18,7 +18,7 @@ pc.extend(pc, function () {
      * @param {String} [name] Name
      * @param {pc.BoundingBox} [aabb] Bounding box. Will be automatically generated, if undefined.
      */
-    var MorphTarget = function (options) {
+    function MorphTarget(options) {
         if (options.indices) {
             this.indices = options.indices;
         } else {
@@ -34,7 +34,7 @@ pc.extend(pc, function () {
         this.deltaTangents = options.deltaTangents;
         this.name = options.name;
         this.aabb = options.aabb;
-    };
+    }
 
     /**
      * @private
@@ -43,7 +43,7 @@ pc.extend(pc, function () {
      * @classdesc Contains a list of pc.MorphTarget, a combined AABB and some associated data.
      * @param {pc.MoprhTarget[]} targets A list of morph targets
      */
-    var Morph = function (targets) {
+    function Morph(targets) {
         this.aabb = new pc.BoundingBox();
 
         this._baseBuffer = null;
@@ -57,7 +57,7 @@ pc.extend(pc, function () {
         this._offsetNF = 0;
         this._offsetTF = 0;
         this._vertSizeF = 0;
-    };
+    }
 
     pc.extend(Morph.prototype, {
 
@@ -183,16 +183,17 @@ pc.extend(pc, function () {
      * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, holds morphed buffer and associated data.
      * @param {pc.Morph} morph The pc.Morph to instance.
      */
-    var MorphInstance = function (morph) {
+    function MorphInstance(morph) {
         this.morph = morph;
 
         this._vertexBuffer = null;
         this._vertexData = null;
         this._weights = [];
         this._dirty = true;
-    };
+    }
 
     MorphInstance.prototype = {
+        constructor: MorphInstance,
 
         // called if the mesh is changed
         _setBaseMesh: function (baseMesh) {

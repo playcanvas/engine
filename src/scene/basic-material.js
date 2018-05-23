@@ -21,13 +21,13 @@ pc.extend(pc, function () {
      *
      * @extends pc.Material
      */
-    var BasicMaterial = function () {
+    function BasicMaterial() {
         this.color = new pc.Color(1, 1, 1, 1);
         this.colorMap = null;
         this.vertexColors = false;
 
         this.update();
-    };
+    }
 
     BasicMaterial = pc.inherits(BasicMaterial, pc.Material);
 

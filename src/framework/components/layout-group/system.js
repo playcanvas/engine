@@ -9,7 +9,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-    var LayoutGroupComponentSystem = function LayoutGroupComponentSystem(app) {
+    function LayoutGroupComponentSystem(app) {
         this.id = 'layoutgroup';
         this.app = app;
         app.systems.add(this.id, this);
@@ -25,7 +25,7 @@ pc.extend(pc, function () {
 
         // Perform reflow when running in the engine
         pc.ComponentSystem.on('postUpdate', this._onPostUpdate, this);
-    };
+    }
     LayoutGroupComponentSystem = pc.inherits(LayoutGroupComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.LayoutGroupComponent.prototype, _schema);

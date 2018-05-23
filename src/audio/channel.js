@@ -39,6 +39,8 @@ pc.extend(pc, function () {
         };
 
         Channel.prototype = {
+            constructor: Channel,
+
             /**
              * @private
              * @function
@@ -216,6 +218,8 @@ pc.extend(pc, function () {
         };
 
         Channel.prototype = {
+            constructor: Channel,
+
             play: function () {
                 if (this.source) {
                     this.paused = false;

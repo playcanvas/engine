@@ -24,7 +24,7 @@ pc.extend(pc, function () {
      * @property {pc.SoundManager} manager Gets / sets the sound manager
      * @extends pc.ComponentSystem
      */
-    var SoundComponentSystem = function (app, manager) {
+    function SoundComponentSystem(app, manager) {
         this.id = "sound";
         this.description = "Allows an Entity to play sounds";
         app.systems.add(this.id, this);
@@ -39,7 +39,7 @@ pc.extend(pc, function () {
         pc.ComponentSystem.on('update', this.onUpdate, this);
 
         this.on('beforeremove', this.onBeforeRemove, this);
-    };
+    }
     SoundComponentSystem = pc.inherits(SoundComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.SoundComponent.prototype, _schema);

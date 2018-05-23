@@ -11,7 +11,7 @@ pc.extend(pc, (function () {
      * @param {Number} [z] The quaternion's z component. Default value 0.
      * @param {Number} [w] The quaternion's w component. Default value 1.
      */
-    var Quat = function (x, y, z, w) {
+    function Quat(x, y, z, w) {
         if (x && x.length === 4) {
             this.x = x[0];
             this.y = x[1];
@@ -23,7 +23,7 @@ pc.extend(pc, (function () {
             this.z = (z === undefined) ? 0 : z;
             this.w = (w === undefined) ? 1 : w;
         }
-    };
+    }
 
     /**
      * @field
@@ -83,6 +83,8 @@ pc.extend(pc, (function () {
      */
 
     Quat.prototype = {
+        constructor: Quat,
+
         /**
          * @function
          * @name pc.Quat#clone

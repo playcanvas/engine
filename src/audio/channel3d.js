@@ -16,7 +16,7 @@ pc.extend(pc, function () {
         };
         Channel3d = pc.inherits(Channel3d, pc.Channel);
 
-        Channel3d.prototype = pc.extend(Channel3d.prototype, {
+        pc.extend(Channel3d.prototype, {
             getPosition: function () {
                 return this.position;
             },
@@ -132,7 +132,7 @@ pc.extend(pc, function () {
         };
         Channel3d = pc.inherits(Channel3d, pc.Channel);
 
-        Channel3d.prototype = pc.extend(Channel3d.prototype, {
+        pc.extend(Channel3d.prototype, {
             getPosition: function () {
                 return this.position;
             },

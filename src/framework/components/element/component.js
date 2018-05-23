@@ -91,7 +91,7 @@ pc.extend(pc, function () {
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
-    var ElementComponent = function ElementComponent(system, entity) {
+    function ElementComponent(system, entity) {
         this._anchor = new pc.Vec4();
         this._localAnchor = new pc.Vec4();
 
@@ -161,7 +161,7 @@ pc.extend(pc, function () {
         // #ifdef DEBUG
         this._batchGroup = null;
         // #endif
-    };
+    }
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
 

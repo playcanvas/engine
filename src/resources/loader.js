@@ -7,13 +7,15 @@ pc.extend(pc, function () {
      * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
      * multiple requests. Add ResourceHandlers to handle different types of resources.
      */
-    var ResourceLoader = function () {
+    function ResourceLoader() {
         this._handlers = {};
         this._requests = {};
         this._cache = {};
-    };
+    }
 
     ResourceLoader.prototype = {
+        constructor: ResourceLoader,
+
         /**
          * @function
          * @name pc.ResourceLoader#addHandler

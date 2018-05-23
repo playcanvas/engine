@@ -21,6 +21,8 @@ pc.extend(pc, function () {
     }
 
     BoundingSphere.prototype = {
+        constructor: BoundingSphere,
+
         containsPoint: function (point) {
             var lenSq = tmpVecA.sub2(point, this.center).lengthSq();
             var r = this.radius;

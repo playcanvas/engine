@@ -25,7 +25,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application managing this system.
      * @extends pc.ComponentSystem
      */
-    var AnimationComponentSystem = function AnimationComponentSystem(app) {
+    function AnimationComponentSystem(app) {
         this.id = 'animation';
         this.description = "Specifies the animation assets that can run on the model specified by the Entity's model Component.";
 
@@ -40,7 +40,7 @@ pc.extend(pc, function () {
         this.on('update', this.onUpdate, this);
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
-    };
+    }
     AnimationComponentSystem = pc.inherits(AnimationComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.AnimationComponent.prototype, _schema);

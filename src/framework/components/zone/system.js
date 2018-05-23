@@ -8,8 +8,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-
-    var ZoneComponentSystem = function ZoneComponentSystem(app) {
+    function ZoneComponentSystem(app) {
         this.id = 'zone';
         this.app = app;
         app.systems.add(this.id, this);
@@ -20,7 +19,7 @@ pc.extend(pc, function () {
         this.schema = _schema;
 
         this.on('beforeremove', this._onBeforeRemove, this);
-    };
+    }
     ZoneComponentSystem = pc.inherits(ZoneComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.ZoneComponent.prototype, _schema);

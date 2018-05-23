@@ -8,7 +8,7 @@ pc.extend(pc, function () {
      * @description Create a new data object
      * @extends pc.ComponentData
      */
-    var ModelComponentData = function () {
+    function ModelComponentData() {
         // serialized
         this.enabled = true;
         this.type = 'asset';
@@ -27,7 +27,7 @@ pc.extend(pc, function () {
         // non-serialized
         this.material = null;
         this.model = null;
-    };
+    }
     ModelComponentData = pc.inherits(ModelComponentData, pc.ComponentData);
 
     return {

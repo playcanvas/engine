@@ -17,7 +17,7 @@ pc.extend(pc, function () {
      * @property {Number} rollOffFactor The factor used in the falloff equation.
      * @property {Object} slots A dictionary that contains the {@link pc.SoundSlot}s managed by this Component.
      */
-    var SoundComponent = function (system, entity) {
+    function SoundComponent(system, entity) {
         this.on('set_slots', this.onSetSlots, this);
         this.on('set_volume', this.onSetVolume, this);
         this.on('set_pitch', this.onSetPitch, this);
@@ -26,8 +26,7 @@ pc.extend(pc, function () {
         this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
         this.on("set_distanceModel", this.onSetDistanceModel, this);
         this.on("set_positional", this.onSetPositional, this);
-    };
-
+    }
     SoundComponent = pc.inherits(SoundComponent, pc.Component);
 
     pc.extend(SoundComponent.prototype, {

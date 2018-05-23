@@ -10,7 +10,7 @@ pc.extend(pc, function () {
      * @name pc.Camera
      * @classdesc A camera.
      */
-    var Camera = function () {
+    function Camera() {
         this._projection = pc.PROJECTION_PERSPECTIVE;
         this._nearClip = 0.1;
         this._farClip = 10000;
@@ -69,9 +69,11 @@ pc.extend(pc, function () {
         this._flipFaces = false;
 
         this._component = null;
-    };
+    }
 
     Camera.prototype = {
+        constructor: Camera,
+
         /**
          * @private
          * @function

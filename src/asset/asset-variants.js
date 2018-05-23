@@ -2,11 +2,11 @@ pc.extend(pc, function () {
 
     var properties = [];
 
-    var AssetVariants = function (asset) {
+    function AssetVariants(asset) {
         this.asset = asset;
-    };
+    }
 
-    var defineVariantProperty = function (name) {
+    function defineVariantProperty(name) {
         var field = '_' + name;
         properties.push(field);
 
@@ -37,8 +37,7 @@ pc.extend(pc, function () {
                 }
             }
         });
-    };
-
+    }
 
     // texture
     defineVariantProperty('dxt');
@@ -49,7 +48,6 @@ pc.extend(pc, function () {
         for (var i = 0; i < properties.length; i++)
             this[properties[i]] = null;
     };
-
 
     return {
         AssetVariants: AssetVariants

@@ -15,7 +15,7 @@ pc.extend(pc, function () {
      * @property {Number} currentTime Get or Set the current time position (in seconds) of the animation
      * @property {Number} duration Get the duration in seconds of the current animation.
      */
-    var AnimationComponent = function (system, entity) {
+    function AnimationComponent(system, entity) {
         this.animationsIndex = { };
 
         // Handle changes to the 'animations' value
@@ -24,7 +24,7 @@ pc.extend(pc, function () {
         this.on('set_assets', this.onSetAssets, this);
         // Handle changes to the 'loop' value
         this.on('set_loop', this.onSetLoop, this);
-    };
+    }
     AnimationComponent = pc.inherits(AnimationComponent, pc.Component);
 
     pc.extend(AnimationComponent.prototype, {

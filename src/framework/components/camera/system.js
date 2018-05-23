@@ -38,7 +38,7 @@ pc.extend(pc, function () {
      * @property {pc.CameraComponent[]} cameras Holds all the active camera components
      * @extends pc.ComponentSystem
      */
-    var CameraComponentSystem = function (app) {
+    function CameraComponentSystem(app) {
         this.id = 'camera';
         this.description = "Renders the scene from the location of the Entity.";
         app.systems.add(this.id, this);
@@ -55,7 +55,7 @@ pc.extend(pc, function () {
         this.on('remove', this.onRemove, this);
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
-    };
+    }
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.CameraComponent.prototype, _schema);

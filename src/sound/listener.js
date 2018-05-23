@@ -8,7 +8,7 @@ pc.extend(pc, function () {
      * @classdesc Represents an audio listener - used internally.
      * @param {pc.SoundManager} manager The sound manager
      */
-    var Listener = function (manager) {
+    function Listener(manager) {
         this.position = new pc.Vec3();
         this.velocity = new pc.Vec3();
         this.orientation = new pc.Mat4();
@@ -16,9 +16,11 @@ pc.extend(pc, function () {
         if (pc.AudioManager.hasAudioContext()) {
             this.listener = manager.context.listener;
         }
-    };
+    }
 
     Listener.prototype = {
+        constructor: Listener,
+
         getPosition: function () {
             return this.position;
         },

@@ -1,11 +1,15 @@
 pc.extend(pc, function () {
-    var CubemapHandler = function (device, assets, loader) {
+    'use strict';
+
+    function CubemapHandler(device, assets, loader) {
         this._device = device;
         this._assets = assets;
         this._loader = loader;
-    };
+    }
 
     CubemapHandler.prototype = {
+        constructor: CubemapHandler,
+
         load: function (url, callback) { },
 
         open: function (url, data) { },

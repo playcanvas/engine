@@ -12,12 +12,12 @@ pc.extend(pc, function () {
 
     var _invMatrix = new pc.Mat4();
 
-    var Skin = function (graphicsDevice, ibp, boneNames) {
+    function Skin(graphicsDevice, ibp, boneNames) {
         // Constant between clones
         this.device = graphicsDevice;
         this.inverseBindPose = ibp;
         this.boneNames = boneNames;
-    };
+    }
 
     /**
      * @constructor
@@ -27,7 +27,7 @@ pc.extend(pc, function () {
      * @param {pc.Skin} skin The skin that will provide the inverse bind pose matrices to
      * generate the final matrix palette.
      */
-    var SkinInstance = function (skin) {
+    function SkinInstance(skin) {
         this.skin = skin;
         this._dirty = true;
 
@@ -76,9 +76,10 @@ pc.extend(pc, function () {
         for (var i = 0; i < numBones; i++) {
             this.matrices[i] = new pc.Mat4();
         }
-    };
+    }
 
     SkinInstance.prototype = {
+        constructor: SkinInstance,
 
         updateMatrices: function (rootNode) {
 

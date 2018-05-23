@@ -6,8 +6,8 @@ pc.extend(pc, function () {
      * @description Create a new Http instance. By default, a PlayCanvas application creates an instance of this
      * object at `pc.http`.
      */
-    var Http = function Http() {
-    };
+    function Http() {
+    }
 
     Http.ContentType = {
         FORM_URLENCODED: "application/x-www-form-urlencoded",
@@ -45,6 +45,7 @@ pc.extend(pc, function () {
     ];
 
     Http.prototype = {
+        constructor: Http,
 
         ContentType: Http.ContentType,
         ResponseType: Http.ResponseType,

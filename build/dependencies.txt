@@ -1,6 +1,7 @@
 ../src/core/core.js
 ../src/polyfill/fullscreen.js
 ../src/polyfill/math-log2.js
+../src/polyfill/pointer-lock.js
 ../src/polyfill/request-animation-frame.js
 ../src/polyfill/string.js
 ../src/core/color.js

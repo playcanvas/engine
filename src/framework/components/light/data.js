@@ -1,5 +1,5 @@
 pc.extend(pc, function () {
-    var LightComponentData = function () {
+    function LightComponentData() {
         var _props = pc._lightProps;
         var _propsDefault = pc._lightPropsDefault;
         var value;
@@ -11,7 +11,7 @@ pc.extend(pc, function () {
                 this[_props[i]] = value;
             }
         }
-    };
+    }
     LightComponentData = pc.inherits(LightComponentData, pc.ComponentData);
 
     return {

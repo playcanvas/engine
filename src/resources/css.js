@@ -1,9 +1,12 @@
 pc.extend(pc, function () {
     'use strict';
 
-    var CssHandler = function () {};
+    function CssHandler() {
+    }
 
     CssHandler.prototype = {
+        constructor: CssHandler,
+
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
                 if (!err) {

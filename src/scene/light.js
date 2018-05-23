@@ -12,7 +12,7 @@ pc.extend(pc, function () {
      * @name pc.Light
      * @classdesc A light.
      */
-    var Light = function Light() {
+    function Light() {
         // Light properties (defaults)
         this._type = pc.LIGHTTYPE_DIRECTIONAL;
         this._color = new pc.Color(0.8, 0.8, 0.8);
@@ -79,6 +79,8 @@ pc.extend(pc, function () {
     };
 
     Light.prototype = {
+        constructor: Light,
+
         destroy: function () {
             this._destroyShadowMap();
         },
@@ -597,7 +599,6 @@ pc.extend(pc, function () {
             this.updateKey();
         }
     });
-
 
     return {
         Light: Light

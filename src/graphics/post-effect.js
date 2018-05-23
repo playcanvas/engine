@@ -17,15 +17,17 @@ pc.extend(pc, function () {
      * @description Creates new PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      */
-    var PostEffect = function (graphicsDevice) {
+    function PostEffect(graphicsDevice) {
         this.device = graphicsDevice;
         this.shader = null;
         this.depthMap = null;
         this.vertexBuffer = pc.createFullscreenQuad(graphicsDevice);
         this.needsDepthBuffer = false;
-    };
+    }
 
     PostEffect.prototype = {
+        constructor: PostEffect,
+
         /**
          * @function
          * @name pc.PostEffect#render

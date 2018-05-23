@@ -13,7 +13,7 @@ pc.extend(pc, (function () {
      * @example
      * var v = new pc.Vec4(1, 2, 3, 4);
      */
-    var Vec4 = function (x, y, z, w) {
+    function Vec4(x, y, z, w) {
         if (x && x.length === 4) {
             this.data = new Float32Array(x);
             return;
@@ -25,9 +25,11 @@ pc.extend(pc, (function () {
         this.data[1] = y || 0;
         this.data[2] = z || 0;
         this.data[3] = w || 0;
-    };
+    }
 
     Vec4.prototype = {
+        constructor: Vec4,
+
         /**
          * @function
          * @name pc.Vec4#add
