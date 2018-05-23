@@ -472,6 +472,72 @@ pc.extend(pc, function () {
         }
     });
 
+    var _pixelFormat2Size = null;
+
+    Object.defineProperty(Texture.prototype, 'gpuSize', {
+        get: function () {
+            if (!_pixelFormat2Size) {
+                _pixelFormat2Size = [];
+                _pixelFormat2Size[pc.PIXELFORMAT_A8] = 1;
+                _pixelFormat2Size[pc.PIXELFORMAT_L8] = 1;
+                _pixelFormat2Size[pc.PIXELFORMAT_L8_A8] = 1;
+                _pixelFormat2Size[pc.PIXELFORMAT_R5_G6_B5] = 2;
+                _pixelFormat2Size[pc.PIXELFORMAT_R5_G5_B5_A1] = 2;
+                _pixelFormat2Size[pc.PIXELFORMAT_R4_G4_B4_A4] = 2;
+                _pixelFormat2Size[pc.PIXELFORMAT_R8_G8_B8] = 4;
+                _pixelFormat2Size[pc.PIXELFORMAT_R8_G8_B8_A8] = 4;
+                _pixelFormat2Size[pc.PIXELFORMAT_RGB16F] = 8;
+                _pixelFormat2Size[pc.PIXELFORMAT_RGBA16F] = 8;
+                _pixelFormat2Size[pc.PIXELFORMAT_RGB32F] = 16;
+                _pixelFormat2Size[pc.PIXELFORMAT_RGBA32F] = 16;
+                _pixelFormat2Size[pc.PIXELFORMAT_R32F] = 4;
+                _pixelFormat2Size[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
+                _pixelFormat2Size[pc.PIXELFORMAT_DEPTHSTENCIL] = 4;
+                _pixelFormat2Size[pc.PIXELFORMAT_111110F] = 4;
+                _pixelFormat2Size[pc.PIXELFORMAT_SRGB] = 4;
+                _pixelFormat2Size[pc.PIXELFORMAT_SRGBA] = 4;
+            }
+
+            var mips = 1;
+            if (this._pot && (this._mipmaps || this._minFilter === pc.FILTER_NEAREST_MIPMAP_NEAREST ||
+                this._minFilter === pc.FILTER_NEAREST_MIPMAP_LINEAR || this._minFilter === pc.FILTER_LINEAR_MIPMAP_NEAREST ||
+                this._minFilter === pc.FILTER_LINEAR_MIPMAP_LINEAR) && !(this._compressed && this._levels.length === 1)) {
+
+                mips = Math.round(Math.log2(Math.max(this._width, this._height)) + 1);
+            }
+            var mipWidth = this._width;
+            var mipHeight = this._height;
+            var mipDepth = this._depth;
+            var size = 0;
+
+            for (var i = 0; i < mips; i++) {
+                if (!this._compressed) {
+                    size += mipWidth * mipHeight * mipDepth * _pixelFormat2Size[this._format];
+                } else if (this._format === pc.PIXELFORMAT_ETC1) {
+                    size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8 * mipDepth;
+                } else if (this._format === pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || this._format === pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
+                    size += Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4 * mipDepth;
+                } else if (this._format === pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || this._format === pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
+                    size += Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2 * mipDepth;
+                } else {
+                    var DXT_BLOCK_WIDTH = 4;
+                    var DXT_BLOCK_HEIGHT = 4;
+                    var blockSize = this._format === pc.PIXELFORMAT_DXT1 ? 8 : 16;
+                    var numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
+                    var numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
+                    var numBlocks = numBlocksAcross * numBlocksDown;
+                    size += numBlocks * blockSize * mipDepth;
+                }
+                mipWidth = Math.max(mipWidth * 0.5, 1);
+                mipHeight = Math.max(mipHeight * 0.5, 1);
+                mipDepth = Math.max(mipDepth * 0.5, 1);
+            }
+
+            if (this._cubemap) size *= 6;
+            return size;
+        }
+    });
+
     /**
      * @readonly
      * @name pc.Texture#volume
