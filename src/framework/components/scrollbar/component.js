@@ -25,7 +25,6 @@ pc.extend(pc, function () {
 
         this._handleReference = new pc.EntityReference(this, 'handleEntity', {
             'button#gain': this._onHandleButtonGain,
-            'button#lose': this._onHandleButtonLose,
             'button#press': this._onHandleButtonPress
         });
 
@@ -59,20 +58,17 @@ pc.extend(pc, function () {
                 window[addOrRemoveEventListener]('touchcancel', this._handleRelease, false);
             }
 
+            this[onOrOff]('set_value', this._onSetValue, this);
+            this[onOrOff]('set_handleSize', this._onSetHandleSize, this);
+
             // TODO Handle scrollwheel events
         },
 
         _onHandleButtonGain: function() {
-            console.log('_onHandleButtonGain');
-        },
-
-        _onHandleButtonLose: function() {
-            console.log('_onHandleButtonLose');
+            this._updateHandlePositionAndSize();
         },
 
         _onHandleButtonPress: function(event) {
-            console.log('_onHandleButtonPress', event);
-
             if (this._handleReference.entity) {
                 this._isDragging = true;
 
@@ -105,7 +101,6 @@ pc.extend(pc, function () {
                 return position;
             }
 
-            console.log("Ray and plane are parallel - can\'t drag");
             return null;
         },
 
@@ -121,13 +116,11 @@ pc.extend(pc, function () {
             }
         },
 
-        _chooseRayOriginAndDirection: function(inputEvent) {
+        _chooseRayOriginAndDirection: function() {
             if (this.entity.element.screen && this.entity.element.screen.screen.screenSpace) {
-                console.log("Is screen space");
                 _rayOrigin.set(_inputScreenPosition.x, -_inputScreenPosition.y, 0);
                 _rayDirection.set(0, 0, -1);
             } else {
-                console.log("NOT screen space");
                 _inputWorldPosition.copy(this._dragCamera.screenToWorld(_inputScreenPosition.x, _inputScreenPosition.y, 1));
                 _rayOrigin.copy(this._dragCamera.entity.getPosition());
                 _rayDirection.copy(_inputWorldPosition).sub(_rayOrigin).normalize();
@@ -158,37 +151,84 @@ pc.extend(pc, function () {
         },
 
         _onRelease: function() {
-            console.log('_onRelease');
             this._isDragging = false;
         },
 
         _onMove: function(event) {
-            if (this._handleReference.entity && this._isDragging) {
+            if (this._handleReference.entity && this._isDragging && this.enabled && this.entity.enabled) {
                 var currentMousePosition = this._screenToLocal(event);
 
                 if (this._dragStartMousePosition && currentMousePosition) {
                     this._deltaMousePosition.copy(currentMousePosition).sub(this._dragStartMousePosition);
                     this._deltaHandlePosition.copy(this._dragStartHandlePosition).add(this._deltaMousePosition);
 
-                    // Constrain movement to a single axis based on the whether the scrollbar
-                    // is supposed to be horizontal or vertical.
-                    if (this.orientation === pc.ORIENTATION_HORIZONTAL) {
-                        this._deltaHandlePosition.y = this._handleReference.entity.getLocalPosition().y;
-                    } else {
-                        this._deltaHandlePosition.x = this._handleReference.entity.getLocalPosition().x;
-                    }
-
-                    this._handleReference.entity.setLocalPosition(this._deltaHandlePosition);
+                    this.value = this._handlePositionToScrollValue(this._deltaHandlePosition[this._getAxis()]);
                 }
             }
         },
 
-        onEnable: function () {
-
+        _onSetValue: function(name, oldValue, newValue) {
+            if (Math.abs(newValue - oldValue) > 1e-3) {
+                this._updateHandlePositionAndSize();
+                this.fire('set:value', newValue);
+            }
         },
 
-        onDisable: function () {
+        _onSetHandleSize: function(name, oldValue, newValue) {
+            if (Math.abs(newValue - oldValue) > 1e-3) {
+                this._updateHandlePositionAndSize();
+            }
+        },
 
+        _updateHandlePositionAndSize: function() {
+            var handleEntity = this._handleReference.entity;
+            var handleElement = handleEntity && handleEntity.element;
+
+            if (handleEntity) {
+                var position = handleEntity.getLocalPosition();
+                position[this._getAxis()] = this._getHandlePosition();
+                this._handleReference.entity.setLocalPosition(position);
+            }
+
+            if (handleElement) {
+                handleElement[this._getDimension()] = this._getHandleLength();
+            }
+        },
+
+        _handlePositionToScrollValue: function(handlePosition) {
+            return pc.math.clamp(handlePosition * this._getSign() / this._getUsableTrackLength(), 0, 1);
+        },
+
+        _scrollValueToHandlePosition: function(value) {
+            return value * this._getSign() * this._getUsableTrackLength();
+        },
+
+        _getUsableTrackLength: function() {
+            return Math.max(this._getTrackLength() - this._getHandleLength(), 1e-3);
+        },
+
+        _getTrackLength: function() {
+            return this.orientation === pc.ORIENTATION_HORIZONTAL ? this.entity.element.calculatedWidth : this.entity.element.calculatedHeight;
+        },
+
+        _getHandleLength: function() {
+            return this._getTrackLength() * this.handleSize;
+        },
+
+        _getHandlePosition: function() {
+            return this._scrollValueToHandlePosition(this.value);
+        },
+
+        _getSign: function() {
+            return this.orientation === pc.ORIENTATION_HORIZONTAL ? 1 : -1;
+        },
+
+        _getAxis: function() {
+            return this.orientation === pc.ORIENTATION_HORIZONTAL ? 'x' : 'y';
+        },
+
+        _getDimension: function() {
+            return this.orientation === pc.ORIENTATION_HORIZONTAL ? 'width' : 'height';
         },
 
         onRemove: function () {
