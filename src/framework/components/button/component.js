@@ -263,6 +263,7 @@ pc.extend(pc, function () {
 
             this._updateVisualState();
             this.fire('mousedown', event);
+            this.fire('press', event);
         },
 
         _onMouseUp: function(event) {
@@ -270,6 +271,7 @@ pc.extend(pc, function () {
 
             this._updateVisualState();
             this.fire('mouseup', event);
+            this.fire('release', event);
         },
 
         _onTouchStart: function(event) {
@@ -277,6 +279,7 @@ pc.extend(pc, function () {
 
             this._updateVisualState();
             this.fire('touchstart', event);
+            this.fire('press', event);
         },
 
         _onTouchEnd: function(event) {
@@ -284,6 +287,7 @@ pc.extend(pc, function () {
 
             this._updateVisualState();
             this.fire('touchend', event);
+            this.fire('release', event);
         },
 
         _onTouchLeave: function(event) {
