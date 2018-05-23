@@ -76,7 +76,7 @@ pc.extend(pc, function () {
         this._visibleLength = [0]; // lengths of passes in culledList
         this._visibleList = [[]]; // culled mesh instances per pass (1 for spot, 6 for point, cameraCount for directional)
         this._visibleCameraSettings = []; // camera settings used in each directional light pass
-    };
+    }
 
     Light.prototype = {
         constructor: Light,

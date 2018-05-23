@@ -43,7 +43,7 @@ pc.extend(pc, function () {
         this._renderListCamera = []; // index to layer.cameras
 
         pc.events.attach(this);
-    };
+    }
 
     LayerComposition.prototype = {
         constructor: LayerComposition,
