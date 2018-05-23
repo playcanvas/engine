@@ -37,31 +37,31 @@ pc.extend(pc, function () {
     }
 
     function testRenderable(gl, pixelFormat) {
-        var __texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, __texture);
+        var texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-        var __width = 2;
-        var __height = 2;
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, __width, __height, 0, gl.RGBA, pixelFormat, null);
+        var width = 2;
+        var height = 2;
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, pixelFormat, null);
 
         // Try to use this texture as a render target.
-        var __fbo = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, __fbo);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, __texture, 0);
+        var fbo = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
         gl.bindTexture(gl.TEXTURE_2D, null);
         /*
          * It is legal for a WebGL implementation exposing the OES_texture_float extension to
          * support floating-point textures but not as attachments to framebuffer objects.
          */
-        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
-            gl.deleteTexture(__texture);
+        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+            gl.deleteTexture(texture);
             return false;
         }
-        gl.deleteTexture(__texture);
+        gl.deleteTexture(texture);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         return true;
     }
@@ -1018,9 +1018,6 @@ pc.extend(pc, function () {
         updateBegin: function () {
             var gl = this.gl;
 
-            this.boundBuffer = null;
-            this.indexBuffer = null;
-
             // Set the render target
             var target = this.renderTarget;
             if (target) {
@@ -1156,10 +1153,6 @@ pc.extend(pc, function () {
                 }
             } else {
                 this.setFramebuffer(null);
-            }
-
-            for (var i = 0; i < 16; i++) {
-                this.textureUnits[i] = null;
             }
         },
 
