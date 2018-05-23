@@ -92,6 +92,24 @@ pc.extend(pc.gfx, {
     VertexIterator: pc.VertexIterator
 });
 
+// Exceptions
+(function () {
+    function UnsupportedBrowserError(message) {
+        this.name = "UnsupportedBrowserError";
+        this.message = (message || "");
+    }
+    UnsupportedBrowserError.prototype = Error.prototype;
+
+    function ContextCreationError(message) {
+        this.name = "ContextCreationError";
+        this.message = (message || "");
+    }
+    ContextCreationError.prototype = Error.prototype;
+
+    pc.ContextCreationError = ContextCreationError;
+    pc.UnsupportedBrowserError = UnsupportedBrowserError;
+})();
+
 pc.extend(pc.input, {
     getTouchTargetCoords: pc.getTouchTargetCoords,
     Controller: pc.Controller,

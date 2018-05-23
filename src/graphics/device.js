@@ -3,19 +3,6 @@ pc.extend(pc, function () {
 
     var EVENT_RESIZE = 'resizecanvas';
 
-    // Exceptions
-    function UnsupportedBrowserError(message) {
-        this.name = "UnsupportedBrowserError";
-        this.message = (message || "");
-    }
-    UnsupportedBrowserError.prototype = Error.prototype;
-
-    function ContextCreationError(message) {
-        this.name = "ContextCreationError";
-        this.message = (message || "");
-    }
-    ContextCreationError.prototype = Error.prototype;
-
     var _downsampleImage = function (image, size) {
         var srcW = image.width;
         var srcH = image.height;
@@ -225,9 +212,6 @@ pc.extend(pc, function () {
 
         this.updateClientRect();
 
-        if (!window.WebGLRenderingContext)
-            throw new pc.UnsupportedBrowserError();
-
         // Array of WebGL objects that need to be re-initialized after a context restore event
         this.shaders = [];
         this.buffers = [];
@@ -274,8 +258,9 @@ pc.extend(pc, function () {
             }
         }
 
-        if (!gl)
-            throw new pc.ContextCreationError();
+        if (!gl) {
+            throw new Error("WebGL not supported");
+        }
 
         this.gl = gl;
 
@@ -2939,8 +2924,6 @@ pc.extend(pc, function () {
     });
 
     return {
-        UnsupportedBrowserError: UnsupportedBrowserError,
-        ContextCreationError: ContextCreationError,
         GraphicsDevice: GraphicsDevice,
         precalculatedTangents: true
     };
