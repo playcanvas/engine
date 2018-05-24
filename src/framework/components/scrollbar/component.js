@@ -51,7 +51,7 @@ pc.extend(pc, function () {
         },
 
         _onSetValue: function(name, oldValue, newValue) {
-            if (Math.abs(newValue - oldValue) > 1e-3) {
+            if (Math.abs(newValue - oldValue) > 1e-5) {
                 this.data.value = pc.math.clamp(newValue, 0, 1);
                 this._updateHandlePositionAndSize();
                 this.fire('set:value', this.data.value);
@@ -59,7 +59,7 @@ pc.extend(pc, function () {
         },
 
         _onSetHandleSize: function(name, oldValue, newValue) {
-            if (Math.abs(newValue - oldValue) > 1e-3) {
+            if (Math.abs(newValue - oldValue) > 1e-5) {
                 this.data.handleSize = pc.math.clamp(newValue, 0, 1);
                 this._updateHandlePositionAndSize();
             }
