@@ -169,6 +169,7 @@ pc.extend(pc, function () {
 
         _onSetValue: function(name, oldValue, newValue) {
             if (Math.abs(newValue - oldValue) > 1e-3) {
+                this.data.value = pc.math.clamp(newValue, 0, 1);
                 this._updateHandlePositionAndSize();
                 this.fire('set:value', newValue);
             }
@@ -176,6 +177,7 @@ pc.extend(pc, function () {
 
         _onSetHandleSize: function(name, oldValue, newValue) {
             if (Math.abs(newValue - oldValue) > 1e-3) {
+                this.data.handleSize = pc.math.clamp(newValue, 0, 1);
                 this._updateHandlePositionAndSize();
             }
         },
@@ -204,7 +206,7 @@ pc.extend(pc, function () {
         },
 
         _getUsableTrackLength: function() {
-            return Math.max(this._getTrackLength() - this._getHandleLength(), 1e-3);
+            return Math.max(this._getTrackLength() - this._getHandleLength(), 0.001);
         },
 
         _getTrackLength: function() {

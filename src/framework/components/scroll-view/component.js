@@ -25,11 +25,71 @@ pc.extend(pc, function () {
      * @property {pc.Entity} verticalScrollbarEntity The entity to be used as the vertical scrollbar. This entity must have a Scrollbar component.
      */
     var ScrollViewComponent = function ScrollViewComponent(system, entity) {
+        this._viewportReference = new pc.EntityReference(this, 'viewportEntity');
+        this._contentReference = new pc.EntityReference(this, 'contentEntity', {
+            'element#gain': this._onContentElementGain
+        });
 
+        this._horizontalScrollbarReference = new pc.EntityReference(this, 'horizontalScrollbarEntity', {
+            'scrollbar#set:value': this._onHorizontalScrollValueChange
+        });
+
+        this._verticalScrollbarReference = new pc.EntityReference(this, 'verticalScrollbarEntity', {
+            'scrollbar#set:value': this._onVerticalScrollValueChange
+        });
     };
     ScrollViewComponent = pc.inherits(ScrollViewComponent, pc.Component);
 
     pc.extend(ScrollViewComponent.prototype, {
+        _onContentElementGain: function() {
+
+        },
+
+        _onHorizontalScrollValueChange: function(value) {
+            this._updateOffset(value, pc.ORIENTATION_HORIZONTAL);
+        },
+
+        _onVerticalScrollValueChange: function(value) {
+            this._updateOffset(value, pc.ORIENTATION_VERTICAL);
+        },
+
+        _updateOffset: function(value, orientation) {
+            var offset = value * this._getMaxOffset(orientation);
+
+            if (this._contentReference.entity) {
+                var position = this._contentReference.entity.getLocalPosition();
+                position[this._getAxis(orientation)] = offset * this._getSign(orientation);
+                this._contentReference.entity.setLocalPosition(position);
+            }
+        },
+
+        _getMaxOffset: function(orientation) {
+            var viewportSize = this._getSize(orientation, this._viewportReference);
+            var contentSize = this._getSize(orientation, this._contentReference);
+
+            return Math.min(viewportSize - contentSize, 0);
+        },
+
+        _getSize: function(orientation, entityReference) {
+            if (entityReference.entity && entityReference.entity.element) {
+                return entityReference.entity.element[this._getDimension(orientation)];
+            }
+
+            return 0;
+        },
+
+        _getSign: function(orientation) {
+            return orientation === pc.ORIENTATION_HORIZONTAL ? 1 : -1;
+        },
+
+        _getAxis: function(orientation) {
+            return orientation === pc.ORIENTATION_HORIZONTAL ? 'x' : 'y';
+        },
+
+        _getDimension: function(orientation) {
+            return orientation === pc.ORIENTATION_HORIZONTAL ? 'width' : 'height';
+        },
+
         onEnable: function () {
 
         },
