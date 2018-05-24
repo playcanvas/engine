@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -82,9 +82,7 @@ pc.extend(pc, function () {
     SoundManager.hasAudio = hasAudio;
     SoundManager.hasAudioContext = hasAudioContext;
 
-    SoundManager.prototype = {
-        constructor: SoundManager,
-
+    Object.assign(SoundManager.prototype, {
         suspend: function  () {
             this.suspended = true;
             this.fire('suspend');
@@ -181,7 +179,7 @@ pc.extend(pc, function () {
 
             return channel;
         }
-    };
+    });
 
     Object.defineProperty(SoundManager.prototype, 'volume', {
         get: function () {
@@ -200,4 +198,4 @@ pc.extend(pc, function () {
     return {
         SoundManager: SoundManager
     };
-}());
+}()));

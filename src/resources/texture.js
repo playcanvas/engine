@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var JSON_ADDRESS_MODE = {
@@ -323,4 +323,4 @@ pc.extend(pc, function () {
     return {
         TextureHandler: TextureHandler
     };
-}());
+}()));

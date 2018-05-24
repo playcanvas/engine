@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     var _deviceDeprecationWarning = false;
     var _getSelectionDeprecationWarning = false;
@@ -61,9 +61,7 @@ pc.extend(pc, function () {
         this._ignoreOpacityFor = null; // meshInstance
     }
 
-    Picker.prototype = {
-        constructor: Picker,
-
+    Object.assign(Picker.prototype, {
         /**
          * @function
          * @name pc.Picker#getSelection
@@ -364,7 +362,7 @@ pc.extend(pc, function () {
             this.width = width;
             this.height = height;
         }
-    };
+    });
 
     Object.defineProperty(Picker.prototype, 'renderTarget', {
         get: function () {
@@ -375,4 +373,4 @@ pc.extend(pc, function () {
     return {
         Picker: Picker
     };
-}());
+}()));

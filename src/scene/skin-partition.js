@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     function PartitionedVertex() {
         this.index = 0;
@@ -27,9 +27,7 @@ pc.extend(pc, function () {
         this.indexMap = {};
     }
 
-    SkinPartition.prototype = {
-        constructor: SkinPartition,
-
+    Object.assign(SkinPartition.prototype, {
         addVertex: function (vertex, idx, vertexArray) {
             var remappedIndex = -1;
             if (this.indexMap[idx] !== undefined) {
@@ -105,7 +103,7 @@ pc.extend(pc, function () {
             }
             return -1;
         }
-    };
+    });
 
     function indicesToReferences(model) {
         var i;
@@ -428,4 +426,4 @@ pc.extend(pc, function () {
     return {
         partitionSkin: partitionSkin
     };
-}());
+}()));

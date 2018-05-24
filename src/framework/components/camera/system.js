@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var _schema = [
         'enabled',
         'clearColorBuffer',
@@ -60,7 +60,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.CameraComponent.prototype, _schema);
 
-    pc.extend(CameraComponentSystem.prototype, {
+    Object.assign(CameraComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
             properties = [
                 'postEffects',
@@ -200,4 +200,4 @@ pc.extend(pc, function () {
     return {
         CameraComponentSystem: CameraComponentSystem
     };
-}());
+}()));

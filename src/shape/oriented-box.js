@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var tmpRay = new pc.Ray();
     var tmpVec3 = new pc.Vec3();
     var tmpSphere = new pc.BoundingSphere();
@@ -21,9 +21,7 @@ pc.extend(pc, function () {
         this._aabb = new pc.BoundingBox(new pc.Vec3(), this.halfExtents);
     }
 
-    OrientedBox.prototype = {
-        constructor: OrientedBox,
-
+    Object.assign(OrientedBox.prototype, {
         /**
          * @function
          * @name pc.OrientedBox#intersectsRay
@@ -74,7 +72,7 @@ pc.extend(pc, function () {
 
             return false;
         }
-    };
+    });
 
     Object.defineProperty(OrientedBox.prototype, 'worldTransform', {
         set: function (value) {
@@ -85,4 +83,4 @@ pc.extend(pc, function () {
     return {
         OrientedBox: OrientedBox
     };
-}());
+}()));

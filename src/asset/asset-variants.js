@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     var properties = [];
 
@@ -52,4 +52,4 @@ pc.extend(pc, function () {
     return {
         AssetVariants: AssetVariants
     };
-}());
+}()));

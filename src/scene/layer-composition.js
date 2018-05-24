@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     /**
      * @constructor
@@ -45,9 +45,7 @@ pc.extend(pc, function () {
         pc.events.attach(this);
     }
 
-    LayerComposition.prototype = {
-        constructor: LayerComposition,
-
+    Object.assign(LayerComposition.prototype, {
         _sortLights: function (target) {
             var light;
             var lights = target._lights;
@@ -602,9 +600,9 @@ pc.extend(pc, function () {
             }
             return null;
         }
-    };
+    });
 
     return {
         LayerComposition: LayerComposition
     };
-}());
+}()));

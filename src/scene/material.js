@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var id = 0;
 
     /**
@@ -99,9 +99,7 @@ pc.extend(pc, function () {
         this._dirtyBlend = false;
     };
 
-    Material.prototype = {
-        constructor: Material,
-
+    Object.assign(Material.prototype, {
         _cloneInternal: function (clone) {
             clone.name = this.name;
             clone.id = id++;
@@ -326,7 +324,7 @@ pc.extend(pc, function () {
                 }
             }
         }
-    };
+    });
 
     Object.defineProperty(Material.prototype, 'blendType', {
         get: function () {
@@ -474,4 +472,4 @@ pc.extend(pc, function () {
     return {
         Material: Material
     };
-}());
+}()));

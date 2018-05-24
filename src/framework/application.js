@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @name pc.Application
      * @class Default application which performs general setup code and initiates the main game loop.
@@ -1704,4 +1704,4 @@ pc.extend(pc, function () {
 
         Application: Application
     };
-}());
+}()));

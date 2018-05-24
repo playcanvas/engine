@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @component Animation
      * @constructor
@@ -27,7 +27,7 @@ pc.extend(pc, function () {
     }
     AnimationComponent = pc.inherits(AnimationComponent, pc.Component);
 
-    pc.extend(AnimationComponent.prototype, {
+    Object.assign(AnimationComponent.prototype, {
         /**
          * @function
          * @name pc.AnimationComponent#play
@@ -308,4 +308,4 @@ pc.extend(pc, function () {
     return {
         AnimationComponent: AnimationComponent
     };
-}());
+}()));

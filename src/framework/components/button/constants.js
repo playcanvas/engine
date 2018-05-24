@@ -1,4 +1,4 @@
-pc.extend(pc, {
+Object.assign(pc, {
     /**
      * @enum pc.BUTTON_TRANSITION_MODE
      * @name pc.BUTTON_TRANSITION_MODE_TINT

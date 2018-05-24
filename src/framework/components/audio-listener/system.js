@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var _schema = ['enabled'];
 
     /**
@@ -29,7 +29,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.AudioListenerComponent.prototype, _schema);
 
-    pc.extend(AudioListenerComponentSystem.prototype, {
+    Object.assign(AudioListenerComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['enabled'];
 
@@ -50,4 +50,4 @@ pc.extend(pc, function () {
     return {
         AudioListenerComponentSystem: AudioListenerComponentSystem
     };
-}());
+}()));

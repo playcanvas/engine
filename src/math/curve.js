@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -51,9 +51,7 @@ pc.extend(pc, (function () {
         this.sort();
     }
 
-    Curve.prototype = {
-        constructor: Curve,
-
+    Object.assign(Curve.prototype, {
         /**
          * @function
          * @name pc.Curve#add
@@ -262,7 +260,7 @@ pc.extend(pc, (function () {
 
             return values;
         }
-    };
+    });
 
     Object.defineProperty(Curve.prototype, 'length', {
         get: function () {

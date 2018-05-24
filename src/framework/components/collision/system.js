@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var _schema = [
         'enabled',
         'type',
@@ -117,7 +117,7 @@ pc.extend(pc, function () {
 
     CollisionBoxSystemImpl = pc.inherits(CollisionBoxSystemImpl, CollisionSystemImpl);
 
-    CollisionBoxSystemImpl.prototype = pc.extend(CollisionBoxSystemImpl.prototype, {
+    Object.assign(CollisionBoxSystemImpl.prototype, {
         createPhysicalShape: function (entity, data) {
             if (typeof Ammo !== 'undefined') {
                 var he = data.halfExtents;
@@ -133,7 +133,7 @@ pc.extend(pc, function () {
 
     CollisionSphereSystemImpl = pc.inherits(CollisionSphereSystemImpl, CollisionSystemImpl);
 
-    pc.extend(CollisionSphereSystemImpl.prototype, {
+    Object.assign(CollisionSphereSystemImpl.prototype, {
         createPhysicalShape: function (entity, data) {
             if (typeof Ammo !== 'undefined') {
                 return new Ammo.btSphereShape(data.radius);
@@ -147,7 +147,7 @@ pc.extend(pc, function () {
 
     CollisionCapsuleSystemImpl = pc.inherits(CollisionCapsuleSystemImpl, CollisionSystemImpl);
 
-    pc.extend(CollisionCapsuleSystemImpl.prototype, {
+    Object.assign(CollisionCapsuleSystemImpl.prototype, {
         createPhysicalShape: function (entity, data) {
             var shape = null;
             var axis = (data.axis !== undefined) ? data.axis : 1;
@@ -176,7 +176,7 @@ pc.extend(pc, function () {
 
     CollisionCylinderSystemImpl = pc.inherits(CollisionCylinderSystemImpl, CollisionSystemImpl);
 
-    pc.extend(CollisionCylinderSystemImpl.prototype, {
+    Object.assign(CollisionCylinderSystemImpl.prototype, {
         createPhysicalShape: function (entity, data) {
             var halfExtents = null;
             var shape = null;
@@ -209,7 +209,7 @@ pc.extend(pc, function () {
 
     CollisionMeshSystemImpl = pc.inherits(CollisionMeshSystemImpl, CollisionSystemImpl);
 
-    pc.extend(CollisionMeshSystemImpl.prototype, {
+    Object.assign(CollisionMeshSystemImpl.prototype, {
         /*
          * override for the mesh implementation because the asset model needs
          * special handling
@@ -397,7 +397,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.CollisionComponent.prototype, _schema);
 
-    pc.extend(CollisionComponentSystem.prototype, {
+    Object.assign(CollisionComponentSystem.prototype, {
         onLibraryLoaded: function () {
             if (typeof Ammo !== 'undefined') {
                 //
@@ -532,4 +532,4 @@ pc.extend(pc, function () {
     return {
         CollisionComponentSystem: CollisionComponentSystem
     };
-}());
+}()));

@@ -1,4 +1,4 @@
-pc.extend(pc.Application.prototype, function () {
+Object.assign(pc.Application.prototype, (function () {
 
     var tempGraphNode = new pc.GraphNode();
     var identityGraphNode = new pc.GraphNode();
@@ -21,9 +21,7 @@ pc.extend(pc.Application.prototype, function () {
         this.identityGraphNode = new pc.GraphNode();
     }
 
-    ImmediateData.prototype = {
-        constructor: ImmediateData,
-
+    Object.assign(ImmediateData.prototype, {
         addLayer: function (layer) {
             if (this.layers.indexOf(layer) < 0) {
                 this.layers.push(layer);
@@ -37,7 +35,7 @@ pc.extend(pc.Application.prototype, function () {
         addLayerIdx: function (idx, layer) {
             this.layerToBatch[layer.id] = idx;
         }
-    };
+    });
 
     function LineBatch() {
         // Sensible default value; buffers will be doubled and reallocated when it's not enough
@@ -53,9 +51,7 @@ pc.extend(pc.Application.prototype, function () {
         this.layer = null;
     }
 
-    LineBatch.prototype = {
-        constructor: LineBatch,
-
+    Object.assign(LineBatch.prototype, {
         init: function (device, vertexFormat, layer, linesToAdd) {
             // Allocate basic stuff once per batch
             if (!this.mesh) {
@@ -124,7 +120,7 @@ pc.extend(pc.Application.prototype, function () {
                 this.linesUsed = 0;
             }
         }
-    };
+    });
 
     function _initImmediate() {
         // Init global line drawing data once
@@ -491,4 +487,4 @@ pc.extend(pc.Application.prototype, function () {
         _preRenderImmediate: _preRenderImmediate,
         _postRenderImmediate: _postRenderImmediate
     };
-}());
+}()));

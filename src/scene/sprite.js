@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -85,9 +85,7 @@ pc.extend(pc, function () {
         }
     }
 
-    Sprite.prototype = {
-        constructor: Sprite,
-
+    Object.assign(Sprite.prototype, {
         _createMeshes: function () {
             var i, len;
 
@@ -291,7 +289,7 @@ pc.extend(pc, function () {
             }
             this._meshes.length = 0;
         }
-    };
+    });
 
     Object.defineProperty(Sprite.prototype, 'frameKeys', {
         get: function () {
@@ -398,4 +396,4 @@ pc.extend(pc, function () {
     return {
         Sprite: Sprite
     };
-}());
+}()));

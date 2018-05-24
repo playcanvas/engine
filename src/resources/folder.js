@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     function FolderHandler() {
@@ -19,4 +19,4 @@ pc.extend(pc, function () {
     return {
         FolderHandler: FolderHandler
     };
-}());
+}()));

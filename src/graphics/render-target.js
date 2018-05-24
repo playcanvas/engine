@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var defaultOptions = {
@@ -94,9 +94,7 @@ pc.extend(pc, function () {
         this._glMsaaDepthBuffer = null;
     }
 
-    RenderTarget.prototype = {
-        constructor: RenderTarget,
-
+    Object.assign(RenderTarget.prototype, {
         /**
          * @function
          * @name pc.RenderTarget#destroy
@@ -192,7 +190,7 @@ pc.extend(pc, function () {
             }
             return this._device.copyRenderTarget(source, this, color, depth);
         }
-    };
+    });
 
     /**
      * @readonly
@@ -267,4 +265,4 @@ pc.extend(pc, function () {
     return {
         RenderTarget: RenderTarget
     };
-}());
+}()));

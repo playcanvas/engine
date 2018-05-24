@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     function Key(time, position, rotation, scale) {
         this.time = time;
         this.position = position;
@@ -32,9 +32,7 @@ pc.extend(pc, function () {
         this._nodeDict = {};
     }
 
-    Animation.prototype = {
-        constructor: Animation,
-
+    Object.assign(Animation.prototype, {
         /**
          * @private
          * @deprecated
@@ -116,7 +114,7 @@ pc.extend(pc, function () {
             this._nodes.push(node);
             this._nodeDict[node._name] = node;
         }
-    };
+    });
 
     /**
      * @readonly
@@ -135,4 +133,4 @@ pc.extend(pc, function () {
         Key: Key,
         Node: Node
     };
-}());
+}()));

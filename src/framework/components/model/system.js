@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var _schema = [
         'enabled',
         'type',
@@ -70,7 +70,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.ModelComponent.prototype, _schema);
 
-    pc.extend(ModelComponentSystem.prototype, {
+    Object.assign(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
 
             // order matters here
@@ -124,7 +124,7 @@ pc.extend(pc, function () {
                 enabled: entity.model.enabled,
                 layers: entity.model.layers,
                 batchGroupId: entity.model.batchGroupId,
-                mapping: pc.extend({}, entity.model.mapping)
+                mapping: Object.assign({}, entity.model.mapping)
             };
 
             /*
@@ -182,4 +182,4 @@ pc.extend(pc, function () {
     return {
         ModelComponentSystem: ModelComponentSystem
     };
-}());
+}()));

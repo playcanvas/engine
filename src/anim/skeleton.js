@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     function InterpolatedKey() {
         this._written = false;
         this._name = "";
@@ -13,9 +13,7 @@ pc.extend(pc, function () {
         this._targetNode = null;
     }
 
-    InterpolatedKey.prototype = {
-        constructor: InterpolatedKey,
-
+    Object.assign(InterpolatedKey.prototype, {
         getTarget: function () {
             return this._targetNode;
         },
@@ -23,7 +21,7 @@ pc.extend(pc, function () {
         setTarget: function (node) {
             this._targetNode = node;
         }
-    };
+    });
 
     /**
      * @constructor
@@ -59,9 +57,7 @@ pc.extend(pc, function () {
         addInterpolatedKeys(graph);
     }
 
-    Skeleton.prototype = {
-        constructor: Skeleton,
-
+    Object.assign(Skeleton.prototype, {
         /**
          * @function
          * @name pc.Skeleton#addTime
@@ -331,7 +327,7 @@ pc.extend(pc, function () {
         getLooping: function () {
             return this.looping;
         }
-    };
+    });
 
     /**
      * @name pc.Skeleton#animation
@@ -387,4 +383,4 @@ pc.extend(pc, function () {
     return {
         Skeleton: Skeleton
     };
-}());
+}()));

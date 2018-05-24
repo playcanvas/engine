@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @private
      * @constructor
@@ -11,4 +11,4 @@ pc.extend(pc, function () {
     return {
         ComponentData: ComponentData
     };
-}());
+}()));

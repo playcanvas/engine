@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var rawToValue = function (app, args, value, old) {
         var i;
 
@@ -123,9 +123,7 @@ pc.extend(pc, function () {
         this.index = { };
     }
 
-    ScriptAttributes.prototype = {
-        constructor: ScriptAttributes,
-
+    Object.assign(ScriptAttributes.prototype, {
         /**
          * @function
          * @name pc.ScriptAttributes#add
@@ -261,7 +259,7 @@ pc.extend(pc, function () {
         get: function (name) {
             return this.index[name] || null;
         }
-    };
+    });
 
     /**
      * @static
@@ -592,4 +590,4 @@ pc.extend(pc, function () {
     return {
         createScript: createScript
     };
-}());
+}()));

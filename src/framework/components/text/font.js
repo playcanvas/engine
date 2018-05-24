@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     pc.FONT_MSDF = 'msdf';
 
     /**
@@ -63,4 +63,4 @@ pc.extend(pc, function () {
         FONT_MSDF: pc.FONT_MSDF,
         Font: Font
     };
-}());
+}()));

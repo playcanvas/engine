@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var viewProj = new pc.Mat4();
 
     /**
@@ -25,9 +25,7 @@ pc.extend(pc, function () {
         this.update(projectionMatrix, viewMatrix);
     }
 
-    Frustum.prototype = {
-        constructor: Frustum,
-
+    Object.assign(Frustum.prototype, {
         /**
          * @function
          * @name pc.Frustum#update
@@ -165,9 +163,9 @@ pc.extend(pc, function () {
 
             return (c === 6) ? 2 : 1;
         }
-    };
+    });
 
     return {
         Frustum: Frustum
     };
-}());
+}()));

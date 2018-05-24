@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var particleVerts = [
         [-1, -1],
         [1, -1],
@@ -417,9 +417,7 @@ pc.extend(pc, function () {
         mat3.data[8] = mat4.data[10];
     }
 
-    ParticleEmitter.prototype = {
-        constructor: ParticleEmitter,
-
+    Object.assign(ParticleEmitter.prototype, {
         onChangeCamera: function () {
             this.regenShader();
             this.resetMaterial();
@@ -1510,9 +1508,9 @@ pc.extend(pc, function () {
             this.shaderParticleUpdateNoRespawn = null;
             this.shaderParticleUpdateOnStop = null;
         }
-    };
+    });
 
     return {
         ParticleEmitter: ParticleEmitter
     };
-}());
+}()));

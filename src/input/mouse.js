@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.MouseEvent
@@ -159,9 +159,7 @@ pc.extend(pc, function () {
         return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
     };
 
-    Mouse.prototype = {
-        constructor: Mouse,
-
+    Object.assign(Mouse.prototype, {
         /**
          * @function
          * @name pc.Mouse#attach
@@ -397,11 +395,11 @@ pc.extend(pc, function () {
                 y: event.clientY - top
             };
         }
-    };
+    });
 
     // Public Interface
     return  {
         Mouse: Mouse,
         MouseEvent: MouseEvent
     };
-}());
+}()));

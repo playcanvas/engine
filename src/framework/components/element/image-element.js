@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     function ImageElement(element) {
         this._element = element;
@@ -61,7 +61,7 @@ pc.extend(pc, function () {
         this._element.on('screen:set:resolution', this._onResolutionChange, this);
     }
 
-    pc.extend(ImageElement.prototype, {
+    Object.assign(ImageElement.prototype, {
         destroy: function () {
             if (this._model) {
                 this._element.removeModelFromLayers(this._model);
@@ -917,4 +917,4 @@ pc.extend(pc, function () {
     return {
         ImageElement: ImageElement
     };
-}());
+}()));

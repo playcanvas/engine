@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     function ScriptLegacyComponentData() {
         // serialized
         this.scripts = [];
@@ -18,4 +18,4 @@ pc.extend(pc, function () {
     return {
         ScriptLegacyComponentData: ScriptLegacyComponentData
     };
-}());
+}()));

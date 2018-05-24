@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -25,9 +25,7 @@ pc.extend(pc, (function () {
         this.data[2] = z || 0;
     }
 
-    Vec3.prototype = {
-        constructor: Vec3,
-
+    Object.assign(Vec3.prototype, {
         /**
          * @function
          * @name pc.Vec3#add
@@ -490,7 +488,7 @@ pc.extend(pc, (function () {
         toString: function () {
             return '[' + this.data[0] + ', ' + this.data[1] + ', ' + this.data[2] + ']';
         }
-    };
+    });
 
     /**
      * @name pc.Vec3#x

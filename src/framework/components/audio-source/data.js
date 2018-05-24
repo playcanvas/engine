@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     function AudioSourceComponentData() {
         // serialized
         this.enabled = true;
@@ -26,4 +26,4 @@ pc.extend(pc, function () {
     return {
         AudioSourceComponentData: AudioSourceComponentData
     };
-}());
+}()));

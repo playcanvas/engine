@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     function SpriteHandler(assets, device) {
@@ -119,4 +119,4 @@ pc.extend(pc, function () {
     return {
         SpriteHandler: SpriteHandler
     };
-}());
+}()));

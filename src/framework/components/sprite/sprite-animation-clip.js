@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     /**
      * @private
@@ -436,7 +436,7 @@ pc.extend(pc, function () {
     return {
         SpriteAnimationClip: SpriteAnimationClip
     };
-}());
+}()));
 
 
 // Events Documentation

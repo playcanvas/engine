@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @name pc.platform
      * @namespace
@@ -96,4 +96,4 @@ pc.extend(pc, function () {
     return {
         platform: platform
     };
-}());
+}()));

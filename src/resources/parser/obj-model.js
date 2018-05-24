@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /*
      * Sample Obj model parser. This is not added to built into the engine library by default.
      *
@@ -22,9 +22,7 @@ pc.extend(pc, function () {
         this._device = device;
     }
 
-    ObjModelParser.prototype = {
-        constructor: ObjModelParser,
-
+    Object.assign(ObjModelParser.prototype, {
         /*
          * First draft obj parser
          * probably doesn't handle a lot of the obj spec
@@ -133,9 +131,9 @@ pc.extend(pc, function () {
             }
             return result;
         }
-    };
+    });
 
     return {
         ObjModelParser: ObjModelParser
     };
-}());
+}()));

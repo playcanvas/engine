@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var scaleCompensatePosTransform = new pc.Mat4();
     var scaleCompensatePos = new pc.Vec3();
     var scaleCompensateRot = new pc.Quat();
@@ -173,7 +173,7 @@ pc.extend(pc, function () {
         }
     });
 
-    pc.extend(GraphNode.prototype, {
+    Object.assign(GraphNode.prototype, {
         _notifyHierarchyStateChanged: function (node, enabled) {
             node._onHierarchyStateChanged(enabled);
 
@@ -1541,4 +1541,4 @@ pc.extend(pc, function () {
     return {
         GraphNode: GraphNode
     };
-}());
+}()));

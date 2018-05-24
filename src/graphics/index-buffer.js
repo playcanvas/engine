@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -53,9 +53,7 @@ pc.extend(pc, function () {
         this.device.buffers.push(this);
     }
 
-    IndexBuffer.prototype = {
-        constructor: IndexBuffer,
-
+    Object.assign(IndexBuffer.prototype, {
         /**
          * @function
          * @name pc.IndexBuffer#destroy
@@ -158,9 +156,9 @@ pc.extend(pc, function () {
             this.unlock();
             return true;
         }
-    };
+    });
 
     return {
         IndexBuffer: IndexBuffer
     };
-}());
+}()));

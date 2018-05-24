@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.Ray
@@ -21,4 +21,4 @@ pc.extend(pc, function () {
     return {
         Ray: Ray
     };
-}());
+}()));

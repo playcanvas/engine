@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.StencilParameters
@@ -24,20 +24,22 @@ pc.extend(pc, function () {
         this.zpass = options.zpass || pc.STENCILOP_KEEP;
     }
 
-    StencilParameters.prototype.clone = function () {
-        var clone = new pc.StencilParameters({
-            func: this.func,
-            ref: this.ref,
-            readMask: this.readMask,
-            writeMask: this.writeMask,
-            fail: this.fail,
-            zfail: this.zfail,
-            zpass: this.zpass
-        });
-        return clone;
-    };
+    Object.assign(StencilParameters.prototype, {
+        clone: function () {
+            var clone = new pc.StencilParameters({
+                func: this.func,
+                ref: this.ref,
+                readMask: this.readMask,
+                writeMask: this.writeMask,
+                fail: this.fail,
+                zfail: this.zfail,
+                zpass: this.zpass
+            });
+            return clone;
+        }
+    });
 
     return {
         StencilParameters: StencilParameters
     };
-}());
+}()));

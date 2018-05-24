@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.Entity
@@ -420,7 +420,7 @@ pc.extend(pc, function () {
     return {
         Entity: Entity
     };
-}());
+}()));
 
 
 /**

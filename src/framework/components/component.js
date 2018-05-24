@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.Component
@@ -92,4 +92,4 @@ pc.extend(pc, function () {
     return {
         Component: Component
     };
-}());
+}()));

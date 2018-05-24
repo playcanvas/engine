@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var _typeSize = [];
@@ -114,4 +114,4 @@ pc.extend(pc, function () {
     return {
         VertexFormat: VertexFormat
     };
-}());
+}()));

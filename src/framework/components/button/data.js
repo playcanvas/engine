@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     function ButtonComponentData() {
         this.enabled = true;
     }
@@ -7,4 +7,4 @@ pc.extend(pc, function () {
     return {
         ButtonComponentData: ButtonComponentData
     };
-}());
+}()));

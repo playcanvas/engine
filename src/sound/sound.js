@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -35,4 +35,4 @@ pc.extend(pc, function () {
     return {
         Sound: Sound
     };
-}());
+}()));

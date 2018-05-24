@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     function LightComponentData() {
         var _props = pc._lightProps;
         var _propsDefault = pc._lightPropsDefault;
@@ -17,4 +17,4 @@ pc.extend(pc, function () {
     return {
         LightComponentData: LightComponentData
     };
-}());
+}()));

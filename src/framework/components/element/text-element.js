@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     function TextElement(element) {
         this._element = element;
@@ -57,7 +57,7 @@ pc.extend(pc, function () {
     var WHITESPACE_CHAR = /^[ \t]$/;
     var WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
 
-    pc.extend(TextElement.prototype, {
+    Object.assign(TextElement.prototype, {
         destroy: function () {
             if (this._model) {
                 this._element.removeModelFromLayers(this._model);
@@ -932,4 +932,4 @@ pc.extend(pc, function () {
     return {
         TextElement: TextElement
     };
-}());
+}()));

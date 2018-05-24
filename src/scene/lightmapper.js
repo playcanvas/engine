@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     var maxSize = 2048;
     var maskBaked = 2;
@@ -17,7 +17,6 @@ pc.extend(pc, function () {
 
     var passTexName = ["texture_lightMap", "texture_dirLightMap"];
     var passMaterial = [];
-
 
     function collectModels(node, nodes, nodesMeshInstances, allNodes) {
         if (!node.enabled) return;
@@ -103,9 +102,7 @@ pc.extend(pc, function () {
         // #endif
     }
 
-    Lightmapper.prototype = {
-        constructor: Lightmapper,
-
+    Object.assign(Lightmapper.prototype, {
         calculateLightmapSize: function (node) {
             var data, parent;
             var sizeMult = this.scene.lightmapSizeMultiplier || 16;
@@ -797,9 +794,9 @@ pc.extend(pc, function () {
             stats.fboTime = device._renderTargetCreationTime - startFboTime;
             // #endif
         }
-    };
+    });
 
     return {
         Lightmapper: Lightmapper
     };
-}());
+}()));

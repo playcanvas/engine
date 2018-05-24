@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @component
      * @constructor
@@ -115,7 +115,7 @@ pc.extend(pc, function () {
      * @param {pc.Entity} other The {@link pc.Entity} that exited this collision volume.
      */
 
-    pc.extend(CollisionComponent.prototype, {
+    Object.assign(CollisionComponent.prototype, {
 
         onSetType: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
@@ -240,4 +240,4 @@ pc.extend(pc, function () {
     return {
         CollisionComponent: CollisionComponent
     };
-}());
+}()));

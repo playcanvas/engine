@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -37,9 +37,7 @@ pc.extend(pc, (function () {
         }
     }
 
-    CurveSet.prototype = {
-        constructor: CurveSet,
-
+    Object.assign(CurveSet.prototype, {
         /**
          * @function
          * @name pc.CurveSet#get
@@ -114,8 +112,7 @@ pc.extend(pc, (function () {
 
             return values;
         }
-
-    };
+    });
 
     /**
      * @readonly

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @component
      * @constructor
@@ -172,7 +172,7 @@ pc.extend(pc, function () {
         }
     });
 
-    pc.extend(CameraComponent.prototype, {
+    Object.assign(CameraComponent.prototype, {
         /**
          * @function
          * @name pc.CameraComponent#screenToWorld
@@ -536,4 +536,4 @@ pc.extend(pc, function () {
     return {
         CameraComponent: CameraComponent
     };
-}());
+}()));

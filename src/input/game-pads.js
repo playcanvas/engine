@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.GamePads
@@ -96,9 +96,7 @@ pc.extend(pc, function () {
         'Product: 0268': 'PS3'
     };
 
-    GamePads.prototype = {
-        constructor: GamePads,
-
+    Object.assign(GamePads.prototype, {
         /**
          * @function
          * @name pc.GamePads#update
@@ -221,9 +219,9 @@ pc.extend(pc, function () {
             }
             return value;
         }
-    };
+    });
 
     return {
         GamePads: GamePads
     };
-}());
+}()));

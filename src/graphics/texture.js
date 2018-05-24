@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -174,9 +174,7 @@ pc.extend(pc, function () {
         this.device.textures.push(this);
     }
 
-    Texture.prototype = {
-        constructor: Texture,
-
+    Object.assign(Texture.prototype, {
         /**
          * @function
          * @name pc.Texture#destroy
@@ -534,7 +532,7 @@ pc.extend(pc, function () {
 
             return buff;
         }
-    };
+    });
 
     // Public properties
     /**
@@ -934,4 +932,4 @@ pc.extend(pc, function () {
     return {
         Texture: Texture
     };
-}());
+}()));

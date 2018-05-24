@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     function SceneHandler(app) {
@@ -45,4 +45,4 @@ pc.extend(pc, function () {
     return {
         SceneHandler: SceneHandler
     };
-}());
+}()));

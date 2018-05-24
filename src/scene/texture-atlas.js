@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -35,9 +35,7 @@ pc.extend(pc, function () {
         pc.events.attach(this);
     }
 
-    TextureAtlas.prototype = {
-        constructor: TextureAtlas,
-
+    Object.assign(TextureAtlas.prototype, {
         /**
          * @private
          * @name pc.TextureAtlas#setFrame
@@ -97,7 +95,7 @@ pc.extend(pc, function () {
                 this._texture.destroy();
             }
         }
-    };
+    });
 
     Object.defineProperty(TextureAtlas.prototype, 'texture', {
         get: function () {
@@ -122,4 +120,4 @@ pc.extend(pc, function () {
     return {
         TextureAtlas: TextureAtlas
     };
-}());
+}()));

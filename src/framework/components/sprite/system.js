@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var _schema = ['enabled'];
@@ -99,7 +99,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.SpriteComponent.prototype, _schema);
 
-    pc.extend(SpriteComponentSystem.prototype, {
+    Object.assign(SpriteComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (data.enabled !== undefined) {
                 component.enabled = data.enabled;
@@ -225,4 +225,4 @@ pc.extend(pc, function () {
     return {
         SpriteComponentSystem: SpriteComponentSystem
     };
-}());
+}()));

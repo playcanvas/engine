@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     function JsonHandler() {
@@ -28,4 +28,4 @@ pc.extend(pc, function () {
     return {
         JsonHandler: JsonHandler
     };
-}());
+}()));

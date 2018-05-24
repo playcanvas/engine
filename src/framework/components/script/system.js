@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var _schema = ['enabled'];
 
     /**
@@ -35,7 +35,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.ScriptComponent.prototype, _schema);
 
-    pc.extend(ScriptComponentSystem.prototype, {
+    Object.assign(ScriptComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             this._components.push(component);
 
@@ -172,4 +172,4 @@ pc.extend(pc, function () {
     return {
         ScriptComponentSystem: ScriptComponentSystem
     };
-}());
+}()));

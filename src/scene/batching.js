@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     // TODO: split by new layers
 
@@ -90,9 +90,7 @@ pc.extend(pc, function () {
         }
     }
 
-    SkinBatchInstance.prototype = {
-        constructor: SkinBatchInstance,
-
+    Object.assign(SkinBatchInstance.prototype, {
         updateMatrices: function () {
         },
 
@@ -129,7 +127,7 @@ pc.extend(pc, function () {
                 this.boneTexture.unlock();
             }
         }
-    };
+    });
 
     /**
      * @constructor
@@ -174,9 +172,7 @@ pc.extend(pc, function () {
         return false;
     }
 
-    BatchManager.prototype = {
-        constructor: BatchManager,
-
+    Object.assign(BatchManager.prototype, {
         /**
          * @function
          * @name pc.BatchManager#addGroup
@@ -1074,11 +1070,11 @@ pc.extend(pc, function () {
                 entities[i].once('destroy', callback);
             }
         }
-    };
+    });
 
     return {
         Batch: Batch,
         BatchGroup: BatchGroup,
         BatchManager: BatchManager
     };
-}());
+}()));

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var _schema = [
         'enabled',
         'autoPlay',
@@ -94,7 +94,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.ParticleSystemComponent.prototype, _schema);
 
-    pc.extend(ParticleSystemComponentSystem.prototype, {
+    Object.assign(ParticleSystemComponentSystem.prototype, {
 
         initializeComponentData: function (component, _data, properties) {
             var data = {};
@@ -254,4 +254,4 @@ pc.extend(pc, function () {
     return {
         ParticleSystemComponentSystem: ParticleSystemComponentSystem
     };
-}());
+}()));

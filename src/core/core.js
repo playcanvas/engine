@@ -91,6 +91,7 @@ var pc = {
 
     /**
      * @private
+     * @deprecated
      * @function
      * @name pc.extend
      * @description Merge the contents of two objects into a single object
@@ -124,7 +125,6 @@ var pc = {
 
         return target;
     },
-
 
     /**
      * @private

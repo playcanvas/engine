@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var keyA, keyB, sortPos, sortDir;
 
     function sortManual(drawCallA, drawCallB) {
@@ -232,9 +232,7 @@ pc.extend(pc, function () {
         this._lightCube = null;
     }
 
-    Layer.prototype = {
-        constructor: Layer,
-
+    Object.assign(Layer.prototype, {
         _updateClearFlags: function () {
             var flags = 0;
 
@@ -616,7 +614,7 @@ pc.extend(pc, function () {
             }
             visible.list.sort(sortCallbacks[sortMode]);
         }
-    };
+    });
 
     Object.defineProperty(Layer.prototype, "enabled", {
         get: function () {
@@ -680,4 +678,4 @@ pc.extend(pc, function () {
         InstanceList: InstanceList,
         VisibleInstanceList: VisibleInstanceList
     };
-}());
+}()));

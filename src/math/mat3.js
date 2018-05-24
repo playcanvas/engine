@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var typeNumber = 'number';
@@ -41,9 +41,7 @@ pc.extend(pc, (function () {
         }
     }
 
-    Mat3.prototype = {
-        constructor: Mat3,
-
+    Object.assign(Mat3.prototype, {
         /**
          * @function
          * @name pc.Mat3#clone
@@ -202,7 +200,7 @@ pc.extend(pc, (function () {
 
             return this;
         }
-    };
+    });
 
     /**
      * @field

@@ -1,12 +1,10 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     function TagsCache(key) {
         this._index = { };
         this._key = key || null;
     }
 
-    TagsCache.prototype = {
-        constructor: TagsCache,
-
+    Object.assign(TagsCache.prototype, {
         addItem: function (item) {
             var tags = item.tags._list;
 
@@ -144,8 +142,7 @@ pc.extend(pc, (function () {
 
             return items;
         }
-    };
-
+    });
 
     /**
      * @name pc.Tags
@@ -185,9 +182,7 @@ pc.extend(pc, (function () {
         pc.events.attach(this);
     }
 
-    Tags.prototype = {
-        constructor: Tags,
-
+    Object.assign(Tags.prototype, {
         /**
          * @function
          * @name pc.Tags#add
@@ -396,7 +391,7 @@ pc.extend(pc, (function () {
 
             return tags;
         }
-    };
+    });
 
     /**
      * @field
@@ -410,7 +405,6 @@ pc.extend(pc, (function () {
             return this._list.length;
         }
     });
-
 
     return {
         TagsCache: TagsCache,

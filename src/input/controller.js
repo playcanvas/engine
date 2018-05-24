@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -35,9 +35,7 @@ pc.extend(pc, function () {
         }
     }
 
-    Controller.prototype = {
-        constructor: Controller,
-
+    Object.assign(Controller.prototype, {
         /**
          * @function
          * @name pc.Controller#attach
@@ -406,9 +404,9 @@ pc.extend(pc, function () {
             }
             this._keyboard.attach(this._element);
         }
-    };
+    });
 
     return {
         Controller: Controller
     };
-}());
+}()));

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @component
      * @constructor
@@ -55,4 +55,4 @@ pc.extend(pc, function () {
     return {
         LayoutChildComponent: LayoutChildComponent
     };
-}());
+}()));

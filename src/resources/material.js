@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var PARAMETER_TYPES = {
@@ -471,4 +471,4 @@ pc.extend(pc, function () {
             return PARAMETER_TYPES[name];
         }
     };
-}());
+}()));

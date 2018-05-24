@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var id = 0;
     var _tmpAabb = new pc.BoundingBox();
 
@@ -486,7 +486,7 @@ pc.extend(pc, function () {
         }
     });
 
-    pc.extend(MeshInstance.prototype, {
+    Object.assign(MeshInstance.prototype, {
         syncAabb: function () {
             // Deprecated
         },
@@ -530,15 +530,13 @@ pc.extend(pc, function () {
         this._buffer = null;
     }
 
-    InstancingData.prototype = {
-        constructor: InstancingData,
-
+    Object.assign(InstancingData.prototype, {
         update: function () {
             if (this._buffer) {
                 this._buffer.setData(this.buffer);
             }
         }
-    };
+    });
 
     function getKey(layer, blendType, isCommand, materialId) {
         /*
@@ -563,4 +561,4 @@ pc.extend(pc, function () {
         InstancingData: InstancingData,
         _getDrawcallSortKey: getKey
     };
-}());
+}()));

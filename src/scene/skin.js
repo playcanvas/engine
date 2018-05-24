@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.Skin
@@ -78,9 +78,7 @@ pc.extend(pc, function () {
         }
     }
 
-    SkinInstance.prototype = {
-        constructor: SkinInstance,
-
+    Object.assign(SkinInstance.prototype, {
         updateMatrices: function (rootNode) {
 
             _invMatrix.copy(rootNode.getWorldTransform()).invert();
@@ -124,10 +122,10 @@ pc.extend(pc, function () {
                 this.boneTexture.unlock();
             }
         }
-    };
+    });
 
     return {
         Skin: Skin,
         SkinInstance: SkinInstance
     };
-}());
+}()));

@@ -1,4 +1,4 @@
-pc.extend(pc, function (){
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.KeyboardEvent
@@ -138,9 +138,7 @@ pc.extend(pc, function (){
         this.stopPropagation = options.stopPropagation || false;
     }
 
-    Keyboard.prototype = {
-        constructor: Keyboard,
-
+    Object.assign(Keyboard.prototype, {
         /**
          * @function
          * @name pc.Keyboard#attach
@@ -322,10 +320,10 @@ pc.extend(pc, function (){
 
             return (!!!(this._keymap[id]) && !!(this._lastmap[id]));
         }
-    };
+    });
 
     return {
         Keyboard: Keyboard,
         KeyboardEvent: KeyboardEvent
     };
-}());
+}()));

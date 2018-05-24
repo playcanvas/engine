@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     function CubemapHandler(device, assets, loader) {
@@ -7,9 +7,7 @@ pc.extend(pc, function () {
         this._loader = loader;
     }
 
-    CubemapHandler.prototype = {
-        constructor: CubemapHandler,
-
+    Object.assign(CubemapHandler.prototype, {
         load: function (url, callback) { },
 
         open: function (url, data) { },
@@ -193,10 +191,9 @@ pc.extend(pc, function () {
                 }
             });
         }
-    };
+    });
 
     return {
         CubemapHandler: CubemapHandler
     };
-
-}());
+}()));

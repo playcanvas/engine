@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     var _schema = [
         'enabled',
@@ -49,7 +49,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.ScriptLegacyComponent.prototype, _schema);
 
-    pc.extend(ScriptLegacyComponentSystem.prototype, {
+    Object.assign(ScriptLegacyComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['runInTools', 'enabled', 'scripts'];
 
@@ -519,4 +519,4 @@ pc.extend(pc, function () {
     return {
         ScriptLegacyComponentSystem: ScriptLegacyComponentSystem
     };
-}());
+}()));

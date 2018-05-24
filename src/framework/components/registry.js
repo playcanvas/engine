@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.ComponentSystemRegistry
@@ -95,4 +95,4 @@ pc.extend(pc, function () {
     return {
         ComponentSystemRegistry: ComponentSystemRegistry
     };
-}());
+}()));

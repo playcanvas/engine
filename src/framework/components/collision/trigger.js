@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     var ammoVec1, ammoQuat;
 
@@ -128,5 +128,4 @@ pc.extend(pc, function () {
     return {
         Trigger: Trigger
     };
-
-}());
+}()));

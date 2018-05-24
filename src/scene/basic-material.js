@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     /**
      * @constructor
@@ -31,7 +31,7 @@ pc.extend(pc, function () {
 
     BasicMaterial = pc.inherits(BasicMaterial, pc.Material);
 
-    pc.extend(BasicMaterial.prototype, {
+    Object.assign(BasicMaterial.prototype, {
         /**
          * @function
          * @name pc.BasicMaterial#clone
@@ -76,4 +76,4 @@ pc.extend(pc, function () {
     return {
         BasicMaterial: BasicMaterial
     };
-}());
+}()));

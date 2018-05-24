@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     /**
      * @private
@@ -11,7 +11,7 @@ pc.extend(pc, function () {
 
     DepthMaterial = pc.inherits(DepthMaterial, pc.Material);
 
-    pc.extend(DepthMaterial.prototype, {
+    Object.assign(DepthMaterial.prototype, {
         /**
          * @private
          * @function
@@ -43,4 +43,4 @@ pc.extend(pc, function () {
     return {
         DepthMaterial: DepthMaterial
     };
-}());
+}()));

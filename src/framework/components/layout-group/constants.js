@@ -1,4 +1,4 @@
-pc.extend(pc, {
+Object.assign(pc, {
     /**
      * @enum pc.ORIENTATION
      * @name pc.ORIENTATION_HORIZONTAL

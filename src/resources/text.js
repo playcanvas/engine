@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     function TextHandler() {
@@ -28,4 +28,4 @@ pc.extend(pc, function () {
     return {
         TextHandler: TextHandler
     };
-}());
+}()));

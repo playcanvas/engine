@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     function CollisionComponentData() {
         this.enabled = true;
         this.type = 'box';
@@ -18,4 +18,4 @@ pc.extend(pc, function () {
     return {
         CollisionComponentData: CollisionComponentData
     };
-}());
+}()));

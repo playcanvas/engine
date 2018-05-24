@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     function AnimationComponentData() {
         // Serialized
         this.assets = [];
@@ -25,4 +25,4 @@ pc.extend(pc, function () {
     return {
         AnimationComponentData: AnimationComponentData
     };
-}());
+}()));

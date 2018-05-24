@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     function ProgramLibrary(device) {
@@ -8,9 +8,7 @@ pc.extend(pc, function () {
         this._isClearingCache = false;
     }
 
-    ProgramLibrary.prototype = {
-        constructor: ProgramLibrary,
-
+    Object.assign(ProgramLibrary.prototype, {
         register: function (name, generator) {
             if (!this.isRegistered(name)) {
                 this._generators[name] = generator;
@@ -70,9 +68,9 @@ pc.extend(pc, function () {
                 }
             }
         }
-    };
+    });
 
     return {
         ProgramLibrary: ProgramLibrary
     };
-}());
+}()));

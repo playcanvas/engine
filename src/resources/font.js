@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     function FontHandler(loader) {
@@ -103,4 +103,4 @@ pc.extend(pc, function () {
     return {
         FontHandler: FontHandler
     };
-}());
+}()));

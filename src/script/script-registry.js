@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.ScriptRegistry
@@ -15,9 +15,7 @@ pc.extend(pc, function () {
         this._list = [];
     }
 
-    ScriptRegistry.prototype = {
-        constructor: ScriptRegistry,
-
+    Object.assign(ScriptRegistry.prototype, {
         /**
          * @function
          * @name pc.ScriptRegistry#add
@@ -191,9 +189,9 @@ pc.extend(pc, function () {
         list: function () {
             return this._list;
         }
-    };
+    });
 
     return {
         ScriptRegistry: ScriptRegistry
     };
-}());
+}()));

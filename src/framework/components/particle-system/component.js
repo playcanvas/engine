@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     // properties that do not need rebuilding the particle system
     var SIMPLE_PROPERTIES = [
@@ -163,7 +163,7 @@ pc.extend(pc, function () {
 
     ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.Component);
 
-    pc.extend(ParticleSystemComponent.prototype, {
+    Object.assign(ParticleSystemComponent.prototype, {
         addModelToLayers: function () {
             if (!this.data.model) return;
             var layer;
@@ -707,4 +707,4 @@ pc.extend(pc, function () {
     return {
         ParticleSystemComponent: ParticleSystemComponent
     };
-}());
+}()));

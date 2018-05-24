@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @private
      * @component
@@ -33,7 +33,7 @@ pc.extend(pc, function () {
     }
     AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.Component);
 
-    pc.extend(AudioSourceComponent.prototype, {
+    Object.assign(AudioSourceComponent.prototype, {
         /**
          * @private
          * @function
@@ -357,4 +357,4 @@ pc.extend(pc, function () {
     return {
         AudioSourceComponent: AudioSourceComponent
     };
-}());
+}()));

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     function HierarchyHandler(app) {
@@ -35,4 +35,4 @@ pc.extend(pc, function () {
     return {
         HierarchyHandler: HierarchyHandler
     };
-}());
+}()));

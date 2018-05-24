@@ -348,7 +348,7 @@
     pc.extend(pc.scene, enums);
 }());
 
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.Scene
@@ -457,9 +457,7 @@ pc.extend(pc, function () {
         pc.events.attach(this);
     }
 
-    Scene.prototype = {
-        constructor: Scene,
-
+    Object.assign(Scene.prototype, {
         applySettings: function (settings) {
             // settings
             this._gravity.set(settings.physics.gravity[0], settings.physics.gravity[1], settings.physics.gravity[2]);
@@ -618,7 +616,7 @@ pc.extend(pc, function () {
         getModels: function (model) {
             return this._models;
         }
-    };
+    });
 
     Object.defineProperty(Scene.prototype, 'fog', {
         get: function () {
@@ -799,7 +797,7 @@ pc.extend(pc, function () {
     return {
         Scene: Scene
     };
-}());
+}()));
 
 /**
  * @event

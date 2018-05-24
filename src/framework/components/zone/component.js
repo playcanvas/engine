@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @component
      * @name pc.ZoneComponent
@@ -61,7 +61,7 @@ pc.extend(pc, function () {
      * });
      */
 
-    pc.extend(ZoneComponent.prototype, {
+    Object.assign(ZoneComponent.prototype, {
         onEnable: function () {
             ZoneComponent._super.onEnable.call(this);
             this._checkState();
@@ -108,4 +108,4 @@ pc.extend(pc, function () {
     return {
         ZoneComponent: ZoneComponent
     };
-}());
+}()));

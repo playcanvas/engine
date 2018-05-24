@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.StandardMaterial
@@ -587,8 +587,7 @@ pc.extend(pc, function () {
 
     StandardMaterial = pc.inherits(StandardMaterial, pc.Material);
 
-    pc.extend(StandardMaterial.prototype, {
-
+    Object.assign(StandardMaterial.prototype, {
         reset: function () {
             this.blendType = pc.BLEND_NONE;
 
@@ -1339,4 +1338,4 @@ pc.extend(pc, function () {
     return {
         StandardMaterial: StandardMaterial
     };
-}());
+}()));

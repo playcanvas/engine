@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     function addLineNumbers(src) {
@@ -86,9 +86,7 @@ pc.extend(pc, function () {
         this.device.shaders.push(this);
     }
 
-    Shader.prototype = {
-        constructor: Shader,
-
+    Object.assign(Shader.prototype, {
         compile: function () {
             this.ready = false;
 
@@ -263,9 +261,9 @@ pc.extend(pc, function () {
                 this.device.removeShaderFromCache(this);
             }
         }
-    };
+    });
 
     return {
         Shader: Shader
     };
-}());
+}()));
