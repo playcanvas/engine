@@ -52,6 +52,11 @@ pc.extend(pc, function () {
 
     pc.extend(ScrollViewComponent.prototype, {
         _toggleLifecycleListeners: function(onOrOff) {
+            this[onOrOff]('set_horizontal', this._onSetHorizontalScrollingEnabled, this);
+            this[onOrOff]('set_vertical', this._onSetVerticalScrollingEnabled, this);
+
+            // TODO Implement scrollbar visibility (show when required/show always) by handling content size changing
+
             // TODO Handle scrollwheel events
         },
 
@@ -76,22 +81,32 @@ pc.extend(pc, function () {
         },
 
         _onSetHorizontalScrollbarValue: function(value) {
-            this._scrollbarUpdateFlags[pc.ORIENTATION_HORIZONTAL] = true;
-            this._onSetScroll(value, null);
-            this._scrollbarUpdateFlags[pc.ORIENTATION_HORIZONTAL] = false;
+            if (!this._scrollbarUpdateFlags[pc.ORIENTATION_HORIZONTAL]) {
+                this._onSetScroll(value, null);
+            }
         },
 
         _onSetVerticalScrollbarValue: function(value) {
-            this._scrollbarUpdateFlags[pc.ORIENTATION_VERTICAL] = true;
-            this._onSetScroll(null, value);
-            this._scrollbarUpdateFlags[pc.ORIENTATION_VERTICAL] = false;
+            if (!this._scrollbarUpdateFlags[pc.ORIENTATION_VERTICAL]) {
+                this._onSetScroll(null, value);
+            }
+        },
+
+        _onSetHorizontalScrollingEnabled: function() {
+            this._syncScrollbarEnabledState(pc.ORIENTATION_HORIZONTAL);
+        },
+
+        _onSetVerticalScrollingEnabled: function() {
+            this._syncScrollbarEnabledState(pc.ORIENTATION_VERTICAL);
         },
 
         _onHorizontalScrollbarGain: function() {
+            this._syncScrollbarEnabledState(pc.ORIENTATION_HORIZONTAL);
             this._syncScrollbarPosition(pc.ORIENTATION_HORIZONTAL);
         },
 
         _onVerticalScrollbarGain: function() {
+            this._syncScrollbarEnabledState(pc.ORIENTATION_VERTICAL);
             this._syncScrollbarPosition(pc.ORIENTATION_VERTICAL);
         },
 
@@ -109,12 +124,36 @@ pc.extend(pc, function () {
             var hasChanged = (value !== null && Math.abs(value - this._scroll[axis]) > 1e-5);
 
             if (hasChanged) {
-                this._scroll[axis] = pc.math.clamp(value, 0, 1);
+                this._scroll[axis] = this._determineNewScrollValue(value, axis, orientation);
                 this._syncContentPosition(orientation);
                 this._syncScrollbarPosition(orientation);
             }
 
             return hasChanged;
+        },
+
+        _determineNewScrollValue: function(value, axis, orientation) {
+            // If scrolling is disabled for the selected orientation, force the
+            // scroll position to remain at the current value
+            if (!this._getScrollingEnabled(orientation)) {
+                return this._scroll[axis];
+            }
+
+            switch (this.scrollMode) {
+                case pc.SCROLL_MODE_CLAMP:
+                    return pc.math.clamp(value, 0, 1);
+
+                case pc.SCROLL_MODE_BOUNCE:
+                    // TODO Implement bounce
+                    return value;
+
+                case pc.SCROLL_MODE_INFINITE:
+                    return value;
+
+                default:
+                    console.warn('Unhandled scroll mode:' + this.scrollMode);
+                    return value;
+            }
         },
 
         _syncContentPosition: function(orientation) {
@@ -134,8 +173,25 @@ pc.extend(pc, function () {
             var axis = this._getAxis(orientation);
             var scrollbarEntity = this._scrollbarReferences[orientation].entity;
 
-            if (scrollbarEntity && scrollbarEntity.scrollbar && !this._scrollbarUpdateFlags[orientation]) {
+            if (scrollbarEntity && scrollbarEntity.scrollbar) {
+                // Setting the value of the scrollbar will fire a 'set:value' event, which in turn
+                // will call the _onSetHorizontalScrollbarValue/_onSetVerticalScrollbarValue handlers
+                // and cause a cycle. To avoid this we keep track of the fact that we're in the process
+                // of updating the scrollbar value.
+                this._scrollbarUpdateFlags[orientation] = true;
                 scrollbarEntity.scrollbar.value = this._scroll[axis];
+                this._scrollbarUpdateFlags[orientation] = false;
+            }
+        },
+
+        // Toggles the scrollbar entities themselves to be enabled/disabled based
+        // on whether the user has enabled horizontal/vertical scrolling on the
+        // scroll view.
+        _syncScrollbarEnabledState: function(orientation) {
+            var entity = this._scrollbarReferences[orientation].entity;
+
+            if (entity) {
+                entity.enabled = this._getScrollingEnabled(orientation);
             }
         },
 
@@ -159,6 +215,16 @@ pc.extend(pc, function () {
             }
 
             return 0;
+        },
+
+        _getScrollingEnabled: function(orientation) {
+            if (orientation === pc.ORIENTATION_HORIZONTAL) {
+                return this.horizontal;
+            } else if (orientation === pc.ORIENTATION_VERTICAL) {
+                return this.vertical;
+            }
+
+            console.warn('Unrecognized orientation: ' + orientation);
         },
 
         _getSign: function(orientation) {
