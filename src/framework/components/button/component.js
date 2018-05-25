@@ -281,7 +281,17 @@ pc.extend(pc, function () {
             this.fire('touchstart', event);
         },
 
-        _onTouchEnd: function (event) {
+        _onTouchEnd: function(event) {
+            // The default behaviour of the browser is to simulate a series of
+            // `mouseenter/down/up` events immediately after the `touchend` event,
+            // in order to ensure that websites that don't explicitly listen for
+            // touch events will still work on mobile (see https://www.html5rocks.com/en/mobile/touchandmouse/
+            // for reference). This leads to an issue whereby buttons will enter
+            // the `hover` state on mobile browsers after the `touchend` event is
+            // received, instead of going back to the `default` state. Calling
+            // preventDefault() here fixes the issue.
+            event.event.preventDefault();
+
             this._isPressed = false;
 
             this._updateVisualState();
