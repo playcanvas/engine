@@ -393,7 +393,9 @@ pc.extend(pc, function () {
                 }
             }
 
-            this._touchedElements = newTouchedElements;
+            for (var touch in newTouchedElements) { 
+                this._touchedElements[touch] = newTouchedElements[touch]; 
+            }
         },
 
         _handleTouchEnd: function (event) {
