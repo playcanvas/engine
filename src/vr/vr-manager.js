@@ -19,8 +19,26 @@ pc.extend(pc, function () {
         this.usesPolyfill = VrManager.usesPolyfill;
 
         // if required initialize webvr polyfill
-        if (window.InitializeWebVRPolyfill)
-            window.InitializeWebVRPolyfill();
+        if (window.WebVRPolyfill) {
+            var options = {
+                ADDITIONAL_VIEWERS: [],
+                DEFAULT_VIEWER: '',
+                PROVIDE_MOBILE_VRDISPLAY: true,
+                GET_VR_DISPLAYS_TIMEOUT: 1000,
+                MOBILE_WAKE_LOCK: true,
+                DEBUG: false,
+                DPDB_URL: 'https://dpdb.webvr.rocks/dpdb.json',
+                K_FILTER: 0.98,
+                PREDICTION_TIME_S: 0.040,
+                TOUCH_PANNER_DISABLED: true,
+                CARDBOARD_UI_DISABLED: false,
+                ROTATE_INSTRUCTIONS_DISABLED: false,
+                YAW_ONLY: false,
+                BUFFER_SCALE: 0.5,
+                DIRTY_SUBMIT_FRAME_BINDINGS: false
+            };
+            var polyfill = new window.WebVRPolyfill(options);
+        }
 
         this._index = { };
         this.displays = [];
@@ -84,7 +102,7 @@ pc.extend(pc, function () {
      * @type Boolean
      * @description Reports whether this device supports the WebVR API using a polyfill
      */
-    VrManager.usesPolyfill = !!window.InitializeWebVRPolyfill;
+    VrManager.usesPolyfill = !!window.WebVRPolyfill;
 
     VrManager.prototype = {
         _attach: function () {
