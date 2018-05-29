@@ -341,11 +341,10 @@
         ASPECT_MANUAL: 1
     };
 
-    pc.extend(pc, enums);
+    Object.assign(pc, enums);
 
     // For backwards compatibility
-    pc.scene = {};
-    pc.extend(pc.scene, enums);
+    pc.scene = Object.assign({}, enums);
 }());
 
 Object.assign(pc, (function () {

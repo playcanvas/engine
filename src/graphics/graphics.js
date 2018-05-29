@@ -757,9 +757,8 @@
         UNIFORMTYPE_TEXTURE3D: 20
     };
 
-    pc.extend(pc, enums);
+    Object.assign(pc, enums);
 
     // For backwards compatibility
-    pc.gfx = {};
-    pc.extend(pc.gfx, enums);
+    pc.gfx = Object.assign({}, enums);
 }());

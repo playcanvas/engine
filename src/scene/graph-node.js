@@ -18,7 +18,7 @@ Object.assign(pc, (function () {
         this.name = typeof name === "string" ? name : "Untitled"; // Non-unique human readable name
         this.tags = new pc.Tags(this);
 
-        this._labels = { };
+        this._labels = {};
 
         // Local-space properties of transform (only first 3 are settable by the user)
         this.localPosition = new pc.Vec3(0, 0, 0);
@@ -203,7 +203,7 @@ Object.assign(pc, (function () {
             for (var i = 0; i < tags.length; i++)
                 clone.tags.add(tags[i]);
 
-            clone._labels = pc.extend(this._labels, {});
+            clone._labels = Object.assign({}, this._labels);
 
             clone.localPosition.copy(this.localPosition);
             clone.localRotation.copy(this.localRotation);

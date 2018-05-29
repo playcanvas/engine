@@ -26,6 +26,43 @@ Function.prototype.extendsFrom = function (Super) {
     return Func;
 };
 
+/**
+ * @private
+ * @deprecated
+ * @function
+ * @name pc.extend
+ * @description Merge the contents of two objects into a single object
+ * @param {Object} target The target object of the merge
+ * @param {Object} ex The object that is merged with target
+ * @returns {Object} The target object
+ * @example
+ * var A = {a: function() {console.log(this.a}};
+ * var B = {b: function() {console.log(this.b}};
+ *
+ * pc.extend(A,B);
+ * A.a();
+ * // logs "a"
+ * A.b();
+ * // logs "b"
+ */
+pc.extend = function (target, ex) {
+    var prop,
+        copy;
+
+    for (prop in ex) {
+        copy = ex[prop];
+        if (pc.type(copy) == "object") {
+            target[prop] = pc.extend({}, copy);
+        } else if (pc.type(copy) == "array") {
+            target[prop] = pc.extend([], copy);
+        } else {
+            target[prop] = copy;
+        }
+    }
+
+    return target;
+};
+
 // Continue to support the old engine namespaces
 pc.anim = {
     Animation: pc.Animation,
