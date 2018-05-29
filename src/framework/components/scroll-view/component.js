@@ -30,7 +30,9 @@ pc.extend(pc, function () {
         this._viewportReference = new pc.EntityReference(this, 'viewportEntity');
         this._contentReference = new pc.EntityReference(this, 'contentEntity', {
             'element#gain': this._onContentElementGain,
-            'element#lose': this._onContentElementLose
+            'element#lose': this._onContentElementLose,
+            'element#set:width': this._onSetContentWidth,
+            'element#set:height': this._onSetContentHeight
         });
 
         this._scrollbarUpdateFlags = {};
@@ -57,8 +59,6 @@ pc.extend(pc, function () {
             this[onOrOff]('set_vertical', this._onSetVerticalScrollingEnabled, this);
 
             pc.ComponentSystem[onOrOff]('update', this._onUpdate, this);
-
-            // TODO Implement scrollbar visibility (show when required/show always) by handling content size changing
 
             // TODO Handle scrollwheel events
         },
@@ -89,6 +89,16 @@ pc.extend(pc, function () {
                     this._setVelocityFromContentPositionDelta(position);
                 }
             }
+        },
+
+        _onSetContentWidth: function() {
+            this._syncContentPosition(pc.ORIENTATION_HORIZONTAL);
+            this._syncScrollbarPosition(pc.ORIENTATION_HORIZONTAL);
+        },
+
+        _onSetContentHeight: function() {
+            this._syncContentPosition(pc.ORIENTATION_VERTICAL);
+            this._syncScrollbarPosition(pc.ORIENTATION_VERTICAL);
         },
 
         _onSetHorizontalScrollbarValue: function(value) {
@@ -193,6 +203,7 @@ pc.extend(pc, function () {
                 // of updating the scrollbar value.
                 this._scrollbarUpdateFlags[orientation] = true;
                 scrollbarEntity.scrollbar.value = this._scroll[axis];
+                scrollbarEntity.scrollbar.handleSize = this._getScrollSizeRatio(orientation);
                 this._scrollbarUpdateFlags[orientation] = false;
             }
         },
@@ -204,7 +215,22 @@ pc.extend(pc, function () {
             var entity = this._scrollbarReferences[orientation].entity;
 
             if (entity) {
-                entity.enabled = this._getScrollingEnabled(orientation);
+                var isScrollingEnabled = this._getScrollingEnabled(orientation);
+                var requestedVisibility = this._getScrollbarVisibility(orientation);
+
+                switch (requestedVisibility) {
+                    case pc.SCROLLBAR_VISIBILITY_SHOW_ALWAYS:
+                        entity.enabled = isScrollingEnabled;
+                        return;
+
+                    case pc.SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED:
+                        entity.enabled = isScrollingEnabled && this._getMaxOffset(orientation) < 0;
+                        return;
+
+                    default:
+                        console.warn('Unhandled scrollbar visibility:' + requestedVisibility);
+                        entity.enabled = isScrollingEnabled;
+                }
             }
         },
 
@@ -219,7 +245,14 @@ pc.extend(pc, function () {
             var viewportSize = this._getSize(orientation, this._viewportReference);
             var contentSize = this._getSize(orientation, this._contentReference);
 
-            return Math.min(viewportSize - contentSize, 0);
+            return Math.min(viewportSize - contentSize, 0.001);
+        },
+
+        _getScrollSizeRatio: function(orientation) {
+            var viewportSize = this._getSize(orientation, this._viewportReference);
+            var contentSize = this._getSize(orientation, this._contentReference);
+
+            return Math.abs(contentSize > 0.001) ? viewportSize / contentSize : 1;
         },
 
         _getSize: function(orientation, entityReference) {
@@ -235,6 +268,16 @@ pc.extend(pc, function () {
                 return this.horizontal;
             } else if (orientation === pc.ORIENTATION_VERTICAL) {
                 return this.vertical;
+            }
+
+            console.warn('Unrecognized orientation: ' + orientation);
+        },
+
+        _getScrollbarVisibility: function(orientation) {
+            if (orientation === pc.ORIENTATION_HORIZONTAL) {
+                return this.horizontalScrollbarVisibility;
+            } else if (orientation === pc.ORIENTATION_VERTICAL) {
+                return this.verticalScrollbarVisibility;
             }
 
             console.warn('Unrecognized orientation: ' + orientation);
@@ -261,6 +304,8 @@ pc.extend(pc, function () {
         _onUpdate: function() {
             if (this._contentReference.entity && this.enabled && this.entity.enabled) {
                 this._updateVelocity();
+                this._syncScrollbarEnabledState(pc.ORIENTATION_HORIZONTAL);
+                this._syncScrollbarEnabledState(pc.ORIENTATION_VERTICAL);
             }
         },
 
