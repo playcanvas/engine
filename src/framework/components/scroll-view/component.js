@@ -84,10 +84,7 @@ pc.extend(pc, function () {
         _onContentDragMove: function(position) {
             if (this._contentReference.entity && this.enabled && this.entity.enabled) {
                 this._setScrollFromContentPosition(position);
-
-                if (!this._hasOvershoot()) {
-                    this._setVelocityFromContentPositionDelta(position);
-                }
+                this._setVelocityFromContentPositionDelta(position);
             }
         },
 
@@ -101,17 +98,17 @@ pc.extend(pc, function () {
             this._syncScrollbarPosition(pc.ORIENTATION_VERTICAL);
         },
 
-        _onSetHorizontalScrollbarValue: function(value) {
+        _onSetHorizontalScrollbarValue: function(scrollValueX) {
             if (!this._scrollbarUpdateFlags[pc.ORIENTATION_HORIZONTAL]) {
                 this._velocity.set(0, 0, 0);
-                this._onSetScroll(value, null);
+                this._onSetScroll(scrollValueX, null);
             }
         },
 
-        _onSetVerticalScrollbarValue: function(value) {
+        _onSetVerticalScrollbarValue: function(scrollValueY) {
             if (!this._scrollbarUpdateFlags[pc.ORIENTATION_VERTICAL]) {
                 this._velocity.set(0, 0, 0);
-                this._onSetScroll(null, value);
+                this._onSetScroll(null, scrollValueY);
             }
         },
 
@@ -143,11 +140,11 @@ pc.extend(pc, function () {
             }
         },
 
-        _updateAxis: function(value, axis, orientation) {
-            var hasChanged = (value !== null && Math.abs(value - this._scroll[axis]) > 1e-5);
+        _updateAxis: function(scrollValue, axis, orientation) {
+            var hasChanged = (scrollValue !== null && Math.abs(scrollValue - this._scroll[axis]) > 1e-5);
 
             if (hasChanged) {
-                this._scroll[axis] = this._determineNewScrollValue(value, axis, orientation);
+                this._scroll[axis] = this._determineNewScrollValue(scrollValue, axis, orientation);
                 this._syncContentPosition(orientation);
                 this._syncScrollbarPosition(orientation);
             }
@@ -155,7 +152,7 @@ pc.extend(pc, function () {
             return hasChanged;
         },
 
-        _determineNewScrollValue: function(value, axis, orientation) {
+        _determineNewScrollValue: function(scrollValue, axis, orientation) {
             // If scrolling is disabled for the selected orientation, force the
             // scroll position to remain at the current value
             if (!this._getScrollingEnabled(orientation)) {
@@ -164,18 +161,18 @@ pc.extend(pc, function () {
 
             switch (this.scrollMode) {
                 case pc.SCROLL_MODE_CLAMP:
-                    return pc.math.clamp(value, 0, 1);
+                    return pc.math.clamp(scrollValue, 0, this._getMaxScrollValue(orientation));
 
                 case pc.SCROLL_MODE_BOUNCE:
-                    this._setVelocityFromOvershoot(value, axis, orientation);
-                    return value;
+                    this._setVelocityFromOvershoot(scrollValue, axis, orientation);
+                    return scrollValue;
 
                 case pc.SCROLL_MODE_INFINITE:
-                    return value;
+                    return scrollValue;
 
                 default:
                     console.warn('Unhandled scroll mode:' + this.scrollMode);
-                    return value;
+                    return scrollValue;
             }
         },
 
@@ -185,7 +182,7 @@ pc.extend(pc, function () {
             var contentEntity = this._contentReference.entity;
 
             if (contentEntity) {
-                var offset = this._scroll[axis] * this._getMaxOffset(orientation);
+                var offset = this._scroll[axis] *  this._getMaxOffset(orientation);
                 var contentPosition = contentEntity.getLocalPosition();
                 contentPosition[axis] = offset * sign;
                 contentEntity.setLocalPosition(contentPosition);
@@ -203,7 +200,7 @@ pc.extend(pc, function () {
                 // of updating the scrollbar value.
                 this._scrollbarUpdateFlags[orientation] = true;
                 scrollbarEntity.scrollbar.value = this._scroll[axis];
-                scrollbarEntity.scrollbar.handleSize = this._getScrollSizeRatio(orientation);
+                scrollbarEntity.scrollbar.handleSize = this._getScrollbarHandleSize(axis, orientation);
                 this._scrollbarUpdateFlags[orientation] = false;
             }
         },
@@ -224,7 +221,7 @@ pc.extend(pc, function () {
                         return;
 
                     case pc.SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED:
-                        entity.enabled = isScrollingEnabled && this._getMaxOffset(orientation) < 0;
+                        entity.enabled = isScrollingEnabled && this._contentIsLargerThanViewport(orientation);
                         return;
 
                     default:
@@ -232,6 +229,10 @@ pc.extend(pc, function () {
                         entity.enabled = isScrollingEnabled;
                 }
             }
+        },
+
+        _contentIsLargerThanViewport: function(orientation) {
+            return this._getContentSize(orientation) > this._getViewportSize(orientation);
         },
 
         _contentPositionToScrollValue: function(contentPosition) {
@@ -242,17 +243,45 @@ pc.extend(pc, function () {
         },
 
         _getMaxOffset: function(orientation) {
-            var viewportSize = this._getSize(orientation, this._viewportReference);
-            var contentSize = this._getSize(orientation, this._contentReference);
+            var viewportSize = this._getViewportSize(orientation);
+            var contentSize = this._getContentSize(orientation);
 
-            return Math.min(viewportSize - contentSize, 0.001);
+            if (contentSize < viewportSize) {
+                return -this._getViewportSize(orientation);
+            }
+
+            return viewportSize - contentSize;
         },
 
-        _getScrollSizeRatio: function(orientation) {
-            var viewportSize = this._getSize(orientation, this._viewportReference);
-            var contentSize = this._getSize(orientation, this._contentReference);
+        _getMaxScrollValue: function(orientation) {
+            return this._contentIsLargerThanViewport(orientation) ? 1 : 0;
+        },
 
-            return Math.abs(contentSize > 0.001) ? viewportSize / contentSize : 1;
+        _getScrollbarHandleSize: function(axis, orientation) {
+            var viewportSize = this._getViewportSize(orientation);
+            var contentSize = this._getContentSize(orientation);
+
+            if (Math.abs(contentSize) < 0.001) {
+                return 1;
+            }
+
+            var handleSize = Math.min(viewportSize / contentSize, 1);
+            var overshoot = this._toOvershoot(this._scroll[axis], orientation);
+
+            if (overshoot === 0) {
+                return handleSize;
+            }
+
+            // Scale the handle down when the content has been dragged past the bounds
+            return handleSize / (1 + Math.abs(overshoot));
+        },
+
+        _getViewportSize: function(orientation) {
+            return this._getSize(orientation, this._viewportReference);
+        },
+
+        _getContentSize: function(orientation) {
+            return this._getSize(orientation, this._contentReference);
         },
 
         _getSize: function(orientation, entityReference) {
@@ -311,12 +340,14 @@ pc.extend(pc, function () {
 
         _updateVelocity: function() {
             if (!this._isDragging()) {
-                if (this._hasOvershoot('x')) {
-                    this._setVelocityFromOvershoot(this.scroll.x, 'x', pc.ORIENTATION_HORIZONTAL);
-                }
+                if (this.scrollMode === pc.SCROLL_MODE_BOUNCE) {
+                    if (this._hasOvershoot('x', pc.ORIENTATION_HORIZONTAL)) {
+                        this._setVelocityFromOvershoot(this.scroll.x, 'x', pc.ORIENTATION_HORIZONTAL);
+                    }
 
-                if (this._hasOvershoot('y')) {
-                    this._setVelocityFromOvershoot(this.scroll.y, 'y', pc.ORIENTATION_VERTICAL);
+                    if (this._hasOvershoot('y', pc.ORIENTATION_VERTICAL)) {
+                        this._setVelocityFromOvershoot(this.scroll.y, 'y', pc.ORIENTATION_VERTICAL);
+                    }
                 }
 
                 this._velocity.data[0] *= this.friction;
@@ -333,29 +364,32 @@ pc.extend(pc, function () {
             }
         },
 
-        _hasOvershoot: function(axis) {
-            return this.scroll[axis] <= 0 || this.scroll[axis] >= 1;
+        _hasOvershoot: function(axis, orientation) {
+            return Math.abs(this._toOvershoot(this.scroll[axis], orientation)) > 0.001;
         },
 
-        _setVelocityFromOvershoot: function(value, axis, orientation) {
-            var overshoot;
+        _toOvershoot: function(scrollValue, orientation) {
+            var maxScrollValue = this._getMaxScrollValue(orientation);
 
-            if (value < 0) {
-                overshoot = value;
-            } else if (value > 1) {
-                overshoot = value - 1;
-            } else {
-                overshoot = 0;
+            if (scrollValue < 0) {
+                return scrollValue;
+            } else if (scrollValue > maxScrollValue) {
+                return scrollValue - maxScrollValue;
             }
 
-            overshoot *= this._getMaxOffset(orientation) * this._getSign(orientation);
+            return 0;
+        },
 
-            if (Math.abs(overshoot) > 0) {
+        _setVelocityFromOvershoot: function(scrollValue, axis, orientation) {
+            var overshootValue = this._toOvershoot(scrollValue, orientation);
+            var overshootPixels = overshootValue * this._getMaxOffset(orientation) * this._getSign(orientation);
+
+            if (Math.abs(overshootPixels) > 0) {
                 // 50 here is just a magic number – it seems to give us a range of useful
                 // range of bounceAmount values, so that 0.1 is similar to the iOS bounce
                 // feel, 1.0 is much slower, etc. The + 1 means that when bounceAmount is
                 // 0, the content will just snap back immediately instead of moving gradually.
-                this._velocity[axis] = -overshoot / (this.bounceAmount * 50 + 1);
+                this._velocity[axis] = -overshootPixels / (this.bounceAmount * 50 + 1);
             }
         },
 
@@ -370,8 +404,8 @@ pc.extend(pc, function () {
         },
 
         _setScrollFromContentPosition: function(position) {
-            var value = this._contentPositionToScrollValue(position);
-            this._onSetScroll(value.x, value.y);
+            var scrollValue = this._contentPositionToScrollValue(position);
+            this._onSetScroll(scrollValue.x, scrollValue.y);
         },
 
         _isDragging: function() {
