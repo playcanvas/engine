@@ -35,7 +35,7 @@ pc.extend(pc, function () {
         _onHandleElementGain: function() {
             this._destroyDragHelper();
             this._handleDragHelper = new pc.ElementDragHelper(this._handleReference.entity.element, this._getAxis());
-            this._handleDragHelper.on('drag', this._onHandleDrag, this);
+            this._handleDragHelper.on('drag:move', this._onHandleDrag, this);
 
             this._updateHandlePositionAndSize();
         },

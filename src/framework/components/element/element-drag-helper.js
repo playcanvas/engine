@@ -79,7 +79,7 @@ pc.extend(pc, function () {
         },
 
         _onMouseDownOrTouchStart: function(event) {
-            if (this._element) {
+            if (this._element && !this._isDragging) {
                 this._isDragging = true;
                 this._toggleDragListeners('on');
 
@@ -87,12 +87,18 @@ pc.extend(pc, function () {
                 this._dragCamera = event.camera;
                 this._dragStartMousePosition.copy(this._screenToLocal(event));
                 this._dragStartHandlePosition.copy(this._element.entity.getLocalPosition());
+
+                this.fire('drag:start');
             }
         },
 
         _onMouseUpOrTouchEnd: function() {
-            this._isDragging = false;
-            this._toggleDragListeners('off');
+            if (this._isDragging) {
+                this._isDragging = false;
+                this._toggleDragListeners('off');
+
+                this.fire('drag:end');
+            }
         },
 
         _screenToLocal: function(event) {
@@ -181,7 +187,7 @@ pc.extend(pc, function () {
                     }
 
                     this._element.entity.setLocalPosition(this._deltaHandlePosition);
-                    this.fire('drag', this._deltaHandlePosition);
+                    this.fire('drag:move', this._deltaHandlePosition);
                 }
             }
         },
@@ -202,6 +208,12 @@ pc.extend(pc, function () {
         }
     });
 
+    Object.defineProperty(ElementDragHelper.prototype, 'isDragging', {
+        get: function () {
+            return this._isDragging;
+        }
+    });
+
     return {
         ElementDragHelper: ElementDragHelper
     };
@@ -209,7 +221,19 @@ pc.extend(pc, function () {
 
 /**
  * @event
- * @name pc.ElementDragHelper#drag
+ * @name pc.ElementDragHelper#drag:start
+ * @description Fired when a new drag operation starts.
+ */
+
+/**
+ * @event
+ * @name pc.ElementDragHelper#drag:end
+ * @description Fired when the current new drag operation ends.
+ */
+
+/**
+ * @event
+ * @name pc.ElementDragHelper#drag:move
  * @description Fired whenever the position of the dragged element changes.
  * @param {pc.Vec3} value The current position.
  */

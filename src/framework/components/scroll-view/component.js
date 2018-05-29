@@ -45,6 +45,7 @@ pc.extend(pc, function () {
         });
 
         this._scroll = new pc.Vec2();
+        this._velocity = new pc.Vec3();
 
         this._toggleLifecycleListeners('on');
     };
@@ -55,6 +56,8 @@ pc.extend(pc, function () {
             this[onOrOff]('set_horizontal', this._onSetHorizontalScrollingEnabled, this);
             this[onOrOff]('set_vertical', this._onSetVerticalScrollingEnabled, this);
 
+            pc.ComponentSystem[onOrOff]('update', this._onUpdate, this);
+
             // TODO Implement scrollbar visibility (show when required/show always) by handling content size changing
 
             // TODO Handle scrollwheel events
@@ -63,7 +66,8 @@ pc.extend(pc, function () {
         _onContentElementGain: function() {
             this._destroyDragHelper();
             this._contentDragHelper = new pc.ElementDragHelper(this._contentReference.entity.element);
-            this._contentDragHelper.on('drag', this._onContentDrag, this);
+            this._contentDragHelper.on('drag:end', this._onContentDragEnd, this);
+            this._contentDragHelper.on('drag:move', this._onContentDragMove, this);
 
             this._syncContentPosition(pc.ORIENTATION_HORIZONTAL);
             this._syncContentPosition(pc.ORIENTATION_VERTICAL);
@@ -73,21 +77,30 @@ pc.extend(pc, function () {
             this._destroyDragHelper();
         },
 
-        _onContentDrag: function(position) {
+        _onContentDragEnd: function() {
+            this._prevContentDragPosition = null;
+        },
+
+        _onContentDragMove: function(position) {
             if (this._contentReference.entity && this.enabled && this.entity.enabled) {
-                var value = this._contentPositionToScrollValue(position);
-                this._onSetScroll(value.x, value.y);
+                this._setScrollFromContentPosition(position);
+
+                if (!this._hasOvershoot()) {
+                    this._setVelocityFromContentPositionDelta(position);
+                }
             }
         },
 
         _onSetHorizontalScrollbarValue: function(value) {
             if (!this._scrollbarUpdateFlags[pc.ORIENTATION_HORIZONTAL]) {
+                this._velocity.set(0, 0, 0);
                 this._onSetScroll(value, null);
             }
         },
 
         _onSetVerticalScrollbarValue: function(value) {
             if (!this._scrollbarUpdateFlags[pc.ORIENTATION_VERTICAL]) {
+                this._velocity.set(0, 0, 0);
                 this._onSetScroll(null, value);
             }
         },
@@ -144,7 +157,7 @@ pc.extend(pc, function () {
                     return pc.math.clamp(value, 0, 1);
 
                 case pc.SCROLL_MODE_BOUNCE:
-                    // TODO Implement bounce
+                    this._setVelocityFromOvershoot(value, axis, orientation);
                     return value;
 
                 case pc.SCROLL_MODE_INFINITE:
@@ -245,6 +258,81 @@ pc.extend(pc, function () {
             }
         },
 
+        _onUpdate: function() {
+            if (this._contentReference.entity && this.enabled && this.entity.enabled) {
+                this._updateVelocity();
+            }
+        },
+
+        _updateVelocity: function() {
+            if (!this._isDragging()) {
+                if (this._hasOvershoot('x')) {
+                    this._setVelocityFromOvershoot(this.scroll.x, 'x', pc.ORIENTATION_HORIZONTAL);
+                }
+
+                if (this._hasOvershoot('y')) {
+                    this._setVelocityFromOvershoot(this.scroll.y, 'y', pc.ORIENTATION_VERTICAL);
+                }
+
+                this._velocity.data[0] *= this.friction;
+                this._velocity.data[1] *= this.friction;
+
+                if (Math.abs(this._velocity.x) > 1e-4 || Math.abs(this._velocity.y) > 1e-4) {
+                    var position = this._contentReference.entity.getLocalPosition();
+                    position.x += this._velocity.data[0];
+                    position.y += this._velocity.data[1];
+                    this._contentReference.entity.setLocalPosition(position);
+
+                    this._setScrollFromContentPosition(position);
+                }
+            }
+        },
+
+        _hasOvershoot: function(axis) {
+            return this.scroll[axis] <= 0 || this.scroll[axis] >= 1;
+        },
+
+        _setVelocityFromOvershoot: function(value, axis, orientation) {
+            var overshoot;
+
+            if (value < 0) {
+                overshoot = value;
+            } else if (value > 1) {
+                overshoot = value - 1;
+            } else {
+                overshoot = 0;
+            }
+
+            overshoot *= this._getMaxOffset(orientation) * this._getSign(orientation);
+
+            if (Math.abs(overshoot) > 0) {
+                // 50 here is just a magic number – it seems to give us a range of useful
+                // range of bounceAmount values, so that 0.1 is similar to the iOS bounce
+                // feel, 1.0 is much slower, etc. The + 1 means that when bounceAmount is
+                // 0, the content will just snap back immediately instead of moving gradually.
+                this._velocity[axis] = -overshoot / (this.bounceAmount * 50 + 1);
+            }
+        },
+
+        _setVelocityFromContentPositionDelta: function(position) {
+            if (this._prevContentDragPosition) {
+                this._velocity.sub2(position, this._prevContentDragPosition);
+                this._prevContentDragPosition.copy(position);
+            } else {
+                this._velocity.set(0, 0, 0);
+                this._prevContentDragPosition = position.clone();
+            }
+        },
+
+        _setScrollFromContentPosition: function(position) {
+            var value = this._contentPositionToScrollValue(position);
+            this._onSetScroll(value.x, value.y);
+        },
+
+        _isDragging: function() {
+            return this._contentDragHelper && this._contentDragHelper.isDragging;
+        },
+
         onEnable: function () {
 
         },
@@ -254,6 +342,7 @@ pc.extend(pc, function () {
         },
 
         onRemove: function () {
+            this._toggleLifecycleListeners('off');
             this._destroyDragHelper();
         }
     });
