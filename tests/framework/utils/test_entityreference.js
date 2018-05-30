@@ -15,6 +15,10 @@
             this.app.root.addChild(this.testEntity);
             this.app.root.addChild(this.otherEntity1);
             this.app.root.addChild(this.otherEntity2);
+        },
+
+        teardown: function () {
+            sinon.restore();
         }
     });
 
@@ -303,6 +307,22 @@
         throws(function() {
             testEventMap({ "foo#bar": null });
         }, "Invalid or missing callback for event listener `foo#bar`");
+    });
+
+    test("logs a warning if the entity property is set to anything other than a string, undefined or null", function () {
+        sinon.stub(console, "warn");
+
+        new pc.EntityReference(this.testComponent, "myEntity1");
+        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        this.testComponent.myEntity1 = null;
+        this.testComponent.myEntity1 = undefined;
+
+        strictEqual(console.warn.callCount, 0);
+
+        this.testComponent.myEntity1 = this.otherEntity1;
+
+        strictEqual(console.warn.callCount, 1);
+        strictEqual(console.warn.getCall(0).args[0], "Entity field `myEntity1` was set to unexpected type 'object'");
     });
 
     test("hasComponent() returns false if the entity is not present", function () {

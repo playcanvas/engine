@@ -200,6 +200,11 @@ pc.extend(pc, function () {
         },
 
         _onSetEntityGuid: function(name, oldGuid, newGuid) {
+            if (newGuid !== null && newGuid !== undefined && typeof newGuid !== 'string') {
+                console.warn("Entity field `" + this._entityPropertyName + "` was set to unexpected type '" + (typeof newGuid) + "'");
+                return;
+            }
+
             if (oldGuid !== newGuid) {
                 this._updateEntityReference();
             }
