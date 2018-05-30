@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var tmpVecA = new pc.Vec3();
     var tmpVecB = new pc.Vec3();
     var tmpVecC = new pc.Vec3();
@@ -13,15 +13,14 @@ pc.extend(pc, function () {
      * @param {pc.Vec3} [center] Center of box. The constructor takes a reference of this parameter.
      * @param {pc.Vec3} [halfExtents] Half the distance across the box in each axis. The constructor takes a reference of this parameter.
      */
-    var BoundingBox = function BoundingBox(center, halfExtents) {
+    function BoundingBox(center, halfExtents) {
         this.center = center || new pc.Vec3(0, 0, 0);
         this.halfExtents = halfExtents || new pc.Vec3(0.5, 0.5, 0.5);
         this._min = new pc.Vec3();
         this._max = new pc.Vec3();
-    };
+    }
 
-    BoundingBox.prototype = {
-
+    Object.assign(BoundingBox.prototype, {
         /**
          * @function
          * @name pc.BoundingBox#add
@@ -343,9 +342,9 @@ pc.extend(pc, function () {
 
             return sq;
         }
-    };
+    });
 
     return {
         BoundingBox: BoundingBox
     };
-}());
+}()));

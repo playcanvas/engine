@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     function syncToCpu(device, targ, face) {
@@ -468,7 +468,6 @@ pc.extend(pc, (function () {
 
         return sh;
     }
-
 
     return {
         prefilterCubemap: prefilterCubemap,

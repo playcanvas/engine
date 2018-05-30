@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @component
      * @constructor
@@ -39,7 +39,7 @@ pc.extend(pc, function () {
      * @property {pc.FITTING} heightFitting Identical to {@link pc.LayoutGroupComponent#widthFitting} but for the Y axis.
      * @property {Boolean} wrap Whether or not to wrap children onto a new row/column when the size of the container is exceeded. Defaults to false, which means that children will be be rendered in a single row (horizontal orientation) or column (vertical orientation).<br><br><em>Note that setting wrap to true makes it impossible for the {@link pc.FITTING_BOTH} fitting mode to operate in any logical manner. For this reason, when wrap is true, a {@link pc.LayoutGroupComponent#widthFitting} or {@link pc.LayoutGroupComponent#heightFitting} mode of {@link pc.FITTING_BOTH} will be coerced to {@link pc.FITTING_STRETCH}.<em>
      */
-    var LayoutGroupComponent = function LayoutGroupComponent(system, entity) {
+    function LayoutGroupComponent(system, entity) {
         this._orientation = pc.ORIENTATION_HORIZONTAL;
         this._reverseX = false;
         this._reverseY = true;
@@ -72,10 +72,10 @@ pc.extend(pc, function () {
         system.app.systems.element.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
         system.app.systems.layoutchild.on('add', this._onElementOrLayoutComponentAdd, this);
         system.app.systems.layoutchild.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
-    };
+    }
     LayoutGroupComponent = pc.inherits(LayoutGroupComponent, pc.Component);
 
-    pc.extend(LayoutGroupComponent.prototype, {
+    Object.assign(LayoutGroupComponent.prototype, {
         _isSelfOrChild: function (entity) {
             return (entity === this.entity) || (this.entity.children.indexOf(entity) !== -1);
         },
@@ -219,4 +219,4 @@ pc.extend(pc, function () {
     return {
         LayoutGroupComponent: LayoutGroupComponent
     };
-}());
+}()));

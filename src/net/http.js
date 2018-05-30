@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.Http
@@ -6,8 +6,8 @@ pc.extend(pc, function () {
      * @description Create a new Http instance. By default, a PlayCanvas application creates an instance of this
      * object at `pc.http`.
      */
-    var Http = function Http() {
-    };
+    function Http() {
+    }
 
     Http.ContentType = {
         FORM_URLENCODED: "application/x-www-form-urlencoded",
@@ -44,8 +44,7 @@ pc.extend(pc, function () {
         '.dds'
     ];
 
-    Http.prototype = {
-
+    Object.assign(Http.prototype, {
         ContentType: Http.ContentType,
         ResponseType: Http.ResponseType,
         binaryExtensions: Http.binaryExtensions,
@@ -277,7 +276,7 @@ pc.extend(pc, function () {
 
             if (options.query) {
                 uri = new pc.URI(url);
-                query = pc.extend(uri.getQuery(), options.query);
+                query = Object.assign(uri.getQuery(), options.query);
                 uri.setQuery(query);
                 url = uri.toString();
             }
@@ -409,10 +408,10 @@ pc.extend(pc, function () {
         _onError: function (method, url, options, xhr) {
             options.callback(xhr.status, null);
         }
-    };
+    });
 
     return {
         Http: Http,
         http: new Http()
     };
-}());
+}()));

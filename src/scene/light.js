@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     var spotCenter = new pc.Vec3();
     var spotEndPoint = new pc.Vec3();
@@ -12,7 +12,7 @@ pc.extend(pc, function () {
      * @name pc.Light
      * @classdesc A light.
      */
-    var Light = function Light() {
+    function Light() {
         // Light properties (defaults)
         this._type = pc.LIGHTTYPE_DIRECTIONAL;
         this._color = new pc.Color(0.8, 0.8, 0.8);
@@ -76,9 +76,9 @@ pc.extend(pc, function () {
         this._visibleLength = [0]; // lengths of passes in culledList
         this._visibleList = [[]]; // culled mesh instances per pass (1 for spot, 6 for point, cameraCount for directional)
         this._visibleCameraSettings = []; // camera settings used in each directional light pass
-    };
+    }
 
-    Light.prototype = {
+    Object.assign(Light.prototype, {
         destroy: function () {
             this._destroyShadowMap();
         },
@@ -278,7 +278,7 @@ pc.extend(pc, function () {
 
             this.key = key;
         }
-    };
+    });
 
     Object.defineProperty(Light.prototype, 'enabled', {
         get: function () {
@@ -598,8 +598,7 @@ pc.extend(pc, function () {
         }
     });
 
-
     return {
         Light: Light
     };
-}());
+}()));

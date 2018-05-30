@@ -1,10 +1,10 @@
-pc.extend(pc, function () {
-    var ScriptLegacyComponent = function ScriptLegacyComponent(system, entity) {
+Object.assign(pc, (function () {
+    function ScriptLegacyComponent(system, entity) {
         this.on("set_scripts", this.onSetScripts, this);
-    };
+    }
     ScriptLegacyComponent = pc.inherits(ScriptLegacyComponent, pc.Component);
 
-    pc.extend(ScriptLegacyComponent.prototype, {
+    Object.assign(ScriptLegacyComponent.prototype, {
         send: function (name, functionName) {
             console.warn("DEPRECATED: ScriptLegacyComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
             var args = pc.makeArray(arguments).slice(2);
@@ -226,4 +226,4 @@ pc.extend(pc, function () {
     return {
         ScriptLegacyComponent: ScriptLegacyComponent
     };
-}());
+}()));

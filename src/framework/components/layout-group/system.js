@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var _schema = ['enabled'];
 
     /**
@@ -9,7 +9,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-    var LayoutGroupComponentSystem = function LayoutGroupComponentSystem(app) {
+    function LayoutGroupComponentSystem(app) {
         this.id = 'layoutgroup';
         this.app = app;
         app.systems.add(this.id, this);
@@ -25,12 +25,12 @@ pc.extend(pc, function () {
 
         // Perform reflow when running in the engine
         pc.ComponentSystem.on('postUpdate', this._onPostUpdate, this);
-    };
+    }
     LayoutGroupComponentSystem = pc.inherits(LayoutGroupComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.LayoutGroupComponent.prototype, _schema);
 
-    pc.extend(LayoutGroupComponentSystem.prototype, {
+    Object.assign(LayoutGroupComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (data.enabled !== undefined) component.enabled = data.enabled;
             if (data.orientation !== undefined) component.orientation = data.orientation;
@@ -133,4 +133,4 @@ pc.extend(pc, function () {
     return {
         LayoutGroupComponentSystem: LayoutGroupComponentSystem
     };
-}());
+}()));

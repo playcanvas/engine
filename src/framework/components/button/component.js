@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var VisualState = {
         DEFAULT: 'DEFAULT',
         HOVER: 'HOVER',
@@ -47,7 +47,7 @@ pc.extend(pc, function () {
      * @property {pc.Asset} inactiveSpriteAsset Sprite to be used as the button image when the button is not interactive.
      * @property {Number} inactiveSpriteFrame Frame to be used from the inactive sprite.
      */
-    var ButtonComponent = function ButtonComponent(system, entity) {
+    function ButtonComponent(system, entity) {
         this._visualState = VisualState.DEFAULT;
         this._isHovering = false;
         this._isPressed = false;
@@ -58,10 +58,10 @@ pc.extend(pc, function () {
         this._defaultSpriteFrame = 0;
 
         this._toggleLifecycleListeners('on', system);
-    };
+    }
     ButtonComponent = pc.inherits(ButtonComponent, pc.Component);
 
-    pc.extend(ButtonComponent.prototype, {
+    Object.assign(ButtonComponent.prototype, {
         _toggleLifecycleListeners: function (onOrOff, system) {
             this[onOrOff]('set_active', this._onSetActive, this);
             this[onOrOff]('set_transitionMode', this._onSetTransitionMode, this);
@@ -474,4 +474,4 @@ pc.extend(pc, function () {
     return {
         ButtonComponent: ButtonComponent
     };
-}());
+}()));

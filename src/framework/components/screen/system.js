@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var _schema = ['enabled'];
 
     /**
@@ -9,7 +9,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-    var ScreenComponentSystem = function ScreenComponentSystem(app) {
+    function ScreenComponentSystem(app) {
         this.id = 'screen';
         this.app = app;
         app.systems.add(this.id, this);
@@ -25,12 +25,12 @@ pc.extend(pc, function () {
         pc.ComponentSystem.on('update', this._onUpdate, this);
 
         this.on('beforeremove', this.onRemoveComponent, this);
-    };
+    }
     ScreenComponentSystem = pc.inherits(ScreenComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.ScreenComponent.prototype, _schema);
 
-    pc.extend(ScreenComponentSystem.prototype, {
+    Object.assign(ScreenComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (data.screenSpace !== undefined) component.screenSpace = data.screenSpace;
             if (data.scaleMode !== undefined) component.scaleMode = data.scaleMode;
@@ -88,4 +88,4 @@ pc.extend(pc, function () {
     return {
         ScreenComponentSystem: ScreenComponentSystem
     };
-}());
+}()));

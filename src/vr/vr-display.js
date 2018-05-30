@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.VrDisplay
@@ -16,7 +16,7 @@ pc.extend(pc, function () {
      * @property {VRDisplayCapabilities} capabilities Returns the <a href="https://w3c.github.io/webvr/#interface-vrdisplaycapabilities" target="_blank">VRDisplayCapabilities</a> object from the VRDisplay.
      * This can be used to determine what features are available on this display.
      */
-    var VrDisplay = function (app, display) {
+    function VrDisplay(app, display) {
         var self = this;
 
         this._app = app;
@@ -99,9 +99,9 @@ pc.extend(pc, function () {
         window.addEventListener('vrdisplaypresentchange', self._presentChange, false);
 
         pc.events.attach(this);
-    };
+    }
 
-    VrDisplay.prototype = {
+    Object.assign(VrDisplay.prototype, {
         /**
          * @function
          * @name pc.VrDisplay#destroy
@@ -314,7 +314,7 @@ pc.extend(pc, function () {
         getFrameData: function () {
             if (this.display) return this._frameData;
         }
-    };
+    });
 
     Object.defineProperty(VrDisplay.prototype, "capabilities", {
         get: function () {
@@ -326,4 +326,4 @@ pc.extend(pc, function () {
     return {
         VrDisplay: VrDisplay
     };
-}());
+}()));

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var EVENT_RESIZE = 'resizecanvas';
@@ -121,7 +121,7 @@ pc.extend(pc, function () {
      * @param {Object} canvas The canvas to which the graphics device is tied.
      * @param {Object} [options] Options passed when creating the WebGL context. More info here https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
      */
-    var GraphicsDevice = function (canvas, options) {
+    function GraphicsDevice(canvas, options) {
         var i;
         this.canvas = canvas;
         this.shader = null;
@@ -576,9 +576,9 @@ pc.extend(pc, function () {
             }
 
         }).call(this);
-    };
+    }
 
-    GraphicsDevice.prototype = {
+    Object.assign(GraphicsDevice.prototype, {
         getPrecision: function () {
             var gl = this.gl;
             var precision = "highp";
@@ -2767,7 +2767,7 @@ pc.extend(pc, function () {
                 this.gl.deleteTransformFeedback(this.feedback);
             }
         }
-    };
+    });
 
     /**
      * @readonly
@@ -2856,4 +2856,4 @@ pc.extend(pc, function () {
         GraphicsDevice: GraphicsDevice,
         precalculatedTangents: true
     };
-}());
+}()));

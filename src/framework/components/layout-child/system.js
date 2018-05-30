@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var _schema = ['enabled'];
 
     /**
@@ -9,7 +9,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-    var LayoutChildComponentSystem = function LayoutChildComponentSystem(app) {
+    function LayoutChildComponentSystem(app) {
         this.id = 'layoutchild';
         this.app = app;
         app.systems.add(this.id, this);
@@ -18,12 +18,12 @@ pc.extend(pc, function () {
         this.DataType = pc.LayoutChildComponentData;
 
         this.schema = _schema;
-    };
+    }
     LayoutChildComponentSystem = pc.inherits(LayoutChildComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.LayoutChildComponent.prototype, _schema);
 
-    pc.extend(LayoutChildComponentSystem.prototype, {
+    Object.assign(LayoutChildComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (data.enabled !== undefined) component.enabled = data.enabled;
             if (data.minWidth !== undefined) component.minWidth = data.minWidth;
@@ -56,4 +56,4 @@ pc.extend(pc, function () {
     return {
         LayoutChildComponentSystem: LayoutChildComponentSystem
     };
-}());
+}()));

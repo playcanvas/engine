@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /*
@@ -54,7 +54,7 @@ pc.extend(pc, function () {
      * @property {Boolean} isStopped Returns true if the slot is currently stopped.
      * @property {pc.SoundInstance[]} instances An array that contains all the {@link pc.SoundInstance}s currently being played by the slot.
      */
-    var SoundSlot = function (component, name, options) {
+    function SoundSlot(component, name, options) {
         options = options || {};
         this._component = component;
         this._assets = component.system.app.assets;
@@ -84,9 +84,11 @@ pc.extend(pc, function () {
         this.instances = [];
 
         pc.events.attach(this);
-    };
+    }
 
     SoundSlot.prototype = {
+        constructor: SoundSlot,
+
         /**
          * @function pc.SoundSlot#play
          * @description Plays a sound. If {@link pc.SoundSlot#overlap} is true the new sound
@@ -619,8 +621,7 @@ pc.extend(pc, function () {
     return {
         SoundSlot: SoundSlot
     };
-
-}());
+}()));
 
 
 // Events Documentation

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -65,7 +65,7 @@ pc.extend(pc, function () {
      * @param {pc.VertexBuffer} inputBuffer The input vertex buffer
      * @param {Number} [usage] The optional usage type of the output vertex buffer (see pc.BUFFER_*). pc.BUFFER_GPUDYNAMIC is recommended for continuous update, and is the default value.
      */
-    var TransformFeedback = function (inputBuffer, usage) {
+    function TransformFeedback(inputBuffer, usage) {
         usage = usage || pc.BUFFER_GPUDYNAMIC;
         this.device = inputBuffer.device;
         var gl = this.device.gl;
@@ -78,7 +78,7 @@ pc.extend(pc, function () {
         }
 
         this._outputBuffer = new pc.VertexBuffer(inputBuffer.device, inputBuffer.format, inputBuffer.numVertices, usage, inputBuffer.storage);
-    };
+    }
 
     /**
      * @function
@@ -93,7 +93,7 @@ pc.extend(pc, function () {
         return pc.shaderChunks.createShaderFromCode(graphicsDevice, vsCode, null, name, true);
     };
 
-    TransformFeedback.prototype = {
+    Object.assign(TransformFeedback.prototype, {
         /**
          * @function
          * @name pc.TransformFeedback#destroy
@@ -137,7 +137,7 @@ pc.extend(pc, function () {
                 this._outputBuffer.bufferId = tmp;
             }
         }
-    };
+    });
 
     /**
      * @readonly
@@ -166,4 +166,4 @@ pc.extend(pc, function () {
     return {
         TransformFeedback: TransformFeedback
     };
-}());
+}()));

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var PARAMETER_TYPES = {
@@ -122,7 +122,7 @@ pc.extend(pc, function () {
         lightMap: 'white'
     };
 
-    var onCubemapAssetLoad = function (asset, attribute, newValue, oldValue) {
+    function onCubemapAssetLoad(asset, attribute, newValue, oldValue) {
         var props = [
             'cubeMap',
             'prefilteredCubeMap128',
@@ -139,16 +139,18 @@ pc.extend(pc, function () {
         }
 
         this.update();
-    };
+    }
 
-    var MaterialHandler = function (app) {
+    function MaterialHandler(app) {
         this._assets = app.assets;
         this._device = app.graphicsDevice;
 
         this._createPlaceholders();
-    };
+    }
 
     MaterialHandler.prototype = {
+        constructor: MaterialHandler,
+
         load: function (url, callback) {
             // Loading from URL (engine-only)
             pc.http.get(url, function (err, response) {
@@ -469,4 +471,4 @@ pc.extend(pc, function () {
             return PARAMETER_TYPES[name];
         }
     };
-}());
+}()));

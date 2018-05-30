@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -36,7 +36,7 @@ pc.extend(pc, (function () {
      * value second)
      * @property {Number} length The number of keys in the curve. [read only]
      */
-    var Curve = function (data) {
+    function Curve(data) {
         this.keys = [];
         this.type = CURVE_SMOOTHSTEP;
 
@@ -49,9 +49,9 @@ pc.extend(pc, (function () {
         }
 
         this.sort();
-    };
+    }
 
-    Curve.prototype = {
+    Object.assign(Curve.prototype, {
         /**
          * @function
          * @name pc.Curve#add
@@ -241,8 +241,14 @@ pc.extend(pc, (function () {
          */
         clone: function () {
             var result = new pc.Curve();
-            result.keys = pc.extend(result.keys, this.keys);
+
+            this.keys.forEach(function (key, index) {
+                result.keys[index] = [key[0], key[1]];
+            });
+
             result.type = this.type;
+            result.tension = this.tension;
+
             return result;
         },
 
@@ -260,7 +266,7 @@ pc.extend(pc, (function () {
 
             return values;
         }
-    };
+    });
 
     Object.defineProperty(Curve.prototype, 'length', {
         get: function () {

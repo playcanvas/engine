@@ -1,10 +1,10 @@
-pc.extend(pc, function () {
-    var ScriptComponentData = function () {
+Object.assign(pc, (function () {
+    function ScriptComponentData() {
         this.enabled = true;
-    };
+    }
     ScriptComponentData = pc.inherits(ScriptComponentData, pc.ComponentData);
 
     return {
         ScriptComponentData: ScriptComponentData
     };
-}());
+}()));

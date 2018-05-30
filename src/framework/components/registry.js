@@ -1,14 +1,16 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.ComponentSystemRegistry
      * @classdesc Store, access and delete instances of the various ComponentSystems
      * @description Create a new ComponentSystemRegistry
      */
-    var ComponentSystemRegistry = function () {
-    };
+    function ComponentSystemRegistry() {
+    }
 
     ComponentSystemRegistry.prototype = {
+        constructor: ComponentSystemRegistry,
+
         /**
          * @private
          * @function
@@ -93,4 +95,4 @@ pc.extend(pc, function () {
     return {
         ComponentSystemRegistry: ComponentSystemRegistry
     };
-}());
+}()));

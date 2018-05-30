@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     // auto incrementing number for asset ids
     var assetIdCounter = 0;
@@ -54,7 +54,7 @@ pc.extend(pc, function () {
      * @property {Boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
      * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
      */
-    var Asset = function (name, type, file, data) {
+    function Asset(name, type, file, data) {
         this._id = ++assetIdCounter;
 
         this.name = name || '';
@@ -79,7 +79,7 @@ pc.extend(pc, function () {
         pc.events.attach(this);
 
         if (file) this.file = file;
-    };
+    }
 
     /**
      * @event
@@ -113,7 +113,7 @@ pc.extend(pc, function () {
      * @param {*} oldValue The old property value
      */
 
-    Asset.prototype = {
+    Object.assign(Asset.prototype, {
         /**
          * @name pc.Asset#getFileUrl
          * @function
@@ -226,8 +226,7 @@ pc.extend(pc, function () {
                 this.registry._loader.clearCache(this.getFileUrl(), this.type);
             }
         }
-    };
-
+    });
 
     Object.defineProperty(Asset.prototype, 'id', {
         get: function () {
@@ -377,4 +376,4 @@ pc.extend(pc, function () {
         ASSET_SCRIPT: 'script',
         ABSOLUTE_URL: ABSOLUTE_URL
     };
-}());
+}()));

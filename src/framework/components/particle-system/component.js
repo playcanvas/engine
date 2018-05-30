@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     // properties that do not need rebuilding the particle system
     var SIMPLE_PROPERTIES = [
@@ -137,7 +137,7 @@ pc.extend(pc, function () {
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this particle system should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
-    var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
+    function ParticleSystemComponent(system, entity) {
         this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
         this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
         this.on("set_mesh", this.onSetMesh, this);
@@ -159,11 +159,11 @@ pc.extend(pc, function () {
         }.bind(this));
 
         this._requestedDepth = false;
-    };
+    }
 
     ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.Component);
 
-    pc.extend(ParticleSystemComponent.prototype, {
+    Object.assign(ParticleSystemComponent.prototype, {
         addModelToLayers: function () {
             if (!this.data.model) return;
             var layer;
@@ -704,8 +704,7 @@ pc.extend(pc, function () {
         }
     });
 
-
     return {
         ParticleSystemComponent: ParticleSystemComponent
     };
-}());
+}()));

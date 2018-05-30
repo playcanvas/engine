@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @name pc.Application
      * @class Default application which performs general setup code and initiates the main game loop.
@@ -131,7 +131,7 @@ pc.extend(pc, function () {
      * }
      */
 
-    var Application = function (canvas, options) {
+    function Application(canvas, options) {
         options = options || {};
 
         // Open the log
@@ -497,7 +497,7 @@ pc.extend(pc, function () {
 
         // bind tick function to current scope
         this.tick = makeTick(this);
-    };
+    }
 
 
     Application._currentApplication = null;
@@ -508,7 +508,7 @@ pc.extend(pc, function () {
 
 
     // Mini-object used to measure progress of loading sets
-    var Progress = function (length) {
+    function Progress(length) {
         this.length = length;
         this.count = 0;
 
@@ -519,9 +519,11 @@ pc.extend(pc, function () {
         this.done = function () {
             return (this.count === this.length);
         };
-    };
+    }
 
     Application.prototype = {
+        constructor: Application,
+
         /**
          * @function
          * @name pc.Application#configure
@@ -1702,4 +1704,4 @@ pc.extend(pc, function () {
 
         Application: Application
     };
-}());
+}()));

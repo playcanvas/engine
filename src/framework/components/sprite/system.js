@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var _schema = ['enabled'];
@@ -31,7 +31,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-    var SpriteComponentSystem = function SpriteComponentSystem(app) {
+    function SpriteComponentSystem(app) {
         this.id = 'sprite';
         this.app = app;
         app.systems.add(this.id, this);
@@ -94,12 +94,12 @@ pc.extend(pc, function () {
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
         this.on('beforeremove', this.onBeforeRemove, this);
-    };
+    }
     SpriteComponentSystem = pc.inherits(SpriteComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.SpriteComponent.prototype, _schema);
 
-    pc.extend(SpriteComponentSystem.prototype, {
+    Object.assign(SpriteComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (data.enabled !== undefined) {
                 component.enabled = data.enabled;
@@ -225,4 +225,4 @@ pc.extend(pc, function () {
     return {
         SpriteComponentSystem: SpriteComponentSystem
     };
-}());
+}()));

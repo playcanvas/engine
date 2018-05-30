@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.Component
@@ -9,7 +9,7 @@ pc.extend(pc, function () {
      * @param {pc.Entity} entity The Entity that this Component is attached to
      * @property {Boolean} enabled Enables or disables the component.
      */
-    var Component = function (system, entity) {
+    function Component(system, entity) {
         this.system = system;
         this.entity = entity;
 
@@ -24,7 +24,7 @@ pc.extend(pc, function () {
         });
 
         this.on('set_enabled', this.onSetEnabled, this);
-    };
+    }
 
     Component._buildAccessors = function (obj, schema) {
         // Create getter/setter pairs for each property defined in the schema
@@ -53,6 +53,8 @@ pc.extend(pc, function () {
     };
 
     Component.prototype = {
+        constructor: Component,
+
         /**
          * @private
          * @property {pc.ComponentData} data Access the {@link pc.ComponentData} directly.
@@ -90,4 +92,4 @@ pc.extend(pc, function () {
     return {
         Component: Component
     };
-}());
+}()));

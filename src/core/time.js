@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     /**
      * @private
      * @constructor
@@ -6,13 +6,13 @@ pc.extend(pc, (function () {
      * @description Create a new Timer instance.
      * @classdesc A Timer counts milliseconds from when start() is called until when stop() is called.
      */
-    var Timer = function Timer() {
+    function Timer() {
         this._isRunning = false;
         this._a = 0;
         this._b = 0;
-    };
+    }
 
-    Timer.prototype = {
+    Object.assign(Timer.prototype, {
         /**
          * @private
          * @function
@@ -45,7 +45,7 @@ pc.extend(pc, (function () {
         getMilliseconds: function () {
             return this._b - this._a;
         }
-    };
+    });
 
     return {
         Timer: Timer,

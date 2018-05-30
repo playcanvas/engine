@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @component
      * @name pc.ZoneComponent
@@ -10,12 +10,11 @@ pc.extend(pc, function () {
      * @param {pc.ZoneComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Vec3} size The Size of Box of a Zone.
      */
-
-    var ZoneComponent = function ZoneComponent(system, entity) {
+    function ZoneComponent(system, entity) {
         this._oldState = true;
         this._size = new pc.Vec3();
         this.on('set_enabled', this._onSetEnabled, this);
-    };
+    }
     ZoneComponent = pc.inherits(ZoneComponent, pc.Component);
 
     /**
@@ -62,7 +61,7 @@ pc.extend(pc, function () {
      * });
      */
 
-    pc.extend(ZoneComponent.prototype, {
+    Object.assign(ZoneComponent.prototype, {
         onEnable: function () {
             ZoneComponent._super.onEnable.call(this);
             this._checkState();
@@ -109,4 +108,4 @@ pc.extend(pc, function () {
     return {
         ZoneComponent: ZoneComponent
     };
-}());
+}()));

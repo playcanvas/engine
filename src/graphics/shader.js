@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     function addLineNumbers(src) {
@@ -74,7 +74,7 @@ pc.extend(pc, function () {
      *
      * shader = new pc.Shader(graphicsDevice, shaderDefinition);
      */
-    var Shader = function (graphicsDevice, definition) {
+    function Shader(graphicsDevice, definition) {
         this.device = graphicsDevice;
         this.definition = definition;
 
@@ -84,9 +84,9 @@ pc.extend(pc, function () {
         this.compile();
 
         this.device.shaders.push(this);
-    };
+    }
 
-    Shader.prototype = {
+    Object.assign(Shader.prototype, {
         compile: function () {
             this.ready = false;
 
@@ -261,9 +261,9 @@ pc.extend(pc, function () {
                 this.device.removeShaderFromCache(this);
             }
         }
-    };
+    });
 
     return {
         Shader: Shader
     };
-}());
+}()));

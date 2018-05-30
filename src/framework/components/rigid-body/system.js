@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var ammoRayStart, ammoRayEnd;
 
     var collisions = {};
@@ -20,11 +20,11 @@ pc.extend(pc, function () {
      * @property {pc.Vec3} point The point at which the ray hit the entity in world space
      * @property {pc.Vec3} normal The normal vector of the surface where the ray hit in world space.
      */
-    var RaycastResult = function RaycastResult(entity, point, normal) {
+    function RaycastResult(entity, point, normal) {
         this.entity = entity;
         this.point = point;
         this.normal = normal;
-    };
+    }
 
     /**
      * @constructor
@@ -42,7 +42,7 @@ pc.extend(pc, function () {
      * @property {pc.Vec3} pointB The point on Entity B where the contact occurred, in world space
      * @property {pc.Vec3} normal The normal vector of the contact on Entity B, in world space
      */
-    var SingleContactResult = function SingleContactResult(a, b, contactPoint) {
+    function SingleContactResult(a, b, contactPoint) {
         if (arguments.length === 0) {
             this.a = null;
             this.b = null;
@@ -60,7 +60,7 @@ pc.extend(pc, function () {
             this.pointB = contactPoint.pointOther;
             this.normal = contactPoint.normal;
         }
-    };
+    }
 
     /**
      * @constructor
@@ -78,7 +78,7 @@ pc.extend(pc, function () {
      * @property {pc.Vec3} pointOther The point on the other entity where the contact occurred, in world space
      * @property {pc.Vec3} normal The normal vector of the contact on the other entity, in world space
      */
-    var ContactPoint = function ContactPoint(localPoint, localPointOther, point, pointOther, normal) {
+    function ContactPoint(localPoint, localPointOther, point, pointOther, normal) {
         if (arguments.length === 0) {
             this.localPoint = new pc.Vec3();
             this.localPointOther = new pc.Vec3();
@@ -92,7 +92,7 @@ pc.extend(pc, function () {
             this.pointOther = pointOther;
             this.normal = normal;
         }
-    };
+    }
 
     /**
      * @constructor
@@ -104,10 +104,10 @@ pc.extend(pc, function () {
      * @property {pc.Entity} other The entity that was involved in the contact with this entity
      * @property {pc.ContactPoint[]} contacts An array of ContactPoints with the other entity
      */
-    var ContactResult = function ContactResult(other, contacts) {
+    function ContactResult(other, contacts) {
         this.other = other;
         this.contacts = contacts;
-    };
+    }
 
     // Events Documentation
     /**
@@ -141,7 +141,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The Application
      * @extends pc.ComponentSystem
      */
-    var RigidBodyComponentSystem = function RigidBodyComponentSystem(app) {
+    function RigidBodyComponentSystem(app) {
         this.id = 'rigidbody';
         this.description = "Adds the entity to the scene's physical simulation.";
         app.systems.add(this.id, this);
@@ -160,12 +160,12 @@ pc.extend(pc, function () {
         this.fixedTimeStep = 1 / 60;
 
         this.on('remove', this.onRemove, this);
-    };
+    }
     RigidBodyComponentSystem = pc.inherits(RigidBodyComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.RigidBodyComponent.prototype, _schema);
 
-    pc.extend(RigidBodyComponentSystem.prototype, {
+    Object.assign(RigidBodyComponentSystem.prototype, {
         onLibraryLoaded: function () {
             // Create the Ammo physics world
             if (typeof Ammo !== 'undefined') {
@@ -624,4 +624,4 @@ pc.extend(pc, function () {
 
         RigidBodyComponentSystem: RigidBodyComponentSystem
     };
-}());
+}()));

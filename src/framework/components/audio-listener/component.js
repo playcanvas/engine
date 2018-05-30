@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @component
      * @constructor
@@ -9,12 +9,12 @@ pc.extend(pc, function () {
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @extends pc.Component
      */
-    var AudioListenerComponent = function (system, entity) {
-    };
+    function AudioListenerComponent(system, entity) {
+    }
 
     AudioListenerComponent = pc.inherits(AudioListenerComponent, pc.Component);
 
-    pc.extend(AudioListenerComponent.prototype, {
+    Object.assign(AudioListenerComponent.prototype, {
         setCurrentListener: function () {
             if (this.enabled && this.entity.audiolistener && this.entity.enabled) {
                 this.system.current = this.entity;
@@ -40,4 +40,4 @@ pc.extend(pc, function () {
     return {
         AudioListenerComponent: AudioListenerComponent
     };
-}());
+}()));

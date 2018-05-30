@@ -1,4 +1,4 @@
-pc.extend(pc.Application.prototype, function () {
+Object.assign(pc.Application.prototype, (function () {
 
     var tempGraphNode = new pc.GraphNode();
     var identityGraphNode = new pc.GraphNode();
@@ -7,7 +7,7 @@ pc.extend(pc.Application.prototype, function () {
     var _deprecationWarning = false;
 
 
-    var ImmediateData = function (device) {
+    function ImmediateData(device) {
         this.lineVertexFormat = new pc.VertexFormat(device, [
             { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 },
             { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
@@ -19,23 +19,25 @@ pc.extend(pc.Application.prototype, function () {
         this.cubeLocalPos = null;
         this.cubeWorldPos = null;
         this.identityGraphNode = new pc.GraphNode();
-    };
+    }
 
-    ImmediateData.prototype.addLayer = function (layer) {
-        if (this.layers.indexOf(layer) < 0) {
-            this.layers.push(layer);
+    Object.assign(ImmediateData.prototype, {
+        addLayer: function (layer) {
+            if (this.layers.indexOf(layer) < 0) {
+                this.layers.push(layer);
+            }
+        },
+
+        getLayerIdx: function (layer) {
+            return this.layerToBatch[layer.id];
+        },
+
+        addLayerIdx: function (idx, layer) {
+            this.layerToBatch[layer.id] = idx;
         }
-    };
+    });
 
-    ImmediateData.prototype.getLayerIdx = function (layer) {
-        return this.layerToBatch[layer.id];
-    };
-
-    ImmediateData.prototype.addLayerIdx = function (idx, layer) {
-        this.layerToBatch[layer.id] = idx;
-    };
-
-    var LineBatch = function () {
+    function LineBatch() {
         // Sensible default value; buffers will be doubled and reallocated when it's not enough
         this.numLinesAllocated = 128;
 
@@ -47,9 +49,9 @@ pc.extend(pc.Application.prototype, function () {
         this.meshInstance = null;
 
         this.layer = null;
-    };
+    }
 
-    LineBatch.prototype = {
+    Object.assign(LineBatch.prototype, {
         init: function (device, vertexFormat, layer, linesToAdd) {
             // Allocate basic stuff once per batch
             if (!this.mesh) {
@@ -118,7 +120,7 @@ pc.extend(pc.Application.prototype, function () {
                 this.linesUsed = 0;
             }
         }
-    };
+    });
 
     function _initImmediate() {
         // Init global line drawing data once
@@ -485,4 +487,4 @@ pc.extend(pc.Application.prototype, function () {
         _preRenderImmediate: _preRenderImmediate,
         _postRenderImmediate: _postRenderImmediate
     };
-}());
+}()));

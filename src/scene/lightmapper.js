@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     var maxSize = 2048;
     var maskBaked = 2;
@@ -17,7 +17,6 @@ pc.extend(pc, function () {
 
     var passTexName = ["texture_lightMap", "texture_dirLightMap"];
     var passMaterial = [];
-
 
     function collectModels(node, nodes, nodesMeshInstances, allNodes) {
         if (!node.enabled) return;
@@ -82,7 +81,7 @@ pc.extend(pc, function () {
      * @param {pc.ForwardRenderer} renderer The renderer.
      * @param {Array} assets Array of assets to lightmap.
      */
-    var Lightmapper = function (device, root, scene, renderer, assets) {
+    function Lightmapper(device, root, scene, renderer, assets) {
         this.device = device;
         this.root = root;
         this.scene = scene;
@@ -101,10 +100,9 @@ pc.extend(pc, function () {
             shadersLinked: 0
         };
         // #endif
-    };
+    }
 
-    Lightmapper.prototype = {
-
+    Object.assign(Lightmapper.prototype, {
         calculateLightmapSize: function (node) {
             var data, parent;
             var sizeMult = this.scene.lightmapSizeMultiplier || 16;
@@ -796,9 +794,9 @@ pc.extend(pc, function () {
             stats.fboTime = device._renderTargetCreationTime - startFboTime;
             // #endif
         }
-    };
+    });
 
     return {
         Lightmapper: Lightmapper
     };
-}());
+}()));

@@ -1,24 +1,28 @@
-pc.extend(pc, function () {
-    var SpriteHandler = function (assets, device) {
+Object.assign(pc, (function () {
+    'use strict';
+
+    function SpriteHandler(assets, device) {
         this._assets = assets;
         this._device = device;
-    };
+    }
 
     // The scope of this function is the sprite asset
-    var onTextureAtlasLoaded = function (atlasAsset) {
+    function onTextureAtlasLoaded(atlasAsset) {
         var spriteAsset = this;
         if (spriteAsset.resource) {
             spriteAsset.resource.atlas = atlasAsset.resource;
         }
-    };
+    }
 
     // The scope of this function is the sprite asset
-    var onTextureAtlasAdded = function (atlasAsset) {
+    function onTextureAtlasAdded(atlasAsset) {
         var spriteAsset = this;
         spriteAsset.registry.load(atlasAsset);
-    };
+    }
 
     SpriteHandler.prototype = {
+        constructor: SpriteHandler,
+
         load: function (url, callback) {
             // if given a json file (probably engine-only use case)
             if (pc.path.getExtension(url) === '.json') {
@@ -115,5 +119,4 @@ pc.extend(pc, function () {
     return {
         SpriteHandler: SpriteHandler
     };
-
-}());
+}()));

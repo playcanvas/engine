@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -29,71 +29,73 @@ pc.extend(pc, function () {
      *   ...
      * };
      */
-    var TextureAtlas = function () {
+    function TextureAtlas() {
         this._texture = null;
         this._frames = null;
         pc.events.attach(this);
-    };
+    }
 
-    /**
-     * @private
-     * @name pc.TextureAtlas#setFrame
-     * @param {String} key The key of the frame.
-     * @param {Object} data The properties of the frame.
-     * @param {pc.Vec4} [data.rect] The u, v, width, height properties of the frame in pixels.
-     * @param {pc.Vec2} [data.pivot] The pivot of the frame - values are between 0-1.
-     * @param {pc.Vec4} [data.border] The border of the frame for 9-slicing. Values are left, bottom, right, top border in pixels.
-     * @example
-     * atlas.setFrame('1', {
-     *    rect: new pc.Vec4(0,0,128,128),
-     *    pivot: new pc.Vec2(0.5, 0.5),
-     *    border: new pc.Vec4(5, 5, 5, 5)
-     * });
-     */
-    TextureAtlas.prototype.setFrame = function (key, data) {
-        var frame = this._frames[key];
-        if (!frame) {
-            frame = {
-                rect: data.rect.clone(),
-                pivot: data.pivot.clone(),
-                border: data.border.clone()
-            };
-            this._frames[key] = frame;
-        } else {
-            frame.rect.copy(data.rect);
-            frame.pivot.copy(data.pivot);
-            frame.border.copy(data.border);
+    Object.assign(TextureAtlas.prototype, {
+        /**
+         * @private
+         * @name pc.TextureAtlas#setFrame
+         * @param {String} key The key of the frame.
+         * @param {Object} data The properties of the frame.
+         * @param {pc.Vec4} [data.rect] The u, v, width, height properties of the frame in pixels.
+         * @param {pc.Vec2} [data.pivot] The pivot of the frame - values are between 0-1.
+         * @param {pc.Vec4} [data.border] The border of the frame for 9-slicing. Values are left, bottom, right, top border in pixels.
+         * @example
+         * atlas.setFrame('1', {
+         *    rect: new pc.Vec4(0,0,128,128),
+         *    pivot: new pc.Vec2(0.5, 0.5),
+         *    border: new pc.Vec4(5, 5, 5, 5)
+         * });
+         */
+        setFrame: function (key, data) {
+            var frame = this._frames[key];
+            if (!frame) {
+                frame = {
+                    rect: data.rect.clone(),
+                    pivot: data.pivot.clone(),
+                    border: data.border.clone()
+                };
+                this._frames[key] = frame;
+            } else {
+                frame.rect.copy(data.rect);
+                frame.pivot.copy(data.pivot);
+                frame.border.copy(data.border);
+            }
+
+            this.fire('set:frame', key.toString(), frame);
+        },
+
+        /**
+         * @private
+         * @name pc.TextureAtlas#removeFrame
+         * @param {String} key The key of the frame.
+         * @example
+         * atlas.removeFrame('1');
+         */
+        removeFrame: function (key) {
+            var frame = this._frames[key];
+            if (frame) {
+                delete this._frames[key];
+                this.fire('remove:frame', key.toString(), frame);
+            }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.TextureAtlas#destroy
+         * @description Free up the underlying WebGL resource owned by the texture.
+         */
+        destroy: function () {
+            if (this._texture) {
+                this._texture.destroy();
+            }
         }
-
-        this.fire('set:frame', key.toString(), frame);
-    };
-
-    /**
-     * @private
-     * @name pc.TextureAtlas#removeFrame
-     * @param {String} key The key of the frame.
-     * @example
-     * atlas.removeFrame('1');
-     */
-    TextureAtlas.prototype.removeFrame = function (key) {
-        var frame = this._frames[key];
-        if (frame) {
-            delete this._frames[key];
-            this.fire('remove:frame', key.toString(), frame);
-        }
-    };
-
-    /**
-     * @private
-     * @function
-     * @name pc.TextureAtlas#destroy
-     * @description Free up the underlying WebGL resource owned by the texture.
-     */
-    TextureAtlas.prototype.destroy = function () {
-        if (this._texture) {
-            this._texture.destroy();
-        }
-    };
+    });
 
     Object.defineProperty(TextureAtlas.prototype, 'texture', {
         get: function () {
@@ -118,4 +120,4 @@ pc.extend(pc, function () {
     return {
         TextureAtlas: TextureAtlas
     };
-}());
+}()));

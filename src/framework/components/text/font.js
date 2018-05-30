@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     pc.FONT_MSDF = 'msdf';
 
     /**
@@ -10,7 +10,7 @@ pc.extend(pc, function () {
      * @property {Number} intensity The font intensity
      * @property {pc.Texture[]} textures The font textures
      */
-    var Font = function (textures, data) {
+    function Font(textures, data) {
         this.type = pc.FONT_MSDF;
 
         this.em = 1;
@@ -24,10 +24,7 @@ pc.extend(pc, function () {
         // json data
         this._data = null;
         this.data = data;
-    };
-
-    Font.prototype = {
-    };
+    }
 
     Object.defineProperty(Font.prototype, "data", {
         get: function () {
@@ -66,4 +63,4 @@ pc.extend(pc, function () {
         FONT_MSDF: pc.FONT_MSDF,
         Font: Font
     };
-}());
+}()));

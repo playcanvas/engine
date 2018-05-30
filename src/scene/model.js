@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.Model
@@ -11,7 +11,7 @@ pc.extend(pc, function () {
      * @property {pc.GraphNode} graph The root node of the model's graph node hierarchy.
      * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in this model.
      */
-    var Model = function Model() {
+    function Model() {
         this.graph = null;
         this.meshInstances = [];
         this.skinInstances = [];
@@ -21,9 +21,9 @@ pc.extend(pc, function () {
         this.lights = [];
 
         this._shadersVersion = 0;
-    };
+    }
 
-    Model.prototype = {
+    Object.assign(Model.prototype, {
         getGraph: function () {
             return this.graph;
         },
@@ -269,9 +269,9 @@ pc.extend(pc, function () {
                 mesh.indexBuffer[pc.RENDERSTYLE_WIREFRAME] = wireBuffer;
             }
         }
-    };
+    });
 
     return {
         Model: Model
     };
-}());
+}()));

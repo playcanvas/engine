@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var JSON_PRIMITIVE_TYPE = {
@@ -22,11 +22,11 @@ pc.extend(pc, function () {
     };
 
     // Take PlayCanvas JSON model data and create pc.Model
-    var JsonModelParser = function (device) {
+    function JsonModelParser(device) {
         this._device = device;
-    };
+    }
 
-    JsonModelParser.prototype = {
+    Object.assign(JsonModelParser.prototype, {
         parse: function (data) {
             var modelData = data.model;
             if (!modelData) {
@@ -721,9 +721,9 @@ pc.extend(pc, function () {
 
             return meshInstances;
         }
-    };
+    });
 
     return {
         JsonModelParser: JsonModelParser
     };
-}());
+}()));

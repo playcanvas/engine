@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -11,7 +11,7 @@ pc.extend(pc, (function () {
      * @example
      * var v = new pc.Vec2(1, 2);
      */
-    var Vec2 = function (x, y) {
+    function Vec2(x, y) {
         if (x && x.length === 2) {
             this.data = new Float32Array(x);
             return;
@@ -21,9 +21,9 @@ pc.extend(pc, (function () {
 
         this.data[0] = x || 0;
         this.data[1] = y || 0;
-    };
+    }
 
-    Vec2.prototype = {
+    Object.assign(Vec2.prototype, {
         /**
          * @function
          * @name pc.Vec2#add
@@ -413,7 +413,7 @@ pc.extend(pc, (function () {
         toString: function () {
             return '[' + this.data[0] + ', ' + this.data[1] + ']';
         }
-    };
+    });
 
     /**
      * @field

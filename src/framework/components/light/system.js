@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 /*
  * @name pc.LightComponentSystem
  * @description Create a new LightComponentSystem.
@@ -12,17 +12,17 @@ pc.extend(pc, function () {
         'spot': pc.LIGHTTYPE_SPOT
     };
 
-    var LightComponentSystem = function (app) {
+    function LightComponentSystem(app) {
         this.id = 'light';
         this.description = "Enables the Entity to emit light.";
         app.systems.add(this.id, this);
 
         this.ComponentType = pc.LightComponent;
         this.DataType = pc.LightComponentData;
-    };
+    }
     LightComponentSystem = pc.inherits(LightComponentSystem, pc.ComponentSystem);
 
-    pc.extend(LightComponentSystem.prototype, {
+    Object.assign(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data) {
             // duplicate because we're modifying the data
             var data = {};
@@ -98,8 +98,7 @@ pc.extend(pc, function () {
         }
     });
 
-
     return {
         LightComponentSystem: LightComponentSystem
     };
-}());
+}()));

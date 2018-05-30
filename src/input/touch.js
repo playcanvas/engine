@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.Touch
@@ -11,7 +11,7 @@ pc.extend(pc, function () {
      * @property {Element} target The target element of the touch event
      * @property {Touch} touch The original browser Touch object
      */
-    var Touch = function (touch) {
+    function Touch(touch) {
         var coords = pc.getTouchTargetCoords(touch);
 
         this.id = touch.identifier;
@@ -22,7 +22,7 @@ pc.extend(pc, function () {
         this.target = touch.target;
 
         this.touch = touch;
-    };
+    }
 
     /**
      * @constructor
@@ -36,7 +36,7 @@ pc.extend(pc, function () {
      * @property {pc.Touch[]} touches A list of all touches currently in contact with the device
      * @property {pc.Touch[]} changedTouches A list of touches that have changed since the last event
      */
-    var TouchEvent = function (device, event) {
+    function TouchEvent(device, event) {
         this.element = event.target;
         this.event = event;
 
@@ -54,9 +54,9 @@ pc.extend(pc, function () {
                 this.changedTouches.push(new Touch(event.changedTouches[i]));
             }
         }
-    };
+    }
 
-    TouchEvent.prototype = {
+    Object.assign(TouchEvent.prototype, {
         /**
          * @function
          * @name pc.TouchEvent#getTouchById
@@ -76,7 +76,7 @@ pc.extend(pc, function () {
 
             return null;
         }
-    };
+    });
 
     /**
      * @constructor
@@ -86,8 +86,7 @@ pc.extend(pc, function () {
      * @description Create a new touch device and attach it to an element
      * @param {Element} element The element to attach listen for events on
      */
-    var TouchDevice = function (element) {
-
+    function TouchDevice(element) {
         this._startHandler = this._handleTouchStart.bind(this);
         this._endHandler = this._handleTouchEnd.bind(this);
         this._moveHandler = this._handleTouchMove.bind(this);
@@ -96,9 +95,9 @@ pc.extend(pc, function () {
         this.attach(element);
 
         pc.events.attach(this);
-    };
+    }
 
-    TouchDevice.prototype = {
+    Object.assign(TouchDevice.prototype, {
         /**
          * @function
          * @name pc.TouchDevice#attach
@@ -154,7 +153,7 @@ pc.extend(pc, function () {
         _handleTouchCancel: function (e) {
             this.fire('touchcancel', new TouchEvent(this, e));
         }
-    };
+    });
 
     return {
         /**
@@ -190,4 +189,4 @@ pc.extend(pc, function () {
         TouchDevice: TouchDevice,
         TouchEvent: TouchEvent
     };
-}());
+}()));

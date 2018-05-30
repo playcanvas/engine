@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var tmpVecA = new pc.Vec3();
     var tmpVecB = new pc.Vec3();
     var tmpVecC = new pc.Vec3();
@@ -20,7 +20,7 @@ pc.extend(pc, function () {
         this.radius = radius === undefined ? 0.5 : radius;
     }
 
-    BoundingSphere.prototype = {
+    Object.assign(BoundingSphere.prototype, {
         containsPoint: function (point) {
             var lenSq = tmpVecA.sub2(point, this.center).lengthSq();
             var r = this.radius;
@@ -122,9 +122,9 @@ pc.extend(pc, function () {
 
             return false;
         }
-    };
+    });
 
     return {
         BoundingSphere: BoundingSphere
     };
-}());
+}()));

@@ -1,17 +1,17 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.GamePads
      * @classdesc Input handler for accessing GamePad input.
      */
-    var GamePads = function () {
+    function GamePads() {
         this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
 
         this.current = [];
         this.previous = [];
 
         this.deadZone = 0.25;
-    };
+    }
 
     var MAPS = {
         DEFAULT: {
@@ -96,7 +96,7 @@ pc.extend(pc, function () {
         'Product: 0268': 'PS3'
     };
 
-    GamePads.prototype = {
+    Object.assign(GamePads.prototype, {
         /**
          * @function
          * @name pc.GamePads#update
@@ -219,9 +219,9 @@ pc.extend(pc, function () {
             }
             return value;
         }
-    };
+    });
 
     return {
         GamePads: GamePads
     };
-}());
+}()));

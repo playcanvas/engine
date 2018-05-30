@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -8,7 +8,7 @@ pc.extend(pc, function () {
      * @classdesc Represents an audio listener - used internally.
      * @param {pc.SoundManager} manager The sound manager
      */
-    var Listener = function (manager) {
+    function Listener(manager) {
         this.position = new pc.Vec3();
         this.velocity = new pc.Vec3();
         this.orientation = new pc.Mat4();
@@ -16,9 +16,9 @@ pc.extend(pc, function () {
         if (pc.AudioManager.hasAudioContext()) {
             this.listener = manager.context.listener;
         }
-    };
+    }
 
-    Listener.prototype = {
+    Object.assign(Listener.prototype, {
         getPosition: function () {
             return this.position;
         },
@@ -52,9 +52,9 @@ pc.extend(pc, function () {
         getOrientation: function () {
             return this.orientation;
         }
-    };
+    });
 
     return {
         Listener: Listener
     };
-}());
+}()));

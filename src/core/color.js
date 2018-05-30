@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.Color
@@ -13,7 +13,7 @@ pc.extend(pc, (function () {
      * @property {Number} b The blue component of the color
      * @property {Number} a The alpha component of the color
      */
-    var Color = function (r, g, b, a) {
+    function Color(r, g, b, a) {
         this.buffer = new ArrayBuffer(4 * 4);
 
         this.data = new Float32Array(this.buffer, 0, 4);
@@ -31,9 +31,9 @@ pc.extend(pc, (function () {
             this.data[2] = b || 0;
             this.data[3] = a !== undefined ? a : 1.0;
         }
-    };
+    }
 
-    Color.prototype = {
+    Object.assign(Color.prototype, {
         /**
          * @function
          * @name pc.Color#clone
@@ -141,7 +141,7 @@ pc.extend(pc, (function () {
 
             return s;
         }
-    };
+    });
 
     Object.defineProperty(Color.prototype, 'r', {
         get: function () {

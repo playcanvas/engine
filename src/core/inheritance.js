@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     return {
         /**
          * @private
@@ -40,4 +40,4 @@ pc.extend(pc, function () {
             return Func;
         }
     };
-}());
+}()));

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -56,7 +56,7 @@ pc.extend(pc, function () {
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this sprite should belong.
      * @property {Number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components in the same layer.
      */
-    var SpriteComponent = function SpriteComponent(system, entity) {
+    function SpriteComponent(system, entity) {
         this._type = pc.SPRITETYPE_SIMPLE;
         this._material = system.defaultMaterial;
         this._color = new pc.Color(1, 1, 1, 1);
@@ -103,10 +103,10 @@ pc.extend(pc, function () {
         });
 
         this._currentClip = this._defaultClip;
-    };
+    }
     SpriteComponent = pc.inherits(SpriteComponent, pc.Component);
 
-    pc.extend(SpriteComponent.prototype, {
+    Object.assign(SpriteComponent.prototype, {
         onEnable: function () {
             SpriteComponent._super.onEnable.call(this);
 
@@ -846,7 +846,7 @@ pc.extend(pc, function () {
     return {
         SpriteComponent: SpriteComponent
     };
-}());
+}()));
 
 
 // Events Documentation

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var defaultOptions = {
@@ -46,7 +46,7 @@ pc.extend(pc, function () {
      * // Set the render target on a layer
      * layer.renderTarget = renderTarget;
      */
-    var RenderTarget = function (options) {
+    function RenderTarget(options) {
         var _arg2 = arguments[1];
         var _arg3 = arguments[2];
 
@@ -92,9 +92,9 @@ pc.extend(pc, function () {
         this._glResolveFrameBuffer = null;
         this._glMsaaColorBuffer = null;
         this._glMsaaDepthBuffer = null;
-    };
+    }
 
-    RenderTarget.prototype = {
+    Object.assign(RenderTarget.prototype, {
         /**
          * @function
          * @name pc.RenderTarget#destroy
@@ -190,7 +190,7 @@ pc.extend(pc, function () {
             }
             return this._device.copyRenderTarget(source, this, color, depth);
         }
-    };
+    });
 
     /**
      * @readonly
@@ -265,4 +265,4 @@ pc.extend(pc, function () {
     return {
         RenderTarget: RenderTarget
     };
-}());
+}()));

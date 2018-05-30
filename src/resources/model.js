@@ -1,4 +1,6 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
+    'use strict';
+
     /**
      * @constructor
      * @name pc.ModelHandler
@@ -6,18 +8,20 @@ pc.extend(pc, function () {
      * @description {@link pc.ResourceHandler} use to load 3D model resources
      * @param {pc.GraphicsDevice} device The graphics device that will be rendering
      */
-    var ModelHandler = function (device) {
+    function ModelHandler(device) {
         this._device = device;
         this._parsers = [];
 
         this.addParser(new pc.JsonModelParser(this._device), function (url, data) {
             return (pc.path.getExtension(url) === '.json');
         });
-    };
+    }
 
     ModelHandler.DEFAULT_MATERIAL = pc.Scene.defaultMaterial;
 
     ModelHandler.prototype = {
+        constructor: ModelHandler,
+
         /**
          * @function
          * @name pc.ModelHandler#load
@@ -141,4 +145,4 @@ pc.extend(pc, function () {
     return {
         ModelHandler: ModelHandler
     };
-}());
+}()));

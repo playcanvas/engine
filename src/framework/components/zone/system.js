@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var _schema = ['enabled'];
 
     /**
@@ -8,8 +8,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-
-    var ZoneComponentSystem = function ZoneComponentSystem(app) {
+    function ZoneComponentSystem(app) {
         this.id = 'zone';
         this.app = app;
         app.systems.add(this.id, this);
@@ -20,12 +19,12 @@ pc.extend(pc, function () {
         this.schema = _schema;
 
         this.on('beforeremove', this._onBeforeRemove, this);
-    };
+    }
     ZoneComponentSystem = pc.inherits(ZoneComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.ZoneComponent.prototype, _schema);
 
-    pc.extend(ZoneComponentSystem.prototype, {
+    Object.assign(ZoneComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
 
@@ -54,4 +53,4 @@ pc.extend(pc, function () {
     return {
         ZoneComponentSystem: ZoneComponentSystem
     };
-}());
+}()));

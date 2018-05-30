@@ -1,10 +1,10 @@
-pc.extend(pc, (function () {
-    var TagsCache = function (key) {
+Object.assign(pc, (function () {
+    function TagsCache(key) {
         this._index = { };
         this._key = key || null;
-    };
+    }
 
-    TagsCache.prototype = {
+    Object.assign(TagsCache.prototype, {
         addItem: function (item) {
             var tags = item.tags._list;
 
@@ -142,8 +142,7 @@ pc.extend(pc, (function () {
 
             return items;
         }
-    };
-
+    });
 
     /**
      * @name pc.Tags
@@ -175,15 +174,15 @@ pc.extend(pc, (function () {
      * It will fire once on bulk changes, while `add`/`remove` will fire on each tag operation
      */
 
-    var Tags = function (parent) {
+    function Tags(parent) {
         this._index = { };
         this._list = [];
         this._parent = parent;
 
         pc.events.attach(this);
-    };
+    }
 
-    Tags.prototype = {
+    Object.assign(Tags.prototype, {
         /**
          * @function
          * @name pc.Tags#add
@@ -392,7 +391,7 @@ pc.extend(pc, (function () {
 
             return tags;
         }
-    };
+    });
 
     /**
      * @field
@@ -406,7 +405,6 @@ pc.extend(pc, (function () {
             return this._list.length;
         }
     });
-
 
     return {
         TagsCache: TagsCache,

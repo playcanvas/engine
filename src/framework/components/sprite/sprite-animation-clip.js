@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     /**
      * @private
@@ -19,7 +19,7 @@ pc.extend(pc, function () {
      * @property {Boolean} isPlaying Whether the animation is currently playing.
      * @property {Boolean} isPaused Whether the animation is currently paused.
      */
-    var SpriteAnimationClip = function (component, data) {
+    function SpriteAnimationClip(component, data) {
         this._component = component;
 
         this._frame = 0;
@@ -37,9 +37,11 @@ pc.extend(pc, function () {
         this._time = 0;
 
         pc.events.attach(this);
-    };
+    }
 
     SpriteAnimationClip.prototype = {
+        constructor: SpriteAnimationClip,
+
         // When sprite asset is added bind it
         _onSpriteAssetAdded: function (asset) {
             this._component.system.app.assets.off('add:' + asset.id, this._onSpriteAssetAdded, this);
@@ -434,7 +436,7 @@ pc.extend(pc, function () {
     return {
         SpriteAnimationClip: SpriteAnimationClip
     };
-}());
+}()));
 
 
 // Events Documentation

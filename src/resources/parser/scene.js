@@ -1,11 +1,11 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
-    var SceneParser = function (app) {
+    function SceneParser(app) {
         this._app = app;
-    };
+    }
 
-    SceneParser.prototype = {
+    Object.assign(SceneParser.prototype, {
         parse: function (data) {
             var entities = {};
             var id, i;
@@ -89,9 +89,9 @@ pc.extend(pc, function () {
 
             return entity;
         }
-    };
+    });
 
     return {
         SceneParser: SceneParser
     };
-}());
+}()));

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @component
      * @constructor
@@ -64,7 +64,7 @@ pc.extend(pc, function () {
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this camera should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
-    var CameraComponent = function CameraComponent(system, entity) {
+    function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
         this.on("set_aspectRatioMode", this.onSetAspectRatioMode, this);
         this.on("set_aspectRatio", this.onSetAspectRatio, this);
@@ -89,7 +89,7 @@ pc.extend(pc, function () {
         this.on("set_cullFaces", this.onSetCullFaces, this);
         this.on("set_flipFaces", this.onSetFlipFaces, this);
         this.on("set_layers", this.onSetLayers, this);
-    };
+    }
     CameraComponent = pc.inherits(CameraComponent, pc.Component);
 
     /**
@@ -172,7 +172,7 @@ pc.extend(pc, function () {
         }
     });
 
-    pc.extend(CameraComponent.prototype, {
+    Object.assign(CameraComponent.prototype, {
         /**
          * @function
          * @name pc.CameraComponent#screenToWorld
@@ -536,4 +536,4 @@ pc.extend(pc, function () {
     return {
         CameraComponent: CameraComponent
     };
-}());
+}()));

@@ -1,13 +1,13 @@
-pc.extend(pc, (function () {
-    var AllocatePool = function (constructor, size) {
+Object.assign(pc, (function () {
+    function AllocatePool(constructor, size) {
         this._constructor = constructor;
         this._pool = [];
         this._count = 0;
 
         this._resize(size);
-    };
+    }
 
-    AllocatePool.prototype = {
+    Object.assign(AllocatePool.prototype, {
         _resize: function (size) {
             if (size > this._pool.length) {
                 for (var i = this._pool.length; i < size; i++) {
@@ -26,7 +26,7 @@ pc.extend(pc, (function () {
         freeAll: function () {
             this._count = 0;
         }
-    };
+    });
 
     return {
         AllocatePool: AllocatePool

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @component
      * @constructor
@@ -34,7 +34,7 @@ pc.extend(pc, function () {
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
 
-    var ModelComponent = function ModelComponent(system, entity)   {
+    function ModelComponent(system, entity)   {
         this.on("set_type", this.onSetType, this);
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
@@ -64,11 +64,10 @@ pc.extend(pc, function () {
         // #ifdef DEBUG
         this._batchGroup = null;
         // #endif
-
-    };
+    }
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
-    pc.extend(ModelComponent.prototype, {
+    Object.assign(ModelComponent.prototype, {
         setVisible: function (visible) {
             console.warn("WARNING: setVisible: Function is deprecated. Set enabled property instead.");
             this.enabled = visible;
@@ -815,4 +814,4 @@ pc.extend(pc, function () {
     return {
         ModelComponent: ModelComponent
     };
-}());
+}()));

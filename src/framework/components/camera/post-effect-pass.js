@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
     var _backbufferRt = [null, null]; // 2 RTs may be needed for ping-ponging
     var _constInput = null;
@@ -457,4 +457,4 @@ pc.extend(pc, function () {
     return {
         PostEffectPass: PostEffectPass
     };
-}());
+}()));

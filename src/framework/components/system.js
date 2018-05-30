@@ -1,20 +1,20 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.ComponentSystem
      * @classdesc Component Systems contain the logic and functionality to update all Components of a particular type.
      * @param {pc.Application} app The application managing this system.
      */
-    var ComponentSystem = function (app) {
+    function ComponentSystem(app) {
         this.app = app;
         this.dataStore = {};
         this.schema = [];
 
         pc.events.attach(this);
-    };
+    }
 
     // Class methods
-    pc.extend(ComponentSystem, {
+    Object.assign(ComponentSystem, {
         initialize: function (root) {
             ComponentSystem.fire('initialize', root);
         },
@@ -45,6 +45,8 @@ pc.extend(pc, function () {
 
     // Instance methods
     ComponentSystem.prototype = {
+        constructor: ComponentSystem,
+
         /**
          * @private
          * @name pc.ComponentSystem#store
@@ -240,4 +242,4 @@ pc.extend(pc, function () {
     return {
         ComponentSystem: ComponentSystem
     };
-}());
+}()));

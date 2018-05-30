@@ -1,6 +1,6 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
 
-    var TextElement = function TextElement(element) {
+    function TextElement(element) {
         this._element = element;
         this._system = element.system;
         this._entity = element.entity;
@@ -51,13 +51,13 @@ pc.extend(pc, function () {
         element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
         element.on('set:draworder', this._onDrawOrderChange, this);
         element.on('set:pivot', this._onPivotChange, this);
-    };
+    }
 
     var LINE_BREAK_CHAR = /^[\r\n]$/;
     var WHITESPACE_CHAR = /^[ \t]$/;
     var WORD_BOUNDARY_CHAR = /^[ \t\-]$/;
 
-    pc.extend(TextElement.prototype, {
+    Object.assign(TextElement.prototype, {
         destroy: function () {
             if (this._model) {
                 this._element.removeModelFromLayers(this._model);
@@ -932,4 +932,4 @@ pc.extend(pc, function () {
     return {
         TextElement: TextElement
     };
-}());
+}()));

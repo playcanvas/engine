@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.AssetRegistry
@@ -8,7 +8,7 @@ pc.extend(pc, function () {
      * @param {pc.ResourceLoader} loader The ResourceLoader used to load the asset files.
      * @property {String} prefix A URL prefix that will be added to all asset loading requests.
      */
-    var AssetRegistry = function (loader) {
+    function AssetRegistry(loader) {
         this._loader = loader;
 
         this._assets = []; // list of all assets
@@ -19,8 +19,8 @@ pc.extend(pc, function () {
 
         this.prefix = null;
 
-        pc.extend(this, pc.events);
-    };
+        Object.assign(this, pc.events);
+    }
 
     /**
      * @event
@@ -150,7 +150,7 @@ pc.extend(pc, function () {
      * app.assets.load(asset);
      */
 
-    AssetRegistry.prototype = {
+    Object.assign(AssetRegistry.prototype, {
         /**
          * @function
          * @name pc.AssetRegistry#list
@@ -678,10 +678,9 @@ pc.extend(pc, function () {
             console.warn("DEPRECATED: getAssetById() use get() instead");
             return this.get(id);
         }
-
-    };
+    });
 
     return {
         AssetRegistry: AssetRegistry
     };
-}());
+}()));

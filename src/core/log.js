@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var log = {
         /**
          * @private
@@ -95,7 +95,7 @@ pc.extend(pc, function () {
     return {
         log: log
     };
-}());
+}()));
 
 // Shortcuts to logging functions
 var logINFO = pc.log.info;

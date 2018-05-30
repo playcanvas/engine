@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var _schema = [
         'enabled',
         'assets',
@@ -25,7 +25,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application managing this system.
      * @extends pc.ComponentSystem
      */
-    var AnimationComponentSystem = function AnimationComponentSystem(app) {
+    function AnimationComponentSystem(app) {
         this.id = 'animation';
         this.description = "Specifies the animation assets that can run on the model specified by the Entity's model Component.";
 
@@ -40,12 +40,12 @@ pc.extend(pc, function () {
         this.on('update', this.onUpdate, this);
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
-    };
+    }
     AnimationComponentSystem = pc.inherits(AnimationComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.AnimationComponent.prototype, _schema);
 
-    pc.extend(AnimationComponentSystem.prototype, {
+    Object.assign(AnimationComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['activate', 'enabled', 'loop', 'speed', 'assets'];
             AnimationComponentSystem._super.initializeComponentData.call(this, component, data, properties);
@@ -55,7 +55,7 @@ pc.extend(pc, function () {
             var key;
             this.addComponent(clone, {});
 
-            clone.animation.data.assets = pc.extend([], entity.animation.assets);
+            clone.animation.data.assets = Object.assign([], entity.animation.assets);
             clone.animation.data.speed = entity.animation.speed;
             clone.animation.data.loop = entity.animation.loop;
             clone.animation.data.activate = entity.animation.activate;
@@ -129,4 +129,4 @@ pc.extend(pc, function () {
     return {
         AnimationComponentSystem: AnimationComponentSystem
     };
-}());
+}()));

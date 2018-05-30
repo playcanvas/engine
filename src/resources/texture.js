@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var JSON_ADDRESS_MODE = {
@@ -30,7 +30,7 @@ pc.extend(pc, function () {
         }
     }
 
-    var TextureHandler = function (device, assets, loader) {
+    function TextureHandler(device, assets, loader) {
         this._device = device;
         this._assets = assets;
         this._loader = loader;
@@ -41,9 +41,11 @@ pc.extend(pc, function () {
             // ensure we send cookies if we load images.
             this.crossOrigin = 'anonymous';
         }
-    };
+    }
 
     TextureHandler.prototype = {
+        constructor: TextureHandler,
+
         load: function (url, callback) {
             var self = this;
             var image;
@@ -321,4 +323,4 @@ pc.extend(pc, function () {
     return {
         TextureHandler: TextureHandler
     };
-}());
+}()));

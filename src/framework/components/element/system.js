@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var _schema = ['enabled'];
 
     var nineSliceBasePS = [
@@ -24,7 +24,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-    var ElementComponentSystem = function ElementComponentSystem(app) {
+    function ElementComponentSystem(app) {
         this.id = 'element';
         this.app = app;
         app.systems.add(this.id, this);
@@ -188,12 +188,12 @@ pc.extend(pc, function () {
         ];
 
         this.on('beforeremove', this.onRemoveComponent, this);
-    };
+    }
     ElementComponentSystem = pc.inherits(ElementComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.ElementComponent.prototype, _schema);
 
-    pc.extend(ElementComponentSystem.prototype, {
+    Object.assign(ElementComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (data.anchor !== undefined) {
                 if (data.anchor instanceof pc.Vec4) {
@@ -418,4 +418,4 @@ pc.extend(pc, function () {
     return {
         ElementComponentSystem: ElementComponentSystem
     };
-}());
+}()));

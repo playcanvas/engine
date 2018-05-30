@@ -1,9 +1,12 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
-    var HtmlHandler = function () {};
+    function HtmlHandler() {
+    }
 
     HtmlHandler.prototype = {
+        constructor: HtmlHandler,
+
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
                 if (!err) {
@@ -25,4 +28,4 @@ pc.extend(pc, function () {
     return {
         HtmlHandler: HtmlHandler
     };
-}());
+}()));

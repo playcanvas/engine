@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var _schema = [
         'enabled',
         'assets',
@@ -25,7 +25,7 @@ pc.extend(pc, function () {
      * @param {pc.SoundManager} manager A sound manager instance.
      * @extends pc.ComponentSystem
      */
-    var AudioSourceComponentSystem = function (app, manager) {
+    function AudioSourceComponentSystem(app, manager) {
         this.id = "audiosource";
         this.description = "Specifies audio assets that can be played at the position of the Entity.";
         app.systems.add(this.id, this);
@@ -43,12 +43,12 @@ pc.extend(pc, function () {
         pc.ComponentSystem.on('update', this.onUpdate, this);
 
         this.on('remove', this.onRemove, this);
-    };
+    }
     AudioSourceComponentSystem = pc.inherits(AudioSourceComponentSystem, pc.ComponentSystem);
 
     pc.Component._buildAccessors(pc.AudioSourceComponent.prototype, _schema);
 
-    pc.extend(AudioSourceComponentSystem.prototype, {
+    Object.assign(AudioSourceComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['activate', 'volume', 'pitch', 'loop', '3d', 'minDistance', 'maxDistance', 'rollOffFactor', 'distanceModel', 'enabled', 'assets'];
             AudioSourceComponentSystem._super.initializeComponentData.call(this, component, data, properties);
@@ -117,4 +117,4 @@ pc.extend(pc, function () {
     return {
         AudioSourceComponentSystem: AudioSourceComponentSystem
     };
-}());
+}()));

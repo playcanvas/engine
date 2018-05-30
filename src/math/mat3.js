@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var typeNumber = 'number';
@@ -18,7 +18,7 @@ pc.extend(pc, (function () {
      * @param {Number} [v7] The value in row 1, column 2.
      * @param {Number} [v8] The value in row 2, column 2.
      */
-    var Mat3 = function (v0, v1, v2, v3, v4, v5, v6, v7, v8) {
+    function Mat3(v0, v1, v2, v3, v4, v5, v6, v7, v8) {
         if (v0 && v0.length === 9) {
             this.data = new Float32Array(v0);
             return;
@@ -39,9 +39,9 @@ pc.extend(pc, (function () {
         } else {
             this.setIdentity();
         }
-    };
+    }
 
-    Mat3.prototype = {
+    Object.assign(Mat3.prototype, {
         /**
          * @function
          * @name pc.Mat3#clone
@@ -200,7 +200,7 @@ pc.extend(pc, (function () {
 
             return this;
         }
-    };
+    });
 
     /**
      * @field

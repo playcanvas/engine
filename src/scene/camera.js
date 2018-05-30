@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     // pre-allocated temp variables
     var _deviceCoord = new pc.Vec3();
     var _far = new pc.Vec3();
@@ -10,7 +10,7 @@ pc.extend(pc, function () {
      * @name pc.Camera
      * @classdesc A camera.
      */
-    var Camera = function () {
+    function Camera() {
         this._projection = pc.PROJECTION_PERSPECTIVE;
         this._nearClip = 0.1;
         this._farClip = 10000;
@@ -69,9 +69,9 @@ pc.extend(pc, function () {
         this._flipFaces = false;
 
         this._component = null;
-    };
+    }
 
-    Camera.prototype = {
+    Object.assign(Camera.prototype, {
         /**
          * @private
          * @function
@@ -276,7 +276,7 @@ pc.extend(pc, function () {
         releaseDepthMap: function () {
             this._renderDepthRequests--;
         }
-    };
+    });
 
     /**
      * @private
@@ -476,4 +476,4 @@ pc.extend(pc, function () {
     return {
         Camera: Camera
     };
-}());
+}()));

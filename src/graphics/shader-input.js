@@ -1,7 +1,7 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     'use strict';
 
-    var ShaderInput = function (graphicsDevice, name, type, locationId) {
+    function ShaderInput(graphicsDevice, name, type, locationId) {
         // Set the shader attribute location
         this.locationId = locationId;
 
@@ -21,9 +21,9 @@ pc.extend(pc, function () {
 
         // Array to hold texture unit ids
         this.array = [];
-    };
+    }
 
     return {
         ShaderInput: ShaderInput
     };
-}());
+}()));

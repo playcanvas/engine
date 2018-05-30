@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     var id = 0;
     var _tmpAabb = new pc.BoundingBox();
 
@@ -19,7 +19,7 @@ pc.extend(pc, function () {
      * {@link pc.GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer property.
      * @property {pc.BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this mesh.
      */
-    var Mesh = function () {
+    function Mesh() {
         this._refCount = 0;
         this.id = id++;
         this.vertexBuffer = null;
@@ -37,7 +37,7 @@ pc.extend(pc, function () {
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
-    };
+    }
 
     Object.defineProperty(Mesh.prototype, 'aabb', {
         get: function () {
@@ -87,7 +87,7 @@ pc.extend(pc, function () {
      * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
      * @property {Boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
      */
-    var MeshInstance = function MeshInstance(node, mesh, material) {
+    function MeshInstance(node, mesh, material) {
         this._key = [0, 0];
         this._shader = [null, null, null];
 
@@ -140,7 +140,7 @@ pc.extend(pc, function () {
 
         this.stencilFront = null;
         this.stencilBack = null;
-    };
+    }
 
     Object.defineProperty(MeshInstance.prototype, 'mesh', {
         get: function () {
@@ -486,7 +486,7 @@ pc.extend(pc, function () {
         }
     });
 
-    pc.extend(MeshInstance.prototype, {
+    Object.assign(MeshInstance.prototype, {
         syncAabb: function () {
             // Deprecated
         },
@@ -506,11 +506,11 @@ pc.extend(pc, function () {
         clearParameters: pc.Material.prototype.clearParameters
     });
 
-    var Command = function (layer, blendType, command) {
+    function Command(layer, blendType, command) {
         this._key = [];
         this._key[pc.SORTKEY_FORWARD] = getKey(layer, blendType, true, 0);
         this.command = command;
-    };
+    }
 
     Object.defineProperty(Command.prototype, 'key', {
         get: function () {
@@ -521,22 +521,22 @@ pc.extend(pc, function () {
         }
     });
 
-    var InstancingData = function (numObjects, dynamic, instanceSize) {
+    function InstancingData(numObjects, dynamic, instanceSize) {
         instanceSize = instanceSize || 16;
         this.buffer = new Float32Array(numObjects * instanceSize);
         this.count = numObjects;
         this.offset = 0;
         this.usage = dynamic ? pc.BUFFER_DYNAMIC : pc.BUFFER_STATIC;
         this._buffer = null;
-    };
+    }
 
-    InstancingData.prototype = {
+    Object.assign(InstancingData.prototype, {
         update: function () {
             if (this._buffer) {
                 this._buffer.setData(this.buffer);
             }
         }
-    };
+    });
 
     function getKey(layer, blendType, isCommand, materialId) {
         /*
@@ -561,4 +561,4 @@ pc.extend(pc, function () {
         InstancingData: InstancingData,
         _getDrawcallSortKey: getKey
     };
-}());
+}()));

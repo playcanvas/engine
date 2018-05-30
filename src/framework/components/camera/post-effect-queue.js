@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.PostEffectQueue
@@ -35,6 +35,8 @@ pc.extend(pc, function () {
     }
 
     PostEffectQueue.prototype = {
+        constructor: PostEffectQueue,
+
         /**
          * @private
          * @function
@@ -386,4 +388,4 @@ pc.extend(pc, function () {
     return {
         PostEffectQueue: PostEffectQueue
     };
-}());
+}()));

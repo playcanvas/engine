@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @private
      * @constructor
@@ -6,7 +6,7 @@ pc.extend(pc, function () {
      * @classdesc ComponentData structure for Camera components.
      * @extends pc.ComponentData
      */
-    var CameraComponentData = function () {
+    function CameraComponentData() {
         // serialized
         this.clearColor = new pc.Color(0.722, 0.722, 0.722, 1);
         this.clearColorBuffer = true;
@@ -35,10 +35,10 @@ pc.extend(pc, function () {
         this.isRendering = false;
         this.calculateTransform = null;
         this.calculateProjection = null;
-    };
+    }
     CameraComponentData = pc.inherits(CameraComponentData, pc.ComponentData);
 
     return {
         CameraComponentData: CameraComponentData
     };
-}());
+}()));

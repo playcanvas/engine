@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @component
      * @constructor
@@ -66,7 +66,7 @@ pc.extend(pc, function () {
      * @property {pc.Model} model The model that is added to the scene graph for the mesh collision volume.
      * @extends pc.Component
      */
-    var CollisionComponent = function CollisionComponent(system, entity) {
+    function CollisionComponent(system, entity) {
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         this.on('set_radius', this.onSetRadius, this);
@@ -74,7 +74,7 @@ pc.extend(pc, function () {
         this.on('set_axis', this.onSetAxis, this);
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_model", this.onSetModel, this);
-    };
+    }
     CollisionComponent = pc.inherits(CollisionComponent, pc.Component);
 
     // Events Documentation
@@ -115,7 +115,7 @@ pc.extend(pc, function () {
      * @param {pc.Entity} other The {@link pc.Entity} that exited this collision volume.
      */
 
-    pc.extend(CollisionComponent.prototype, {
+    Object.assign(CollisionComponent.prototype, {
 
         onSetType: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
@@ -240,4 +240,4 @@ pc.extend(pc, function () {
     return {
         CollisionComponent: CollisionComponent
     };
-}());
+}()));

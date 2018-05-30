@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.VrManager
@@ -10,7 +10,7 @@ pc.extend(pc, function () {
      * @property {Boolean} isSupported Reports whether this device supports the WebVR API
      * @property {Boolean} usesPolyfill Reports whether this device supports the WebVR API using a polyfill
      */
-    var VrManager = function (app) {
+    function VrManager(app) {
         pc.events.attach(this);
 
         var self = this;
@@ -46,7 +46,7 @@ pc.extend(pc, function () {
                 self.fire('ready', self.displays);
             }
         });
-    };
+    }
 
     /**
      * @event
@@ -86,7 +86,7 @@ pc.extend(pc, function () {
      */
     VrManager.usesPolyfill = !!window.InitializeWebVRPolyfill;
 
-    VrManager.prototype = {
+    Object.assign(VrManager.prototype, {
         _attach: function () {
             window.addEventListener('vrdisplayconnect', this._onDisplayConnect);
             window.addEventListener('vrdisplaydisconnect', this._onDisplayDisconnect);
@@ -185,9 +185,9 @@ pc.extend(pc, function () {
 
             this.fire('displaydisconnect', display);
         }
-    };
+    });
 
     return {
         VrManager: VrManager
     };
-}());
+}()));
