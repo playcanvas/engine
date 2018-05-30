@@ -272,20 +272,22 @@
 
         // next are undocumented
         SHADER_SHADOW: 3, // PCF3
-        // 4: VSM8,
-        // 5: VSM16,
-        // 6: VSM32,
-        // 7: PCF5,
-        // 8: PCF3 POINT
-        // 9: VSM8 POINT,
-        // 10: VSM16 POINT,
-        // 11: VSM32 POINT,
-        // 12: PCF5 POINT
-        // 13: PCF3 SPOT
-        // 14: VSM8 SPOT,
-        // 15: VSM16 SPOT,
-        // 16: VSM32 SPOT,
-        // 17: PCF5 SPOT
+        /*
+         * 4: VSM8,
+         * 5: VSM16,
+         * 6: VSM32,
+         * 7: PCF5,
+         * 8: PCF3 POINT
+         * 9: VSM8 POINT,
+         * 10: VSM16 POINT,
+         * 11: VSM32 POINT,
+         * 12: PCF5 POINT
+         * 13: PCF3 SPOT
+         * 14: VSM8 SPOT,
+         * 15: VSM16 SPOT,
+         * 16: VSM32 SPOT,
+         * 17: PCF5 SPOT
+         */
         SHADER_PICK: 18,
 
         BAKE_COLOR: 0,
@@ -602,8 +604,10 @@ pc.extend(pc, function () {
         }
     });
 
-    // some backwards compatibility
-    // drawCalls will now return list of all active composition mesh instances
+    /*
+     * some backwards compatibility
+     * drawCalls will now return list of all active composition mesh instances
+     */
     Object.defineProperty(Scene.prototype, 'drawCalls', {
         get: function () {
             var drawCalls = this.layers._meshInstances;
@@ -656,7 +660,7 @@ pc.extend(pc, function () {
         if (this._skyboxCubeMap && !this.skyboxModel) {
             var material = new pc.Material();
             var scene = this;
-            material.updateShader = function(dev, sc, defs, staticLightList, pass) {
+            material.updateShader = function (dev, sc, defs, staticLightList, pass) {
                 var library = device.getProgramLibrary();
                 var shader = library.getProgram('skybox', { rgbm: scene._skyboxCubeMap.rgbm,
                     hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format === pc.PIXELFORMAT_RGBA32F),
@@ -714,11 +718,13 @@ pc.extend(pc, function () {
 
     Scene.prototype.setSkybox = function (cubemaps) {
         var i;
-        if (! cubemaps)
+        if (!cubemaps)
             cubemaps = [null, null, null, null, null, null, null];
 
-        // check if any values actually changed
-        // to prevent unnecessary recompilations
+        /*
+         * check if any values actually changed
+         * to prevent unnecessary recompilations
+         */
 
         var different = false;
 
@@ -787,34 +793,33 @@ pc.extend(pc, function () {
 }());
 
 /**
-* @event
-* @name pc.Scene#set:skybox
-* @description Fired when the skybox is set.
-* @param {pc.Texture} usedTex Previously used cubemap texture. New is in the {@link pc.Scene#skybox}.
-*/
+ * @event
+ * @name pc.Scene#set:skybox
+ * @description Fired when the skybox is set.
+ * @param {pc.Texture} usedTex Previously used cubemap texture. New is in the {@link pc.Scene#skybox}.
+ */
 
 /**
-* @event
-* @name pc.Scene#set:layers
-* @description Fired when the layer composition is set. Use this event to add callbacks or advanced properties to your layers.
-* @param {pc.LayerComposition} oldComp Previously used {@link pc.LayerComposition}.
-* @param {pc.LayerComposition} newComp Newly set {@link pc.LayerComposition}.
-* @example
-*   this.app.scene.on('set:layers', function(oldComp, newComp) {
-*       var list = newComp.layerList;
-*       var layer;
-*       for(var i=0; i<list.length; i++) {
-*           layer = list[i];
-*           switch(layer.name) {
-*               case 'MyLayer':
-*                   layer.onEnable = myOnEnableFunction;
-*                   layer.onDisable = myOnDisableFunction;
-*                   break;
-*               case 'MyOtherLayer':
-*                   layer.shaderPass = myShaderPass;
-*                   break;
-*           }
-*       }
-*   });
-*/
-
+ * @event
+ * @name pc.Scene#set:layers
+ * @description Fired when the layer composition is set. Use this event to add callbacks or advanced properties to your layers.
+ * @param {pc.LayerComposition} oldComp Previously used {@link pc.LayerComposition}.
+ * @param {pc.LayerComposition} newComp Newly set {@link pc.LayerComposition}.
+ * @example
+ *   this.app.scene.on('set:layers', function(oldComp, newComp) {
+ *       var list = newComp.layerList;
+ *       var layer;
+ *       for(var i=0; i<list.length; i++) {
+ *           layer = list[i];
+ *           switch(layer.name) {
+ *               case 'MyLayer':
+ *                   layer.onEnable = myOnEnableFunction;
+ *                   layer.onDisable = myOnDisableFunction;
+ *                   break;
+ *               case 'MyOtherLayer':
+ *                   layer.shaderPass = myShaderPass;
+ *                   break;
+ *           }
+ *       }
+ *   });
+ */

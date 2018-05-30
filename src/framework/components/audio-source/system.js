@@ -56,7 +56,7 @@ pc.extend(pc, function () {
             component.paused = !(component.enabled && component.activate);
         },
 
-        onInitialize: function(root) {
+        onInitialize: function (root) {
             if (root.audiosource &&
                 root.enabled &&
                 root.audiosource.enabled &&
@@ -76,7 +76,7 @@ pc.extend(pc, function () {
             this.initialized = true;
         },
 
-        onUpdate: function(dt) {
+        onUpdate: function (dt) {
             var components = this.store;
 
             for (var id in components) {

@@ -49,26 +49,26 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @event
-    * @name pc.VrManager#displayconnect
-    * @description Fired when an VR display is connected
-    * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been connected
-    * @example
-    * this.app.vr.on("displayconnect", function (display) {
-    *     // use `display` here
-    * });
-    */
+     * @event
+     * @name pc.VrManager#displayconnect
+     * @description Fired when an VR display is connected
+     * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been connected
+     * @example
+     * this.app.vr.on("displayconnect", function (display) {
+     *     // use `display` here
+     * });
+     */
 
     /**
-    * @event
-    * @name pc.VrManager#displaydisconnect
-    * @description Fired when an VR display is disconnected
-    * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been disconnected
-    * @example
-    * this.app.vr.on("displaydisconnect", function (display) {
-    *     // `display` is no longer connected
-    * });
-    */
+     * @event
+     * @name pc.VrManager#displaydisconnect
+     * @description Fired when an VR display is disconnected
+     * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been disconnected
+     * @example
+     * this.app.vr.on("displaydisconnect", function (display) {
+     *     // `display` is no longer connected
+     * });
+     */
 
     /**
      * @static
@@ -76,7 +76,7 @@ pc.extend(pc, function () {
      * @type Boolean
      * @description Reports whether this device supports the WebVR API
      */
-    VrManager.isSupported = !! navigator.getVRDisplays;
+    VrManager.isSupported = !!navigator.getVRDisplays;
 
     /**
      * @static
@@ -84,7 +84,7 @@ pc.extend(pc, function () {
      * @type Boolean
      * @description Reports whether this device supports the WebVR API using a polyfill
      */
-    VrManager.usesPolyfill = !! window.InitializeWebVRPolyfill;
+    VrManager.usesPolyfill = !!window.InitializeWebVRPolyfill;
 
     VrManager.prototype = {
         _attach: function () {
@@ -121,7 +121,7 @@ pc.extend(pc, function () {
 
         _getDisplays: function (callback) {
             if (navigator.getVRDisplays) {
-                navigator.getVRDisplays().then(function(displays) {
+                navigator.getVRDisplays().then(function (displays) {
                     if (callback) callback(null, displays);
                 });
             } else {
@@ -129,7 +129,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _addDisplay: function(vrDisplay) {
+        _addDisplay: function (vrDisplay) {
             if (this._index[vrDisplay.displayId])
                 return;
 
@@ -137,7 +137,7 @@ pc.extend(pc, function () {
             this._index[display.id] = display;
             this.displays.push(display);
 
-            if (! this.display)
+            if (!this.display)
                 this.display = display;
 
             this.fire('displayconnect', display);
@@ -165,7 +165,7 @@ pc.extend(pc, function () {
             }
 
             var display = this._index[id];
-            if (! display)
+            if (!display)
                 return;
 
             display.destroy();

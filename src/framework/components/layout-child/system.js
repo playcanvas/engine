@@ -32,6 +32,7 @@ pc.extend(pc, function () {
             if (data.maxHeight !== undefined) component.maxHeight = data.maxHeight;
             if (data.fitWidthProportion !== undefined) component.fitWidthProportion = data.fitWidthProportion;
             if (data.fitHeightProportion !== undefined) component.fitHeightProportion = data.fitHeightProportion;
+            if (data.excludeFromLayout !== undefined) component.excludeFromLayout = data.excludeFromLayout;
 
             LayoutChildComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -46,7 +47,8 @@ pc.extend(pc, function () {
                 maxWidth: layoutChild.maxWidth,
                 maxHeight: layoutChild.maxHeight,
                 fitWidthProportion: layoutChild.fitWidthProportion,
-                fitHeightProportion: layoutChild.fitHeightProportion
+                fitHeightProportion: layoutChild.fitHeightProportion,
+                excludeFromLayout: layoutChild.excludeFromLayout
             });
         }
     });

@@ -48,8 +48,10 @@ pc.extend(pc, function () {
         patch: function (asset, assets) {
             var sprite = asset.resource;
             if (sprite.__data) {
-                // loading from a json file we have asset data store temporarily on the sprite resource
-                // copy it into asset.data and delete
+                /*
+                 * loading from a json file we have asset data store temporarily on the sprite resource
+                 * copy it into asset.data and delete
+                 */
 
                 asset.data.pixelsPerUnit = sprite.__data.pixelsPerUnit;
                 asset.data.renderMode = sprite.__data.renderMode;
@@ -78,7 +80,7 @@ pc.extend(pc, function () {
         // Load atlas
         _updateAtlas: function (asset) {
             var sprite = asset.resource;
-            if (! asset.data.textureAtlasAsset) {
+            if (!asset.data.textureAtlasAsset) {
                 sprite.atlas = null;
                 return;
             }

@@ -3,19 +3,6 @@ pc.extend(pc, function () {
 
     var EVENT_RESIZE = 'resizecanvas';
 
-    // Exceptions
-    function UnsupportedBrowserError(message) {
-        this.name = "UnsupportedBrowserError";
-        this.message = (message || "");
-    }
-    UnsupportedBrowserError.prototype = Error.prototype;
-
-    function ContextCreationError(message) {
-        this.name = "ContextCreationError";
-        this.message = (message || "");
-    }
-    ContextCreationError.prototype = Error.prototype;
-
     var _downsampleImage = function (image, size) {
         var srcW = image.width;
         var srcH = image.height;
@@ -49,94 +36,32 @@ pc.extend(pc, function () {
         return (msie > 0 || !!trident);
     }
 
-    var _pixelFormat2Size = null;
-
-    function gpuTexSize(gl, tex) {
-        if (!_pixelFormat2Size) {
-            _pixelFormat2Size = {};
-            _pixelFormat2Size[pc.PIXELFORMAT_A8] = 1;
-            _pixelFormat2Size[pc.PIXELFORMAT_L8] = 1;
-            _pixelFormat2Size[pc.PIXELFORMAT_L8_A8] = 1;
-            _pixelFormat2Size[pc.PIXELFORMAT_R5_G6_B5] = 2;
-            _pixelFormat2Size[pc.PIXELFORMAT_R5_G5_B5_A1] = 2;
-            _pixelFormat2Size[pc.PIXELFORMAT_R4_G4_B4_A4] = 2;
-            _pixelFormat2Size[pc.PIXELFORMAT_R8_G8_B8] = 4;
-            _pixelFormat2Size[pc.PIXELFORMAT_R8_G8_B8_A8] = 4;
-            _pixelFormat2Size[pc.PIXELFORMAT_RGB16F] = 8;
-            _pixelFormat2Size[pc.PIXELFORMAT_RGBA16F] = 8;
-            _pixelFormat2Size[pc.PIXELFORMAT_RGB32F] = 16;
-            _pixelFormat2Size[pc.PIXELFORMAT_RGBA32F] = 16;
-            _pixelFormat2Size[pc.PIXELFORMAT_R32F] = 4;
-            _pixelFormat2Size[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
-            _pixelFormat2Size[pc.PIXELFORMAT_DEPTHSTENCIL] = 4;
-            _pixelFormat2Size[pc.PIXELFORMAT_111110F] = 4;
-            _pixelFormat2Size[pc.PIXELFORMAT_SRGB] = 4;
-            _pixelFormat2Size[pc.PIXELFORMAT_SRGBA] = 4;
-        }
-
-        var mips = 1;
-        if (tex._pot && (tex._mipmaps || tex._minFilter === pc.FILTER_NEAREST_MIPMAP_NEAREST ||
-            tex._minFilter === pc.FILTER_NEAREST_MIPMAP_LINEAR || tex._minFilter === pc.FILTER_LINEAR_MIPMAP_NEAREST ||
-            tex._minFilter === pc.FILTER_LINEAR_MIPMAP_LINEAR) && ! (tex._compressed && tex._levels.length === 1)) {
-
-            mips = Math.round(Math.log2(Math.max(tex._width, tex._height)) + 1);
-        }
-        var mipWidth = tex._width;
-        var mipHeight = tex._height;
-        var mipDepth = tex._depth;
-        var size = 0;
-
-        for (var i = 0; i < mips; i++) {
-            if (! tex._compressed) {
-                size += mipWidth * mipHeight * mipDepth * _pixelFormat2Size[tex._format];
-            } else if (tex._format === pc.PIXELFORMAT_ETC1) {
-                size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8 * mipDepth;
-            } else if (tex._format === pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || tex._format === pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
-                size += Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4 * mipDepth;
-            } else if (tex._format === pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || tex._format === pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
-                size += Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2 * mipDepth;
-            } else {
-                var DXT_BLOCK_WIDTH = 4;
-                var DXT_BLOCK_HEIGHT = 4;
-                var blockSize = tex._format === pc.PIXELFORMAT_DXT1 ? 8 : 16;
-                var numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
-                var numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
-                var numBlocks = numBlocksAcross * numBlocksDown;
-                size += numBlocks * blockSize * mipDepth;
-            }
-            mipWidth = Math.max(mipWidth * 0.5, 1);
-            mipHeight = Math.max(mipHeight * 0.5, 1);
-            mipDepth = Math.max(mipDepth * 0.5, 1);
-        }
-
-        if (tex._cubemap) size *= 6;
-        return size;
-    }
-
     function testRenderable(gl, pixelFormat) {
-        var __texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, __texture);
+        var texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-        var __width = 2;
-        var __height = 2;
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, __width, __height, 0, gl.RGBA, pixelFormat, null);
+        var width = 2;
+        var height = 2;
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, pixelFormat, null);
 
         // Try to use this texture as a render target.
-        var __fbo = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, __fbo);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, __texture, 0);
+        var fbo = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
         gl.bindTexture(gl.TEXTURE_2D, null);
-        // It is legal for a WebGL implementation exposing the OES_texture_float extension to
-        // support floating-point textures but not as attachments to framebuffer objects.
-        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
-            gl.deleteTexture(__texture);
+        /*
+         * It is legal for a WebGL implementation exposing the OES_texture_float extension to
+         * support floating-point textures but not as attachments to framebuffer objects.
+         */
+        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+            gl.deleteTexture(texture);
             return false;
         }
-        gl.deleteTexture(__texture);
+        gl.deleteTexture(texture);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         return true;
     }
@@ -183,7 +108,7 @@ pc.extend(pc, function () {
      * @description The 'resizecanvas' event is fired when the canvas is resized
      * @param {Number} width The new width of the canvas in pixels
      * @param {Number} height The new height of the canvas in pixels
-    */
+     */
 
     /**
      * @constructor
@@ -222,9 +147,6 @@ pc.extend(pc, function () {
         this._height = 0;
 
         this.updateClientRect();
-
-        if (!window.WebGLRenderingContext)
-            throw new pc.UnsupportedBrowserError();
 
         // Array of WebGL objects that need to be re-initialized after a context restore event
         this.shaders = [];
@@ -272,8 +194,9 @@ pc.extend(pc, function () {
             }
         }
 
-        if (!gl)
-            throw new pc.ContextCreationError();
+        if (!gl) {
+            throw new Error("WebGL not supported");
+        }
 
         this.gl = gl;
 
@@ -281,10 +204,12 @@ pc.extend(pc, function () {
         this.initializeCapabilities();
         this.initializeRenderState();
 
-        // put the rest of the constructor in a function
-        // so that the constructor remains small. Small constructors
-        // are optimized by Firefox due to type inference
-        (function() {
+        /*
+         * put the rest of the constructor in a function
+         * so that the constructor remains small. Small constructors
+         * are optimized by Firefox due to type inference
+         */
+        (function () {
             this.defaultClearOptions = {
                 color: [0, 0, 0, 1],
                 depth: 1,
@@ -506,11 +431,13 @@ pc.extend(pc, function () {
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
             this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
 
-            // Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
-            // based on the number of available uniforms and the number of uniforms required for non-
-            // bone data.  This is based off of the Standard shader.  A user defined shader may have
-            // even less space available for bones so this calculated value can be overridden via
-            // pc.GraphicsDevice.setBoneLimit.
+            /*
+             * Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
+             * based on the number of available uniforms and the number of uniforms required for non-
+             * bone data.  This is based off of the Standard shader.  A user defined shader may have
+             * even less space available for bones so this calculated value can be overridden via
+             * pc.GraphicsDevice.setBoneLimit.
+             */
             var numUniforms = this.vertexUniformsCount;
             numUniforms -= 4 * 4; // Model, view, projection and shadow matrices
             numUniforms -= 8;     // 8 lights max, each specifying a position vector
@@ -518,9 +445,11 @@ pc.extend(pc, function () {
             numUniforms -= 4 * 4; // Up to 4 texture transforms
             this.boneLimit = Math.floor(numUniforms / 4);
 
-            // Put a limit on the number of supported bones before skin partitioning must be performed
-            // Some GPUs have demonstrated performance issues if the number of vectors allocated to the
-            // skin matrix palette is left unbounded
+            /*
+             * Put a limit on the number of supported bones before skin partitioning must be performed
+             * Some GPUs have demonstrated performance issues if the number of vectors allocated to the
+             * skin matrix palette is left unbounded
+             */
             this.boneLimit = Math.min(this.boneLimit, 128);
 
             if (this.unmaskedRenderer === 'Mali-450 MP') {
@@ -654,9 +583,11 @@ pc.extend(pc, function () {
             var gl = this.gl;
             var precision = "highp";
 
-            // Query the precision supported by ints and floats in vertex and fragment shaders.
-            // Note that getShaderPrecisionFormat is not guaranteed to be present (such as some
-            // instances of the default Android browser). In this case, assume highp is available.
+            /*
+             * Query the precision supported by ints and floats in vertex and fragment shaders.
+             * Note that getShaderPrecisionFormat is not guaranteed to be present (such as some
+             * instances of the default Android browser). In this case, assume highp is available.
+             */
             if (gl.getShaderPrecisionFormat) {
                 var vertexShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT);
                 var vertexShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT);
@@ -816,13 +747,11 @@ pc.extend(pc, function () {
             gl.stencilMask(0xFF);
 
             this.alphaToCoverage = false;
+            this.raster = true;
             if (this.webgl2) {
                 gl.disable(gl.SAMPLE_ALPHA_TO_COVERAGE);
                 gl.disable(gl.RASTERIZER_DISCARD);
             }
-
-            this.raster = true;
-
 
             this.depthBiasEnabled = false;
             gl.disable(gl.POLYGON_OFFSET_FILL);
@@ -887,9 +816,11 @@ pc.extend(pc, function () {
             this.activeTexture = 0;
             this.textureUnits = [];
 
-            // Reset all render targets so they'll be recreated as required.
-            // TODO: a solution for the case where a render target contains something
-            // that was previously generated that needs to be re-rendered.
+            /*
+             * Reset all render targets so they'll be recreated as required.
+             * TODO: a solution for the case where a render target contains something
+             * that was previously generated that needs to be re-rendered.
+             */
             for (i = 0, len = this.targets.length; i < len; i++) {
                 this.targets[i]._glFrameBuffer = undefined;
                 this.targets[i]._glDepthBuffer = undefined;
@@ -1087,9 +1018,6 @@ pc.extend(pc, function () {
         updateBegin: function () {
             var gl = this.gl;
 
-            this.boundBuffer = null;
-            this.indexBuffer = null;
-
             // Set the render target
             var target = this.renderTarget;
             if (target) {
@@ -1150,8 +1078,10 @@ pc.extend(pc, function () {
                                                     target._depthBuffer._glTextureId, 0);
                         }
                     } else if (target._depth) {
-                        // --- Init a new depth/stencil buffer (optional) ---
-                        // if this is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
+                        /*
+                         * --- Init a new depth/stencil buffer (optional) ---
+                         * if this is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
+                         */
                         var willRenderMsaa = target._samples > 1 && this.webgl2;
                         if (!willRenderMsaa) {
                             if (!target._glDepthBuffer) {
@@ -1224,10 +1154,6 @@ pc.extend(pc, function () {
             } else {
                 this.setFramebuffer(null);
             }
-
-            for (var i = 0; i < 16; i++) {
-                this.textureUnits[i] = null;
-            }
         },
 
         /**
@@ -1243,9 +1169,6 @@ pc.extend(pc, function () {
             // Unset the render target
             var target = this.renderTarget;
             if (target) {
-                // Switch rendering back to the back buffer
-                // this.setFramebuffer(null); // disabled - not needed?
-
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
                 if (colorBuffer && colorBuffer._glTextureId && colorBuffer.mipmaps && colorBuffer._pot) {
@@ -1439,7 +1362,7 @@ pc.extend(pc, function () {
         uploadTexture: function (texture) {
             var gl = this.gl;
 
-            if (! texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || ! texture._pot))
+            if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture._pot))
                 return;
 
             var mipLevel = 0;
@@ -1449,18 +1372,20 @@ pc.extend(pc, function () {
             while (texture._levels[mipLevel] || mipLevel === 0) {
                 // Upload all existing mip levels. Initialize 0 mip anyway.
 
-                if (! texture._needsUpload && mipLevel === 0) {
+                if (!texture._needsUpload && mipLevel === 0) {
                     mipLevel++;
                     continue;
-                } else if (mipLevel && (! texture._needsMipmapsUpload || ! texture._mipmaps)) {
+                } else if (mipLevel && (!texture._needsMipmapsUpload || !texture._mipmaps)) {
                     break;
                 }
 
                 mipObject = texture._levels[mipLevel];
 
-                if (mipLevel == 1 && ! texture._compressed) {
-                    // We have more than one mip levels we want to assign, but we need all mips to make
-                    // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
+                if (mipLevel == 1 && !texture._compressed) {
+                    /*
+                     * We have more than one mip levels we want to assign, but we need all mips to make
+                     * the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
+                     */
                     gl.generateMipmap(texture._glTarget);
                     texture._mipmapsUploaded = true;
                 }
@@ -1475,7 +1400,7 @@ pc.extend(pc, function () {
                     if ((mipObject[0] instanceof HTMLCanvasElement) || (mipObject[0] instanceof HTMLImageElement) || (mipObject[0] instanceof HTMLVideoElement)) {
                         // Upload the image, canvas or video
                         for (face = 0; face < 6; face++) {
-                            if (! texture._levelsUpdated[0][face])
+                            if (!texture._levelsUpdated[0][face])
                                 continue;
 
                             var src = mipObject[face];
@@ -1503,7 +1428,7 @@ pc.extend(pc, function () {
                         // Upload the byte array
                         resMult = 1 / Math.pow(2, mipLevel);
                         for (face = 0; face < 6; face++) {
-                            if (! texture._levelsUpdated[0][face])
+                            if (!texture._levelsUpdated[0][face])
                                 continue;
 
                             var texData = mipObject[face];
@@ -1533,9 +1458,11 @@ pc.extend(pc, function () {
                         }
                     }
                 } else if (texture._volume) {
-                    // ----- 3D -----
-                    // Image/canvas/video not supported (yet?)
-                    // Upload the byte array
+                    /*
+                     * ----- 3D -----
+                     * Image/canvas/video not supported (yet?)
+                     * Upload the byte array
+                     */
                     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                     resMult = 1 / Math.pow(2, mipLevel);
                     if (texture._compressed) {
@@ -1631,7 +1558,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (! texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && texture._pot && texture._levels.length === 1) {
+            if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && texture._pot && texture._levels.length === 1) {
                 gl.generateMipmap(texture._glTarget);
                 texture._mipmapsUploaded = true;
             }
@@ -1649,7 +1576,7 @@ pc.extend(pc, function () {
                 // #endif
             }
 
-            texture._gpuSize = gpuTexSize(gl, texture);
+            texture._gpuSize = texture.gpuSize;
             this._vram.tex += texture._gpuSize;
             // #ifdef PROFILER
             if (texture.profilerHint === pc.TEXHINT_SHADOWMAP) {
@@ -1684,7 +1611,7 @@ pc.extend(pc, function () {
             if (paramDirty) {
                 if (texture._minFilterDirty) {
                     var filter = texture._minFilter;
-                    if (! texture._pot || ! texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
+                    if (!texture._pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
                         if (filter === pc.FILTER_NEAREST_MIPMAP_NEAREST || filter === pc.FILTER_NEAREST_MIPMAP_LINEAR) {
                             filter = pc.FILTER_NEAREST;
                         } else if (filter === pc.FILTER_LINEAR_MIPMAP_NEAREST || filter === pc.FILTER_LINEAR_MIPMAP_LINEAR) {
@@ -2726,7 +2653,7 @@ pc.extend(pc, function () {
          * @param {pc.Shader} shader The shader to set to assign to the device.
          * @returns {Boolean} true if the shader was successfully set, false otherwise.
          */
-        setShader: function(shader) {
+        setShader: function (shader) {
             if (shader !== this.shader) {
                 this.shader = shader;
 
@@ -2745,7 +2672,7 @@ pc.extend(pc, function () {
             return true;
         },
 
-        getHdrFormat: function() {
+        getHdrFormat: function () {
             if (this.extTextureHalfFloatRenderable) {
                 return pc.PIXELFORMAT_RGB16F;
             } else if (this.extTextureFloatRenderable) {
@@ -2793,15 +2720,15 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.GraphicsDevice#resizeCanvas
-        * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
-        * Note that the specified width and height values will be multiplied by the value of
-        * {@link pc.GraphicsDevice#maxPixelRatio} to give the final resultant width and height for
-        * the canvas.
-        * @param {Number} width The new width of the canvas.
-        * @param {Number} height The new height of the canvas.
-        */
+         * @function
+         * @name pc.GraphicsDevice#resizeCanvas
+         * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
+         * Note that the specified width and height values will be multiplied by the value of
+         * {@link pc.GraphicsDevice#maxPixelRatio} to give the final resultant width and height for
+         * the canvas.
+         * @param {Number} width The new width of the canvas.
+         * @param {Number} height The new height of the canvas.
+         */
         resizeCanvas: function (width, height) {
             this._width = width;
             this._height = height;
@@ -2823,10 +2750,10 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.GraphicsDevice#clearShaderCache
-        * @description Frees memory from all shaders ever allocated with this device
-        */
+         * @function
+         * @name pc.GraphicsDevice#clearShaderCache
+         * @description Frees memory from all shaders ever allocated with this device
+         */
         clearShaderCache: function () {
             this.programLib.clearCache();
         },
@@ -2926,8 +2853,6 @@ pc.extend(pc, function () {
     });
 
     return {
-        UnsupportedBrowserError: UnsupportedBrowserError,
-        ContextCreationError: ContextCreationError,
         GraphicsDevice: GraphicsDevice,
         precalculatedTangents: true
     };

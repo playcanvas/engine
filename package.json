@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -23,14 +23,17 @@
   "eslintConfig": {
     "extends": "eslint-config-playcanvas"
   },
+  "eslintIgnore": [
+    "src/polyfill/*"
+  ],
   "devDependencies": {
     "eslint": "^4.19.0",
-    "eslint-config-playcanvas": "^1.0.0",
+    "eslint-config-playcanvas": "^1.1.0",
     "fs-extra": "^3.0.1",
     "google-closure-compiler": "^20180204.0.0",
     "preprocessor": "^1.4.0",
     "sinon": "^5.0.10",
-    "uglify-js": "^3.3.16"
+    "uglify-js": "^3.3.26"
   },
   "optionalDependencies": {
     "jsdom": "^11.5.1"

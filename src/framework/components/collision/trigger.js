@@ -12,7 +12,7 @@ pc.extend(pc, function () {
      * @param {pc.Component} component The component for which the trigger will be created
      * @param {pc.ComponentData} data The data for the component
      */
-    var Trigger = function Trigger (app, component, data) {
+    var Trigger = function Trigger(app, component, data) {
         this.entity = component.entity;
         this.component = component;
         this.app = app;
@@ -98,8 +98,10 @@ pc.extend(pc, function () {
 
             this.app.systems.rigidbody.addBody(body, pc.BODYGROUP_TRIGGER, pc.BODYMASK_NOT_STATIC ^ pc.BODYGROUP_TRIGGER);
 
-            // set the body's activation state to active so that it is
-            // simulated properly again
+            /*
+             * set the body's activation state to active so that it is
+             * simulated properly again
+             */
             body.forceActivationState(pc.BODYSTATE_ACTIVE_TAG);
 
             body.activate();
@@ -113,8 +115,10 @@ pc.extend(pc, function () {
 
             this.app.systems.rigidbody.removeBody(body);
 
-            // set the body's activation state to disable simulation so
-            // that it properly deactivates after we remove it from the physics world
+            /*
+             * set the body's activation state to disable simulation so
+             * that it properly deactivates after we remove it from the physics world
+             */
             body.forceActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
         }
     };

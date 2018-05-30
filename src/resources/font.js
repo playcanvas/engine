@@ -83,8 +83,10 @@ pc.extend(pc, function () {
         },
 
         patch: function (asset, assets) {
-            // if not already set, get font data block from asset
-            // and assign to font resource
+            /*
+             * if not already set, get font data block from asset
+             * and assign to font resource
+             */
             var font = asset.resource;
             if (!font.data && asset.data) {
                 // font data present in asset but not in font

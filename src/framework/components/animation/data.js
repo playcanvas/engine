@@ -1,4 +1,4 @@
-pc.extend(pc, function() {
+pc.extend(pc, function () {
     var AnimationComponentData = function () {
         // Serialized
         this.assets = [];

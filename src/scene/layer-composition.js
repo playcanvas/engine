@@ -34,9 +34,11 @@ pc.extend(pc, function () {
         this._renderedByCam = [];
         this._renderedLayer = [];
 
-        // generated automatically - actual rendering sequence
-        // can differ from layerList/subLayer list in case of multiple cameras on one layer
-        // identical otherwise
+        /*
+         * generated automatically - actual rendering sequence
+         * can differ from layerList/subLayer list in case of multiple cameras on one layer
+         * identical otherwise
+         */
         this._renderList = []; // index to layerList/subLayerList
         this._renderListCamera = []; // index to layer.cameras
 
@@ -160,8 +162,10 @@ pc.extend(pc, function () {
             result |= pc.COMPUPDATED_LIGHTS;
             this._lights.length = 0;
             this._lightShadowCasters.length = 0;
-            // TODO: don't create new arrays, reference
-            // updates when _dirty as well to fix shadow casters
+            /*
+             * TODO: don't create new arrays, reference
+             * updates when _dirty as well to fix shadow casters
+             */
 
             for (i = 0; i < len; i++) {
                 layer = this.layerList[i];

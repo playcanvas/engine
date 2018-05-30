@@ -92,6 +92,24 @@ pc.extend(pc.gfx, {
     VertexIterator: pc.VertexIterator
 });
 
+// Exceptions
+(function () {
+    function UnsupportedBrowserError(message) {
+        this.name = "UnsupportedBrowserError";
+        this.message = (message || "");
+    }
+    UnsupportedBrowserError.prototype = Error.prototype;
+
+    function ContextCreationError(message) {
+        this.name = "ContextCreationError";
+        this.message = (message || "");
+    }
+    ContextCreationError.prototype = Error.prototype;
+
+    pc.ContextCreationError = ContextCreationError;
+    pc.UnsupportedBrowserError = UnsupportedBrowserError;
+})();
+
 pc.extend(pc.input, {
     getTouchTargetCoords: pc.getTouchTargetCoords,
     Controller: pc.Controller,
@@ -104,6 +122,18 @@ pc.extend(pc.input, {
     TouchDevice: pc.TouchDevice,
     TouchEvent: pc.TouchEvent
 });
+
+/**
+ * @private
+ * @deprecated
+ * @name pc.math.INV_LOG2
+ * @description Inverse log 2. Use Math.LOG2E instead.
+ * @type Number
+ */
+pc.math.INV_LOG2 = Math.LOG2E;
+
+pc.math.intToBytes = pc.math.intToBytes32;
+pc.math.bytesToInt = pc.math.bytesToInt32;
 
 pc.posteffect = {
     createFullscreenQuad: pc.createFullscreenQuad,
@@ -171,7 +201,7 @@ pc.ELEMENTTYPE_UINT32 = pc.TYPE_UINT32;
 pc.ELEMENTTYPE_FLOAT32 = pc.TYPE_FLOAT32;
 
 Object.defineProperty(pc.shaderChunks, "transformSkinnedVS", {
-    get: function() {
+    get: function () {
         return "#define SKIN\n" + pc.shaderChunks.transformVS;
     }
 });

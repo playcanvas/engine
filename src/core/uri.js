@@ -1,4 +1,4 @@
-pc.extend(pc, function() {
+pc.extend(pc, function () {
     return {
         /**
          * @private

@@ -248,13 +248,13 @@ pc.extend(pc, function () {
 
             var shouldForceSetAnchor = false;
 
-            if (data.width !== undefined && ! splitHorAnchors) {
+            if (data.width !== undefined && !splitHorAnchors) {
                 // force update
                 component.width = data.width;
             } else if (splitHorAnchors) {
                 shouldForceSetAnchor = true;
             }
-            if (data.height !== undefined && ! splitVerAnchors) {
+            if (data.height !== undefined && !splitVerAnchors) {
                 // force update
                 component.height = data.height;
             } else if (splitVerAnchors) {
@@ -298,8 +298,10 @@ pc.extend(pc, function () {
                     // force update
                     component.color = component.color;
                 } else {
-                    // default to white
-                    // force a value to update meshinstance parameters
+                    /*
+                     * default to white
+                     * force a value to update meshinstance parameters
+                     */
                     var opacity = data.opacity || 1;
                     component.color.set(1, 1, 1, opacity);
                     component.color = component.color;
@@ -308,8 +310,10 @@ pc.extend(pc, function () {
                 if (data.opacity !== undefined) {
                     component.opacity = data.opacity;
                 } else {
-                    // default to 1
-                    // force a value to update meshinstance parameters
+                    /*
+                     * default to 1
+                     * force a value to update meshinstance parameters
+                     */
                     component.opacity = 1;
                 }
                 if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
@@ -355,8 +359,10 @@ pc.extend(pc, function () {
             }
 
 
-            // find screen
-            // do this here not in constructor so that component is added to the entity
+            /*
+             * find screen
+             * do this here not in constructor so that component is added to the entity
+             */
             var result = component._parseUpToScreen();
             if (result.screen) {
                 component._updateScreen(result.screen);
