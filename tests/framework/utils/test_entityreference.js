@@ -304,4 +304,25 @@
             testEventMap({ "foo#bar": null });
         }, "Invalid or missing callback for event listener `foo#bar`");
     });
+
+    test("hasComponent() returns false if the entity is not present", function () {
+        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
+
+        strictEqual(reference.hasComponent("dummy"), false);
+    });
+
+    test("hasComponent() returns false if the entity is present but does not have a component of the provided type", function () {
+        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
+        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        this.otherEntity1.removeComponent("dummy");
+
+        strictEqual(reference.hasComponent("dummy"), false);
+    });
+
+    test("hasComponent() returns true if the entity is present and has a component of the provided type", function () {
+        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
+        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+
+        strictEqual(reference.hasComponent("dummy"), true);
+    });
 })();

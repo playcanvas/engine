@@ -331,6 +331,16 @@ pc.extend(pc, function () {
                 this._toggleLifecycleListeners('off');
                 this._toggleEntityListeners('off', true);
             }
+        },
+
+        /**
+         * Convenience method indicating whether the entity exists and has a component of the provided type.
+         *
+         * @param {String} componentName Name of the component.
+         * @returns {Boolean} True if the entity exists and has a component of the provided type.
+         */
+        hasComponent: function(componentName) {
+            return (this._entity && this._entity.c) ? !!this._entity.c[componentName] : false;
         }
     });
 
