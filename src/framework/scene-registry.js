@@ -279,7 +279,8 @@ pc.extend(pc, function () {
     };
 
     return {
-       SceneRegistry: SceneRegistry
+        SceneRegistry: SceneRegistry,
+        SceneRegistryItem: SceneRegistryItem
     };
 
 }());
