@@ -412,14 +412,6 @@ pc.extend(pc, function () {
             return this._contentDragHelper && this._contentDragHelper.isDragging;
         },
 
-        onEnable: function () {
-
-        },
-
-        onDisable: function () {
-
-        },
-
         onRemove: function () {
             this._toggleLifecycleListeners('off');
             this._destroyDragHelper();
