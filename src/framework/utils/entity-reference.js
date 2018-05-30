@@ -92,10 +92,14 @@ pc.extend(pc, function () {
      *
      * The lifetime of an ElementReference is tied to the parent component that instantiated it. This
      * coupling is indicated by the provision of the `this` keyword to the ElementReference's constructor
-     * in the above examples (i.e. <code>new pc.EntityReference(this, ...</code>). Any event listeners
-     * managed by the ElementReference are automatically cleaned up when the parent component is removed
-     * or the parent component's entity is destroyed – as such you should never have to worry about dangling
-     * listeners.
+     * in the above examples (i.e. <code>new pc.EntityReference(this, ...</code>).
+     *
+     * Any event listeners managed by the ElementReference are automatically cleaned up when the parent
+     * component is removed or the parent component's entity is destroyed – as such you should never have
+     * to worry about dangling listeners.
+     *
+     * Additionally, any callbacks listed in the event config will automatically be called in the scope
+     * of the parent component – you should never have to worry about manually calling <code>Function.bind()</code>.
      *
      * @param {pc.Component} parentComponent A reference to the parent component that owns this entity reference.
      * @param {String} entityPropertyName The name of the component property that contains the entity guid.
