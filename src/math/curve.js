@@ -241,8 +241,14 @@ Object.assign(pc, (function () {
          */
         clone: function () {
             var result = new pc.Curve();
-            result.keys = pc.extend(result.keys, this.keys);
+
+            this.keys.forEach(function (key, index) {
+                result.keys[index] = [key[0], key[1]];
+            });
+
             result.type = this.type;
+            result.tension = this.tension;
+
             return result;
         },
 

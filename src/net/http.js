@@ -276,7 +276,7 @@ Object.assign(pc, (function () {
 
             if (options.query) {
                 uri = new pc.URI(url);
-                query = pc.extend(uri.getQuery(), options.query);
+                query = Object.assign(uri.getQuery(), options.query);
                 uri.setQuery(query);
                 url = uri.toString();
             }
