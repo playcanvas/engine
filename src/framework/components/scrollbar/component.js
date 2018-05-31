@@ -93,7 +93,11 @@ pc.extend(pc, function () {
         },
 
         _getTrackLength: function() {
-            return this.orientation === pc.ORIENTATION_HORIZONTAL ? this.entity.element.calculatedWidth : this.entity.element.calculatedHeight;
+            if (this.entity.element) {
+                return this.orientation === pc.ORIENTATION_HORIZONTAL ? this.entity.element.calculatedWidth : this.entity.element.calculatedHeight;
+            }
+
+            return 0;
         },
 
         _getHandleLength: function() {
@@ -120,6 +124,20 @@ pc.extend(pc, function () {
             if (this._handleDragHelper) {
                 this._handleDragHelper.destroy();
             }
+        },
+
+        _setHandleDraggingEnabled: function(enabled) {
+            if (this._handleDragHelper) {
+                this._handleDragHelper.enabled = enabled;
+            }
+        },
+
+        onEnable: function () {
+            this._setHandleDraggingEnabled(true);
+        },
+
+        onDisable: function () {
+            this._setHandleDraggingEnabled(false);
         },
 
         onRemove: function () {

@@ -99,14 +99,14 @@ pc.extend(pc, function () {
         },
 
         _onSetHorizontalScrollbarValue: function(scrollValueX) {
-            if (!this._scrollbarUpdateFlags[pc.ORIENTATION_HORIZONTAL]) {
+            if (!this._scrollbarUpdateFlags[pc.ORIENTATION_HORIZONTAL] && this.enabled && this.entity.enabled) {
                 this._velocity.set(0, 0, 0);
                 this._onSetScroll(scrollValueX, null);
             }
         },
 
         _onSetVerticalScrollbarValue: function(scrollValueY) {
-            if (!this._scrollbarUpdateFlags[pc.ORIENTATION_VERTICAL]) {
+            if (!this._scrollbarUpdateFlags[pc.ORIENTATION_VERTICAL] && this.enabled && this.entity.enabled) {
                 this._velocity.set(0, 0, 0);
                 this._onSetScroll(null, scrollValueY);
             }
@@ -410,6 +410,39 @@ pc.extend(pc, function () {
 
         _isDragging: function() {
             return this._contentDragHelper && this._contentDragHelper.isDragging;
+        },
+
+        _setScrollbarComponentsEnabled: function(enabled) {
+            if (this._scrollbarReferences[pc.ORIENTATION_HORIZONTAL].hasComponent('scrollbar')) {
+                this._scrollbarReferences[pc.ORIENTATION_HORIZONTAL].entity.scrollbar.enabled = enabled;
+            }
+
+            if (this._scrollbarReferences[pc.ORIENTATION_VERTICAL].hasComponent('scrollbar')) {
+                this._scrollbarReferences[pc.ORIENTATION_VERTICAL].entity.scrollbar.enabled = enabled;
+            }
+        },
+
+        _setContentDraggingEnabled: function(enabled) {
+            if (this._contentDragHelper) {
+                this._contentDragHelper.enabled = enabled;
+            }
+        },
+
+        onEnable: function () {
+            this._setScrollbarComponentsEnabled(true);
+            this._setContentDraggingEnabled(true);
+
+            this._syncContentPosition(pc.ORIENTATION_HORIZONTAL);
+            this._syncContentPosition(pc.ORIENTATION_VERTICAL);
+            this._syncScrollbarPosition(pc.ORIENTATION_HORIZONTAL);
+            this._syncScrollbarPosition(pc.ORIENTATION_VERTICAL);
+            this._syncScrollbarEnabledState(pc.ORIENTATION_HORIZONTAL);
+            this._syncScrollbarEnabledState(pc.ORIENTATION_VERTICAL);
+        },
+
+        onDisable: function () {
+            this._setScrollbarComponentsEnabled(false);
+            this._setContentDraggingEnabled(false);
         },
 
         onRemove: function () {
