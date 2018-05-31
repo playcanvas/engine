@@ -38,6 +38,7 @@ pc.extend(pc, function () {
         this._dragStartHandlePosition = new pc.Vec3();
         this._deltaMousePosition = new pc.Vec3();
         this._deltaHandlePosition = new pc.Vec3();
+        this._isDragging = false;
 
         pc.events.attach(this);
 
@@ -79,7 +80,7 @@ pc.extend(pc, function () {
         },
 
         _onMouseDownOrTouchStart: function(event) {
-            if (this._element && !this._isDragging) {
+            if (this._element && !this._isDragging && this.enabled) {
                 this._dragCamera = event.camera;
                 this._calculateDragScale();
 
@@ -88,7 +89,7 @@ pc.extend(pc, function () {
                 if (currentMousePosition) {
                     this._toggleDragListeners('on');
                     this._isDragging = true;
-                    this._dragStartMousePosition.copy(this._screenToLocal(event));
+                    this._dragStartMousePosition.copy(currentMousePosition);
                     this._dragStartHandlePosition.copy(this._element.entity.getLocalPosition());
 
                     this.fire('drag:start');
