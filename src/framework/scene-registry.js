@@ -116,7 +116,7 @@ pc.extend(pc, function () {
     /**
      * @private
      * @function
-     * @name pc.Application#loadSceneHierarchy
+     * @name pc.SceneRegistry#loadSceneHierarchy
      * @description Load a scene file, create and initialize the Entity hierarchy
      * and add the hierarchy to the application root Entity.
      * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
@@ -180,7 +180,7 @@ pc.extend(pc, function () {
     /**
      * @private
      * @function
-     * @name pc.Application#loadSceneSettings
+     * @name pc.SceneRegistry#loadSceneSettings
      * @description Load a scene file and apply the scene settings to the current scene
      * @param {String} url The URL of the scene file. This can be looked up using app.getSceneUrl
      * @param {Function} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
@@ -222,7 +222,7 @@ pc.extend(pc, function () {
     /**
      * @private
      * @function
-     * @name  pc.Application#loadScene
+     * @name  pc.SceneRegistry#loadScene
      * @description
      * @param  {String}   url      The URL of the scene file
      * @param  {Function} callback [description]
