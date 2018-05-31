@@ -28,14 +28,14 @@ pc.extend(pc, function () {
      */
     var ScrollViewComponent = function ScrollViewComponent(system, entity) {
         this._viewportReference = new pc.EntityReference(this, 'viewportEntity', {
-            'element#gain': this._onViewportElementGain
+            'element#gain': this._onViewportElementGain,
+            'element#resize': this._onSetContentOrViewportSize
         });
 
         this._contentReference = new pc.EntityReference(this, 'contentEntity', {
             'element#gain': this._onContentElementGain,
             'element#lose': this._onContentElementLose,
-            'element#set:width': this._onSetContentWidth,
-            'element#set:height': this._onSetContentHeight
+            'element#resize': this._onSetContentOrViewportSize
         });
 
         this._scrollbarUpdateFlags = {};
@@ -52,18 +52,46 @@ pc.extend(pc, function () {
         this._scroll = new pc.Vec2();
         this._velocity = new pc.Vec3();
 
-        this._toggleLifecycleListeners('on');
+        this._toggleLifecycleListeners('on', system);
+        this._toggleElementListeners('on');
     };
     ScrollViewComponent = pc.inherits(ScrollViewComponent, pc.Component);
 
     pc.extend(ScrollViewComponent.prototype, {
-        _toggleLifecycleListeners: function(onOrOff) {
+        _toggleLifecycleListeners: function(onOrOff, system) {
             this[onOrOff]('set_horizontal', this._onSetHorizontalScrollingEnabled, this);
             this[onOrOff]('set_vertical', this._onSetVerticalScrollingEnabled, this);
 
             pc.ComponentSystem[onOrOff]('update', this._onUpdate, this);
 
+            system.app.systems.element[onOrOff]('add', this._onElementComponentAdd, this);
+            system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemove, this);
+
             // TODO Handle scrollwheel events
+        },
+
+        _toggleElementListeners: function(onOrOff) {
+            if (this.entity.element) {
+                if (onOrOff === 'on' && this._hasElementListeners) {
+                    return;
+                }
+
+                this.entity.element[onOrOff]('resize', this._onSetContentOrViewportSize, this);
+
+                this._hasElementListeners = (onOrOff === 'on');
+            }
+        },
+
+        _onElementComponentAdd: function(entity) {
+            if (this.entity === entity) {
+                this._toggleElementListeners('on');
+            }
+        },
+
+        _onElementComponentRemove: function(entity) {
+            if (this.entity === entity) {
+                this._toggleElementListeners('off');
+            }
         },
 
         _onViewportElementGain: function() {
@@ -94,14 +122,8 @@ pc.extend(pc, function () {
             }
         },
 
-        _onSetContentWidth: function() {
-            this._syncContentPosition(pc.ORIENTATION_HORIZONTAL);
-            this._syncScrollbarPosition(pc.ORIENTATION_HORIZONTAL);
-        },
-
-        _onSetContentHeight: function() {
-            this._syncContentPosition(pc.ORIENTATION_VERTICAL);
-            this._syncScrollbarPosition(pc.ORIENTATION_VERTICAL);
+        _onSetContentOrViewportSize: function() {
+            this._syncAll();
         },
 
         _onSetHorizontalScrollbarValue: function(scrollValueX) {
@@ -301,7 +323,7 @@ pc.extend(pc, function () {
 
         _getSize: function(orientation, entityReference) {
             if (entityReference.entity && entityReference.entity.element) {
-                return entityReference.entity.element[this._getDimension(orientation)];
+                return entityReference.entity.element[this._getCalculatedDimension(orientation)];
             }
 
             return 0;
@@ -335,8 +357,8 @@ pc.extend(pc, function () {
             return orientation === pc.ORIENTATION_HORIZONTAL ? 'x' : 'y';
         },
 
-        _getDimension: function(orientation) {
-            return orientation === pc.ORIENTATION_HORIZONTAL ? 'width' : 'height';
+        _getCalculatedDimension: function(orientation) {
+            return orientation === pc.ORIENTATION_HORIZONTAL ? 'calculatedWidth' : 'calculatedHeight';
         },
 
         _destroyDragHelper: function () {
@@ -456,7 +478,8 @@ pc.extend(pc, function () {
         },
 
         onRemove: function () {
-            this._toggleLifecycleListeners('off');
+            this._toggleLifecycleListeners('off', this.system);
+            this._toggleElementListeners('off');
             this._destroyDragHelper();
         }
     });
