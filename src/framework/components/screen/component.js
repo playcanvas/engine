@@ -27,7 +27,7 @@ pc.extend(pc, function () {
      * @property {pc.Vec2} resolution The width and height of the ScreenComponent. When screenSpace is true the resolution will always be equal to {@link pc.GraphicsDevice#width} x {@link pc.GraphicsDevice#height}.
      * @property {pc.Vec2} referenceResolution The resolution that the ScreenComponent is designed for. This is only taken into account when screenSpace is true and scaleMode is {@link pc.SCALEMODE_BLEND}. If the actual resolution is different then the ScreenComponent will be scaled according to the scaleBlend value.
      */
-    var ScreenComponent = function ScreenComponent (system, entity) {
+    var ScreenComponent = function ScreenComponent(system, entity) {
         this._resolution = new pc.Vec2(640, 320);
         this._referenceResolution = new pc.Vec2(640, 320);
         this._scaleMode = pc.SCALEMODE_NONE;
@@ -96,9 +96,11 @@ pc.extend(pc, function () {
         },
 
         _calcScale: function (resolution, referenceResolution) {
-            // Using log of scale values
-            // This produces a nicer outcome where if you have a xscale = 2 and yscale = 0.5
-            // the combined scale is 1 for an even blend
+            /*
+             * Using log of scale values
+             * This produces a nicer outcome where if you have a xscale = 2 and yscale = 0.5
+             * the combined scale is 1 for an even blend
+             */
             var lx = Math.log2(resolution.x / referenceResolution.x);
             var ly = Math.log2(resolution.y / referenceResolution.y);
             return Math.pow(2, (lx * (1 - this._scaleBlend) + ly * this._scaleBlend));
@@ -130,7 +132,7 @@ pc.extend(pc, function () {
 
             this._calcProjectionMatrix();
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire("set:resolution", this._resolution);
@@ -146,7 +148,7 @@ pc.extend(pc, function () {
             this._updateScale();
             this._calcProjectionMatrix();
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire("set:referenceresolution", this._resolution);
@@ -168,7 +170,7 @@ pc.extend(pc, function () {
             }
             this.resolution = this._resolution; // force update either way
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire('set:screenspace', this._screenSpace);
@@ -205,7 +207,7 @@ pc.extend(pc, function () {
             this._updateScale();
             this._calcProjectionMatrix();
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire("set:scaleblend", this._scaleBlend);

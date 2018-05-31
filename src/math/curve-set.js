@@ -122,7 +122,7 @@ pc.extend(pc, (function () {
      * @description The number of curves in the curve set.
      */
     Object.defineProperty(CurveSet.prototype, 'length', {
-        get: function() {
+        get: function () {
             return this.curves.length;
         }
     });
@@ -139,11 +139,11 @@ pc.extend(pc, (function () {
      * </ul>
      */
     Object.defineProperty(CurveSet.prototype, 'type', {
-        get: function() {
+        get: function () {
             return this._type;
         },
 
-        set: function(value) {
+        set: function (value) {
             this._type = value;
             for (var i = 0; i < this.curves.length; i++) {
                 this.curves[i].type = value;

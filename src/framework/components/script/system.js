@@ -37,7 +37,7 @@ pc.extend(pc, function () {
     pc.Component._buildAccessors(pc.ScriptComponent.prototype, _schema);
 
     pc.extend(ScriptComponentSystem.prototype, {
-        initializeComponentData: function(component, data, properties) {
+        initializeComponentData: function (component, data, properties) {
             this._components.push(component);
 
             component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
@@ -55,7 +55,7 @@ pc.extend(pc, function () {
             }
         },
 
-        cloneComponent: function(entity, clone) {
+        cloneComponent: function (entity, clone) {
             var i, key;
             var order = [];
             var scripts = { };
@@ -89,11 +89,11 @@ pc.extend(pc, function () {
             return this.addComponent(clone, data);
         },
 
-        _callComponentMethod: function(name, dt) {
+        _callComponentMethod: function (name, dt) {
             var wasLooping = this._beginLooping();
 
             for (var i = 0; i < this._components.length; i++) {
-                if (this._components[i]._destroyed || ! this._components[i].entity.enabled || ! this._components[i].enabled) {
+                if (this._components[i]._destroyed || !this._components[i].entity.enabled || !this._components[i].enabled) {
                     continue;
                 }
 
@@ -112,7 +112,7 @@ pc.extend(pc, function () {
         _endLooping: function (wasLooping) {
             this._isLoopingThroughComponents = wasLooping;
 
-            if (! this._isLoopingThroughComponents) {
+            if (!this._isLoopingThroughComponents) {
                 // remove destroyed components
                 var len = this._destroyedComponents.length;
                 if (len) {
@@ -128,7 +128,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onInitialize: function() {
+        _onInitialize: function () {
             this.preloading = false;
 
             // initialize attributes
@@ -137,29 +137,33 @@ pc.extend(pc, function () {
 
             this._callComponentMethod('_onInitialize');
         },
-        _onPostInitialize: function() {
+        _onPostInitialize: function () {
             this._callComponentMethod('_onPostInitialize');
         },
-        _onUpdate: function(dt) {
+        _onUpdate: function (dt) {
             this._callComponentMethod('_onUpdate', dt);
         },
-        _onPostUpdate: function(dt) {
+        _onPostUpdate: function (dt) {
             this._callComponentMethod('_onPostUpdate', dt);
         },
 
-        _onBeforeRemove: function(entity, component) {
+        _onBeforeRemove: function (entity, component) {
             var ind = this._components.indexOf(component);
             if (ind === -1) return;
 
             component._onBeforeRemove();
 
-            // if we are not currently looping through components then
-            // remove the components from our list
-            if (! this._isLoopingThroughComponents) {
+            /*
+             * if we are not currently looping through components then
+             * remove the components from our list
+             */
+            if (!this._isLoopingThroughComponents) {
                 this._components.splice(ind, 1);
             } else {
-                // otherwise push it to be destroyed when
-                // the current loop is over
+                /*
+                 * otherwise push it to be destroyed when
+                 * the current loop is over
+                 */
                 component._destroyed = true;
                 this._destroyedComponents.push(component);
             }

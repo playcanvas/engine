@@ -18,17 +18,10 @@ pc.extend(pc, function () {
      * @param {ArrayBuffer} [initialData] Initial data.
      */
     var IndexBuffer = function (graphicsDevice, format, numIndices, usage, initialData) {
-        // Initialize optional parameters
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
         this.usage = usage || pc.BUFFER_STATIC;
-
-        // Store the index format
         this.format = format;
-
-        // Store the number of indices
         this.numIndices = numIndices;
-
-        // Create the WebGL buffer
         this.device = graphicsDevice;
 
         var gl = this.device.gl;

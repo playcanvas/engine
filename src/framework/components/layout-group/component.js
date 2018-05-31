@@ -1,6 +1,7 @@
 pc.extend(pc, function () {
     /**
      * @component
+     * @constructor
      * @name pc.LayoutGroupComponent
      * @description Create a new LayoutGroupComponent
      * @classdesc A LayoutGroupComponent enables the Entity to position and scale child {@link pc.ElementComponent}s according to configurable layout rules.
@@ -54,7 +55,7 @@ pc.extend(pc, function () {
         this._listenForReflowEvents(this.entity, 'on');
 
         // Listen to existing children being resized
-        this.entity.children.forEach(function(child) {
+        this.entity.children.forEach(function (child) {
             this._listenForReflowEvents(child, 'on');
         }.bind(this));
 
@@ -62,9 +63,11 @@ pc.extend(pc, function () {
         this.entity.on('childinsert', this._onChildInsert, this);
         this.entity.on('childremove', this._onChildRemove, this);
 
-        // Listen for ElementComponents and LayoutChildComponents being added
-        // to self or to children - covers cases where they are not already
-        // present at the point when this component is constructed.
+        /*
+         * Listen for ElementComponents and LayoutChildComponents being added
+         * to self or to children - covers cases where they are not already
+         * present at the point when this component is constructed.
+         */
         system.app.systems.element.on('add', this._onElementOrLayoutComponentAdd, this);
         system.app.systems.element.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
         system.app.systems.layoutchild.on('add', this._onElementOrLayoutComponentAdd, this);
@@ -73,11 +76,11 @@ pc.extend(pc, function () {
     LayoutGroupComponent = pc.inherits(LayoutGroupComponent, pc.Component);
 
     pc.extend(LayoutGroupComponent.prototype, {
-        _isSelfOrChild: function(entity) {
+        _isSelfOrChild: function (entity) {
             return (entity === this.entity) || (this.entity.children.indexOf(entity) !== -1);
         },
 
-        _listenForReflowEvents: function(target, onOff) {
+        _listenForReflowEvents: function (target, onOff) {
             if (target.element) {
                 target.element[onOff]('enableelement', this._scheduleReflow, this);
                 target.element[onOff]('disableelement', this._scheduleReflow, this);
@@ -91,37 +94,37 @@ pc.extend(pc, function () {
             }
         },
 
-        _onElementOrLayoutComponentAdd: function(entity) {
+        _onElementOrLayoutComponentAdd: function (entity) {
             if (this._isSelfOrChild(entity)) {
                 this._listenForReflowEvents(entity, 'on');
                 this._scheduleReflow();
             }
         },
 
-        _onElementOrLayoutComponentRemove: function(entity) {
+        _onElementOrLayoutComponentRemove: function (entity) {
             if (this._isSelfOrChild(entity)) {
                 this._listenForReflowEvents(entity, 'off');
                 this._scheduleReflow();
             }
         },
 
-        _onChildInsert: function(child) {
+        _onChildInsert: function (child) {
             this._listenForReflowEvents(child, 'on');
             this._scheduleReflow();
         },
 
-        _onChildRemove: function(child) {
+        _onChildRemove: function (child) {
             this._listenForReflowEvents(child, 'off');
             this._scheduleReflow();
         },
 
-        _scheduleReflow: function() {
+        _scheduleReflow: function () {
             if (this.enabled && this.entity && this.entity.enabled && !this._isPerformingReflow) {
                 this.system.scheduleReflow(this);
             }
         },
 
-        reflow: function() {
+        reflow: function () {
             var container = getElement(this.entity);
             var elements = this.entity.children.filter(isEnabledAndHasEnabledElement).map(getElement);
 
@@ -145,15 +148,19 @@ pc.extend(pc, function () {
                 containerSize: new pc.Vec2(containerWidth, containerHeight)
             };
 
-            // In order to prevent recursive reflow (i.e. whereby setting the size of
-            // a child element triggers another reflow on the next frame, and so on)
-            // we flag that a reflow is currently in progress.
+            /*
+             * In order to prevent recursive reflow (i.e. whereby setting the size of
+             * a child element triggers another reflow on the next frame, and so on)
+             * we flag that a reflow is currently in progress.
+             */
             this._isPerformingReflow = true;
-            this._layoutCalculator.calculateLayout(elements, options);
+            var layoutInfo = this._layoutCalculator.calculateLayout(elements, options);
             this._isPerformingReflow = false;
+
+            this.fire('reflow', layoutInfo);
         },
 
-        onEnable: function() {
+        onEnable: function () {
             this._scheduleReflow();
         },
 
@@ -163,7 +170,7 @@ pc.extend(pc, function () {
 
             this._listenForReflowEvents(this.entity, 'off');
 
-            this.entity.children.forEach(function(child) {
+            this.entity.children.forEach(function (child) {
                 this._listenForReflowEvents(child, 'off');
             }.bind(this));
 

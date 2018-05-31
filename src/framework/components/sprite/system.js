@@ -175,7 +175,7 @@ pc.extend(pc, function () {
 
             SpriteComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
-            if (! warningShown) {
+            if (!warningShown) {
                 console.warn('The Sprite component is in beta and might change without notice.');
                 warningShown = true;
             }

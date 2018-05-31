@@ -62,7 +62,7 @@ pc.extend(pc, function () {
     ButtonComponent = pc.inherits(ButtonComponent, pc.Component);
 
     pc.extend(ButtonComponent.prototype, {
-        _toggleLifecycleListeners: function(onOrOff, system) {
+        _toggleLifecycleListeners: function (onOrOff, system) {
             this[onOrOff]('set_active', this._onSetActive, this);
             this[onOrOff]('set_transitionMode', this._onSetTransitionMode, this);
             this[onOrOff]('set_hoverTint', this._onSetTransitionValue, this);
@@ -83,13 +83,13 @@ pc.extend(pc, function () {
             system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemoveOrImageEntityDestroy, this);
         },
 
-        _onSetActive: function(name, oldValue, newValue) {
+        _onSetActive: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
                 this._updateVisualState();
             }
         },
 
-        _onSetTransitionMode: function(name, oldValue, newValue) {
+        _onSetTransitionMode: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
                 this._cancelTween();
                 this._resetToDefaultVisualState(oldValue);
@@ -97,28 +97,30 @@ pc.extend(pc, function () {
             }
         },
 
-        _onSetTransitionValue: function(name, oldValue, newValue) {
+        _onSetTransitionValue: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
                 this._forceReapplyVisualState();
             }
         },
 
-        _onSetImageEntity: function(name, oldGuid, newGuid) {
+        _onSetImageEntity: function (name, oldGuid, newGuid) {
             if (oldGuid !== newGuid) {
                 this._updateImageEntityReference();
             }
         },
 
-        _onPostInitialize: function() {
+        _onPostInitialize: function () {
             this._updateImageEntityReference();
         },
 
-        // The public imageEntity property stores the entity guid (and this is what is
-        // persisted in the database), but internally we need a reference to the actual
-        // entity so that we can add listeners to it, modify its tint/sprite when the
-        // user interacts with it, etc. This method is called whenever the guid changes
-        // in order to resolve the guid to an actual entity reference.
-        _updateImageEntityReference: function() {
+        /*
+         * The public imageEntity property stores the entity guid (and this is what is
+         * persisted in the database), but internally we need a reference to the actual
+         * entity so that we can add listeners to it, modify its tint/sprite when the
+         * user interacts with it, etc. This method is called whenever the guid changes
+         * in order to resolve the guid to an actual entity reference.
+         */
+        _updateImageEntityReference: function () {
             var imageGuid = this.data.imageEntity;
             var hasChanged = !this._imageEntity || this._imageEntity.getGuid() !== imageGuid;
 
@@ -135,7 +137,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onElementComponentRemoveOrImageEntityDestroy: function(entity) {
+        _onElementComponentRemoveOrImageEntityDestroy: function (entity) {
             if (this._imageEntity === entity) {
                 this._cancelTween();
                 this._toggleImageListeners('off');
@@ -143,24 +145,24 @@ pc.extend(pc, function () {
             }
         },
 
-        _onElementComponentAdd: function(entity) {
+        _onElementComponentAdd: function (entity) {
             if (this._imageEntity === entity) {
                 this._onAfterImageEntityChange();
             }
         },
 
-        _onBeforeImageEntityChange: function() {
+        _onBeforeImageEntityChange: function () {
             this._toggleImageListeners('off');
             this._resetToDefaultVisualState(this.transitionMode);
         },
 
-        _onAfterImageEntityChange: function() {
+        _onAfterImageEntityChange: function () {
             this._toggleImageListeners('on');
             this._storeDefaultVisualState();
             this._forceReapplyVisualState();
         },
 
-        _toggleImageListeners: function(onOrOff) {
+        _toggleImageListeners: function (onOrOff) {
             if (this._imageEntity && this._imageEntity.element) {
                 var isAdding = (onOrOff === 'on');
 
@@ -188,7 +190,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _storeDefaultVisualState: function() {
+        _storeDefaultVisualState: function () {
             if (this._imageEntity && this._imageEntity.element) {
                 this._storeDefaultColor(this._imageEntity.element.color);
                 this._storeDefaultOpacity(this._imageEntity.element.opacity);
@@ -197,60 +199,60 @@ pc.extend(pc, function () {
             }
         },
 
-        _storeDefaultColor: function(color) {
+        _storeDefaultColor: function (color) {
             this._defaultTint.r = color.r;
             this._defaultTint.g = color.g;
             this._defaultTint.b = color.b;
         },
 
-        _storeDefaultOpacity: function(opacity) {
+        _storeDefaultOpacity: function (opacity) {
             this._defaultTint.a = opacity;
         },
 
-        _storeDefaultSpriteAsset: function(spriteAsset) {
+        _storeDefaultSpriteAsset: function (spriteAsset) {
             this._defaultSpriteAsset = spriteAsset;
         },
 
-        _storeDefaultSpriteFrame: function(spriteFrame) {
+        _storeDefaultSpriteFrame: function (spriteFrame) {
             this._defaultSpriteFrame = spriteFrame;
         },
 
-        _onSetColor: function(color) {
+        _onSetColor: function (color) {
             if (!this._isApplyingTint) {
                 this._storeDefaultColor(color);
                 this._forceReapplyVisualState();
             }
         },
 
-        _onSetOpacity: function(opacity) {
+        _onSetOpacity: function (opacity) {
             if (!this._isApplyingTint) {
                 this._storeDefaultOpacity(opacity);
                 this._forceReapplyVisualState();
             }
         },
 
-        _onSetSpriteAsset: function(spriteAsset) {
+        _onSetSpriteAsset: function (spriteAsset) {
             if (!this._isApplyingSprite) {
                 this._storeDefaultSpriteAsset(spriteAsset);
                 this._forceReapplyVisualState();
             }
         },
 
-        _onSetSpriteFrame: function(spriteFrame) {
+        _onSetSpriteFrame: function (spriteFrame) {
             if (!this._isApplyingSprite) {
                 this._storeDefaultSpriteFrame(spriteFrame);
                 this._forceReapplyVisualState();
             }
         },
 
-        _onMouseEnter: function(event) {
+        _onMouseEnter: function (event) {
             this._isHovering = true;
 
             this._updateVisualState();
             this.fire('mouseenter', event);
         },
 
-        _onMouseLeave: function(event) {
+        _onMouseLeave: function (event) {
             this._isHovering = false;
             this._isPressed = false;
 
@@ -258,7 +260,7 @@ pc.extend(pc, function () {
             this.fire('mouseleave', event);
         },
 
-        _onMouseDown: function(event) {
+        _onMouseDown: function (event) {
             this._isPressed = true;
 
             this._updateVisualState();
@@ -266,7 +268,7 @@ pc.extend(pc, function () {
             this.fire('press', event);
         },
 
-        _onMouseUp: function(event) {
+        _onMouseUp: function (event) {
             this._isPressed = false;
 
             this._updateVisualState();
@@ -274,7 +276,7 @@ pc.extend(pc, function () {
             this.fire('release', event);
         },
 
-        _onTouchStart: function(event) {
+        _onTouchStart: function (event) {
             this._isPressed = true;
 
             this._updateVisualState();
@@ -283,6 +285,16 @@ pc.extend(pc, function () {
         },
 
         _onTouchEnd: function(event) {
+            // The default behaviour of the browser is to simulate a series of
+            // `mouseenter/down/up` events immediately after the `touchend` event,
+            // in order to ensure that websites that don't explicitly listen for
+            // touch events will still work on mobile (see https://www.html5rocks.com/en/mobile/touchandmouse/
+            // for reference). This leads to an issue whereby buttons will enter
+            // the `hover` state on mobile browsers after the `touchend` event is
+            // received, instead of going back to the `default` state. Calling
+            // preventDefault() here fixes the issue.
+            event.event.preventDefault();
+
             this._isPressed = false;
 
             this._updateVisualState();
@@ -290,25 +302,25 @@ pc.extend(pc, function () {
             this.fire('release', event);
         },
 
-        _onTouchLeave: function(event) {
+        _onTouchLeave: function (event) {
             this._isPressed = false;
 
             this._updateVisualState();
             this.fire('touchleave', event);
         },
 
-        _onTouchCancel: function(event) {
+        _onTouchCancel: function (event) {
             this._isPressed = false;
 
             this._updateVisualState();
             this.fire('touchcancel', event);
         },
 
-        _onClick: function(event) {
+        _onClick: function (event) {
             this.fire('click', event);
         },
 
-        _updateVisualState: function(force) {
+        _updateVisualState: function (force) {
             var oldVisualState = this._visualState;
             var newVisualState = this._determineVisualState();
 
@@ -333,17 +345,21 @@ pc.extend(pc, function () {
             }
         },
 
-        // Called when a property changes that mean the visual state must be reapplied,
-        // even if the state enum has not changed. Examples of this are when the tint
-        // value for one of the states is changed via the editor.
-        _forceReapplyVisualState: function() {
+        /*
+         * Called when a property changes that mean the visual state must be reapplied,
+         * even if the state enum has not changed. Examples of this are when the tint
+         * value for one of the states is changed via the editor.
+         */
+        _forceReapplyVisualState: function () {
             this._updateVisualState(true);
         },
 
-        // Called before the image entity changes, in order to restore the previous
-        // image back to its original tint. Note that this happens immediately, i.e.
-        // without any animation.
-        _resetToDefaultVisualState: function(transitionMode) {
+        /*
+         * Called before the image entity changes, in order to restore the previous
+         * image back to its original tint. Note that this happens immediately, i.e.
+         * without any animation.
+         */
+        _resetToDefaultVisualState: function (transitionMode) {
             if (this._imageEntity && this._imageEntity.element) {
                 switch (transitionMode) {
                     case pc.BUTTON_TRANSITION_MODE_TINT:
@@ -358,7 +374,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _determineVisualState: function() {
+        _determineVisualState: function () {
             if (!this.active) {
                 return VisualState.INACTIVE;
             } else if (this._isPressed) {
@@ -370,7 +386,7 @@ pc.extend(pc, function () {
             return VisualState.DEFAULT;
         },
 
-        _applySprite: function(spriteAsset, spriteFrame) {
+        _applySprite: function (spriteAsset, spriteFrame) {
             spriteFrame = spriteFrame || 0;
 
             if (this._imageEntity && this._imageEntity.element) {
@@ -381,7 +397,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _applyTint: function(tintColor) {
+        _applyTint: function (tintColor) {
             this._cancelTween();
 
             if (this.fadeDuration === 0) {
@@ -391,7 +407,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _applyTintImmediately: function(tintColor) {
+        _applyTintImmediately: function (tintColor) {
             if (this._imageEntity && this._imageEntity.element && tintColor) {
                 this._isApplyingTint = true;
                 this._imageEntity.element.color = toColor3(tintColor);
@@ -400,7 +416,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _applyTintWithTween: function(tintColor) {
+        _applyTintWithTween: function (tintColor) {
             if (this._imageEntity && this._imageEntity.element && tintColor) {
                 var color = this._imageEntity.element.color;
                 var opacity = this._imageEntity.element.opacity;
@@ -414,7 +430,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _updateTintTween: function() {
+        _updateTintTween: function () {
             var elapsedTime = pc.now() - this._tweenInfo.startTime;
             var elapsedProportion = this.fadeDuration === 0 ? 1 : (elapsedTime / this.fadeDuration);
             elapsedProportion = pc.math.clamp(elapsedProportion, 0, 1);
@@ -428,11 +444,11 @@ pc.extend(pc, function () {
             }
         },
 
-        _cancelTween: function() {
+        _cancelTween: function () {
             delete this._tweenInfo;
         },
 
-        _onUpdate: function() {
+        _onUpdate: function () {
             if (this._tweenInfo) {
                 this._updateTintTween();
             }

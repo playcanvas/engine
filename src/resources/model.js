@@ -30,10 +30,10 @@ pc.extend(pc, function () {
          */
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
-                if (! callback)
+                if (!callback)
                     return;
 
-                if (! err) {
+                if (!err) {
                     callback(null, response);
                 } else {
                     callback(pc.string.format("Error loading model: {0} [{1}]", url, err));
@@ -62,14 +62,14 @@ pc.extend(pc, function () {
         },
 
         patch: function (asset, assets) {
-            if (! asset.resource)
+            if (!asset.resource)
                 return;
 
             var data = asset.data;
 
             asset.resource.meshInstances.forEach(function (meshInstance, i) {
                 if (data.mapping) {
-                    var handleMaterial = function(asset) {
+                    var handleMaterial = function (asset) {
                         if (asset.resource) {
                             meshInstance.material = asset.resource;
                         } else {
@@ -77,13 +77,13 @@ pc.extend(pc, function () {
                             assets.load(asset);
                         }
 
-                        asset.once('remove', function(asset) {
+                        asset.once('remove', function (asset) {
                             if (meshInstance.material === asset.resource)
                                 meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
                         });
                     };
 
-                    if (! data.mapping[i]) {
+                    if (!data.mapping[i]) {
                         meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
                         return;
                     }
@@ -93,7 +93,7 @@ pc.extend(pc, function () {
                     var material;
 
                     if (id !== undefined) { // id mapping
-                        if (! id) {
+                        if (!id) {
                             meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
                         } else {
                             material = assets.get(id);

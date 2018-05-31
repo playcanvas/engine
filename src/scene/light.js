@@ -121,13 +121,15 @@ pc.extend(pc, function () {
             clone.shadowResolution = this._shadowResolution;
             clone.shadowDistance = this.shadowDistance;
 
-            // Cookies properties
-            // clone.cookie = this._cookie;
-            // clone.cookieIntensity = this.cookieIntensity;
-            // clone.cookieFalloff = this._cookieFalloff;
-            // clone.cookieChannel = this._cookieChannel;
-            // clone.cookieTransform = this._cookieTransform;
-            // clone.cookieOffset = this._cookieOffset;
+            /*
+             * Cookies properties
+             * clone.cookie = this._cookie;
+             * clone.cookieIntensity = this.cookieIntensity;
+             * clone.cookieFalloff = this._cookieFalloff;
+             * clone.cookieChannel = this._cookieChannel;
+             * clone.cookieTransform = this._cookieTransform;
+             * clone.cookieOffset = this._cookieOffset;
+             */
 
             return clone;
         },
@@ -235,27 +237,29 @@ pc.extend(pc, function () {
             }
         },
 
-        updateShadow: function() {
+        updateShadow: function () {
             if (this.shadowUpdateMode !== pc.SHADOWUPDATE_REALTIME) {
                 this.shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
             }
         },
 
-        updateKey: function() {
-            // Key definition:
-            // Bit
-            // 31      : sign bit (leave)
-            // 29 - 30 : type
-            // 28      : cast shadows
-            // 25 - 27 : shadow type
-            // 23 - 24 : falloff mode
-            // 22      : normal offset bias
-            // 21      : cookie
-            // 20      : cookie falloff
-            // 18 - 19 : cookie channel R
-            // 16 - 17 : cookie channel G
-            // 14 - 15 : cookie channel B
-            // 12      : cookie transform
+        updateKey: function () {
+            /*
+             * Key definition:
+             * Bit
+             * 31      : sign bit (leave)
+             * 29 - 30 : type
+             * 28      : cast shadows
+             * 25 - 27 : shadow type
+             * 23 - 24 : falloff mode
+             * 22      : normal offset bias
+             * 21      : cookie
+             * 20      : cookie falloff
+             * 18 - 19 : cookie channel R
+             * 16 - 17 : cookie channel G
+             * 14 - 15 : cookie channel B
+             * 12      : cookie transform
+             */
             var key =
                    (this._type                                << 29) |
                    ((this._castShadows ? 1 : 0)               << 28) |
@@ -277,10 +281,10 @@ pc.extend(pc, function () {
     };
 
     Object.defineProperty(Light.prototype, 'enabled', {
-        get: function() {
+        get: function () {
             return this._type;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._type === value)
                 return;
 
@@ -291,10 +295,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'type', {
-        get: function() {
+        get: function () {
             return this._type;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._type === value)
                 return;
 
@@ -313,10 +317,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'mask', {
-        get: function() {
+        get: function () {
             return this._mask;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._mask === value)
                 return;
 
@@ -327,10 +331,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'shadowType', {
-        get: function() {
+        get: function () {
             return this._shadowType;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._shadowType === value)
                 return;
 
@@ -343,10 +347,10 @@ pc.extend(pc, function () {
                 value = pc.SHADOW_PCF3; // fallback from HW PCF to old PCF
             }
 
-            if (value === pc.SHADOW_VSM32 && ! device.extTextureFloatRenderable) // fallback from vsm32 to vsm16
+            if (value === pc.SHADOW_VSM32 && !device.extTextureFloatRenderable) // fallback from vsm32 to vsm16
                 value = pc.SHADOW_VSM16;
 
-            if (value === pc.SHADOW_VSM16 && ! device.extTextureHalfFloatRenderable) // fallback from vsm16 to vsm8
+            if (value === pc.SHADOW_VSM16 && !device.extTextureHalfFloatRenderable) // fallback from vsm16 to vsm8
                 value = pc.SHADOW_VSM8;
 
             this._isVsm = value >= pc.SHADOW_VSM8 && value <= pc.SHADOW_VSM32;
@@ -361,10 +365,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'castShadows', {
-        get: function() {
+        get: function () {
             return this._castShadows && this._mask !== pc.MASK_LIGHTMAP && this._mask !== 0;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._castShadows === value)
                 return;
 
@@ -376,10 +380,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'shadowResolution', {
-        get: function() {
+        get: function () {
             return this._shadowResolution;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._shadowResolution === value)
                 return;
 
@@ -394,10 +398,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'vsmBlurSize', {
-        get: function() {
+        get: function () {
             return this._vsmBlurSize;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._vsmBlurSize === value)
                 return;
 
@@ -407,14 +411,14 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'normalOffsetBias', {
-        get: function() {
+        get: function () {
             return this._normalOffsetBias;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._normalOffsetBias === value)
                 return;
 
-            if ((! this._normalOffsetBias && value) || (this._normalOffsetBias && ! value)) {
+            if ((!this._normalOffsetBias && value) || (this._normalOffsetBias && !value)) {
                 if (this._scene !== null)
                     this._scene.updateShaders = true;
                 this.updateKey();
@@ -424,10 +428,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'falloffMode', {
-        get: function() {
+        get: function () {
             return this._falloffMode;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._falloffMode === value)
                 return;
 
@@ -439,10 +443,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'innerConeAngle', {
-        get: function() {
+        get: function () {
             return this._innerConeAngle;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._innerConeAngle === value)
                 return;
 
@@ -452,10 +456,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'outerConeAngle', {
-        get: function() {
+        get: function () {
             return this._outerConeAngle;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._outerConeAngle === value)
                 return;
 
@@ -465,10 +469,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'intensity', {
-        get: function() {
+        get: function () {
             return this._intensity;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._intensity === value)
                 return;
 
@@ -492,10 +496,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'cookie', {
-        get: function() {
+        get: function () {
             return this._cookie;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookie === value)
                 return;
 
@@ -507,10 +511,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'cookieFalloff', {
-        get: function() {
+        get: function () {
             return this._cookieFalloff;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookieFalloff === value)
                 return;
 
@@ -522,10 +526,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'cookieChannel', {
-        get: function() {
+        get: function () {
             return this._cookieChannel;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookieChannel === value)
                 return;
 
@@ -543,22 +547,22 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'cookieTransform', {
-        get: function() {
+        get: function () {
             return this._cookieTransform;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookieTransform === value)
                 return;
 
-            var xformOld = !! (this._cookieTransformSet || this._cookieOffsetSet);
-            var xformNew = !! (value || this._cookieOffsetSet);
+            var xformOld = !!(this._cookieTransformSet || this._cookieOffsetSet);
+            var xformNew = !!(value || this._cookieOffsetSet);
             if (xformOld !== xformNew) {
                 if (this._scene !== null)
                     this._scene.updateShaders = true;
             }
             this._cookieTransform = value;
-            this._cookieTransformSet = !! value;
-            if (value && ! this._cookieOffset) {
+            this._cookieTransformSet = !!value;
+            if (value && !this._cookieOffset) {
                 this.cookieOffset = new pc.Vec2(); // using transform forces using offset code
                 this._cookieOffsetSet = false;
             }
@@ -567,15 +571,15 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'cookieOffset', {
-        get: function() {
+        get: function () {
             return this._cookieOffset;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookieOffset === value)
                 return;
 
-            var xformOld = !! (this._cookieTransformSet || this._cookieOffsetSet);
-            var xformNew = !! (this._cookieTransformSet || value);
+            var xformOld = !!(this._cookieTransformSet || this._cookieOffsetSet);
+            var xformNew = !!(this._cookieTransformSet || value);
             if (xformOld !== xformNew) {
                 if (this._scene !== null)
                     this._scene.updateShaders = true;
@@ -585,8 +589,8 @@ pc.extend(pc, function () {
             } else {
                 this._cookieOffset = value;
             }
-            this._cookieOffsetSet = !! value;
-            if (value && ! this._cookieTransform) {
+            this._cookieOffsetSet = !!value;
+            if (value && !this._cookieTransform) {
                 this.cookieTransform = new pc.Vec4(1, 1, 0, 0); // using offset forces using matrix code
                 this._cookieTransformSet = false;
             }

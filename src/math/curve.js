@@ -161,7 +161,7 @@ pc.extend(pc, (function () {
 
                 // back up index to left key
                 if (i > 0) {
-                    i = i - 1;
+                    i--;
                 }
 
                 if (i > 0) {
@@ -263,7 +263,7 @@ pc.extend(pc, (function () {
     };
 
     Object.defineProperty(Curve.prototype, 'length', {
-        get: function() {
+        get: function () {
             return this.keys.length;
         }
     });

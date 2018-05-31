@@ -29,7 +29,9 @@ pc.extend(pc, function () {
     ProgramLibrary.prototype.getProgram = function (name, options) {
         var generator = this._generators[name];
         if (generator === undefined) {
-            logERROR("No program library functions registered for: " + name);
+            // #ifdef DEBUG
+            console.warn("ProgramLibrary#getProgram: No program library functions registered for: " + name);
+            // #endif
             return null;
         }
         var gd = this._device;
@@ -54,7 +56,7 @@ pc.extend(pc, function () {
         this._isClearingCache = false;
     };
 
-    ProgramLibrary.prototype.removeFromCache = function(shader) {
+    ProgramLibrary.prototype.removeFromCache = function (shader) {
         if (this._isClearingCache) return; // don't delete by one when clearing whole cache
         var cache = this._cache;
         for (var key in cache) {

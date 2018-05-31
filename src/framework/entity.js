@@ -44,7 +44,7 @@ pc.extend(pc, function () {
      *
      * @extends pc.GraphNode
      */
-    var Entity = function(name, app){
+    var Entity = function (name, app){
         if (name instanceof pc.Application) app = name;
         this._guid = pc.guid.create(); // Globally Unique Identifier
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
@@ -265,13 +265,13 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @function
-    * @name pc.Entity#destroy
-    * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
-    * @example
-    * var firstChild = this.entity.children[0];
-    * firstChild.destroy(); // delete child, all components and remove from hierarchy
-    */
+     * @function
+     * @name pc.Entity#destroy
+     * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
+     * @example
+     * var firstChild = this.entity.children[0];
+     * firstChild.destroy(); // delete child, all components and remove from hierarchy
+     */
     Entity.prototype.destroy = function () {
         var name;
 
@@ -296,9 +296,11 @@ pc.extend(pc, function () {
                 child.destroy();
             }
 
-            // make sure child._parent is null because
-            // we have removed it from the children array before calling
-            // destroy on it
+            /*
+             * make sure child._parent is null because
+             * we have removed it from the children array before calling
+             * destroy on it
+             */
             child._parent = null;
 
             child = children.shift();
@@ -316,15 +318,15 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @function
-    * @name pc.Entity#clone
-    * @description Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components and all descendants.
-    * Note, this Entity is not in the hierarchy and must be added manually.
-    * @returns {pc.Entity} A new Entity which is a deep copy of the original.
-    * @example
-    *   var e = this.entity.clone(); // Clone Entity
-    *   this.entity.parent.addChild(e); // Add it as a sibling to the original
-    */
+     * @function
+     * @name pc.Entity#clone
+     * @description Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components and all descendants.
+     * Note, this Entity is not in the hierarchy and must be added manually.
+     * @returns {pc.Entity} A new Entity which is a deep copy of the original.
+     * @example
+     *   var e = this.entity.clone(); // Clone Entity
+     *   this.entity.parent.addChild(e); // Add it as a sibling to the original
+     */
     Entity.prototype.clone = function () {
         var duplicatedIdsMap = {};
         var c = this._cloneRecursively(duplicatedIdsMap);
@@ -335,7 +337,7 @@ pc.extend(pc, function () {
         return c;
     };
 
-    Entity.prototype._cloneRecursively = function(duplicatedIdsMap) {
+    Entity.prototype._cloneRecursively = function (duplicatedIdsMap) {
         var type;
         var c = new pc.Entity(this._app);
         pc.Entity._super._cloneInternal.call(this, c);
@@ -358,26 +360,28 @@ pc.extend(pc, function () {
         return c;
     };
 
-    // When an entity that has properties that contain references to other
-    // entities within its subtree is duplicated, the expectation of the
-    // user is likely that those properties will be updated to point to
-    // the corresponding entities within the newly-created duplicate subtree.
-    //
-    // To handle this, we need to search for properties that refer to entities
-    // within the old duplicated structure, find their newly-cloned partners
-    // within the new structure, and update the references accordingly. This
-    // function implements that requirement.
+    /*
+     * When an entity that has properties that contain references to other
+     * entities within its subtree is duplicated, the expectation of the
+     * user is likely that those properties will be updated to point to
+     * the corresponding entities within the newly-created duplicate subtree.
+     *
+     * To handle this, we need to search for properties that refer to entities
+     * within the old duplicated structure, find their newly-cloned partners
+     * within the new structure, and update the references accordingly. This
+     * function implements that requirement.
+     */
     function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, newEntity, duplicatedIdsMap) {
         // TODO Would be nice to also make this work for entity script attributes
 
         if (oldEntity instanceof pc.Entity) {
             var components = oldEntity.c;
 
-            Object.keys(components).forEach(function(componentName) {
+            Object.keys(components).forEach(function (componentName) {
                 var component = components[componentName];
                 var entityProperties = component.system.getPropertiesOfType('entity');
 
-                entityProperties.forEach(function(propertyDescriptor) {
+                entityProperties.forEach(function (propertyDescriptor) {
                     var propertyName = propertyDescriptor.name;
                     var oldEntityReferenceId = component[propertyName];
                     var entityIsWithinOldSubtree = !!oldSubtreeRoot.findByGuid(oldEntityReferenceId);
@@ -394,13 +398,19 @@ pc.extend(pc, function () {
                 });
             });
 
-            // Recurse into children. Note that we continue to pass in the same `oldSubtreeRoot`,
-            // in order to correctly handle cases where a child has an entity reference
-            // field that points to a parent or other ancestor that is still within the
-            // duplicated subtree.
-            var _old = oldEntity.children.filter(function (e) { return (e instanceof pc.Entity); });
-            var _new = newEntity.children.filter(function (e) { return (e instanceof pc.Entity); });
-            _old.forEach(function(oldChild, index) {
+            /*
+             * Recurse into children. Note that we continue to pass in the same `oldSubtreeRoot`,
+             * in order to correctly handle cases where a child has an entity reference
+             * field that points to a parent or other ancestor that is still within the
+             * duplicated subtree.
+             */
+            var _old = oldEntity.children.filter(function (e) {
+                return (e instanceof pc.Entity);
+            });
+            var _new = newEntity.children.filter(function (e) {
+                return (e instanceof pc.Entity);
+            });
+            _old.forEach(function (oldChild, index) {
                 resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldChild, _new[index], duplicatedIdsMap);
             });
         }
@@ -413,12 +423,12 @@ pc.extend(pc, function () {
 
 
 /**
-* @event
-* @name pc.Entity#destroy
-* @description Fired after the entity is destroyed.
-* @param {pc.Entity} entity The entity that was destroyed.
-* @example
-* entity.on("destroy", function (e) {
-*     console.log('entity ' + e.name + ' has been destroyed');
-* });
-*/
+ * @event
+ * @name pc.Entity#destroy
+ * @description Fired after the entity is destroyed.
+ * @param {pc.Entity} entity The entity that was destroyed.
+ * @example
+ * entity.on("destroy", function (e) {
+ *     console.log('entity ' + e.name + ' has been destroyed');
+ * });
+ */

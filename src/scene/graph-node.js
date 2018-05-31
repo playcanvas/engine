@@ -62,7 +62,7 @@ pc.extend(pc, function () {
      * @type pc.Vec3
      */
     Object.defineProperty(GraphNode.prototype, 'right', {
-        get: function() {
+        get: function () {
             return this.getWorldTransform().getX(this._right).normalize();
         }
     });
@@ -74,7 +74,7 @@ pc.extend(pc, function () {
      * @type pc.Vec3
      */
     Object.defineProperty(GraphNode.prototype, 'up', {
-        get: function() {
+        get: function () {
             return this.getWorldTransform().getY(this._up).normalize();
         }
     });
@@ -86,7 +86,7 @@ pc.extend(pc, function () {
      * @type pc.Vec3
      */
     Object.defineProperty(GraphNode.prototype, 'forward', {
-        get: function() {
+        get: function () {
             return this.getWorldTransform().getZ(this._forward).normalize().scale(-1);
         }
     });
@@ -100,9 +100,11 @@ pc.extend(pc, function () {
      */
     Object.defineProperty(GraphNode.prototype, 'enabled', {
         get: function () {
-            // make sure to check this._enabled too because if that
-            // was false when a parent was updated the _enabledInHierarchy
-            // flag may not have been updated for optimization purposes
+            /*
+             * make sure to check this._enabled too because if that
+             * was false when a parent was updated the _enabledInHierarchy
+             * flag may not have been updated for optimization purposes
+             */
             return this._enabled && this._enabledInHierarchy;
         },
 
@@ -110,7 +112,7 @@ pc.extend(pc, function () {
             if (this._enabled !== enabled) {
                 this._enabled = enabled;
 
-                if (! this._parent || this._parent.enabled)
+                if (!this._parent || this._parent.enabled)
                     this._notifyHierarchyStateChanged(this, enabled);
             }
         }
@@ -137,7 +139,7 @@ pc.extend(pc, function () {
     Object.defineProperty(GraphNode.prototype, 'root', {
         get: function () {
             var parent = this._parent;
-            if (! parent)
+            if (!parent)
                 return this;
 
             while (parent._parent)
@@ -317,7 +319,7 @@ pc.extend(pc, function () {
          * // Finds the first node that has the name property set to 'Test'
          * var node = parent.findOne('name', 'Test');
          */
-        findOne: function(attr, value) {
+        findOne: function (attr, value) {
             var i;
             var len = this._children.length;
             var result = null;
@@ -379,12 +381,12 @@ pc.extend(pc, function () {
          * // Return all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
          * var meatEatingMammalsAndReptiles = node.findByTag([ "carnivore", "mammal" ], [ "carnivore", "reptile" ]);
          */
-        findByTag: function() {
+        findByTag: function () {
             var tags = this.tags._processArguments(arguments);
             return this._findByTag(tags);
         },
 
-        _findByTag: function(tags) {
+        _findByTag: function (tags) {
             var result = [];
             var i, len = this._children.length;
             var descendants;
@@ -730,7 +732,7 @@ pc.extend(pc, function () {
          * var transform = this.entity.getWorldTransform();
          */
         getWorldTransform: function () {
-            if (! this._dirtyLocal && ! this._dirtyWorld)
+            if (!this._dirtyLocal && !this._dirtyWorld)
                 return this.worldTransform;
 
             if (this._parent)
@@ -788,7 +790,7 @@ pc.extend(pc, function () {
                 this.localRotation.setFromEulerAngles(x, y, z);
             }
 
-            if (! this._dirtyLocal)
+            if (!this._dirtyLocal)
                 this._dirtify(true);
         },
 
@@ -817,7 +819,7 @@ pc.extend(pc, function () {
                 this.localPosition.set(x, y, z);
             }
 
-            if (! this._dirtyLocal)
+            if (!this._dirtyLocal)
                 this._dirtify(true);
         },
 
@@ -847,7 +849,7 @@ pc.extend(pc, function () {
                 this.localRotation.set(x, y, z, w);
             }
 
-            if (! this._dirtyLocal)
+            if (!this._dirtyLocal)
                 this._dirtify(true);
         },
 
@@ -876,7 +878,7 @@ pc.extend(pc, function () {
                 this.localScale.set(x, y, z);
             }
 
-            if (! this._dirtyLocal)
+            if (!this._dirtyLocal)
                 this._dirtify(true);
         },
 
@@ -894,14 +896,14 @@ pc.extend(pc, function () {
             this.name = name;
         },
 
-        _dirtify: function(local) {
-            if ((! local || (local && this._dirtyLocal)) && this._dirtyWorld)
+        _dirtify: function (local) {
+            if ((!local || (local && this._dirtyLocal)) && this._dirtyWorld)
                 return;
 
             if (local)
                 this._dirtyLocal = true;
 
-            if (! this._dirtyWorld) {
+            if (!this._dirtyWorld) {
                 this._dirtyWorld = true;
 
                 var i = this._children.length;
@@ -953,7 +955,7 @@ pc.extend(pc, function () {
                     invParentWtm.transformPoint(position, this.localPosition);
                 }
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }(),
@@ -996,7 +998,7 @@ pc.extend(pc, function () {
                     this.localRotation.copy(invParentRot).mul(rotation);
                 }
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }(),
@@ -1036,7 +1038,7 @@ pc.extend(pc, function () {
                     this.localRotation.mul2(invParentRot, this.localRotation);
                 }
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }(),
@@ -1058,7 +1060,7 @@ pc.extend(pc, function () {
             this._onInsertChild(node);
         },
 
-        addChildAndSaveTransform: function(node) {
+        addChildAndSaveTransform: function (node) {
             var wPos = node.getPosition();
             var wRot = node.getRotation();
 
@@ -1100,16 +1102,20 @@ pc.extend(pc, function () {
         _onInsertChild: function (node) {
             node._parent = this;
 
-            // the child node should be enabled in the hierarchy only if itself is enabled and if
-            // this parent is enabled
+            /*
+             * the child node should be enabled in the hierarchy only if itself is enabled and if
+             * this parent is enabled
+             */
             var enabledInHierarchy = (node._enabled && this.enabled);
             if (node._enabledInHierarchy !== enabledInHierarchy) {
                 node._enabledInHierarchy = enabledInHierarchy;
 
-                // propagate the change to the children - necessary if we reparent a node
-                // under a parent with a different enabled state (if we reparent a node that is
-                // not active in the hierarchy under a parent who is active in the hierarchy then
-                // we want our node to be activated)
+                /*
+                 * propagate the change to the children - necessary if we reparent a node
+                 * under a parent with a different enabled state (if we reparent a node that is
+                 * not active in the hierarchy under a parent who is active in the hierarchy then
+                 * we want our node to be activated)
+                 */
                 node._notifyHierarchyStateChanged(node, enabledInHierarchy);
             }
 
@@ -1126,7 +1132,7 @@ pc.extend(pc, function () {
             if (this.fire) this.fire('childinsert', node);
         },
 
-        _updateGraphDepth: function() {
+        _updateGraphDepth: function () {
             if (this._parent) {
                 this._graphDepth = this._parent._graphDepth + 1;
             } else {
@@ -1310,7 +1316,7 @@ pc.extend(pc, function () {
          * @description Updates the world transformation matrices at this node and all of its descendants.
          */
         syncHierarchy: function () {
-            if (! this._enabled)
+            if (!this._enabled)
                 return;
 
             if (this._dirtyLocal || this._dirtyWorld)
@@ -1446,7 +1452,7 @@ pc.extend(pc, function () {
                 this.localRotation.transformVector(translation, translation);
                 this.localPosition.add(translation);
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }(),
@@ -1491,7 +1497,7 @@ pc.extend(pc, function () {
                     this.localRotation.mul2(quaternion, rot);
                 }
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }(),
@@ -1526,7 +1532,7 @@ pc.extend(pc, function () {
 
                 this.localRotation.mul(quaternion);
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }()

@@ -1,4 +1,4 @@
-pc.extend(pc, function() {
+pc.extend(pc, function () {
     var _schema = [
         'enabled',
         'autoPlay',
@@ -96,7 +96,7 @@ pc.extend(pc, function() {
 
     pc.extend(ParticleSystemComponentSystem.prototype, {
 
-        initializeComponentData: function(component, _data, properties) {
+        initializeComponentData: function (component, _data, properties) {
             var data = {};
 
             properties = [];
@@ -164,7 +164,7 @@ pc.extend(pc, function() {
             return this.addComponent(clone, data);
         },
 
-        onUpdate: function(dt) {
+        onUpdate: function (dt) {
             var components = this.store;
             var numSteps, i, j, c;
             var stats = this.app.stats.particles;
@@ -179,15 +179,17 @@ pc.extend(pc, function() {
                         var emitter = data.model.emitter;
                         if (!emitter.meshInstance.visible) continue;
 
-                        // Bake ambient and directional lighting into one ambient cube
-                        // TODO: only do if lighting changed
-                        // TODO: don't do for every emitter
+                        /*
+                         * Bake ambient and directional lighting into one ambient cube
+                         * TODO: only do if lighting changed
+                         * TODO: don't do for every emitter
+                         */
                         if (emitter.lighting) {
                             var layer, lightCube;
                             var layers = data.layers;
                             for (i = 0; i < layers.length; i++) {
                                 layer = this.app.scene.layers.getLayerById(layers[i]);
-                                if (! layer) continue;
+                                if (!layer) continue;
 
                                 if (!layer._lightCube) {
                                     layer._lightCube = new Float32Array(6 * 3);
@@ -235,7 +237,7 @@ pc.extend(pc, function() {
             }
         },
 
-        onRemove: function(entity, component) {
+        onRemove: function (entity, component) {
             var data = component.data;
             if (data.model) {
                 entity.removeChild(data.model.getGraph());

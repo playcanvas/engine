@@ -632,12 +632,13 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
  * @returns {pc.Mesh} A new cylinder-shaped mesh.
  */
 pc.createCylinder = function (device, opts) {
-    // Check the supplied options and provide defaults for unspecified ones
     // #ifdef DEBUG
-    if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius'))
+    if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius')) {
         console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+    }
     // #endif
 
+    // Check the supplied options and provide defaults for unspecified ones
     var radius = opts && (opts.radius || opts.baseRadius);
     radius = radius !== undefined ? radius : 0.5;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
@@ -832,15 +833,17 @@ pc.createPlane = function (device, opts) {
     var uvs = [];
     var indices = [];
 
-    // Generate plane as follows (assigned UVs denoted at corners):
-    // (0,1)x---------x(1,1)
-    //      |         |
-    //      |         |
-    //      |    O--X |length
-    //      |    |    |
-    //      |    Z    |
-    // (0,0)x---------x(1,0)
-    //         width
+    /*
+     * Generate plane as follows (assigned UVs denoted at corners):
+     * (0,1)x---------x(1,1)
+     *      |         |
+     *      |         |
+     *      |    O--X |length
+     *      |    |    |
+     *      |    Z    |
+     * (0,0)x---------x(1,0)
+     *         width
+     */
     var vcounter = 0;
 
     for (i = 0; i <= ws; i++) {
@@ -967,9 +970,11 @@ pc.createBox = function (device, opts) {
                 positions.push(r.x, r.y, r.z);
                 normals.push(faceNormals[side][0], faceNormals[side][1], faceNormals[side][2]);
                 uvs.push(u, v);
-                // pack as 3x2
-                // 1/3 will be empty, but it's either that or stretched pixels
-                // TODO: generate non-rectangular lightMaps, so we could use space without stretching
+                /*
+                 * pack as 3x2
+                 * 1/3 will be empty, but it's either that or stretched pixels
+                 * TODO: generate non-rectangular lightMaps, so we could use space without stretching
+                 */
                 u /= 3;
                 v /= 3;
                 u = u * primitiveUv1PaddingScale + primitiveUv1Padding;

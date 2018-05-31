@@ -26,8 +26,10 @@ pc.extend(pc, function () {
             var self = this;
             var handler = this._loader.getHandler("texture");
 
-            // if supplied with a json file url (probably engine-only)
-            // load json data then load texture of same name
+            /*
+             * if supplied with a json file url (probably engine-only)
+             * load json data then load texture of same name
+             */
             if (pc.path.getExtension(url) === '.json') {
                 pc.http.get(url, function (err, response) {
                     if (!err) {
@@ -61,7 +63,7 @@ pc.extend(pc, function () {
             } else {
                 var handler = this._loader.getHandler("texture");
                 var texture = handler.open(url, data);
-                if (! texture) return null;
+                if (!texture) return null;
                 resource.texture = texture;
             }
             return resource;
@@ -151,7 +153,7 @@ pc.extend(pc, function () {
 
                     if (value) {
                         // add or update frame
-                        if (! asset.resource.frames[frameKey]) {
+                        if (!asset.resource.frames[frameKey]) {
                             asset.resource.frames[frameKey] = {
                                 rect: new pc.Vec4(value.rect),
                                 pivot: new pc.Vec2(value.pivot),

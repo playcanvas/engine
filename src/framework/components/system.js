@@ -137,7 +137,7 @@ pc.extend(pc, function () {
             data = data || {};
 
             // initialize
-            properties.forEach(function(descriptor) {
+            properties.forEach(function (descriptor) {
                 var name;
                 var type;
 
@@ -153,8 +153,10 @@ pc.extend(pc, function () {
                 var value = data[name];
 
                 if (value !== undefined) {
-                    // If we know the intended type of the value, convert the raw data
-                    // into an instance of the specified type.
+                    /*
+                     * If we know the intended type of the value, convert the raw data
+                     * into an instance of the specified type.
+                     */
                     if (type !== undefined) {
                         value = convertValue(value, type);
                     }
@@ -184,7 +186,7 @@ pc.extend(pc, function () {
             var matchingProperties = [];
             var schema = this.schema || [];
 
-            schema.forEach(function(descriptor) {
+            schema.forEach(function (descriptor) {
                 if (descriptor && typeof descriptor === 'object' && descriptor.type === type) {
                     matchingProperties.push(descriptor);
                 }

@@ -1,6 +1,6 @@
 pc.extend(pc, function () {
 
-    var ImageElement = function ImageElement (element) {
+    var ImageElement = function ImageElement(element) {
         this._element = element;
         this._entity = element.entity;
         this._system = element.system;
@@ -65,9 +65,11 @@ pc.extend(pc, function () {
         destroy: function () {
             if (this._model) {
                 this._element.removeModelFromLayers(this._model);
-                // reset mesh to the default because that's the mesh we want destroyed
-                // and not possible a mesh from the sprite asset that might be
-                // used elsewhere
+                /*
+                 * reset mesh to the default because that's the mesh we want destroyed
+                 * and not possible a mesh from the sprite asset that might be
+                 * used elsewhere
+                 */
                 this._meshInstance.mesh = this._defaultMesh;
                 this._model.destroy();
                 this._model = null;
@@ -107,19 +109,15 @@ pc.extend(pc, function () {
             }
         },
 
-        // Returns true if we are using a material
-        // other than the default materials
+        /*
+         * Returns true if we are using a material
+         * other than the default materials
+         */
         _hasUserMaterial: function () {
             return !!this._materialAsset ||
                    (!!this._material &&
                     this._system.defaultImageMaterials.indexOf(this._material) === -1);
         },
-
-        // assign a material internally without updating everything
-        // _setMaterial: function (material) {
-        //     this._material = material;
-        //     this._meshInstance.material = material;
-        // },
 
         _use9Slicing: function () {
             return this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED);
@@ -302,8 +300,10 @@ pc.extend(pc, function () {
                     this._meshInstance.setParameter("innerOffset", this._innerOffset.data);
                     // set atlas rect
                     this._meshInstance.setParameter("atlasRect", this._atlasRect.data);
-                    // set outer scale
-                    // use outerScale in ALL passes (depth, picker, etc) so the shape is correct
+                    /*
+                     * set outer scale
+                     * use outerScale in ALL passes (depth, picker, etc) so the shape is correct
+                     */
                     this._meshInstance.setParameter("outerScale", this._outerScale.data, 0xFFFFFFFF);
                     // set aabb update function
                     this._meshInstance._updateAabbFunc = this._updateAabbFunc;
@@ -496,13 +496,15 @@ pc.extend(pc, function () {
             }
         },
 
-        // When sprite asset is loaded make sure the texture atlas asset is loaded too
-        // If so then set the sprite, otherwise wait for the atlas to be loaded first
+        /*
+         * When sprite asset is loaded make sure the texture atlas asset is loaded too
+         * If so then set the sprite, otherwise wait for the atlas to be loaded first
+         */
         _onSpriteAssetLoad: function (asset) {
-            if (! asset.resource) {
+            if (!asset.resource) {
                 this.sprite = null;
             } else {
-                if (! asset.resource.atlas) {
+                if (!asset.resource.atlas) {
                     var atlasAssetId = asset.data.textureAtlasAsset;
                     var assets = this._system.app.assets;
                     assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
@@ -519,9 +521,11 @@ pc.extend(pc, function () {
         },
 
         _onSpritePpuChange: function () {
-            // on force update when the sprite is 9-sliced. If it's not
-            // then its mesh will change when the ppu changes which will
-            // be handled by onSpriteMeshesChange
+            /*
+             * on force update when the sprite is 9-sliced. If it's not
+             * then its mesh will change when the ppu changes which will
+             * be handled by onSpriteMeshesChange
+             */
             if (this.sprite.renderMode !== pc.SPRITE_RENDERMODE_SIMPLE && this._pixelsPerUnit === null) {
                 // force update
                 this.spriteFrame = this.spriteFrame;
@@ -624,7 +628,7 @@ pc.extend(pc, function () {
             return this._material;
         },
         set: function (value) {
-            if (! value) {
+            if (!value) {
                 var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
                 value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
                 value = this._mask ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
@@ -673,7 +677,7 @@ pc.extend(pc, function () {
                 this._materialAsset = _id;
                 if (this._materialAsset) {
                     var asset = assets.get(this._materialAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.material = null;
                         assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
                     } else {
@@ -733,7 +737,7 @@ pc.extend(pc, function () {
                 this._textureAsset = _id;
                 if (this._textureAsset) {
                     var asset = assets.get(this._textureAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.texture = null;
                         assets.on('add:' + this._textureAsset, this._onTextureAdded, this);
                     } else {
@@ -771,7 +775,7 @@ pc.extend(pc, function () {
                 this._spriteAsset = _id;
                 if (this._spriteAsset) {
                     var asset = assets.get(this._spriteAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.sprite = null;
                         assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
                     } else {
@@ -914,4 +918,3 @@ pc.extend(pc, function () {
         ImageElement: ImageElement
     };
 }());
-

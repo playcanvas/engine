@@ -102,9 +102,11 @@ pc.extend(pc, function () {
 
                     image.src = url;
                 } else {
-                    // Unsupported texture extension
-                    // Use timeout because asset events can be hooked up after load gets called in some
-                    // cases. For example, material loads a texture on 'add' event.
+                    /*
+                     * Unsupported texture extension
+                     * Use timeout because asset events can be hooked up after load gets called in some
+                     * cases. For example, material loads a texture on 'add' event.
+                     */
                     setTimeout(function () {
                         callback(pc.string.format("Error loading Texture: format not supported: '{0}'", ext));
                     }, 0);
@@ -113,16 +115,18 @@ pc.extend(pc, function () {
         },
 
         open: function (url, data) {
-            if (! url)
+            if (!url)
                 return;
 
             var texture;
             var ext = pc.path.getExtension(url).toLowerCase();
             var format = null;
 
-            // Every browser seems to pass data as an Image type. For some reason, the XDK
-            // passes an HTMLImageElement. TODO: figure out why!
-            // DDS textures are ArrayBuffers
+            /*
+             * Every browser seems to pass data as an Image type. For some reason, the XDK
+             * passes an HTMLImageElement. TODO: figure out why!
+             * DDS textures are ArrayBuffers
+             */
             if ((data instanceof Image) || (data instanceof HTMLImageElement)) { // PNG, JPG or GIF
                 var img = data;
 
@@ -208,7 +212,7 @@ pc.extend(pc, function () {
                     }
                 }
 
-                if (! format) {
+                if (!format) {
                     // #ifdef DEBUG
                     console.error("This DDS pixel format is currently unsupported. Empty texture will be created instead.");
                     // #endif
@@ -284,7 +288,7 @@ pc.extend(pc, function () {
         patch: function (asset, assets) {
             var texture = asset.resource;
 
-            if (! texture)
+            if (!texture)
                 return;
 
             if (texture.name !== asset.name)

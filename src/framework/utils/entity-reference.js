@@ -11,7 +11,7 @@ pc.extend(pc, function () {
      * <h2>Usage Scenario</h2>
      *
      * Imagine that you're creating a Checkbox component, which has a reference to an entity representing
-     * the checkmark/tickmark that is rendered in the Checkbox. The reference is modeled as an entity guid
+     * the checkmark/tickmark that is rendered in the Checkbox. The reference is modelled as an entity guid
      * property on the Checkbox component, called simply 'checkmark'. We have to implement a basic piece of
      * functionality whereby when the 'checkmark' entity reference is set, the Checkbox component must toggle
      * the tint of an ImageElementComponent present on the checkmark entity to indicate whether the Checkbox
@@ -92,10 +92,14 @@ pc.extend(pc, function () {
      *
      * The lifetime of an ElementReference is tied to the parent component that instantiated it. This
      * coupling is indicated by the provision of the `this` keyword to the ElementReference's constructor
-     * in the above examples (i.e. <code>new pc.EntityReference(this, ...</code>). Any event listeners
-     * managed by the ElementReference are automatically cleaned up when the parent component is removed
-     * or the parent component's entity is destroyed – as such you should never have to worry about dangling
-     * listeners.
+     * in the above examples (i.e. <code>new pc.EntityReference(this, ...</code>).
+     *
+     * Any event listeners managed by the ElementReference are automatically cleaned up when the parent
+     * component is removed or the parent component's entity is destroyed – as such you should never have
+     * to worry about dangling listeners.
+     *
+     * Additionally, any callbacks listed in the event config will automatically be called in the scope
+     * of the parent component – you should never have to worry about manually calling <code>Function.bind()</code>.
      *
      * @param {pc.Component} parentComponent A reference to the parent component that owns this entity reference.
      * @param {String} entityPropertyName The name of the component property that contains the entity guid.
@@ -196,6 +200,11 @@ pc.extend(pc, function () {
         },
 
         _onSetEntityGuid: function(name, oldGuid, newGuid) {
+            if (newGuid !== null && newGuid !== undefined && typeof newGuid !== 'string') {
+                console.warn("Entity field `" + this._entityPropertyName + "` was set to unexpected type '" + (typeof newGuid) + "'");
+                return;
+            }
+
             if (oldGuid !== newGuid) {
                 this._updateEntityReference();
             }
@@ -331,6 +340,16 @@ pc.extend(pc, function () {
                 this._toggleLifecycleListeners('off');
                 this._toggleEntityListeners('off', true);
             }
+        },
+
+        /**
+         * Convenience method indicating whether the entity exists and has a component of the provided type.
+         *
+         * @param {String} componentName Name of the component.
+         * @returns {Boolean} True if the entity exists and has a component of the provided type.
+         */
+        hasComponent: function(componentName) {
+            return (this._entity && this._entity.c) ? !!this._entity.c[componentName] : false;
         }
     });
 

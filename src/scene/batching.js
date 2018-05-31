@@ -51,8 +51,10 @@ pc.extend(pc, function () {
         this.layers = layers === undefined ? [pc.LAYERID_WORLD] : layers;
     };
 
-    // Modified SkinInstance for batching
-    // Doesn't contain bind matrices, simplier
+    /*
+     * Modified SkinInstance for batching
+     * Doesn't contain bind matrices, simplier
+     */
     var SkinBatchInstance = function (device, nodes, rootNode) {
         this.device = device;
         this.rootNode = rootNode;
@@ -168,7 +170,7 @@ pc.extend(pc, function () {
      * belong to these layers. Layers of source models will be ignored.
      * @returns {pc.BatchGroup} Group object.
      */
-    BatchManager.prototype.addGroup = function(name, dynamic, maxAabbSize, id, layers) {
+    BatchManager.prototype.addGroup = function (name, dynamic, maxAabbSize, id, layers) {
         if (id === undefined) {
             id = this._batchGroupCounter;
             this._batchGroupCounter++;
@@ -193,7 +195,7 @@ pc.extend(pc, function () {
      * @description Remove global batch group by id.
      * @param {String} id Group id
      */
-    BatchManager.prototype.removeGroup = function(id) {
+    BatchManager.prototype.removeGroup = function (id) {
         if (!this._batchGroups[id]) {
             // #ifdef DEBUG
             console.error("batch group with id " + id + " doesn't exist");
@@ -217,7 +219,7 @@ pc.extend(pc, function () {
         delete this._batchGroups[id];
     };
 
-    BatchManager.prototype._removeModelsFromBatchGroup = function(node, id) {
+    BatchManager.prototype._removeModelsFromBatchGroup = function (node, id) {
         if (!node.enabled) return;
 
         if (node.model && node.model.batchGroupId === id) {
@@ -235,7 +237,7 @@ pc.extend(pc, function () {
         }
     };
 
-    BatchManager.prototype._collectAndRemoveModels = function(node, groupMeshInstances, groupIds) {
+    BatchManager.prototype._collectAndRemoveModels = function (node, groupMeshInstances, groupIds) {
         if (!node.enabled) return;
 
         var i, arr;
@@ -245,8 +247,10 @@ pc.extend(pc, function () {
                 if (!arr) arr = groupMeshInstances[node.model.batchGroupId] = [];
 
                 if (node.model.isStatic) {
-                    // static mesh instances can be in both drawCall array with _staticSource linking to original
-                    // and in the original array as well, if no triangle splitting was done
+                    /*
+                     * static mesh instances can be in both drawCall array with _staticSource linking to original
+                     * and in the original array as well, if no triangle splitting was done
+                     */
                     var drawCalls = this.scene.drawCalls;
                     var nodeMeshInstances = node.model.meshInstances;
                     for (i = 0; i < drawCalls.length; i++) {
@@ -314,13 +318,13 @@ pc.extend(pc, function () {
         }
     };
 
-    BatchManager.prototype._markGroupDirty = function(id) {
+    BatchManager.prototype._markGroupDirty = function (id) {
         if (this._dirtyGroups.indexOf(id) < 0) {
             this._dirtyGroups.push(id);
         }
     };
 
-    BatchManager.prototype._registerEntities = function(batch, meshInstances) {
+    BatchManager.prototype._registerEntities = function (batch, meshInstances) {
         var node;
         var ents = [];
         for (var i = 0; i < meshInstances.length; i++) {
@@ -341,7 +345,7 @@ pc.extend(pc, function () {
      * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start, and if batchGroupIds on models are changed.
      * @param {Array} [groupIds] Optional array of batch group IDs to update. Otherwise all groups are updated.
      */
-    BatchManager.prototype.generate = function(groupIds) {
+    BatchManager.prototype.generate = function (groupIds) {
         var i, j;
         var groupMeshInstances = {};
 
@@ -402,7 +406,7 @@ pc.extend(pc, function () {
 
             lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize);
             for (i = 0; i < lists.length; i++) {
-                batch = this.create(lists[i], groupData.dynamic, parseInt(groupId));
+                batch = this.create(lists[i], groupData.dynamic, parseInt(groupId, 10));
                 for (j = 0; j < groupData.layers.length; j++) {
                     this.scene.layers.getLayerById(groupData.layers[j]).addMeshInstances(batch.model.meshInstances);
                 }
@@ -418,7 +422,7 @@ pc.extend(pc, function () {
      * @param {String} name Name
      * @returns {pc.BatchGroup} Group object.
      */
-    BatchManager.prototype.getGroupByName = function(name) {
+    BatchManager.prototype.getGroupByName = function (name) {
         var groups = this._batchGroups;
         for (var group in groups) {
             if (!groups.hasOwnProperty(group)) continue;
@@ -464,7 +468,7 @@ pc.extend(pc, function () {
      * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
      * @returns {Array} An array of arrays of mesh instances, each valid to pass to {@link pc.BatchManager#create}.
      */
-    BatchManager.prototype.prepare = function(meshInstances, dynamic, maxAabbSize) {
+    BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize) {
         if (meshInstances.length === 0) return [];
         if (maxAabbSize === undefined) maxAabbSize = Number.POSITIVE_INFINITY;
         var halfMaxAabbSize = maxAabbSize * 0.5;
@@ -511,9 +515,11 @@ pc.extend(pc, function () {
                         meshInstancesLeftB.push(meshInstancesLeftA[i]);
                         continue;
                     }
-                    // Split by static source
-                    //
-                    // Split by vert count
+                    /*
+                     * Split by static source
+                     *
+                     * Split by vert count
+                     */
                     if (vertCount + meshInstancesLeftA[i].mesh.vertexBuffer.getNumVertices() > 0xFFFF) {
                         meshInstancesLeftB.push(meshInstancesLeftA[i]);
                         continue;
@@ -608,7 +614,7 @@ pc.extend(pc, function () {
      * @param {Number} [batchGroupId] Link this batch to a specific batch group. This is done automatically with default batches.
      * @returns {pc.Batch} The resulting batch object.
      */
-    BatchManager.prototype.create = function(meshInstances, dynamic, batchGroupId) {
+    BatchManager.prototype.create = function (meshInstances, dynamic, batchGroupId) {
 
         // #ifdef PROFILER
         var time = pc.now();
@@ -951,7 +957,7 @@ pc.extend(pc, function () {
      * @description Updates bounding box for a batch. Called automatically.
      * @param {pc.Batch} batch A batch object
      */
-    BatchManager.prototype.update = function(batch) {
+    BatchManager.prototype.update = function (batch) {
         batch._aabb.copy(batch.origMeshInstances[0].aabb);
         for (var i = 0; i < batch.origMeshInstances.length; i++) {
             if (i > 0) batch._aabb.add(batch.origMeshInstances[i].aabb); // this is the slowest part
@@ -967,7 +973,7 @@ pc.extend(pc, function () {
      * @name pc.BatchManager#updateAll
      * @description Updates bounding boxes for all dynamic batches. Called automatically.
      */
-    BatchManager.prototype.updateAll = function() {
+    BatchManager.prototype.updateAll = function () {
         // TODO: only call when needed. Applies to skinning matrices as well
 
         if (this._dirtyGroups.length > 0) {
@@ -996,7 +1002,7 @@ pc.extend(pc, function () {
      * @param {Array} clonedMeshInstances New mesh instances
      * @returns {pc.Batch} New batch object
      */
-    BatchManager.prototype.clone = function(batch, clonedMeshInstances) {
+    BatchManager.prototype.clone = function (batch, clonedMeshInstances) {
         var batch2 = new pc.Batch(clonedMeshInstances, batch.dynamic, batch.batchGroupId);
         this._batchList.push(batch2);
 
@@ -1035,7 +1041,7 @@ pc.extend(pc, function () {
      * @description Decrements reference counter on a batch. If it's zero, the batch is removed from scene, and its geometry is deleted from memory.
      * @param {pc.Batch} batch A batch object
      */
-    BatchManager.prototype.destroy = function(batch) {
+    BatchManager.prototype.destroy = function (batch) {
         batch.refCounter--;
         if (batch.refCounter === 0) {
             var layers = this._batchGroups[batch.batchGroupId].layers;
@@ -1054,10 +1060,10 @@ pc.extend(pc, function () {
      * @param {pc.Batch} batch A batch object
      * @param {Array} entities An array of pc.Entity
      */
-    BatchManager.prototype.register = function(batch, entities) {
+    BatchManager.prototype.register = function (batch, entities) {
         batch.refCounter = entities.length;
         var self = this;
-        var callback = function() {
+        var callback = function () {
             self.destroy(batch);
         };
         for (var i = 0; i < entities.length; i++) {
