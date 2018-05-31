@@ -80,15 +80,19 @@ pc.extend(pc, function () {
 
         _onMouseDownOrTouchStart: function(event) {
             if (this._element && !this._isDragging) {
-                this._isDragging = true;
-                this._toggleDragListeners('on');
-
-                this._calculateDragScale();
                 this._dragCamera = event.camera;
-                this._dragStartMousePosition.copy(this._screenToLocal(event));
-                this._dragStartHandlePosition.copy(this._element.entity.getLocalPosition());
+                this._calculateDragScale();
 
-                this.fire('drag:start');
+                var currentMousePosition = this._screenToLocal(event);
+
+                if (currentMousePosition) {
+                    this._toggleDragListeners('on');
+                    this._isDragging = true;
+                    this._dragStartMousePosition.copy(this._screenToLocal(event));
+                    this._dragStartHandlePosition.copy(this._element.entity.getLocalPosition());
+
+                    this.fire('drag:start');
+                }
             }
         },
 
