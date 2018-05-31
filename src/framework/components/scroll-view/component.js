@@ -387,8 +387,8 @@ pc.extend(pc, function () {
                     }
                 }
 
-                this._velocity.data[0] *= this.friction;
-                this._velocity.data[1] *= this.friction;
+                this._velocity.data[0] *= (1 - this.friction);
+                this._velocity.data[1] *= (1 - this.friction);
 
                 if (Math.abs(this._velocity.x) > 1e-4 || Math.abs(this._velocity.y) > 1e-4) {
                     var position = this._contentReference.entity.getLocalPosition();
