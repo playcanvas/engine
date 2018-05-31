@@ -174,6 +174,8 @@ pc.extend(pc, function () {
         this.scriptsOrder = options.scriptsOrder || [];
         this.scripts = new pc.ScriptRegistry(this);
 
+        this._sceneRegistry = new pc.SceneRegistry(this);
+
         var self = this;
         this.defaultLayerWorld = new pc.Layer({
             name: "World",
@@ -538,10 +540,12 @@ pc.extend(pc, function () {
                 }
 
                 var props = response.application_properties;
+                var scenes = response.scenes;
                 var assets = response.assets;
 
                 self._parseApplicationProperties(props, function (err) {
                     self._onVrChange(props.vr);
+                    self._parseScenes(scenes);
                     self._parseAssets(assets);
                     if (!err) {
                         callback(null);
@@ -632,6 +636,22 @@ pc.extend(pc, function () {
 
         /**
          * @function
+         * @name pc.Application#getSceneUrl
+         * @description Look up the URL of the scene hierarchy file via the name given to the scene in the editor. Use this to in {@link pc.Application#loadSceneHierarchy}.
+         * @param  {String} name The name of the scene file given in the Editor
+         * @return {String}      The URL of the scene file
+         */
+        getSceneUrl: function (name) {
+            var entry = this._sceneRegistry.find(name);
+            if (entry) {
+                return entry.url;
+            } else {
+                return null;
+            }
+        },
+
+        /**
+         * @function
          * @name pc.Application#loadSceneHierarchy
          * @description Load a scene file, create and initialize the Entity hierarchy
          * and add the hierarchy to the application root Entity.
@@ -649,48 +669,7 @@ pc.extend(pc, function () {
          * });
          */
         loadSceneHierarchy: function (url, callback) {
-            var self = this;
-
-            /*
-             * Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
-             * Split loading into load and open
-             */
-            var handler = this.loader.getHandler("hierarchy");
-
-            // include asset prefix if present
-            if (this.assets && this.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
-                url = pc.path.join(this.assets.prefix, url);
-            }
-
-            handler.load(url, function (err, data) {
-                if (err) {
-                    if (callback) callback(err);
-                    return;
-                }
-
-                // called after scripts are preloaded
-                var _loaded = function () {
-
-                    self.systems.script.preloading = true;
-                    var entity = handler.open(url, data);
-                    self.systems.script.preloading = false;
-
-                    // clear from cache because this data is modified by entity operations (e.g. destroy)
-                    self.loader.clearCache(url, "hierarchy");
-
-                    // add to hierarchy
-                    self.root.addChild(entity);
-
-                    // initialize components
-                    pc.ComponentSystem.initialize(entity);
-                    pc.ComponentSystem.postInitialize(entity);
-
-                    if (callback) callback(err, entity);
-                };
-
-                // load priority and referenced scripts before opening scene
-                self._preloadScripts(data, _loaded);
-            });
+            this._sceneRegistry.loadSceneHierarchy(url, callback);
         },
 
         /**
@@ -710,75 +689,11 @@ pc.extend(pc, function () {
          * });
          */
         loadSceneSettings: function (url, callback) {
-            // include asset prefix if present
-            if (this.assets && this.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
-                url = pc.path.join(this.assets.prefix, url);
-            }
-
-            this.loader.load(url, "scenesettings", function (err, settings) {
-                if (!err) {
-                    this.applySceneSettings(settings);
-                    if (callback) {
-                        callback(null);
-                    }
-
-                } else {
-                    if (callback) {
-                        callback(err);
-                    }
-                }
-            }.bind(this));
+            this._sceneRegistry.loadSceneSettings(url, callback);
         },
 
         loadScene: function (url, callback) {
-            var self = this;
-
-            var handler = this.loader.getHandler("scene");
-
-            // include asset prefix if present
-            if (this.assets && this.assets.prefix && !pc.ABSOLUTE_URL.test(url)) {
-                url = pc.path.join(this.assets.prefix, url);
-            }
-
-            handler.load(url, function (err, data) {
-                if (!err) {
-                    var _loaded = function () {
-                        // parse and create scene
-                        self.systems.script.preloading = true;
-                        var scene = handler.open(url, data);
-                        self.systems.script.preloading = false;
-
-                        /*
-                         * clear scene from cache because we'll destroy it when we load another one
-                         * so data will be invalid
-                         */
-                        self.loader.clearCache(url, "scene");
-
-                        self.loader.patch({
-                            resource: scene,
-                            type: "scene"
-                        }, self.assets);
-
-                        self.root.addChild(scene.root);
-
-                        // Initialise pack settings
-                        if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
-                            self.systems.rigidbody.setGravity(scene._gravity.x, scene._gravity.y, scene._gravity.z);
-                        }
-
-                        if (callback) {
-                            callback(null, scene);
-                        }
-                    };
-
-                    // preload scripts before opening scene
-                    this._preloadScripts(data, _loaded);
-                } else {
-                    if (callback) {
-                        callback(err);
-                    }
-                }
-            }.bind(this));
+            this._sceneRegistry.loadScene(url, callback);
         },
 
         _preloadScripts: function (sceneData, callback) {
@@ -931,6 +846,15 @@ pc.extend(pc, function () {
                 }
             } else {
                 callback(null);
+            }
+        },
+
+        // insert scene name/urls into the registry
+        _parseScenes: function (scenes) {
+            if (!scenes) return;
+
+            for (var i = 0; i < scenes.length; i++) {
+                this._sceneRegistry.add(scenes[i].name, scenes[i].url);
             }
         },
 

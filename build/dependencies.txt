@@ -106,6 +106,7 @@
 ../src/framework/script.js
 ../src/framework/application.js
 ../src/framework/stats.js
+../src/framework/scene-registry.js
 ../src/framework/components/registry.js
 ../src/framework/components/system.js
 ../src/framework/components/component.js
