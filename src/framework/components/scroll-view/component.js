@@ -27,7 +27,10 @@ pc.extend(pc, function () {
      * @property {pc.Entity} verticalScrollbarEntity The entity to be used as the vertical scrollbar. This entity must have a Scrollbar component.
      */
     var ScrollViewComponent = function ScrollViewComponent(system, entity) {
-        this._viewportReference = new pc.EntityReference(this, 'viewportEntity');
+        this._viewportReference = new pc.EntityReference(this, 'viewportEntity', {
+            'element#gain': this._onViewportElementGain
+        });
+
         this._contentReference = new pc.EntityReference(this, 'contentEntity', {
             'element#gain': this._onContentElementGain,
             'element#lose': this._onContentElementLose,
@@ -63,14 +66,17 @@ pc.extend(pc, function () {
             // TODO Handle scrollwheel events
         },
 
+        _onViewportElementGain: function() {
+            this._syncAll();
+        },
+
         _onContentElementGain: function() {
             this._destroyDragHelper();
             this._contentDragHelper = new pc.ElementDragHelper(this._contentReference.entity.element);
             this._contentDragHelper.on('drag:end', this._onContentDragEnd, this);
             this._contentDragHelper.on('drag:move', this._onContentDragMove, this);
 
-            this._syncContentPosition(pc.ORIENTATION_HORIZONTAL);
-            this._syncContentPosition(pc.ORIENTATION_VERTICAL);
+            this._syncAll();
         },
 
         _onContentElementLose: function() {
@@ -174,6 +180,15 @@ pc.extend(pc, function () {
                     console.warn('Unhandled scroll mode:' + this.scrollMode);
                     return scrollValue;
             }
+        },
+
+        _syncAll: function() {
+            this._syncContentPosition(pc.ORIENTATION_HORIZONTAL);
+            this._syncContentPosition(pc.ORIENTATION_VERTICAL);
+            this._syncScrollbarPosition(pc.ORIENTATION_HORIZONTAL);
+            this._syncScrollbarPosition(pc.ORIENTATION_VERTICAL);
+            this._syncScrollbarEnabledState(pc.ORIENTATION_HORIZONTAL);
+            this._syncScrollbarEnabledState(pc.ORIENTATION_VERTICAL);
         },
 
         _syncContentPosition: function(orientation) {
@@ -432,12 +447,7 @@ pc.extend(pc, function () {
             this._setScrollbarComponentsEnabled(true);
             this._setContentDraggingEnabled(true);
 
-            this._syncContentPosition(pc.ORIENTATION_HORIZONTAL);
-            this._syncContentPosition(pc.ORIENTATION_VERTICAL);
-            this._syncScrollbarPosition(pc.ORIENTATION_HORIZONTAL);
-            this._syncScrollbarPosition(pc.ORIENTATION_VERTICAL);
-            this._syncScrollbarEnabledState(pc.ORIENTATION_HORIZONTAL);
-            this._syncScrollbarEnabledState(pc.ORIENTATION_VERTICAL);
+            this._syncAll();
         },
 
         onDisable: function () {
