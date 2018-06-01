@@ -223,9 +223,9 @@ pc.extend(pc, function () {
      * @private
      * @function
      * @name  pc.SceneRegistry#loadScene
-     * @description
+     * @description Load the scene hierarchy and scene settings. This is an internal method used by the pc.Application
      * @param  {String}   url      The URL of the scene file
-     * @param  {Function} callback [description]
+     * @param  {Function} callback The function called after the settings are applied. Passed (err, scene) where err is null if no error occurred and scene is the pc.Scene
      */
     SceneRegistry.prototype.loadScene =  function (url, callback) {
         var self = this;
