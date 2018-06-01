@@ -43,13 +43,23 @@ pc.extend(pc, function () {
      * @description  Add a new item to the scene registry
      * @param {String} name The name of the scene
      * @param {String} url  The url of the scene file
+     * @return {Boolean} Returns true if the scene was successfully added to the registry, false otherwise
      */
     SceneRegistry.prototype.add = function (name, url) {
+        if (this._index.hasOwnProperty(name)) {
+            // #ifdef DEBUG
+            console.warn('pc.SceneRegistry: trying to add more than one scene called: ' + name);
+            // #endif
+            return false;
+        }
+
         var item = new pc.SceneRegistryItem(name, url)
 
         var i = this._list.push(item);
         this._index[item.name] = i-1;
         this._urlIndex[item.url] = i-1;
+
+        return true;
     };
 
     /**
