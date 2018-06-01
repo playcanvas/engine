@@ -702,6 +702,10 @@ pc.extend(pc, function () {
                 this._topMask = false;
             }
 
+            if (this._batchGroupId >= 0) {
+                this.system.app.batcher.markGroupDirty(this.batchGroupId);
+            }
+
             this.fire("disableelement");
         },
 
@@ -1318,8 +1322,8 @@ pc.extend(pc, function () {
             if (this._batchGroupId === value)
                 return;
 
-            if (this._batchGroupId >= 0) this.system.app.batcher._markGroupDirty(this._batchGroupId);
-            if (value >= 0) this.system.app.batcher._markGroupDirty(value);
+            if (this._batchGroupId >= 0) this.system.app.batcher.markGroupDirty(this._batchGroupId);
+            if (value >= 0) this.system.app.batcher.markGroupDirty(value);
 
             if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching

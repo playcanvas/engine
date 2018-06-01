@@ -374,8 +374,8 @@ pc.extend(pc, function () {
         },
 
         onSetBatchGroupId: function (name, oldValue, newValue) {
-            if (oldValue >= 0) this.system.app.batcher._markGroupDirty(oldValue);
-            if (newValue >= 0) this.system.app.batcher._markGroupDirty(newValue);
+            if (oldValue >= 0) this.system.app.batcher.markGroupDirty(oldValue);
+            if (newValue >= 0) this.system.app.batcher.markGroupDirty(newValue);
 
             if (newValue < 0 && oldValue >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching
@@ -735,6 +735,10 @@ pc.extend(pc, function () {
             if (this.system.app.scene.layers) {
                 this.system.app.scene.layers.off("add", this.onLayerAdded, this);
                 this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            }
+
+            if (this.batchGroupId >= 0) {
+                this.system.app.batcher.markGroupDirty(this.batchGroupId);
             }
 
             var model = this.data.model;
