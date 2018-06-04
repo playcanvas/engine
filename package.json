@@ -32,6 +32,7 @@
     "fs-extra": "^3.0.1",
     "google-closure-compiler": "^20180204.0.0",
     "preprocessor": "^1.4.0",
+    "sinon": "^5.0.10",
     "uglify-js": "^3.3.26"
   },
   "optionalDependencies": {

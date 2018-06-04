@@ -1,44 +1,9 @@
 (function() {
-    // ------------------------------------------------------------------------------
-    // Dummy component type used for testing the ability of an entity to successfully
-    // clone its components.
-
-    var DummyComponent = function DummyComponent() {};
-    DummyComponent = pc.inherits(DummyComponent, pc.Component);
-
-    var DummyComponentData = function DummyComponentData() {};
-    DummyComponentData = pc.inherits(DummyComponentData, pc.ComponentData);
-
-    var dummySchema = [
-        'enabled',
-        { name: 'myEntity1', type: 'entity' },
-        { name: 'myEntity2', type: 'entity' }
-    ];
-
-    var DummyComponentSystem = function DummyComponentSystem(app) {
-        this.id = 'dummy';
-        this.app = app;
-        app.systems.add(this.id, this);
-
-        this.ComponentType = DummyComponent;
-        this.DataType = DummyComponentData;
-        this.schema = dummySchema;
-    };
-    DummyComponentSystem = pc.inherits(DummyComponentSystem, pc.ComponentSystem);
-
-    pc.Component._buildAccessors(DummyComponent.prototype, dummySchema);
-
-    DummyComponentSystem.prototype.initializeComponentData = function (component, data, properties) {
-        DummyComponentSystem._super.initializeComponentData.call(this, component, data, dummySchema);
-    };
-
-    // ------------------------------------------------------------------------------
-
     module("pc.Entity", {
         setup: function () {
             this.app = new pc.Application(document.createElement("canvas"));
 
-            new DummyComponentSystem(this.app);
+            new pc.DummyComponentSystem(this.app);
         },
 
         createSubtree: function() {

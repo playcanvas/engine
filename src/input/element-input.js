@@ -75,12 +75,14 @@ pc.extend(pc, function () {
      * @description Create an instance of a pc.ElementInputEvent.
      * @param {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
      * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
+     * @param {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
      * @property {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
      * @property {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
      */
-    var ElementInputEvent = function (event, element) {
+    var ElementInputEvent = function (event, element, camera) {
         this.event = event;
         this.element = element;
+        this.camera = camera;
         this._stopPropagation = false;
     };
 
@@ -106,6 +108,7 @@ pc.extend(pc, function () {
      * @description Create an instance of a pc.ElementMouseEvent.
      * @param {MouseEvent} event The MouseEvent that was originally raised.
      * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
+     * @param {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
      * @param {Number} x The x coordinate
      * @param {Number} y The y coordinate
      * @param {Number} lastX The last x coordinate
@@ -119,7 +122,7 @@ pc.extend(pc, function () {
      * @property {Number} dy The amount of vertical movement of the cursor
      * @property {Number} wheel The amount of the wheel movement
      */
-    var ElementMouseEvent = function (event, element, x, y, lastX, lastY) {
+    var ElementMouseEvent = function (event, element, camera, x, y, lastX, lastY) {
         this.x = x;
         this.y = y;
 
@@ -161,13 +164,18 @@ pc.extend(pc, function () {
      * @description Create an instance of a pc.ElementTouchEvent.
      * @param {TouchEvent} event The TouchEvent that was originally raised.
      * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
+     * @param {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
+     * @param {Number} x The x coordinate of the touch that triggered the event
+     * @param {Number} y The y coordinate of the touch that triggered the event
      * @param {pc.ElementInput} input The pc.ElementInput instance
      * @property {Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
      * @property {Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
      */
-    var ElementTouchEvent = function (event, element, input) {
+    var ElementTouchEvent = function (event, element, camera, x, y, input) {
         this.touches = event.touches;
         this.changedTouches = event.changedTouches;
+        this.x = x;
+        this.y = y;
     };
 
     ElementTouchEvent = pc.inherits(ElementTouchEvent, ElementInputEvent);
@@ -365,7 +373,12 @@ pc.extend(pc, function () {
                     var element = this._getTargetElement(camera, coords.x, coords.y);
                     if (element) {
                         done++;
-                        touchedElements[event.changedTouches[j].identifier] = element;
+                        touchedElements[event.changedTouches[j].identifier] = {
+                            element: element,
+                            camera: camera,
+                            x: coords.x,
+                            y: coords.y
+                        };
                     }
                 }
 
@@ -384,11 +397,11 @@ pc.extend(pc, function () {
 
             for (var i = 0, len = event.changedTouches.length; i < len; i++) {
                 var touch = event.changedTouches[i];
-                var newTouchedElement = newTouchedElements[touch.identifier];
-                var oldTouchedElement = this._touchedElements[touch.identifier];
+                var newTouchInfo = newTouchedElements[touch.identifier];
+                var oldTouchInfo = this._touchedElements[touch.identifier];
 
-                if (newTouchedElement && newTouchedElement !== oldTouchedElement) {
-                    this._fireEvent(event.type, new ElementTouchEvent(event, newTouchedElement, this));
+                if (newTouchInfo && (!oldTouchInfo || newTouchInfo.element !== oldTouchInfo.element)) {
+                    this._fireEvent(event.type, new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, this));
                     this._touchesForWhichTouchLeaveHasFired[touch.identifier] = false;
                 }
             }
@@ -413,14 +426,19 @@ pc.extend(pc, function () {
 
             for (var i = 0, len = event.changedTouches.length; i < len; i++) {
                 var touch = event.changedTouches[i];
-                var element = this._touchedElements[touch.identifier];
-                if (!element)
+                var touchInfo = this._touchedElements[touch.identifier];
+                if (!touchInfo)
                     continue;
+
+                var element = touchInfo.element;
+                var camera = touchInfo.camera;
+                var x = touchInfo.x;
+                var y = touchInfo.y;
 
                 delete this._touchedElements[touch.identifier];
                 delete this._touchesForWhichTouchLeaveHasFired[touch.identifier];
 
-                this._fireEvent(event.type, new ElementTouchEvent(event, element, this));
+                this._fireEvent(event.type, new ElementTouchEvent(event, element, camera, x, y, this));
 
                 /*
                  * check if touch was released over previously touch
@@ -434,7 +452,7 @@ pc.extend(pc, function () {
                         if (hovered === element) {
 
                             if (!this._clickedEntities[element.entity.getGuid()]) {
-                                this._fireEvent('click', new ElementTouchEvent(event, element, this));
+                                this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, this));
                                 this._clickedEntities[element.entity.getGuid()] = true;
                             }
 
@@ -457,13 +475,15 @@ pc.extend(pc, function () {
 
             for (var i = 0, len = event.changedTouches.length; i < len; i++) {
                 var touch = event.changedTouches[i];
-                var newTouchedElement = newTouchedElements[touch.identifier];
-                var oldTouchedElement = this._touchedElements[touch.identifier];
+                var newTouchInfo = newTouchedElements[touch.identifier];
+                var oldTouchInfo = this._touchedElements[touch.identifier];
 
-                if (oldTouchedElement) {
+                if (oldTouchInfo) {
+                    var coords = this._calcTouchCoords(touch);
+
                     // Fire touchleave if we've left the previously touched element
-                    if (newTouchedElement !== oldTouchedElement && !this._touchesForWhichTouchLeaveHasFired[touch.identifier]) {
-                        this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchedElement, this));
+                    if ((!newTouchInfo || newTouchInfo.element !== oldTouchInfo.element) && !this._touchesForWhichTouchLeaveHasFired[touch.identifier]) {
+                        this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, this));
 
                         /*
                          * Flag that touchleave has been fired for this touch, so that we don't
@@ -476,7 +496,7 @@ pc.extend(pc, function () {
                         this._touchesForWhichTouchLeaveHasFired[touch.identifier] = true;
                     }
 
-                    this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchedElement, this));
+                    this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, this));
                 }
             }
         },
@@ -488,6 +508,7 @@ pc.extend(pc, function () {
             this._hoveredElement = null;
 
             var cameras = this.app.systems.camera.cameras;
+            var camera;
 
             /*
              * check cameras from last to front
@@ -495,7 +516,7 @@ pc.extend(pc, function () {
              * receive events first
              */
             for (var i = cameras.length - 1; i >= 0; i--) {
-                var camera = cameras[i];
+                camera = cameras[i];
 
                 element = this._getTargetElement(camera, targetX, targetY);
                 if (element)
@@ -504,7 +525,7 @@ pc.extend(pc, function () {
 
             // fire mouse event
             if (element) {
-                this._fireEvent(event.type, new ElementMouseEvent(event, element, targetX, targetY, this._lastX, this._lastY));
+                this._fireEvent(event.type, new ElementMouseEvent(event, element, camera, targetX, targetY, this._lastX, this._lastY));
 
                 this._hoveredElement = element;
 
@@ -517,12 +538,12 @@ pc.extend(pc, function () {
 
                 // mouseleave event
                 if (hovered) {
-                    this._fireEvent('mouseleave', new ElementMouseEvent(event, hovered, targetX, targetY, this._lastX, this._lastY));
+                    this._fireEvent('mouseleave', new ElementMouseEvent(event, hovered, camera, targetX, targetY, this._lastX, this._lastY));
                 }
 
                 // mouseenter event
                 if (this._hoveredElement) {
-                    this._fireEvent('mouseenter', new ElementMouseEvent(event, this._hoveredElement, targetX, targetY, this._lastX, this._lastY));
+                    this._fireEvent('mouseenter', new ElementMouseEvent(event, this._hoveredElement, camera, targetX, targetY, this._lastX, this._lastY));
                 }
             }
 
@@ -533,7 +554,7 @@ pc.extend(pc, function () {
 
                     // fire click event if it hasn't been fired already by the touchup handler
                     if (!this._clickedEntities || !this._clickedEntities[this._hoveredElement.entity.getGuid()]) {
-                        this._fireEvent('click', new ElementMouseEvent(event, this._hoveredElement, targetX, targetY, this._lastX, this._lastY));
+                        this._fireEvent('click', new ElementMouseEvent(event, this._hoveredElement, camera, targetX, targetY, this._lastX, this._lastY));
                     }
                 } else {
                     this._pressedElement = null;
