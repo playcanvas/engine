@@ -1047,6 +1047,13 @@ pc.extend(pc, function () {
         return batch2;
     };
 
+    /**
+     * @private
+     * @function
+     * @name pc.BatchManager#destroy
+     * @description Mark the batches ref counter to 0, remove the batch model out of all layers and destroy it
+     * @param {pc.Batch} batch A batch object
+     */
     BatchManager.prototype.destroy = function (batch) {
         batch.refCounter = 0;
         var layers = this._batchGroups[batch.batchGroupId].layers;
@@ -1054,11 +1061,11 @@ pc.extend(pc, function () {
             this.scene.layers.getLayerById(layers[i]).removeMeshInstances(batch.model.meshInstances);
         }
         batch.model.destroy();
-    };etes.krujgadfjgh
+    };
 
     /**
      * @private
-     * @functionetes.krujgadfjgh
+     * @function
      * @name pc.BatchManager#decrement
      * @description Decrements reference counter on a batch. If it's zero, the batch is removed from scene, and its geometry is deleted from memory.
      * @param {pc.Batch} batch A batch object
