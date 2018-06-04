@@ -22,6 +22,7 @@ pc.extend(pc, function () {
         this.model = null;
         this.dynamic = dynamic;
         this.batchGroupId = batchGroupId;
+        this.refCounter = 0;
     };
 
     /**
@@ -191,6 +192,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.BatchManager#removeGroup
      * @description Remove global batch group by id.
+     * Note, this traverses the entire scene graph and clears the batch group id from all components
      * @param {String} id Group id
      */
     BatchManager.prototype.removeGroup = function (id) {
@@ -208,7 +210,6 @@ pc.extend(pc, function () {
                 newBatchList.push(this._batchList[i]);
                 continue;
             }
-            this._batchList[i].refCounter = 1;
             this.destroy(this._batchList[i]);
         }
         this._batchList = newBatchList;
@@ -217,6 +218,7 @@ pc.extend(pc, function () {
         delete this._batchGroups[id];
     };
 
+    // traverse full hierarchy and clear the batch group id from all model, element and sprite components
     BatchManager.prototype._removeModelsFromBatchGroup = function (node, id) {
         if (!node.enabled) return;
 
@@ -235,6 +237,10 @@ pc.extend(pc, function () {
         }
     };
 
+    // traverse scene hierarchy down from `node` and collect all components that are marked
+    // with a batch group id. Remove from layers any models that these components contains.
+    // Fill the `groupMeshInstances` with all the mesh instances to be included in the batch groups,
+    // indexed by batch group id.
     BatchManager.prototype._collectAndRemoveModels = function (node, groupMeshInstances, groupIds) {
         if (!node.enabled) return;
 
@@ -314,7 +320,15 @@ pc.extend(pc, function () {
         }
     };
 
-    BatchManager.prototype._markGroupDirty = function (id) {
+    /**
+     * @private
+     * @function
+     * @name pc.BatchManager.markGroupDirty
+     * @description Mark a specific batch group as dirty. Dirty groups are re-batched before the next frame is rendered.
+     * Note, re-batching a group is a potentially expensive operation
+     * @param  {Number} id Batch Group ID to mark as dirty
+     */
+    BatchManager.prototype.markGroupDirty = function (id) {
         if (this._dirtyGroups.indexOf(id) < 0) {
             this._dirtyGroups.push(id);
         }
@@ -350,7 +364,6 @@ pc.extend(pc, function () {
 
             // delete old batches
             for (i = 0; i < this._batchList.length; i++) {
-                this._batchList[i].refCounter = 1;
                 this.destroy(this._batchList[i]);
             }
             this._batchList.length = 0;
@@ -368,7 +381,6 @@ pc.extend(pc, function () {
                     newBatchList.push(this._batchList[i]);
                     continue;
                 }
-                this._batchList[i].refCounter = 1;
                 this.destroy(this._batchList[i]);
             }
             this._batchList = newBatchList;
@@ -1029,19 +1041,32 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @private
      * @function
      * @name pc.BatchManager#destroy
-     * @description Decrements reference counter on a batch. If it's zero, the batch is removed from scene, and its geometry is deleted from memory.
+     * @description Mark the batches ref counter to 0, remove the batch model out of all layers and destroy it
      * @param {pc.Batch} batch A batch object
      */
     BatchManager.prototype.destroy = function (batch) {
+        batch.refCounter = 0;
+        var layers = this._batchGroups[batch.batchGroupId].layers;
+        for (var i = 0; i < layers.length; i++) {
+            this.scene.layers.getLayerById(layers[i]).removeMeshInstances(batch.model.meshInstances);
+        }
+        batch.model.destroy();
+    };
+
+    /**
+     * @private
+     * @function
+     * @name pc.BatchManager#decrement
+     * @description Decrements reference counter on a batch. If it's zero, the batch is removed from scene, and its geometry is deleted from memory.
+     * @param {pc.Batch} batch A batch object
+     */
+    BatchManager.prototype.decrement = function (batch) {
         batch.refCounter--;
         if (batch.refCounter === 0) {
-            var layers = this._batchGroups[batch.batchGroupId].layers;
-            for (var i = 0; i < layers.length; i++) {
-                this.scene.layers.getLayerById(layers[i]).removeMeshInstances(batch.model.meshInstances);
-            }
-            batch.model.destroy();
+            this.destroy(batch);
         }
     };
 
@@ -1057,7 +1082,7 @@ pc.extend(pc, function () {
         batch.refCounter = entities.length;
         var self = this;
         var callback = function () {
-            self.destroy(batch);
+            self.decrement(batch);
         };
         for (var i = 0; i < entities.length; i++) {
             entities[i].once('destroy', callback);
