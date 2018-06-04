@@ -481,10 +481,8 @@ pc.extend(pc, function () {
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
-        /*
-         * Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
-         * in this._hiddenAttr.
-         */
+        // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
+        // in this._hiddenAttr.
         if (document.hidden !== undefined) {
             this._hiddenAttr = 'hidden';
             document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
@@ -640,16 +638,16 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Application#getSceneUrl
          * @description Look up the URL of the scene hierarchy file via the name given to the scene in the editor. Use this to in {@link pc.Application#loadSceneHierarchy}.
-         * @param  {String} name The name of the scene file given in the Editor
-         * @return {String}      The URL of the scene file
+         * @param {String} name The name of the scene file given in the Editor
+         * @returns {String} The URL of the scene file
          */
         getSceneUrl: function (name) {
             var entry = this._sceneRegistry.find(name);
             if (entry) {
                 return entry.url;
-            } else {
-                return null;
             }
+            return null;
+
         },
 
         /**
@@ -765,10 +763,8 @@ pc.extend(pc, function () {
             this.setCanvasResolution(props.resolutionMode, this._width, this._height);
             this.setCanvasFillMode(props.fillMode, this._width, this._height);
 
-            /*
-             * if VR is enabled in the project and there is no native VR support
-             * load the polyfill
-             */
+            // if VR is enabled in the project and there is no native VR support
+            // load the polyfill
             if (props.vr && props.vrPolyfillUrl) {
                 if (!pc.VrManager.isSupported || pc.platform.android) {
                     props.libraries.push(props.vrPolyfillUrl);
@@ -783,10 +779,8 @@ pc.extend(pc, function () {
                 for (var key in props.layers) {
                     var data = props.layers[key];
                     data.id = parseInt(key, 10);
-                    /*
-                     * depth layer should only be enabled when needed
-                     * by incrementing its ref counter
-                     */
+                    // depth layer should only be enabled when needed
+                    // by incrementing its ref counter
                     data.enabled = data.id !== pc.LAYERID_DEPTH;
                     layers[key] = new pc.Layer(data);
                 }

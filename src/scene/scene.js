@@ -272,22 +272,20 @@
 
         // next are undocumented
         SHADER_SHADOW: 3, // PCF3
-        /*
-         * 4: VSM8,
-         * 5: VSM16,
-         * 6: VSM32,
-         * 7: PCF5,
-         * 8: PCF3 POINT
-         * 9: VSM8 POINT,
-         * 10: VSM16 POINT,
-         * 11: VSM32 POINT,
-         * 12: PCF5 POINT
-         * 13: PCF3 SPOT
-         * 14: VSM8 SPOT,
-         * 15: VSM16 SPOT,
-         * 16: VSM32 SPOT,
-         * 17: PCF5 SPOT
-         */
+        // 4: VSM8,
+        // 5: VSM16,
+        // 6: VSM32,
+        // 7: PCF5,
+        // 8: PCF3 POINT
+        // 9: VSM8 POINT,
+        // 10: VSM16 POINT,
+        // 11: VSM32 POINT,
+        // 12: PCF5 POINT
+        // 13: PCF3 SPOT
+        // 14: VSM8 SPOT,
+        // 15: VSM16 SPOT,
+        // 16: VSM32 SPOT,
+        // 17: PCF5 SPOT
         SHADER_PICK: 18,
 
         BAKE_COLOR: 0,
@@ -617,10 +615,8 @@ pc.extend(pc, function () {
         }
     });
 
-    /*
-     * some backwards compatibility
-     * drawCalls will now return list of all active composition mesh instances
-     */
+    // some backwards compatibility
+    // drawCalls will now return list of all active composition mesh instances
     Object.defineProperty(Scene.prototype, 'drawCalls', {
         get: function () {
             var drawCalls = this.layers._meshInstances;
@@ -734,10 +730,8 @@ pc.extend(pc, function () {
         if (!cubemaps)
             cubemaps = [null, null, null, null, null, null, null];
 
-        /*
-         * check if any values actually changed
-         * to prevent unnecessary recompilations
-         */
+        // check if any values actually changed
+        // to prevent unnecessary recompilations
 
         var different = false;
 

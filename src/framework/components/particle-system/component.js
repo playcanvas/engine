@@ -496,10 +496,8 @@ pc.extend(pc, function () {
             if (!this.emitter) {
                 var mesh = data.mesh;
 
-                /*
-                 * mesh might be an asset id of an asset
-                 * that hasn't been loaded yet
-                 */
+                // mesh might be an asset id of an asset
+                // that hasn't been loaded yet
                 if (!(mesh instanceof pc.Mesh))
                     mesh = null;
 
@@ -679,10 +677,8 @@ pc.extend(pc, function () {
                 return true;
             }
 
-            /*
-             * possible bug here what happens if the non looping emitter
-             * was paused in the meantime?
-             */
+            // possible bug here what happens if the non looping emitter
+            // was paused in the meantime?
             return Date.now() <= this.emitter.endTime;
         },
 

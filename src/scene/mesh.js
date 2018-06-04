@@ -539,15 +539,13 @@ pc.extend(pc, function () {
     };
 
     function getKey(layer, blendType, isCommand, materialId) {
-        /*
-         * Key definition:
-         * Bit
-         * 31      : sign bit (leave)
-         * 27 - 30 : layer
-         * 26      : translucency type (opaque/transparent)
-         * 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
-         * 0 - 24  : Material ID (if oqaque) or 0 (if transparent - will be depth)
-         */
+        // Key definition:
+        // Bit
+        // 31      : sign bit (leave)
+        // 27 - 30 : layer
+        // 26      : translucency type (opaque/transparent)
+        // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
+        // 0 - 24  : Material ID (if oqaque) or 0 (if transparent - will be depth)
         return ((layer & 0x0f) << 27) |
                ((blendType === pc.BLEND_NONE ? 1 : 0) << 26) |
                ((isCommand ? 1 : 0) << 25) |

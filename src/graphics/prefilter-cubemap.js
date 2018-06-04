@@ -165,14 +165,12 @@ pc.extend(pc, (function () {
             }
         }
 
-        /*
-         * Filter
-         * [Prepass]: just downsample
-         * Pass 0: just filter
-         * Pass 1: filter + edge fixup
-         * Pass 2: filter + encode to RGBM
-         * Pass 3: filter + edge fixup + encode to RGBM
-         */
+        // Filter
+        // [Prepass]: just downsample
+        // Pass 0: just filter
+        // Pass 1: filter + edge fixup
+        // Pass 2: filter + encode to RGBM
+        // Pass 3: filter + edge fixup + encode to RGBM
         for (pass = startPass; pass < cmapsList.length; pass++) {
             if (cmapsList[pass] != null) {
                 if (pass > 1 && rgbmSource) {
@@ -276,10 +274,8 @@ pc.extend(pc, (function () {
 
         var invResolution = 1.0 / size;
 
-        /*
-         * U and V are the -1..1 texture coordinate on the current face.
-         * Get projected area for this texel
-         */
+        // U and V are the -1..1 texture coordinate on the current face.
+        // Get projected area for this texel
         var x0 = _u - invResolution;
         var y0 = _v - invResolution;
         var x1 = _u + invResolution;

@@ -46,12 +46,12 @@ pc.extend(pc, function () {
     };
 
     pc.extend(ElementDragHelper.prototype, {
-        _toggleLifecycleListeners: function(onOrOff) {
+        _toggleLifecycleListeners: function (onOrOff) {
             this._element[onOrOff]('mousedown', this._onMouseDownOrTouchStart, this);
             this._element[onOrOff]('touchstart', this._onMouseDownOrTouchStart, this);
         },
 
-        _toggleDragListeners: function(onOrOff) {
+        _toggleDragListeners: function (onOrOff) {
             var isOn = onOrOff === 'on';
             var addOrRemoveEventListener = isOn ? 'addEventListener' : 'removeEventListener';
 
@@ -79,7 +79,7 @@ pc.extend(pc, function () {
             this._hasDragListeners = isOn;
         },
 
-        _onMouseDownOrTouchStart: function(event) {
+        _onMouseDownOrTouchStart: function (event) {
             if (this._element && !this._isDragging && this.enabled) {
                 this._dragCamera = event.camera;
                 this._calculateDragScale();
@@ -97,7 +97,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onMouseUpOrTouchEnd: function() {
+        _onMouseUpOrTouchEnd: function () {
             if (this._isDragging) {
                 this._isDragging = false;
                 this._toggleDragListeners('off');
@@ -106,7 +106,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _screenToLocal: function(event) {
+        _screenToLocal: function (event) {
             this._determineInputPosition(event);
             this._chooseRayOriginAndDirection();
 
@@ -131,7 +131,7 @@ pc.extend(pc, function () {
             return null;
         },
 
-        _determineInputPosition: function(event) {
+        _determineInputPosition: function (event) {
             if (typeof event.x !== 'undefined' && typeof event.y !== 'undefined') {
                 _inputScreenPosition.x = event.x;
                 _inputScreenPosition.y = event.y;
@@ -143,7 +143,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _chooseRayOriginAndDirection: function() {
+        _chooseRayOriginAndDirection: function () {
             if (this._element.screen && this._element.screen.screen.screenSpace) {
                 _rayOrigin.set(_inputScreenPosition.x, -_inputScreenPosition.y, 0);
                 _rayDirection.set(0, 0, -1);
@@ -154,7 +154,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _calculateDragScale: function() {
+        _calculateDragScale: function () {
             var current = this._element.entity;
             var screen = this._element.screen && this._element.screen.screen;
             var isWithin2DScreen = screen && screen.screenSpace;
@@ -177,7 +177,7 @@ pc.extend(pc, function () {
             dragScale.data[2] = 1 / dragScale.data[2];
         },
 
-        _onMove: function(event) {
+        _onMove: function (event) {
             if (this._element && this._isDragging && this.enabled && this._element.enabled && this._element.entity.enabled) {
                 var currentMousePosition = this._screenToLocal(event);
 
@@ -208,7 +208,7 @@ pc.extend(pc, function () {
             return this._enabled;
         },
 
-        set: function(value) {
+        set: function (value) {
             this._enabled = value;
         }
     });

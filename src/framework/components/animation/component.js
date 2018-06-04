@@ -56,10 +56,8 @@ pc.extend(pc, function () {
             if (data.model) {
                 data.blending = blendTime > 0 && data.prevAnim;
                 if (data.blending) {
-                    /*
-                     * Blend from the current time of the current animation to the start of
-                     * the newly specified animation over the specified blend time period.
-                     */
+                    // Blend from the current time of the current animation to the start of
+                    // the newly specified animation over the specified blend time period.
                     data.blendTime = blendTime;
                     data.blendTimeRemaining = blendTime;
                     data.fromSkel.animation = data.animations[data.prevAnim];

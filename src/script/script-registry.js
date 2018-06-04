@@ -57,10 +57,8 @@ pc.extend(pc, function () {
         this.fire('add', script.__name, script);
         this.fire('add:' + script.__name, script);
 
-        /*
-         * for all components awaiting Script Type
-         * create script instance
-         */
+        // for all components awaiting Script Type
+        // create script instance
         setTimeout(function () {
             if (!self._scripts.hasOwnProperty(script.__name))
                 return;

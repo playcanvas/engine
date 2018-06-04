@@ -58,7 +58,7 @@ pc.extend(pc, function () {
     ScrollViewComponent = pc.inherits(ScrollViewComponent, pc.Component);
 
     pc.extend(ScrollViewComponent.prototype, {
-        _toggleLifecycleListeners: function(onOrOff, system) {
+        _toggleLifecycleListeners: function (onOrOff, system) {
             this[onOrOff]('set_horizontal', this._onSetHorizontalScrollingEnabled, this);
             this[onOrOff]('set_vertical', this._onSetVerticalScrollingEnabled, this);
 
@@ -70,7 +70,7 @@ pc.extend(pc, function () {
             // TODO Handle scrollwheel events
         },
 
-        _toggleElementListeners: function(onOrOff) {
+        _toggleElementListeners: function (onOrOff) {
             if (this.entity.element) {
                 if (onOrOff === 'on' && this._hasElementListeners) {
                     return;
@@ -82,23 +82,23 @@ pc.extend(pc, function () {
             }
         },
 
-        _onElementComponentAdd: function(entity) {
+        _onElementComponentAdd: function (entity) {
             if (this.entity === entity) {
                 this._toggleElementListeners('on');
             }
         },
 
-        _onElementComponentRemove: function(entity) {
+        _onElementComponentRemove: function (entity) {
             if (this.entity === entity) {
                 this._toggleElementListeners('off');
             }
         },
 
-        _onViewportElementGain: function() {
+        _onViewportElementGain: function () {
             this._syncAll();
         },
 
-        _onContentElementGain: function() {
+        _onContentElementGain: function () {
             this._destroyDragHelper();
             this._contentDragHelper = new pc.ElementDragHelper(this._contentReference.entity.element);
             this._contentDragHelper.on('drag:end', this._onContentDragEnd, this);
@@ -107,58 +107,58 @@ pc.extend(pc, function () {
             this._syncAll();
         },
 
-        _onContentElementLose: function() {
+        _onContentElementLose: function () {
             this._destroyDragHelper();
         },
 
-        _onContentDragEnd: function() {
+        _onContentDragEnd: function () {
             this._prevContentDragPosition = null;
         },
 
-        _onContentDragMove: function(position) {
+        _onContentDragMove: function (position) {
             if (this._contentReference.entity && this.enabled && this.entity.enabled) {
                 this._setScrollFromContentPosition(position);
                 this._setVelocityFromContentPositionDelta(position);
             }
         },
 
-        _onSetContentOrViewportSize: function() {
+        _onSetContentOrViewportSize: function () {
             this._syncAll();
         },
 
-        _onSetHorizontalScrollbarValue: function(scrollValueX) {
+        _onSetHorizontalScrollbarValue: function (scrollValueX) {
             if (!this._scrollbarUpdateFlags[pc.ORIENTATION_HORIZONTAL] && this.enabled && this.entity.enabled) {
                 this._velocity.set(0, 0, 0);
                 this._onSetScroll(scrollValueX, null);
             }
         },
 
-        _onSetVerticalScrollbarValue: function(scrollValueY) {
+        _onSetVerticalScrollbarValue: function (scrollValueY) {
             if (!this._scrollbarUpdateFlags[pc.ORIENTATION_VERTICAL] && this.enabled && this.entity.enabled) {
                 this._velocity.set(0, 0, 0);
                 this._onSetScroll(null, scrollValueY);
             }
         },
 
-        _onSetHorizontalScrollingEnabled: function() {
+        _onSetHorizontalScrollingEnabled: function () {
             this._syncScrollbarEnabledState(pc.ORIENTATION_HORIZONTAL);
         },
 
-        _onSetVerticalScrollingEnabled: function() {
+        _onSetVerticalScrollingEnabled: function () {
             this._syncScrollbarEnabledState(pc.ORIENTATION_VERTICAL);
         },
 
-        _onHorizontalScrollbarGain: function() {
+        _onHorizontalScrollbarGain: function () {
             this._syncScrollbarEnabledState(pc.ORIENTATION_HORIZONTAL);
             this._syncScrollbarPosition(pc.ORIENTATION_HORIZONTAL);
         },
 
-        _onVerticalScrollbarGain: function() {
+        _onVerticalScrollbarGain: function () {
             this._syncScrollbarEnabledState(pc.ORIENTATION_VERTICAL);
             this._syncScrollbarPosition(pc.ORIENTATION_VERTICAL);
         },
 
-        _onSetScroll: function(x, y) {
+        _onSetScroll: function (x, y) {
             var hasChanged = false;
             hasChanged |= this._updateAxis(x, 'x', pc.ORIENTATION_HORIZONTAL);
             hasChanged |= this._updateAxis(y, 'y', pc.ORIENTATION_VERTICAL);
@@ -168,7 +168,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _updateAxis: function(scrollValue, axis, orientation) {
+        _updateAxis: function (scrollValue, axis, orientation) {
             var hasChanged = (scrollValue !== null && Math.abs(scrollValue - this._scroll[axis]) > 1e-5);
 
             if (hasChanged) {
@@ -180,7 +180,7 @@ pc.extend(pc, function () {
             return hasChanged;
         },
 
-        _determineNewScrollValue: function(scrollValue, axis, orientation) {
+        _determineNewScrollValue: function (scrollValue, axis, orientation) {
             // If scrolling is disabled for the selected orientation, force the
             // scroll position to remain at the current value
             if (!this._getScrollingEnabled(orientation)) {
@@ -204,7 +204,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _syncAll: function() {
+        _syncAll: function () {
             this._syncContentPosition(pc.ORIENTATION_HORIZONTAL);
             this._syncContentPosition(pc.ORIENTATION_VERTICAL);
             this._syncScrollbarPosition(pc.ORIENTATION_HORIZONTAL);
@@ -213,7 +213,7 @@ pc.extend(pc, function () {
             this._syncScrollbarEnabledState(pc.ORIENTATION_VERTICAL);
         },
 
-        _syncContentPosition: function(orientation) {
+        _syncContentPosition: function (orientation) {
             var axis = this._getAxis(orientation);
             var sign = this._getSign(orientation);
             var contentEntity = this._contentReference.entity;
@@ -226,7 +226,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _syncScrollbarPosition: function(orientation) {
+        _syncScrollbarPosition: function (orientation) {
             var axis = this._getAxis(orientation);
             var scrollbarEntity = this._scrollbarReferences[orientation].entity;
 
@@ -245,7 +245,7 @@ pc.extend(pc, function () {
         // Toggles the scrollbar entities themselves to be enabled/disabled based
         // on whether the user has enabled horizontal/vertical scrolling on the
         // scroll view.
-        _syncScrollbarEnabledState: function(orientation) {
+        _syncScrollbarEnabledState: function (orientation) {
             var entity = this._scrollbarReferences[orientation].entity;
 
             if (entity) {
@@ -268,18 +268,18 @@ pc.extend(pc, function () {
             }
         },
 
-        _contentIsLargerThanViewport: function(orientation) {
+        _contentIsLargerThanViewport: function (orientation) {
             return this._getContentSize(orientation) > this._getViewportSize(orientation);
         },
 
-        _contentPositionToScrollValue: function(contentPosition) {
+        _contentPositionToScrollValue: function (contentPosition) {
             return _tempScrollValue.set(
                 contentPosition.x / this._getMaxOffset(pc.ORIENTATION_HORIZONTAL),
                 contentPosition.y / -this._getMaxOffset(pc.ORIENTATION_VERTICAL)
             );
         },
 
-        _getMaxOffset: function(orientation) {
+        _getMaxOffset: function (orientation) {
             var viewportSize = this._getViewportSize(orientation);
             var contentSize = this._getContentSize(orientation);
 
@@ -290,11 +290,11 @@ pc.extend(pc, function () {
             return viewportSize - contentSize;
         },
 
-        _getMaxScrollValue: function(orientation) {
+        _getMaxScrollValue: function (orientation) {
             return this._contentIsLargerThanViewport(orientation) ? 1 : 0;
         },
 
-        _getScrollbarHandleSize: function(axis, orientation) {
+        _getScrollbarHandleSize: function (axis, orientation) {
             var viewportSize = this._getViewportSize(orientation);
             var contentSize = this._getContentSize(orientation);
 
@@ -313,15 +313,15 @@ pc.extend(pc, function () {
             return handleSize / (1 + Math.abs(overshoot));
         },
 
-        _getViewportSize: function(orientation) {
+        _getViewportSize: function (orientation) {
             return this._getSize(orientation, this._viewportReference);
         },
 
-        _getContentSize: function(orientation) {
+        _getContentSize: function (orientation) {
             return this._getSize(orientation, this._contentReference);
         },
 
-        _getSize: function(orientation, entityReference) {
+        _getSize: function (orientation, entityReference) {
             if (entityReference.entity && entityReference.entity.element) {
                 return entityReference.entity.element[this._getCalculatedDimension(orientation)];
             }
@@ -329,7 +329,7 @@ pc.extend(pc, function () {
             return 0;
         },
 
-        _getScrollingEnabled: function(orientation) {
+        _getScrollingEnabled: function (orientation) {
             if (orientation === pc.ORIENTATION_HORIZONTAL) {
                 return this.horizontal;
             } else if (orientation === pc.ORIENTATION_VERTICAL) {
@@ -339,7 +339,7 @@ pc.extend(pc, function () {
             console.warn('Unrecognized orientation: ' + orientation);
         },
 
-        _getScrollbarVisibility: function(orientation) {
+        _getScrollbarVisibility: function (orientation) {
             if (orientation === pc.ORIENTATION_HORIZONTAL) {
                 return this.horizontalScrollbarVisibility;
             } else if (orientation === pc.ORIENTATION_VERTICAL) {
@@ -349,15 +349,15 @@ pc.extend(pc, function () {
             console.warn('Unrecognized orientation: ' + orientation);
         },
 
-        _getSign: function(orientation) {
+        _getSign: function (orientation) {
             return orientation === pc.ORIENTATION_HORIZONTAL ? 1 : -1;
         },
 
-        _getAxis: function(orientation) {
+        _getAxis: function (orientation) {
             return orientation === pc.ORIENTATION_HORIZONTAL ? 'x' : 'y';
         },
 
-        _getCalculatedDimension: function(orientation) {
+        _getCalculatedDimension: function (orientation) {
             return orientation === pc.ORIENTATION_HORIZONTAL ? 'calculatedWidth' : 'calculatedHeight';
         },
 
@@ -367,7 +367,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onUpdate: function() {
+        _onUpdate: function () {
             if (this._contentReference.entity && this.enabled && this.entity.enabled) {
                 this._updateVelocity();
                 this._syncScrollbarEnabledState(pc.ORIENTATION_HORIZONTAL);
@@ -375,7 +375,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _updateVelocity: function() {
+        _updateVelocity: function () {
             if (!this._isDragging()) {
                 if (this.scrollMode === pc.SCROLL_MODE_BOUNCE) {
                     if (this._hasOvershoot('x', pc.ORIENTATION_HORIZONTAL)) {
@@ -401,11 +401,11 @@ pc.extend(pc, function () {
             }
         },
 
-        _hasOvershoot: function(axis, orientation) {
+        _hasOvershoot: function (axis, orientation) {
             return Math.abs(this._toOvershoot(this.scroll[axis], orientation)) > 0.001;
         },
 
-        _toOvershoot: function(scrollValue, orientation) {
+        _toOvershoot: function (scrollValue, orientation) {
             var maxScrollValue = this._getMaxScrollValue(orientation);
 
             if (scrollValue < 0) {
@@ -417,7 +417,7 @@ pc.extend(pc, function () {
             return 0;
         },
 
-        _setVelocityFromOvershoot: function(scrollValue, axis, orientation) {
+        _setVelocityFromOvershoot: function (scrollValue, axis, orientation) {
             var overshootValue = this._toOvershoot(scrollValue, orientation);
             var overshootPixels = overshootValue * this._getMaxOffset(orientation) * this._getSign(orientation);
 
@@ -430,7 +430,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _setVelocityFromContentPositionDelta: function(position) {
+        _setVelocityFromContentPositionDelta: function (position) {
             if (this._prevContentDragPosition) {
                 this._velocity.sub2(position, this._prevContentDragPosition);
                 this._prevContentDragPosition.copy(position);
@@ -440,16 +440,16 @@ pc.extend(pc, function () {
             }
         },
 
-        _setScrollFromContentPosition: function(position) {
+        _setScrollFromContentPosition: function (position) {
             var scrollValue = this._contentPositionToScrollValue(position);
             this._onSetScroll(scrollValue.x, scrollValue.y);
         },
 
-        _isDragging: function() {
+        _isDragging: function () {
             return this._contentDragHelper && this._contentDragHelper.isDragging;
         },
 
-        _setScrollbarComponentsEnabled: function(enabled) {
+        _setScrollbarComponentsEnabled: function (enabled) {
             if (this._scrollbarReferences[pc.ORIENTATION_HORIZONTAL].hasComponent('scrollbar')) {
                 this._scrollbarReferences[pc.ORIENTATION_HORIZONTAL].entity.scrollbar.enabled = enabled;
             }
@@ -459,7 +459,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _setContentDraggingEnabled: function(enabled) {
+        _setContentDraggingEnabled: function (enabled) {
             if (this._contentDragHelper) {
                 this._contentDragHelper.enabled = enabled;
             }
@@ -489,7 +489,7 @@ pc.extend(pc, function () {
             return this._scroll;
         },
 
-        set: function(value) {
+        set: function (value) {
             this._onSetScroll(value.x, value.y);
         }
     });

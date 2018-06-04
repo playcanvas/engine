@@ -827,17 +827,15 @@ pc.extend(pc, function () {
             // updateShader is also called by pc.Scene when all shaders need to be updated
             this.material.updateShader = function () {
 
-                /*
-                 * The app works like this:
-                 * 1. Emitter init
-                 * 2. Update. No camera is assigned to emitters
-                 * 3. Render; activeCamera = camera; shader init
-                 * 4. Update. activeCamera is set to emitters
-                 * -----
-                 * The problem with 1st frame render is that we init the shader without having any camera set to emitter -
-                 * so wrong shader is being compiled.
-                 * To fix it, we need to check activeCamera!=emitter.camera in shader init too
-                 */
+                // The app works like this:
+                // 1. Emitter init
+                // 2. Update. No camera is assigned to emitters
+                // 3. Render; activeCamera = camera; shader init
+                // 4. Update. activeCamera is set to emitters
+                // -----
+                // The problem with 1st frame render is that we init the shader without having any camera set to emitter -
+                // so wrong shader is being compiled.
+                // To fix it, we need to check activeCamera!=emitter.camera in shader init too
                 if (this.emitter.scene) {
                     if (this.emitter.camera != this.emitter.scene._activeCamera) {
                         this.emitter.camera = this.emitter.scene._activeCamera;
@@ -1372,18 +1370,14 @@ pc.extend(pc, function () {
                         }
                     } else {
                         if (life >= particleLifetime) {
-                            /*
-                             * respawn particle by moving it's life back to zero.
-                             * OR below zero, if there are still unspawned particles to be emitted before this one.
-                             * such thing happens when you have an enormous amount of particles with short lifetime.
-                             */
+                            // respawn particle by moving it's life back to zero.
+                            // OR below zero, if there are still unspawned particles to be emitted before this one.
+                            // such thing happens when you have an enormous amount of particles with short lifetime.
                             life -= Math.max(particleLifetime, (this.numParticles - 1) * particleRate);
 
-                            /*
-                             * dead particles in a single-shot system continue their paths, but marked as invisible.
-                             * it is necessary for keeping correct separation between particles, based on emission rate.
-                             * dying again in a looped system they will become visible on next respawn.
-                             */
+                            // dead particles in a single-shot system continue their paths, but marked as invisible.
+                            // it is necessary for keeping correct separation between particles, based on emission rate.
+                            // dying again in a looped system they will become visible on next respawn.
                             this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * 2 * particleTexChannels] = this.loop ? 1 : -1;
                         }
                         if (life < 0 && this.loop) {
@@ -1419,10 +1413,8 @@ pc.extend(pc, function () {
                     }
                 }
 
-                /*
-                 * Particle sorting
-                 * TODO: optimize
-                 */
+                // Particle sorting
+                // TODO: optimize
                 if (this.sort > pc.PARTICLESORT_NONE && this.camera) {
                     var particleDistance = this.particleDistance;
                     for (i = 0; i < this.numParticles; i++) {
@@ -1466,12 +1458,10 @@ pc.extend(pc, function () {
             if (this.rtParticleTexIN) this.rtParticleTexIN.destroy();
             if (this.rtParticleTexOUT) this.rtParticleTexOUT.destroy();
 
-            /*
-             * TODO: delete shaders from cache with reference counting
-             * if (this.shaderParticleUpdateRespawn) this.shaderParticleUpdateRespawn.destroy();
-             * if (this.shaderParticleUpdateNoRespawn) this.shaderParticleUpdateNoRespawn.destroy();
-             * if (this.shaderParticleUpdateOnStop) this.shaderParticleUpdateOnStop.destroy();
-             */
+            // TODO: delete shaders from cache with reference counting
+            // if (this.shaderParticleUpdateRespawn) this.shaderParticleUpdateRespawn.destroy();
+            // if (this.shaderParticleUpdateNoRespawn) this.shaderParticleUpdateNoRespawn.destroy();
+            // if (this.shaderParticleUpdateOnStop) this.shaderParticleUpdateOnStop.destroy();
 
             this.particleTexIN = null;
             this.particleTexOUT = null;

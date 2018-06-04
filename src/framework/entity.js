@@ -296,11 +296,9 @@ pc.extend(pc, function () {
                 child.destroy();
             }
 
-            /*
-             * make sure child._parent is null because
-             * we have removed it from the children array before calling
-             * destroy on it
-             */
+            // make sure child._parent is null because
+            // we have removed it from the children array before calling
+            // destroy on it
             child._parent = null;
 
             child = children.shift();
@@ -360,17 +358,15 @@ pc.extend(pc, function () {
         return c;
     };
 
-    /*
-     * When an entity that has properties that contain references to other
-     * entities within its subtree is duplicated, the expectation of the
-     * user is likely that those properties will be updated to point to
-     * the corresponding entities within the newly-created duplicate subtree.
-     *
-     * To handle this, we need to search for properties that refer to entities
-     * within the old duplicated structure, find their newly-cloned partners
-     * within the new structure, and update the references accordingly. This
-     * function implements that requirement.
-     */
+    // When an entity that has properties that contain references to other
+    // entities within its subtree is duplicated, the expectation of the
+    // user is likely that those properties will be updated to point to
+    // the corresponding entities within the newly-created duplicate subtree.
+    //
+    // To handle this, we need to search for properties that refer to entities
+    // within the old duplicated structure, find their newly-cloned partners
+    // within the new structure, and update the references accordingly. This
+    // function implements that requirement.
     function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, newEntity, duplicatedIdsMap) {
         // TODO Would be nice to also make this work for entity script attributes
 
@@ -398,12 +394,10 @@ pc.extend(pc, function () {
                 });
             });
 
-            /*
-             * Recurse into children. Note that we continue to pass in the same `oldSubtreeRoot`,
-             * in order to correctly handle cases where a child has an entity reference
-             * field that points to a parent or other ancestor that is still within the
-             * duplicated subtree.
-             */
+            // Recurse into children. Note that we continue to pass in the same `oldSubtreeRoot`,
+            // in order to correctly handle cases where a child has an entity reference
+            // field that points to a parent or other ancestor that is still within the
+            // duplicated subtree.
             var _old = oldEntity.children.filter(function (e) {
                 return (e instanceof pc.Entity);
             });

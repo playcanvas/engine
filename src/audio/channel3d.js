@@ -95,10 +95,8 @@ pc.extend(pc, function () {
         var offset = new pc.Vec3();
 
 
-        /*
-         * Fall off function which should be the same as the one in the Web Audio API
-         * Taken from https://developer.mozilla.org/en-US/docs/Web/API/PannerNode/distanceModel
-         */
+        // Fall off function which should be the same as the one in the Web Audio API
+        // Taken from https://developer.mozilla.org/en-US/docs/Web/API/PannerNode/distanceModel
         var fallOff = function (posOne, posTwo, refDistance, maxDistance, rolloffFactor, distanceModel) {
             offset = offset.sub2(posOne, posTwo);
             var distance = offset.length();

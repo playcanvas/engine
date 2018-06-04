@@ -211,10 +211,8 @@ pc.extend(pc, function () {
 
             if (options.postdata != null) {
                 if (options.postdata instanceof Document) {
-                    /*
-                     * It's an XML document, so we can send it directly.
-                     * XMLHttpRequest will set the content type correctly.
-                     */
+                    // It's an XML document, so we can send it directly.
+                    // XMLHttpRequest will set the content type correctly.
                     postdata = options.postdata;
                 } else if (options.postdata instanceof FormData) {
                     postdata = options.postdata;
@@ -305,10 +303,8 @@ pc.extend(pc, function () {
             try {
                 xhr.send(postdata);
             } catch (e) {
-                /*
-                 * DWE: Don't callback on exceptions as behaviour is inconsistent, e.g. cross-domain request errors don't throw an exception.
-                 * Error callback should be called by xhr.onerror() callback instead.
-                 */
+                // DWE: Don't callback on exceptions as behaviour is inconsistent, e.g. cross-domain request errors don't throw an exception.
+                // Error callback should be called by xhr.onerror() callback instead.
                 if (!errored) {
                     options.error(xhr.status, xhr, e);
                 }
@@ -346,10 +342,8 @@ pc.extend(pc, function () {
             if (xhr.readyState === 4) {
                 switch (xhr.status) {
                     case 0: {
-                        /*
-                         * If this is a local resource then continue (IOS) otherwise the request
-                         * didn't complete, possibly an exception or attempt to do cross-domain request
-                         */
+                        // If this is a local resource then continue (IOS) otherwise the request
+                        // didn't complete, possibly an exception or attempt to do cross-domain request
                         if (url[0] != '/') {
                             this._onSuccess(method, url, options, xhr);
                         }

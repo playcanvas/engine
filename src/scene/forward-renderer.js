@@ -1962,13 +1962,11 @@ pc.extend(pc, function () {
                             }
 
                             // uncomment to remove 32 lights limit
-                            /*
-                             * var lnames = combIbName.split("_");
-                             * lnames.length = lnames.length - 1;
-                             * for(k=0; k<lnames.length; k++) {
-                             * instance._staticLightList[k] = lights[ parseInt(lnames[k]) ];
-                             * }
-                             */
+                            // var lnames = combIbName.split("_");
+                            // lnames.length = lnames.length - 1;
+                            // for(k=0; k<lnames.length; k++) {
+                            // instance._staticLightList[k] = lights[ parseInt(lnames[k]) ];
+                            // }
 
                             // comment to remove 32 lights limit
                             for (k = 0; k < staticLights.length; k++) {
@@ -2050,10 +2048,8 @@ pc.extend(pc, function () {
                 scene.updateSkybox = false;
             }
 
-            /*
-             * Update shaders if needed
-             * all mesh instances (TODO: ideally can update less if only lighting changed)
-             */
+            // Update shaders if needed
+            // all mesh instances (TODO: ideally can update less if only lighting changed)
             if (scene.updateShaders) {
                 this.updateShaders(meshInstances);
                 scene.updateShaders = false;
@@ -2215,11 +2211,9 @@ pc.extend(pc, function () {
             shadowCamNode.setRotation(lightNode.getRotation());
             shadowCamNode.rotateLocal(-90, 0, 0); // Camera's look down negative Z, and directional lights point down negative Y
 
-            /*
-             * Positioning directional light frustum I
-             * Construct light's orthographic frustum around camera frustum
-             * Use very large near/far planes this time
-             */
+            // Positioning directional light frustum I
+            // Construct light's orthographic frustum around camera frustum
+            // Use very large near/far planes this time
 
             // 1. Get the frustum of the camera
             _getFrustumPoints(camera, light.shadowDistance || camera._farClip, frustumPoints);
@@ -2235,10 +2229,8 @@ pc.extend(pc, function () {
                 c2sc.transformPoint(frustumPoints[i], frustumPoints[i]);
             }
 
-            /*
-             * 4. Come up with a bounding box (in light-space) by calculating the min
-             * and max X, Y, and Z values from your 8 light-space frustum coordinates.
-             */
+            // 4. Come up with a bounding box (in light-space) by calculating the min
+            // and max X, Y, and Z values from your 8 light-space frustum coordinates.
             minx = miny = minz = 1000000;
             maxx = maxy = maxz = -1000000;
             for (i = 0; i < 8; i++) {
@@ -2251,11 +2243,9 @@ pc.extend(pc, function () {
                 if (p.z > maxz) maxz = p.z;
             }
 
-            /*
-             * 5. Enlarge the light's frustum so that the frustum will be the same size
-             * no matter how the view frustum moves.
-             * And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
-             */
+            // 5. Enlarge the light's frustum so that the frustum will be the same size
+            // no matter how the view frustum moves.
+            // And also snap the frustum to align with shadow texel. ( Avoid shadow shimmering )
             unitPerTexel = frustumSize / light._shadowResolution;
             delta = (frustumSize - (maxx - minx)) * 0.5;
             minx = Math.floor( (minx - delta) / unitPerTexel ) * unitPerTexel;
@@ -2312,18 +2302,14 @@ pc.extend(pc, function () {
             }
             visibleList.sort(this.depthSortCompare); // sort shadowmap drawcalls here, not in render
 
-            /*
-             * Positioning directional light frustum II
-             * Fit clipping planes tightly around visible shadow casters
-             */
+            // Positioning directional light frustum II
+            // Fit clipping planes tightly around visible shadow casters
 
             // 1. Calculate minz/maxz based on casters' AABB
             var z = _getZFromAABBSimple( shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax(), minx, maxx, miny, maxy );
 
-            /*
-             * Always use the scene's aabb's Z value
-             * Otherwise object between the light and the frustum won't cast shadow.
-             */
+            // Always use the scene's aabb's Z value
+            // Otherwise object between the light and the frustum won't cast shadow.
             maxz = z.max;
             if (z.min > minz) minz = z.min;
 
@@ -2455,10 +2441,8 @@ pc.extend(pc, function () {
             this.beginFrame(comp);
             this.setSceneConstants();
 
-            /*
-             * Camera culling (once for each camera + layer)
-             * Also applies meshInstance.visible and camera.cullingMask
-             */
+            // Camera culling (once for each camera + layer)
+            // Also applies meshInstance.visible and camera.cullingMask
             var renderedLength = 0;
             var objects, drawCalls, visible;
             for (i = 0; i < comp.layerList.length; i++) {
@@ -2490,10 +2474,8 @@ pc.extend(pc, function () {
                         this._camerasRendered++;
                     }
                     if (!processedThisCameraAndLayer) {
-                        /*
-                         * cull each layer's lights once with each camera
-                         * lights aren't collected anywhere, but marked as visible
-                         */
+                        // cull each layer's lights once with each camera
+                        // lights aren't collected anywhere, but marked as visible
                         this.cullLights(camera.camera, layer._lights);
                     }
                     if (!processedThisCamera || !processedThisCameraAndLayer) {
@@ -2502,11 +2484,9 @@ pc.extend(pc, function () {
                         renderedLength++;
                     }
 
-                    /*
-                     * cull mesh instances
-                     * collected into layer arrays
-                     * shared objects are only culled once
-                     */
+                    // cull mesh instances
+                    // collected into layer arrays
+                    // shared objects are only culled once
                     visible = transparent ? objects.visibleTransparent[j] : objects.visibleOpaque[j];
                     if (!visible.done) {
                         if (layer.onPreCull) {
@@ -2526,18 +2506,14 @@ pc.extend(pc, function () {
                 }
             }
 
-            /*
-             * Shadowmap culling for directional and visible local lights
-             * collected into light._visibleList
-             * objects are also globally marked as visible
-             * Also sets up local shadow camera matrices
-             */
+            // Shadowmap culling for directional and visible local lights
+            // collected into light._visibleList
+            // objects are also globally marked as visible
+            // Also sets up local shadow camera matrices
             var light, casters;
 
-            /*
-             * Local lights
-             * culled once for the whole frame
-             */
+            // Local lights
+            // culled once for the whole frame
 
             // #ifdef PROFILER
             var cullTime = pc.now();
@@ -2552,10 +2528,8 @@ pc.extend(pc, function () {
                 this.cullLocalShadowmap(light, casters);
             }
 
-            /*
-             * Directional lights
-             * culled once for each camera
-             */
+            // Directional lights
+            // culled once for each camera
             renderedLength = 0;
             var globalLightCounter = -1;
             for (i = 0; i < comp._lights.length; i++) {

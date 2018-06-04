@@ -247,11 +247,9 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
-            /*
-             * fire change event when the file changes
-             * so that we reload it if necessary
-             * set/unset file property of file hash been changed
-             */
+            // fire change event when the file changes
+            // so that we reload it if necessary
+            // set/unset file property of file hash been changed
             var key;
             var valueAsBool = !!value;
             var fileAsBool = !!this._file;
@@ -306,10 +304,8 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
-            /*
-             * fire change event when data changes
-             * because the asset might need reloading if that happens
-             */
+            // fire change event when data changes
+            // because the asset might need reloading if that happens
             var old = this._data;
             this._data = value;
             if (value !== old) {

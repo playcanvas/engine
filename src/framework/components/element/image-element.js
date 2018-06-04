@@ -65,11 +65,9 @@ pc.extend(pc, function () {
         destroy: function () {
             if (this._model) {
                 this._element.removeModelFromLayers(this._model);
-                /*
-                 * reset mesh to the default because that's the mesh we want destroyed
-                 * and not possible a mesh from the sprite asset that might be
-                 * used elsewhere
-                 */
+                // reset mesh to the default because that's the mesh we want destroyed
+                // and not possible a mesh from the sprite asset that might be
+                // used elsewhere
                 this._meshInstance.mesh = this._defaultMesh;
                 this._model.destroy();
                 this._model = null;
@@ -109,10 +107,8 @@ pc.extend(pc, function () {
             }
         },
 
-        /*
-         * Returns true if we are using a material
-         * other than the default materials
-         */
+        // Returns true if we are using a material
+        // other than the default materials
         _hasUserMaterial: function () {
             return !!this._materialAsset ||
                    (!!this._material &&
@@ -300,10 +296,8 @@ pc.extend(pc, function () {
                     this._meshInstance.setParameter("innerOffset", this._innerOffset.data);
                     // set atlas rect
                     this._meshInstance.setParameter("atlasRect", this._atlasRect.data);
-                    /*
-                     * set outer scale
-                     * use outerScale in ALL passes (depth, picker, etc) so the shape is correct
-                     */
+                    // set outer scale
+                    // use outerScale in ALL passes (depth, picker, etc) so the shape is correct
                     this._meshInstance.setParameter("outerScale", this._outerScale.data, 0xFFFFFFFF);
                     // set aabb update function
                     this._meshInstance._updateAabbFunc = this._updateAabbFunc;
@@ -496,10 +490,8 @@ pc.extend(pc, function () {
             }
         },
 
-        /*
-         * When sprite asset is loaded make sure the texture atlas asset is loaded too
-         * If so then set the sprite, otherwise wait for the atlas to be loaded first
-         */
+        // When sprite asset is loaded make sure the texture atlas asset is loaded too
+        // If so then set the sprite, otherwise wait for the atlas to be loaded first
         _onSpriteAssetLoad: function (asset) {
             if (!asset.resource) {
                 this.sprite = null;
@@ -521,11 +513,9 @@ pc.extend(pc, function () {
         },
 
         _onSpritePpuChange: function () {
-            /*
-             * on force update when the sprite is 9-sliced. If it's not
-             * then its mesh will change when the ppu changes which will
-             * be handled by onSpriteMeshesChange
-             */
+            // on force update when the sprite is 9-sliced. If it's not
+            // then its mesh will change when the ppu changes which will
+            // be handled by onSpriteMeshesChange
             if (this.sprite.renderMode !== pc.SPRITE_RENDERMODE_SIMPLE && this._pixelsPerUnit === null) {
                 // force update
                 this.spriteFrame = this.spriteFrame;

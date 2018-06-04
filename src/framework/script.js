@@ -7,10 +7,8 @@
 pc.script = (function () {
     var _legacy = false;
 
-    /*
-     * flag to avoid creating multiple loading screens e.g. when
-     * loading screen scripts are reloaded
-     */
+    // flag to avoid creating multiple loading screens e.g. when
+    // loading screen scripts are reloaded
     var _createdLoadingScreen = false;
 
     var script = {

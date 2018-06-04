@@ -179,11 +179,9 @@ pc.extend(pc, function () {
                         var emitter = data.model.emitter;
                         if (!emitter.meshInstance.visible) continue;
 
-                        /*
-                         * Bake ambient and directional lighting into one ambient cube
-                         * TODO: only do if lighting changed
-                         * TODO: don't do for every emitter
-                         */
+                        // Bake ambient and directional lighting into one ambient cube
+                        // TODO: only do if lighting changed
+                        // TODO: don't do for every emitter
                         if (emitter.lighting) {
                             var layer, lightCube;
                             var layers = data.layers;

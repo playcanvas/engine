@@ -30,7 +30,7 @@ pc.extend(pc, function () {
      * @function
      * @name pc.SceneRegistry#list
      * @description return the list of scene
-     * @return {pc.SceneRegistryItem[]} All items in the registry
+     * @returns {pc.SceneRegistryItem[]} All items in the registry
      */
     SceneRegistry.prototype.list = function () {
         return this._list;
@@ -43,7 +43,7 @@ pc.extend(pc, function () {
      * @description  Add a new item to the scene registry
      * @param {String} name The name of the scene
      * @param {String} url  The url of the scene file
-     * @return {Boolean} Returns true if the scene was successfully added to the registry, false otherwise
+     * @returns {Boolean} Returns true if the scene was successfully added to the registry, false otherwise
      */
     SceneRegistry.prototype.add = function (name, url) {
         if (this._index.hasOwnProperty(name)) {
@@ -53,11 +53,11 @@ pc.extend(pc, function () {
             return false;
         }
 
-        var item = new pc.SceneRegistryItem(name, url)
+        var item = new pc.SceneRegistryItem(name, url);
 
         var i = this._list.push(item);
-        this._index[item.name] = i-1;
-        this._urlIndex[item.url] = i-1;
+        this._index[item.name] = i - 1;
+        this._urlIndex[item.url] = i - 1;
 
         return true;
     };
@@ -68,14 +68,14 @@ pc.extend(pc, function () {
      * @name  pc.SceneRegistry#find
      * @description  Find a Scene by name and return the {@link pc.SceneRegistryItem}
      * @param  {String} name The name of the scene
-     * @return {pc.SceneRegistryItem} The stored data about a scene
+     * @returns {pc.SceneRegistryItem} The stored data about a scene
      */
     SceneRegistry.prototype.find = function (name) {
         if (this._index.hasOwnProperty(name)) {
             return this._list[this._index[name]];
-        } else {
-            return null;
         }
+        return null;
+
     };
 
     /**
@@ -84,14 +84,14 @@ pc.extend(pc, function () {
      * @name  pc.SceneRegistry#findByUrl
      * @description  Find a scene by the URL and return the {@link pc.SceneRegistryItem}
      * @param  {String} url The URL to search by
-     * @return {pc.SceneRegistryItem} The stored data about a scene
+     * @returns {pc.SceneRegistryItem} The stored data about a scene
      */
     SceneRegistry.prototype.findByUrl = function (url) {
         if (this._urlIndex.hasOwnProperty(url)) {
             return this._list[this._urlIndex[url]];
-        } else {
-            return null;
         }
+        return null;
+
     };
 
     /**
@@ -146,10 +146,8 @@ pc.extend(pc, function () {
     SceneRegistry.prototype.loadSceneHierarchy = function (url, callback) {
         var self = this;
 
-        /*
-         * Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
-         * Split loading into load and open
-         */
+        // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
+        // Split loading into load and open
         var handler = this._app.loader.getHandler("hierarchy");
 
         // include asset prefix if present
@@ -255,10 +253,8 @@ pc.extend(pc, function () {
                     var scene = handler.open(url, data);
                     self._app.systems.script.preloading = false;
 
-                    /*
-                     * clear scene from cache because we'll destroy it when we load another one
-                     * so data will be invalid
-                     */
+                    // clear scene from cache because we'll destroy it when we load another one
+                    // so data will be invalid
                     self._app.loader.clearCache(url, "scene");
 
                     self._app.loader.patch({

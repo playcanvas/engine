@@ -127,7 +127,7 @@ pc.extend(pc, function () {
     }
 
     pc.extend(EntityReference.prototype, {
-        _configureEventListeners: function(externalEventConfig, internalEventConfig) {
+        _configureEventListeners: function (externalEventConfig, internalEventConfig) {
             var externalEventListenerConfigs = this._parseEventListenerConfig(externalEventConfig, 'external', this._parentComponent);
             var internalEventListenerConfigs = this._parseEventListenerConfig(internalEventConfig, 'internal', this);
 
@@ -137,8 +137,8 @@ pc.extend(pc, function () {
             this._loseListeners = {};
         },
 
-        _parseEventListenerConfig: function(eventConfig, prefix, scope) {
-            return Object.keys(eventConfig).map(function(listenerDescription, index) {
+        _parseEventListenerConfig: function (eventConfig, prefix, scope) {
+            return Object.keys(eventConfig).map(function (listenerDescription, index) {
                 var listenerDescriptionParts = listenerDescription.split('#');
                 var sourceName = listenerDescriptionParts[0];
                 var eventName = listenerDescriptionParts[1];
@@ -164,7 +164,7 @@ pc.extend(pc, function () {
             }, this);
         },
 
-        _toggleLifecycleListeners: function(onOrOff) {
+        _toggleLifecycleListeners: function (onOrOff) {
             this._parentComponent[onOrOff]('set_' + this._entityPropertyName, this._onSetEntityGuid, this);
             this._parentComponent.system[onOrOff]('beforeremove', this._onParentComponentRemove, this);
 
@@ -199,7 +199,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onSetEntityGuid: function(name, oldGuid, newGuid) {
+        _onSetEntityGuid: function (name, oldGuid, newGuid) {
             if (newGuid !== null && newGuid !== undefined && typeof newGuid !== 'string') {
                 console.warn("Entity field `" + this._entityPropertyName + "` was set to unexpected type '" + (typeof newGuid) + "'");
                 return;
@@ -210,11 +210,11 @@ pc.extend(pc, function () {
             }
         },
 
-        _onPostInitialize: function() {
+        _onPostInitialize: function () {
             this._updateEntityReference();
         },
 
-        _updateEntityReference: function() {
+        _updateEntityReference: function () {
             var nextEntityGuid = this._parentComponent.data[this._entityPropertyName];
             var nextEntity = nextEntityGuid ? this._parentComponent.system.app.root.findByGuid(nextEntityGuid) : null;
             var hasChanged = this._entity !== nextEntity;
@@ -232,17 +232,17 @@ pc.extend(pc, function () {
             }
         },
 
-        _onBeforeEntityChange: function() {
+        _onBeforeEntityChange: function () {
             this._toggleEntityListeners('off');
             this._callAllGainOrLoseListeners(this._loseListeners);
         },
 
-        _onAfterEntityChange: function() {
+        _onAfterEntityChange: function () {
             this._toggleEntityListeners('on');
             this._callAllGainOrLoseListeners(this._gainListeners);
         },
 
-        _onComponentAdd: function(entity, component) {
+        _onComponentAdd: function (entity, component) {
             var componentName = component.system.name;
 
             if (entity === this._entity) {
@@ -251,7 +251,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _onComponentRemove: function(entity, component) {
+        _onComponentRemove: function (entity, component) {
             var componentName = component.system.name;
 
             if (entity === this._entity) {
@@ -260,20 +260,20 @@ pc.extend(pc, function () {
             }
         },
 
-        _callAllGainOrLoseListeners: function(listenerMap) {
+        _callAllGainOrLoseListeners: function (listenerMap) {
             for (var componentName in this._entity.c) {
                 this._callGainOrLoseListener(componentName, listenerMap);
             }
         },
 
-        _callGainOrLoseListener: function(componentName, listenerMap) {
+        _callGainOrLoseListener: function (componentName, listenerMap) {
             if (this._entity.c.hasOwnProperty(componentName) && listenerMap[componentName]) {
                 var config = listenerMap[componentName];
                 config.callback.call(config.scope);
             }
         },
 
-        _toggleEntityListeners: function(onOrOff, isDestroying) {
+        _toggleEntityListeners: function (onOrOff, isDestroying) {
             if (this._entity) {
                 for (var i = 0; i < this._eventListenerConfigs.length; ++i) {
                     this._safeToggleListener(onOrOff, this._eventListenerConfigs[i], isDestroying);
@@ -281,7 +281,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _toggleComponentListeners: function(onOrOff, componentName, isDestroying) {
+        _toggleComponentListeners: function (onOrOff, componentName, isDestroying) {
             for (var i = 0; i < this._eventListenerConfigs.length; ++i) {
                 var config = this._eventListenerConfigs[i];
 
@@ -291,7 +291,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _safeToggleListener: function(onOrOff, config, isDestroying) {
+        _safeToggleListener: function (onOrOff, config, isDestroying) {
             var isAdding = (onOrOff === 'on');
 
             // Prevent duplicate listeners
@@ -307,7 +307,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _getEventSource: function(sourceName, isDestroying) {
+        _getEventSource: function (sourceName, isDestroying) {
             // The 'entity' source name is a special case - we just want to return
             // a reference to the entity itself. For all other cases the source name
             // should refer to a component.
@@ -328,14 +328,14 @@ pc.extend(pc, function () {
             return null;
         },
 
-        _onEntityDestroy: function(entity) {
+        _onEntityDestroy: function (entity) {
             if (this._entity === entity) {
                 this._toggleEntityListeners('off', true);
                 this._entity = null;
             }
         },
 
-        _onParentComponentRemove: function(entity, component) {
+        _onParentComponentRemove: function (entity, component) {
             if (component === this._parentComponent) {
                 this._toggleLifecycleListeners('off');
                 this._toggleEntityListeners('off', true);
@@ -348,7 +348,7 @@ pc.extend(pc, function () {
          * @param {String} componentName Name of the component.
          * @returns {Boolean} True if the entity exists and has a component of the provided type.
          */
-        hasComponent: function(componentName) {
+        hasComponent: function (componentName) {
             return (this._entity && this._entity.c) ? !!this._entity.c[componentName] : false;
         }
     });

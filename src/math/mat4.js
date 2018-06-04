@@ -1180,11 +1180,9 @@ pc.extend(pc, (function () {
          * var m = new pc.Mat4();
          * m.setFromEulerAngles(45, 90, 180);
          */
-        /*
-         * http://en.wikipedia.org/wiki/Rotation_matrix#Conversion_from_and_to_axis-angle
-         * The 3D space is right-handed, so the rotation around each axis will be counterclockwise
-         * for an observer placed so that the axis goes in his or her direction (Right-hand rule).
-         */
+        // http://en.wikipedia.org/wiki/Rotation_matrix#Conversion_from_and_to_axis-angle
+        // The 3D space is right-handed, so the rotation around each axis will be counterclockwise
+        // for an observer placed so that the axis goes in his or her direction (Right-hand rule).
         setFromEulerAngles: function (ex, ey, ez) {
             var s1, c1, s2, c2, s3, c3, m;
 

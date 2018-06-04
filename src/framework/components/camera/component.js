@@ -479,11 +479,9 @@ pc.extend(pc, function () {
                     display.requestPresent(function (err) {
                         if (!err) {
                             self.vrDisplay = display;
-                            /*
-                             * camera component uses internal 'before' event
-                             * this means display nulled before anyone other
-                             * code gets to update
-                             */
+                            // camera component uses internal 'before' event
+                            // this means display nulled before anyone other
+                            // code gets to update
                             self.vrDisplay.once('beforepresentchange', function (display) {
                                 if (!display.presenting) {
                                     self.vrDisplay = null;

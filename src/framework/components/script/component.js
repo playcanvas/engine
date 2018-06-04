@@ -198,20 +198,16 @@ pc.extend(pc, function () {
             this._endLooping(wasLooping);
         },
 
-        /*
-         * Sets isLoopingThroughScripts to false and returns
-         * its previous value
-         */
+        // Sets isLoopingThroughScripts to false and returns
+        // its previous value
         _beginLooping: function () {
             var looping = this._isLoopingThroughScripts;
             this._isLoopingThroughScripts = true;
             return looping;
         },
 
-        /*
-         * Restores isLoopingThroughScripts to the specified parameter
-         * If all loops are over then remove destroyed scripts form the _scripts array
-         */
+        // Restores isLoopingThroughScripts to the specified parameter
+        // If all loops are over then remove destroyed scripts form the _scripts array
         _endLooping: function (wasLoopingBefore) {
             this._isLoopingThroughScripts = wasLoopingBefore;
             if (!this._isLoopingThroughScripts) {
@@ -219,11 +215,9 @@ pc.extend(pc, function () {
             }
         },
 
-        /*
-         * We also need this handler because it is fired
-         * when value === old instead of onEnable and onDisable
-         * which are only fired when value !== old
-         */
+        // We also need this handler because it is fired
+        // when value === old instead of onEnable and onDisable
+        // which are only fired when value !== old
         _onSetEnabled: function (prop, old, value) {
             this._beingEnabled = true;
             this._checkState();
@@ -506,18 +500,14 @@ pc.extend(pc, function () {
                 scriptData.instance.enabled = false;
                 scriptData.instance._destroyed = true;
 
-                /*
-                 * if we are not currently looping through our scripts
-                 * then it's safe to remove the script
-                 */
+                // if we are not currently looping through our scripts
+                // then it's safe to remove the script
                 if (!this._isLoopingThroughScripts) {
                     var ind = this._scripts.indexOf(scriptData.instance);
                     this._scripts.splice(ind, 1);
                 } else {
-                    /*
-                     * otherwise push the script in _destroyedScripts and
-                     * remove it from _scripts when the loop is over
-                     */
+                    // otherwise push the script in _destroyedScripts and
+                    // remove it from _scripts when the loop is over
                     this._destroyedScripts.push(scriptData.instance);
                 }
             }
@@ -649,10 +639,8 @@ pc.extend(pc, function () {
                         }
                     }
                 } else {
-                    /*
-                     * TODO scripts2
-                     * new script
-                     */
+                    // TODO scripts2
+                    // new script
                     console.log(this.order);
                 }
             }

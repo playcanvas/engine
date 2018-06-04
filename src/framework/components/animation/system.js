@@ -102,10 +102,8 @@ pc.extend(pc, function () {
                                 var alpha = 1.0 - (componentData.blendTimeRemaining / componentData.blendTime);
                                 skeleton.blend(componentData.fromSkel, componentData.toSkel, alpha);
                             } else {
-                                /*
-                                 * Advance the animation, interpolating keyframes at each animated node in
-                                 * skeleton
-                                 */
+                                // Advance the animation, interpolating keyframes at each animated node in
+                                // skeleton
                                 var delta = dt * componentData.speed;
                                 skeleton.addTime(delta);
                                 if ((skeleton._time === skeleton._animation.duration) && !componentData.loop) {

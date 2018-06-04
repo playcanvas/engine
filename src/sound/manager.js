@@ -45,10 +45,8 @@ pc.extend(pc, function () {
                 var context = this.context;
                 // iOS only starts sound as a response to user interaction
                 if (pc.platform.ios) {
-                    /*
-                     * Play an inaudible sound when the user touches the screen
-                     * This only happens once
-                     */
+                    // Play an inaudible sound when the user touches the screen
+                    // This only happens once
                     var unlock = function () {
                         var buffer = context.createBuffer(1, 1, 44100);
                         var source = context.createBufferSource();

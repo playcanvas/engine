@@ -60,10 +60,8 @@ pc.extend(pc, function () {
             }
         },
 
-        /*
-         * When sprite asset is loaded make sure the texture atlas asset is loaded too
-         * If so then set the sprite, otherwise wait for the atlas to be loaded first
-         */
+        // When sprite asset is loaded make sure the texture atlas asset is loaded too
+        // If so then set the sprite, otherwise wait for the atlas to be loaded first
         _onSpriteAssetLoad: function (asset) {
             if (!asset.resource) {
                 this.sprite = null;
@@ -93,10 +91,8 @@ pc.extend(pc, function () {
             this.sprite = null;
         },
 
-        /*
-         * If the meshes are re-created make sure
-         * we update them in the mesh instance
-         */
+        // If the meshes are re-created make sure
+        // we update them in the mesh instance
         _onSpriteMeshesChange: function () {
             if (this._component.currentClip === this) {
                 this._component._showFrame(this.frame);
@@ -362,17 +358,13 @@ pc.extend(pc, function () {
                         }
                     }
 
-                    /*
-                     * if we have a time then force update
-                     * frame based on the time (check if fps is not 0 otherwise time will be Infinity)
-                     */
+                    // if we have a time then force update
+                    // frame based on the time (check if fps is not 0 otherwise time will be Infinity)
                     if (this.time && this.fps) {
                         this.time = this.time;
                     } else {
-                        /*
-                         * if we don't have a time
-                         * then force update frame counter
-                         */
+                        // if we don't have a time
+                        // then force update frame counter
                         this.frame = this.frame;
                     }
                 }

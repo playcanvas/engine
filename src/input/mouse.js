@@ -50,10 +50,8 @@ pc.extend(pc, function () {
             return;
         }
 
-        /*
-         * FF uses 'detail' and returns a value in 'no. of lines' to scroll
-         * WebKit and Opera use 'wheelDelta', WebKit goes in multiples of 120 per wheel notch
-         */
+        // FF uses 'detail' and returns a value in 'no. of lines' to scroll
+        // WebKit and Opera use 'wheelDelta', WebKit goes in multiples of 120 per wheel notch
         if (event.detail) {
             this.wheel = -1 * event.detail;
         } else if (event.wheelDelta) {

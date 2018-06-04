@@ -26,10 +26,8 @@ pc.extend(pc, function () {
             var self = this;
             var handler = this._loader.getHandler("texture");
 
-            /*
-             * if supplied with a json file url (probably engine-only)
-             * load json data then load texture of same name
-             */
+            // if supplied with a json file url (probably engine-only)
+            // load json data then load texture of same name
             if (pc.path.getExtension(url) === '.json') {
                 pc.http.get(url, function (err, response) {
                     if (!err) {

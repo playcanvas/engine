@@ -113,13 +113,11 @@ pc.extend(pc, function () {
             this._updateImageEntityReference();
         },
 
-        /*
-         * The public imageEntity property stores the entity guid (and this is what is
-         * persisted in the database), but internally we need a reference to the actual
-         * entity so that we can add listeners to it, modify its tint/sprite when the
-         * user interacts with it, etc. This method is called whenever the guid changes
-         * in order to resolve the guid to an actual entity reference.
-         */
+        // The public imageEntity property stores the entity guid (and this is what is
+        // persisted in the database), but internally we need a reference to the actual
+        // entity so that we can add listeners to it, modify its tint/sprite when the
+        // user interacts with it, etc. This method is called whenever the guid changes
+        // in order to resolve the guid to an actual entity reference.
         _updateImageEntityReference: function () {
             var imageGuid = this.data.imageEntity;
             var hasChanged = !this._imageEntity || this._imageEntity.getGuid() !== imageGuid;
@@ -281,7 +279,7 @@ pc.extend(pc, function () {
             this.fire('touchstart', event);
         },
 
-        _onTouchEnd: function(event) {
+        _onTouchEnd: function (event) {
             // The default behaviour of the browser is to simulate a series of
             // `mouseenter/down/up` events immediately after the `touchend` event,
             // in order to ensure that websites that don't explicitly listen for
@@ -341,20 +339,16 @@ pc.extend(pc, function () {
             }
         },
 
-        /*
-         * Called when a property changes that mean the visual state must be reapplied,
-         * even if the state enum has not changed. Examples of this are when the tint
-         * value for one of the states is changed via the editor.
-         */
+        // Called when a property changes that mean the visual state must be reapplied,
+        // even if the state enum has not changed. Examples of this are when the tint
+        // value for one of the states is changed via the editor.
         _forceReapplyVisualState: function () {
             this._updateVisualState(true);
         },
 
-        /*
-         * Called before the image entity changes, in order to restore the previous
-         * image back to its original tint. Note that this happens immediately, i.e.
-         * without any animation.
-         */
+        // Called before the image entity changes, in order to restore the previous
+        // image back to its original tint. Note that this happens immediately, i.e.
+        // without any animation.
         _resetToDefaultVisualState: function (transitionMode) {
             if (this._imageEntity && this._imageEntity.element) {
                 switch (transitionMode) {

@@ -1,10 +1,8 @@
 pc.extend(pc, function () {
     'use strict';
 
-    /*
-     * temporary object for creating
-     * instances
-     */
+    // temporary object for creating
+    // instances
     var instanceOptions = {
         volume: 0,
         pitch: 0,
@@ -103,10 +101,8 @@ pc.extend(pc, function () {
             var instance = this._createInstance();
             this.instances.push(instance);
 
-            /*
-             * if not loaded then load first
-             * and then set sound resource on the created instance
-             */
+            // if not loaded then load first
+            // and then set sound resource on the created instance
             if (!this.isLoaded) {
                 var onLoad = function (sound) {
                     var playWhenLoaded = instance._playWhenLoaded;

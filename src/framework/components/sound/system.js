@@ -62,10 +62,8 @@ pc.extend(pc, function () {
                 }
             }
 
-            /*
-             * convert 'slots' back to
-             * simple option objects
-             */
+            // convert 'slots' back to
+            // simple option objects
             newData.slots = {};
 
             for (key in oldData.slots) {

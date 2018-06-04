@@ -143,10 +143,8 @@ pc.extend(pc, function () {
         },
 
         _handleTouchMove: function (e) {
-            /*
-             * call preventDefault to avoid issues in Chrome Android:
-             * http://wilsonpage.co.uk/touch-events-in-chrome-android/
-             */
+            // call preventDefault to avoid issues in Chrome Android:
+            // http://wilsonpage.co.uk/touch-events-in-chrome-android/
             e.preventDefault();
             this.fire('touchmove', new TouchEvent(this, e));
         },

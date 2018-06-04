@@ -419,10 +419,8 @@ pc.extend(pc, function () {
                 if (this.entity.animation)
                     this.entity.animation.setModel(newValue);
 
-                /*
-                 * trigger event handler to load mapping
-                 * for new model
-                 */
+                // trigger event handler to load mapping
+                // for new model
                 if (this.data.type === 'asset') {
                     this.mapping = this.data.mapping;
                 } else {

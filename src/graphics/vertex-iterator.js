@@ -110,10 +110,8 @@ pc.extend(pc, function () {
             var vertexFormat = this.vertexBuffer.getFormat();
             while (i < numSetters) {
                 var setter = setters[i++];
-                /*
-                 * BYTES_PER_ELEMENT is on the instance and constructor for Chrome, Safari and Firefox
-                 * but just the constructor for Opera
-                 */
+                // BYTES_PER_ELEMENT is on the instance and constructor for Chrome, Safari and Firefox
+                // but just the constructor for Opera
                 setter.index += vertexFormat.size / setter.array.constructor.BYTES_PER_ELEMENT;
             }
         },

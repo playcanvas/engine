@@ -109,10 +109,8 @@ pc.extend(pc, function () {
         }
         codeWithoutScopes += code.substr(codeStart, (code.length - codeStart) + 1);
 
-        /*
-         * Find all global variable declarations and detect collisions
-         * ... won't work with re#defined types
-         */
+        // Find all global variable declarations and detect collisions
+        // ... won't work with re#defined types
         var collisions = null;
         var decls = codeWithoutScopes.match(_regexVariables) || [];
         var vars, varName;
@@ -129,10 +127,8 @@ pc.extend(pc, function () {
             }
         }
 
-        /*
-         * Find all varying/uniform declarations (ideally should be possible to filter them out with first search...)
-         * and remove from list
-         */
+        // Find all varying/uniform declarations (ideally should be possible to filter them out with first search...)
+        // and remove from list
         var irrelevantDecls = codeWithoutScopes.match(_regexIrrelevantVariables) || [];
         var index;
         for (i = 0; i < irrelevantDecls.length; i++) {
@@ -254,11 +250,9 @@ pc.extend(pc, function () {
                 var backbufferRtFormat = pc.PIXELFORMAT_R8_G8_B8_A8;
 
                 if (app.scene.layers._dirty) {
-                    /*
-                     * only called if layer order changed
-                     * detect chains of posteffects and combine if possible
-                     * won't work with uniform collisions
-                     */
+                    // only called if layer order changed
+                    // detect chains of posteffects and combine if possible
+                    // won't work with uniform collisions
 
                     // #ifdef DEBUG
                     console.log("Trying to combine shaders...");
@@ -299,20 +293,16 @@ pc.extend(pc, function () {
 
                                     for (j = 0; j < iterator; j++) {
                                         subCode = layers[_postEffectChain[j]].shader.definition.fshader + "\n";
-                                        /*
-                                         * For every shader's code:
-                                         * - Replace #version, because createShaderFromCode will append a new one anyway;
-                                         * - Replace pc_fragColor and #define gl_FragColor for the same reason;
-                                         * - Replace any usage of gl_FragColor to shaderOutput;
-                                         */
+                                        // For every shader's code:
+                                        // - Replace #version, because createShaderFromCode will append a new one anyway;
+                                        // - Replace pc_fragColor and #define gl_FragColor for the same reason;
+                                        // - Replace any usage of gl_FragColor to shaderOutput;
                                         subCode = subCode.replace(_regexVersion, "//").replace(_regexFragColor, "//").replace(_regexFragColor2, "//").replace(_regexFragColor3, "shaderOutput");
                                         if (j > 0) {
-                                            /*
-                                             * For every shader's code > 0:
-                                             * - Remove definition of uColorBuffer (should be defined in code 0 already);
-                                             * - Remove definition of vUv0 (same reason);
-                                             * - Replace reading from uColorBuffer with reading from shaderOutput.
-                                             */
+                                            // For every shader's code > 0:
+                                            // - Remove definition of uColorBuffer (should be defined in code 0 already);
+                                            // - Remove definition of vUv0 (same reason);
+                                            // - Replace reading from uColorBuffer with reading from shaderOutput.
                                             subCode = subCode.replace(_regexColorBuffer, "//").replace(_regexUv, "//").replace(_regexColorBufferSample, "shaderOutput;\/\/");
                                         }
                                         // Replace main() with mainX()
@@ -351,28 +341,25 @@ pc.extend(pc, function () {
                     }
                 }
 
-                /*
-                 * getting from
-                 *     world -> backbuffer
-                 *     backbuffer -> post1 -> backbuffer
-                 *     backbuffer -> post2 -> backbuffer
-                 * to
-                 *     world -> rt0
-                 *     rt0 -> post1 -> rt1
-                 *     rt1 -> post2 -> backbuffer
-                 */
-
-                /*
-                 * other case:
-                 *     world -> backbuffer
-                 *     backbuffer -> post -> someRt
-                 *     otherObjects -> backbuffer
-                 * ->
-                 *     world -> rt0
-                 *     rt0 -> post -> someRt
-                 *     otherObjects -> rt0
-                 *     if no posteffects writing backbuffer, rt0 -> backbuffer
-                 */
+                // getting from
+                //     world -> backbuffer
+                //     backbuffer -> post1 -> backbuffer
+                //     backbuffer -> post2 -> backbuffer
+                // to
+                //     world -> rt0
+                //     rt0 -> post1 -> rt1
+                //     rt1 -> post2 -> backbuffer
+                //
+                // other case:
+                //     world -> backbuffer
+                //     backbuffer -> post -> someRt
+                //     otherObjects -> backbuffer
+                // ->
+                //     world -> rt0
+                //     rt0 -> post -> someRt
+                //     otherObjects -> rt0
+                //
+                // if no posteffects writing backbuffer, rt0 -> backbuffer
                 for (i = 0; i < layers.length; i++) {
                     if (layers[i].isPostEffect && ((!layers[i].postEffect.srcRenderTarget && !layers[i]._postEffectCombined) ||
                                                    (!layers[i].postEffect._postEffectCombinedSrc && layers[i]._postEffectCombined >= 0))) { // layer i is posteffect reading from backbuffer

@@ -1222,11 +1222,9 @@ pc.extend(pc, function () {
         _defineColor(obj, "emissive", new pc.Color(0, 0, 0), true);
 
         _defineFloat(obj, "shininess", 25, function (mat, shininess) {
-            /*
-             * Shininess is 0-100 value
-             * which is actually a 0-1 glosiness value.
-             * Can be converted to specular power using exp2(shininess * 0.01 * 11)
-             */
+            // Shininess is 0-100 value
+            // which is actually a 0-1 glosiness value.
+            // Can be converted to specular power using exp2(shininess * 0.01 * 11)
             var value;
             if (mat.shadingModel === pc.SPECULAR_PHONG) {
                 value = Math.pow(2, shininess * 0.01 * 11); // legacy: expand back to specular power

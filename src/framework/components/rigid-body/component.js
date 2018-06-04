@@ -144,10 +144,8 @@ pc.extend(pc, function () {
             if (entity.collision) {
                 shape = entity.collision.shape;
 
-                /*
-                 * if a trigger was already created from the collision system
-                 * destroy it
-                 */
+                // if a trigger was already created from the collision system
+                // destroy it
                 if (entity.trigger) {
                     entity.trigger.destroy();
                     delete entity.trigger;
@@ -258,10 +256,8 @@ pc.extend(pc, function () {
             var body = this.body;
             if (body && this.data.simulationEnabled) {
                 this.system.removeBody(body);
-                /*
-                 * set activation state to disable simulation to avoid body.isActive() to return
-                 * true even if it's not in the dynamics world
-                 */
+                // set activation state to disable simulation to avoid body.isActive() to return
+                // true even if it's not in the dynamics world
                 body.forceActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
 
                 this.data.simulationEnabled = false;

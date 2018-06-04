@@ -25,14 +25,14 @@ pc.extend(pc, function () {
     ScrollbarComponent = pc.inherits(ScrollbarComponent, pc.Component);
 
     pc.extend(ScrollbarComponent.prototype, {
-        _toggleLifecycleListeners: function(onOrOff) {
+        _toggleLifecycleListeners: function (onOrOff) {
             this[onOrOff]('set_value', this._onSetValue, this);
             this[onOrOff]('set_handleSize', this._onSetHandleSize, this);
 
             // TODO Handle scrollwheel events
         },
 
-        _onHandleElementGain: function() {
+        _onHandleElementGain: function () {
             this._destroyDragHelper();
             this._handleDragHelper = new pc.ElementDragHelper(this._handleReference.entity.element, this._getAxis());
             this._handleDragHelper.on('drag:move', this._onHandleDrag, this);
@@ -40,17 +40,17 @@ pc.extend(pc, function () {
             this._updateHandlePositionAndSize();
         },
 
-        _onHandleElementLose: function() {
+        _onHandleElementLose: function () {
             this._destroyDragHelper();
         },
 
-        _onHandleDrag: function(position) {
+        _onHandleDrag: function (position) {
             if (this._handleReference.entity && this.enabled && this.entity.enabled) {
                 this.value = this._handlePositionToScrollValue(position[this._getAxis()]);
             }
         },
 
-        _onSetValue: function(name, oldValue, newValue) {
+        _onSetValue: function (name, oldValue, newValue) {
             if (Math.abs(newValue - oldValue) > 1e-5) {
                 this.data.value = pc.math.clamp(newValue, 0, 1);
                 this._updateHandlePositionAndSize();
@@ -58,14 +58,14 @@ pc.extend(pc, function () {
             }
         },
 
-        _onSetHandleSize: function(name, oldValue, newValue) {
+        _onSetHandleSize: function (name, oldValue, newValue) {
             if (Math.abs(newValue - oldValue) > 1e-5) {
                 this.data.handleSize = pc.math.clamp(newValue, 0, 1);
                 this._updateHandlePositionAndSize();
             }
         },
 
-        _updateHandlePositionAndSize: function() {
+        _updateHandlePositionAndSize: function () {
             var handleEntity = this._handleReference.entity;
             var handleElement = handleEntity && handleEntity.element;
 
@@ -80,19 +80,19 @@ pc.extend(pc, function () {
             }
         },
 
-        _handlePositionToScrollValue: function(handlePosition) {
+        _handlePositionToScrollValue: function (handlePosition) {
             return handlePosition * this._getSign() / this._getUsableTrackLength();
         },
 
-        _scrollValueToHandlePosition: function(value) {
+        _scrollValueToHandlePosition: function (value) {
             return value * this._getSign() * this._getUsableTrackLength();
         },
 
-        _getUsableTrackLength: function() {
+        _getUsableTrackLength: function () {
             return Math.max(this._getTrackLength() - this._getHandleLength(), 0.001);
         },
 
-        _getTrackLength: function() {
+        _getTrackLength: function () {
             if (this.entity.element) {
                 return this.orientation === pc.ORIENTATION_HORIZONTAL ? this.entity.element.calculatedWidth : this.entity.element.calculatedHeight;
             }
@@ -100,23 +100,23 @@ pc.extend(pc, function () {
             return 0;
         },
 
-        _getHandleLength: function() {
+        _getHandleLength: function () {
             return this._getTrackLength() * this.handleSize;
         },
 
-        _getHandlePosition: function() {
+        _getHandlePosition: function () {
             return this._scrollValueToHandlePosition(this.value);
         },
 
-        _getSign: function() {
+        _getSign: function () {
             return this.orientation === pc.ORIENTATION_HORIZONTAL ? 1 : -1;
         },
 
-        _getAxis: function() {
+        _getAxis: function () {
             return this.orientation === pc.ORIENTATION_HORIZONTAL ? 'x' : 'y';
         },
 
-        _getDimension: function() {
+        _getDimension: function () {
             return this.orientation === pc.ORIENTATION_HORIZONTAL ? 'width' : 'height';
         },
 
@@ -126,7 +126,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _setHandleDraggingEnabled: function(enabled) {
+        _setHandleDraggingEnabled: function (enabled) {
             if (this._handleDragHelper) {
                 this._handleDragHelper.enabled = enabled;
             }

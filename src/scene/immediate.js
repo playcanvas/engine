@@ -328,10 +328,8 @@ pc.extend(pc.Application.prototype, function () {
         this._addLines(position, color, options);
     }
 
-    /*
-     * Draw lines forming a transformed unit-sized cube at this frame
-     * lineType is optional
-     */
+    // Draw lines forming a transformed unit-sized cube at this frame
+    // lineType is optional
     function renderWireCube(matrix, color, options) {
         // if (lineType===undefined) lineType = pc.LINEBATCH_WORLD;
 

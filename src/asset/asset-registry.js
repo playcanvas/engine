@@ -292,11 +292,9 @@ pc.extend(pc, function () {
 
             var self = this;
 
-            /*
-             * do nothing if asset is already loaded
-             * note: lots of code calls assets.load() assuming this check is present
-             * don't remove it without updating calls to assets.load() with checks for the asset.loaded state
-             */
+            // do nothing if asset is already loaded
+            // note: lots of code calls assets.load() assuming this check is present
+            // don't remove it without updating calls to assets.load() with checks for the asset.loaded state
             if (asset.loaded) {
                 if (asset.type === 'cubemap')
                     self._loader.patch(asset, this);

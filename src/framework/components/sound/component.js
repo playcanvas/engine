@@ -181,11 +181,9 @@ pc.extend(pc, function () {
 
             for (var key in slots) {
                 var slot = slots[key];
-                /*
-                 * play if autoPlay is true or
-                 * if the slot was paused when the component
-                 * got disabled
-                 */
+                // play if autoPlay is true or
+                // if the slot was paused when the component
+                // got disabled
                 if (slot.autoPlay && slot.isStopped) {
                     slot.play();
                 } else if (playingBeforeDisable[key]) {
@@ -207,10 +205,8 @@ pc.extend(pc, function () {
                 if (!slots[key].overlap) {
                     if (slots[key].isPlaying) {
                         slots[key].pause();
-                        /*
-                         * remember sounds playing when we disable
-                         * so we can resume them on enable
-                         */
+                        // remember sounds playing when we disable
+                        // so we can resume them on enable
                         playingBeforeDisable[key] = true;
                     }
                 }

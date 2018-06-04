@@ -153,17 +153,13 @@ pc.extend(pc, function () {
 
             component._onBeforeRemove();
 
-            /*
-             * if we are not currently looping through components then
-             * remove the components from our list
-             */
+            // if we are not currently looping through components then
+            // remove the components from our list
             if (!this._isLoopingThroughComponents) {
                 this._components.splice(ind, 1);
             } else {
-                /*
-                 * otherwise push it to be destroyed when
-                 * the current loop is over
-                 */
+                // otherwise push it to be destroyed when
+                // the current loop is over
                 component._destroyed = true;
                 this._destroyedComponents.push(component);
             }
