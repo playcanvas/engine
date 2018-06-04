@@ -835,11 +835,11 @@ pc.createPlane = function (device, opts) {
 
     // Generate plane as follows (assigned UVs denoted at corners):
     // (0,1)x---------x(1,1)
-    // |         |
-    // |         |
-    // |    O--X |length
-    // |    |    |
-    // |    Z    |
+    //      |         |
+    //      |         |
+    //      |    O--X |length
+    //      |    |    |
+    //      |    Z    |
     // (0,0)x---------x(1,0)
     // width
     var vcounter = 0;

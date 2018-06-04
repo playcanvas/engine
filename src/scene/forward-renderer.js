@@ -1964,8 +1964,8 @@ pc.extend(pc, function () {
                             // uncomment to remove 32 lights limit
                             // var lnames = combIbName.split("_");
                             // lnames.length = lnames.length - 1;
-                            // for(k=0; k<lnames.length; k++) {
-                            // instance._staticLightList[k] = lights[ parseInt(lnames[k]) ];
+                            // for(k = 0; k < lnames.length; k++) {
+                            //     instance._staticLightList[k] = lights[parseInt(lnames[k])];
                             // }
 
                             // comment to remove 32 lights limit

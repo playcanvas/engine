@@ -91,7 +91,6 @@ pc.extend(pc, function () {
             return this._list[this._urlIndex[url]];
         }
         return null;
-
     };
 
     /**
