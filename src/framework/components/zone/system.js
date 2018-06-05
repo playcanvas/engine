@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     var _schema = ['enabled'];
 
     /**
+     * @private
      * @name pc.ZoneComponentSystem
      * @description Create a new ZoneComponentSystem
      * @class Defines zone in world.

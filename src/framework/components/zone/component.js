@@ -1,5 +1,6 @@
 pc.extend(pc, function () {
     /**
+     * @private
      * @component
      * @name pc.ZoneComponent
      * @extends pc.Component
@@ -19,6 +20,7 @@ pc.extend(pc, function () {
     ZoneComponent = pc.inherits(ZoneComponent, pc.Component);
 
     /**
+     * @private
      * @event
      * @name pc.ZoneComponent#enable
      * @description Fired when Component becomes enabled
@@ -30,6 +32,7 @@ pc.extend(pc, function () {
      */
 
     /**
+     * @private
      * @event
      * @name pc.ZoneComponent#disable
      * @description Fired when Component becomes disabled
@@ -41,6 +44,7 @@ pc.extend(pc, function () {
      */
 
     /**
+     * @private
      * @event
      * @name pc.ZoneComponent#state
      * @description Fired when Component changes state to enabled or disabled
@@ -53,6 +57,7 @@ pc.extend(pc, function () {
      */
 
     /**
+     * @private
      * @event
      * @name pc.ZoneComponent#remove
      * @description Fired when a zone is removed from an entity

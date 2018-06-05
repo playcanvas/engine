@@ -1,5 +1,6 @@
 pc.extend(pc, function () {
     /**
+     * @private
      * @component
      * @name pc.ScrollbarComponent
      * @description Create a new ScrollbarComponent
@@ -153,6 +154,7 @@ pc.extend(pc, function () {
 
 /**
  * @event
+ * @private
  * @name pc.ScrollbarComponent#set:value
  * @description Fired whenever the scroll value changes.
  * @param {Number} value The current scroll value.
