@@ -5,7 +5,7 @@ pc.extend(pc, function () {
      * @classdesc A Light Component is used to dynamically light the scene.
      * @description Create a new LightComponentSystem.
      * @param {pc.Application} app The application.
-     * @extends pc.ComponentSystem 
+     * @extends pc.ComponentSystem
      */
     var lightTypes = {
         'directional': pc.LIGHTTYPE_DIRECTIONAL,

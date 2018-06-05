@@ -2,10 +2,11 @@ pc.extend(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.SceneRegistryItem
-     * @class Item to be stored in the {@link pc.SceneRegistry}
+     * @description Item to be stored in the {@link pc.SceneRegistry}
      * @param {String} name The name of the scene
-     * @param {Strng} url The url of the scene file
+     * @param {String} url The url of the scene file
      */
     var SceneRegistryItem = function (name, url) {
         this.name = name;
@@ -14,8 +15,9 @@ pc.extend(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.SceneRegistry
-     * @class Container for storing the name and url for scene files
+     * @description Container for storing the name and url for scene files
      * @param {pc.Application} app The application
      */
     var SceneRegistry = function (app) {
@@ -113,8 +115,8 @@ pc.extend(pc, function () {
             this._list.splice(i, 1);
 
             // refresh index
-            for (var i = 0; i < this._list.length; i++) {
-                var item = this._list[i];
+            for (i = 0; i < this._list.length; i++) {
+                item = this._list[i];
                 this._index[item.name] = i;
                 this._urlIndex[item.url] = i;
             }
@@ -182,7 +184,7 @@ pc.extend(pc, function () {
             // load priority and referenced scripts before opening scene
             self._app._preloadScripts(data, _loaded);
         });
-    },
+    };
 
     /**
      * @private
