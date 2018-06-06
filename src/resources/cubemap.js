@@ -1,11 +1,11 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var CubemapHandler = function (device, assets, loader) {
         this._device = device;
         this._assets = assets;
         this._loader = loader;
     };
 
-    CubemapHandler.prototype = {
+    Object.assign(CubemapHandler.prototype, {
         load: function (url, callback) { },
 
         open: function (url, data) { },
@@ -189,7 +189,7 @@ pc.extend(pc, function () {
                 }
             });
         }
-    };
+    });
 
     return {
         CubemapHandler: CubemapHandler

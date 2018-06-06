@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var SoundInstance;
@@ -110,7 +110,7 @@ pc.extend(pc, function () {
             this.source = null;
         };
 
-        SoundInstance.prototype = {
+        Object.assign(SoundInstance.prototype, {
             /**
              * @function
              * @private
@@ -463,7 +463,7 @@ pc.extend(pc, function () {
                     this.source = null;
                 }
             }
-        };
+        });
 
         Object.defineProperty(SoundInstance.prototype, 'volume', {
             get: function () {
@@ -614,7 +614,7 @@ pc.extend(pc, function () {
             this._createSource();
         };
 
-        SoundInstance.prototype = {
+        Object.assign(SoundInstance.prototype, {
             play: function () {
                 if (this._state !== STATE_STOPPED) {
                     this.stop();
@@ -779,7 +779,7 @@ pc.extend(pc, function () {
                     this.source.pause();
                 }
             }
-        };
+        });
 
         Object.defineProperty(SoundInstance.prototype, 'volume', {
             get: function () {
@@ -861,7 +861,7 @@ pc.extend(pc, function () {
     }
 
     // Add functions which don't depend on source type
-    pc.extend(SoundInstance.prototype, {
+    Object.assign(SoundInstance.prototype, {
 
         _onPlay: function () {
             this.fire('play');

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     var spotCenter = new pc.Vec3();
     var spotEndPoint = new pc.Vec3();
@@ -78,7 +78,7 @@ pc.extend(pc, function () {
         this._visibleCameraSettings = []; // camera settings used in each directional light pass
     };
 
-    Light.prototype = {
+    Object.assign(Light.prototype, {
         destroy: function () {
             this._destroyShadowMap();
         },
@@ -274,7 +274,7 @@ pc.extend(pc, function () {
 
             this.key = key;
         }
-    };
+    });
 
     Object.defineProperty(Light.prototype, 'enabled', {
         get: function () {

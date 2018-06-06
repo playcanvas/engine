@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var JSON_ADDRESS_MODE = {
         "repeat": pc.ADDRESS_REPEAT,
         "clamp": pc.ADDRESS_CLAMP_TO_EDGE,
@@ -20,7 +20,7 @@ pc.extend(pc, function () {
         this._loader = loader;
     };
 
-    TextureAtlasHandler.prototype = {
+    Object.assign(TextureAtlasHandler.prototype, {
         // Load the texture atlas texture using the texture resource loader
         load: function (url, callback) {
             var self = this;
@@ -177,7 +177,7 @@ pc.extend(pc, function () {
                 }
             }
         }
-    };
+    });
 
     return {
         TextureAtlasHandler: TextureAtlasHandler

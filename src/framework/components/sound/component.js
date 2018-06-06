@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @component
      * @constructor
@@ -30,7 +30,7 @@ pc.extend(pc, function () {
 
     SoundComponent = pc.inherits(SoundComponent, pc.Component);
 
-    pc.extend(SoundComponent.prototype, {
+    Object.assign(SoundComponent.prototype, {
         onSetSlots: function (name, oldValue, newValue) {
             var key;
 

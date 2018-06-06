@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     // checks if user is running IE
@@ -25,7 +25,7 @@ pc.extend(pc, function () {
         this.manager = manager;
     };
 
-    AudioHandler.prototype = {
+    Object.assign(AudioHandler.prototype, {
         _isSupported: function (url) {
             var toMIME = {
                 '.ogg': 'audio/ogg',
@@ -71,7 +71,7 @@ pc.extend(pc, function () {
         open: function (url, data) {
             return data;
         }
-    };
+    });
 
     if (pc.SoundManager.hasAudioContext()) {
         /**

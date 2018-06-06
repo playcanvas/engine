@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     var nineSliceBasePS = [
@@ -193,7 +193,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.ElementComponent.prototype, _schema);
 
-    pc.extend(ElementComponentSystem.prototype, {
+    Object.assign(ElementComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (data.anchor !== undefined) {
                 if (data.anchor instanceof pc.Vec4) {

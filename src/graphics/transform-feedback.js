@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
@@ -93,7 +93,7 @@ pc.extend(pc, function () {
         return pc.shaderChunks.createShaderFromCode(graphicsDevice, vsCode, null, name, true);
     };
 
-    TransformFeedback.prototype = {
+    Object.assign(TransformFeedback.prototype, {
         /**
          * @function
          * @name pc.TransformFeedback#destroy
@@ -137,7 +137,7 @@ pc.extend(pc, function () {
                 this._outputBuffer.bufferId = tmp;
             }
         }
-    };
+    });
 
     /**
      * @readonly

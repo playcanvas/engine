@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     /**
      * @private
      * @constructor
@@ -12,7 +12,7 @@ pc.extend(pc, (function () {
         this._b = 0;
     };
 
-    Timer.prototype = {
+    Object.assign(Timer.prototype, {
         /**
          * @private
          * @function
@@ -45,7 +45,7 @@ pc.extend(pc, (function () {
         getMilliseconds: function () {
             return this._b - this._a;
         }
-    };
+    });
 
     return {
         Timer: Timer,

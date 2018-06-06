@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var targetX, targetY;
     var vecA = new pc.Vec3();
     var vecB = new pc.Vec3();
@@ -82,7 +82,7 @@ pc.extend(pc, function () {
         this._stopPropagation = false;
     };
 
-    ElementInputEvent.prototype = {
+    Object.assign(ElementInputEvent.prototype, {
         /**
          * @function
          * @name pc.ElementInputEvent#stopPropagation
@@ -93,8 +93,7 @@ pc.extend(pc, function () {
             this.event.stopImmediatePropagation();
             this.event.stopPropagation();
         }
-
-    };
+    });
 
     /**
      * @constructor
@@ -215,7 +214,7 @@ pc.extend(pc, function () {
         this.attach(domElement);
     };
 
-    ElementInput.prototype = {
+    Object.assign(ElementInput.prototype, {
         /**
          * @function
          * @name pc.ElementInput#attach
@@ -772,7 +771,7 @@ pc.extend(pc, function () {
 
             return false;
         }
-    };
+    });
 
     Object.defineProperty(ElementInput.prototype, 'enabled', {
         get: function () {

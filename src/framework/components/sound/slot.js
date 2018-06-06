@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     // temporary object for creating
@@ -84,7 +84,7 @@ pc.extend(pc, function () {
         pc.events.attach(this);
     };
 
-    SoundSlot.prototype = {
+    Object.assign(SoundSlot.prototype, {
         /**
          * @function pc.SoundSlot#play
          * @description Plays a sound. If {@link pc.SoundSlot#overlap} is true the new sound
@@ -410,7 +410,7 @@ pc.extend(pc, function () {
                 instances[i].position = position;
             }
         }
-    };
+    });
 
     Object.defineProperty(SoundSlot.prototype, 'name', {
         get: function () {

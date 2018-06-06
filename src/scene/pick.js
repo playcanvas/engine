@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     var _deviceDeprecationWarning = false;
     var _getSelectionDeprecationWarning = false;

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     // auto incrementing number for asset ids
     var assetIdCounter = 0;
@@ -113,7 +113,7 @@ pc.extend(pc, function () {
      * @param {*} oldValue The old property value
      */
 
-    Asset.prototype = {
+    Object.assign(Asset.prototype, {
         /**
          * @name pc.Asset#getFileUrl
          * @function
@@ -226,8 +226,7 @@ pc.extend(pc, function () {
                 this.registry._loader.clearCache(this.getFileUrl(), this.type);
             }
         }
-    };
-
+    });
 
     Object.defineProperty(Asset.prototype, 'id', {
         get: function () {

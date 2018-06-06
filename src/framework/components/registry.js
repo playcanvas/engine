@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ComponentSystemRegistry
@@ -8,7 +8,7 @@ pc.extend(pc, function () {
     var ComponentSystemRegistry = function () {
     };
 
-    ComponentSystemRegistry.prototype = {
+    Object.assign(ComponentSystemRegistry.prototype, {
         /**
          * @private
          * @function
@@ -88,7 +88,7 @@ pc.extend(pc, function () {
 
             return names;
         }
-    };
+    });
 
     return {
         ComponentSystemRegistry: ComponentSystemRegistry

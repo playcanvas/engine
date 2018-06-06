@@ -1,4 +1,4 @@
-pc.extend(pc.Application.prototype, function () {
+Object.assign(pc.Application.prototype, function () {
 
     var tempGraphNode = new pc.GraphNode();
     var identityGraphNode = new pc.GraphNode();
@@ -49,7 +49,7 @@ pc.extend(pc.Application.prototype, function () {
         this.layer = null;
     };
 
-    LineBatch.prototype = {
+    Object.assign(LineBatch.prototype, {
         init: function (device, vertexFormat, layer, linesToAdd) {
             // Allocate basic stuff once per batch
             if (!this.mesh) {
@@ -118,7 +118,7 @@ pc.extend(pc.Application.prototype, function () {
                 this.linesUsed = 0;
             }
         }
-    };
+    });
 
     function _initImmediate() {
         // Init global line drawing data once

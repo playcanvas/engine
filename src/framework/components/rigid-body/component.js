@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     // Shared math variable to avoid excessive allocation
     var ammoTransform;
     var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
@@ -130,7 +130,7 @@ pc.extend(pc, function () {
         }
     });
 
-    pc.extend(RigidBodyComponent.prototype, {
+    Object.assign(RigidBodyComponent.prototype, {
         /**
          * @private
          * @function

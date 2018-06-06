@@ -709,9 +709,9 @@
         PAD_R_STICK_Y: 3
     };
 
-    pc.extend(pc, enums);
+    Object.assign(pc, enums);
 
     // For backwards compatibility
     pc.input = {};
-    pc.extend(pc.input, enums);
+    Object.assign(pc.input, enums);
 }());

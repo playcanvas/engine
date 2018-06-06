@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = [
         { name: 'enabled', type: 'boolean' },
         { name: 'horizontal', type: 'boolean' },
@@ -38,7 +38,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.ScrollViewComponent.prototype, _schema);
 
-    pc.extend(ScrollViewComponentSystem.prototype, {
+    Object.assign(ScrollViewComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             ScrollViewComponentSystem._super.initializeComponentData.call(this, component, data, _schema);
         },

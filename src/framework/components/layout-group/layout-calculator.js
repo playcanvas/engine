@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @private
      * @constructor
@@ -650,7 +650,7 @@ pc.extend(pc, function () {
     CALCULATE_FNS[pc.ORIENTATION_HORIZONTAL] = createCalculator(pc.ORIENTATION_HORIZONTAL);
     CALCULATE_FNS[pc.ORIENTATION_VERTICAL] = createCalculator(pc.ORIENTATION_VERTICAL);
 
-    LayoutCalculator.prototype = {
+    Object.assign(LayoutCalculator.prototype, {
         calculateLayout: function (elements, options) {
             var calculateFn = CALCULATE_FNS[options.orientation];
 
@@ -660,7 +660,7 @@ pc.extend(pc, function () {
                 return calculateFn(elements, options);
             }
         }
-    };
+    });
 
     return {
         LayoutCalculator: LayoutCalculator

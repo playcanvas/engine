@@ -1,10 +1,10 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     var TagsCache = function (key) {
         this._index = { };
         this._key = key || null;
     };
 
-    TagsCache.prototype = {
+    Object.assign(TagsCache.prototype, {
         addItem: function (item) {
             var tags = item.tags._list;
 
@@ -142,7 +142,7 @@ pc.extend(pc, (function () {
 
             return items;
         }
-    };
+    });
 
 
     /**
@@ -183,7 +183,7 @@ pc.extend(pc, (function () {
         pc.events.attach(this);
     };
 
-    Tags.prototype = {
+    Object.assign(Tags.prototype, {
         /**
          * @function
          * @name pc.Tags#add
@@ -392,7 +392,7 @@ pc.extend(pc, (function () {
 
             return tags;
         }
-    };
+    });
 
     /**
      * @field

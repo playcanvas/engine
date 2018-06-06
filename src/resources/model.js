@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ModelHandler
@@ -17,7 +17,7 @@ pc.extend(pc, function () {
 
     ModelHandler.DEFAULT_MATERIAL = pc.Scene.defaultMaterial;
 
-    ModelHandler.prototype = {
+    Object.assign(ModelHandler.prototype, {
         /**
          * @function
          * @name pc.ModelHandler#load
@@ -136,7 +136,7 @@ pc.extend(pc, function () {
                 decider: decider
             });
         }
-    };
+    });
 
     return {
         ModelHandler: ModelHandler

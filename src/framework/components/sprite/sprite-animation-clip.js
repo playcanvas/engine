@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     /**
      * @private
@@ -39,7 +39,7 @@ pc.extend(pc, function () {
         pc.events.attach(this);
     };
 
-    SpriteAnimationClip.prototype = {
+    Object.assign(SpriteAnimationClip.prototype, {
         // When sprite asset is added bind it
         _onSpriteAssetAdded: function (asset) {
             this._component.system.app.assets.off('add:' + asset.id, this._onSpriteAssetAdded, this);
@@ -256,8 +256,7 @@ pc.extend(pc, function () {
             this.fire('stop');
             this._component.fire('stop', this);
         }
-    };
-
+    });
 
     Object.defineProperty(SpriteAnimationClip.prototype, "spriteAsset", {
         get: function () {

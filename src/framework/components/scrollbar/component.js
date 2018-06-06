@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @private
      * @component
@@ -25,7 +25,7 @@ pc.extend(pc, function () {
     };
     ScrollbarComponent = pc.inherits(ScrollbarComponent, pc.Component);
 
-    pc.extend(ScrollbarComponent.prototype, {
+    Object.assign(ScrollbarComponent.prototype, {
         _toggleLifecycleListeners: function (onOrOff) {
             this[onOrOff]('set_value', this._onSetValue, this);
             this[onOrOff]('set_handleSize', this._onSetHandleSize, this);

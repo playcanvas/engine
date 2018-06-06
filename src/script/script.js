@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var rawToValue = function (app, args, value, old) {
         var i;
 

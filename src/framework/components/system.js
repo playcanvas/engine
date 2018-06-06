@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ComponentSystem
@@ -14,7 +14,7 @@ pc.extend(pc, function () {
     };
 
     // Class methods
-    pc.extend(ComponentSystem, {
+    Object.assign(ComponentSystem, {
         initialize: function (root) {
             ComponentSystem.fire('initialize', root);
         },

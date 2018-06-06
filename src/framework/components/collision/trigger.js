@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     var ammoVec1, ammoQuat;
 
@@ -25,7 +25,7 @@ pc.extend(pc, function () {
         this.initialize(data);
     };
 
-    Trigger.prototype =  {
+    Object.assign(Trigger.prototype,  {
         initialize: function (data) {
             var entity = this.entity;
             var shape = data.shape;
@@ -117,10 +117,9 @@ pc.extend(pc, function () {
             // that it properly deactivates after we remove it from the physics world
             body.forceActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
         }
-    };
+    });
 
     return {
         Trigger: Trigger
     };
-
 }());

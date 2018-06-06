@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     function InterpolatedKey() {
         this._written = false;
         this._name = "";
@@ -13,7 +13,7 @@ pc.extend(pc, function () {
         this._targetNode = null;
     }
 
-    InterpolatedKey.prototype = {
+    Object.assign(InterpolatedKey.prototype, {
         getTarget: function () {
             return this._targetNode;
         },
@@ -21,7 +21,7 @@ pc.extend(pc, function () {
         setTarget: function (node) {
             this._targetNode = node;
         }
-    };
+    });
 
     /**
      * @constructor

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.VrManager
@@ -86,7 +86,7 @@ pc.extend(pc, function () {
      */
     VrManager.usesPolyfill = !!window.InitializeWebVRPolyfill;
 
-    VrManager.prototype = {
+    Object.assign(VrManager.prototype, {
         _attach: function () {
             window.addEventListener('vrdisplayconnect', this._onDisplayConnect);
             window.addEventListener('vrdisplaydisconnect', this._onDisplayDisconnect);
@@ -185,7 +185,7 @@ pc.extend(pc, function () {
 
             this.fire('displaydisconnect', display);
         }
-    };
+    });
 
     return {
         VrManager: VrManager

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     // TODO: split by new layers
 
@@ -89,8 +89,7 @@ pc.extend(pc, function () {
         }
     };
 
-    SkinBatchInstance.prototype = {
-
+    Object.assign(SkinBatchInstance.prototype, {
         updateMatrices: function () {
         },
 
@@ -127,7 +126,7 @@ pc.extend(pc, function () {
                 this.boneTexture.unlock();
             }
         }
-    };
+    });
 
     /**
      * @constructor

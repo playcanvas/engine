@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var JSON_ADDRESS_MODE = {
@@ -43,7 +43,7 @@ pc.extend(pc, function () {
         }
     };
 
-    TextureHandler.prototype = {
+    Object.assign(TextureHandler.prototype, {
         load: function (url, callback) {
             var self = this;
             var image;
@@ -312,7 +312,7 @@ pc.extend(pc, function () {
             if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== rgbm)
                 texture.rgbm = rgbm;
         }
-    };
+    });
 
     return {
         TextureHandler: TextureHandler

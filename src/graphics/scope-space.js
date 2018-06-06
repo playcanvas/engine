@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var ScopeSpace = function (name) {
@@ -10,7 +10,7 @@ pc.extend(pc, function () {
         this.namespaces = {};
     };
 
-    ScopeSpace.prototype = {
+    Object.assign(ScopeSpace.prototype, {
         resolve: function (name) {
             // Check if the ScopeId already exists
             if (!this.variables.hasOwnProperty(name)) {
@@ -32,7 +32,7 @@ pc.extend(pc, function () {
             // Now return the ScopeNamespace instance
             return this.namespaces[name];
         }
-    };
+    });
 
     return {
         ScopeSpace: ScopeSpace

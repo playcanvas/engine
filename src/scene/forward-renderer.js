@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     // Global shadowmap resources
     var scaleShift = new pc.Mat4().mul2(
@@ -449,7 +449,7 @@ pc.extend(pc, function () {
         m3.data[8] = m4.data[10];
     }
 
-    pc.extend(ForwardRenderer.prototype, {
+    Object.assign(ForwardRenderer.prototype, {
 
         sortCompare: function (drawCallA, drawCallB) {
             if (drawCallA.layer === drawCallB.layer) {

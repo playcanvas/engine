@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Touch
@@ -56,7 +56,7 @@ pc.extend(pc, function () {
         }
     };
 
-    TouchEvent.prototype = {
+    Object.assign(TouchEvent.prototype, {
         /**
          * @function
          * @name pc.TouchEvent#getTouchById
@@ -76,7 +76,7 @@ pc.extend(pc, function () {
 
             return null;
         }
-    };
+    });
 
     /**
      * @constructor
@@ -98,7 +98,7 @@ pc.extend(pc, function () {
         pc.events.attach(this);
     };
 
-    TouchDevice.prototype = {
+    Object.assign(TouchDevice.prototype, {
         /**
          * @function
          * @name pc.TouchDevice#attach
@@ -152,7 +152,7 @@ pc.extend(pc, function () {
         _handleTouchCancel: function (e) {
             this.fire('touchcancel', new TouchEvent(this, e));
         }
-    };
+    });
 
     return {
         /**

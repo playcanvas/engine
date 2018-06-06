@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var ShaderInput = function (graphicsDevice, name, type, locationId) {

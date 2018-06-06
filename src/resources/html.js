@@ -1,9 +1,9 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var HtmlHandler = function () {};
 
-    HtmlHandler.prototype = {
+    Object.assign(HtmlHandler.prototype, {
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
                 if (!err) {
@@ -20,7 +20,7 @@ pc.extend(pc, function () {
 
         patch: function (asset, assets) {
         }
-    };
+    });
 
     return {
         HtmlHandler: HtmlHandler

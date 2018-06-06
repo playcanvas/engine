@@ -1,4 +1,4 @@
-pc.extend(pc, {
+Object.assign(pc, {
     /**
      * @enum pc.FITTING
      * @name pc.FITTING_NONE

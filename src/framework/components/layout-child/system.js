@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
@@ -23,7 +23,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.LayoutChildComponent.prototype, _schema);
 
-    pc.extend(LayoutChildComponentSystem.prototype, {
+    Object.assign(LayoutChildComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (data.enabled !== undefined) component.enabled = data.enabled;
             if (data.minWidth !== undefined) component.minWidth = data.minWidth;
