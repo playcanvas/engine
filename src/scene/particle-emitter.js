@@ -1,5 +1,5 @@
 // Mr F
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var particleVerts = [
         [-1, -1],
         [1, -1],
@@ -43,6 +43,33 @@ pc.extend(pc, function () {
         return texture;
     };
 
+    function frac(f) {
+        return f - Math.floor(f);
+    }
+
+    function encodeFloatRGBA( v ) {
+        var encX = frac(v);
+        var encY = frac(255.0 * v);
+        var encZ = frac(65025.0 * v);
+        var encW = frac(160581375.0 * v);
+
+        encX -= encY / 255.0;
+        encY -= encZ / 255.0;
+        encZ -= encW / 255.0;
+        encW -= encW / 255.0;
+
+        return [encX, encY, encZ, encW];
+    }
+
+    function encodeFloatRG( v ) {
+        var encX = frac(v);
+        var encY = frac(255.0 * v);
+
+        encX -= encY / 255.0;
+        encY -= encY / 255.0;
+
+        return [encX, encY];
+    }
 
     function saturate(x) {
         return Math.max(Math.min(x, 1), 0);
@@ -391,7 +418,7 @@ pc.extend(pc, function () {
         mat3.data[8] = mat4.data[10];
     }
 
-    ParticleEmitter.prototype = {
+    Object.assign(ParticleEmitter.prototype, {
 
         onChangeCamera: function () {
             this.regenShader();
@@ -1473,37 +1500,9 @@ pc.extend(pc, function () {
             this.shaderParticleUpdateNoRespawn = null;
             this.shaderParticleUpdateOnStop = null;
         }
-    };
+    });
 
     return {
         ParticleEmitter: ParticleEmitter
     };
 }());
-
-function frac(f) {
-    return f - Math.floor(f);
-}
-
-function encodeFloatRGBA( v ) {
-    var encX = frac(v);
-    var encY = frac(255.0 * v);
-    var encZ = frac(65025.0 * v);
-    var encW = frac(160581375.0 * v);
-
-    encX -= encY / 255.0;
-    encY -= encZ / 255.0;
-    encZ -= encW / 255.0;
-    encW -= encW / 255.0;
-
-    return [encX, encY, encZ, encW];
-}
-
-function encodeFloatRG( v ) {
-    var encX = frac(v);
-    var encY = frac(255.0 * v);
-
-    encX -= encY / 255.0;
-    encY -= encY / 255.0;
-
-    return [encX, encY];
-}

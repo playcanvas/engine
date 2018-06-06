@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _tempScrollValue = new pc.Vec2();
 
     /**
@@ -58,7 +58,7 @@ pc.extend(pc, function () {
     };
     ScrollViewComponent = pc.inherits(ScrollViewComponent, pc.Component);
 
-    pc.extend(ScrollViewComponent.prototype, {
+    Object.assign(ScrollViewComponent.prototype, {
         _toggleLifecycleListeners: function (onOrOff, system) {
             this[onOrOff]('set_horizontal', this._onSetHorizontalScrollingEnabled, this);
             this[onOrOff]('set_vertical', this._onSetVerticalScrollingEnabled, this);

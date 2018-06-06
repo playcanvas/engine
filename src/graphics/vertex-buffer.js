@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
@@ -36,7 +36,7 @@ pc.extend(pc, function () {
         this.device.buffers.push(this);
     };
 
-    VertexBuffer.prototype = {
+    Object.assign(VertexBuffer.prototype, {
         /**
          * @function
          * @name pc.VertexBuffer#destroy
@@ -157,7 +157,7 @@ pc.extend(pc, function () {
             this.unlock();
             return true;
         }
-    };
+    });
 
     return {
         VertexBuffer: VertexBuffer

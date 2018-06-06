@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @enum pc.SCALEMODE
      * @name pc.SCALEMODE_NONE
@@ -43,7 +43,7 @@ pc.extend(pc, function () {
 
     var _transform = new pc.Mat4();
 
-    pc.extend(ScreenComponent.prototype, {
+    Object.assign(ScreenComponent.prototype, {
         /**
          * @function
          * @name pc.ScreenComponent#syncDrawOrder

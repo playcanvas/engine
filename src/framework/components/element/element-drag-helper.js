@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _inputScreenPosition = new pc.Vec2();
     var _inputWorldPosition = new pc.Vec3();
     var _rayOrigin = new pc.Vec3();
@@ -45,7 +45,7 @@ pc.extend(pc, function () {
         this._toggleLifecycleListeners('on');
     };
 
-    pc.extend(ElementDragHelper.prototype, {
+    Object.assign(ElementDragHelper.prototype, {
         _toggleLifecycleListeners: function (onOrOff) {
             this._element[onOrOff]('mousedown', this._onMouseDownOrTouchStart, this);
             this._element[onOrOff]('touchstart', this._onMouseDownOrTouchStart, this);

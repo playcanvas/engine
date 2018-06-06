@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = [
         'enabled',
         'volume',
@@ -44,7 +44,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.SoundComponent.prototype, _schema);
 
-    pc.extend(SoundComponentSystem.prototype, {
+    Object.assign(SoundComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['volume', 'pitch', 'positional', 'refDistance', 'maxDistance', 'rollOffFactor', 'distanceModel', 'slots', 'enabled'];
             SoundComponentSystem._super.initializeComponentData.call(this, component, data, properties);

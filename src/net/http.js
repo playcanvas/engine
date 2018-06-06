@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Http
@@ -44,7 +44,7 @@ pc.extend(pc, function () {
         '.dds'
     ];
 
-    Http.prototype = {
+    Object.assign(Http.prototype, {
 
         ContentType: Http.ContentType,
         ResponseType: Http.ResponseType,
@@ -403,7 +403,7 @@ pc.extend(pc, function () {
         _onError: function (method, url, options, xhr) {
             options.callback(xhr.status, null);
         }
-    };
+    });
 
     return {
         Http: Http,

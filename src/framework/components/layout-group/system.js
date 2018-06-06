@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
@@ -30,7 +30,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.LayoutGroupComponent.prototype, _schema);
 
-    pc.extend(LayoutGroupComponentSystem.prototype, {
+    Object.assign(LayoutGroupComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (data.enabled !== undefined) component.enabled = data.enabled;
             if (data.orientation !== undefined) component.orientation = data.orientation;

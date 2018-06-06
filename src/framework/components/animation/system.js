@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = [
         'enabled',
         'assets',
@@ -45,7 +45,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.AnimationComponent.prototype, _schema);
 
-    pc.extend(AnimationComponentSystem.prototype, {
+    Object.assign(AnimationComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['activate', 'enabled', 'loop', 'speed', 'assets'];
             AnimationComponentSystem._super.initializeComponentData.call(this, component, data, properties);

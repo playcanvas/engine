@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = [
         'enabled',
         'active',
@@ -41,7 +41,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.ButtonComponent.prototype, _schema);
 
-    pc.extend(ButtonComponentSystem.prototype, {
+    Object.assign(ButtonComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             ButtonComponentSystem._super.initializeComponentData.call(this, component, data, _schema);
         },

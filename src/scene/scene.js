@@ -352,14 +352,14 @@
         ORIENTATION_VERTICAL: 1
     };
 
-    pc.extend(pc, enums);
+    Object.assign(pc, enums);
 
     // For backwards compatibility
     pc.scene = {};
-    pc.extend(pc.scene, enums);
+    Object.assign(pc.scene, enums);
 }());
 
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Scene

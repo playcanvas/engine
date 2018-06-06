@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
@@ -106,7 +106,7 @@ pc.extend(pc, function () {
     };
     SpriteComponent = pc.inherits(SpriteComponent, pc.Component);
 
-    pc.extend(SpriteComponent.prototype, {
+    Object.assign(SpriteComponent.prototype, {
         onEnable: function () {
             SpriteComponent._super.onEnable.call(this);
 

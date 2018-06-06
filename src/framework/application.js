@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @name pc.Application
      * @class Default application which performs general setup code and initiates the main game loop.
@@ -523,7 +523,7 @@ pc.extend(pc, function () {
         };
     };
 
-    Application.prototype = {
+    Object.assign(Application.prototype, {
         /**
          * @function
          * @name pc.Application#configure
@@ -1527,7 +1527,7 @@ pc.extend(pc, function () {
 
             pc.destroyPostEffectQuad();
         }
-    };
+    });
 
     // static data
     var _frameEndData = {};

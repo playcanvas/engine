@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
@@ -570,7 +570,7 @@ pc.extend(pc, function () {
     });
 
     // Public methods
-    pc.extend(Texture.prototype, {
+    Object.assign(Texture.prototype, {
         /**
          * @function
          * @name pc.Texture#destroy

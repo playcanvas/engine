@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.VrDisplay
@@ -99,7 +99,7 @@ pc.extend(pc, function () {
         pc.events.attach(this);
     };
 
-    VrDisplay.prototype = {
+    Object.assign(VrDisplay.prototype, {
         /**
          * @function
          * @name pc.VrDisplay#destroy
@@ -310,7 +310,7 @@ pc.extend(pc, function () {
         getFrameData: function () {
             if (this.display) return this._frameData;
         }
-    };
+    });
 
     Object.defineProperty(VrDisplay.prototype, "capabilities", {
         get: function () {

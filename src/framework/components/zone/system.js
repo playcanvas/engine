@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
@@ -26,7 +26,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.ZoneComponent.prototype, _schema);
 
-    pc.extend(ZoneComponentSystem.prototype, {
+    Object.assign(ZoneComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
 

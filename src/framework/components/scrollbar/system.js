@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = [
         { name: 'enabled', type: 'boolean' },
         { name: 'orientation', type: 'number' },
@@ -31,7 +31,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.ScrollbarComponent.prototype, _schema);
 
-    pc.extend(ScrollbarComponentSystem.prototype, {
+    Object.assign(ScrollbarComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             ScrollbarComponentSystem._super.initializeComponentData.call(this, component, data, _schema);
         },

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var tmpVecA = new pc.Vec3();
 
     /**
@@ -15,7 +15,7 @@ pc.extend(pc, function () {
         this.point = point || new pc.Vec3(0, 0, 0);
     };
 
-    Plane.prototype = {
+    Object.assign(Plane.prototype, {
         /**
          * @function
          * @name pc.Plane#intersectsLine
@@ -56,7 +56,7 @@ pc.extend(pc, function () {
 
             return intersects;
         }
-    };
+    });
 
     return {
         Plane: Plane

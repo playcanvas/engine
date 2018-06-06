@@ -72,7 +72,7 @@ pc.fw = {
     }
 };
 
-pc.extend(pc.gfx, {
+Object.assign(pc.gfx, {
     drawQuadWithShader: pc.drawQuadWithShader,
     precalculatedTangents: pc.precalculatedTangents,
     programlib: pc.programlib,
@@ -110,7 +110,7 @@ pc.extend(pc.gfx, {
     pc.UnsupportedBrowserError = UnsupportedBrowserError;
 })();
 
-pc.extend(pc.input, {
+Object.assign(pc.input, {
     getTouchTargetCoords: pc.getTouchTargetCoords,
     Controller: pc.Controller,
     GamePads: pc.GamePads,
@@ -142,7 +142,7 @@ pc.posteffect = {
     PostEffectQueue: pc.PostEffectQueue
 };
 
-pc.extend(pc.scene, {
+Object.assign(pc.scene, {
     partitionSkin: pc.partitionSkin,
     procedural: {
         calculateTangents: pc.calculateTangents,

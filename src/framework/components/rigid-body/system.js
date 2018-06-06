@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var ammoRayStart, ammoRayEnd;
 
     var collisions = {};
@@ -165,7 +165,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.RigidBodyComponent.prototype, _schema);
 
-    pc.extend(RigidBodyComponentSystem.prototype, {
+    Object.assign(RigidBodyComponentSystem.prototype, {
         onLibraryLoaded: function () {
             // Create the Ammo physics world
             if (typeof Ammo !== 'undefined') {

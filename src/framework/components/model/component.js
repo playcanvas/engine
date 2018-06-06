@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @component
      * @constructor
@@ -68,7 +68,7 @@ pc.extend(pc, function () {
     };
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
-    pc.extend(ModelComponent.prototype, {
+    Object.assign(ModelComponent.prototype, {
         setVisible: function (visible) {
             console.warn("WARNING: setVisible: Function is deprecated. Set enabled property instead.");
             this.enabled = visible;

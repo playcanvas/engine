@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @component
      * @constructor
@@ -325,7 +325,7 @@ pc.extend(pc, function () {
         }
     });
 
-    pc.extend(LightComponent.prototype, {
+    Object.assign(LightComponent.prototype, {
 
         addLightToLayers: function () {
             var layer;

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.AssetRegistry
@@ -19,7 +19,7 @@ pc.extend(pc, function () {
 
         this.prefix = null;
 
-        pc.extend(this, pc.events);
+        Object.assign(this, pc.events);
     };
 
     /**
@@ -150,7 +150,7 @@ pc.extend(pc, function () {
      * app.assets.load(asset);
      */
 
-    AssetRegistry.prototype = {
+    Object.assign(AssetRegistry.prototype, {
         /**
          * @function
          * @name pc.AssetRegistry#list
@@ -676,8 +676,7 @@ pc.extend(pc, function () {
             console.warn("DEPRECATED: getAssetById() use get() instead");
             return this.get(id);
         }
-
-    };
+    });
 
     return {
         AssetRegistry: AssetRegistry

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     // pre-allocated temp variables
     var _deviceCoord = new pc.Vec3();
     var _far = new pc.Vec3();
@@ -71,7 +71,7 @@ pc.extend(pc, function () {
         this._component = null;
     };
 
-    Camera.prototype = {
+    Object.assign(Camera.prototype, {
         /**
          * @private
          * @function
@@ -272,7 +272,7 @@ pc.extend(pc, function () {
         releaseDepthMap: function () {
             this._renderDepthRequests--;
         }
-    };
+    });
 
     /**
      * @private

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @component
      * @constructor
@@ -73,7 +73,7 @@ pc.extend(pc, function () {
     };
     LayoutGroupComponent = pc.inherits(LayoutGroupComponent, pc.Component);
 
-    pc.extend(LayoutGroupComponent.prototype, {
+    Object.assign(LayoutGroupComponent.prototype, {
         _isSelfOrChild: function (entity) {
             return (entity === this.entity) || (this.entity.children.indexOf(entity) !== -1);
         },

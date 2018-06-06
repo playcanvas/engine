@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var PARAMETER_TYPES = {
@@ -148,7 +148,7 @@ pc.extend(pc, function () {
         this._createPlaceholders();
     };
 
-    MaterialHandler.prototype = {
+    Object.assign(MaterialHandler.prototype, {
         load: function (url, callback) {
             // Loading from URL (engine-only)
             pc.http.get(url, function (err, response) {
@@ -451,7 +451,7 @@ pc.extend(pc, function () {
 
             material.init(data);
         }
-    };
+    });
 
     return {
         MaterialHandler: MaterialHandler,

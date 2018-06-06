@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.PostEffectQueue
@@ -32,7 +32,7 @@ pc.extend(pc, function () {
         camera.on('set_rect', this.onCameraRectChanged, this);
     }
 
-    PostEffectQueue.prototype = {
+    Object.assign(PostEffectQueue.prototype, {
         /**
          * @private
          * @function
@@ -373,7 +373,7 @@ pc.extend(pc, function () {
                 this.resizeRenderTargets();
             }
         }
-    };
+    });
 
     return {
         PostEffectQueue: PostEffectQueue

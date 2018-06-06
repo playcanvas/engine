@@ -1,4 +1,4 @@
-pc.extend(pc, {
+Object.assign(pc, {
     /**
      * @private
      * @enum pc.BUTTON_TRANSITION_MODE

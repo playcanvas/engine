@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var VisualState = {
         DEFAULT: 'DEFAULT',
         HOVER: 'HOVER',
@@ -62,7 +62,7 @@ pc.extend(pc, function () {
     };
     ButtonComponent = pc.inherits(ButtonComponent, pc.Component);
 
-    pc.extend(ButtonComponent.prototype, {
+    Object.assign(ButtonComponent.prototype, {
         _toggleLifecycleListeners: function (onOrOff, system) {
             this[onOrOff]('set_active', this._onSetActive, this);
             this[onOrOff]('set_transitionMode', this._onSetTransitionMode, this);

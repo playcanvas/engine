@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var topMasks = [];
 
     var _debugLogging = false;
@@ -159,7 +159,7 @@ pc.extend(pc, function () {
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
 
-    pc.extend(ElementComponent.prototype, {
+    Object.assign(ElementComponent.prototype, {
         _patch: function () {
             this.entity._sync = this._sync;
             this.entity.setPosition = this._setPosition;

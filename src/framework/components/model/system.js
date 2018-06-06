@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = [
         'enabled',
         'type',
@@ -70,7 +70,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.ModelComponent.prototype, _schema);
 
-    pc.extend(ModelComponentSystem.prototype, {
+    Object.assign(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
 
             // order matters here

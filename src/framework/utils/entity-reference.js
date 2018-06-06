@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @private
      * @name pc.EntityReference
@@ -126,7 +126,7 @@ pc.extend(pc, function () {
         this._toggleLifecycleListeners('on');
     }
 
-    pc.extend(EntityReference.prototype, {
+    Object.assign(EntityReference.prototype, {
         _configureEventListeners: function (externalEventConfig, internalEventConfig) {
             var externalEventListenerConfigs = this._parseEventListenerConfig(externalEventConfig, 'external', this._parentComponent);
             var internalEventListenerConfigs = this._parseEventListenerConfig(internalEventConfig, 'internal', this);

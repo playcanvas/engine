@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @component
      * @name pc.ScriptComponent
@@ -161,7 +161,7 @@ pc.extend(pc, function () {
      * });
      */
 
-    pc.extend(ScriptComponent.prototype, {
+    Object.assign(ScriptComponent.prototype, {
         onEnable: function () {
             ScriptComponent._super.onEnable.call(this);
             this._beingEnabled = true;

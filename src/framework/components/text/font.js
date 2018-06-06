@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     pc.FONT_MSDF = 'msdf';
 
     /**
@@ -24,9 +24,6 @@ pc.extend(pc, function () {
         // json data
         this._data = null;
         this.data = data;
-    };
-
-    Font.prototype = {
     };
 
     Object.defineProperty(Font.prototype, "data", {

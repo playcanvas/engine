@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
@@ -13,7 +13,7 @@ pc.extend(pc, function () {
         this._cache = {};
     };
 
-    ResourceLoader.prototype = {
+    Object.assign(ResourceLoader.prototype, {
         /**
          * @function
          * @name pc.ResourceLoader#addHandler
@@ -160,7 +160,7 @@ pc.extend(pc, function () {
             this._requests = {};
             this._cache = {};
         }
-    };
+    });
 
     return {
         ResourceLoader: ResourceLoader

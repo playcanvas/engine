@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @component
      * @constructor
@@ -14,7 +14,7 @@ pc.extend(pc, function () {
 
     AudioListenerComponent = pc.inherits(AudioListenerComponent, pc.Component);
 
-    pc.extend(AudioListenerComponent.prototype, {
+    Object.assign(AudioListenerComponent.prototype, {
         setCurrentListener: function () {
             if (this.enabled && this.entity.audiolistener && this.entity.enabled) {
                 this.system.current = this.entity;
