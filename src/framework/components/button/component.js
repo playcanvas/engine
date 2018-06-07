@@ -49,6 +49,8 @@ Object.assign(pc, function () {
      * @property {Number} inactiveSpriteFrame Frame to be used from the inactive sprite.
      */
     var ButtonComponent = function ButtonComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this._visualState = VisualState.DEFAULT;
         this._isHovering = false;
         this._isPressed = false;
@@ -60,7 +62,8 @@ Object.assign(pc, function () {
 
         this._toggleLifecycleListeners('on', system);
     };
-    ButtonComponent = pc.inherits(ButtonComponent, pc.Component);
+    ButtonComponent.prototype = Object.create(pc.Component.prototype);
+    ButtonComponent.prototype.constructor = ButtonComponent;
 
     Object.assign(ButtonComponent.prototype, {
         _toggleLifecycleListeners: function (onOrOff, system) {

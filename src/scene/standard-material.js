@@ -243,9 +243,13 @@ Object.assign(pc, function () {
      */
 
     var StandardMaterial = function () {
+        pc.Material.call(this);
+
         this.reset();
         this.update();
     };
+    StandardMaterial.prototype = Object.create(pc.Material.prototype);
+    StandardMaterial.prototype.constructor = StandardMaterial;
 
     var _createTexture = function (param) {
         return (param.data instanceof pc.Texture) ? param.data : null;
@@ -584,8 +588,6 @@ Object.assign(pc, function () {
                 this[p] = from[p];
         }
     };
-
-    StandardMaterial = pc.inherits(StandardMaterial, pc.Material);
 
     Object.assign(StandardMaterial.prototype, {
 

@@ -10,6 +10,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var LayoutChildComponentSystem = function LayoutChildComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'layoutchild';
         this.app = app;
         app.systems.add(this.id, this);
@@ -19,7 +21,8 @@ Object.assign(pc, function () {
 
         this.schema = _schema;
     };
-    LayoutChildComponentSystem = pc.inherits(LayoutChildComponentSystem, pc.ComponentSystem);
+    LayoutChildComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    LayoutChildComponentSystem.prototype.constructor = LayoutChildComponentSystem;
 
     pc.Component._buildAccessors(pc.LayoutChildComponent.prototype, _schema);
 
@@ -34,7 +37,7 @@ Object.assign(pc, function () {
             if (data.fitHeightProportion !== undefined) component.fitHeightProportion = data.fitHeightProportion;
             if (data.excludeFromLayout !== undefined) component.excludeFromLayout = data.excludeFromLayout;
 
-            LayoutChildComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {

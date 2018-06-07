@@ -109,9 +109,11 @@ Object.assign(pc, function () {
     });
 
     // Box Collision System
-    var CollisionBoxSystemImpl = function (system) {};
-
-    CollisionBoxSystemImpl = pc.inherits(CollisionBoxSystemImpl, CollisionSystemImpl);
+    var CollisionBoxSystemImpl = function (system) {
+        CollisionSystemImpl.call(this, system);
+    };
+    CollisionBoxSystemImpl.prototype = Object.create(CollisionSystemImpl.prototype);
+    CollisionBoxSystemImpl.prototype.constructor = CollisionBoxSystemImpl;
 
     Object.assign(CollisionBoxSystemImpl.prototype, {
         createPhysicalShape: function (entity, data) {
@@ -125,9 +127,11 @@ Object.assign(pc, function () {
     });
 
     // Sphere Collision System
-    var CollisionSphereSystemImpl = function (system) {};
-
-    CollisionSphereSystemImpl = pc.inherits(CollisionSphereSystemImpl, CollisionSystemImpl);
+    var CollisionSphereSystemImpl = function (system) {
+        CollisionSystemImpl.call(this, system);
+    };
+    CollisionSphereSystemImpl.prototype = Object.create(CollisionSystemImpl.prototype);
+    CollisionSphereSystemImpl.prototype.constructor = CollisionSphereSystemImpl;
 
     Object.assign(CollisionSphereSystemImpl.prototype, {
         createPhysicalShape: function (entity, data) {
@@ -139,9 +143,11 @@ Object.assign(pc, function () {
     });
 
     // Capsule Collision System
-    var CollisionCapsuleSystemImpl = function (system) {};
-
-    CollisionCapsuleSystemImpl = pc.inherits(CollisionCapsuleSystemImpl, CollisionSystemImpl);
+    var CollisionCapsuleSystemImpl = function (system) {
+        CollisionSystemImpl.call(this, system);
+    };
+    CollisionCapsuleSystemImpl.prototype = Object.create(CollisionSystemImpl.prototype);
+    CollisionCapsuleSystemImpl.prototype.constructor = CollisionCapsuleSystemImpl;
 
     Object.assign(CollisionCapsuleSystemImpl.prototype, {
         createPhysicalShape: function (entity, data) {
@@ -168,9 +174,11 @@ Object.assign(pc, function () {
     });
 
     // Cylinder Collision System
-    var CollisionCylinderSystemImpl = function (system) {};
-
-    CollisionCylinderSystemImpl = pc.inherits(CollisionCylinderSystemImpl, CollisionSystemImpl);
+    var CollisionCylinderSystemImpl = function (system) {
+        CollisionSystemImpl.call(this, system);
+    };
+    CollisionCylinderSystemImpl.prototype = Object.create(CollisionSystemImpl.prototype);
+    CollisionCylinderSystemImpl.prototype.constructor = CollisionCylinderSystemImpl;
 
     Object.assign(CollisionCylinderSystemImpl.prototype, {
         createPhysicalShape: function (entity, data) {
@@ -201,9 +209,11 @@ Object.assign(pc, function () {
     });
 
     // Mesh Collision System
-    var CollisionMeshSystemImpl = function (system) { };
-
-    CollisionMeshSystemImpl = pc.inherits(CollisionMeshSystemImpl, CollisionSystemImpl);
+    var CollisionMeshSystemImpl = function (system) {
+        CollisionSystemImpl.call(this, system);
+    };
+    CollisionMeshSystemImpl.prototype = Object.create(CollisionSystemImpl.prototype);
+    CollisionMeshSystemImpl.prototype.constructor = CollisionMeshSystemImpl;
 
     Object.assign(CollisionMeshSystemImpl.prototype, {
         // override for the mesh implementation because the asset model needs
@@ -358,7 +368,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            CollisionMeshSystemImpl._super.updateTransform.call(this, component, position, rotation, scale);
+            pc.CollisionSystemImpl.prototype.updateTransform.call(this, component, position, rotation, scale);
         }
     });
 
@@ -371,6 +381,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var CollisionComponentSystem = function CollisionComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = "collision";
         this.description = "Specifies a collision volume.";
         app.systems.add(this.id, this);
@@ -386,8 +398,8 @@ Object.assign(pc, function () {
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
     };
-
-    CollisionComponentSystem = pc.inherits(CollisionComponentSystem, pc.ComponentSystem);
+    CollisionComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    CollisionComponentSystem.prototype.constructor = CollisionComponentSystem;
 
     pc.Component._buildAccessors(pc.CollisionComponent.prototype, _schema);
 
@@ -437,7 +449,7 @@ Object.assign(pc, function () {
             var impl = this._createImplementation(data.type);
             impl.beforeInitialize(component, data);
 
-            CollisionComponentSystem._super.initializeComponentData.call(this.system, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this.system, component, data, properties);
 
             impl.afterInitialize(component, data);
         },

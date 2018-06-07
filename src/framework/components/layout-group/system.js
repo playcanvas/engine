@@ -10,6 +10,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var LayoutGroupComponentSystem = function LayoutGroupComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'layoutgroup';
         this.app = app;
         app.systems.add(this.id, this);
@@ -26,7 +28,8 @@ Object.assign(pc, function () {
         // Perform reflow when running in the engine
         pc.ComponentSystem.on('postUpdate', this._onPostUpdate, this);
     };
-    LayoutGroupComponentSystem = pc.inherits(LayoutGroupComponentSystem, pc.ComponentSystem);
+    LayoutGroupComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    LayoutGroupComponentSystem.prototype.constructor = LayoutGroupComponentSystem;
 
     pc.Component._buildAccessors(pc.LayoutGroupComponent.prototype, _schema);
 
@@ -67,7 +70,7 @@ Object.assign(pc, function () {
             if (data.heightFitting !== undefined) component.heightFitting = data.heightFitting;
             if (data.wrap !== undefined) component.wrap = data.wrap;
 
-            LayoutGroupComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {

@@ -22,6 +22,8 @@ Object.assign(pc, function () {
      */
 
     var AudioSourceComponent = function (system, entity) {
+        pc.Component.call(this, system, entity);
+
         this.on("set_assets", this.onSetAssets, this);
         this.on("set_loop", this.onSetLoop, this);
         this.on("set_volume", this.onSetVolume, this);
@@ -32,7 +34,8 @@ Object.assign(pc, function () {
         this.on("set_distanceModel", this.onSetDistanceModel, this);
         this.on("set_3d", this.onSet3d, this);
     };
-    AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.Component);
+    AudioSourceComponent.prototype = Object.create(pc.Component.prototype);
+    AudioSourceComponent.prototype.constructor = AudioSourceComponent;
 
     Object.assign(AudioSourceComponent.prototype, {
         /**
@@ -252,7 +255,7 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            AudioSourceComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
 
             // load assets that haven't been loaded yet
             var assets = this.data.assets;
@@ -280,7 +283,7 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            AudioSourceComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
             this.pause();
         },
 

@@ -11,6 +11,8 @@ Object.assign(pc, function () {
      */
 
     var ScriptComponent = function ScriptComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this._scripts = [];
         this._scriptsIndex = {};
         this._destroyedScripts = [];
@@ -21,7 +23,8 @@ Object.assign(pc, function () {
         this._isLoopingThroughScripts = false;
         this.on('set_enabled', this._onSetEnabled, this);
     };
-    ScriptComponent = pc.inherits(ScriptComponent, pc.Component);
+    ScriptComponent.prototype = Object.create(pc.Component.prototype);
+    ScriptComponent.prototype.constructor = ScriptComponent;
 
     ScriptComponent.scriptMethods = {
         initialize: 'initialize',
@@ -163,7 +166,7 @@ Object.assign(pc, function () {
 
     Object.assign(ScriptComponent.prototype, {
         onEnable: function () {
-            ScriptComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
             this._beingEnabled = true;
             this._checkState();
 
@@ -175,7 +178,7 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            ScriptComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
             this._checkState();
         },
 

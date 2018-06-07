@@ -27,6 +27,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var ModelComponentSystem = function ModelComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'model';
         this.description = "Renders a 3D model at the location of the Entity.";
         app.systems.add(this.id, this);
@@ -66,7 +68,8 @@ Object.assign(pc, function () {
 
         this.on('beforeremove', this.onRemove, this);
     };
-    ModelComponentSystem = pc.inherits(ModelComponentSystem, pc.ComponentSystem);
+    ModelComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ModelComponentSystem.prototype.constructor = ModelComponentSystem;
 
     pc.Component._buildAccessors(pc.ModelComponent.prototype, _schema);
 
@@ -95,8 +98,7 @@ Object.assign(pc, function () {
                 data.layers = data.layers.slice(0);
             }
 
-
-            ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         removeComponent: function (entity) {
@@ -108,7 +110,7 @@ Object.assign(pc, function () {
                 data.model = null;
             }
 
-            ModelComponentSystem._super.removeComponent.call(this, entity);
+            pc.ComponentSystem.prototype.removeComponent.call(this, entity);
         },
 
         cloneComponent: function (entity, clone) {

@@ -10,9 +10,10 @@ Object.assign(pc, function () {
      * @extends pc.Component
      */
     var AudioListenerComponent = function (system, entity) {
+        pc.Component.call(this, system, entity);
     };
-
-    AudioListenerComponent = pc.inherits(AudioListenerComponent, pc.Component);
+    AudioListenerComponent.prototype = Object.create(pc.Component.prototype);
+    AudioListenerComponent.prototype.constructor = AudioListenerComponent;
 
     Object.assign(AudioListenerComponent.prototype, {
         setCurrentListener: function () {
@@ -24,12 +25,12 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            AudioListenerComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
             this.setCurrentListener();
         },
 
         onDisable: function () {
-            AudioListenerComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
             if (this.system.current === this.entity) {
                 this.system.current = null;
             }
