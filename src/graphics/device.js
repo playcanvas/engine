@@ -1006,6 +1006,9 @@ pc.extend(pc, function () {
         updateBegin: function () {
             var gl = this.gl;
 
+            this.boundBuffer = null;
+            this.indexBuffer = null;
+
             // Set the render target
             var target = this.renderTarget;
             if (target) {
@@ -1139,6 +1142,10 @@ pc.extend(pc, function () {
                 }
             } else {
                 this.setFramebuffer(null);
+            }
+
+            for (var i = 0; i < 16; i++) {
+                this.textureUnits[i] = null;
             }
         },
 
