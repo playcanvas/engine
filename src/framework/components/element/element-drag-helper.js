@@ -155,7 +155,7 @@ Object.assign(pc, function () {
         },
 
         _calculateDragScale: function () {
-            var current = this._element.entity;
+            var current = this._element.entity.parent;
             var screen = this._element.screen && this._element.screen.screen;
             var isWithin2DScreen = screen && screen.screenSpace;
             var screenScale = isWithin2DScreen ? screen.scale : 1;
