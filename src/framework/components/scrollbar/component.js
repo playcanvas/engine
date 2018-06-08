@@ -31,6 +31,7 @@ pc.extend(pc, function () {
         _toggleLifecycleListeners: function (onOrOff) {
             this[onOrOff]('set_value', this._onSetValue, this);
             this[onOrOff]('set_handleSize', this._onSetHandleSize, this);
+            this[onOrOff]('set_orientation', this._onSetOrientation, this);
 
             // TODO Handle scrollwheel events
         },
@@ -70,6 +71,12 @@ pc.extend(pc, function () {
 
         _onSetHandleAlignment: function () {
             this._updateHandlePositionAndSize();
+        },
+
+        _onSetOrientation: function (name, oldValue, newValue) {
+            if (newValue !== oldValue && this._handleReference.hasComponent('element')) {
+                this._handleReference.entity.element[this._getOppositeDimension()] = 0;
+            }
         },
 
         _updateHandlePositionAndSize: function () {
@@ -125,6 +132,10 @@ pc.extend(pc, function () {
 
         _getDimension: function () {
             return this.orientation === pc.ORIENTATION_HORIZONTAL ? 'width' : 'height';
+        },
+
+        _getOppositeDimension: function () {
+            return this.orientation === pc.ORIENTATION_HORIZONTAL ? 'height' : 'width';
         },
 
         _destroyDragHelper: function () {
