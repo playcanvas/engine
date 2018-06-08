@@ -936,6 +936,7 @@ pc.extend(pc, function () {
         set: function (value) {
             this._margin.copy(value);
             this._calculateSize(true, true);
+            this.fire('set:margin', this._margin);
         }
     });
 
