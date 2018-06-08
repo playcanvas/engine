@@ -17,7 +17,10 @@ pc.extend(pc, function () {
 
         this._handleReference = new pc.EntityReference(this, 'handleEntity', {
             'element#gain': this._onHandleElementGain,
-            'element#lose': this._onHandleElementLose
+            'element#lose': this._onHandleElementLose,
+            'element#set:anchor': this._onSetHandleAlignment,
+            'element#set:margin': this._onSetHandleAlignment,
+            'element#set:pivot': this._onSetHandleAlignment
         });
 
         this._toggleLifecycleListeners('on');
@@ -63,6 +66,10 @@ pc.extend(pc, function () {
                 this.data.handleSize = pc.math.clamp(newValue, 0, 1);
                 this._updateHandlePositionAndSize();
             }
+        },
+
+        _onSetHandleAlignment: function () {
+            this._updateHandlePositionAndSize();
         },
 
         _updateHandlePositionAndSize: function () {
