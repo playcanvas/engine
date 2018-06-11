@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head> 
+    <script src="../../build/output/playcanvas-latest.js"></script>
+    <link href="../style.css" rel="stylesheet" />
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <script>
+        function createMaterial(colors) {
+            var material = new pc.PhongMaterial();
+            for (var param in colors) {
+                material[param] = colors[param];
+            }
+            material.update();
+            return material;
+        }
+    </script>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        app.scene.ambientLight = new pc.Color(0.8, 0.8, 0.8);
+
+        var entity;
+
+        // Create an Entity with a camera component
+        var cameraEntity = new pc.Entity(app);
+        cameraEntity.addComponent("camera", {
+            clearColor: new pc.Color(0, 0, 0)
+        });
+        cameraEntity.rotateLocal(0, 0, 0);
+        cameraEntity.translateLocal(0, 0.6, 2.4);
+        app.root.addChild(cameraEntity); 
+        
+        //load animator
+        app.assets.loadFromUrl("../assets/Playbot/Playbot.json", "model", function (err, asset) {
+            modelAsset = asset;
+            app.assets.loadFromUrl("../assets/Playbot/Playbot_run.json", "animator", function (err, asset) {
+                var runAsset = asset;
+                app.assets.loadFromUrl("../assets/Playbot/Playbot_idle.json", "animator", function (err, asset) { 
+                    var idleAsset = asset; 
+                    app.assets.loadFromUrl("../assets/newAnimation/AnimatedTriangle.gltf", "animator", function (err, asset) { 
+                        var triangleAsset = asset;
+
+                    entity = new pc.Entity();
+                    // add model component to entity
+                    entity.addComponent("model", {
+                        type: "asset",
+                        asset: modelAsset,
+                        castShadows: true
+                    });
+
+                    //animator component=============================== 
+                        var animation = triangleAsset.resource.animations[0];
+                        var ckeys = Object.keys(animation.animCurves);
+                        var curve = animation.animCurves[ckeys[0]];
+                        curve.animTargets[0].targetNode = entity.model.model.getGraph(); 
+
+                    entity.addComponent("animator"); 
+                    var modelComponent = entity.model;
+                    if(modelComponent)
+                        entity.animator.setTarget(modelComponent.model); 
+ 
+                    //entity.animator.addAssets([idleAnim, runAnim, trangleAnim]); 
+                    entity.animator.addClip("idle clip", idleAsset);
+                    entity.animator.addClip("run clip", runAsset);
+                    entity.animator.addClip("spin clip", triangleAsset, 0);
+
+
+                    app.root.addChild(entity); 
+                    // Start alternating between run and stop
+                    setTimeout(function () {
+                        run();
+                    }, 2000);
+                });//gltf
+                });
+            });
+        });
+
+        /* glb/gltf
+        app.assets.loadFromUrl("../assets/newAnimation/AnimatedTriangle.gltf", "animate", function (err, asset) {
+            model = asset;
+            app.assets.loadFromUrl("../assets/newAnimation/AnimatedTriangle.gltf", "animate", function (err, asset) {
+                var newAnimation = asset;
+            });
+        });*/
+
+        // Start running then stop in 1s
+        function run() {
+            entity.animator.fadeTo("run clip", 1);
+            setTimeout(function () {
+                stop();
+            }, 2000);
+        };
+
+        // Stop running then start running in 1s
+        function stop() { 
+            entity.animator.fadeTo("idle clip", 1);
+            setTimeout(function () { 
+                gltfTake4();
+            }, 2000);
+        }
+
+        function gltfTake4() { 
+            entity.animator.fadeTo("spin clip", 0.5);
+            setTimeout(function () {
+                run();
+            }, 1000);
+        }
+
+    </script>
+</body>
+</html>

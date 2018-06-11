@@ -434,6 +434,7 @@ Object.assign(pc, function () {
         this._scriptPrefix = options.scriptPrefix || '';
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
+        this.loader.addHandler("animator", new pc.AnimatorHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
         this.loader.addHandler("material", new pc.MaterialHandler(this));
         this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice, this.assets, this.loader));
@@ -457,6 +458,7 @@ Object.assign(pc, function () {
         new pc.RigidBodyComponentSystem(this);
         new pc.CollisionComponentSystem(this);
         new pc.AnimationComponentSystem(this);
+        new pc.AnimatorComponentSystem(this);
         new pc.ModelComponentSystem(this);
         new pc.CameraComponentSystem(this);
         new pc.LightComponentSystem(this);

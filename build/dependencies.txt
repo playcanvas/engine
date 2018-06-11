@@ -86,6 +86,7 @@
 ../src/scene/stencil-parameters.js
 ../src/anim/animation.js
 ../src/anim/skeleton.js
+../src/animator/animator.js
 ../src/sound/manager.js
 ../src/sound/sound.js
 ../src/sound/listener.js
@@ -116,6 +117,9 @@
 ../src/framework/components/animation/component.js
 ../src/framework/components/animation/system.js
 ../src/framework/components/animation/data.js
+../src/framework/components/animator/component.js
+../src/framework/components/animator/system.js
+../src/framework/components/animator/data.js
 ../src/framework/components/model/component.js
 ../src/framework/components/model/system.js
 ../src/framework/components/model/data.js
@@ -195,6 +199,8 @@
 ../src/framework/utils/entity-reference.js
 ../src/resources/loader.js
 ../src/resources/animation.js
+../src/resources/animator.js
+../src/resources/gltf.js
 ../src/resources/audio.js
 ../src/resources/cubemap.js
 ../src/resources/json.js
