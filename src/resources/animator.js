@@ -64,7 +64,7 @@ pc.extend(pc, function () {
         //legacy json animation =================================================================
         _parseNewAnimationV3: function(data) {//data contains legacy animation
             var data = data.animation; 
-            var animation = new pc.Animation2(null); 
+            var animation = new pc.Animation(null);
             animation.name = data.name;
             animation.duration = data.duration;
 
@@ -112,7 +112,7 @@ pc.extend(pc, function () {
 
         _parseNewAnimationV4: function(data) {//data contains legacy format
             var data = data.animation; 
-            var animation = new pc.Animation2(null);
+            var animation = new pc.Animation(null);
 
             animation.name = data.name;
             animation.duration = data.duration;

@@ -111,7 +111,7 @@ pc.extend(pc, function () {
             return this._clips[clipName]._playable; 
         }, 
         addAnimation: function(animation) {
-            if(animation && (animation instanceof pc.Animation2)) {
+            if(animation && (animation instanceof pc.Animation)) {
                 var clip = new pc.AnimationClip(this, animation); 
                 clip._name = animation.name;
                 this._clips[clip._name] = clip;
@@ -159,7 +159,7 @@ pc.extend(pc, function () {
                 } 
             } 
             //playable maybe a animation
-            if(clip._playable instanceof pc.Animation2) { 
+            if(clip._playable instanceof pc.Animation) {
                 var animation = clip._playable;  
                 for (var key in animation.animCurves) { 
                     if (!animation.animCurves.hasOwnProperty(key)) 

@@ -121,7 +121,7 @@
     // Specification:
     //   https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#animation
     function translateAnimation(data, resources) {
-        var animation = new pc.Animation2();
+        var animation = new pc.Animation();
         if(data.hasOwnProperty('name'))
             animation.name = data.name;
 

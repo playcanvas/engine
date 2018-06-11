@@ -801,10 +801,10 @@ AnimationSnapshot.linearBlend = function (shot1, shot2, p, mask) {//WANGYI: name
 // * e.g.:   for an animation of a character, name = "walk"
 // *       each joint has one curve with keys on timeline, thus animCurves stores curves of all joints
 // *===============================================================================================================
-var Animation2 = function Animation2(root) {
-    Animation2.count ++;
-    this.id = Animation2.count;
-    this.name = "take" + Animation2.count.toString();
+var Animation = function Animation(root) {
+    Animation.count ++;
+    this.id = Animation.count;
+    this.name = "take" + Animation.count.toString();
     this.duration = 0;
     this.animCurves = {}; // a map for easy query
     this.root = null;
@@ -815,10 +815,10 @@ var Animation2 = function Animation2(root) {
 
     this.clip = new AnimationClip(null, this);//null for _component
 };
-Animation2.count = 0;
+Animation.count = 0;
 
 // getter setter
-Object.defineProperty(Animation2.prototype, 'isPlaying', {
+Object.defineProperty(Animation.prototype, 'isPlaying', {
     get: function () {
         return this.clip._isPlaying;
     },
@@ -826,7 +826,7 @@ Object.defineProperty(Animation2.prototype, 'isPlaying', {
         this.clip._isPlaying = isPlaying;
     }
 });
-Object.defineProperty(Animation2.prototype, 'loop', {
+Object.defineProperty(Animation.prototype, 'loop', {
     get: function () {
         return this.clip._loop;
     },
@@ -834,7 +834,7 @@ Object.defineProperty(Animation2.prototype, 'loop', {
         this.clip._loop = loop;
     }
 });
-Object.defineProperty(Animation2.prototype, 'speed', {
+Object.defineProperty(Animation.prototype, 'speed', {
     get: function () {
         return this.clip._speed;
     },
@@ -843,7 +843,7 @@ Object.defineProperty(Animation2.prototype, 'speed', {
     }
 });
 
-Animation2.prototype.copy = function (animation) {
+Animation.prototype.copy = function (animation) {
     this.name = animation.name;
     this.duration = animation.duration;
 
@@ -859,12 +859,12 @@ Animation2.prototype.copy = function (animation) {
     return this;
 };
 
-Animation2.prototype.clone = function () {
-    var cloned = new Animation2().copy(this);
+Animation.prototype.clone = function () {
+    var cloned = new Animation().copy(this);
     return cloned;
 };
 
-Animation2.prototype.updateDuration = function () {
+Animation.prototype.updateDuration = function () {
     this.duration = 0;
     for(var cname in this.animCurves) { 
         if(!this.animCurves.hasOwnProperty(cname)) continue;
@@ -872,20 +872,20 @@ Animation2.prototype.updateDuration = function () {
     }
 };
 
-Animation2.prototype.showAt = function (time, fadeDir, fadeBegTime, fadeEndTime, fadeTime) {
+Animation.prototype.showAt = function (time, fadeDir, fadeBegTime, fadeEndTime, fadeTime) {
     this.clip.showAt(time, fadeDir, fadeBegTime, fadeEndTime, fadeTime);
 };
 
-Animation2.prototype.blendToTarget = function (snapshot, p) {
+Animation.prototype.blendToTarget = function (snapshot, p) {
     this.clip.blendToTarget(snapshot, p);
 };
 
-Animation2.prototype.updateToTarget = function (snapshot) {
+Animation.prototype.updateToTarget = function (snapshot) {
     this.clip.updateToTarget(snapshot);
 };
 
 // a dictionary: retrieve animTargets with curve name
-Animation2.prototype.getAnimTargets = function () {
+Animation.prototype.getAnimTargets = function () {
     var animTargets = {}; 
     for(var cname in this.animCurves) { 
 
@@ -898,7 +898,7 @@ Animation2.prototype.getAnimTargets = function () {
     return animTargets;
 };
 
-Animation2.prototype.resetClip = function () {
+Animation.prototype.resetClip = function () {
     this.clip._playable = this;
     this.clip._animTargets = this.getAnimTargets();
     this.clip._isPlaying = true;
@@ -909,36 +909,36 @@ Animation2.prototype.resetClip = function () {
     this.clip._loop = true;
 };
 
-Animation2.prototype.play = function () {
+Animation.prototype.play = function () {
     this.clip.play(this);
 };
 
-Animation2.prototype.stop = function () {
+Animation.prototype.stop = function () {
     this.clip.stop();
 };
 
-Animation2.prototype.pause = function () {
+Animation.prototype.pause = function () {
     this.clip.pause();
 };
 
-Animation2.prototype.resume = function () {
+Animation.prototype.resume = function () {
     this.clip.resume();
 };
 
-Animation2.prototype.fadeIn = function (duration) {
+Animation.prototype.fadeIn = function (duration) {
     this.clip.fadeIn(duration, this);
 };
 
-Animation2.prototype.fadeOut = function (duration) {
+Animation.prototype.fadeOut = function (duration) {
     this.clip.fadeOut(duration);
 };
 
-Animation2.prototype.fadeTo = function (toAnimation, duration) {
+Animation.prototype.fadeTo = function (toAnimation, duration) {
     this.clip.fadeTo(toAnimation, duration);
 };
 
 // curve related
-Animation2.prototype.addCurve = function (curve) {
+Animation.prototype.addCurve = function (curve) {
     if (curve && curve.name) {
         this.animCurves[curve.name] = curve;
         if (curve.duration > this.duration)
@@ -946,41 +946,41 @@ Animation2.prototype.addCurve = function (curve) {
     }
 };
 
-Animation2.prototype.removeCurve = function (name) {
+Animation.prototype.removeCurve = function (name) {
     if (name && this.animCurves[name]) {
         delete this.animCurves[name];
         this.updateDuration();
     }
 };
 
-Animation2.prototype.removeAllCurves = function () {
+Animation.prototype.removeAllCurves = function () {
     this.animCurves = {};
     this.duration = 0;
 };
 
 
 // events related
-Animation2.prototype.on = function (name, time, fnCallback, context, parameter) {
+Animation.prototype.on = function (name, time, fnCallback, context, parameter) {
     if (this.clip)
         this.clip.on(name, time, fnCallback, context, parameter);
     return this;
 };
 
-Animation2.prototype.off = function (name, time, fnCallback) {
+Animation.prototype.off = function (name, time, fnCallback) {
     if (this.clip)
         this.clip.off(name, time, fnCallback);
     return this;
 };
 
-Animation2.prototype.removeAllEvents = function () {
+Animation.prototype.removeAllEvents = function () {
     if (this.clip)
         this.clip.removeAllEvents();
     return this;
 };
 
 // animation related
-Animation2.prototype.getSubAnimation = function (tmBeg, tmEnd) {
-    var subAnimation = new Animation2();
+Animation.prototype.getSubAnimation = function (tmBeg, tmEnd) {
+    var subAnimation = new Animation();
     subAnimation.name = this.name + "_sub";
     subAnimation.root = this.root;
  
@@ -998,7 +998,7 @@ Animation2.prototype.getSubAnimation = function (tmBeg, tmEnd) {
 };
 
 // take a snapshot of animation at this moment
-Animation2.prototype.eval = function (time) {
+Animation.prototype.eval = function (time) {
     var snapshot = new AnimationSnapshot();
     snapshot.time = time;
  
@@ -1013,7 +1013,7 @@ Animation2.prototype.eval = function (time) {
     return snapshot;
 };
 
-Animation2.prototype.constructFromRoot = function (root) {
+Animation.prototype.constructFromRoot = function (root) {
     if (!root)
         return;
 
@@ -1071,7 +1071,7 @@ Animation2.prototype.constructFromRoot = function (root) {
 //         newTarget.vScale = NS / AS = vScale * NS / RS;
 //
 */
-Animation2.prototype.transferToRoot = function (root) {
+Animation.prototype.transferToRoot = function (root) {
     var arTarget = AnimationTarget.constructTargetNodes(root);// contains localScale information
  
     for(var cname in this.animCurves) { 
@@ -1106,7 +1106,7 @@ Animation2.prototype.transferToRoot = function (root) {
 };
 
 //blend related
-Animation2.prototype.updateCurveNameFromTarget = function () {
+Animation.prototype.updateCurveNameFromTarget = function () {
     var curveNames = Object.keys(this.animCurves);
     for (var i = 0; i < curveNames.length; i++) { // for each curve in animation
         var oldName = curveNames[i];
@@ -1127,7 +1127,7 @@ Animation2.prototype.updateCurveNameFromTarget = function () {
     }
 };
 
-Animation2.prototype.removeEmptyCurves = function () {
+Animation.prototype.removeEmptyCurves = function () {
     var curveNames = Object.keys(this.animCurves);
     for (var i = 0; i < curveNames.length; i++) {
         if (!this.animCurves[curveNames[i]] ||
@@ -1136,7 +1136,7 @@ Animation2.prototype.removeEmptyCurves = function () {
     }
 };
 
-Animation2.prototype.setInterpolationType = function (type) {
+Animation.prototype.setInterpolationType = function (type) {
     for(var cname in this.animCurves) { 
         if(!this.animCurves.hasOwnProperty(cname)) continue;
         if (this.animCurves[cname])
@@ -1325,12 +1325,12 @@ Object.defineProperty(AnimationClip.prototype, 'fadeDir', {
 });
 Object.defineProperty(AnimationClip.prototype, 'animation', {
     get: function () {
-        if(this._playable instanceof pc.Animation2)
+        if(this._playable instanceof pc.Animation)
             return this._playable;
         return null;
     },
     set: function (value) {
-        if(value instanceof pc.Animation2)
+        if(value instanceof pc.Animation)
             this._playable = value;
     }
 });
@@ -1414,7 +1414,7 @@ AnimationClip.prototype.clone = function () {
 
 //blend related==========================================================
 AnimationClip.prototype.setBlend = function(blendValue, weight, curveName, mask){
-    if(blendValue instanceof pc.Animation2){ 
+    if(blendValue instanceof pc.Animation){
         if(!curveName || curveName === "") 
             curveName = "__default__"; 
         this._blendables[curveName] = blendValue;
@@ -1534,7 +1534,7 @@ AnimationClip.prototype.blendToTarget = function (input, p) {
     }
 
     // playable is a animation, input is a AnimationSnapshot, animTargets is an object {curvename1:[]targets, curvename2:[]targets, curvename3:[]targets}
-    if (this._playable instanceof pc.Animation2 && input instanceof pc.AnimationSnapshot) { 
+    if (this._playable instanceof pc.Animation && input instanceof pc.AnimationSnapshot) {
         for(var cname in input.curveKeyable) { 
             if(!input.curveKeyable.hasOwnProperty(cname))
                 continue; 
@@ -1565,7 +1565,7 @@ AnimationClip.prototype.updateToTarget = function (input) {
     }
 
     // playable is a animation, input is a AnimationSnapshot
-    if (this._playable instanceof pc.Animation2 && input instanceof pc.AnimationSnapshot) {
+    if (this._playable instanceof pc.Animation && input instanceof pc.AnimationSnapshot) {
         for(var cname in input.curveKeyable) { 
             if(!input.curveKeyable.hasOwnProperty(cname))
                 continue;
@@ -1590,7 +1590,7 @@ AnimationClip.prototype.showAt = function (time, fadeDir, fadeBegTime, fadeEndTi
         var p = this._blendWeights[bname];
         var blendable = this._blendables[bname];
         var mask = this._blendMasks[bname];//WANGYI:
-        if(blendable && (blendable instanceof pc.Animation2) && (typeof p === "number")) {
+        if(blendable && (blendable instanceof pc.Animation) && (typeof p === "number")) {
             var blendInput = blendable.eval(this._accTime%blendable.duration);  
             input = AnimationSnapshot.linearBlend(input, blendInput, p, mask);//WANGYI, add mask
         }
@@ -1602,7 +1602,7 @@ AnimationClip.prototype.showAt = function (time, fadeDir, fadeBegTime, fadeEndTi
 
         var p = this._blendWeights[cname];
         var blendkey = this._blendables[cname];
-        if(!blendkey || !input.curveKeyable[cname] || (blendkey instanceof pc.Animation2))
+        if(!blendkey || !input.curveKeyable[cname] || (blendkey instanceof pc.Animation))
             continue; 
         var resKey = AnimationKeyable.linearBlend(input.curveKeyable[cname], blendkey, p);
         input.curveKeyable[cname] = resKey;
@@ -1633,7 +1633,7 @@ AnimationClip.prototype.play = function (playable, animTargets) {
     if (playable)
         this._playable = playable;
 
-    if (!(this._playable instanceof pc.Animation2) && !(this._playable instanceof pc.AnimationCurve))
+    if (!(this._playable instanceof pc.Animation) && !(this._playable instanceof pc.AnimationCurve))
         return this;
 
     if (this._isPlaying)// already playing
@@ -1789,7 +1789,7 @@ AnimationClip.prototype._onLoadAsset = function () {
     if(!this._asset || !this._asset.resource) 
         return;
     //set playable
-    if(this._asset.resource instanceof pc.Animation2)
+    if(this._asset.resource instanceof pc.Animation)
         this._playable = this._asset.resource;
     else if(this._asset.resource instanceof pc.AnimationGroup) {
         var animGroup = this._asset.resource;
@@ -1958,8 +1958,8 @@ AnimationClip.prototype._onAddAsset = function(asset, idx) {
 // WANGYI: why use this: blending from different animations, two animations at this moment
 // *===============================================================================================================
 var AnimationBlended = function AnimationBlended(weights, animations) {
-    Animation2.count ++;
-    this._name = "take" + Animation2.count.toString(); 
+    Animation.count ++;
+    this._name = "take" + Animation.count.toString();
     this.animations = animations;
     this.weights = weights; 
     this.clip = new AnimationClip(null, this); //null for _component
@@ -1975,7 +1975,7 @@ var AnimationBlended = function AnimationBlended(weights, animations) {
 
 }; 
 //inheritance, set base to Animation
-AnimationBlended.prototype = new Animation2();
+AnimationBlended.prototype = new Animation();
 AnimationBlended.prototype.constructor = AnimationBlended;
  
 AnimationBlended.prototype.eval = function (time) {
@@ -2104,7 +2104,7 @@ AnimationGroup.prototype.unsetBlend = function(curveName) {
 return {
     AnimationGroup: AnimationGroup,
     AnimationClip: AnimationClip, 
-    Animation2: Animation2,
+    Animation: Animation,
     AnimationBlended: AnimationBlended, 
     AnimationEvent: AnimationEvent,
     AnimationSnapshot: AnimationSnapshot,
