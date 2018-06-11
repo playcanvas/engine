@@ -76,7 +76,7 @@ Object.assign(pc, function () {
          * @name pc.AnimationComponent#getAnimation
          * @description Return an animation
          * @param {String} name The name of the animation asset
-         * @returns {pc.Animation} An Animation
+         * @returns {pc.LegacyAnimation} An Animation
          */
         getAnimation: function (name) {
             return this.data.animations[name];

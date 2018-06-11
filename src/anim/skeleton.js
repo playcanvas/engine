@@ -185,8 +185,8 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Skeleton#animation
-     * @type pc.Animation
-     * @description Animation currently assigned to skeleton.
+     * @type pc.LegacyAnimation
+     * @description LegacyAnimation currently assigned to skeleton.
      */
     Object.defineProperty(Skeleton.prototype, 'animation', {
         get: function () {
@@ -204,7 +204,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Skeleton#getAnimation
      * @description Returns the animation currently assigned to the specified skeleton.
-     * @returns {pc.Animation} The animation set on the skeleton.
+     * @returns {pc.LegacyAnimation} The animation set on the skeleton.
      */
     Skeleton.prototype.getAnimation = function () {
         return this._animation;
@@ -292,7 +292,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Skeleton#setAnimation
      * @description Sets an animation on the specified skeleton.
-     * @param {pc.Animation} animation The animation to set on the skeleton.
+     * @param {pc.LegacyAnimation} animation The animation to set on the skeleton.
      */
     Skeleton.prototype.setAnimation = function (animation) {
         this.animation = animation;

@@ -22,7 +22,7 @@ Object.assign(pc, function () {
         _parseAnimationV3: function (data) {
             var animData = data.animation;
 
-            var anim = new pc.Animation();
+            var anim = new pc.LegacyAnimation();
             anim.setName(animData.name);
             anim.duration = animData.duration;
 
@@ -57,7 +57,7 @@ Object.assign(pc, function () {
         _parseAnimationV4: function (data) {
             var animData = data.animation;
 
-            var anim = new pc.Animation();
+            var anim = new pc.LegacyAnimation();
             anim.setName(animData.name);
             anim.duration = animData.duration;
 

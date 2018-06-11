@@ -28,7 +28,7 @@ Function.prototype.extendsFrom = function (Super) {
 
 // Continue to support the old engine namespaces
 pc.anim = {
-    Animation: pc.Animation,
+    LegacyAnimation: pc.LegacyAnimation,
     Key: pc.Key,
     Node: pc.Node,
     Skeleton: pc.Skeleton
