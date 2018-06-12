@@ -2061,9 +2061,11 @@ AnimationGroup.prototype.removeAnimation = function (name) {
 };
 
 AnimationGroup.prototype.playAnimation = function (name) {
-    var animation = this.getAnimationByName(name); 
-    this.curAnimation = animation;
-    animation.play(); 
+    var animation = this.getAnimationByName(name);
+    if(animation) {  
+        this.curAnimation = animation;
+        animation.play(); 
+    }
 };
 
 AnimationGroup.prototype.stopAnimation = function () {

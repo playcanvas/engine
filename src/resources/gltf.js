@@ -149,7 +149,7 @@
                 itsRoot.script.create('anim');
                 itsRoot.script.anim.animGroup = new pc.AnimationGroup();
                 //may not be needed AnimationClip.app = itsRoot.script.anim.app;
-                itsRoot.script.anim.animGroup.curAnimation = animation.name;
+                itsRoot.script.anim.animGroup.curAnimation = animation;
             }
             animGroup = itsRoot.script.anim.animGroup;
 
