@@ -79,6 +79,31 @@ Object.assign(pc, function () {
             this._element.off('set:screen', this._onScreenChange, this);
             this._element.off('set:draworder', this._onDrawOrderChange, this);
             this._element.off('screen:set:resolution', this._onResolutionChange, this);
+
+            var asset;
+            var app = this._system.app;
+
+            // unbind all asset events
+            asset = this._textureAsset ? app.assets.get(this._textureAsset) : null;
+            if (asset) {
+                asset.off("load", this._onTextureLoad, this);
+                asset.off("change", this._onTextureChange, this);
+                asset.off("remove", this._onTextureRemove, this);
+            }
+
+            asset = this._spriteAsset ? app.assets.get(this._spriteAsset): null;
+            if (asset) {
+                asset.off("load", this._onSpriteAssetLoad, this);
+                asset.off("change", this._onSpriteAssetChange, this);
+                asset.off("remove", this._onSpriteAssetRemove, this);
+            }
+
+            asset = this._materialAsset ? app.assets.get(this._materialAsset): null;
+            if (asset) {
+                asset.off("load", this._onMaterialLoad, this);
+                asset.off("change", this._onMaterialChange, this);
+                asset.off("remove", this._onMaterialRemove, this);
+            }
         },
 
         _onResolutionChange: function (res) {
