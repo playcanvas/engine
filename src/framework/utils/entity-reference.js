@@ -169,6 +169,7 @@ Object.assign(pc, function () {
             this._parentComponent.system[onOrOff]('beforeremove', this._onParentComponentRemove, this);
 
             pc.ComponentSystem[onOrOff]('postInitialize', this._onPostInitialize, this);
+            this._app.on('tools:sceneloaded', this._onSceneLoaded, this);
 
             // For any event listeners that relate to the gain/loss of a component, register
             // listeners that will forward the add/remove component events
@@ -211,6 +212,13 @@ Object.assign(pc, function () {
         },
 
         _onPostInitialize: function () {
+            this._updateEntityReference();
+        },
+
+        // When running within the editor, postInitialize is fired before the scene graph
+        // has been fully constructed. As such we use the special tools:sceneloaded event
+        // in order to know when the graph is ready to traverse.
+        _onSceneLoaded: function () {
             this._updateEntityReference();
         },
 
