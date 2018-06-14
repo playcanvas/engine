@@ -380,7 +380,11 @@ Object.assign(pc, function () {
             for (var i = 0; i < this.system._prerender.length; i++) {
                 var mask = this.system._prerender[i];
                 if (_debugLogging) console.log('prerender from: ' + mask.name);
-                ref = mask.element.syncMask(ref) + 1;
+
+                // prevent call if element has been removed since being added
+                if (mask.element) {
+                    ref = mask.element.syncMask(ref) + 1;
+                }
             }
 
             this.system._prerender.length = 0;
