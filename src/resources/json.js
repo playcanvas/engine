@@ -1,11 +1,11 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var JsonHandler = function () {
 
     };
 
-    JsonHandler.prototype = {
+    Object.assign(JsonHandler.prototype, {
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
                 if (!err) {
@@ -22,7 +22,7 @@ pc.extend(pc, function () {
 
         patch: function (asset, assets) {
         }
-    };
+    });
 
     return {
         JsonHandler: JsonHandler

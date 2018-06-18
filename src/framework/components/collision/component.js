@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @component
      * @constructor
@@ -66,7 +66,7 @@ pc.extend(pc, function () {
      * @property {pc.Model} model The model that is added to the scene graph for the mesh collision volume.
      * @extends pc.Component
      */
-    var CollisionComponent = function CollisionComponent (system, entity) {
+    var CollisionComponent = function CollisionComponent(system, entity) {
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         this.on('set_radius', this.onSetRadius, this);
@@ -83,21 +83,21 @@ pc.extend(pc, function () {
      * @name pc.CollisionComponent#contact
      * @description The 'contact' event is fired when a contact occurs between two rigid bodies
      * @param {pc.ContactResult} result Details of the contact between the two rigid bodies.
-    */
+     */
 
     /**
      * @event
      * @name pc.CollisionComponent#collisionstart
      * @description The 'collisionstart' event is fired when two rigid bodies start touching.
      * @param {pc.ContactResult} result Details of the contact between the two Entities.
-    */
+     */
 
     /**
      * @event
      * @name pc.CollisionComponent#collisionend
      * @description The 'collisionend' event is fired two rigid-bodies stop touching.
      * @param {pc.Entity} other The {@link pc.Entity} that stopped touching this collision volume.
-    */
+     */
 
     /**
      * @event
@@ -105,7 +105,7 @@ pc.extend(pc, function () {
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
      * a {@link pc.RigidBodyComponent} attached.
      * @param {pc.Entity} other The {@link pc.Entity} that entered this collision volume.
-    */
+     */
 
     /**
      * @event
@@ -113,9 +113,9 @@ pc.extend(pc, function () {
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
      * a {@link pc.RigidBodyComponent} attached.
      * @param {pc.Entity} other The {@link pc.Entity} that exited this collision volume.
-    */
+     */
 
-    pc.extend(CollisionComponent.prototype, {
+    Object.assign(CollisionComponent.prototype, {
 
         onSetType: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
@@ -173,7 +173,7 @@ pc.extend(pc, function () {
             }
 
             if (this.data.initialized && this.data.type === 'mesh') {
-                if (! newValue) {
+                if (!newValue) {
                     // if asset is null set model to null
                     // so that it's going to be removed from the simulation
                     this.data.model = null;

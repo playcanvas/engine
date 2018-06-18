@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var SpriteHandler = function (assets, device) {
         this._assets = assets;
         this._device = device;
@@ -18,7 +18,7 @@ pc.extend(pc, function () {
         spriteAsset.registry.load(atlasAsset);
     };
 
-    SpriteHandler.prototype = {
+    Object.assign(SpriteHandler.prototype, {
         load: function (url, callback) {
             // if given a json file (probably engine-only use case)
             if (pc.path.getExtension(url) === '.json') {
@@ -78,7 +78,7 @@ pc.extend(pc, function () {
         // Load atlas
         _updateAtlas: function (asset) {
             var sprite = asset.resource;
-            if (! asset.data.textureAtlasAsset) {
+            if (!asset.data.textureAtlasAsset) {
                 sprite.atlas = null;
                 return;
             }
@@ -108,7 +108,7 @@ pc.extend(pc, function () {
                 }
             }
         }
-    };
+    });
 
     return {
         SpriteHandler: SpriteHandler

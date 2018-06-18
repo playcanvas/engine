@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     pc.FONT_MSDF = 'msdf';
 
     /**
@@ -26,9 +26,6 @@ pc.extend(pc, function () {
         this.data = data;
     };
 
-    Font.prototype = {
-    };
-
     Object.defineProperty(Font.prototype, "data", {
         get: function () {
             return this._data;
@@ -36,18 +33,18 @@ pc.extend(pc, function () {
 
         set: function (value){
             this._data = value;
-            if (! value)
+            if (!value)
                 return;
 
             if (this._data.intensity !== undefined) {
                 this.intensity = this._data.intensity;
             }
 
-            if (! this._data.info)
+            if (!this._data.info)
                 this._data.info = {};
 
             // check if we need to migrate to version 2
-            if (! this._data.version || this._data.version < 2) {
+            if (!this._data.version || this._data.version < 2) {
                 this._data.info.maps = [{
                     width: this._data.info.width,
                     height: this._data.info.height

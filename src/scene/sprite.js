@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
@@ -30,7 +30,7 @@ pc.extend(pc, function () {
     pc.SPRITE_RENDERMODE_TILED = 2;
 
     // normals are the same for every mesh
-    var normals = [
+    var spriteNormals = [
         0, 0, 1,
         0, 0, 1,
         0, 0, 1,
@@ -38,7 +38,7 @@ pc.extend(pc, function () {
     ];
 
     // indices are the same for every mesh
-    var indices = [
+    var spriteIndices = [
         0, 1, 3,
         2, 3, 1
     ];
@@ -89,7 +89,7 @@ pc.extend(pc, function () {
         // destroy old meshes
         for (i = 0, len = this._meshes.length; i < len; i++) {
             var mesh = this._meshes[i];
-            if (! mesh) continue;
+            if (!mesh) continue;
 
             mesh.vertexBuffer.destroy();
             for (var j = 0, len2 = mesh.indexBuffer.length; j < len2; j++) {
@@ -147,8 +147,8 @@ pc.extend(pc, function () {
 
         var mesh = pc.createMesh(this._device, positions, {
             uvs: uvs,
-            normals: normals,
-            indices: indices
+            normals: spriteNormals,
+            indices: spriteIndices
         });
 
         return mesh;
@@ -176,7 +176,7 @@ pc.extend(pc, function () {
         //      |    |    |
         //      |    Z    |
         // (0,0)x---------x(1,0)
-        //         width
+        // width
         var vcounter = 0;
         for (i = 0; i <= ws; i++) {
             u = (i === 0 || i === ws) ? 0 : 1;
@@ -259,11 +259,11 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @private
-    * @function
-    * @name pc.Sprite#destroy
-    * @description Free up the meshes created by the sprite.
-    */
+     * @private
+     * @function
+     * @name pc.Sprite#destroy
+     * @description Free up the meshes created by the sprite.
+     */
     Sprite.prototype.destroy = function () {
         var i;
         var len;
@@ -271,7 +271,7 @@ pc.extend(pc, function () {
         // destroy old meshes
         for (i = 0, len = this._meshes.length; i < len; i++) {
             var mesh = this._meshes[i];
-            if (! mesh) continue;
+            if (!mesh) continue;
 
             mesh.vertexBuffer.destroy();
             for (var j = 0, len2 = mesh.indexBuffer.length; j < len2; j++) {

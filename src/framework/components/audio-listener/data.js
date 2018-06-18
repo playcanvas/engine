@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var AudioListenerComponentData = function () {
         // Serialized
         this.enabled = true;

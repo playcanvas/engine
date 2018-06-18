@@ -1,10 +1,10 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var ScriptLegacyComponent = function ScriptLegacyComponent(system, entity) {
         this.on("set_scripts", this.onSetScripts, this);
     };
     ScriptLegacyComponent = pc.inherits(ScriptLegacyComponent, pc.Component);
 
-    pc.extend(ScriptLegacyComponent.prototype, {
+    Object.assign(ScriptLegacyComponent.prototype, {
         send: function (name, functionName) {
             console.warn("DEPRECATED: ScriptLegacyComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
             var args = pc.makeArray(arguments).slice(2);
@@ -43,7 +43,7 @@ pc.extend(pc, function () {
             this.system._disableScriptComponent(this);
         },
 
-        onSetScripts: function(name, oldValue, newValue) {
+        onSetScripts: function (name, oldValue, newValue) {
             if (!this.system._inTools || this.runInTools) {
                 // if we only need to update script attributes then update them and return
                 if (this._updateScriptAttributes(oldValue, newValue)) {
@@ -114,7 +114,7 @@ pc.extend(pc, function () {
 
             for (i = 0, len = urls.length; i < len; i++) {
                 var url = urls[i];
-                if (! regex.test(url)) {
+                if (!regex.test(url)) {
                     url = pc.path.join(prefix, url);
                 }
 

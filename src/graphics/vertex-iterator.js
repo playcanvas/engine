@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     function VertexIteratorSetter(buffer, vertexElement) {
@@ -86,7 +86,7 @@ pc.extend(pc, function () {
         }
     }
 
-    VertexIterator.prototype = {
+    Object.assign(VertexIterator.prototype, {
         /**
          * @function
          * @name pc.VertexIterator#next
@@ -137,7 +137,7 @@ pc.extend(pc, function () {
             // Unlock the vertex buffer
             this.vertexBuffer.unlock();
         }
-    };
+    });
 
     return {
         VertexIterator: VertexIterator

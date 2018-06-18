@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     // Primitive for drawFullscreenQuad
     var primitive = {
@@ -25,7 +25,7 @@ pc.extend(pc, function () {
         this.needsDepthBuffer = false;
     };
 
-    PostEffect.prototype = {
+    Object.assign(PostEffect.prototype, {
         /**
          * @function
          * @name pc.PostEffect#render
@@ -37,9 +37,9 @@ pc.extend(pc, function () {
          */
         render: function (inputTarget, outputTarget, rect) {
         }
-    };
+    });
 
-    function createFullscreenQuad (device) {
+    function createFullscreenQuad(device) {
         // Create the vertex format
         var vertexFormat = new pc.VertexFormat(device, [
             { semantic: pc.SEMANTIC_POSITION, components: 2, type: pc.TYPE_FLOAT32 }
@@ -62,7 +62,7 @@ pc.extend(pc, function () {
         return vertexBuffer;
     }
 
-    function drawFullscreenQuad (device, target, vertexBuffer, shader, rect) {
+    function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
         device.setRenderTarget(target);
         device.updateBegin();
         var w = (target !== null) ? target.width : device.width;

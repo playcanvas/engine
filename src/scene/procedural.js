@@ -632,12 +632,13 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
  * @returns {pc.Mesh} A new cylinder-shaped mesh.
  */
 pc.createCylinder = function (device, opts) {
-    // Check the supplied options and provide defaults for unspecified ones
     // #ifdef DEBUG
-    if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius'))
+    if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius')) {
         console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+    }
     // #endif
 
+    // Check the supplied options and provide defaults for unspecified ones
     var radius = opts && (opts.radius || opts.baseRadius);
     radius = radius !== undefined ? radius : 0.5;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
@@ -840,7 +841,7 @@ pc.createPlane = function (device, opts) {
     //      |    |    |
     //      |    Z    |
     // (0,0)x---------x(1,0)
-    //         width
+    // width
     var vcounter = 0;
 
     for (i = 0; i <= ws; i++) {

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var keyA, keyB, sortPos, sortDir;
 
     function sortManual(drawCallA, drawCallB) {
@@ -264,13 +264,13 @@ pc.extend(pc, function () {
         var flags = 0;
 
         if (this._clearColorBuffer)
-            flags = flags | pc.CLEARFLAG_COLOR;
+            flags |= pc.CLEARFLAG_COLOR;
 
         if (this._clearDepthBuffer)
-            flags = flags | pc.CLEARFLAG_DEPTH;
+            flags |= pc.CLEARFLAG_DEPTH;
 
         if (this._clearStencilBuffer)
-            flags = flags | pc.CLEARFLAG_STENCIL;
+            flags |= pc.CLEARFLAG_STENCIL;
 
         this._clearOptions.flags = flags;
     };
@@ -347,12 +347,12 @@ pc.extend(pc, function () {
     };
 
     // SUBLAYER GROUPS
-    // If there are multiple sublayer with identical _cameraHash without anything in between, these are called a SUBLAYER GROUP
-    // instead of
-        // for each sublayer
-            // for each camera
-    // we go
-        // for each sublayerGroup
+    // If there are multiple sublayer with identical _cameraHash without anything in between, these
+    // are called a SUBLAYER GROUP instead of:
+    //     for each sublayer
+    //         for each camera
+    // we go:
+    //     for each sublayerGroup
 
     /**
      * @function
@@ -634,7 +634,7 @@ pc.extend(pc, function () {
         this._generateCameraHash();
     };
 
-    Layer.prototype._calculateSortDistances = function(drawCalls, drawCallsCount, camPos, camFwd) {
+    Layer.prototype._calculateSortDistances = function (drawCalls, drawCallsCount, camPos, camFwd) {
         var i, drawCall, meshPos;
         var tempx, tempy, tempz;
         for (i = 0; i < drawCallsCount; i++) {

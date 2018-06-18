@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.StandardMaterial
@@ -143,15 +143,15 @@ pc.extend(pc, function () {
      *
      * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
      * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
-        It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
+     * It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
      * @property {Number} shadingModel Defines the shading model.
      * <ul>
      *     <li>{@link pc.SPECULAR_PHONG}: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.</li>
      *     <li>{@link pc.SPECULAR_BLINN}: Energy-conserving Blinn-Phong.</li>
      * </ul>
      * @property {Number} fresnelModel Defines the formula used for Fresnel effect.
-     As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
-     When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
+     * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
+     * When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
      * <ul>
      *     <li>{@link pc.FRESNEL_NONE}: No Fresnel.</li>
      *     <li>{@link pc.FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.</li>
@@ -312,7 +312,7 @@ pc.extend(pc, function () {
         pc._matTex2D[name] = channels;
 
         Object.defineProperty(StandardMaterial.prototype, privMap.substring(1), {
-            get: function() {
+            get: function () {
                 return this[privMap];
             },
             set: function (value) {
@@ -332,7 +332,7 @@ pc.extend(pc, function () {
         var mapOffset = privMapOffset.substring(1);
 
         Object.defineProperty(StandardMaterial.prototype, mapTiling, {
-            get: function() {
+            get: function () {
                 return this[privMapTiling];
             },
             set: function (value) {
@@ -351,7 +351,7 @@ pc.extend(pc, function () {
 
 
         Object.defineProperty(StandardMaterial.prototype, mapOffset, {
-            get: function() {
+            get: function () {
                 return this[privMapOffset];
             },
             set: function (value) {
@@ -370,7 +370,7 @@ pc.extend(pc, function () {
 
 
         Object.defineProperty(StandardMaterial.prototype, privMapUv.substring(1), {
-            get: function() {
+            get: function () {
                 return this[privMapUv];
             },
             set: function (value) {
@@ -379,7 +379,7 @@ pc.extend(pc, function () {
             }
         });
         Object.defineProperty(StandardMaterial.prototype, privMapChannel.substring(1), {
-            get: function() {
+            get: function () {
                 return this[privMapChannel];
             },
             set: function (value) {
@@ -388,7 +388,7 @@ pc.extend(pc, function () {
             }
         });
         Object.defineProperty(StandardMaterial.prototype, privMapVertexColor.substring(1), {
-            get: function() {
+            get: function () {
                 return this[privMapVertexColor];
             },
             set: function (value) {
@@ -397,7 +397,7 @@ pc.extend(pc, function () {
             }
         });
         Object.defineProperty(StandardMaterial.prototype, privMapVertexColorChannel.substring(1), {
-            get: function() {
+            get: function () {
                 return this[privMapVertexColorChannel];
             },
             set: function (value) {
@@ -425,7 +425,7 @@ pc.extend(pc, function () {
         obj[priv] = defaultValue;
         obj[uform] = new Float32Array(3);
         Object.defineProperty(StandardMaterial.prototype, name, {
-            get: function() {
+            get: function () {
                 this.dirtyColor = true;
                 this.dirtyShader = true;
                 return this[priv];
@@ -463,7 +463,7 @@ pc.extend(pc, function () {
         if (hasMultiplier) {
             obj[pmult] = 1;
             Object.defineProperty(StandardMaterial.prototype, mult, {
-                get: function() {
+                get: function () {
                     return this[pmult];
                 },
                 set: function (value) {
@@ -500,7 +500,7 @@ pc.extend(pc, function () {
         var priv = "_" + name;
         obj[priv] = defaultValue;
         Object.defineProperty(StandardMaterial.prototype, name, {
-            get: function() {
+            get: function () {
                 return this[priv];
             },
             set: function (value) {
@@ -524,7 +524,7 @@ pc.extend(pc, function () {
         var priv = "_" + name;
         obj[priv] = null;
         Object.defineProperty(StandardMaterial.prototype, name, {
-            get: function() {
+            get: function () {
                 return this[priv];
             },
             set: function (value) {
@@ -539,7 +539,7 @@ pc.extend(pc, function () {
 
     var _defineAlias = function (obj, newName, oldName) {
         Object.defineProperty(StandardMaterial.prototype, oldName, {
-            get: function() {
+            get: function () {
                 return this[newName];
             },
             set: function (value) {
@@ -549,9 +549,8 @@ pc.extend(pc, function () {
     };
 
     var _defineChunks = function (obj) {
-        this._chunks = null;
         Object.defineProperty(StandardMaterial.prototype, "chunks", {
-            get: function() {
+            get: function () {
                 this.dirtyShader = true;
                 return this._chunks;
             },
@@ -567,7 +566,7 @@ pc.extend(pc, function () {
         var priv = "_" + name;
         obj[priv] = defaultValue;
         Object.defineProperty(StandardMaterial.prototype, name, {
-            get: function() {
+            get: function () {
                 return this[priv];
             },
             set: function (value) {
@@ -578,8 +577,8 @@ pc.extend(pc, function () {
         _propsSerial.push(name);
     };
 
-    var Chunks = function() { };
-    Chunks.prototype.copy = function(from) {
+    var Chunks = function () { };
+    Chunks.prototype.copy = function (from) {
         for (var p in from) {
             if (from.hasOwnProperty(p) && p !== 'copy')
                 this[p] = from[p];
@@ -588,7 +587,7 @@ pc.extend(pc, function () {
 
     StandardMaterial = pc.inherits(StandardMaterial, pc.Material);
 
-    pc.extend(StandardMaterial.prototype, {
+    Object.assign(StandardMaterial.prototype, {
 
         reset: function () {
             this.blendType = pc.BLEND_NONE;
@@ -640,19 +639,19 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (! clone.shader)
+            if (!clone.shader)
                 clone.update();
 
             return clone;
         },
 
         /**
-        * @private
-        * @name pc.PhoneMaterial#init
-        * @description Update material data from a data block, as found on a material Asset.
-        * @param {Object} data JSON material data.
-        * Note, init() expects texture parameters to contain a {@link pc.Texture} not a resource id.
-        */
+         * @private
+         * @name pc.PhoneMaterial#init
+         * @description Update material data from a data block, as found on a material Asset.
+         * @param {Object} data JSON material data.
+         * Note, init() expects texture parameters to contain a {@link pc.Texture} not a resource id.
+         */
         init: function (data) {
             this.reset();
 
@@ -692,7 +691,7 @@ pc.extend(pc, function () {
             return transform;
         },
 
-        _collectLights: function(lType, lights, lightsFiltered, mask, staticLightList) {
+        _collectLights: function (lType, lights, lightsFiltered, mask, staticLightList) {
             var light;
             var i;
             for (i = 0; i < lights.length; i++) {
@@ -719,12 +718,12 @@ pc.extend(pc, function () {
             }
         },
 
-        _setParameter: function(name, value) {
+        _setParameter: function (name, value) {
             this.setParameter(name, value);
             this._propsSet.push(name);
         },
 
-        _clearParameters: function() {
+        _clearParameters: function () {
             var props = this._propsSet;
             for (var i = 0; i < props.length; i++) {
                 delete this.parameters[props[i]];
@@ -749,7 +748,7 @@ pc.extend(pc, function () {
             }
         },
 
-        getUniform: function(varName, value, changeMat) {
+        getUniform: function (varName, value, changeMat) {
             var func = _prop2Uniform[varName];
             if (func) {
                 return func(this, value, changeMat);
@@ -899,7 +898,7 @@ pc.extend(pc, function () {
             this.dirtyColor = false;
         },
 
-        _getMapTransformID: function(xform, uv) {
+        _getMapTransformID: function (xform, uv) {
             if (!xform) return 0;
             if (!this._mapXForms[uv]) this._mapXForms[uv] = [];
 
@@ -1221,7 +1220,7 @@ pc.extend(pc, function () {
         _defineColor(obj, "specular", new pc.Color(0, 0, 0));
         _defineColor(obj, "emissive", new pc.Color(0, 0, 0), true);
 
-        _defineFloat(obj, "shininess", 25, function(mat, shininess) {
+        _defineFloat(obj, "shininess", 25, function (mat, shininess) {
             // Shininess is 0-100 value
             // which is actually a 0-1 glosiness value.
             // Can be converted to specular power using exp2(shininess * 0.01 * 11)
@@ -1233,7 +1232,7 @@ pc.extend(pc, function () {
             }
             return { name: "material_shininess", value: value };
         });
-        _defineFloat(obj, "heightMapFactor", 1, function(mat, height) {
+        _defineFloat(obj, "heightMapFactor", 1, function (mat, height) {
             return { name: 'material_heightMapFactor', value: height * 0.025 };
         });
         _defineFloat(obj, "opacity", 1);

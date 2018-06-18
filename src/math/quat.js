@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -82,7 +82,7 @@ pc.extend(pc, (function () {
      * quat.w = 0;
      */
 
-    Quat.prototype = {
+    Object.assign(Quat.prototype, {
         /**
          * @function
          * @name pc.Quat#clone
@@ -702,7 +702,7 @@ pc.extend(pc, (function () {
         toString: function () {
             return '[' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ']';
         }
-    };
+    });
 
     /**
      * @field

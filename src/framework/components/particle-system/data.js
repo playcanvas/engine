@@ -1,5 +1,5 @@
-pc.extend(pc, function() {
-    var ParticleSystemComponentData = function() {
+Object.assign(pc, function () {
+    var ParticleSystemComponentData = function () {
 
         this.numParticles = 1;                  // Amount of particles allocated (max particles = max GL texture width at this moment)
         this.rate = 1;                          // Emission rate

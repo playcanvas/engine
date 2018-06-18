@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var ZoneComponentData = function () {
         this.enabled = true;
     };

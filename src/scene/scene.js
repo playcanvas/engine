@@ -336,17 +336,30 @@
         COMPUPDATED_BLEND: 8,
 
         ASPECT_AUTO: 0,
-        ASPECT_MANUAL: 1
+        ASPECT_MANUAL: 1,
+
+        /**
+         * @enum pc.ORIENTATION
+         * @name pc.ORIENTATION_HORIZONTAL
+         * @description Horizontal orientation.
+         */
+        ORIENTATION_HORIZONTAL: 0,
+        /**
+         * @enum pc.ORIENTATION
+         * @name pc.ORIENTATION_VERTICAL
+         * @description Vertical orientation.
+         */
+        ORIENTATION_VERTICAL: 1
     };
 
-    pc.extend(pc, enums);
+    Object.assign(pc, enums);
 
     // For backwards compatibility
     pc.scene = {};
-    pc.extend(pc.scene, enums);
+    Object.assign(pc.scene, enums);
 }());
 
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Scene
@@ -656,7 +669,7 @@ pc.extend(pc, function () {
         if (this._skyboxCubeMap && !this.skyboxModel) {
             var material = new pc.Material();
             var scene = this;
-            material.updateShader = function(dev, sc, defs, staticLightList, pass) {
+            material.updateShader = function (dev, sc, defs, staticLightList, pass) {
                 var library = device.getProgramLibrary();
                 var shader = library.getProgram('skybox', { rgbm: scene._skyboxCubeMap.rgbm,
                     hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format === pc.PIXELFORMAT_RGBA32F),
@@ -714,7 +727,7 @@ pc.extend(pc, function () {
 
     Scene.prototype.setSkybox = function (cubemaps) {
         var i;
-        if (! cubemaps)
+        if (!cubemaps)
             cubemaps = [null, null, null, null, null, null, null];
 
         // check if any values actually changed
@@ -787,34 +800,33 @@ pc.extend(pc, function () {
 }());
 
 /**
-* @event
-* @name pc.Scene#set:skybox
-* @description Fired when the skybox is set.
-* @param {pc.Texture} usedTex Previously used cubemap texture. New is in the {@link pc.Scene#skybox}.
-*/
+ * @event
+ * @name pc.Scene#set:skybox
+ * @description Fired when the skybox is set.
+ * @param {pc.Texture} usedTex Previously used cubemap texture. New is in the {@link pc.Scene#skybox}.
+ */
 
 /**
-* @event
-* @name pc.Scene#set:layers
-* @description Fired when the layer composition is set. Use this event to add callbacks or advanced properties to your layers.
-* @param {pc.LayerComposition} oldComp Previously used {@link pc.LayerComposition}.
-* @param {pc.LayerComposition} newComp Newly set {@link pc.LayerComposition}.
-* @example
-*   this.app.scene.on('set:layers', function(oldComp, newComp) {
-*       var list = newComp.layerList;
-*       var layer;
-*       for(var i=0; i<list.length; i++) {
-*           layer = list[i];
-*           switch(layer.name) {
-*               case 'MyLayer':
-*                   layer.onEnable = myOnEnableFunction;
-*                   layer.onDisable = myOnDisableFunction;
-*                   break;
-*               case 'MyOtherLayer':
-*                   layer.shaderPass = myShaderPass;
-*                   break;
-*           }
-*       }
-*   });
-*/
-
+ * @event
+ * @name pc.Scene#set:layers
+ * @description Fired when the layer composition is set. Use this event to add callbacks or advanced properties to your layers.
+ * @param {pc.LayerComposition} oldComp Previously used {@link pc.LayerComposition}.
+ * @param {pc.LayerComposition} newComp Newly set {@link pc.LayerComposition}.
+ * @example
+ *   this.app.scene.on('set:layers', function(oldComp, newComp) {
+ *       var list = newComp.layerList;
+ *       var layer;
+ *       for(var i=0; i<list.length; i++) {
+ *           layer = list[i];
+ *           switch(layer.name) {
+ *               case 'MyLayer':
+ *                   layer.onEnable = myOnEnableFunction;
+ *                   layer.onDisable = myOnDisableFunction;
+ *                   break;
+ *               case 'MyOtherLayer':
+ *                   layer.shaderPass = myShaderPass;
+ *                   break;
+ *           }
+ *       }
+ *   });
+ */

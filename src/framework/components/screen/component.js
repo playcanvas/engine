@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @enum pc.SCALEMODE
      * @name pc.SCALEMODE_NONE
@@ -27,7 +27,7 @@ pc.extend(pc, function () {
      * @property {pc.Vec2} resolution The width and height of the ScreenComponent. When screenSpace is true the resolution will always be equal to {@link pc.GraphicsDevice#width} x {@link pc.GraphicsDevice#height}.
      * @property {pc.Vec2} referenceResolution The resolution that the ScreenComponent is designed for. This is only taken into account when screenSpace is true and scaleMode is {@link pc.SCALEMODE_BLEND}. If the actual resolution is different then the ScreenComponent will be scaled according to the scaleBlend value.
      */
-    var ScreenComponent = function ScreenComponent (system, entity) {
+    var ScreenComponent = function ScreenComponent(system, entity) {
         this._resolution = new pc.Vec2(640, 320);
         this._referenceResolution = new pc.Vec2(640, 320);
         this._scaleMode = pc.SCALEMODE_NONE;
@@ -43,7 +43,7 @@ pc.extend(pc, function () {
 
     var _transform = new pc.Mat4();
 
-    pc.extend(ScreenComponent.prototype, {
+    Object.assign(ScreenComponent.prototype, {
         /**
          * @function
          * @name pc.ScreenComponent#syncDrawOrder
@@ -130,7 +130,7 @@ pc.extend(pc, function () {
 
             this._calcProjectionMatrix();
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire("set:resolution", this._resolution);
@@ -146,7 +146,7 @@ pc.extend(pc, function () {
             this._updateScale();
             this._calcProjectionMatrix();
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire("set:referenceresolution", this._resolution);
@@ -168,7 +168,7 @@ pc.extend(pc, function () {
             }
             this.resolution = this._resolution; // force update either way
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire('set:screenspace', this._screenSpace);
@@ -205,7 +205,7 @@ pc.extend(pc, function () {
             this._updateScale();
             this._calcProjectionMatrix();
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire("set:scaleblend", this._scaleBlend);

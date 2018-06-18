@@ -1,11 +1,11 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var SceneHandler = function (app) {
         this._app = app;
     };
 
-    SceneHandler.prototype = {
+    Object.assign(SceneHandler.prototype, {
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
                 if (!err) {
@@ -38,7 +38,7 @@ pc.extend(pc, function () {
 
         patch: function (asset, assets) {
         }
-    };
+    });
 
     return {
         SceneHandler: SceneHandler

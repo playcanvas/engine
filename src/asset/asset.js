@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     // auto incrementing number for asset ids
     var assetIdCounter = 0;
@@ -67,11 +67,10 @@ pc.extend(pc, function () {
         this._file = null;
         this._data = data || { };
 
-        // This is where the loaded resource will be
-        // this.resource = null;
+        // This is where the loaded resource(s) will be
         this._resources = [];
 
-        // is resource loaded
+        // Is resource loaded
         this.loaded = false;
         this.loading = false;
 
@@ -83,56 +82,56 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @event
-    * @name pc.Asset#load
-    * @description Fired when the asset has completed loading
-    * @param {pc.Asset} asset The asset that was loaded
-    */
+     * @event
+     * @name pc.Asset#load
+     * @description Fired when the asset has completed loading
+     * @param {pc.Asset} asset The asset that was loaded
+     */
 
     /**
-    * @event
-    * @name pc.Asset#remove
-    * @description Fired when the asset is removed from the asset registry
-    * @param {pc.Asset} asset The asset that was removed
-    */
+     * @event
+     * @name pc.Asset#remove
+     * @description Fired when the asset is removed from the asset registry
+     * @param {pc.Asset} asset The asset that was removed
+     */
 
     /**
-    * @event
-    * @name pc.Asset#error
-    * @description Fired if the asset encounters an error while loading
-    * @param {String} err The error message
-    * @param {pc.Asset} asset The asset that generated the error
-    */
+     * @event
+     * @name pc.Asset#error
+     * @description Fired if the asset encounters an error while loading
+     * @param {String} err The error message
+     * @param {pc.Asset} asset The asset that generated the error
+     */
 
     /**
-    * @event
-    * @name pc.Asset#change
-    * @description Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed
-    * @param {pc.Asset} asset The asset that was loaded
-    * @param {String} property The name of the property that changed
-    * @param {*} value The new property value
-    * @param {*} oldValue The old property value
-    */
+     * @event
+     * @name pc.Asset#change
+     * @description Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed
+     * @param {pc.Asset} asset The asset that was loaded
+     * @param {String} property The name of the property that changed
+     * @param {*} value The new property value
+     * @param {*} oldValue The old property value
+     */
 
-    Asset.prototype = {
+    Object.assign(Asset.prototype, {
         /**
-        * @name pc.Asset#getFileUrl
-        * @function
-        * @description Return the URL required to fetch the file for this asset.
-        * @returns {String} The URL
-        * @example
-        * var assets = app.assets.find("My Image", "texture");
-        * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
-        */
+         * @name pc.Asset#getFileUrl
+         * @function
+         * @description Return the URL required to fetch the file for this asset.
+         * @returns {String} The URL
+         * @example
+         * var assets = app.assets.find("My Image", "texture");
+         * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
+         */
         getFileUrl: function () {
             var file = this.getPreferredFile();
 
-            if (! file || ! file.url)
+            if (!file || !file.url)
                 return null;
 
             var url = file.url;
 
-            if (this.registry && this.registry.prefix && ! ABSOLUTE_URL.test(url))
+            if (this.registry && this.registry.prefix && !ABSOLUTE_URL.test(url))
                 url = this.registry.prefix + url;
 
             // add file hash to avoid hard-caching problems
@@ -144,8 +143,8 @@ pc.extend(pc, function () {
             return url;
         },
 
-        getPreferredFile: function() {
-            if (! this.file)
+        getPreferredFile: function () {
+            if (!this.file)
                 return null;
 
             if (this.type === 'texture' || this.type === 'textureatlas') {
@@ -164,17 +163,17 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Asset#ready
-        * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away
-        * @param {Function} callback The function called when the asset is ready. Passed the (asset) arguments
-        * @example
-        * var asset = app.assets.find("My Asset");
-        * asset.ready(function (asset) {
-        *   // asset loaded
-        * });
-        * app.assets.load(asset);
-        */
+         * @function
+         * @name pc.Asset#ready
+         * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away
+         * @param {Function} callback The function called when the asset is ready. Passed the (asset) arguments
+         * @example
+         * var asset = app.assets.find("My Asset");
+         * asset.ready(function (asset) {
+         *   // asset loaded
+         * });
+         * app.assets.load(asset);
+         */
         ready: function (callback, scope) {
             scope = scope || this;
 
@@ -187,9 +186,9 @@ pc.extend(pc, function () {
             }
         },
 
-        reload: function() {
+        reload: function () {
             // no need to be reloaded
-            if (! this.loaded)
+            if (!this.loaded)
                 return;
 
             if (this.type === 'cubemap') {
@@ -201,16 +200,16 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Asset#unload
-        * @description Destroys the associated resource and marks asset as unloaded.
-        * @example
-        * var asset = app.assets.find("My Asset");
-        * asset.unload();
-        * // asset.resource is null
-        */
+         * @function
+         * @name pc.Asset#unload
+         * @description Destroys the associated resource and marks asset as unloaded.
+         * @example
+         * var asset = app.assets.find("My Asset");
+         * asset.unload();
+         * // asset.resource is null
+         */
         unload: function () {
-            if (! this.loaded && ! this.resource)
+            if (!this.loaded && !this.resource)
                 return;
 
             this.fire('unload', this);
@@ -227,11 +226,10 @@ pc.extend(pc, function () {
                 this.registry._loader.clearCache(this.getFileUrl(), this.type);
             }
         }
-    };
-
+    });
 
     Object.defineProperty(Asset.prototype, 'id', {
-        get: function() {
+        get: function () {
             return this._id;
         },
 
@@ -243,7 +241,7 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Asset.prototype, 'file', {
-        get: function() {
+        get: function () {
             return this._file;
         },
 
@@ -256,7 +254,7 @@ pc.extend(pc, function () {
             var fileAsBool = !!this._file;
             if (valueAsBool !== fileAsBool || (value && this._file && value.hash !== this._file)) {
                 if (value) {
-                    if (! this._file)
+                    if (!this._file)
                         this._file = { };
 
                     this._file.url = value.url;
@@ -270,7 +268,7 @@ pc.extend(pc, function () {
 
                         if (value.variants) {
                             for (key in value.variants) {
-                                if (! value.variants[key])
+                                if (!value.variants[key])
                                     continue;
 
                                 this.variants[key] = value.variants[key];
@@ -289,7 +287,7 @@ pc.extend(pc, function () {
 
                 if (value.variants) {
                     for (key in value.variants) {
-                        if (! value.variants[key])
+                        if (!value.variants[key])
                             continue;
 
                         this.variants[key] = value.variants[key];

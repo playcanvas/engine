@@ -1,4 +1,4 @@
-pc.extend(pc, function(){
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.KeyboardEvent
@@ -49,7 +49,7 @@ pc.extend(pc, function(){
      * @returns {Number} The character code.
      */
     function toKeyCode(s){
-        if (typeof(s) == "string") {
+        if (typeof s === "string") {
             return s.toUpperCase().charCodeAt(0);
         }
         return s;
@@ -74,34 +74,34 @@ pc.extend(pc, function(){
     };
 
     /**
-    * @event
-    * @name pc.Keyboard#keydown
-    * @description Event fired when a key is pressed.
-    * @param {pc.KeyboardEvent} event The Keyboard event object. Note, this event is only valid for the current callback.
-    * @example
-    * var onKeyDown = function (e) {
-    *     if (e.key === pc.KEY_SPACE) {
-    *         // space key pressed
-    *     }
-    *     e.event.preventDefault(); // Use original browser event to prevent browser action.
-    * };
-    * app.keyboard.on("keydown", onKeyDown, this);
-    */
+     * @event
+     * @name pc.Keyboard#keydown
+     * @description Event fired when a key is pressed.
+     * @param {pc.KeyboardEvent} event The Keyboard event object. Note, this event is only valid for the current callback.
+     * @example
+     * var onKeyDown = function (e) {
+     *     if (e.key === pc.KEY_SPACE) {
+     *         // space key pressed
+     *     }
+     *     e.event.preventDefault(); // Use original browser event to prevent browser action.
+     * };
+     * app.keyboard.on("keydown", onKeyDown, this);
+     */
 
     /**
-    * @event
-    * @name pc.Keyboard#keyup
-    * @description Event fired when a key is released.
-    * @param {pc.KeyboardEvent} event The Keyboard event object. Note, this event is only valid for the current callback.
-    * @example
-    * var onKeyUp = function (e) {
-    *     if (e.key === pc.KEY_SPACE) {
-    *         // space key released
-    *     }
-    *     e.event.preventDefault(); // Use original browser event to prevent browser action.
-    * };
-    * app.keyboard.on("keyup", onKeyUp, this);
-    */
+     * @event
+     * @name pc.Keyboard#keyup
+     * @description Event fired when a key is released.
+     * @param {pc.KeyboardEvent} event The Keyboard event object. Note, this event is only valid for the current callback.
+     * @example
+     * var onKeyUp = function (e) {
+     *     if (e.key === pc.KEY_SPACE) {
+     *         // space key released
+     *     }
+     *     e.event.preventDefault(); // Use original browser event to prevent browser action.
+     * };
+     * app.keyboard.on("keyup", onKeyUp, this);
+     */
 
     /**
      * @constructor
@@ -117,7 +117,7 @@ pc.extend(pc, function(){
      * @example
      * var keyboard = new pc.Keyboard(window); // attach keyboard listeners to the window
      */
-    var Keyboard = function(element, options) {
+    var Keyboard = function (element, options) {
         options = options || {};
         this._element = null;
 
@@ -139,11 +139,11 @@ pc.extend(pc, function(){
     };
 
     /**
-    * @function
-    * @name pc.Keyboard#attach
-    * @description Attach the keyboard event handlers to an Element
-    * @param {Element} element The element to listen for keyboard events on.
-    */
+     * @function
+     * @name pc.Keyboard#attach
+     * @description Attach the keyboard event handlers to an Element
+     * @param {Element} element The element to listen for keyboard events on.
+     */
     Keyboard.prototype.attach = function (element) {
         if (this._element) {
             // remove previous attached element
@@ -156,10 +156,10 @@ pc.extend(pc, function(){
     };
 
     /**
-    * @function
-    * @name pc.Keyboard#detach
-    * @description Detach the keyboard event handlers from the element it is attached to.
-    */
+     * @function
+     * @name pc.Keyboard#detach
+     * @description Detach the keyboard event handlers from the element it is attached to.
+     */
     Keyboard.prototype.detach = function () {
         this._element.removeEventListener("keydown", this._keyDownHandler);
         this._element.removeEventListener("keypress", this._keyPressHandler);
@@ -175,7 +175,7 @@ pc.extend(pc, function(){
      * @param {Number} keyCode The key code.
      * @returns {String} The key identifier.
      */
-    Keyboard.prototype.toKeyIdentifier = function(keyCode){
+    Keyboard.prototype.toKeyIdentifier = function (keyCode){
         keyCode = toKeyCode(keyCode);
         var count;
         var hex;
@@ -196,7 +196,7 @@ pc.extend(pc, function(){
         return 'U+' + hex;
     };
 
-    Keyboard.prototype._handleKeyDown = function(event) {
+    Keyboard.prototype._handleKeyDown = function (event) {
         var code = event.keyCode || event.charCode;
 
         // Google Chrome auto-filling of login forms could raise a malformed event
@@ -219,7 +219,7 @@ pc.extend(pc, function(){
         }
     };
 
-    Keyboard.prototype._handleKeyUp = function(event){
+    Keyboard.prototype._handleKeyUp = function (event){
         var code = event.keyCode || event.charCode;
 
         // Google Chrome auto-filling of login forms could raise a malformed event
@@ -242,7 +242,7 @@ pc.extend(pc, function(){
         }
     };
 
-    Keyboard.prototype._handleKeyPress = function(event){
+    Keyboard.prototype._handleKeyPress = function (event){
         this.fire("keypress", makeKeyboardEvent(event));
 
         if (this.preventDefault) {

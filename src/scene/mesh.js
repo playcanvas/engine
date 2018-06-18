@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var id = 0;
     var _tmpAabb = new pc.BoundingBox();
 
@@ -353,7 +353,7 @@ pc.extend(pc, function () {
             } else if (this.node._aabbVer !== this._aabbVer) {
                  // if there is no mesh then reset aabb
                 aabb = this.mesh ? this.mesh.aabb : this._aabb;
-                if (! this.mesh) {
+                if (!this.mesh) {
                     aabb.center.set(0, 0, 0);
                     aabb.halfExtents.set(0, 0, 0);
                 }
@@ -486,7 +486,7 @@ pc.extend(pc, function () {
         }
     });
 
-    pc.extend(MeshInstance.prototype, {
+    Object.assign(MeshInstance.prototype, {
         syncAabb: function () {
             // Deprecated
         },
@@ -530,13 +530,13 @@ pc.extend(pc, function () {
         this._buffer = null;
     };
 
-    InstancingData.prototype = {
+    Object.assign(InstancingData.prototype, {
         update: function () {
             if (this._buffer) {
                 this._buffer.setData(this.buffer);
             }
         }
-    };
+    });
 
     function getKey(layer, blendType, isCommand, materialId) {
         // Key definition:

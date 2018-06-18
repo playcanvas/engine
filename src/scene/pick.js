@@ -1,21 +1,8 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     var _deviceDeprecationWarning = false;
     var _getSelectionDeprecationWarning = false;
     var _prepareDeprecationWarning = false;
-
-/*
-    function sortDrawCalls(drawCallA, drawCallB) {
-
-        if (drawCallA.layer === drawCallB.layer) {
-            if (drawCallA.drawOrder && drawCallB.drawOrder) {
-                return drawCallA.drawOrder - drawCallB.drawOrder;
-            }
-        }
-
-        return drawCallB.key - drawCallA.key;
-    }
-*/
 
     /**
      * @constructor
@@ -29,7 +16,7 @@ pc.extend(pc, function () {
      * @property {Number} height Height of the pick buffer in pixels (read-only).
      * @property {pc.RenderTarget} renderTarget The render target used by the picker internally (read-only).
      */
-    var Picker = function(app, width, height) {
+    var Picker = function (app, width, height) {
         if (app instanceof pc.GraphicsDevice) {
             app = pc.Application.getApplication();
             if (!_deviceDeprecationWarning) {
@@ -65,7 +52,7 @@ pc.extend(pc, function () {
             depth: 1.0,
             flags: pc.CLEARFLAG_DEPTH
         };
-        this.clearDepthCommand = new pc.Command(0, 0, function(){
+        this.clearDepthCommand = new pc.Command(0, 0, function (){
             device.clear(self._clearDepthOptions);
         });
 
@@ -208,7 +195,7 @@ pc.extend(pc, function () {
                 shaderPass: pc.SHADER_PICK,
                 opaqueSortMode: pc.SORTMODE_NONE,
 
-                onEnable: function() {
+                onEnable: function () {
                     if (this.renderTarget) return;
                     var colorBuffer = new pc.Texture(device, {
                         format: pc.PIXELFORMAT_R8_G8_B8_A8,
@@ -224,24 +211,24 @@ pc.extend(pc, function () {
                     });
                 },
 
-                onDisable: function() {
+                onDisable: function () {
                     if (!this.renderTarget) return;
                     this.renderTarget._colorBuffer.destroy();
                     this.renderTarget.destroy();
                     this.renderTarget = null;
                 },
 
-                onDrawCall: function(meshInstance, i) {
-                    self.pickColor[0] = ((i >> 16) & 0xff) / 255;
-                    self.pickColor[1] = ((i >> 8) & 0xff) / 255;
-                    self.pickColor[2] = (i & 0xff) / 255;
+                onDrawCall: function (meshInstance, index) {
+                    self.pickColor[0] = ((index >> 16) & 0xff) / 255;
+                    self.pickColor[1] = ((index >> 8) & 0xff) / 255;
+                    self.pickColor[2] = (index & 0xff) / 255;
                     pickColorId.setValue(self.pickColor);
                     device.setBlending(false);
                 },
 
                 // could probably move updateCameraFrustum into onLayerPreRender function
                 // and remove everything else
-                onPreCull: function() {
+                onPreCull: function () {
                     this.oldAspectMode = this.cameras[0].aspectRatioMode;
                     this.oldAspect = this.cameras[0].aspectRatio;
                     this.cameras[0].aspectRatioMode = pc.ASPECT_MANUAL;
@@ -252,7 +239,7 @@ pc.extend(pc, function () {
 
                 // could probably remove this because we've moved
                 // prerender/postrender to be outside of renderComposition
-                onPostCull: function() {
+                onPostCull: function () {
                     this.cameras[0].aspectRatioMode = this.oldAspectMode;
                     this.cameras[0].aspectRatio = this.oldAspect;
                 }
@@ -372,7 +359,7 @@ pc.extend(pc, function () {
     };
 
     Object.defineProperty(Picker.prototype, 'renderTarget', {
-        get: function() {
+        get: function () {
             return this.layer.renderTarget;
         }
     });

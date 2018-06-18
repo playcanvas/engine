@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var JSON_PRIMITIVE_TYPE = {
@@ -26,7 +26,7 @@ pc.extend(pc, function () {
         this._device = device;
     };
 
-    JsonModelParser.prototype = {
+    Object.assign(JsonModelParser.prototype, {
         parse: function (data) {
             var modelData = data.model;
             if (!modelData) {
@@ -34,45 +34,33 @@ pc.extend(pc, function () {
             }
 
             if (modelData.version <= 1) {
-                logERROR(pc.string.format("Trying to parse unsupported model format."));
+                // #ifdef DEBUG
+                console.warn("JsonModelParser#parse: Trying to parse unsupported model format.");
+                // #endif
                 return null;
             }
 
-            ////////////////////
-            // NODE HIERARCHY //
-            ////////////////////
+            // NODE HIERARCHY
             var nodes = this._parseNodes(data);
 
-            ///////////
-            // SKINS //
-            ///////////
+            // SKINS
             var skins = this._parseSkins(data, nodes);
 
-            ///////////
-            // MORPHS //
-            ///////////
+            // MORPHS
             var morphs = this._parseMorphs(data, nodes);
 
-            ////////////////////
-            // VERTEX BUFFERS //
-            ////////////////////
+            // VERTEX BUFFERS
             var vertexBuffers = this._parseVertexBuffers(data);
 
-            //////////////////
-            // INDEX BUFFER //
-            //////////////////
+            // INDEX BUFFER
             var indices = this._parseIndexBuffers(data, vertexBuffers);
 
-            ////////////
-            // MESHES //
-            ////////////
+            // MESHES
             var meshes = this._parseMeshes(data, skins.skins, morphs.morphs, vertexBuffers, indices.buffer, indices.data);
 
             this._initMorphs(data, morphs.morphs, vertexBuffers, meshes);
 
-            ////////////////////
-            // MESH INSTANCES //
-            ////////////////////
+            // MESH INSTANCES
             var meshInstances = this._parseMeshInstances(data, nodes, meshes, skins.skins, skins.instances, morphs.morphs, morphs.instances);
 
             var model = new pc.Model();
@@ -733,7 +721,7 @@ pc.extend(pc, function () {
 
             return meshInstances;
         }
-    };
+    });
 
     return {
         JsonModelParser: JsonModelParser

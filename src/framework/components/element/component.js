@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var topMasks = [];
 
     var _debugLogging = false;
@@ -91,7 +91,7 @@ pc.extend(pc, function () {
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
-    var ElementComponent = function ElementComponent (system, entity) {
+    var ElementComponent = function ElementComponent(system, entity) {
         this._anchor = new pc.Vec4();
         this._localAnchor = new pc.Vec4();
 
@@ -159,7 +159,7 @@ pc.extend(pc, function () {
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
 
-    pc.extend(ElementComponent.prototype, {
+    Object.assign(ElementComponent.prototype, {
         _patch: function () {
             this.entity._sync = this._sync;
             this.entity.setPosition = this._setPosition;
@@ -177,7 +177,7 @@ pc.extend(pc, function () {
             var invParentWtm = new pc.Mat4();
 
             return function (x, y, z) {
-                if (! this.element.screen)
+                if (!this.element.screen)
                     return pc.Entity.prototype.setPosition.call(this, x, y, z);
 
                 if (x instanceof pc.Vec3) {
@@ -190,7 +190,7 @@ pc.extend(pc, function () {
                 invParentWtm.copy(this.element._screenToWorld).invert();
                 invParentWtm.transformPoint(position, this.localPosition);
 
-                if (! this._dirtyLocal)
+                if (!this._dirtyLocal)
                     this._dirtify(true);
             };
         }(),
@@ -211,7 +211,7 @@ pc.extend(pc, function () {
             element._margin.data[1] = p[1] - element._calculatedHeight * pvt[1];
             element._margin.data[3] = (element._localAnchor.data[3] - element._localAnchor.data[1]) - element._calculatedHeight - element._margin.data[1];
 
-            if (! this._dirtyLocal)
+            if (!this._dirtyLocal)
                 this._dirtify(true);
         },
 
@@ -234,7 +234,7 @@ pc.extend(pc, function () {
                         resy = this._parent.element.calculatedHeight;
                         px = this._parent.element.pivot.x;
                         py = this._parent.element.pivot.y;
-                    } else if (screen) {
+                    } else {
                         // use screen rect
                         var resolution = screen.screen.resolution;
                         resx = resolution.x / screen.screen.scale;
@@ -269,7 +269,7 @@ pc.extend(pc, function () {
                 this._dirtyLocal = false;
             }
 
-            if (! screen) {
+            if (!screen) {
                 if (this._dirtyWorld) {
                     element._cornersDirty = true;
                     element._canvasCornersDirty = true;
@@ -380,7 +380,11 @@ pc.extend(pc, function () {
             for (var i = 0; i < this.system._prerender.length; i++) {
                 var mask = this.system._prerender[i];
                 if (_debugLogging) console.log('prerender from: ' + mask.name);
-                ref = mask.element.syncMask(ref) + 1;
+
+                // prevent call if element has been removed since being added
+                if (mask.element) {
+                    ref = mask.element.syncMask(ref) + 1;
+                }
             }
 
             this.system._prerender.length = 0;
@@ -431,10 +435,6 @@ pc.extend(pc, function () {
             if (!elem) return;
 
             if (mask) {
-                // if (elem._maskedBy && elem._maskedBy !== mask) {
-                //     // already masked by something else
-                // }
-
                 var ref = mask.element._image._maskRef;
                 if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
                 var sp = new pc.StencilParameters({
@@ -614,7 +614,7 @@ pc.extend(pc, function () {
             return p;
         },
 
-        onLayersChanged: function(oldComp, newComp) {
+        onLayersChanged: function (oldComp, newComp) {
             this.addModelToLayers(this._image ? this._image._model : this._text._model);
             oldComp.off("add", this.onLayerAdded, this);
             oldComp.off("remove", this.onLayerRemoved, this);
@@ -622,7 +622,7 @@ pc.extend(pc, function () {
             newComp.on("remove", this.onLayerRemoved, this);
         },
 
-        onLayerAdded: function(layer) {
+        onLayerAdded: function (layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             if (this._image) {
@@ -632,7 +632,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onLayerRemoved: function(layer) {
+        onLayerRemoved: function (layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             if (this._image) {
@@ -692,6 +692,10 @@ pc.extend(pc, function () {
                 this._topMask = false;
             }
 
+            if (this._batchGroupId >= 0) {
+                this.system.app.batcher.markGroupDirty(this.batchGroupId);
+            }
+
             this.fire("disableelement");
         },
 
@@ -714,9 +718,9 @@ pc.extend(pc, function () {
         },
 
         // recalculates
-        //   localAnchor, width, height, (local position is updated if anchors are split)
+        // localAnchor, width, height, (local position is updated if anchors are split)
         // assumes these properties are up to date
-        //   _margin
+        // _margin
         _calculateSize: function (propagateCalculatedWidth, propagateCalculatedHeight) {
             // can't calculate if local anchors are wrong
             if (!this.entity._parent && !this.screen) return;
@@ -763,7 +767,7 @@ pc.extend(pc, function () {
             this.fire('set:height', this._height);
         },
 
-        _setCalculatedWidth: function(value, updateMargins) {
+        _setCalculatedWidth: function (value, updateMargins) {
             var didChange = Math.abs(value - this._calculatedWidth) > 1e-4;
 
             this._calculatedWidth = value;
@@ -784,7 +788,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _setCalculatedHeight: function(value, updateMargins) {
+        _setCalculatedHeight: function (value, updateMargins) {
             var didChange = Math.abs(value - this._calculatedHeight) > 1e-4;
 
             this._calculatedHeight = value;
@@ -805,7 +809,7 @@ pc.extend(pc, function () {
             }
         },
 
-        _flagChildrenAsDirty: function() {
+        _flagChildrenAsDirty: function () {
             var i, l;
             var c = this.entity._children;
             for (i = 0, l = c.length; i < l; i++) {
@@ -816,7 +820,7 @@ pc.extend(pc, function () {
             }
         },
 
-        addModelToLayers: function(model) {
+        addModelToLayers: function (model) {
             var layer;
             this._addedModel = model;
             for (var i = 0; i < this.layers.length; i++) {
@@ -826,7 +830,7 @@ pc.extend(pc, function () {
             }
         },
 
-        removeModelFromLayers: function(model) {
+        removeModelFromLayers: function (model) {
             var layer;
             this._addedModel = null;
             for (var i = 0; i < this.layers.length; i++) {
@@ -883,7 +887,7 @@ pc.extend(pc, function () {
 
             this._layers = value;
 
-            if (!this.enabled || !this.entity.enabled || ! this._addedModel) return;
+            if (!this.enabled || !this.entity.enabled || !this._addedModel) return;
             for (i = 0; i < this._layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
@@ -936,6 +940,7 @@ pc.extend(pc, function () {
         set: function (value) {
             this._margin.copy(value);
             this._calculateSize(true, true);
+            this.fire('set:margin', this._margin);
         }
     });
 
@@ -1112,7 +1117,7 @@ pc.extend(pc, function () {
 
             this._anchorDirty = true;
 
-            if (! this.entity._dirtyLocal)
+            if (!this.entity._dirtyLocal)
                 this.entity._dirtify(true);
 
             this.fire('set:anchor', this._anchor);
@@ -1136,7 +1141,7 @@ pc.extend(pc, function () {
     // Order is bottom left, bottom right, top right, top left.
     Object.defineProperty(ElementComponent.prototype, 'screenCorners', {
         get: function () {
-            if (! this._cornersDirty || ! this.screen)
+            if (!this._cornersDirty || !this.screen)
                 return this._screenCorners;
 
             var parentBottomLeft = this.entity.parent && this.entity.parent.element && this.entity.parent.element.screenCorners[0];
@@ -1173,7 +1178,7 @@ pc.extend(pc, function () {
     // Order of the corners is bottom left, bottom right, top right, top left.
     Object.defineProperty(ElementComponent.prototype, 'canvasCorners', {
         get: function () {
-            if (! this._canvasCornersDirty || ! this.screen || ! this.screen.screen.screenSpace)
+            if (!this._canvasCornersDirty || !this.screen || !this.screen.screen.screenSpace)
                 return this._canvasCorners;
 
             var device = this.system.app.graphicsDevice;
@@ -1198,14 +1203,14 @@ pc.extend(pc, function () {
     // bottom left, bottom right, top right, top left
     Object.defineProperty(ElementComponent.prototype, 'worldCorners', {
         get: function () {
-            if (! this._worldCornersDirty) {
+            if (!this._worldCornersDirty) {
                 return this._worldCorners;
             }
 
             if (this.screen) {
                 var screenCorners = this.screenCorners;
 
-                if (! this.screen.screen.screenSpace) {
+                if (!this.screen.screen.screenSpace) {
                     matA.copy(this.screen.screen._screenMatrix);
 
                     // flip screen matrix along the horizontal axis
@@ -1300,8 +1305,8 @@ pc.extend(pc, function () {
             if (this._batchGroupId === value)
                 return;
 
-            if (this._batchGroupId >= 0) this.system.app.batcher._markGroupDirty(this._batchGroupId);
-            if (value >= 0) this.system.app.batcher._markGroupDirty(value);
+            if (this._batchGroupId >= 0) this.system.app.batcher.markGroupDirty(this._batchGroupId);
+            if (value >= 0) this.system.app.batcher.markGroupDirty(value);
 
             if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching
@@ -1369,76 +1374,76 @@ pc.extend(pc, function () {
 // Events Documentation
 
 /**
-* @event
-* @name pc.ElementComponent#mousedown
-* @description Fired when the mouse is pressed while the cursor is on the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#mousedown
+ * @description Fired when the mouse is pressed while the cursor is on the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#mouseup
-* @description Fired when the mouse is released while the cursor is on the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#mouseup
+ * @description Fired when the mouse is released while the cursor is on the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#mouseenter
-* @description Fired when the mouse cursor enters the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#mouseenter
+ * @description Fired when the mouse cursor enters the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent} event The event
+ */
 /**
-* @event
-* @name pc.ElementComponent#mouseleave
-* @description Fired when the mouse cursor leaves the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#mouseleave
+ * @description Fired when the mouse cursor leaves the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent} event The event
+ */
 /**
-* @event
-* @name pc.ElementComponent#mousemove
-* @description Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#mousemove
+ * @description Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#mousewheel
-* @description Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#mousewheel
+ * @description Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#click
-* @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component. Only fired when useInput is true.
-* @param {pc.ElementMouseEvent|pc.ElementTouchEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#click
+ * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component. Only fired when useInput is true.
+ * @param {pc.ElementMouseEvent|pc.ElementTouchEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#touchstart
-* @description Fired when a touch starts on the component. Only fired when useInput is true.
-* @param {pc.ElementTouchEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#touchstart
+ * @description Fired when a touch starts on the component. Only fired when useInput is true.
+ * @param {pc.ElementTouchEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#touchend
-* @description Fired when a touch ends on the component. Only fired when useInput is true.
-* @param {pc.ElementTouchEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#touchend
+ * @description Fired when a touch ends on the component. Only fired when useInput is true.
+ * @param {pc.ElementTouchEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#touchmove
-* @description Fired when a touch moves after it started touching the component. Only fired when useInput is true.
-* @param {pc.ElementTouchEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#touchmove
+ * @description Fired when a touch moves after it started touching the component. Only fired when useInput is true.
+ * @param {pc.ElementTouchEvent} event The event
+ */
 
 /**
-* @event
-* @name pc.ElementComponent#touchcancel
-* @description Fired when a touch is cancelled on the component. Only fired when useInput is true.
-* @param {pc.ElementTouchEvent} event The event
-*/
+ * @event
+ * @name pc.ElementComponent#touchcancel
+ * @description Fired when a touch is cancelled on the component. Only fired when useInput is true.
+ * @param {pc.ElementTouchEvent} event The event
+ */

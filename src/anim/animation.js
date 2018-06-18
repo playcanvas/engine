@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var Key = function Key(time, position, rotation, scale) {
         this.time = time;
         this.position = position;

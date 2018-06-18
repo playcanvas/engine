@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = [
         'enabled',
         'type',
@@ -26,7 +26,7 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The Application.
      * @extends pc.ComponentSystem
      */
-    var ModelComponentSystem = function ModelComponentSystem (app) {
+    var ModelComponentSystem = function ModelComponentSystem(app) {
         this.id = 'model';
         this.description = "Renders a 3D model at the location of the Entity.";
         app.systems.add(this.id, this);
@@ -70,7 +70,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.ModelComponent.prototype, _schema);
 
-    pc.extend(ModelComponentSystem.prototype, {
+    Object.assign(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
 
             // order matters here
@@ -148,7 +148,7 @@ pc.extend(pc, function () {
 
             // clone the original model if the original model component is of type asset but
             // has no specified asset
-            if (entity.model.model && entity.model.type === 'asset' && ! entity.model.asset) {
+            if (entity.model.model && entity.model.type === 'asset' && !entity.model.asset) {
                 component.model = entity.model.model.clone();
                 component._clonedModel = true;
             }
@@ -168,7 +168,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onRemove: function(entity, component) {
+        onRemove: function (entity, component) {
             // Unhook any material asset events
             entity.model.materialAsset = null;
             component.remove();

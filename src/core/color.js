@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     /**
      * @constructor
      * @name pc.Color
@@ -33,13 +33,13 @@ pc.extend(pc, (function () {
         }
     };
 
-    Color.prototype = {
+    Object.assign(Color.prototype, {
         /**
-        * @function
-        * @name pc.Color#clone
-        * @description Returns a clone of the specified color.
-        * @returns {pc.Color} A duplicate color object
-        */
+         * @function
+         * @name pc.Color#clone
+         * @description Returns a clone of the specified color.
+         * @returns {pc.Color} A duplicate color object
+         */
         clone: function () {
             return new pc.Color(this.data[0], this.data[1], this.data[2], this.data[3]);
         },
@@ -141,7 +141,7 @@ pc.extend(pc, (function () {
 
             return s;
         }
-    };
+    });
 
     Object.defineProperty(Color.prototype, 'r', {
         get: function () {

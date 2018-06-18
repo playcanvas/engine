@@ -1,4 +1,4 @@
-pc.extend(pc.Application.prototype, function () {
+Object.assign(pc.Application.prototype, function () {
 
     var tempGraphNode = new pc.GraphNode();
     var identityGraphNode = new pc.GraphNode();
@@ -49,7 +49,7 @@ pc.extend(pc.Application.prototype, function () {
         this.layer = null;
     };
 
-    LineBatch.prototype = {
+    Object.assign(LineBatch.prototype, {
         init: function (device, vertexFormat, layer, linesToAdd) {
             // Allocate basic stuff once per batch
             if (!this.mesh) {
@@ -90,7 +90,7 @@ pc.extend(pc.Application.prototype, function () {
             }
         },
 
-        addLines: function(position, color) {
+        addLines: function (position, color) {
             // Append lines to buffer
             var multiColor = !!color.length;
             var offset = this.linesUsed * 2 * this.vertexFormat.size;
@@ -108,7 +108,7 @@ pc.extend(pc.Application.prototype, function () {
             this.linesUsed += position.length / 2;
         },
 
-        finalize: function() {
+        finalize: function () {
             // Update batch vertex buffer/issue drawcall if there are any lines
             if (this.linesUsed > 0) {
                 this.vb.setData(this.vbRam.buffer);
@@ -118,7 +118,7 @@ pc.extend(pc.Application.prototype, function () {
                 this.linesUsed = 0;
             }
         }
-    };
+    });
 
     function _initImmediate() {
         // Init global line drawing data once
@@ -219,7 +219,7 @@ pc.extend(pc.Application.prototype, function () {
             // passed in end color
             endColor = arg3;
 
-            if (typeof(arg4) === 'number') {
+            if (typeof arg4 === 'number') {
                 if (!_deprecationWarning) {
                     console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
                     _deprecationWarning = true;
@@ -240,7 +240,7 @@ pc.extend(pc.Application.prototype, function () {
                 // use passed in options
                 options = arg4;
             }
-        } else if (typeof(arg3) === 'number') {
+        } else if (typeof arg3 === 'number') {
             if (!_deprecationWarning) {
                 console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
                 _deprecationWarning = true;
@@ -294,7 +294,7 @@ pc.extend(pc.Application.prototype, function () {
                 layer: this.scene.layers.getLayerById(pc.LAYERID_IMMEDIATE),
                 depthTest: true
             };
-        } else if (typeof(options) === 'number') {
+        } else if (typeof options === 'number') {
             if (!_deprecationWarning) {
                 console.warn("lineBatch argument is deprecated for renderLine. Use options.layer instead");
                 _deprecationWarning = true;
@@ -436,7 +436,6 @@ pc.extend(pc.Application.prototype, function () {
         this._initImmediate();
 
         // Init quad data once
-        // if (!this._immediateData.quadMesh) {
         if (!this._immediateData.quadMesh) {
             var format = new pc.VertexFormat(this.graphicsDevice, [
                 { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 }
@@ -458,7 +457,7 @@ pc.extend(pc.Application.prototype, function () {
             this._immediateData.quadMesh.primitive[0].count = 4;
             this._immediateData.quadMesh.primitive[0].indexed = false;
         }
-        // }
+
         // Issue quad drawcall
         tempGraphNode.worldTransform = matrix;
         tempGraphNode._dirtyWorld = tempGraphNode._dirtyNormal = false;

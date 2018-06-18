@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _morphMin = new pc.Vec3();
     var _morphMax = new pc.Vec3();
 
@@ -59,7 +59,7 @@ pc.extend(pc, function () {
         this._vertSizeF = 0;
     };
 
-    pc.extend(Morph.prototype, {
+    Object.assign(Morph.prototype, {
 
         // called if the mesh is changed
         _setBaseMesh: function (baseMesh) {
@@ -182,7 +182,7 @@ pc.extend(pc, function () {
      * @name pc.MorphInstance
      * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, holds morphed buffer and associated data.
      * @param {pc.Morph} morph The pc.Morph to instance.
-    */
+     */
     var MorphInstance = function (morph) {
         this.morph = morph;
 
@@ -192,7 +192,7 @@ pc.extend(pc, function () {
         this._dirty = true;
     };
 
-    MorphInstance.prototype = {
+    Object.assign(MorphInstance.prototype, {
 
         // called if the mesh is changed
         _setBaseMesh: function (baseMesh) {
@@ -332,7 +332,7 @@ pc.extend(pc, function () {
 
             this._vertexBuffer.unlock();
         }
-    };
+    });
 
     return {
         MorphTarget: MorphTarget,

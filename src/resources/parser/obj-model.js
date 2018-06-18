@@ -1,36 +1,32 @@
-pc.extend(pc, function () {
-    /*
-     * Sample Obj model parser. This is not added to built into the engine library by default.
-     *
-     * To use, first register the parser:
-     *
-     * // add parser to model resource handler
-     * var objParser = new pc.ObjModelParser(this.app.graphicsDevice);
-     * this.app.loader.getHandler("model").addParser(objParser, function (url) {
-     *     return (pc.path.getExtension(url) === '.obj');
-     * });
-     *
-     * Then load obj as a model asset:
-     *
-     * var asset = new pc.Asset("MyObj", "model", {
-     *    url: "model.obj"
-     * });
-     * this.app.assets.add(asset);
-     * this.app.assets.load(asset);
-     */
+Object.assign(pc, function () {
+    // Sample Obj model parser. This is not added to built into the engine library by default.
+    //
+    // To use, first register the parser:
+    //
+    // // add parser to model resource handler
+    // var objParser = new pc.ObjModelParser(this.app.graphicsDevice);
+    // this.app.loader.getHandler("model").addParser(objParser, function (url) {
+    //     return (pc.path.getExtension(url) === '.obj');
+    // });
+    //
+    // Then load obj as a model asset:
+    //
+    // var asset = new pc.Asset("MyObj", "model", {
+    //    url: "model.obj"
+    // });
+    // this.app.assets.add(asset);
+    // this.app.assets.load(asset);
     var ObjModelParser = function (device) {
         this._device = device;
     };
 
-    ObjModelParser.prototype = {
-        /*
-         * First draft obj parser
-         * probably doesn't handle a lot of the obj spec
-         * Known issues:
-         * - can't handle meshes larger than 65535 verts
-         * - assigns default material to all meshes
-         * - doesn't created indexed geometry
-         */
+    Object.assign(ObjModelParser.prototype, {
+        // First draft obj parser
+        // probably doesn't handle a lot of the obj spec
+        // Known issues:
+        // - can't handle meshes larger than 65535 verts
+        // - assigns default material to all meshes
+        // - doesn't created indexed geometry
         parse: function (input) {
             // expanded vert, uv and normal values from face indices
             var parsed = {
@@ -131,8 +127,7 @@ pc.extend(pc, function () {
             }
             return result;
         }
-    };
-
+    });
 
     return {
         ObjModelParser: ObjModelParser

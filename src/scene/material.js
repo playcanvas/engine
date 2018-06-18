@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var id = 0;
 
     /**
@@ -353,7 +353,7 @@ pc.extend(pc, function () {
 
         if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
 
-        if (data === undefined && typeof(name) === 'object') {
+        if (data === undefined && typeof name === 'object') {
             var uniformObject = name;
             if (uniformObject.length) {
                 for (var i = 0; i < uniformObject.length; i++) {
@@ -399,10 +399,6 @@ pc.extend(pc, function () {
         // Push each shader parameter into scope
         for (var paramName in this.parameters) {
             var parameter = this.parameters[paramName];
-            // TODO: Fix https://github.com/playcanvas/engine/issues/597
-            // if (!parameter.scopeId) {
-            //    parameter.scopeId = device.scope.resolve(paramName);
-            // }
             parameter.scopeId.setValue(parameter.data);
         }
     };
@@ -426,9 +422,7 @@ pc.extend(pc, function () {
         throw Error("Not Implemented in base class");
     };
 
-    ////////////////
-    // DEPRECATED //
-    ////////////////
+    // DEPRECATED
     /**
      * @private
      * @function

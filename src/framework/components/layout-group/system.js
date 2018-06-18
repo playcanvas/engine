@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
@@ -30,7 +30,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.LayoutGroupComponent.prototype, _schema);
 
-    pc.extend(LayoutGroupComponentSystem.prototype, {
+    Object.assign(LayoutGroupComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (data.enabled !== undefined) component.enabled = data.enabled;
             if (data.orientation !== undefined) component.orientation = data.orientation;
@@ -105,13 +105,17 @@ pc.extend(pc, function () {
             // Sort in ascending order of depth within the graph (i.e. outermost first), so that
             // any layout groups which are children of other layout groups will always have their
             // new size set before their own reflow is calculated.
-            this._reflowQueue.sort(function(componentA, componentB) {
+            this._reflowQueue.sort(function (componentA, componentB) {
                 return componentA.entity.graphDepth < componentB.entity.graphDepth;
             });
 
             while (this._reflowQueue.length > 0) {
-                var component = this._reflowQueue.shift();
-                component.reflow();
+                // Note that we leave the current item in the queue while performing its reflow
+                // and then remove it afterwards, rather than removing it first and then reflowing
+                // it. This is safer because the item cannot re-enter the queue while it is
+                // already in there (due to the check performed in the scheduleReflow() method).
+                this._reflowQueue[0].reflow();
+                this._reflowQueue.shift();
             }
 
             this._reflowQueue = [];

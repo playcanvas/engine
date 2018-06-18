@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = [
         'enabled',
         'volume',
@@ -44,7 +44,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.SoundComponent.prototype, _schema);
 
-    pc.extend(SoundComponentSystem.prototype, {
+    Object.assign(SoundComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['volume', 'pitch', 'positional', 'refDistance', 'maxDistance', 'rollOffFactor', 'distanceModel', 'slots', 'enabled'];
             SoundComponentSystem._super.initializeComponentData.call(this, component, data, properties);
@@ -92,7 +92,7 @@ pc.extend(pc, function () {
             return this.addComponent(clone, newData);
         },
 
-        onUpdate: function(dt) {
+        onUpdate: function (dt) {
             var store = this.store;
 
             for (var id in store) {
@@ -117,7 +117,7 @@ pc.extend(pc, function () {
             var slots = component.slots;
             // stop non overlapping sounds
             for (var key in slots) {
-                if (! slots[key].overlap) {
+                if (!slots[key].overlap) {
                     slots[key].stop();
                 }
             }
@@ -135,7 +135,7 @@ pc.extend(pc, function () {
 
     Object.defineProperty(SoundComponentSystem.prototype, 'context', {
         get: function () {
-            if (! pc.SoundManager.hasAudioContext()) {
+            if (!pc.SoundManager.hasAudioContext()) {
                 console.warn('WARNING: Audio context is not supported on this browser');
                 return null;
             }

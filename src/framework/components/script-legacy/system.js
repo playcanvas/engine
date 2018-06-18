@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     var _schema = [
         'enabled',
@@ -47,7 +47,7 @@ pc.extend(pc, function () {
 
     pc.Component._buildAccessors(pc.ScriptLegacyComponent.prototype, _schema);
 
-    pc.extend(ScriptLegacyComponentSystem.prototype, {
+    Object.assign(ScriptLegacyComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['runInTools', 'enabled', 'scripts'];
 
@@ -148,7 +148,7 @@ pc.extend(pc, function () {
                 if (instances.hasOwnProperty(name)) {
                     var instance = instances[name].instance;
                     if (instance[method]) {
-                        instance[method].call(instance);
+                        instance[method]();
                     }
                 }
             }
@@ -229,7 +229,7 @@ pc.extend(pc, function () {
             for (var i = 0, len = updateList.length; i < len; i++) {
                 item = updateList[i];
                 if (item && item.entity && item.entity.enabled && item.entity.script.enabled) {
-                    item[method].call(item, dt);
+                    item[method](dt);
                 }
             }
         },

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ComponentSystem
@@ -14,7 +14,7 @@ pc.extend(pc, function () {
     };
 
     // Class methods
-    pc.extend(ComponentSystem, {
+    Object.assign(ComponentSystem, {
         initialize: function (root) {
             ComponentSystem.fire('initialize', root);
         },
@@ -131,17 +131,37 @@ pc.extend(pc, function () {
          * This can be overridden by derived Component Systems and either called by the derived System or replaced entirely
          * @param {pc.Component} component The component being initialized.
          * @param {Object} data The data block used to initialize the component.
-         * @param {Array} properties The array of property names of the component.
+         * @param {Array} properties The array of property descriptors for the component. A descriptor can be either a plain property name, or an object specifying the name and type.
          */
         initializeComponentData: function (component, data, properties) {
             data = data || {};
 
             // initialize
-            properties.forEach(function(value) {
-                if (data[value] !== undefined) {
-                    component[value] = data[value];
+            properties.forEach(function (descriptor) {
+                var name;
+                var type;
+
+                // If the descriptor is an object, it will have `name` and `type` members
+                if (typeof descriptor === 'object') {
+                    name = descriptor.name;
+                    type = descriptor.type;
+                // Otherwise, the descriptor is just the property name
                 } else {
-                    component[value] = component.data[value];
+                    name = descriptor;
+                }
+
+                var value = data[name];
+
+                if (value !== undefined) {
+                    // If we know the intended type of the value, convert the raw data
+                    // into an instance of the specified type.
+                    if (type !== undefined) {
+                        value = convertValue(value, type);
+                    }
+
+                    component[name] = value;
+                } else {
+                    component[name] = component.data[name];
                 }
 
             }, this);
@@ -150,9 +170,58 @@ pc.extend(pc, function () {
             if (component.enabled && component.entity.enabled) {
                 component.onEnable();
             }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.ComponentSystem#getPropertiesOfType
+         * @description Searches the component schema for properties that match the specified type.
+         * @param {String} type The type to search for
+         * @returns {Array} An array of property descriptors matching the specified type.
+         */
+        getPropertiesOfType: function (type) {
+            var matchingProperties = [];
+            var schema = this.schema || [];
+
+            schema.forEach(function (descriptor) {
+                if (descriptor && typeof descriptor === 'object' && descriptor.type === type) {
+                    matchingProperties.push(descriptor);
+                }
+            });
+
+            return matchingProperties;
+        }
+    };
+
+    function convertValue(value, type) {
+        if (!value) {
+            return value;
         }
 
-    };
+        value = (value && value.data) ? value.data : value;
+
+        switch (type) {
+            case 'rgb':
+                return new pc.Color(value[0], value[1], value[2]);
+            case 'rgba':
+                return new pc.Color(value[0], value[1], value[2], value[3]);
+            case 'vec2':
+                return new pc.Vec2(value[0], value[1]);
+            case 'vec3':
+                return new pc.Vec3(value[0], value[1], value[2]);
+            case 'vec4':
+                return new pc.Vec4(value[0], value[1], value[2], value[3]);
+            case 'boolean':
+            case 'number':
+            case 'string':
+                return value;
+            case 'entity':
+                return value; // Entity fields should just be a string guid
+            default:
+                throw new Error('Could not convert unhandled type: ' + type);
+        }
+    }
 
     // Add event support
     pc.events.attach(ComponentSystem);

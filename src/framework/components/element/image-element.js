@@ -1,6 +1,6 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
-    var ImageElement = function ImageElement (element) {
+    var ImageElement = function ImageElement(element) {
         this._element = element;
         this._entity = element.entity;
         this._system = element.system;
@@ -61,7 +61,7 @@ pc.extend(pc, function () {
         this._element.on('screen:set:resolution', this._onResolutionChange, this);
     };
 
-    pc.extend(ImageElement.prototype, {
+    Object.assign(ImageElement.prototype, {
         destroy: function () {
             if (this._model) {
                 this._element.removeModelFromLayers(this._model);
@@ -79,6 +79,31 @@ pc.extend(pc, function () {
             this._element.off('set:screen', this._onScreenChange, this);
             this._element.off('set:draworder', this._onDrawOrderChange, this);
             this._element.off('screen:set:resolution', this._onResolutionChange, this);
+
+            var asset;
+            var app = this._system.app;
+
+            // unbind all asset events
+            asset = this._textureAsset ? app.assets.get(this._textureAsset) : null;
+            if (asset) {
+                asset.off("load", this._onTextureLoad, this);
+                asset.off("change", this._onTextureChange, this);
+                asset.off("remove", this._onTextureRemove, this);
+            }
+
+            asset = this._spriteAsset ? app.assets.get(this._spriteAsset): null;
+            if (asset) {
+                asset.off("load", this._onSpriteAssetLoad, this);
+                asset.off("change", this._onSpriteAssetChange, this);
+                asset.off("remove", this._onSpriteAssetRemove, this);
+            }
+
+            asset = this._materialAsset ? app.assets.get(this._materialAsset): null;
+            if (asset) {
+                asset.off("load", this._onMaterialLoad, this);
+                asset.off("change", this._onMaterialChange, this);
+                asset.off("remove", this._onMaterialRemove, this);
+            }
         },
 
         _onResolutionChange: function (res) {
@@ -114,12 +139,6 @@ pc.extend(pc, function () {
                    (!!this._material &&
                     this._system.defaultImageMaterials.indexOf(this._material) === -1);
         },
-
-        // assign a material internally without updating everything
-        // _setMaterial: function (material) {
-        //     this._material = material;
-        //     this._meshInstance.material = material;
-        // },
 
         _use9Slicing: function () {
             return this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED);
@@ -499,10 +518,10 @@ pc.extend(pc, function () {
         // When sprite asset is loaded make sure the texture atlas asset is loaded too
         // If so then set the sprite, otherwise wait for the atlas to be loaded first
         _onSpriteAssetLoad: function (asset) {
-            if (! asset.resource) {
+            if (!asset.resource) {
                 this.sprite = null;
             } else {
-                if (! asset.resource.atlas) {
+                if (!asset.resource.atlas) {
                     var atlasAssetId = asset.data.textureAtlasAsset;
                     var assets = this._system.app.assets;
                     assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
@@ -582,6 +601,10 @@ pc.extend(pc, function () {
             if (this._meshInstance) {
                 this._meshInstance.setParameter('material_emissive', this._color.data3);
             }
+
+            if (this._element) {
+                this._element.fire('set:color', this._color);
+            }
         }
     });
 
@@ -593,6 +616,10 @@ pc.extend(pc, function () {
         set: function (value) {
             this._color.data[3] = value;
             this._meshInstance.setParameter("material_opacity", value);
+
+            if (this._element) {
+                this._element.fire('set:opacity', this._color.data[3]);
+            }
         }
     });
 
@@ -616,7 +643,7 @@ pc.extend(pc, function () {
             return this._material;
         },
         set: function (value) {
-            if (! value) {
+            if (!value) {
                 var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
                 value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
                 value = this._mask ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
@@ -627,10 +654,7 @@ pc.extend(pc, function () {
                 this._meshInstance.material = value;
 
                 // if this is not the default material then clear color and opacity overrides
-                if (value !== this._system.defaultScreenSpaceImageMaterial &&
-                    value !== this._system.defaultImageMaterial &&
-                    value !== this._system.defaultImageMaskMaterial &&
-                    value !== this._system.defaultScreenSpaceImageMaskMaterial) {
+                if (this._hasUserMaterial()) {
                     this._meshInstance.deleteParameter('material_opacity');
                     this._meshInstance.deleteParameter('material_emissive');
                 } else {
@@ -668,7 +692,7 @@ pc.extend(pc, function () {
                 this._materialAsset = _id;
                 if (this._materialAsset) {
                     var asset = assets.get(this._materialAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.material = null;
                         assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
                     } else {
@@ -728,7 +752,7 @@ pc.extend(pc, function () {
                 this._textureAsset = _id;
                 if (this._textureAsset) {
                     var asset = assets.get(this._textureAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.texture = null;
                         assets.on('add:' + this._textureAsset, this._onTextureAdded, this);
                     } else {
@@ -766,7 +790,7 @@ pc.extend(pc, function () {
                 this._spriteAsset = _id;
                 if (this._spriteAsset) {
                     var asset = assets.get(this._spriteAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.sprite = null;
                         assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
                     } else {
@@ -774,6 +798,10 @@ pc.extend(pc, function () {
                     }
                 } else {
                     this.sprite = null;
+                }
+
+                if (this._element) {
+                    this._element.fire('set:spriteAsset', _id);
                 }
             }
         }
@@ -847,6 +875,10 @@ pc.extend(pc, function () {
             if (this.mesh) {
                 this._updateMesh(this.mesh);
             }
+
+            if (this._element) {
+                this._element.fire('set:spriteFrame', value);
+            }
         }
     });
 
@@ -901,4 +933,3 @@ pc.extend(pc, function () {
         ImageElement: ImageElement
     };
 }());
-

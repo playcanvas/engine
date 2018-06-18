@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     /**
      * @constructor
@@ -214,11 +214,11 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @function
-    * @name pc.Controller#registerAxis
-    * @param {Object} [options] Optional options object.
-    * @param {Object} [options.pad] The index of the game pad to register for (use pc.PAD_1, etc)
-    */
+     * @function
+     * @name pc.Controller#registerAxis
+     * @param {Object} [options] Optional options object.
+     * @param {Object} [options.pad] The index of the game pad to register for (use pc.PAD_1, etc)
+     */
     Controller.prototype.registerAxis = function (options) {
         var name = options.name;
         if (!this._axes[name]) {

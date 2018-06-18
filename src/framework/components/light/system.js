@@ -1,11 +1,12 @@
-pc.extend(pc, function () {
-/*
-* @name pc.LightComponentSystem
-* @description Create a new LightComponentSystem.
-* @class A Light Component is used to dynamically light the scene.
-* @param {pc.Application} app The application.
-* @extends pc.ComponentSystem
-*/
+Object.assign(pc, function () {
+    /**
+     * @constructor
+     * @name pc.LightComponentSystem
+     * @classdesc A Light Component is used to dynamically light the scene.
+     * @description Create a new LightComponentSystem.
+     * @param {pc.Application} app The application.
+     * @extends pc.ComponentSystem
+     */
     var lightTypes = {
         'directional': pc.LIGHTTYPE_DIRECTIONAL,
         'point': pc.LIGHTTYPE_POINT,
@@ -22,7 +23,7 @@ pc.extend(pc, function () {
     };
     LightComponentSystem = pc.inherits(LightComponentSystem, pc.ComponentSystem);
 
-    pc.extend(LightComponentSystem.prototype, {
+    Object.assign(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data) {
             // duplicate because we're modifying the data
             var data = {};

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var tmpVecA = new pc.Vec3();
     var tmpVecB = new pc.Vec3();
     var tmpVecC = new pc.Vec3();
@@ -20,7 +20,7 @@ pc.extend(pc, function () {
         this._max = new pc.Vec3();
     };
 
-    BoundingBox.prototype = {
+    Object.assign(BoundingBox.prototype, {
 
         /**
          * @function
@@ -343,7 +343,7 @@ pc.extend(pc, function () {
 
             return sq;
         }
-    };
+    });
 
     return {
         BoundingBox: BoundingBox

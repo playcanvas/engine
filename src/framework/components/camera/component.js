@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @component
      * @constructor
@@ -99,7 +99,7 @@ pc.extend(pc, function () {
      * @description Queries the camera's projection matrix.
      */
     Object.defineProperty(CameraComponent.prototype, "projectionMatrix", {
-        get: function() {
+        get: function () {
             return this.data.camera.getProjectionMatrix();
         }
     });
@@ -111,7 +111,7 @@ pc.extend(pc, function () {
      * @description Queries the camera's view matrix.
      */
     Object.defineProperty(CameraComponent.prototype, "viewMatrix", {
-        get: function() {
+        get: function () {
             var wtm = this.data.camera._node.getWorldTransform();
             return wtm.clone().invert();
         }
@@ -124,7 +124,7 @@ pc.extend(pc, function () {
      * @description Queries the camera's frustum shape.
      */
     Object.defineProperty(CameraComponent.prototype, "frustum", {
-        get: function() {
+        get: function () {
             return this.data.camera.frustum;
         }
     });
@@ -167,12 +167,12 @@ pc.extend(pc, function () {
      * @description Queries the camera's GraphNode. Can be used to get position and rotation.
      */
     Object.defineProperty(CameraComponent.prototype, "node", {
-        get: function() {
+        get: function () {
             return this.data.camera._node;
         }
     });
 
-    pc.extend(CameraComponent.prototype, {
+    Object.assign(CameraComponent.prototype, {
         /**
          * @function
          * @name pc.CameraComponent#screenToWorld
@@ -304,7 +304,7 @@ pc.extend(pc, function () {
             }
         },
 
-        addCameraToLayers: function() {
+        addCameraToLayers: function () {
             var layer;
             for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
@@ -313,7 +313,7 @@ pc.extend(pc, function () {
             }
         },
 
-        removeCameraFromLayers: function() {
+        removeCameraFromLayers: function () {
             var layer;
             for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
@@ -322,7 +322,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onLayersChanged: function(oldComp, newComp) {
+        onLayersChanged: function (oldComp, newComp) {
             this.addCameraToLayers();
             oldComp.off("add", this.onLayerAdded, this);
             oldComp.off("remove", this.onLayerRemoved, this);
@@ -330,13 +330,13 @@ pc.extend(pc, function () {
             newComp.on("remove", this.onLayerRemoved, this);
         },
 
-        onLayerAdded: function(layer) {
+        onLayerAdded: function (layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             layer.addCamera(this);
         },
 
-        onLayerRemoved: function(layer) {
+        onLayerRemoved: function (layer) {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             layer.removeCamera(this);
@@ -346,13 +346,13 @@ pc.extend(pc, function () {
             var flags = 0;
 
             if (this.clearColorBuffer)
-                flags = flags | pc.CLEARFLAG_COLOR;
+                flags |= pc.CLEARFLAG_COLOR;
 
             if (this.clearDepthBuffer)
-                flags = flags | pc.CLEARFLAG_DEPTH;
+                flags |= pc.CLEARFLAG_DEPTH;
 
             if (this.clearStencilBuffer)
-                flags = flags | pc.CLEARFLAG_STENCIL;
+                flags |= pc.CLEARFLAG_STENCIL;
 
             this.data.camera.clearFlags = flags;
         },
@@ -458,7 +458,7 @@ pc.extend(pc, function () {
          * });
          */
         enterVr: function (display, callback) {
-            if ((display instanceof Function) && ! callback) {
+            if ((display instanceof Function) && !callback) {
                 callback = display;
                 display = null;
             }
