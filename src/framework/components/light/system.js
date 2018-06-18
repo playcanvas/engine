@@ -14,6 +14,8 @@ Object.assign(pc, function () {
     };
 
     var LightComponentSystem = function (app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'light';
         this.description = "Enables the Entity to emit light.";
         app.systems.add(this.id, this);
@@ -21,7 +23,8 @@ Object.assign(pc, function () {
         this.ComponentType = pc.LightComponent;
         this.DataType = pc.LightComponentData;
     };
-    LightComponentSystem = pc.inherits(LightComponentSystem, pc.ComponentSystem);
+    LightComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    LightComponentSystem.prototype.constructor = LightComponentSystem;
 
     Object.assign(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data) {
@@ -63,14 +66,14 @@ Object.assign(pc, function () {
             light._scene = this.app.scene;
             component.data.light = light;
 
-            LightComponentSystem._super.initializeComponentData.call(this, component, data, _props);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _props);
         },
 
         removeComponent: function (entity) {
             var data = entity.light.data;
             data.light.destroy();
 
-            LightComponentSystem._super.removeComponent.call(this, entity);
+            pc.ComponentSystem.prototype.removeComponent.call(this, entity);
         },
 
         cloneComponent: function (entity, clone) {

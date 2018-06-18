@@ -45,6 +45,8 @@ Object.assign(pc, function () {
      * @extends pc.GraphNode
      */
     var Entity = function (name, app){
+        pc.GraphNode.call(this, name);
+
         if (name instanceof pc.Application) app = name;
         this._guid = pc.guid.create(); // Globally Unique Identifier
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
@@ -59,7 +61,8 @@ Object.assign(pc, function () {
 
         pc.events.attach(this);
     };
-    Entity = pc.inherits(Entity, pc.GraphNode);
+    Entity.prototype = Object.create(pc.GraphNode.prototype);
+    Entity.prototype.constructor = Entity;
 
     /**
      * @function
@@ -195,7 +198,7 @@ Object.assign(pc, function () {
     };
 
     Entity.prototype._onHierarchyStateChanged = function (enabled) {
-        pc.Entity._super._onHierarchyStateChanged.call(this, enabled);
+        pc.GraphNode.prototype._onHierarchyStateChanged.call(this, enabled);
 
         // enable / disable all the components
         var component;
@@ -338,7 +341,7 @@ Object.assign(pc, function () {
     Entity.prototype._cloneRecursively = function (duplicatedIdsMap) {
         var type;
         var c = new pc.Entity(this._app);
-        pc.Entity._super._cloneInternal.call(this, c);
+        pc.GraphNode.prototype._cloneInternal.call(this, c);
 
         for (type in this.c) {
             var component = this.c[type];

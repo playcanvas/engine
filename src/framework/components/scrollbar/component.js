@@ -14,6 +14,8 @@ Object.assign(pc, function () {
      * @property {pc.Entity} handleEntity The entity to be used as the scrollbar handle. This entity must have a Scrollbar component.
      */
     var ScrollbarComponent = function ScrollbarComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this._app = system.app;
 
         this._handleReference = new pc.EntityReference(this, 'handleEntity', {
@@ -26,7 +28,8 @@ Object.assign(pc, function () {
 
         this._toggleLifecycleListeners('on');
     };
-    ScrollbarComponent = pc.inherits(ScrollbarComponent, pc.Component);
+    ScrollbarComponent.prototype = Object.create(pc.Component.prototype);
+    ScrollbarComponent.prototype.constructor = ScrollbarComponent;
 
     Object.assign(ScrollbarComponent.prototype, {
         _toggleLifecycleListeners: function (onOrOff) {

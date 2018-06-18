@@ -46,6 +46,8 @@ Object.assign(pc, function () {
      * Defaults to pc.BODYTYPE_STATIC.
      */
     var RigidBodyComponent = function RigidBodyComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         // Lazily create shared variable
         if (typeof Ammo !== 'undefined' && !ammoTransform) {
             ammoTransform = new Ammo.btTransform();
@@ -73,7 +75,8 @@ Object.assign(pc, function () {
         this._linearVelocity = new pc.Vec3(0, 0, 0);
         this._angularVelocity = new pc.Vec3(0, 0, 0);
     };
-    RigidBodyComponent = pc.inherits(RigidBodyComponent, pc.Component);
+    RigidBodyComponent.prototype = Object.create(pc.Component.prototype);
+    RigidBodyComponent.prototype.constructor = RigidBodyComponent;
 
     Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
         get: function () {
@@ -683,7 +686,7 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            RigidBodyComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
             if (!this.body) {
                 this.createBody();
             }
@@ -692,7 +695,7 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            RigidBodyComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
             this.disableSimulation();
         },
 

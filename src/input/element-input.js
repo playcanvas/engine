@@ -118,6 +118,8 @@ Object.assign(pc, function () {
      * @property {Number} wheel The amount of the wheel movement
      */
     var ElementMouseEvent = function (event, element, camera, x, y, lastX, lastY) {
+        ElementInputEvent.call(this, event, element, camera);
+
         this.x = x;
         this.y = y;
 
@@ -146,8 +148,8 @@ Object.assign(pc, function () {
             this.wheel = 0;
         }
     };
-
-    ElementMouseEvent = pc.inherits(ElementMouseEvent, ElementInputEvent);
+    ElementMouseEvent.prototype = Object.create(ElementInputEvent.prototype);
+    ElementMouseEvent.prototype.constructor = ElementMouseEvent;
 
     /**
      * @constructor
@@ -165,13 +167,15 @@ Object.assign(pc, function () {
      * @property {Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
      */
     var ElementTouchEvent = function (event, element, camera, x, y, input) {
+        ElementInputEvent.call(this, event, element, camera);
+
         this.touches = event.touches;
         this.changedTouches = event.changedTouches;
         this.x = x;
         this.y = y;
     };
-
-    ElementTouchEvent = pc.inherits(ElementTouchEvent, ElementInputEvent);
+    ElementTouchEvent.prototype = Object.create(ElementInputEvent.prototype);
+    ElementTouchEvent.prototype.constructor = ElementTouchEvent;
 
     /**
      * @constructor

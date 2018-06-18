@@ -36,7 +36,6 @@ Object.assign(pc, function () {
         this.calculateTransform = null;
         this.calculateProjection = null;
     };
-    CameraComponentData = pc.inherits(CameraComponentData, pc.ComponentData);
 
     return {
         CameraComponentData: CameraComponentData

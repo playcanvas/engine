@@ -10,6 +10,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var ScreenComponentSystem = function ScreenComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'screen';
         this.app = app;
         app.systems.add(this.id, this);
@@ -26,7 +28,8 @@ Object.assign(pc, function () {
 
         this.on('beforeremove', this.onRemoveComponent, this);
     };
-    ScreenComponentSystem = pc.inherits(ScreenComponentSystem, pc.ComponentSystem);
+    ScreenComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ScreenComponentSystem.prototype.constructor = ScreenComponentSystem;
 
     pc.Component._buildAccessors(pc.ScreenComponent.prototype, _schema);
 
@@ -52,7 +55,7 @@ Object.assign(pc, function () {
                 component.referenceResolution = component._referenceResolution;
             }
 
-            ScreenComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         _onUpdate: function (dt) {

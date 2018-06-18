@@ -8,13 +8,16 @@ Object.assign(pc, function () {
 
     if (pc.AudioManager.hasAudioContext()) {
         Channel3d = function (manager, sound, options) {
+            pc.Channel.call(this, manager, sound, options);
+
             this.position = new pc.Vec3();
             this.velocity = new pc.Vec3();
 
             var context = manager.context;
             this.panner = context.createPanner();
         };
-        Channel3d = pc.inherits(Channel3d, pc.Channel);
+        Channel3d.prototype = Object.create(pc.Channel.prototype);
+        Channel3d.prototype.constructor = Channel3d;
 
         Object.assign(Channel3d.prototype, {
             getPosition: function () {
@@ -119,6 +122,8 @@ Object.assign(pc, function () {
         };
 
         Channel3d = function (manager, sound) {
+            pc.Channel.call(this, manager, sound);
+
             this.position = new pc.Vec3();
             this.velocity = new pc.Vec3();
 
@@ -126,9 +131,9 @@ Object.assign(pc, function () {
             this.minDistance = 1;
             this.rollOffFactor = 1;
             this.distanceModel = pc.DISTANCE_INVERSE;
-
         };
-        Channel3d = pc.inherits(Channel3d, pc.Channel);
+        Channel3d.prototype = Object.create(pc.Channel.prototype);
+        Channel3d.prototype.constructor = Channel3d;
 
         Object.assign(Channel3d.prototype, {
             getPosition: function () {

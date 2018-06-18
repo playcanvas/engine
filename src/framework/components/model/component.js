@@ -35,6 +35,8 @@ Object.assign(pc, function () {
      */
 
     var ModelComponent = function ModelComponent(system, entity)   {
+        pc.Component.call(this, system, entity);
+
         this.on("set_type", this.onSetType, this);
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
@@ -66,7 +68,8 @@ Object.assign(pc, function () {
         // #endif
 
     };
-    ModelComponent = pc.inherits(ModelComponent, pc.Component);
+    ModelComponent.prototype = Object.create(pc.Component.prototype);
+    ModelComponent.prototype.constructor = ModelComponent;
 
     Object.assign(ModelComponent.prototype, {
         setVisible: function (visible) {
@@ -675,7 +678,7 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            ModelComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
 
             this.system.app.scene.on("set:layers", this.onLayersChanged, this);
             if (this.system.app.scene.layers) {
@@ -727,7 +730,7 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            ModelComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
 
             this.system.app.scene.off("set:layers", this.onLayersChanged, this);
             if (this.system.app.scene.layers) {

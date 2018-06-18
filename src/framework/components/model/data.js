@@ -28,7 +28,6 @@ Object.assign(pc, function () {
         this.material = null;
         this.model = null;
     };
-    ModelComponentData = pc.inherits(ModelComponentData, pc.ComponentData);
 
     return {
         ModelComponentData: ModelComponentData

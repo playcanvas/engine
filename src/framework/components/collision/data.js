@@ -13,7 +13,6 @@ Object.assign(pc, function () {
         this.model = null;
         this.initialized = false;
     };
-    CollisionComponentData = pc.inherits(CollisionComponentData, pc.ComponentData);
 
     return {
         CollisionComponentData: CollisionComponentData

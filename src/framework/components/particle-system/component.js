@@ -138,6 +138,8 @@ Object.assign(pc, function () {
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
         this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
         this.on("set_mesh", this.onSetMesh, this);
@@ -160,8 +162,8 @@ Object.assign(pc, function () {
 
         this._requestedDepth = false;
     };
-
-    ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.Component);
+    ParticleSystemComponent.prototype = Object.create(pc.Component.prototype);
+    ParticleSystemComponent.prototype.constructor = ParticleSystemComponent;
 
     Object.assign(ParticleSystemComponent.prototype, {
         addModelToLayers: function () {
@@ -589,11 +591,11 @@ Object.assign(pc, function () {
                 this._requestDepth();
             }
 
-            ParticleSystemComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
         },
 
         onDisable: function () {
-            ParticleSystemComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
 
             this.system.app.scene.off("set:layers", this.onLayersChanged, this);
             if (this.system.app.scene.layers) {

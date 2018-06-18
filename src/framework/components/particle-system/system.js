@@ -61,6 +61,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var ParticleSystemComponentSystem = function ParticleSystemComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'particlesystem';
         this.description = "Updates and renders particle system in the scene.";
         app.systems.add(this.id, this);
@@ -90,7 +92,8 @@ Object.assign(pc, function () {
         this.on('beforeremove', this.onRemove, this);
         pc.ComponentSystem.on('update', this.onUpdate, this);
     };
-    ParticleSystemComponentSystem = pc.inherits(ParticleSystemComponentSystem, pc.ComponentSystem);
+    ParticleSystemComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ParticleSystemComponentSystem.prototype.constructor = ParticleSystemComponentSystem;
 
     pc.Component._buildAccessors(pc.ParticleSystemComponent.prototype, _schema);
 
@@ -134,7 +137,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            ParticleSystemComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {

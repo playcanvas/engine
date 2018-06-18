@@ -28,6 +28,8 @@ Object.assign(pc, function () {
      * @property {pc.Vec2} referenceResolution The resolution that the ScreenComponent is designed for. This is only taken into account when screenSpace is true and scaleMode is {@link pc.SCALEMODE_BLEND}. If the actual resolution is different then the ScreenComponent will be scaled according to the scaleBlend value.
      */
     var ScreenComponent = function ScreenComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this._resolution = new pc.Vec2(640, 320);
         this._referenceResolution = new pc.Vec2(640, 320);
         this._scaleMode = pc.SCALEMODE_NONE;
@@ -39,7 +41,8 @@ Object.assign(pc, function () {
 
         system.app.graphicsDevice.on("resizecanvas", this._onResize, this);
     };
-    ScreenComponent = pc.inherits(ScreenComponent, pc.Component);
+    ScreenComponent.prototype = Object.create(pc.Component.prototype);
+    ScreenComponent.prototype.constructor = ScreenComponent;
 
     var _transform = new pc.Mat4();
 

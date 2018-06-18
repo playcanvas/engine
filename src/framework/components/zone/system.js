@@ -9,8 +9,9 @@ Object.assign(pc, function () {
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
-
     var ZoneComponentSystem = function ZoneComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'zone';
         this.app = app;
         app.systems.add(this.id, this);
@@ -22,7 +23,8 @@ Object.assign(pc, function () {
 
         this.on('beforeremove', this._onBeforeRemove, this);
     };
-    ZoneComponentSystem = pc.inherits(ZoneComponentSystem, pc.ComponentSystem);
+    ZoneComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ZoneComponentSystem.prototype.constructor = ZoneComponentSystem;
 
     pc.Component._buildAccessors(pc.ZoneComponent.prototype, _schema);
 

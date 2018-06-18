@@ -17,6 +17,8 @@ Object.assign(pc, function () {
     var ON_DISABLE = 'onDisable';
 
     var ScriptLegacyComponentSystem = function ScriptLegacyComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
         app.systems.add(this.id, this);
@@ -43,7 +45,8 @@ Object.assign(pc, function () {
         pc.ComponentSystem.on(POST_UPDATE, this.onPostUpdate, this);
         pc.ComponentSystem.on(TOOLS_UPDATE, this.onToolsUpdate, this);
     };
-    ScriptLegacyComponentSystem = pc.inherits(ScriptLegacyComponentSystem, pc.ComponentSystem);
+    ScriptLegacyComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ScriptLegacyComponentSystem.prototype.constructor = ScriptLegacyComponentSystem;
 
     pc.Component._buildAccessors(pc.ScriptLegacyComponent.prototype, _schema);
 
@@ -65,7 +68,7 @@ Object.assign(pc, function () {
                 });
             }
 
-            ScriptLegacyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {
