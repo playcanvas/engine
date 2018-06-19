@@ -287,25 +287,49 @@ graph-node.js
 
 ## Namespaces and Classes
 
-Use library function pc.extend to add additional Classes, methods and variables on to an existing namespace.
-Private functions and variables should be declared inside the namespace.
-Avoid declaring multiple Classes and Methods extending namespace per file.
+The entire PlayCanvas API must be declared under the ```pc``` namespace. The vast majority of the PlayCanvas codebase is made up of 'class' definitions. These have the following structure (which should be adhered to):
 
 ```javascript
-pc.extend(pc, function() {
+Object.assign(pc, function() {
+    // Closure to define new class
+
     var Class = function () {
-
     };
 
-    // optionally can inherit
-    Class = pc.inherits(Class, pc.Base);
+    Object.assign(Class.prototype, {
+        someFunc: function () {
 
-    Class.prototype.derivedFn = function () {
-
-    };
+        }
+    });
 
     return {
         Class: Class
+    };
+}());
+```
+
+You can also subclass existing classes:
+
+```javascript
+Object.assign(pc, function() {
+    // Closure to define new class
+
+    var SubClass = function () {
+        pc.SuperClass.call(this);
+    };
+
+    // optionally can inherit
+    SubClass.prototype = Object.create(pc.SuperClass.prototype);
+    SubClass.prototype.constructor = SubClass;
+
+    Object.assign(SubClass.prototype, {
+        someFunc: function () {
+            SuperClass.prototype.someFunc.call(this);
+        }
+    });
+
+    return {
+        SubClass: SubClass
     };
 }());
 ```

@@ -1,9 +1,11 @@
-//--------------- POST EFFECT DEFINITION ------------------------//
-pc.extend(pc, function () {
+// --------------- POST EFFECT DEFINITION --------------- //
+Object.assign(pc, function () {
+
     /**
+     * @constructor
      * @name pc.BlendEffect
-     * @class Blends the input render target with another texture
-     * @constructor Creates new instance of the post effect.
+     * @classdesc Blends the input render target with another texture
+     * @description Creates new instance of the post effect.
      * @extends pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {pc.Texture} blendMap The texture with which to blend the input render target with
@@ -48,9 +50,10 @@ pc.extend(pc, function () {
         this.blendMap = new pc.Texture(graphicsDevice);
     };
 
-    BlendEffect = pc.inherits(BlendEffect, pc.PostEffect);
+    BlendEffect.prototype = Object.create(pc.PostEffect.prototype);
+    BlendEffect.prototype.constructor = BlendEffect;
 
-    BlendEffect.prototype = pc.extend(BlendEffect.prototype, {
+    Object.assign(BlendEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -67,9 +70,7 @@ pc.extend(pc, function () {
     };
 }());
 
-
-//--------------- SCRIPT DEFINITION ------------------------//
-
+// ----------------- SCRIPT DEFINITION ------------------ //
 var Blend = pc.createScript('blend');
 
 Blend.attributes.add('mixRatio', {
@@ -87,7 +88,7 @@ Blend.attributes.add('blendMap', {
     title: 'Blend Map'
 });
 
-Blend.prototype.initialize = function() {
+Blend.prototype.initialize = function () {
     this.effect = new pc.BlendEffect(this.app.graphicsDevice);
     this.effect.mixRatio = this.mixRatio;
     this.effect.blendMap = this.blendMap.resource;
@@ -116,4 +117,3 @@ Blend.prototype.initialize = function() {
         this.effect.blendMap = value ? value.resource : null;
     }, this);
 };
-

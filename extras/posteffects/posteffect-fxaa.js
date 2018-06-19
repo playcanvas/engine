@@ -1,10 +1,11 @@
-//--------------- POST EFFECT DEFINITION------------------------//
-pc.extend(pc, function () {
+// --------------- POST EFFECT DEFINITION --------------- //
+Object.assign(pc, function () {
 
     /**
+     * @constructor
      * @name pc.FxaaEffect
-     * @class Implements the FXAA post effect by NVIDIA
-     * @constructor Creates new instance of the post effect.
+     * @classdesc Implements the FXAA post effect by NVIDIA
+     * @description Creates new instance of the post effect.
      * @extends pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      */
@@ -93,9 +94,10 @@ pc.extend(pc, function () {
         this.resolution = new Float32Array(2);
     };
 
-    FxaaEffect = pc.inherits(FxaaEffect, pc.PostEffect);
+    FxaaEffect.prototype = Object.create(pc.PostEffect.prototype);
+    FxaaEffect.prototype.constructor = FxaaEffect;
 
-    FxaaEffect.prototype = pc.extend(FxaaEffect.prototype, {
+    Object.assign(FxaaEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -113,11 +115,11 @@ pc.extend(pc, function () {
     };
 }());
 
-//--------------- SCRIPT DEFINITION------------------------//
+// ----------------- SCRIPT DEFINITION ------------------ //
 var Fxaa = pc.createScript('fxaa');
 
 // initialize code called once per entity
-Fxaa.prototype.initialize = function() {
+Fxaa.prototype.initialize = function () {
     this.effect = new pc.FxaaEffect(this.app.graphicsDevice);
 
     var queue = this.entity.camera.postEffects;
