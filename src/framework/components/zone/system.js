@@ -3,10 +3,11 @@ Object.assign(pc, function () {
 
     /**
      * @private
+     * @constructor
      * @name pc.ZoneComponentSystem
-     * @description Create a new ZoneComponentSystem
-     * @class Defines zone in world.
-     * @param {pc.Application} app The application
+     * @classdesc Defines zone in world.
+     * @description Create a new ZoneComponentSystem.
+     * @param {pc.Application} app The application.
      * @extends pc.ComponentSystem
      */
     var ZoneComponentSystem = function ZoneComponentSystem(app) {

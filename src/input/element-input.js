@@ -401,8 +401,8 @@ Object.assign(pc, function () {
                 }
             }
 
-            for (var touch in newTouchedElements) { 
-                this._touchedElements[touch] = newTouchedElements[touch]; 
+            for (var touchId in newTouchedElements) {
+                this._touchedElements[touchId] = newTouchedElements[touchId];
             }
         },
 
