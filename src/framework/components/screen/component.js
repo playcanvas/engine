@@ -51,6 +51,10 @@ Object.assign(pc, function () {
          * so that ElementComponents which are last in the hierarchy are rendered on top.
          */
         syncDrawOrder: function () {
+            this.system.queueCallback(this.entity.getGuid(), this._syncDrawOrder, this);
+        },
+
+        _syncDrawOrder: function () {
             var i = 1;
 
             var recurse = function (e) {
@@ -65,6 +69,8 @@ Object.assign(pc, function () {
             };
 
             recurse(this.entity);
+
+            this.fire('syncdraworder');
         },
 
         _calcProjectionMatrix: function () {

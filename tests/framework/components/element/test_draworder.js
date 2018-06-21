@@ -1,0 +1,221 @@
+module("pc.Element: drawOrder", {
+    setup: function () {
+        this.app = new pc.Application(document.createElement("canvas"));
+    },
+
+    teardown: function () {
+        this.app.destroy();
+    }
+});
+
+test("basic hierarchy", function () {
+    var screen = new pc.Entity('screen');
+    screen.addComponent('screen');
+
+    var p1 = new pc.Entity('p1');
+    p1.addComponent('element', {
+    });
+
+    var c1 = new pc.Entity('c1');
+    c1.addComponent('element', {
+
+    });
+
+    p1.addChild(c1);
+    screen.addChild(p1);
+    this.app.root.addChild(screen);
+
+    // update forces draw order sync
+    this.app.update(0.1);
+
+    equal(p1.element.drawOrder, 1);
+    equal(c1.element.drawOrder, 2);
+});
+
+test("reorder children", function () {
+    var screen = new pc.Entity('screen');
+    screen.addComponent('screen');
+
+    var p1 = new pc.Entity('p1');
+    p1.addComponent('element', {
+    });
+
+    var c1 = new pc.Entity('c1');
+    c1.addComponent('element', {
+
+    });
+
+    var c2 = new pc.Entity('c2');
+    c2.addComponent('element', {
+
+    });
+
+    p1.addChild(c1);
+    screen.addChild(p1);
+    this.app.root.addChild(screen);
+
+    p1.removeChild(c2);
+    p1.insertChild(c2, 0);
+
+    // update forces draw order sync
+    this.app.update(0.1);
+
+    equal(p1.element.drawOrder, 1);
+    equal(c2.element.drawOrder, 2);
+    equal(c1.element.drawOrder, 3);
+});
+
+
+test('add screen late', function () {
+    var screen = new pc.Entity('screen');
+
+    var p1 = new pc.Entity('p1');
+    p1.addComponent('element', {
+    });
+
+    var c1 = new pc.Entity('c1');
+    c1.addComponent('element', {
+
+    });
+
+    p1.addChild(c1);
+    screen.addChild(p1);
+    this.app.root.addChild(screen);
+
+    screen.addComponent('screen');
+
+    // update forces draw order sync
+    this.app.update(0.1);
+
+    equal(p1.element.drawOrder, 1);
+    equal(c1.element.drawOrder, 2);
+});
+
+test('reparent to screen', function () {
+    var screen = new pc.Entity('screen');
+    screen.addComponent('screen');
+
+    var p1 = new pc.Entity('p1');
+    p1.addComponent('element', {
+    });
+
+    var c1 = new pc.Entity('c1');
+    c1.addComponent('element', {
+
+    });
+
+    p1.addChild(c1);
+    this.app.root.addChild(p1);
+    this.app.root.addChild(screen);
+
+    p1.reparent(screen);
+
+    // update forces draw order sync
+    this.app.update(0.1);
+
+    equal(p1.element.drawOrder, 1);
+    equal(c1.element.drawOrder, 2);
+});
+
+
+test('single call to syncDrawOrder', function () {
+    var count = 0;
+    // patch to count
+    var _syncDrawOrder = pc.ScreenComponent.prototype._syncDrawOrder;
+    pc.ScreenComponent.prototype._syncDrawOrder = function () {
+        count++;
+        _syncDrawOrder.apply(this, arguments);
+    };
+
+    var screen = new pc.Entity('screen');
+    screen.addComponent('screen');
+
+    var p1 = new pc.Entity('p1');
+    p1.addComponent('element', {
+    });
+
+    var c1 = new pc.Entity('c1');
+    c1.addComponent('element', {
+
+    });
+
+    p1.addChild(c1);
+    screen.addChild(p1);
+    this.app.root.addChild(screen);
+
+    // update forces draw order sync
+    this.app.update(0.1);
+
+    equal(count, 1);
+
+    // restore original
+    pc.ScreenComponent.prototype._syncDrawOrder = _syncDrawOrder;
+});
+
+test("Unmask drawOrder", function () {
+    var screen = new pc.Entity('screen');
+    screen.addComponent('screen');
+
+    var m1 = new pc.Entity('m1');
+    m1.addComponent('element', {
+        type: "image",
+        mask: true
+    });
+
+    var m2 = new pc.Entity('m2');
+    m2.addComponent('element', {
+        type: "image",
+        mask: true
+    });
+
+    var m3 = new pc.Entity('m3');
+    m3.addComponent('element', {
+        type: "image",
+        mask: true
+    });
+
+    var c1 = new pc.Entity('c1');
+    c1.addComponent('element', {
+        type: "image"
+    });
+
+    m2.addChild(m3);
+    m1.addChild(m2);
+    m1.addChild(c1);
+    screen.addChild(m1);
+    this.app.root.addChild(screen);
+
+    // update forces draw order sync
+    this.app.update(0.1);
+
+    var m1DrawOrder = m1.element.drawOrder;
+    var m2DrawOrder = m2.element.drawOrder;
+    var m3DrawOrder = m3.element.drawOrder;
+    var c1DrawOrder = c1.element.drawOrder;
+
+    var m1Unmask = m1.element._image._renderable.unmaskMeshInstance.drawOrder;
+    var m2Unmask = m2.element._image._renderable.unmaskMeshInstance.drawOrder;
+    var m3Unmask = m3.element._image._renderable.unmaskMeshInstance.drawOrder;
+
+    ok(m1Unmask > m1DrawOrder, "unmask for m1 drawn after m1");
+    ok(m1Unmask > m2DrawOrder, "unmask for m1 drawn after m2");
+    ok(m1Unmask > m3DrawOrder, "unmask for m1 drawn after m3");
+    ok(m1Unmask > c1DrawOrder, "unmask for m1 drawn after c1");
+    ok(m1Unmask > m2Unmask, "unmask for m1 drawn after unmask m2");
+    ok(m1Unmask > m3Unmask, "unmask for m1 drawn after unmask m3");
+
+    ok(m2Unmask > m1DrawOrder, "unmask for m2 drawn after m1");
+    ok(m2Unmask > m2DrawOrder, "unmask for m2 drawn after m2");
+    ok(m2Unmask > m3DrawOrder, "unmask for m2 drawn after m3");
+    ok(m2Unmask < c1DrawOrder, "unmask for m2 drawn before c1");
+    ok(m2Unmask < m1Unmask, "unmask for m2 drawn before unmask m2");
+    ok(m2Unmask > m3Unmask, "unmask for m2 drawn after unmask m3");
+
+    ok(m3Unmask > m1DrawOrder, "unmask for m3 drawn after m1");
+    ok(m3Unmask > m2DrawOrder, "unmask for m3 drawn after m2");
+    ok(m3Unmask > m3DrawOrder, "unmask for m3 drawn after m3");
+    ok(m3Unmask < c1DrawOrder, "unmask for m3 drawn before c1");
+    ok(m3Unmask < m1Unmask, "unmask for m1 drawn before unmask m2");
+    ok(m3Unmask < m2Unmask, "unmask for m1 drawn before unmask m3");
+
+});

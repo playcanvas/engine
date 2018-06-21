@@ -127,10 +127,10 @@
                 subpanel.name = "Subpanel"+c;
                 subpanel.addComponent("element", {
                     type: "image",
-                    anchor: new pc.Vec4(0.5, 0.1, 0.5, 0.1),
-                    pivot: new pc.Vec2(0.5, 0),
-                    width: 400,
-                    height: 100,
+                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    width: 200,
+                    height: 200,
                     opacity: 1,
                     color: new pc.Color(0.5,0.5,0.5)
                 });
@@ -139,26 +139,24 @@
                 submask.name = "Submask"+c;
                 submask.addComponent("element", {
                     type: "image",
-                    anchor: new pc.Vec4(0.5,0,0.5,0),
-                    pivot: new pc.Vec2(0.5, 0),
-                    width: 400,
-                    height: 100,
+                    anchor: new pc.Vec4(0, 0, 1, 1),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    margin: [0,0,0,0],
                     opacity: 1,
                     mask: true
                 });
 
-                block = new pc.Entity();
-                block.name = "Block"+c;
-                block.addComponent("element", {
+
+                subsubmask = new pc.Entity();
+                subsubmask.name = "SubSubmask"+c;
+                subsubmask.addComponent("element", {
                     type: "image",
-                    anchor: new pc.Vec4(1,0.5,1,0.5),
+                    anchor: new pc.Vec4(0, 0, 1, 1),
                     pivot: new pc.Vec2(0.5, 0.5),
-                    width: 150,
-                    height: 100,
+                    margin: [0,0,0,0],
                     opacity: 1,
-                    color: new pc.Color(0,1,0)
+                    mask: true
                 });
-                block.setLocalPosition(0,50,0);
 
 
                 hiddenblock = new pc.Entity();
@@ -168,30 +166,16 @@
                     anchor: new pc.Vec4(0.5, 1, 0.5, 1),
                     pivot: new pc.Vec2(0.5, 1),
                     width: 100,
-                    height: 300,
+                    height: 600,
                     opacity: 1,
                     color: new pc.Color(1,0,0)
                 });
 
-                text = new pc.Entity();
-                text.name = "Text"+c;
-                text.addComponent("element", {
-                    type: "text",
-                    anchor: new pc.Vec4(0.5, 0.8, 0.5, 0.8),
-                    pivot: new pc.Vec2(0.5, 1),
-                    fontSize: 64,
-                    fontAsset: fontAsset,
-                    opacity: 1,
-                    color: new pc.Color(0,0,1),
-                    text: "Hello World!"
-                });
-
                 panel.addChild(mask);
-                mask.addChild(block);
                 mask.addChild(subpanel);
                 subpanel.addChild(submask);
-                submask.addChild(hiddenblock);
-                hiddenblock.addChild(text);
+                submask.addChild(subsubmask);
+                subpanel.addChild(hiddenblock);
 
                 menu.addChild(panel);
 
@@ -213,31 +197,12 @@
                 var parent = createMenu();
                 var p;
                 p = createPanel(parent);
-                p.translateLocal(-150,-25,0);
+                // p.translateLocal(-150,-25,0);
 
-                p = createPanel(parent);
-                p.translateLocal(150,25,0);
+                // p = createPanel(parent);
+                // p.translateLocal(150,25,0);
 
                 var panel1 = app.root.findByName("Panel1");
-
-
-                var mousedown = false;
-                app.mouse.on("mousedown", function () {
-                    mousedown = true;
-                });
-                app.mouse.on("mouseup", function () {
-                    mousedown = false;
-                });
-                app.mouse.on("mousemove", function (e) {
-                    var evt = e.event;
-                    if (mousedown) {
-                        // panel1.translateLocal(e.x * 0.1, e.y * 0.1, 0);
-                        // panel1.translateLocal(2*(e.x/app.graphicsDevice.width)-1, -2*(e.y/app.graphicsDevice.height)-1, 0);
-                        var mousex = evt.clientX;
-                        var mousey = evt.clientY;
-                        panel1.setPosition((mousex/app.graphicsDevice.width)*2-1, -((mousey/app.graphicsDevice.height)*2-1), 0);
-                    }
-                });
             }
 
             // update every frame

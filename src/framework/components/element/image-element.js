@@ -1,5 +1,192 @@
 Object.assign(pc, function () {
 
+    var maskOffset = 0.5;
+    var maskOffsetIncrement = 0.001;
+
+    var ImageRenderable = function (entity, mesh) {
+        this._entity = entity;
+        this._element = entity.element;
+
+        this._material = null;
+
+        this.model = new pc.Model();
+        this.node = new pc.GraphNode();
+        this.model.graph = this.node;
+
+        this.mesh = mesh;
+        this.meshInstance = new pc.MeshInstance(this.node, this.mesh, pc.Scene.defaultMaterial);
+        this.meshInstance.name = 'ImageElement: ' + entity.name;
+        this.meshInstance.castShadow = false;
+        this.meshInstance.receiveShadow = false;
+
+        this.model.meshInstances.push(this.meshInstance);
+
+        this._entity.addChild(this.model.graph);
+        this.model._entity = this._entity;
+
+        this.unmaskModel = null;
+        this.unmaskMeshInstance = null;
+    };
+
+    ImageRenderable.prototype.destroy = function () {
+        this._element.removeModelFromLayers(this.model);
+
+        if (this.unmaskModel) {
+            this._element.removeModelFromLayers(this.unmaskModel);
+            this.unmaskModel.destroy();
+            this.unmaskModel = null;
+        }
+
+        this.model.destroy();
+        this.model = null;
+
+    };
+
+    ImageRenderable.prototype.setMesh = function (mesh) {
+        this.mesh = mesh;
+
+        this.meshInstance.mesh = mesh;
+        this.meshInstance.visible = !!mesh;
+        this.forceUpdateAabb();
+    };
+
+    ImageRenderable.prototype.setMask = function (mask) {
+        if (mask) {
+            this.unmaskModel = new pc.Model();
+            this.unmaskMeshInstance = new pc.MeshInstance(this.node, this.mesh, this.material);
+            this.unmaskMeshInstance.name = 'Unmask: ' + this._entity.name;
+            this.unmaskMeshInstance.castShadow = false;
+            this.unmaskMeshInstance.receiveShadow = false;
+
+            this.unmaskModel.meshInstances.push(this.unmaskMeshInstance);
+            this.unmaskModel.graph = this.node;
+
+            this.unmaskModel._entity = this._entity;
+
+            // copy parameters
+            for (var name in this.meshInstance.parameters) {
+                this.unmaskMeshInstance.setParameter(name, this.meshInstance.parameters[name].data);
+            }
+
+            this._element.addModelToLayers(this.unmaskModel);
+        } else {
+            // destroy
+        }
+    };
+
+    ImageRenderable.prototype.setMaterial = function (material) {
+        this.material = material;
+
+        this.meshInstance.material = material;
+
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.material = material;
+        }
+    };
+
+    ImageRenderable.prototype.setParameter = function (name, value) {
+        this.meshInstance.setParameter(name, value);
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.setParameter(name, value);
+        }
+    };
+
+    ImageRenderable.prototype.deleteParameter = function (name) {
+        this.meshInstance.deleteParameter(name);
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.deleteParameter(name);
+        }
+    };
+
+    ImageRenderable.prototype.setUnmaskDrawOrder = function () {
+        var getLastChild = function (e) {
+            var last;
+            var c = e.getChildren();
+            var l = c.length;
+            if (l) {
+                for (var i = 0; i < l; i++) {
+                    if (c[i].element) {
+                        last = c[i];
+                    }
+                }
+
+                if (!last) return null;
+
+                var child = getLastChild(last);
+                if (child) {
+                    return child;
+                } else {
+                    return last;
+                }
+            } else {
+                return null;
+            }
+        };
+
+        // todo: fix drawOrder to be at end of mask hierarchy
+        if (this.unmaskMeshInstance) {
+            var lastChild = getLastChild(this._entity);
+            if (lastChild && lastChild.element) {
+                this.unmaskMeshInstance.drawOrder = lastChild.element.drawOrder + maskOffset;
+            } else {
+                this.unmaskMeshInstance.drawOrder = this.meshInstance.drawOrder + maskOffset;
+            }
+            maskOffset -= maskOffsetIncrement;
+            if (maskOffset < 0) {
+                maskOffset = maskOffsetIncrement;
+                console.warn('Unmasking offset reached 0. Defaulting to ' + maskOffsetIncrement);
+            }
+            // console.log('setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
+        }
+    };
+
+    ImageRenderable.prototype.setDrawOrder = function (drawOrder) {
+        // console.log('setDrawOrder: ', this.meshInstance.name, drawOrder);
+        this.meshInstance.drawOrder = drawOrder;
+
+    }
+
+    ImageRenderable.prototype.setCull = function (cull) {
+        this.meshInstance.cull = cull;
+
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.cull = cull;
+        }
+    };
+
+
+    ImageRenderable.prototype.setScreenSpace = function (screenSpace) {
+        this.meshInstance.screenSpace = screenSpace;
+
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.screenSpace = screenSpace;
+        }
+    };
+
+
+    ImageRenderable.prototype.setLayer = function (layer) {
+        this.meshInstance.layer = layer;
+
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.layer = layer;
+        }
+    };
+
+    ImageRenderable.prototype.forceUpdateAabb = function (mask) {
+        this.meshInstance._aabbVer = -1;
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance._aabbVer = -1;
+        }
+    };
+
+    ImageRenderable.prototype.setAabbFunc = function (fn) {
+        this.meshInstance._updateAabbFunc = fn;
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance._updateAabbFunc = fn;
+        }
+    };
+
+
     var ImageElement = function ImageElement(element) {
         this._element = element;
         this._entity = element.entity;
@@ -22,6 +209,8 @@ Object.assign(pc, function () {
         this._mask = false; // this image element is a mask
         this._maskRef = 0; // id used in stencil buffer to mask
 
+        this._maskedBy = null; // entity that is masking this element
+
         // private
         this._positions = [];
         this._normals = [];
@@ -34,20 +223,10 @@ Object.assign(pc, function () {
         this._atlasRect = new pc.Vec4();
 
         this._defaultMesh = this._createMesh();
-        this._mesh = this._defaultMesh;
-        this._node = new pc.GraphNode();
-        this._model = new pc.Model();
-        this._model.graph = this._node;
-        this._meshInstance = new pc.MeshInstance(this._node, this._mesh, this._material);
-        this._meshInstance.castShadow = false;
-        this._meshInstance.receiveShadow = false;
-        this._model.meshInstances.push(this._meshInstance);
-        this._drawOrder = 0;
+        this._renderable = new ImageRenderable(this._entity, this._defaultMesh);
 
         this._updateAabbFunc = this._updateAabb.bind(this);
 
-        this._entity.addChild(this._model.graph);
-        this._model._entity = this._entity;
 
         // initialize based on screen
         this._onScreenChange(this._element.screen);
@@ -63,15 +242,16 @@ Object.assign(pc, function () {
 
     Object.assign(ImageElement.prototype, {
         destroy: function () {
-            if (this._model) {
-                this._element.removeModelFromLayers(this._model);
-                // reset mesh to the default because that's the mesh we want destroyed
-                // and not possible a mesh from the sprite asset that might be
-                // used elsewhere
-                this._meshInstance.mesh = this._defaultMesh;
-                this._model.destroy();
-                this._model = null;
-            }
+            this._renderable.destroy();
+            // if (this._model) {
+            //     this._element.removeModelFromLayers(this._model);
+            //     // reset mesh to the default because that's the mesh we want destroyed
+            //     // and not possible a mesh from the sprite asset that might be
+            //     // used elsewhere
+            //     this._meshInstance.mesh = this._defaultMesh;
+            //     this._model.destroy();
+            //     this._model = null;
+            // }
 
             this._element.off('resize', this._onParentResizeOrPivotChange, this);
             this._element.off('set:pivot', this._onParentResizeOrPivotChange, this);
@@ -110,25 +290,29 @@ Object.assign(pc, function () {
         },
 
         _onParentResizeOrPivotChange: function () {
-            if (this._mesh) this._updateMesh(this._mesh);
+            if (this._renderable.mesh) this._updateMesh(this._renderable.mesh);
         },
 
         _onScreenSpaceChange: function (value) {
             this._updateMaterial(value);
         },
 
-        _onScreenChange: function (screen) {
+        _onScreenChange: function (screen, previous) {
             if (screen) {
                 this._updateMaterial(screen.screen.screenSpace);
+
             } else {
                 this._updateMaterial(false);
             }
         },
 
         _onDrawOrderChange: function (order) {
-            this._drawOrder = order;
-            if (this._meshInstance) {
-                this._meshInstance.drawOrder = order;
+            this._renderable.setDrawOrder(order);
+
+            if (this.mask) {
+                this._entity.element.screen.screen.once('syncdraworder', function () {
+                    this._renderable.setUnmaskDrawOrder();
+                }, this);
             }
         },
 
@@ -174,7 +358,8 @@ Object.assign(pc, function () {
                     }
 
                 }
-                if (this._meshInstance) this._meshInstance.cull = false;
+
+                if (this._renderable) this._renderable.setCull(false);
 
             } else {
                 if (!this._hasUserMaterial()) {
@@ -205,12 +390,13 @@ Object.assign(pc, function () {
                     }
                 }
 
-                if (this._meshInstance) this._meshInstance.cull = true;
+                if (this._renderable) this._renderable.setCull(true);
             }
-            if (this._meshInstance) {
-                this._meshInstance.material = this._material;
-                this._meshInstance.screenSpace = screenSpace;
-                this._meshInstance.layer = screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD;
+
+            if (this._renderable) {
+                this._renderable.setMaterial(this._material);
+                this._renderable.setScreenSpace(screenSpace);
+                this._renderable.setLayer(screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD);
             }
         },
 
@@ -273,9 +459,7 @@ Object.assign(pc, function () {
             }
 
             // force update meshInstance aabb
-            if (this._meshInstance) {
-                this._meshInstance._aabbVer = -1;
-            }
+            if (this._renderable) this._renderable.forceUpdateAabb();
 
             if (this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
 
@@ -316,22 +500,14 @@ Object.assign(pc, function () {
                 scaleY *= pc.math.clamp(h / (this._innerOffset.y * scaleMulY), 0.0001, 1);
 
                 // set scale
-                if (this._meshInstance) {
-                    // set inner offset
-                    this._meshInstance.setParameter("innerOffset", this._innerOffset.data);
-                    // set atlas rect
-                    this._meshInstance.setParameter("atlasRect", this._atlasRect.data);
-                    // set outer scale
-                    // use outerScale in ALL passes (depth, picker, etc) so the shape is correct
-                    this._meshInstance.setParameter("outerScale", this._outerScale.data, 0xFFFFFFFF);
-                    // set aabb update function
-                    this._meshInstance._updateAabbFunc = this._updateAabbFunc;
-                }
+                if (this._renderable) {
+                    this._renderable.setParameter('innerOffset', this._innerOffset.data);
+                    this._renderable.setParameter('atlasRect', this._atlasRect.data);
+                    this._renderable.setParameter('outerScale', this._outerScale.data);
+                    this._renderable.setAabbFunc(this._updateAabbFunc);
 
-                // set scale and pivot
-                if (this._node) {
-                    this._node.setLocalScale(scaleX, scaleY, 1);
-                    this._node.setLocalPosition((0.5 - this._element.pivot.x) * w, (0.5 - this._element.pivot.y) * h, 0);
+                    this._renderable.node.setLocalScale(scaleX, scaleY, 1);
+                    this._renderable.node.setLocalPosition((0.5 - this._element.pivot.x) * w, (0.5 - this._element.pivot.y) * h, 0);
                 }
             } else {
                 this._positions[0] = 0;
@@ -392,13 +568,11 @@ Object.assign(pc, function () {
 
                 mesh.aabb.compute(this._positions);
 
-                if (this._node) {
-                    this._node.setLocalScale(1, 1, 1);
-                    this._node.setLocalPosition(0, 0, 0);
-                }
+                if (this._renderable) {
+                    this._renderable.node.setLocalScale(1, 1, 1);
+                    this._renderable.node.setLocalPosition(0, 0, 0);
 
-                if (this._meshInstance) {
-                    this._meshInstance._updateAabbFunc = null;
+                    this._renderable.setAabbFunc(null);
                 }
 
             }
@@ -408,28 +582,30 @@ Object.assign(pc, function () {
         _updateAabb: function (aabb) {
             aabb.center.set(0, 0, 0);
             aabb.halfExtents.set(this._outerScale.x * 0.5, this._outerScale.y * 0.5, 0.001);
-            aabb.setFromTransformedAabb(aabb, this._node.getWorldTransform());
+            aabb.setFromTransformedAabb(aabb, this._renderable.node.getWorldTransform());
             return aabb;
         },
 
-        _getHigherMask: function () {
-            var parent = this._entity;
+        // _getHigherMask: function () {
+        //     var parent = this._entity;
 
-            while (parent) {
-                parent = parent.getParent();
-                if (parent && parent.element && parent.element.mask) {
-                    return parent;
-                }
-            }
+        //     while (parent) {
+        //         parent = parent.getParent();
+        //         if (parent && parent.element && parent.element.mask) {
+        //             return parent;
+        //         }
+        //     }
 
-            return null;
-        },
+        //     return null;
+        // },
 
         _toggleMask: function () {
             this._element._dirtifyMask();
 
             var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
             this._updateMaterial(screenSpace);
+
+            this._renderable.setMask(!!this._mask);
         },
 
         _onMaterialLoad: function (asset) {
@@ -549,11 +725,11 @@ Object.assign(pc, function () {
 
         _onAtlasTextureChange: function () {
             if (this.sprite && this.sprite.atlas && this.sprite.atlas.texture) {
-                this._meshInstance.setParameter("texture_emissiveMap", this._sprite.atlas.texture);
-                this._meshInstance.setParameter("texture_opacityMap", this._sprite.atlas.texture);
+                this._renderable.setParameter('texture_emissiveMap', this._sprite.atlas.texture);
+                this._renderable.setParameter('texture_opacityMap', this._sprite.atlas.texture);
             } else {
-                this._meshInstance.deleteParameter("texture_emissiveMap");
-                this._meshInstance.deleteParameter("texture_opacityMap");
+                this._renderable.deleteParameter('texture_emissiveMap');
+                this._renderable.deleteParameter('texture_opacityMap');
             }
         },
 
@@ -576,14 +752,38 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            if (this._model) {
-                this._element.addModelToLayers(this._model);
+            this._element.addModelToLayers(this._renderable.model);
+
+            if (this._renderable.unmaskModel) {
+                this._element.addModelToLayers(this._renderable.unmaskModel);
             }
         },
 
         onDisable: function () {
-            if (this._model) {
-                this._element.removeModelFromLayers(this._model);
+            this._element.removeModelFromLayers(this._renderable.model);
+
+            if (this._renderable.unmaskModel) {
+                this._element.removeModelFromLayers(this._renderable.unmaskModel);
+            }
+        },
+
+        _setStencil: function (stencilParams) {
+            this._renderable.meshInstance.stencilFront = stencilParams;
+            this._renderable.meshInstance.stencilBack = stencilParams;
+
+            var ref = 0;
+            if (this._element.maskedBy) {
+                ref = this._element.maskedBy.element._image._maskRef;
+            }
+            if (this._renderable.unmaskMeshInstance) {
+                 var sp = new pc.StencilParameters({
+                    ref: ref,
+                    func: pc.FUNC_ALWAYS,
+                    zpass: pc.STENCILOP_REPLACE
+                });
+
+                this._renderable.unmaskMeshInstance.stencilFront = sp;
+                this._renderable.unmaskMeshInstance.stencilBack = sp;
             }
         }
     });
@@ -598,9 +798,7 @@ Object.assign(pc, function () {
             this._color.data[1] = value.data[1];
             this._color.data[2] = value.data[2];
 
-            if (this._meshInstance) {
-                this._meshInstance.setParameter('material_emissive', this._color.data3);
-            }
+            this._renderable.setParameter('material_emissive', this._color.data3);
 
             if (this._element) {
                 this._element.fire('set:color', this._color);
@@ -615,7 +813,8 @@ Object.assign(pc, function () {
 
         set: function (value) {
             this._color.data[3] = value;
-            this._meshInstance.setParameter("material_opacity", value);
+
+            this._renderable.setParameter('material_opacity', value);
 
             if (this._element) {
                 this._element.fire('set:opacity', this._color.data[3]);
@@ -634,7 +833,7 @@ Object.assign(pc, function () {
             } else {
                 this._rect.set(value[0], value[1], value[2], value[3]);
             }
-            if (this._mesh) this._updateMesh(this._mesh);
+            if (this._renderable.mesh) this._updateMesh(this._renderable.mesh);
         }
     });
 
@@ -651,16 +850,16 @@ Object.assign(pc, function () {
 
             this._material = value;
             if (value) {
-                this._meshInstance.material = value;
+                this._renderable.setMaterial(value);
 
                 // if this is not the default material then clear color and opacity overrides
                 if (this._hasUserMaterial()) {
-                    this._meshInstance.deleteParameter('material_opacity');
-                    this._meshInstance.deleteParameter('material_emissive');
+                    this._renderable.deleteParameter('material_opacity');
+                    this._renderable.deleteParameter('material_emissive');
                 } else {
                     // otherwise if we are back to the defaults reset the color and opacity
-                    this._meshInstance.setParameter('material_emissive', this._color.data3);
-                    this._meshInstance.setParameter('material_opacity', this._color.data[3]);
+                    this._renderable.setParameter('material_emissive', this._color.data3);
+                    this._renderable.setParameter('material_opacity', this._color.data[3]);
                 }
             }
         }
@@ -714,14 +913,14 @@ Object.assign(pc, function () {
 
             if (value) {
                 // default texture just uses emissive and opacity maps
-                this._meshInstance.setParameter("texture_emissiveMap", this._texture);
-                this._meshInstance.setParameter("texture_opacityMap", this._texture);
-                this._meshInstance.setParameter("material_emissive", this._color.data3);
-                this._meshInstance.setParameter("material_opacity", this._color.data[3]);
+                this._renderable.setParameter("texture_emissiveMap", this._texture);
+                this._renderable.setParameter("texture_opacityMap", this._texture);
+                this._renderable.setParameter("material_emissive", this._color.data3);
+                this._renderable.setParameter("material_opacity", this._color.data[3]);
             } else {
                 // clear texture params
-                this._meshInstance.deleteParameter("texture_emissiveMap");
-                this._meshInstance.deleteParameter("texture_opacityMap");
+                this._renderable.deleteParameter("texture_emissiveMap");
+                this._renderable.deleteParameter("texture_opacityMap");
             }
         }
     });
@@ -832,16 +1031,14 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (this._meshInstance) {
-                if (this._sprite && this._sprite.atlas && this._sprite.atlas.texture) {
-                    // default texture just uses emissive and opacity maps
-                    this._meshInstance.setParameter("texture_emissiveMap", this._sprite.atlas.texture);
-                    this._meshInstance.setParameter("texture_opacityMap", this._sprite.atlas.texture);
-                } else {
-                    // clear texture params
-                    this._meshInstance.deleteParameter("texture_emissiveMap");
-                    this._meshInstance.deleteParameter("texture_opacityMap");
-                }
+            if (this._sprite && this._sprite.atlas && this._sprite.atlas.texture) {
+                // default texture just uses emissive and opacity maps
+                this._renderable.setParameter("texture_emissiveMap", this._sprite.atlas.texture);
+                this._renderable.setParameter("texture_opacityMap", this._sprite.atlas.texture);
+            } else {
+                // clear texture params
+                this._renderable.deleteParameter("texture_emissiveMap");
+                this._renderable.deleteParameter("texture_opacityMap");
             }
 
             this.spriteFrame = this.spriteFrame; // force update frame
@@ -884,19 +1081,16 @@ Object.assign(pc, function () {
 
     Object.defineProperty(ImageElement.prototype, "mesh", {
         get: function () {
-            return this._mesh;
+            return this._renderable.mesh;
         },
         set: function (value) {
-            this._mesh = value;
-            if (this._meshInstance) {
-                this._meshInstance.mesh = this._mesh;
-                this._meshInstance.visible = !!this._mesh;
-                this._meshInstance._aabbVer = -1;
-                if (this._mesh === this._defaultMesh) {
-                    this._meshInstance._updateAabbFunc = null;
-                } else {
-                    this._meshInstance._updateAabbFunc = this._updateAabbFunc;
-                }
+            this._renderable.mesh = value;
+
+            this._renderable.setMesh(value);
+            if (this._defaultMesh === value) {
+                this._renderable.setAabbFunc(null);
+            } else {
+                this._renderable.setAabbFunc(this._updateAabbFunc);
             }
         }
     });

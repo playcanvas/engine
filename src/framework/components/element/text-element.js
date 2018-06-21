@@ -643,6 +643,16 @@ Object.assign(pc, function () {
             if (this._model) {
                 this._element.removeModelFromLayers(this._model);
             }
+        },
+
+        _setStencil: function (stencilParams) {
+            if (this._model) {
+                var instances = this._model.meshInstances;
+                for (var i = 0; i < instances.length; i++) {
+                    instances[i].stencilFront = stencilParams;
+                    instances[i].stencilBack = stencilParams;
+                }
+            }
         }
     });
 

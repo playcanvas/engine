@@ -20,6 +20,10 @@ Object.assign(pc, function () {
         this.schema = _schema;
 
         this.windowResolution = new pc.Vec2();
+
+        // queue of callbacks
+        this._preUpdateQueue = new pc.IndexedList('id');
+
         this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
 
         pc.ComponentSystem.on('update', this._onUpdate, this);
@@ -56,6 +60,8 @@ Object.assign(pc, function () {
         },
 
         _onUpdate: function (dt) {
+            this.processPreUpdateQueue();
+
             var components = this.store;
 
             for (var id in components) {
@@ -82,7 +88,27 @@ Object.assign(pc, function () {
 
         onRemoveComponent: function (entity, component) {
             component.onRemove();
-        }
+        },
+
+        processPreUpdateQueue: function () {
+            var list = this._preUpdateQueue.list();
+
+            for (var i = 0; i < list.length; i++) {
+                var item = list[i];
+                item.callback.call(item.scope);
+            }
+            this._preUpdateQueue.clear();
+        },
+
+        queueCallback: function (id, fn, scope) {
+            if (!this._preUpdateQueue.has(id)) {
+                this._preUpdateQueue.push(id, {
+                    callback: fn,
+                    scope: scope
+                });
+            }
+        },
+
     });
 
     return {
