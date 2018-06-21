@@ -25,7 +25,7 @@ Object.assign(pc, function () {
         * @param {Number} [options.pitch=1] The relative pitch, default of 1, plays at normal pitch.
         * @param {Boolean} [options.loop=false] Whether the sound should loop when it reaches the end or not.
         * @param {Number} [options.startTime=0] The time from which the playback will start in seconds. Default is 0 to start at the beginning.
-        * @param {Number} [options.duration=null] The total time after the startTime in milliseconds when playback will stop or restart if loop is true.
+        * @param {Number} [options.duration=null] The total time after the startTime in seconds when playback will stop or restart if loop is true.
         * @param {Function} [options.onPlay=null] Function called when the instance starts playing.
         * @param {Function} [options.onPause=null] Function called when the instance is paused.
         * @param {Function} [options.onResume=null] Function called when the instance is resumed.
