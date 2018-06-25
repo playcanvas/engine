@@ -12,6 +12,7 @@ Object.assign(pc, function () {
      */
     pc.SCALEMODE_BLEND = "blend";
 
+    // var counter = 1;
     /**
      * @component
      * @constructor
@@ -33,6 +34,9 @@ Object.assign(pc, function () {
         this._scaleMode = pc.SCALEMODE_NONE;
         this.scale = 1;
         this._scaleBlend = 0.5;
+
+        // this._counter = counter*65535;
+        // counter++;
 
         this._screenSpace = false;
         this._screenMatrix = new pc.Mat4();

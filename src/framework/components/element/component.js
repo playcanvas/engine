@@ -1,5 +1,5 @@
 Object.assign(pc, function () {
-    var _debugLogging = false;
+    var _debugLogging = true;
 
     /**
      * @enum pc.ELEMENTTYPE
@@ -149,7 +149,7 @@ Object.assign(pc, function () {
         this._useInput = false;
 
         this._layers = [pc.LAYERID_UI]; // assign to the default UI layer
-        this._addedModel = null;
+        this._addedModels = []; // store models that have been added to layer so we can re-add when layer is changed
 
         this._batchGroupId = -1;
         // #ifdef DEBUG
@@ -379,14 +379,13 @@ Object.assign(pc, function () {
         },
 
         _onPrerender: function () {
-            var maskCounter = 1;
             for (var i = 0; i < this.system._prerender.length; i++) {
                 var mask = this.system._prerender[i];
                 if (_debugLogging) console.log('prerender from: ' + mask.name);
 
                 // prevent call if element has been removed since being added
                 if (mask.element) {
-                    maskCounter = mask.element.syncMask(maskCounter);
+                    this.system.maskCounter = mask.element.syncMask(this.system.maskCounter);
                 }
             }
 
@@ -496,7 +495,6 @@ Object.assign(pc, function () {
                 for (i = 0, l = children.length; i < l; i++) {
                     if (children[i].element) {
                         maskCounter = children[i].element._updateMask(currentMask, maskCounter);
-                        if (_debugLogging) console.log(originalMaskCounter, maskCounter);
                     }
                 }
 
@@ -532,7 +530,6 @@ Object.assign(pc, function () {
                 for (i = 0, l = children.length; i < l; i++) {
                     if (children[i].element) {
                         maskCounter = children[i].element._updateMask(currentMask, maskCounter);
-                        if (_debugLogging) console.log(originalMaskCounter, maskCounter);
                     }
                 }
 
@@ -820,7 +817,7 @@ Object.assign(pc, function () {
 
         addModelToLayers: function (model) {
             var layer;
-            this._addedModel = model;
+            this._addedModels.push(model);
             for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
@@ -830,7 +827,10 @@ Object.assign(pc, function () {
 
         removeModelFromLayers: function (model) {
             var layer;
-            this._addedModel = null;
+            var idx = this._addedModels.indexOf(model);
+            if(idx >= 0) {
+                this._addedModels.splice(idx, 1);
+            }
             for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
@@ -874,22 +874,27 @@ Object.assign(pc, function () {
         set: function (value) {
             var i, layer;
 
-            if (this._addedModel) {
+            if (this._addedModels.length) {
                 for (i = 0; i < this._layers.length; i++) {
                     layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                     if (layer) {
-                        layer.removeMeshInstances(this._addedModel.meshInstances);
+                        this._addedModels.forEach(function (model) {
+                            layer.removeMeshInstances(model.meshInstances);
+                        });
                     }
                 }
             }
 
             this._layers = value;
 
-            if (!this.enabled || !this.entity.enabled || !this._addedModel) return;
+            if (!this.enabled || !this.entity.enabled || !this._addedModels.length) return;
             for (i = 0; i < this._layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
-                    layer.addMeshInstances(this._addedModel.meshInstances);
+                    // layer.addMeshInstances(this._addedModel.meshInstances);
+                    this._addedModels.forEach(function (model) {
+                        layer.addMeshInstances(model.meshInstances);
+                    });
                 }
             }
         }
@@ -901,6 +906,9 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            // if (this.screen) {
+            //     value += this.screen.screen._counter;
+            // }
             this._drawOrder = value;
             this.fire('set:draworder', this._drawOrder);
         }

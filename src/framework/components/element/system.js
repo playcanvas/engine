@@ -45,8 +45,7 @@ Object.assign(pc, function () {
         pixels.set(pixelData);
         this._defaultTexture.unlock();
 
-
-        this._maskMaterials = {}; // cache for materials that mask elements
+        this.maskCounter = 1; // counter used as stencil reference value for rendering masks
 
         this.defaultImageMaterial = new pc.StandardMaterial();
         this.defaultImageMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included

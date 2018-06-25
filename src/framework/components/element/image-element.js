@@ -1,20 +1,19 @@
 Object.assign(pc, function () {
+    var _debugLogging = false;
 
     var maskOffset = 0.5;
     var maskOffsetIncrement = 0.001;
 
-    var ImageRenderable = function (entity, mesh) {
+    var ImageRenderable = function (entity, mesh, material) {
         this._entity = entity;
         this._element = entity.element;
-
-        this._material = null;
 
         this.model = new pc.Model();
         this.node = new pc.GraphNode();
         this.model.graph = this.node;
 
         this.mesh = mesh;
-        this.meshInstance = new pc.MeshInstance(this.node, this.mesh, pc.Scene.defaultMaterial);
+        this.meshInstance = new pc.MeshInstance(this.node, this.mesh, material);
         this.meshInstance.name = 'ImageElement: ' + entity.name;
         this.meshInstance.castShadow = false;
         this.meshInstance.receiveShadow = false;
@@ -24,22 +23,18 @@ Object.assign(pc, function () {
         this._entity.addChild(this.model.graph);
         this.model._entity = this._entity;
 
-        this.unmaskModel = null;
         this.unmaskMeshInstance = null;
     };
 
     ImageRenderable.prototype.destroy = function () {
         this._element.removeModelFromLayers(this.model);
-
-        if (this.unmaskModel) {
-            this._element.removeModelFromLayers(this.unmaskModel);
-            this.unmaskModel.destroy();
-            this.unmaskModel = null;
-        }
-
         this.model.destroy();
         this.model = null;
-
+        this.node = null;
+        this.mesh = null;
+        this.meshInstance = null;
+        this._entity = null;
+        this._element = null;
     };
 
     ImageRenderable.prototype.setMesh = function (mesh) {
@@ -47,36 +42,45 @@ Object.assign(pc, function () {
 
         this.meshInstance.mesh = mesh;
         this.meshInstance.visible = !!mesh;
+
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.mesh = mesh;
+        }
         this.forceUpdateAabb();
     };
 
     ImageRenderable.prototype.setMask = function (mask) {
         if (mask) {
-            this.unmaskModel = new pc.Model();
-            this.unmaskMeshInstance = new pc.MeshInstance(this.node, this.mesh, this.material);
+            this.unmaskMeshInstance = new pc.MeshInstance(this.node, this.mesh, this.meshInstance.material);
             this.unmaskMeshInstance.name = 'Unmask: ' + this._entity.name;
             this.unmaskMeshInstance.castShadow = false;
             this.unmaskMeshInstance.receiveShadow = false;
+            this.unmaskMeshInstance.pick = false;
 
-            this.unmaskModel.meshInstances.push(this.unmaskMeshInstance);
-            this.unmaskModel.graph = this.node;
-
-            this.unmaskModel._entity = this._entity;
+            this.model.meshInstances.push(this.unmaskMeshInstance);
 
             // copy parameters
             for (var name in this.meshInstance.parameters) {
                 this.unmaskMeshInstance.setParameter(name, this.meshInstance.parameters[name].data);
             }
-
-            this._element.addModelToLayers(this.unmaskModel);
         } else {
-            // destroy
+            // remove unmask mesh instance from model
+            var idx = this.model.meshInstances.indexOf(this.unmaskMeshInstance);
+            if (idx >= 0) {
+                this.model.meshInstances.splice(idx, 1);
+            }
+
+            this.unmaskMeshInstance = null;
+        }
+
+        // remove model then re-add to update to current mesh instances
+        if (this._entity.enabled && this._element.enabled) {
+            this._element.removeModelFromLayers(this.model);
+            this._element.addModelToLayers(this.model);
         }
     };
 
     ImageRenderable.prototype.setMaterial = function (material) {
-        this.material = material;
-
         this.meshInstance.material = material;
 
         if (this.unmaskMeshInstance) {
@@ -123,7 +127,9 @@ Object.assign(pc, function () {
             }
         };
 
-        // todo: fix drawOrder to be at end of mask hierarchy
+        // The unmask mesh instance renders into the stencil buffer
+        // with the ref of the previous mask. This essentially "clears"
+        // the mask value
         if (this.unmaskMeshInstance) {
             var lastChild = getLastChild(this._entity);
             if (lastChild && lastChild.element) {
@@ -136,14 +142,13 @@ Object.assign(pc, function () {
                 maskOffset = maskOffsetIncrement;
                 console.warn('Unmasking offset reached 0. Defaulting to ' + maskOffsetIncrement);
             }
-            // console.log('setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
+            if (_debugLogging) console.log('setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
         }
     };
 
     ImageRenderable.prototype.setDrawOrder = function (drawOrder) {
-        // console.log('setDrawOrder: ', this.meshInstance.name, drawOrder);
+        if (_debugLogging) console.log('setDrawOrder: ', this.meshInstance.name, drawOrder);
         this.meshInstance.drawOrder = drawOrder;
-
     }
 
     ImageRenderable.prototype.setCull = function (cull) {
@@ -223,10 +228,9 @@ Object.assign(pc, function () {
         this._atlasRect = new pc.Vec4();
 
         this._defaultMesh = this._createMesh();
-        this._renderable = new ImageRenderable(this._entity, this._defaultMesh);
+        this._renderable = new ImageRenderable(this._entity, this._defaultMesh, this._material);
 
         this._updateAabbFunc = this._updateAabb.bind(this);
-
 
         // initialize based on screen
         this._onScreenChange(this._element.screen);
@@ -242,6 +246,7 @@ Object.assign(pc, function () {
 
     Object.assign(ImageElement.prototype, {
         destroy: function () {
+            this._renderable.setMesh(this._defaultMesh);
             this._renderable.destroy();
             // if (this._model) {
             //     this._element.removeModelFromLayers(this._model);
@@ -586,19 +591,6 @@ Object.assign(pc, function () {
             return aabb;
         },
 
-        // _getHigherMask: function () {
-        //     var parent = this._entity;
-
-        //     while (parent) {
-        //         parent = parent.getParent();
-        //         if (parent && parent.element && parent.element.mask) {
-        //             return parent;
-        //         }
-        //     }
-
-        //     return null;
-        // },
-
         _toggleMask: function () {
             this._element._dirtifyMask();
 
@@ -753,18 +745,10 @@ Object.assign(pc, function () {
 
         onEnable: function () {
             this._element.addModelToLayers(this._renderable.model);
-
-            if (this._renderable.unmaskModel) {
-                this._element.addModelToLayers(this._renderable.unmaskModel);
-            }
         },
 
         onDisable: function () {
             this._element.removeModelFromLayers(this._renderable.model);
-
-            if (this._renderable.unmaskModel) {
-                this._element.removeModelFromLayers(this._renderable.unmaskModel);
-            }
         },
 
         _setStencil: function (stencilParams) {
@@ -1084,7 +1068,7 @@ Object.assign(pc, function () {
             return this._renderable.mesh;
         },
         set: function (value) {
-            this._renderable.mesh = value;
+            // this._renderable.mesh = value;
 
             this._renderable.setMesh(value);
             if (this._defaultMesh === value) {
