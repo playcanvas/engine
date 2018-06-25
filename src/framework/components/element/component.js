@@ -155,6 +155,10 @@ Object.assign(pc, function () {
         // #ifdef DEBUG
         this._batchGroup = null;
         // #endif
+        //
+
+        this._offsetReadAt = 0;
+        this._maskOffset = 0.5;
     };
     ElementComponent = pc.inherits(ElementComponent, pc.Component);
 
@@ -532,9 +536,6 @@ Object.assign(pc, function () {
                         maskCounter = children[i].element._updateMask(currentMask, maskCounter);
                     }
                 }
-
-                // if (originalMaskCounter === maskCounter) maskCounter++;
-
             }
 
             return maskCounter;
@@ -681,12 +682,6 @@ Object.assign(pc, function () {
                 this.system.app.elementInput.removeElement(this);
             }
 
-            if (this._topMask) {
-                var index = topMasks.indexOf(this);
-                if (index >= 0) topMasks.splice(index, 1);
-                this._topMask = false;
-            }
-
             if (this._batchGroupId >= 0) {
                 this.system.app.batcher.markGroupDirty(this.batchGroupId);
             }
@@ -705,10 +700,9 @@ Object.assign(pc, function () {
                 this.system.app.elementInput.removeElement(this);
             }
 
-            if (this._topMask) {
-                var index = topMasks.indexOf(this);
-                if (index >= 0) topMasks.splice(index, 1);
-                this._topMask = false;
+            // if there is a screen, update draw-order
+            if (this.screen) {
+                this.screen.screen.syncDrawOrder();
             }
         },
 
@@ -836,6 +830,19 @@ Object.assign(pc, function () {
                 if (!layer) continue;
                 layer.removeMeshInstances(model.meshInstances);
             }
+        },
+
+        getMaskOffset: function () {
+            // reset offset on new frame
+            // we always count offset down from 0.5
+            var frame = this.system.app.frame;
+            if (this._offsetReadAt !== frame) {
+                this._maskOffset = 0.5;
+                this._offsetReadAt = frame;
+            }
+            var mo = this._maskOffset;
+            this._maskOffset -= 0.001;
+            return mo;
         }
     });
 

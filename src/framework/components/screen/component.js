@@ -62,6 +62,8 @@ Object.assign(pc, function () {
             var i = 1;
 
             var recurse = function (e) {
+                if (!e instanceof pc.Entity) return;
+
                 if (e.element) {
                     e.element.drawOrder = i++;
                 }

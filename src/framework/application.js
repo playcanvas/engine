@@ -147,6 +147,8 @@ Object.assign(pc, function () {
         this.timeScale = 1;
         this.maxDeltaTime = 0.1; // Maximum delta is 0.1s or 10 fps.
 
+        this.frame = 0; // the total number of frames the application has updated since start() was called
+
         this.autoRender = true;
         this.renderNextFrame = false;
 
@@ -938,6 +940,8 @@ Object.assign(pc, function () {
          * @description Start the Application updating
          */
         start: function () {
+            this.frame = 0;
+
             this.fire("start", {
                 timestamp: pc.now(),
                 target: this
@@ -963,6 +967,8 @@ Object.assign(pc, function () {
          * @param {Number} dt The time delta since the last frame.
          */
         update: function (dt) {
+            this.frame++;
+
             this.graphicsDevice.updateClientRect();
 
             if (this.vr) this.vr.poll();

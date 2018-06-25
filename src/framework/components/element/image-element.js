@@ -130,18 +130,25 @@ Object.assign(pc, function () {
         // The unmask mesh instance renders into the stencil buffer
         // with the ref of the previous mask. This essentially "clears"
         // the mask value
+        //
+        // The unmask has a drawOrder set to be mid-way between the last child of the
+        // masked hierarchy and the next child to be drawn.
+        //
+        // The offset is reduced by a small fraction each time so that if multiple masks
+        // end on the same last child they are unmasked in the correct order.
         if (this.unmaskMeshInstance) {
             var lastChild = getLastChild(this._entity);
             if (lastChild && lastChild.element) {
-                this.unmaskMeshInstance.drawOrder = lastChild.element.drawOrder + maskOffset;
+                this.unmaskMeshInstance.drawOrder = lastChild.element.drawOrder + lastChild.element.getMaskOffset();
             } else {
-                this.unmaskMeshInstance.drawOrder = this.meshInstance.drawOrder + maskOffset;
+                this.unmaskMeshInstance.drawOrder = this.meshInstance.drawOrder + this._element.getMaskOffset();
             }
-            maskOffset -= maskOffsetIncrement;
-            if (maskOffset < 0) {
-                maskOffset = maskOffsetIncrement;
-                console.warn('Unmasking offset reached 0. Defaulting to ' + maskOffsetIncrement);
-            }
+
+            // maskOffset -= maskOffsetIncrement;
+            // if (maskOffset < 0) {
+            //     maskOffset = maskOffsetIncrement;
+            //     console.warn('Unmasking offset reached 0. Defaulting to ' + maskOffsetIncrement);
+            // }
             if (_debugLogging) console.log('setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
         }
     };
@@ -314,8 +321,8 @@ Object.assign(pc, function () {
         _onDrawOrderChange: function (order) {
             this._renderable.setDrawOrder(order);
 
-            if (this.mask) {
-                this._entity.element.screen.screen.once('syncdraworder', function () {
+            if (this.mask &&this._element.screen) {
+                this._element.screen.screen.once('syncdraworder', function () {
                     this._renderable.setUnmaskDrawOrder();
                 }, this);
             }

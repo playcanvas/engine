@@ -197,6 +197,8 @@ test("Unmask drawOrder", function () {
     var m2Unmask = m2.element._image._renderable.unmaskMeshInstance.drawOrder;
     var m3Unmask = m3.element._image._renderable.unmaskMeshInstance.drawOrder;
 
+    console.log(m1DrawOrder, m2DrawOrder, m3DrawOrder, m1Unmask, m2Unmask,m3Unmask);
+
     ok(m1Unmask > m1DrawOrder, "unmask for m1 drawn after m1");
     ok(m1Unmask > m2DrawOrder, "unmask for m1 drawn after m2");
     ok(m1Unmask > m3DrawOrder, "unmask for m1 drawn after m3");
@@ -217,5 +219,92 @@ test("Unmask drawOrder", function () {
     ok(m3Unmask < c1DrawOrder, "unmask for m3 drawn before c1");
     ok(m3Unmask < m1Unmask, "unmask for m1 drawn before unmask m2");
     ok(m3Unmask < m2Unmask, "unmask for m1 drawn before unmask m3");
+
+});
+
+test("Unmask drawOrder - draw order remains the same for repeated calls", function () {
+    var screen = new pc.Entity('screen');
+    screen.addComponent('screen');
+
+    var m1 = new pc.Entity('m1');
+    m1.addComponent('element', {
+        type: "image",
+        mask: true
+    });
+
+    var m2 = new pc.Entity('m2');
+    m2.addComponent('element', {
+        type: "image",
+        mask: true
+    });
+
+    var m3 = new pc.Entity('m3');
+    m3.addComponent('element', {
+        type: "image",
+        mask: true
+    });
+
+    var c1 = new pc.Entity('c1');
+    c1.addComponent('element', {
+        type: "image"
+    });
+
+    m2.addChild(m3);
+    m1.addChild(m2);
+    m1.addChild(c1);
+    screen.addChild(m1);
+    this.app.root.addChild(screen);
+
+    // update forces draw order sync
+    this.app.update(0.1);
+
+    var addChild = function (parent) {
+        var e = new pc.Entity();
+        e.addComponent("element", {
+            type: "image",
+            mask: true
+        });
+        parent.addChild(e);
+        return e;
+    };
+
+    var beforeResult = {
+        m1DrawOrder: m1.element.drawOrder,
+        m2DrawOrder: m2.element.drawOrder,
+        m3DrawOrder: m3.element.drawOrder,
+        c1DrawOrder: c1.element.drawOrder,
+        m1Unmask: m1.element._image._renderable.unmaskMeshInstance.drawOrder,
+        m2Unmask: m2.element._image._renderable.unmaskMeshInstance.drawOrder,
+        m3Unmask: m3.element._image._renderable.unmaskMeshInstance.drawOrder
+    };
+
+    console.log(beforeResult);
+
+
+    var e = addChild(m1);
+    this.app.update(0.1);
+    e.destroy();
+    this.app.update(0.1);
+
+    var afterResult = {
+        m1DrawOrder: m1.element.drawOrder,
+        m2DrawOrder: m2.element.drawOrder,
+        m3DrawOrder: m3.element.drawOrder,
+        c1DrawOrder: c1.element.drawOrder,
+        m1Unmask: m1.element._image._renderable.unmaskMeshInstance.drawOrder,
+        m2Unmask: m2.element._image._renderable.unmaskMeshInstance.drawOrder,
+        m3Unmask: m3.element._image._renderable.unmaskMeshInstance.drawOrder
+    };
+
+    console.log(afterResult);
+
+    equal(beforeResult.m1DrawOrder, afterResult.m1DrawOrder);
+    equal(beforeResult.m2DrawOrder, afterResult.m2DrawOrder);
+    equal(beforeResult.m3DrawOrder, afterResult.m3DrawOrder);
+    equal(beforeResult.c1DrawOrder, afterResult.c1DrawOrder);
+    equal(beforeResult.m1Unmask, afterResult.m1Unmask);
+    equal(beforeResult.m2Unmask, afterResult.m2Unmask);
+    equal(beforeResult.m3Unmask, afterResult.m3Unmask);
+
 
 });
