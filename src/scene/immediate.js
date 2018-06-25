@@ -69,7 +69,10 @@ Object.assign(pc.Application.prototype, function () {
 
             // Increase buffer size, if it's not enough
             while ((this.linesUsed + linesToAdd) > this.numLinesAllocated) {
-                this.vb = null;
+                if (this.vb) {
+                    this.vb.destroy();
+                    this.vb = null;
+                }
                 this.numLinesAllocated *= 2;
             }
 
