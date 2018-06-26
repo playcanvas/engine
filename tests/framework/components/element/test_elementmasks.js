@@ -111,18 +111,18 @@ test("sibling masks, correct maskref", function () {
     equal(c2.element.maskedBy.name, m2.name);
 
     equal(m1.element._image._maskRef, 1);
-    equal(m2.element._image._maskRef, 2);
+    equal(m2.element._image._maskRef, 1);
 
 });
 
 test("sub-masked and sibling children", function () {
     //    top
     // /        \
-    // m1       m2
+    // m11       m12
     // |        |
-    // m3       m4
+    // m21       m22
     // |  \     |
-    // c2 c3    d2
+    // c31 c32  d31
     var top = new pc.Entity("top")
     top.addComponent('element', {
         type: 'group'
@@ -186,13 +186,85 @@ test("sub-masked and sibling children", function () {
     equal(m21.element._image._maskRef, 2);
     equal(c31.element.maskedBy.name, m21.name);
     equal(c32.element.maskedBy.name, m21.name);
-    equal(m12.element._image._maskRef, 3);
+    equal(m12.element._image._maskRef, 1);
     equal(m22.element.maskedBy.name, m12.name);
-    equal(m22.element._image._maskRef, 4);
+    equal(m22.element._image._maskRef, 2);
     equal(d31.element.maskedBy.name, m22.name);
 });
 
 test("parallel parents - sub-masked and sibling children", function () {
+
+    // m11  m12
+    // |    |
+    // m21  m22
+    // |    |
+    // c1   d1
+    //
+
+
+    var m11 = new pc.Entity("m11");
+    m11.addComponent('element', {
+        type: 'image',
+        mask: true
+    });
+
+    var m12 = new pc.Entity("m12");
+    m12.addComponent('element', {
+        type: 'image',
+        mask: true
+    });
+
+    var m21 = new pc.Entity("m21");
+    m21.addComponent('element', {
+        type: 'image',
+        mask: true
+    });
+
+    var c1 = new pc.Entity("c1");
+    c1.addComponent('element', {
+        type: 'image',
+    });
+
+    var m22 = new pc.Entity("m22");
+    m22.addComponent('element', {
+        type: 'image',
+        mask: true
+    });
+
+    var d1 = new pc.Entity("d1");
+    d1.addComponent('element', {
+        type: 'image',
+    });
+
+    m21.addChild(c1);
+    m11.addChild(m21);
+
+    m22.addChild(d1);
+    m12.addChild(m22);
+
+    this.app.root.addChild(m11);
+    this.app.root.addChild(m12);
+
+    this.app.fire('prerender');
+
+    equal(m11.element._image._maskRef, 1);
+    equal(m21.element.maskedBy.name, m11.name);
+    equal(m21.element._image._maskRef, 2);
+    equal(c1.element.maskedBy.name, m21.name);
+    equal(m12.element._image._maskRef, 1);
+    equal(m22.element.maskedBy.name, m12.name);
+    equal(m22.element._image._maskRef, 2);
+    equal(d1.element.maskedBy.name, m22.name);
+});
+
+test("sub-masked and later children", function () {
+    // m1
+    // |  \
+    // m2 c2
+    // |
+    // c1
+
+
     var m1 = new pc.Entity("m1");
     m1.addComponent('element', {
         type: 'image',
@@ -208,7 +280,6 @@ test("parallel parents - sub-masked and sibling children", function () {
     var c1 = new pc.Entity("c1");
     c1.addComponent('element', {
         type: 'image',
-        mask: true
     });
 
     var c2 = new pc.Entity("c2");
@@ -216,79 +287,30 @@ test("parallel parents - sub-masked and sibling children", function () {
         type: 'image',
     });
 
-    var d1 = new pc.Entity("d1");
-    d1.addComponent('element', {
-        type: 'image',
-        mask: true
-    });
-
-    var d2 = new pc.Entity("d2");
-    d2.addComponent('element', {
-        type: 'image',
-    });
-
-    c1.addChild(c2);
-    m1.addChild(c1);
-
-    d1.addChild(d2);
-    m2.addChild(d1);
-
-    this.app.root.addChild(m1);
-    this.app.root.addChild(m2);
-
-    this.app.fire('prerender');
-
-    equal(m1.element._image._maskRef, 1);
-    equal(c1.element.maskedBy.name, m1.name);
-    equal(c1.element._image._maskRef, 2);
-    equal(c2.element.maskedBy.name, c1.name);
-    equal(m2.element._image._maskRef, 3);
-    equal(d1.element.maskedBy.name, m2.name);
-    equal(d1.element._image._maskRef, 4);
-    equal(d2.element.maskedBy.name, d1.name);
-});
-
-test("sub-masked and later children", function () {
-    var m1 = new pc.Entity("m1");
-    m1.addComponent('element', {
-        type: 'image',
-        mask: true
-    });
-
-    var c1 = new pc.Entity("c1");
-    c1.addComponent('element', {
-        type: 'image',
-        mask: true
-    });
-
-    var c2 = new pc.Entity("c2");
-    c2.addComponent('element', {
-        type: 'image',
-    });
-
-    var c3 = new pc.Entity("c3");
-    c3.addComponent('element', {
-        type: 'image',
-    });
-
-    c1.addChild(c2);
-    m1.addChild(c1);
-    m1.addChild(c3);
+    m2.addChild(c1);
+    m1.addChild(m2);
+    m1.addChild(c2);
 
     this.app.root.addChild(m1);
 
     this.app.fire('prerender');
 
     equal(m1.element._image._maskRef, 1);
-    equal(c1.element.maskedBy.name, m1.name);
-    equal(c1.element._image._maskRef, 2);
-    equal(c2.element.maskedBy.name, c1.name);
-    equal(c3.element.maskedBy.name, m1.name);
-    // equal(c3.element._image._maskRef, m1.name);
+    equal(m2.element.maskedBy.name, m1.name);
+    equal(m2.element._image._maskRef, 2);
+    equal(c1.element.maskedBy.name, m2.name);
+    equal(c2.element.maskedBy.name, m1.name);
 });
 
 
-test("", function () {
+test("multiple child masks and later children", function () {
+    //    m1
+    // /  |  \
+    // m2 m3 c2
+    // |
+    // c1
+
+
     var m1 = new pc.Entity("m1");
     m1.addComponent('element', {
         type: 'image',
@@ -317,9 +339,9 @@ test("", function () {
         type: 'image',
     });
 
-    m3.addChild(c1);
-    m1.addChild(m3);
+    m2.addChild(c1);
     m1.addChild(m2);
+    m1.addChild(m3);
     m1.addChild(c2);
 
     this.app.root.addChild(m1);
@@ -330,6 +352,6 @@ test("", function () {
     equal(m2.element.maskedBy.name, m1.name);
     equal(m2.element._image._maskRef, 2);
     equal(c1.element.maskedBy.name, m2.name);
-    equal(m3.element._image._maskRef, 3);
+    equal(m3.element._image._maskRef, 2);
     equal(c2.element.maskedBy.name, m1.name);
 });
