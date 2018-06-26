@@ -36,6 +36,7 @@ Object.assign(pc, function () {
 
     Object.assign(ScreenComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
+            if (data.priority !== undefined) component.priority = data.priority;
             if (data.screenSpace !== undefined) component.screenSpace = data.screenSpace;
             if (data.scaleMode !== undefined) component.scaleMode = data.scaleMode;
             if (data.scaleBlend !== undefined) component.scaleBlend = data.scaleBlend;
@@ -55,6 +56,9 @@ Object.assign(pc, function () {
                 }
                 component.referenceResolution = component._referenceResolution;
             }
+
+            // queue up a draw order sync
+            component.syncDrawOrder();
 
             ScreenComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },

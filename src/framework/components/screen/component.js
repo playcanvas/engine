@@ -35,8 +35,9 @@ Object.assign(pc, function () {
         this.scale = 1;
         this._scaleBlend = 0.5;
 
-        // this._counter = counter*65535;
-        // counter++;
+        // priority determines the order in which screens components are rendered
+        // priority is set into the top 8 bits of the
+        this._priority = 0;
 
         this._screenSpace = false;
         this._screenMatrix = new pc.Mat4();
@@ -229,6 +230,20 @@ Object.assign(pc, function () {
         }
     });
 
+    Object.defineProperty(ScreenComponent.prototype, "priority", {
+        get: function () {
+            return this._priority;
+        },
+
+        set: function (value) {
+            if (value > 0xFF) {
+                console.warn('Clamping screen priority from ' + value + ' to 255');
+                value = 0xFF;
+            }
+
+            this._priority = value;
+        }
+    });
     return {
         ScreenComponent: ScreenComponent
     };

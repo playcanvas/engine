@@ -32,6 +32,14 @@ test("basic hierarchy", function () {
     equal(c1.element.drawOrder, 2);
 });
 
+test("clamp max drawOrder", function () {
+    var p1 = new pc.Entity('p1');
+    p1.addComponent('element');
+    p1.element.drawOrder = 0x1FFFFFF;
+
+    equal(p1.element.drawOrder, 0xFFFFFF);
+});
+
 test("reorder children", function () {
     var screen = new pc.Entity('screen');
     screen.addComponent('screen');
@@ -197,8 +205,6 @@ test("Unmask drawOrder", function () {
     var m2Unmask = m2.element._image._renderable.unmaskMeshInstance.drawOrder;
     var m3Unmask = m3.element._image._renderable.unmaskMeshInstance.drawOrder;
 
-    console.log(m1DrawOrder, m2DrawOrder, m3DrawOrder, m1Unmask, m2Unmask,m3Unmask);
-
     ok(m1Unmask > m1DrawOrder, "unmask for m1 drawn after m1");
     ok(m1Unmask > m2DrawOrder, "unmask for m1 drawn after m2");
     ok(m1Unmask > m3DrawOrder, "unmask for m1 drawn after m3");
@@ -278,9 +284,6 @@ test("Unmask drawOrder - draw order remains the same for repeated calls", functi
         m3Unmask: m3.element._image._renderable.unmaskMeshInstance.drawOrder
     };
 
-    console.log(beforeResult);
-
-
     var e = addChild(m1);
     this.app.update(0.1);
     e.destroy();
@@ -296,8 +299,6 @@ test("Unmask drawOrder - draw order remains the same for repeated calls", functi
         m3Unmask: m3.element._image._renderable.unmaskMeshInstance.drawOrder
     };
 
-    console.log(afterResult);
-
     equal(beforeResult.m1DrawOrder, afterResult.m1DrawOrder);
     equal(beforeResult.m2DrawOrder, afterResult.m2DrawOrder);
     equal(beforeResult.m3DrawOrder, afterResult.m3DrawOrder);
@@ -305,6 +306,4 @@ test("Unmask drawOrder - draw order remains the same for repeated calls", functi
     equal(beforeResult.m1Unmask, afterResult.m1Unmask);
     equal(beforeResult.m2Unmask, afterResult.m2Unmask);
     equal(beforeResult.m3Unmask, afterResult.m3Unmask);
-
-
 });

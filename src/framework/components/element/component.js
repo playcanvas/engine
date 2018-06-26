@@ -905,7 +905,6 @@ Object.assign(pc, function () {
             for (i = 0; i < this._layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
-                    // layer.addMeshInstances(this._addedModel.meshInstances);
                     this._addedModels.forEach(function (model) {
                         layer.addMeshInstances(model.meshInstances);
                     });
@@ -920,10 +919,18 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
-            // if (this.screen) {
-            //     value += this.screen.screen._counter;
-            // }
-            this._drawOrder = value;
+            var priority = 0;
+            if (this.screen) {
+                priority = this.screen.screen.priority;
+            }
+
+            if (value > 0xFFFFFF) {
+                console.error("Element.drawOrder larger than max size of: " + 0xFFFFFF);
+                value = 0xFFFFFF;
+            }
+
+            // screen priority is stored in the top 8 bits
+            this._drawOrder = (priority << 24) + value;;
             this.fire('set:draworder', this._drawOrder);
         }
     });
