@@ -1,5 +1,7 @@
 Object.assign(pc, function () {
+    // #ifdef DEBUG
     var _debugLogging = false;
+    // #endif
 
     var maskOffset = 0.5;
     var maskOffsetIncrement = 0.001;
@@ -143,12 +145,16 @@ Object.assign(pc, function () {
             } else {
                 this.unmaskMeshInstance.drawOrder = this.meshInstance.drawOrder + this._element.getMaskOffset();
             }
+            // #ifdef DEBUG
             if (_debugLogging) console.log('setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
+            // #endif
         }
     };
 
     ImageRenderable.prototype.setDrawOrder = function (drawOrder) {
+        // #ifdef DEBUG
         if (_debugLogging) console.log('setDrawOrder: ', this.meshInstance.name, drawOrder);
+        // #endif
         this.meshInstance.drawOrder = drawOrder;
     }
 

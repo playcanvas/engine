@@ -1,5 +1,7 @@
 Object.assign(pc, function () {
+    // #ifdef DEBUG
     var _debugLogging = false;
+    // #endif
 
     /**
      * @enum pc.ELEMENTTYPE
@@ -367,7 +369,9 @@ Object.assign(pc, function () {
                         this.system._prerender = [];
                         this.system.app.once('prerender', this._onPrerender, this);
 
+                        // #ifdef DEBUG
                         if (_debugLogging) console.log('register prerender');
+                        // #endif
                     }
                     var i = this.system._prerender.indexOf(this.entity);
                     if (i >= 0) {
@@ -377,7 +381,9 @@ Object.assign(pc, function () {
                     if (j < 0) {
                         this.system._prerender.push(current);
                     }
+                    // #ifdef DEBUG
                     if (_debugLogging) console.log('set prerender root to: ' + current.name);
+                    // #endif
                 }
 
                 current = next;
@@ -387,7 +393,9 @@ Object.assign(pc, function () {
         _onPrerender: function () {
             for (var i = 0; i < this.system._prerender.length; i++) {
                 var mask = this.system._prerender[i];
+                // #ifdef DEBUG
                 if (_debugLogging) console.log('prerender from: ' + mask.name);
+                // #endif
 
                 // prevent call if element has been removed since being added
                 if (mask.element) {
@@ -450,7 +458,10 @@ Object.assign(pc, function () {
 
             if (mask) {
                 var ref = mask.element._image._maskRef;
+                // #ifdef DEBUG
                 if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
+                // #endif
+
                 var sp = new pc.StencilParameters({
                     ref: ref,
                     func: pc.FUNC_EQUAL
@@ -462,7 +473,9 @@ Object.assign(pc, function () {
 
                 elem._maskedBy = mask;
             } else {
+                // #ifdef DEBUG
                 if (_debugLogging) console.log("no masking on: " + this.entity.name);
+                // #endif
 
                 // remove mask
                 if (elem._setStencil) {
@@ -494,10 +507,12 @@ Object.assign(pc, function () {
                     // increment counter to count mask depth
                     depth++;
 
+                    // #ifdef DEBUG
                     if (_debugLogging) {
                         console.log("masking from: " + this.entity.name + " with " + (sp.ref+1));
                         console.log("depth++ to: ", depth);
                     }
+                    // #endif
 
                     currentMask = this.entity;
                 }
@@ -529,10 +544,12 @@ Object.assign(pc, function () {
                     // increment mask counter to count depth of masks
                     depth++;
 
+                    // #ifdef DEBUG
                     if (_debugLogging) {
                         console.log("masking from: " + this.entity.name + " with " + sp.ref);
                         console.log("depth++ to: ", depth);
                     }
+                    // #endif
 
                     currentMask = this.entity;
                 }
