@@ -240,7 +240,9 @@ Object.assign(pc, function () {
 
         set: function (value) {
             if (value > 0xFF) {
+                // #ifdef DEBUG
                 console.warn('Clamping screen priority from ' + value + ' to 255');
+                // #endif
                 value = 0xFF;
             }
 

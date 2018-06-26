@@ -927,7 +927,9 @@ Object.assign(pc, function () {
             }
 
             if (value > 0xFFFFFF) {
-                console.error("Element.drawOrder larger than max size of: " + 0xFFFFFF);
+                // #ifdef DEBUG
+                console.warn("Element.drawOrder larger than max size of: " + 0xFFFFFF);
+                // #endif
                 value = 0xFFFFFF;
             }
 

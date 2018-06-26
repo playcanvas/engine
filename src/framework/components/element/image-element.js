@@ -143,12 +143,6 @@ Object.assign(pc, function () {
             } else {
                 this.unmaskMeshInstance.drawOrder = this.meshInstance.drawOrder + this._element.getMaskOffset();
             }
-
-            // maskOffset -= maskOffsetIncrement;
-            // if (maskOffset < 0) {
-            //     maskOffset = maskOffsetIncrement;
-            //     console.warn('Unmasking offset reached 0. Defaulting to ' + maskOffsetIncrement);
-            // }
             if (_debugLogging) console.log('setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
         }
     };
@@ -255,15 +249,6 @@ Object.assign(pc, function () {
         destroy: function () {
             this._renderable.setMesh(this._defaultMesh);
             this._renderable.destroy();
-            // if (this._model) {
-            //     this._element.removeModelFromLayers(this._model);
-            //     // reset mesh to the default because that's the mesh we want destroyed
-            //     // and not possible a mesh from the sprite asset that might be
-            //     // used elsewhere
-            //     this._meshInstance.mesh = this._defaultMesh;
-            //     this._model.destroy();
-            //     this._model = null;
-            // }
 
             this._element.off('resize', this._onParentResizeOrPivotChange, this);
             this._element.off('set:pivot', this._onParentResizeOrPivotChange, this);
