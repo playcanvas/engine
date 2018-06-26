@@ -57,9 +57,10 @@ Object.assign(pc, function () {
          * @name pc.ScreenComponent#syncDrawOrder
          * @description Set the drawOrder of each child {@link pc.ElementComponent}
          * so that ElementComponents which are last in the hierarchy are rendered on top.
+         * Draw Order sync is queued and will be updated by the next update loop.
          */
         syncDrawOrder: function () {
-            this.system.queueCallback(this.entity.getGuid(), this._processDrawOrderSync, this);
+            this.system.queueDrawOrderSync(this.entity.getGuid(), this._processDrawOrderSync, this);
         },
 
         _recurseDrawOrderSync: function (e, i) {
@@ -82,6 +83,7 @@ Object.assign(pc, function () {
 
             this._recurseDrawOrderSync(this.entity, i);
 
+            // fire internal event after all screen hierarchy is synced
             this.fire('syncdraworder');
         },
 

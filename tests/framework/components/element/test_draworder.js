@@ -26,7 +26,7 @@ test("basic hierarchy", function () {
     this.app.root.addChild(screen);
 
     // update forces draw order sync
-    this.app.update(0.1);
+    this.app.tick()
 
     equal(p1.element.drawOrder, 1);
     equal(c1.element.drawOrder, 2);
@@ -66,7 +66,7 @@ test("reorder children", function () {
     p1.insertChild(c2, 0);
 
     // update forces draw order sync
-    this.app.update(0.1);
+    this.app.tick();
 
     equal(p1.element.drawOrder, 1);
     equal(c2.element.drawOrder, 2);
@@ -93,7 +93,7 @@ test('add screen late', function () {
     screen.addComponent('screen');
 
     // update forces draw order sync
-    this.app.update(0.1);
+    this.app.tick();
 
     equal(p1.element.drawOrder, 1);
     equal(c1.element.drawOrder, 2);
@@ -119,7 +119,7 @@ test('reparent to screen', function () {
     p1.reparent(screen);
 
     // update forces draw order sync
-    this.app.update(0.1);
+    this.app.tick();
 
     equal(p1.element.drawOrder, 1);
     equal(c1.element.drawOrder, 2);
@@ -152,7 +152,7 @@ test('single call to _processDrawOrderSync', function () {
     this.app.root.addChild(screen);
 
     // update forces draw order sync
-    this.app.update(0.1);
+    this.app.tick();
 
     equal(count, 1);
 
@@ -194,7 +194,7 @@ test("Unmask drawOrder", function () {
     this.app.root.addChild(screen);
 
     // update forces draw order sync
-    this.app.update(0.1);
+    this.app.tick();
 
     var m1DrawOrder = m1.element.drawOrder;
     var m2DrawOrder = m2.element.drawOrder;
@@ -261,8 +261,8 @@ test("Unmask drawOrder - draw order remains the same for repeated calls", functi
     screen.addChild(m1);
     this.app.root.addChild(screen);
 
-    // update forces draw order sync
-    this.app.update(0.1);
+    // force mask and draw order sync
+    this.app.tick();
 
     var addChild = function (parent) {
         var e = new pc.Entity();
@@ -285,9 +285,9 @@ test("Unmask drawOrder - draw order remains the same for repeated calls", functi
     };
 
     var e = addChild(m1);
-    this.app.update(0.1);
+    this.app.tick();
     e.destroy();
-    this.app.update(0.1);
+    this.app.tick();
 
     var afterResult = {
         m1DrawOrder: m1.element.drawOrder,
