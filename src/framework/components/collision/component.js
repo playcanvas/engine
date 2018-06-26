@@ -67,6 +67,8 @@ Object.assign(pc, function () {
      * @extends pc.Component
      */
     var CollisionComponent = function CollisionComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         this.on('set_radius', this.onSetRadius, this);
@@ -75,7 +77,8 @@ Object.assign(pc, function () {
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_model", this.onSetModel, this);
     };
-    CollisionComponent = pc.inherits(CollisionComponent, pc.Component);
+    CollisionComponent.prototype = Object.create(pc.Component.prototype);
+    CollisionComponent.prototype.constructor = CollisionComponent;
 
     // Events Documentation
     /**
@@ -199,7 +202,7 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            CollisionComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
 
             if (this.data.type === 'mesh' && this.data.asset && this.data.initialized) {
                 var asset = this.system.app.assets.get(this.data.asset);
@@ -221,7 +224,7 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            CollisionComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
 
             if (this.entity.trigger) {
                 this.entity.trigger.disable();

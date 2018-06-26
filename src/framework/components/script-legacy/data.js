@@ -13,7 +13,6 @@ Object.assign(pc, function () {
         this.postInitialized = false;
         this.areScriptsLoaded = false;
     };
-    ScriptLegacyComponentData = pc.inherits(ScriptLegacyComponentData, pc.ComponentData);
 
     return {
         ScriptLegacyComponentData: ScriptLegacyComponentData

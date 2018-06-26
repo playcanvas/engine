@@ -90,6 +90,8 @@ Object.assign(pc, function () {
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var ElementComponent = function ElementComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this._anchor = new pc.Vec4();
         this._localAnchor = new pc.Vec4();
 
@@ -160,8 +162,8 @@ Object.assign(pc, function () {
         this._offsetReadAt = 0;
         this._maskOffset = 0.5;
     };
-    ElementComponent = pc.inherits(ElementComponent, pc.Component);
-
+    ElementComponent.prototype = Object.create(pc.Component.prototype);
+    ElementComponent.prototype.constructor = ElementComponent;
 
     Object.assign(ElementComponent.prototype, {
         _patch: function () {
@@ -654,7 +656,7 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            ElementComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
             if (this._image) this._image.onEnable();
             if (this._text) this._text.onEnable();
             if (this._group) this._group.onEnable();
@@ -673,7 +675,7 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            ElementComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
 
             this.system.app.scene.off("set:layers", this.onLayersChanged, this);
             if (this.system.app.scene.layers) {

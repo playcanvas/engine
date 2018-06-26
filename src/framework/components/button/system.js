@@ -26,6 +26,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var ButtonComponentSystem = function ButtonComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'button';
         this.app = app;
         app.systems.add(this.id, this);
@@ -37,13 +39,14 @@ Object.assign(pc, function () {
 
         this.on('beforeremove', this._onRemoveComponent, this);
     };
-    ButtonComponentSystem = pc.inherits(ButtonComponentSystem, pc.ComponentSystem);
+    ButtonComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ButtonComponentSystem.prototype.constructor = ButtonComponentSystem;
 
     pc.Component._buildAccessors(pc.ButtonComponent.prototype, _schema);
 
     Object.assign(ButtonComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            ButtonComponentSystem._super.initializeComponentData.call(this, component, data, _schema);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
         },
 
         _onRemoveComponent: function (entity, component) {

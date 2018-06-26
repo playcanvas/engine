@@ -57,6 +57,8 @@ Object.assign(pc, function () {
      * @property {Number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components in the same layer.
      */
     var SpriteComponent = function SpriteComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this._type = pc.SPRITETYPE_SIMPLE;
         this._material = system.defaultMaterial;
         this._color = new pc.Color(1, 1, 1, 1);
@@ -104,11 +106,12 @@ Object.assign(pc, function () {
 
         this._currentClip = this._defaultClip;
     };
-    SpriteComponent = pc.inherits(SpriteComponent, pc.Component);
+    SpriteComponent.prototype = Object.create(pc.Component.prototype);
+    SpriteComponent.prototype.constructor = SpriteComponent;
 
     Object.assign(SpriteComponent.prototype, {
         onEnable: function () {
-            SpriteComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
 
             this.system.app.scene.on("set:layers", this._onLayersChanged, this);
             if (this.system.app.scene.layers) {
@@ -122,7 +125,7 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            SpriteComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
 
             this.system.app.scene.off("set:layers", this._onLayersChanged, this);
             if (this.system.app.scene.layers) {

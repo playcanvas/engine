@@ -16,6 +16,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var ScrollbarComponentSystem = function ScrollbarComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'scrollbar';
         this.app = app;
         app.systems.add(this.id, this);
@@ -27,13 +29,14 @@ Object.assign(pc, function () {
 
         this.on('beforeremove', this._onRemoveComponent, this);
     };
-    ScrollbarComponentSystem = pc.inherits(ScrollbarComponentSystem, pc.ComponentSystem);
+    ScrollbarComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ScrollbarComponentSystem.prototype.constructor = ScrollbarComponentSystem;
 
     pc.Component._buildAccessors(pc.ScrollbarComponent.prototype, _schema);
 
     Object.assign(ScrollbarComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            ScrollbarComponentSystem._super.initializeComponentData.call(this, component, data, _schema);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
         },
 
         _onRemoveComponent: function (entity, component) {

@@ -20,7 +20,6 @@ Object.assign(pc, function () {
         this.blendTimeRemaining = 0;
         this.playing = false;
     };
-    AnimationComponentData = pc.inherits(AnimationComponentData, pc.ComponentData);
 
     return {
         AnimationComponentData: AnimationComponentData

@@ -25,6 +25,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var SoundComponentSystem = function (app, manager) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = "sound";
         this.description = "Allows an Entity to play sounds";
         app.systems.add(this.id, this);
@@ -40,14 +42,15 @@ Object.assign(pc, function () {
 
         this.on('beforeremove', this.onBeforeRemove, this);
     };
-    SoundComponentSystem = pc.inherits(SoundComponentSystem, pc.ComponentSystem);
+    SoundComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    SoundComponentSystem.prototype.constructor = SoundComponentSystem;
 
     pc.Component._buildAccessors(pc.SoundComponent.prototype, _schema);
 
     Object.assign(SoundComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['volume', 'pitch', 'positional', 'refDistance', 'maxDistance', 'rollOffFactor', 'distanceModel', 'slots', 'enabled'];
-            SoundComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {

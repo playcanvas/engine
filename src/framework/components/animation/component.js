@@ -16,6 +16,8 @@ Object.assign(pc, function () {
      * @property {Number} duration Get the duration in seconds of the current animation.
      */
     var AnimationComponent = function (system, entity) {
+        pc.Component.call(this, system, entity);
+
         this.animationsIndex = { };
 
         // Handle changes to the 'animations' value
@@ -25,7 +27,8 @@ Object.assign(pc, function () {
         // Handle changes to the 'loop' value
         this.on('set_loop', this.onSetLoop, this);
     };
-    AnimationComponent = pc.inherits(AnimationComponent, pc.Component);
+    AnimationComponent.prototype = Object.create(pc.Component.prototype);
+    AnimationComponent.prototype.constructor = AnimationComponent;
 
     Object.assign(AnimationComponent.prototype, {
         /**
@@ -244,7 +247,7 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            AnimationComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
 
             // load assets if they're not loaded
             var assets = this.data.assets;

@@ -1,8 +1,11 @@
 Object.assign(pc, function () {
     var ScriptLegacyComponent = function ScriptLegacyComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this.on("set_scripts", this.onSetScripts, this);
     };
-    ScriptLegacyComponent = pc.inherits(ScriptLegacyComponent, pc.Component);
+    ScriptLegacyComponent.prototype = Object.create(pc.Component.prototype);
+    ScriptLegacyComponent.prototype.constructor = ScriptLegacyComponent;
 
     Object.assign(ScriptLegacyComponent.prototype, {
         send: function (name, functionName) {
@@ -21,7 +24,7 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            ScriptLegacyComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
 
             // if the scripts of the component have been loaded
             // then call the appropriate methods on the component
@@ -39,7 +42,7 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            ScriptLegacyComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
             this.system._disableScriptComponent(this);
         },
 

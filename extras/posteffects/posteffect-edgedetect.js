@@ -1,10 +1,11 @@
-//----------------------------- POST EFFECT DEFINITION -----------------------------//
-pc.extend(pc, function () {
+// --------------- POST EFFECT DEFINITION --------------- //
+Object.assign(pc, function () {
 
     /**
+     * @constructor
      * @name pc.EdgeDetectEffect
-     * @class Edge Detection post effect using Sobel filter
-     * @constructor Creates new instance of the post effect.
+     * @classdesc Edge Detection post effect using Sobel filter
+     * @description Creates new instance of the post effect.
      * @extends pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      */
@@ -72,12 +73,13 @@ pc.extend(pc, function () {
         // Uniforms
         this.resolution = new Float32Array(2);
         this.intensity = 1.0;
-        this.color = new pc.Color(1,1,1,1);
-    }
+        this.color = new pc.Color(1, 1, 1, 1);
+    };
 
-    EdgeDetectEffect = pc.inherits(EdgeDetectEffect, pc.PostEffect);
+    EdgeDetectEffect.prototype = Object.create(pc.PostEffect.prototype);
+    EdgeDetectEffect.prototype.constructor = EdgeDetectEffect;
 
-    EdgeDetectEffect.prototype = pc.extend(EdgeDetectEffect.prototype, {
+    Object.assign(EdgeDetectEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -97,7 +99,7 @@ pc.extend(pc, function () {
     };
 }());
 
-//----------------------------- SCRIPT DEFINITION -----------------------------//
+// ----------------- SCRIPT DEFINITION ------------------ //
 var EdgeDetect = pc.createScript('edgeDetect');
 
 EdgeDetect.attributes.add('intensity', {
@@ -115,7 +117,7 @@ EdgeDetect.attributes.add('color', {
 });
 
 // initialize code called once per entity
-EdgeDetect.prototype.initialize = function() {
+EdgeDetect.prototype.initialize = function () {
     this.effect = new pc.EdgeDetectEffect(this.app.graphicsDevice);
     this.effect.intensity = this.intensity;
     this.effect.color = this.color;

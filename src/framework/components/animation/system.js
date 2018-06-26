@@ -26,6 +26,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var AnimationComponentSystem = function AnimationComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'animation';
         this.description = "Specifies the animation assets that can run on the model specified by the Entity's model Component.";
 
@@ -41,14 +43,15 @@ Object.assign(pc, function () {
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
     };
-    AnimationComponentSystem = pc.inherits(AnimationComponentSystem, pc.ComponentSystem);
+    AnimationComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    AnimationComponentSystem.prototype.constructor = AnimationComponentSystem;
 
     pc.Component._buildAccessors(pc.AnimationComponent.prototype, _schema);
 
     Object.assign(AnimationComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['activate', 'enabled', 'loop', 'speed', 'assets'];
-            AnimationComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {

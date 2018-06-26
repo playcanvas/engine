@@ -32,6 +32,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var SpriteComponentSystem = function SpriteComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'sprite';
         this.app = app;
         app.systems.add(this.id, this);
@@ -95,7 +97,8 @@ Object.assign(pc, function () {
         pc.ComponentSystem.on('update', this.onUpdate, this);
         this.on('beforeremove', this.onBeforeRemove, this);
     };
-    SpriteComponentSystem = pc.inherits(SpriteComponentSystem, pc.ComponentSystem);
+    SpriteComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    SpriteComponentSystem.prototype.constructor = SpriteComponentSystem;
 
     pc.Component._buildAccessors(pc.SpriteComponent.prototype, _schema);
 
@@ -173,7 +176,7 @@ Object.assign(pc, function () {
 
             component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
 
-            SpriteComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
 
             if (!warningShown) {
                 console.warn('The Sprite component is in beta and might change without notice.');

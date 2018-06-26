@@ -3,7 +3,6 @@ Object.assign(pc, function () {
         // Serialized
         this.enabled = true;
     };
-    AudioListenerComponentData = pc.inherits(AudioListenerComponentData, pc.ComponentData);
 
     return {
         AudioListenerComponentData: AudioListenerComponentData

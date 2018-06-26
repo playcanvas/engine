@@ -70,7 +70,6 @@ Object.assign(pc, function () {
 
         this.layers = [pc.LAYERID_WORLD]; // assign to the default world layer
     };
-    ParticleSystemComponentData = pc.inherits(ParticleSystemComponentData, pc.ComponentData);
 
     return {
         ParticleSystemComponentData: ParticleSystemComponentData

@@ -28,6 +28,8 @@ Object.assign(pc, function () {
      * @property {pc.Entity} verticalScrollbarEntity The entity to be used as the vertical scrollbar. This entity must have a Scrollbar component.
      */
     var ScrollViewComponent = function ScrollViewComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this._viewportReference = new pc.EntityReference(this, 'viewportEntity', {
             'element#gain': this._onViewportElementGain,
             'element#resize': this._onSetContentOrViewportSize
@@ -56,7 +58,8 @@ Object.assign(pc, function () {
         this._toggleLifecycleListeners('on', system);
         this._toggleElementListeners('on');
     };
-    ScrollViewComponent = pc.inherits(ScrollViewComponent, pc.Component);
+    ScrollViewComponent.prototype = Object.create(pc.Component.prototype);
+    ScrollViewComponent.prototype.constructor = ScrollViewComponent;
 
     Object.assign(ScrollViewComponent.prototype, {
         _toggleLifecycleListeners: function (onOrOff, system) {

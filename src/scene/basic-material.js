@@ -22,14 +22,16 @@ Object.assign(pc, function () {
      * @extends pc.Material
      */
     var BasicMaterial = function () {
+        pc.Material.call(this);
+
         this.color = new pc.Color(1, 1, 1, 1);
         this.colorMap = null;
         this.vertexColors = false;
 
         this.update();
     };
-
-    BasicMaterial = pc.inherits(BasicMaterial, pc.Material);
+    BasicMaterial.prototype = Object.create(pc.Material.prototype);
+    BasicMaterial.prototype.constructor = BasicMaterial;
 
     Object.assign(BasicMaterial.prototype, {
         /**

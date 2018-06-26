@@ -283,14 +283,14 @@ Object.assign(pc, function () {
                 asset.off("remove", this._onTextureRemove, this);
             }
 
-            asset = this._spriteAsset ? app.assets.get(this._spriteAsset): null;
+            asset = this._spriteAsset ? app.assets.get(this._spriteAsset) : null;
             if (asset) {
                 asset.off("load", this._onSpriteAssetLoad, this);
                 asset.off("change", this._onSpriteAssetChange, this);
                 asset.off("remove", this._onSpriteAssetRemove, this);
             }
 
-            asset = this._materialAsset ? app.assets.get(this._materialAsset): null;
+            asset = this._materialAsset ? app.assets.get(this._materialAsset) : null;
             if (asset) {
                 asset.off("load", this._onMaterialLoad, this);
                 asset.off("change", this._onMaterialChange, this);

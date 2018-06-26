@@ -11,6 +11,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var AudioListenerComponentSystem = function (app, manager) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = "audiolistener";
         this.description = "Specifies the location of the listener for 3D audio playback.";
         app.systems.add(this.id, this);
@@ -25,7 +27,8 @@ Object.assign(pc, function () {
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
     };
-    AudioListenerComponentSystem = pc.inherits(AudioListenerComponentSystem, pc.ComponentSystem);
+    AudioListenerComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    AudioListenerComponentSystem.prototype.constructor = AudioListenerComponentSystem;
 
     pc.Component._buildAccessors(pc.AudioListenerComponent.prototype, _schema);
 
@@ -33,7 +36,7 @@ Object.assign(pc, function () {
         initializeComponentData: function (component, data, properties) {
             properties = ['enabled'];
 
-            AudioListenerComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         onUpdate: function (dt) {

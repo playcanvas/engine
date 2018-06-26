@@ -12,7 +12,6 @@ Object.assign(pc, function () {
             }
         }
     };
-    LightComponentData = pc.inherits(LightComponentData, pc.ComponentData);
 
     return {
         LightComponentData: LightComponentData

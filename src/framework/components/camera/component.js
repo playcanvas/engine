@@ -65,6 +65,8 @@ Object.assign(pc, function () {
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var CameraComponent = function CameraComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         // Bind event to update hierarchy if camera node changes
         this.on("set_aspectRatioMode", this.onSetAspectRatioMode, this);
         this.on("set_aspectRatio", this.onSetAspectRatio, this);
@@ -90,7 +92,8 @@ Object.assign(pc, function () {
         this.on("set_flipFaces", this.onSetFlipFaces, this);
         this.on("set_layers", this.onSetLayers, this);
     };
-    CameraComponent = pc.inherits(CameraComponent, pc.Component);
+    CameraComponent.prototype = Object.create(pc.Component.prototype);
+    CameraComponent.prototype.constructor = CameraComponent;
 
     /**
      * @readonly
@@ -370,7 +373,7 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            CameraComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
             this.system.addCamera(this);
 
             this.system.app.scene.on("set:layers", this.onLayersChanged, this);
@@ -387,7 +390,7 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            CameraComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
             this.postEffects.disable();
 
             this.removeCameraFromLayers();

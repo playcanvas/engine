@@ -25,6 +25,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var ElementComponentSystem = function ElementComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'element';
         this.app = app;
         app.systems.add(this.id, this);
@@ -186,7 +188,8 @@ Object.assign(pc, function () {
 
         this.on('beforeremove', this.onRemoveComponent, this);
     };
-    ElementComponentSystem = pc.inherits(ElementComponentSystem, pc.ComponentSystem);
+    ElementComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ElementComponentSystem.prototype.constructor = ElementComponentSystem;
 
     pc.Component._buildAccessors(pc.ElementComponent.prototype, _schema);
 
@@ -359,7 +362,7 @@ Object.assign(pc, function () {
                 component._updateScreen(result.screen);
             }
 
-            ElementComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         onRemoveComponent: function (entity, component) {
