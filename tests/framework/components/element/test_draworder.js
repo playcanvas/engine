@@ -118,13 +118,13 @@ test('reparent to screen', function () {
 });
 
 
-test('single call to syncDrawOrder', function () {
+test('single call to _processDrawOrderSync', function () {
     var count = 0;
     // patch to count
-    var _syncDrawOrder = pc.ScreenComponent.prototype._syncDrawOrder;
-    pc.ScreenComponent.prototype._syncDrawOrder = function () {
+    var _processDrawOrderSync = pc.ScreenComponent.prototype._processDrawOrderSync;
+    pc.ScreenComponent.prototype._processDrawOrderSync = function () {
         count++;
-        _syncDrawOrder.apply(this, arguments);
+        _processDrawOrderSync.apply(this, arguments);
     };
 
     var screen = new pc.Entity('screen');
@@ -149,7 +149,7 @@ test('single call to syncDrawOrder', function () {
     equal(count, 1);
 
     // restore original
-    pc.ScreenComponent.prototype._syncDrawOrder = _syncDrawOrder;
+    pc.ScreenComponent.prototype._processDrawOrderSync = _processDrawOrderSync;
 });
 
 test("Unmask drawOrder", function () {

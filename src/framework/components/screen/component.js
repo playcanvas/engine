@@ -55,26 +55,28 @@ Object.assign(pc, function () {
          * so that ElementComponents which are last in the hierarchy are rendered on top.
          */
         syncDrawOrder: function () {
-            this.system.queueCallback(this.entity.getGuid(), this._syncDrawOrder, this);
+            this.system.queueCallback(this.entity.getGuid(), this._processDrawOrderSync, this);
         },
 
-        _syncDrawOrder: function () {
+        _recurseDrawOrderSync: function (e, i) {
+            if (!e instanceof pc.Entity) return;
+
+            if (e.element) {
+                e.element.drawOrder = i++;
+            }
+
+            var children = e.getChildren();
+            for (var j = 0; j < children.length; j++) {
+                i = this._recurseDrawOrderSync(children[j], i);
+            }
+
+            return i;
+        },
+
+        _processDrawOrderSync: function () {
             var i = 1;
 
-            var recurse = function (e) {
-                if (!e instanceof pc.Entity) return;
-
-                if (e.element) {
-                    e.element.drawOrder = i++;
-                }
-
-                var children = e.getChildren();
-                for (var j = 0; j < children.length; j++) {
-                    recurse(children[j]);
-                }
-            };
-
-            recurse(this.entity);
+            this._recurseDrawOrderSync(this.entity, i);
 
             this.fire('syncdraworder');
         },

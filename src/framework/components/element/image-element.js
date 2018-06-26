@@ -768,9 +768,9 @@ Object.assign(pc, function () {
             }
             if (this._renderable.unmaskMeshInstance) {
                  var sp = new pc.StencilParameters({
-                    ref: ref,
-                    func: pc.FUNC_ALWAYS,
-                    zpass: pc.STENCILOP_REPLACE
+                    ref: ref+1,
+                    func: pc.FUNC_EQUAL,
+                    zpass: pc.STENCILOP_DECREMENT
                 });
 
                 this._renderable.unmaskMeshInstance.stencilFront = sp;

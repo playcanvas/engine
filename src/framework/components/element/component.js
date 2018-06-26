@@ -1,5 +1,5 @@
 Object.assign(pc, function () {
-    var _debugLogging = true;
+    var _debugLogging = false;
 
     /**
      * @enum pc.ELEMENTTYPE
@@ -389,7 +389,8 @@ Object.assign(pc, function () {
 
                 // prevent call if element has been removed since being added
                 if (mask.element) {
-                    this.system.maskCounter = mask.element.syncMask(this.system.maskCounter);
+                    var depth = 1;
+                    mask.element.syncMask(depth);
                 }
             }
 
@@ -431,9 +432,9 @@ Object.assign(pc, function () {
             if (this.screen) this.screen.screen.syncDrawOrder();
         },
 
-        syncMask: function (ref) {
+        syncMask: function (depth) {
             var result = this._parseUpToScreen();
-            return this._updateMask(result.mask, ref);
+            this._updateMask(result.mask, depth);
         },
 
         _setMaskedBy: function (mask) {
@@ -465,10 +466,8 @@ Object.assign(pc, function () {
             }
         },
 
-        _updateMask: function (currentMask, maskCounter) {
+        _updateMask: function (currentMask, depth) {
             var i, l, sp, children;
-
-            var originalMaskCounter = maskCounter;
 
             if (currentMask) {
                 this._setMaskedBy(currentMask);
@@ -482,13 +481,14 @@ Object.assign(pc, function () {
                         zpass: pc.STENCILOP_INCREMENT
                     });
                     this._image._setStencil(sp);
-                    this._image._maskRef = maskCounter;
+                    this._image._maskRef = depth;
 
-                    maskCounter++;
+                    // increment counter to count mask depth
+                    depth++;
 
                     if (_debugLogging) {
-                        console.log("masking from: " + this.entity.name + " with " + sp.ref);
-                        console.log("maskCounter++ to: ", maskCounter);
+                        console.log("masking from: " + this.entity.name + " with " + (sp.ref+1));
+                        console.log("depth++ to: ", depth);
                     }
 
                     currentMask = this.entity;
@@ -498,13 +498,12 @@ Object.assign(pc, function () {
                 children = this.entity.getChildren();
                 for (i = 0, l = children.length; i < l; i++) {
                     if (children[i].element) {
-                        maskCounter = children[i].element._updateMask(currentMask, maskCounter);
+                        children[i].element._updateMask(currentMask, depth);
                     }
                 }
 
-
-
-                // if (originalMaskCounter === maskCounter) maskCounter++;
+                // if mask counter was increased, decrement it as we come back up the hierarchy
+                if (this.mask) depth--;
 
             } else {
                 // clearing mask
@@ -512,18 +511,19 @@ Object.assign(pc, function () {
 
                 if (this.mask) {
                     sp = new pc.StencilParameters({
-                        ref: maskCounter,
+                        ref: depth,
                         func: pc.FUNC_ALWAYS,
                         zpass: pc.STENCILOP_REPLACE
                     });
                     this._image._setStencil(sp);
-                    this._image._maskRef = maskCounter;
+                    this._image._maskRef = depth;
 
-                    maskCounter++;
+                    // increment mask counter to count depth of masks
+                    depth++;
 
                     if (_debugLogging) {
                         console.log("masking from: " + this.entity.name + " with " + sp.ref);
-                        console.log("maskCounter++ to: ", maskCounter);
+                        console.log("depth++ to: ", depth);
                     }
 
                     currentMask = this.entity;
@@ -533,12 +533,13 @@ Object.assign(pc, function () {
                 children = this.entity.getChildren();
                 for (i = 0, l = children.length; i < l; i++) {
                     if (children[i].element) {
-                        maskCounter = children[i].element._updateMask(currentMask, maskCounter);
+                        children[i].element._updateMask(currentMask, depth);
                     }
                 }
-            }
 
-            return maskCounter;
+                // decrement mask counter as we come back up the hierarchy
+                if (this.mask) depth--;
+            }
         },
 
         // search up the parent hierarchy until we reach a screen
