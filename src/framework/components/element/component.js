@@ -437,6 +437,10 @@ Object.assign(pc, function () {
             this._updateMask(result.mask, depth);
         },
 
+        // set the stencil buffer to check the mask value
+        // so as to only render inside the mask
+        // Note: if this entity is itself a mask the stencil params
+        // will be updated in updateMask to include masking
         _setMaskedBy: function (mask) {
             var i, mi, len;
             var elem = this._image || this._text;
@@ -466,6 +470,8 @@ Object.assign(pc, function () {
             }
         },
 
+        // recursively update entity's stencil params
+        // to render the correct value into the stencil buffer
         _updateMask: function (currentMask, depth) {
             var i, l, sp, children;
 
