@@ -36,7 +36,7 @@ Object.assign(pc, function () {
         this._scaleBlend = 0.5;
 
         // priority determines the order in which screens components are rendered
-        // priority is set into the top 8 bits of the
+        // priority is set into the top 8 bits of the drawOrder property in an element
         this._priority = 0;
 
         this._screenSpace = false;

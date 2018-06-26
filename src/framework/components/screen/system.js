@@ -22,7 +22,7 @@ Object.assign(pc, function () {
         this.windowResolution = new pc.Vec2();
 
         // queue of callbacks
-        this._preUpdateQueue = new pc.IndexedList('id');
+        this._preUpdateQueue = new pc.IndexedList();
 
         this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
 
