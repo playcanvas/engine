@@ -319,10 +319,27 @@
 
         strictEqual(console.warn.callCount, 0);
 
-        this.testComponent.myEntity1 = this.otherEntity1;
+        this.testComponent.myEntity1 = {};
 
         strictEqual(console.warn.callCount, 1);
         strictEqual(console.warn.getCall(0).args[0], "Entity field `myEntity1` was set to unexpected type 'object'");
+    });
+
+    test("set reference to a pc.Entity instead of guid, converts property to guid", function () {
+        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
+        this.testComponent.myEntity1 = this.otherEntity1;
+
+        strictEqual(this.testComponent.myEntity1, this.otherEntity1.getGuid(), "Component property converted to guid");
+        strictEqual(reference.entity, this.otherEntity1);
+    });
+
+    test("set reference to a pc.Entity that is not in hierarchy, converts property to guid", function () {
+        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
+        var entity = new pc.Entity();
+        this.testComponent.myEntity1 = entity;
+
+        strictEqual(this.testComponent.myEntity1, entity.getGuid(), "Component property converted to guid");
+        strictEqual(reference.entity, entity);
     });
 
     test("hasComponent() returns false if the entity is not present", function () {
