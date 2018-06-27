@@ -1632,16 +1632,18 @@ Object.assign(pc, function () {
                     }
                     texture._addressVDirty = false;
                 }
-                if (this.webgl2) {
-                    if (texture._addressWDirty) {
+                if (texture._addressWDirty) {
+                    if (this.webgl2) {
                         gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
-                        texture._addressWDirty = false;
                     }
-                    if (texture._compareModeDirty) {
+                    texture._addressWDirty = false;
+                }
+                if (texture._compareModeDirty) {
+                    if (this.webgl2) {
                         gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
                         gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_FUNC, this.glComparison[texture._compareFunc]);
-                        texture._compareModeDirty = false;
                     }
+                    texture._compareModeDirty = false;
                 }
                 if (texture._anisotropyDirty) {
                     var ext = this.extTextureFilterAnisotropic;
