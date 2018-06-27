@@ -202,6 +202,10 @@ Object.assign(pc, function () {
         this.initializeCapabilities();
         this.initializeRenderState();
 
+        for (i = 0; i < this.maxCombinedTextures; i++) {
+            this.textureUnits.push([null, null, null]);
+        }
+
         // put the rest of the constructor in a function
         // so that the constructor remains small. Small constructors
         // are optimized by Firefox due to type inference
