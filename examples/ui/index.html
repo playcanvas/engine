@@ -111,7 +111,7 @@
             // create a button
             // an image element, with button script and selector attached
             // and a text element label
-            var createButton = function (text, x, y) {
+            var createButton = function (text, x, y, active) {
                 var button = new pc.Entity('Button');
                 button.addComponent('element', {
                     type: 'image',
@@ -124,20 +124,12 @@
                 button.element.useInput = true;
 
                 button.addComponent('button', {
-                    // fadeDuration: 0,
-                    // active: true,
-                    // hitPadding: new pc.Vec4(0,0,0,0),
-                    // transitionMode: pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE,
-                    // hoverSpriteAsset: assets.buttonHover,
-                    // hoverSpriteFrame: 0,
-                    // pressedSpriteAsset: assets.buttonPressed,
-                    // pressedSpriteFrame: 0,
-                    // inactiveSpriteAsset: assets.buttonDisabled,
-                    // inactiveSpriteFrame: 0,
-                    imageEntity: button,
-                    // hoverTint: new pc.Color(1,1,1),
-                    // pressedTint: new pc.Color(1,1,1),
-                    // inactiveTint: new pc.Color(1,1,1),
+                    active: active,
+                    transitionMode: pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE,
+                    hoverSpriteAsset: assets.buttonHover,
+                    pressedSpriteAsset: assets.buttonPressed,
+                    inactiveSpriteAsset: assets.buttonDisabled,
+                    imageEntity: button
                 });
 
                 button.setLocalPosition(x, y, 0);
@@ -160,7 +152,7 @@
                     type: "text",
                     text: text,
                     fontAsset: assets.font,
-                    color: new pc.Color(1,1,1),
+                    color: active ? new pc.Color(1,1,1) : new pc.Color(0.2,0.2,0.2),
                     opacity: 0.5
                 });
                 label.setLocalPosition(0, 4, 0)
@@ -211,20 +203,20 @@
                     textureAsset: assets.panel
                 });
 
-                button = createButton("START", 0, -22);
+                button = createButton("START", 0, -22, true);
                 button.button.on('click', function () {
                     showGame();
                 });
                 panel.addChild(button);
 
-                button = createButton("ANNOY", 0, -108);
+                button = createButton("ANNOY", 0, -108, true);
                 button.button.on('click', function () {
                     toggleSpin();
                 });
                 panel.addChild(button);
 
-                button = createButton("DISABLED", 0, -192);
-                button.button.active = false;
+                button = createButton("DISABLED", 0, -192, false);
+
                 panel.addChild(button);
                 menu.addChild(panel);
                 menu.enabled = false;
@@ -248,8 +240,8 @@
                     fontAsset: assets.font,
                     color: new pc.Color(1,1,1)
                 });
-                score.translateLocal(-84, -10, 0);
                 hud.addChild(score);
+                score.translateLocal(-84, -10, 0);
 
                 lives = [];
                 for (var i = 0; i < 3; i++) {
@@ -262,8 +254,8 @@
                         type: "image",
                         textureAsset: assets.heart
                     });
-                    lives[i].translateLocal(-10, -64*i-10, 0);
                     hud.addChild(lives[i]);
+                    lives[i].translateLocal(-10, -64*i-10, 0);
                 }
                 app.root.addChild(hud);
                 hud.enabled = false;
