@@ -1586,6 +1586,7 @@ Object.assign(pc, function () {
             var slot = this.targetToSlot[textureTarget];
 
             if (this.textureUnits[textureUnit][slot] !== textureObject) {
+                var gl = this.gl;
                 if (this.activeTexture !== textureUnit) {
                     gl.activeTexture(gl.TEXTURE0 + textureUnit);
                     this.activeTexture = textureUnit;
