@@ -310,11 +310,10 @@ Object.assign(pc, function () {
                 gl.FLOAT
             ];
 
-            this.targetToSlot = {
-                gl.TEXTURE_2D: 0,
-                gl.TEXTURE_CUBE_MAP: 1,
-                gl.TEXTURE_3D: 2
-            };
+            this.targetToSlot = {};
+            this.targetToSlot[gl.TEXTURE_2D] = 0;
+            this.targetToSlot[gl.TEXTURE_CUBE_MAP] = 1;
+            this.targetToSlot[gl.TEXTURE_3D] = 2;
 
             // Define the uniform commit functions
             var scopeX, scopeY, scopeZ, scopeW;

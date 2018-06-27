@@ -1316,8 +1316,10 @@ Object.assign(pc, function () {
             if (this._dirtyLocal || this._dirtyWorld)
                 this._sync();
 
-            for (var i = 0; i < this._children.length; i++)
-                this._children[i].syncHierarchy();
+            var children = this._children;
+            for (var i = 0, len = children.length; i < len; i++) {
+                children[i].syncHierarchy();
+            }
         },
 
         /**
