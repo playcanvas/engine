@@ -291,6 +291,22 @@ Object.assign(pc, function () {
             if ((oldVisualState !== newVisualState || force) && this.enabled) {
                 this._visualState = newVisualState;
 
+                if (oldVisualState === VisualState.HOVER) {
+                    this.fire('hoverend');
+                }
+
+                if (oldVisualState === VisualState.PRESSED) {
+                    this.fire('pressedend');
+                }
+
+                if (newVisualState === VisualState.HOVER) {
+                    this.fire('hoverstart');
+                }
+
+                if (newVisualState === VisualState.PRESSED) {
+                    this.fire('pressedstart');
+                }
+
                 switch (this.transitionMode) {
                     case pc.BUTTON_TRANSITION_MODE_TINT:
                         var tintName = STATES_TO_TINT_NAMES[this._visualState];
@@ -509,4 +525,32 @@ Object.assign(pc, function () {
  * @name pc.ButtonComponent#touchleave
  * @description Fired when a touch leaves the component.
  * @param {pc.ElementTouchEvent} event The event
+ */
+
+/**
+ * @private
+ * @event
+ * @name pc.ButtonComponent#hoverstart
+ * @description Fired when the button changes state to be hovered
+ */
+
+/**
+ * @private
+ * @event
+ * @name pc.ButtonComponent#hoverend
+ * @description Fired when the button changes state to be not hovered
+ */
+
+/**
+ * @private
+ * @event
+ * @name pc.ButtonComponent#pressedstart
+ * @description Fired when the button changes state to be pressed
+ */
+
+/**
+ * @private
+ * @event
+ * @name pc.ButtonComponent#pressedend
+ * @description Fired when the button changes state to be not pressed
  */
