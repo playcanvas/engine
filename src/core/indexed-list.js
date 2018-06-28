@@ -64,6 +64,14 @@ Object.assign(pc, function() {
         if (location !== undefined) {
             this._list.splice(location, 1);
             delete this._index[key];
+
+            // update index
+            for (var key in this._index) {
+                var idx = this._index[key];
+                if (idx > location) {
+                    this._index[key] = idx - 1;
+                }
+            }
             return true;
       }
 
