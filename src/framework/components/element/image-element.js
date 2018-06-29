@@ -84,7 +84,6 @@ Object.assign(pc, function () {
 
     ImageRenderable.prototype.setMaterial = function (material) {
         this.meshInstance.material = material;
-
         if (this.unmaskMeshInstance) {
             this.unmaskMeshInstance.material = material;
         }
@@ -253,8 +252,14 @@ Object.assign(pc, function () {
 
     Object.assign(ImageElement.prototype, {
         destroy: function () {
+            // reset all assets to unbind all asset events
+            this.textureAsset = null;
+            this.spriteAsset = null;
+            this.materialAsset = null;
+
             this._renderable.setMesh(this._defaultMesh);
             this._renderable.destroy();
+            this._defaultMesh = null;
 
             this._element.off('resize', this._onParentResizeOrPivotChange, this);
             this._element.off('set:pivot', this._onParentResizeOrPivotChange, this);
@@ -262,31 +267,6 @@ Object.assign(pc, function () {
             this._element.off('set:screen', this._onScreenChange, this);
             this._element.off('set:draworder', this._onDrawOrderChange, this);
             this._element.off('screen:set:resolution', this._onResolutionChange, this);
-
-            var asset;
-            var app = this._system.app;
-
-            // unbind all asset events
-            asset = this._textureAsset ? app.assets.get(this._textureAsset) : null;
-            if (asset) {
-                asset.off("load", this._onTextureLoad, this);
-                asset.off("change", this._onTextureChange, this);
-                asset.off("remove", this._onTextureRemove, this);
-            }
-
-            asset = this._spriteAsset ? app.assets.get(this._spriteAsset) : null;
-            if (asset) {
-                asset.off("load", this._onSpriteAssetLoad, this);
-                asset.off("change", this._onSpriteAssetChange, this);
-                asset.off("remove", this._onSpriteAssetRemove, this);
-            }
-
-            asset = this._materialAsset ? app.assets.get(this._materialAsset) : null;
-            if (asset) {
-                asset.off("load", this._onMaterialLoad, this);
-                asset.off("change", this._onMaterialChange, this);
-                asset.off("remove", this._onMaterialRemove, this);
-            }
         },
 
         _onResolutionChange: function (res) {
@@ -621,6 +601,12 @@ Object.assign(pc, function () {
             }
         },
 
+        _unbindMaterialAsset: function (asset) {
+            asset.off("load", this._onMaterialLoad, this);
+            asset.off("change", this._onMaterialChange, this);
+            asset.off("remove", this._onMaterialRemove, this);
+        },
+
         _onMaterialChange: function () {
 
         },
@@ -646,6 +632,12 @@ Object.assign(pc, function () {
             } else {
                 this._system.app.assets.load(asset);
             }
+        },
+
+        _unbindTextureAsset: function (asset) {
+            asset.off("load", this._onTextureLoad, this);
+            asset.off("change", this._onTextureChange, this);
+            asset.off("remove", this._onTextureRemove, this);
         },
 
         _onTextureLoad: function (asset) {
@@ -678,6 +670,31 @@ Object.assign(pc, function () {
                 this._onSpriteAssetLoad(asset);
             } else {
                 this._system.app.assets.load(asset);
+            }
+        },
+
+        _unbindSpriteAsset: function (asset) {
+            asset.off("load", this._onSpriteAssetLoad, this);
+            asset.off("change", this._onSpriteAssetChange, this);
+            asset.off("remove", this._onSpriteAssetRemove, this);
+        },
+
+        // Hook up event handlers on sprite asset
+        _bindSprite: function (sprite) {
+            sprite.on('set:meshes', this._onSpriteMeshesChange, this);
+            sprite.on('set:pixelsPerUnit', this._onSpritePpuChange, this);
+            sprite.on('set:atlas', this._onAtlasTextureChange, this);
+            if (sprite.atlas) {
+                sprite.atlas.on('set:texture', this._onAtlasTextureChange, this);
+            }
+        },
+
+        _unbindSprite: function (sprite) {
+            sprite.off('set:meshes', this._onSpriteMeshesChange, this);
+            sprite.off('set:pixelsPerUnit', this._onSpritePpuChange, this);
+            sprite.off('set:atlas', this._onAtlasTextureChange, this);
+            if (sprite.atlas) {
+                sprite.atlas.off('set:texture', this._onAtlasTextureChange, this);
             }
         },
 
@@ -962,9 +979,7 @@ Object.assign(pc, function () {
                 if (this._spriteAsset) {
                     var _prev = assets.get(this._spriteAsset);
                     if (_prev) {
-                        _prev.off("load", this._onSpriteAssetLoad, this);
-                        _prev.off("change", this._onSpriteAssetChange, this);
-                        _prev.off("remove", this._onSpriteAssetRemove, this);
+                        this._unbindSpriteAsset(_prev);
                     }
                 }
 
@@ -994,23 +1009,13 @@ Object.assign(pc, function () {
         },
         set: function (value) {
             if (this._sprite) {
-                this._sprite.off('set:meshes', this._onSpriteMeshesChange, this);
-                this._sprite.off('set:pixelsPerUnit', this._onSpritePpuChange, this);
-                this._sprite.off('set:atlas', this._onAtlasTextureChange, this);
-                if (this._sprite.atlas) {
-                    this._sprite.atlas.off('set:texture', this._onAtlasTextureChange, this);
-                }
+                this._unbindSprite(this._sprite);
             }
 
             this._sprite = value;
 
             if (this._sprite) {
-                this._sprite.on('set:meshes', this._onSpriteMeshesChange, this);
-                this._sprite.on('set:pixelsPerUnit', this._onSpritePpuChange, this);
-                this._sprite.on('set:atlas', this._onAtlasTextureChange, this);
-                if (this._sprite.atlas) {
-                    this._sprite.atlas.on('set:texture', this._onAtlasTextureChange, this);
-                }
+                this._bindSprite(this._sprite);
             }
 
             if (this._sprite && this._sprite.atlas && this._sprite.atlas.texture) {

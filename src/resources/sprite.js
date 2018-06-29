@@ -55,9 +55,13 @@ Object.assign(pc, function () {
                 asset.data.renderMode = sprite.__data.renderMode;
                 asset.data.frameKeys = sprite.__data.frameKeys;
 
-                var atlas = assets.getByUrl(sprite.__data.textureAtlasAsset);
-                if (atlas) {
-                    asset.data.textureAtlasAsset = atlas.id;
+                if (sprite.__data.textureAtlasAsset) {
+                    var atlas = assets.getByUrl(sprite.__data.textureAtlasAsset);
+                    if (atlas) {
+                        asset.data.textureAtlasAsset = atlas.id;
+                    } else {
+                        console.warn("Could not find textureatlas with url: " + sprite.__data.textureAtlasAsset);
+                    }
                 }
 
                 delete sprite.__data;
