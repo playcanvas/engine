@@ -3,9 +3,6 @@ Object.assign(pc, function () {
 
     var _schema = ['enabled'];
 
-    // TODO: remove this once sprites are deployed
-    var warningShown = false;
-
     var nineSliceBasePS = [
         "varying vec2 vMask;",
         "varying vec2 vTiledUv;",
@@ -177,11 +174,6 @@ Object.assign(pc, function () {
             component.batchGroupId = data.batchGroupId === undefined || data.batchGroupId === null ? -1 : data.batchGroupId;
 
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-
-            if (!warningShown) {
-                console.warn('The Sprite component is in beta and might change without notice.');
-                warningShown = true;
-            }
         },
 
         cloneComponent: function (entity, clone) {
