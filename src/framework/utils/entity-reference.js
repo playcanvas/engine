@@ -165,7 +165,7 @@ Object.assign(pc, function () {
         },
 
         _toggleLifecycleListeners: function (onOrOff) {
-            this._parentComponent[onOrOff]('set_' + this._entityPropertyName, this._onSetEntityGuid, this);
+            this._parentComponent[onOrOff]('set_' + this._entityPropertyName, this._onSetEntity, this);
             this._parentComponent.system[onOrOff]('beforeremove', this._onParentComponentRemove, this);
 
             pc.ComponentSystem[onOrOff]('postInitialize', this._onPostInitialize, this);
@@ -200,14 +200,18 @@ Object.assign(pc, function () {
             }
         },
 
-        _onSetEntityGuid: function (name, oldGuid, newGuid) {
-            if (newGuid !== null && newGuid !== undefined && typeof newGuid !== 'string') {
-                console.warn("Entity field `" + this._entityPropertyName + "` was set to unexpected type '" + (typeof newGuid) + "'");
-                return;
-            }
-
-            if (oldGuid !== newGuid) {
+        _onSetEntity: function (name, oldValue, newValue) {
+            if (newValue instanceof pc.Entity) {
                 this._updateEntityReference();
+            } else  {
+                if (newValue !== null && newValue !== undefined && typeof newValue !== 'string') {
+                    console.warn("Entity field `" + this._entityPropertyName + "` was set to unexpected type '" + (typeof newValue) + "'");
+                    return;
+                }
+
+                if (oldValue !== newValue) {
+                    this._updateEntityReference();
+                }
             }
         },
 
@@ -224,7 +228,17 @@ Object.assign(pc, function () {
 
         _updateEntityReference: function () {
             var nextEntityGuid = this._parentComponent.data[this._entityPropertyName];
-            var nextEntity = nextEntityGuid ? this._parentComponent.system.app.root.findByGuid(nextEntityGuid) : null;
+            var nextEntity;
+
+            if (nextEntityGuid instanceof pc.Entity) {
+                // if value is set to a Entity itself replace value with the GUID
+                nextEntity = nextEntityGuid;
+                nextEntityGuid = nextEntity.getGuid();
+                this._parentComponent.data[this._entityPropertyName] = nextEntityGuid;
+            } else {
+                nextEntity = nextEntityGuid ? this._parentComponent.system.app.root.findByGuid(nextEntityGuid) : null;
+            }
+
             var hasChanged = this._entity !== nextEntity;
 
             if (hasChanged) {

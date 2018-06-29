@@ -12,6 +12,7 @@ Object.assign(pc, function () {
      */
     pc.SCALEMODE_BLEND = "blend";
 
+    // var counter = 1;
     /**
      * @component
      * @constructor
@@ -36,6 +37,10 @@ Object.assign(pc, function () {
         this.scale = 1;
         this._scaleBlend = 0.5;
 
+        // priority determines the order in which screens components are rendered
+        // priority is set into the top 8 bits of the drawOrder property in an element
+        this._priority = 0;
+
         this._screenSpace = false;
         this._screenMatrix = new pc.Mat4();
 
@@ -52,22 +57,34 @@ Object.assign(pc, function () {
          * @name pc.ScreenComponent#syncDrawOrder
          * @description Set the drawOrder of each child {@link pc.ElementComponent}
          * so that ElementComponents which are last in the hierarchy are rendered on top.
+         * Draw Order sync is queued and will be updated by the next update loop.
          */
         syncDrawOrder: function () {
+            this.system.queueDrawOrderSync(this.entity.getGuid(), this._processDrawOrderSync, this);
+        },
+
+        _recurseDrawOrderSync: function (e, i) {
+            if (!e instanceof pc.Entity) return;
+
+            if (e.element) {
+                e.element.drawOrder = i++;
+            }
+
+            var children = e.getChildren();
+            for (var j = 0; j < children.length; j++) {
+                i = this._recurseDrawOrderSync(children[j], i);
+            }
+
+            return i;
+        },
+
+        _processDrawOrderSync: function () {
             var i = 1;
 
-            var recurse = function (e) {
-                if (e.element) {
-                    e.element.drawOrder = i++;
-                }
+            this._recurseDrawOrderSync(this.entity, i);
 
-                var children = e.getChildren();
-                for (var j = 0; j < children.length; j++) {
-                    recurse(children[j]);
-                }
-            };
-
-            recurse(this.entity);
+            // fire internal event after all screen hierarchy is synced
+            this.fire('syncdraworder');
         },
 
         _calcProjectionMatrix: function () {
@@ -218,6 +235,22 @@ Object.assign(pc, function () {
         }
     });
 
+    Object.defineProperty(ScreenComponent.prototype, "priority", {
+        get: function () {
+            return this._priority;
+        },
+
+        set: function (value) {
+            if (value > 0xFF) {
+                // #ifdef DEBUG
+                console.warn('Clamping screen priority from ' + value + ' to 255');
+                // #endif
+                value = 0xFF;
+            }
+
+            this._priority = value;
+        }
+    });
     return {
         ScreenComponent: ScreenComponent
     };

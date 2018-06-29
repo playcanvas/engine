@@ -202,6 +202,10 @@ Object.assign(pc, function () {
         this.initializeCapabilities();
         this.initializeRenderState();
 
+        for (i = 0; i < this.maxCombinedTextures; i++) {
+            this.textureUnits.push([null, null, null]);
+        }
+
         // put the rest of the constructor in a function
         // so that the constructor remains small. Small constructors
         // are optimized by Firefox due to type inference
@@ -309,6 +313,11 @@ Object.assign(pc, function () {
                 gl.UNSIGNED_INT,
                 gl.FLOAT
             ];
+
+            this.targetToSlot = {};
+            this.targetToSlot[gl.TEXTURE_2D] = 0;
+            this.targetToSlot[gl.TEXTURE_CUBE_MAP] = 1;
+            this.targetToSlot[gl.TEXTURE_3D] = 2;
 
             // Define the uniform commit functions
             var scopeX, scopeY, scopeZ, scopeW;
@@ -425,7 +434,7 @@ Object.assign(pc, function () {
             pc.events.attach(this);
 
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
-            this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
+            this.useTexCubeLod = this.extTextureLod && this.maxTextures < 16;
 
             // Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
             // based on the number of available uniforms and the number of uniforms required for non-
@@ -666,7 +675,8 @@ Object.assign(pc, function () {
             this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
             this.maxCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
             this.maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
-            this.samplerCount = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+            this.maxTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+            this.maxCombinedTextures = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.vertexUniformsCount = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
             this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
@@ -804,7 +814,10 @@ Object.assign(pc, function () {
                 texture.dirtyAll();
             }
             this.activeTexture = 0;
-            this.textureUnits = [];
+            this.textureUnits.length = 0;
+            for (i = 0; i < this.maxCombinedTextures; i++) {
+                this.textureUnits.push([null, null, null]);
+            }
 
             // Reset all render targets so they'll be recreated as required.
             // TODO: a solution for the case where a render target contains something
@@ -1143,10 +1156,6 @@ Object.assign(pc, function () {
             } else {
                 this.setFramebuffer(null);
             }
-
-            for (var i = 0; i < 16; i++) {
-                this.textureUnits[i] = null;
-            }
         },
 
         /**
@@ -1165,7 +1174,7 @@ Object.assign(pc, function () {
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
                 if (colorBuffer && colorBuffer._glTextureId && colorBuffer.mipmaps && colorBuffer._pot) {
-                    gl.bindTexture(colorBuffer._glTarget, colorBuffer._glTextureId);
+                    this.bindTexture(this.maxCombinedTextures - 1, colorBuffer._glTarget, colorBuffer._glTextureId);
                     gl.generateMipmap(colorBuffer._glTarget);
                 }
 
@@ -1184,7 +1193,6 @@ Object.assign(pc, function () {
 
             texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
                 (texture._volume ? gl.TEXTURE_3D : gl.TEXTURE_2D);
-
 
             switch (texture._format) {
                 case pc.PIXELFORMAT_A8:
@@ -1578,25 +1586,31 @@ Object.assign(pc, function () {
             // #endif
         },
 
+        bindTexture: function (textureUnit, textureTarget, textureObject) {
+            var slot = this.targetToSlot[textureTarget];
+
+            if (this.textureUnits[textureUnit][slot] !== textureObject) {
+                var gl = this.gl;
+                if (this.activeTexture !== textureUnit) {
+                    gl.activeTexture(gl.TEXTURE0 + textureUnit);
+                    this.activeTexture = textureUnit;
+                }
+                gl.bindTexture(textureTarget, textureObject);
+                this.textureUnits[textureUnit][slot] = textureObject;
+            }
+        },
+
         setTexture: function (texture, textureUnit) {
             var gl = this.gl;
 
             if (!texture._glTextureId)
                 this.initializeTexture(texture);
 
+            this.bindTexture(textureUnit, texture._glTarget, texture._glTextureId);
+
             var paramDirty = texture._minFilterDirty || texture._magFilterDirty ||
                              texture._addressUDirty || texture._addressVDirty || texture._addressWDirty ||
                              texture._anisotropyDirty || texture._compareModeDirty;
-
-            if ((this.textureUnits[textureUnit] !== texture) || paramDirty) {
-                if (this.activeTexture !== textureUnit) {
-                    gl.activeTexture(gl.TEXTURE0 + textureUnit);
-                    this.activeTexture = textureUnit;
-                }
-                gl.bindTexture(texture._glTarget, texture._glTextureId);
-                this.textureUnits[textureUnit] = texture;
-            }
-
             if (paramDirty) {
                 if (texture._minFilterDirty) {
                     var filter = texture._minFilter;
@@ -1632,16 +1646,18 @@ Object.assign(pc, function () {
                     }
                     texture._addressVDirty = false;
                 }
-                if (this.webgl2) {
-                    if (texture._addressWDirty) {
+                if (texture._addressWDirty) {
+                    if (this.webgl2) {
                         gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
-                        texture._addressWDirty = false;
                     }
-                    if (texture._compareModeDirty) {
+                    texture._addressWDirty = false;
+                }
+                if (texture._compareModeDirty) {
+                    if (this.webgl2) {
                         gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
                         gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_FUNC, this.glComparison[texture._compareFunc]);
-                        texture._compareModeDirty = false;
                     }
+                    texture._compareModeDirty = false;
                 }
                 if (texture._anisotropyDirty) {
                     var ext = this.extTextureFilterAnisotropic;
