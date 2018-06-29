@@ -51,6 +51,18 @@ Object.assign(pc, function () {
         this.visibleTransparent = [];
     };
 
+    InstanceList.prototype.clearVisibleLists = function (cameraPass) {
+        if (this.visibleOpaque[cameraPass]) {
+            this.visibleOpaque[cameraPass].length = 0;
+            this.visibleOpaque[cameraPass].list.length = 0;
+        }
+
+        if (this.visibleTransparent[cameraPass]) {
+            this.visibleTransparent[cameraPass].length = 0;
+            this.visibleTransparent[cameraPass].list.length = 0;
+        }
+    };
+
     /**
      * @constructor
      * @name pc.Layer
@@ -617,6 +629,10 @@ Object.assign(pc, function () {
         if (id < 0) return;
         this.cameras.splice(id, 1);
         this._generateCameraHash();
+
+        // visible lists in layer are not updated after camera is removed
+        // so clear out any remaining mesh instances
+        this.instances.clearVisibleLists(id);
     };
 
     /**
