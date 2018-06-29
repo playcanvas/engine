@@ -60,6 +60,16 @@ Object.assign(pc, function () {
             }
         },
 
+        _unbindSpriteAsset: function (asset) {
+            asset.off("load", this._onSpriteAssetLoad, this);
+            asset.off("remove", this._onSpriteAssetRemove, this);
+
+            // unbind atlas
+            if (asset.resource && asset.resource.atlas) {
+                this._component.system.app.assets.off('load:' + asset.data.textureAtlasAsset, this._onTextureAtlasLoad, this);
+            }
+        },
+
         // When sprite asset is loaded make sure the texture atlas asset is loaded too
         // If so then set the sprite, otherwise wait for the atlas to be loaded first
         _onSpriteAssetLoad: function (asset) {
@@ -183,12 +193,14 @@ Object.assign(pc, function () {
 
         _destroy: function () {
             // remove sprite
-            if (this._sprite)
-                this._sprite = null;
+            if (this._sprite) {
+                this.sprite = null;
+            }
 
             // remove sprite asset
-            if (this._spriteAsset)
-                this._spriteAsset = null;
+            if (this._spriteAsset) {
+                this.spriteAsset = null;
+            }
         },
 
         /**
@@ -275,13 +287,7 @@ Object.assign(pc, function () {
                     // clean old event listeners
                     var prev = assets.get(this._spriteAsset);
                     if (prev) {
-                        prev.off("load", this._onSpriteAssetLoad, this);
-                        prev.off("remove", this._onSpriteAssetRemove, this);
-
-                        var atlasAssetId = prev.data && prev.data.textureAtlasAsset;
-                        if (atlasAssetId) {
-                            assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
-                        }
+                        this._unbindSpriteAsset(prev);
                     }
                 }
 

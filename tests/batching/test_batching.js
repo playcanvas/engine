@@ -11,11 +11,11 @@ module("pc.Batcher", {
 
     // loadAssets: function () {
     //     this.atlasAsset = new pc.Asset('red-atlas', 'textureatlas', {
-    //         url: '../assets/sprite/red-atlas.json'
+    //         url: '../test-assets/sprite/red-atlas.json'
     //     });
 
     //     this.spriteAsset = new pc.Asset('red-sprite', 'sprite', {
-    //         url: '../assets/sprite/red-sprite.json'
+    //         url: '../test-assets/sprite/red-sprite.json'
     //     });
 
     //     this.app.assets.add(this.atlasAsset);
