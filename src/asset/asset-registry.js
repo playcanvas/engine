@@ -219,23 +219,49 @@ Object.assign(pc, function () {
          * app.assets.remove(asset);
          */
         remove: function (asset) {
-            delete this._cache[asset.id];
-            delete this._names[asset.name];
+            var idx = this._cache[asset.id];
 
-            var url = asset.file ? asset.file.url : null;
-            if (url)
-                delete this._urls[url];
+            if (idx !== undefined) {
+                // remove from list
+                this._assets.splice(idx, 1);
 
-            // tags cache
-            this._tags.removeItem(asset);
-            asset.tags.off('add', this._onTagAdd, this);
-            asset.tags.off('remove', this._onTagRemove, this);
+                // remove id -> index cache
+                delete this._cache[asset.id];
 
-            asset.fire("remove", asset);
-            this.fire("remove", asset);
-            this.fire("remove:" + asset.id, asset);
-            if (url)
-                this.fire("remove:url:" + url, asset);
+                // name cache needs to be completely rebuilt
+                this._names = {};
+
+                // update id cache and rebuild name cache
+                for (var i = 0, l = this._assets.length; i < l; i++) {
+                    var asset = this._assets[i];
+
+                    this._cache[asset.id] = i;
+                    if (!this._names[asset.name]) {
+                        this._names[asset.name] = [];
+                    }
+                    this._names[asset.name].push(i);
+                }
+
+                var url = asset.file ? asset.file.url : null;
+                if (url)
+                    delete this._urls[url];
+
+                // tags cache
+                this._tags.removeItem(asset);
+                asset.tags.off('add', this._onTagAdd, this);
+                asset.tags.off('remove', this._onTagRemove, this);
+
+                asset.fire("remove", asset);
+                this.fire("remove", asset);
+                this.fire("remove:" + asset.id, asset);
+                if (url)
+                    this.fire("remove:url:" + url, asset);
+
+                return true;
+            } else {
+                // asset not in registry
+                return false;
+            }
         },
 
         /**
