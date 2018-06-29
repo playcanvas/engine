@@ -245,7 +245,7 @@
 
                 lives = [];
                 for (var i = 0; i < 3; i++) {
-                    lives[i] = new pc.Entity();
+                    lives[i] = new pc.Entity("Life "+i);
                     lives[i].addComponent("element", {
                         anchor: [1,1,1,1],
                         pivot: [1,1],
