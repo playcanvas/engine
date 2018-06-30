@@ -134,7 +134,7 @@ Object.assign(pc, function () {
         this.enabledAttributes = { };
         this.transformFeedbackBuffer = null;
         this.activeFramebuffer = null;
-        this.activeTexture = 0;
+        this.textureUnit = 0;
         this.textureUnits = [];
         this._maxPixelRatio = 1;
         this.renderTarget = null;
@@ -813,7 +813,7 @@ Object.assign(pc, function () {
                 var texture = this.textures[i];
                 texture.dirtyAll();
             }
-            this.activeTexture = 0;
+            this.textureUnit = 0;
             this.textureUnits.length = 0;
             for (i = 0; i < this.maxCombinedTextures; i++) {
                 this.textureUnits.push([null, null, null]);
@@ -1586,16 +1586,36 @@ Object.assign(pc, function () {
             // #endif
         },
 
-        bindTexture: function (textureUnit, textureTarget, textureObject) {
-            var slot = this.targetToSlot[textureTarget];
+        // Activate the specified texture unit
+        activeTexture: function (textureUnit) {
+            if (this.textureUnit !== textureUnit) {
+                this.gl.activeTexture(this.gl.TEXTURE0 + textureUnit);
+                this.textureUnit = textureUnit;
+            }
+        },
 
+        // If the texture is not already bound on the currently active texture
+        // unit, bind it
+        bindTexture: function (texture) {
+            var textureTarget = texture._glTarget;
+            var textureObject = texture._glTextureId;
+            var textureUnit = this.textureUnit;
+            var slot = this.targetToSlot[textureTarget];
             if (this.textureUnits[textureUnit][slot] !== textureObject) {
-                var gl = this.gl;
-                if (this.activeTexture !== textureUnit) {
-                    gl.activeTexture(gl.TEXTURE0 + textureUnit);
-                    this.activeTexture = textureUnit;
-                }
-                gl.bindTexture(textureTarget, textureObject);
+                this.gl.bindTexture(textureTarget, textureObject);
+                this.textureUnits[textureUnit][slot] = textureObject;
+            }
+        },
+
+        // If the texture is not bound on the specified texture unit, active the
+        // texture unit and bind the texture to it
+        bindTextureOnUnit: function (texture, textureUnit) {
+            var textureTarget = texture._glTarget;
+            var textureObject = texture._glTextureId;
+            var slot = this.targetToSlot[textureTarget];
+            if (this.textureUnits[textureUnit][slot] !== textureObject) {
+                this.activeTexture(textureUnit);
+                this.gl.bindTexture(textureTarget, textureObject);
                 this.textureUnits[textureUnit][slot] = textureObject;
             }
         },
@@ -1606,70 +1626,82 @@ Object.assign(pc, function () {
             if (!texture._glTextureId)
                 this.initializeTexture(texture);
 
-            this.bindTexture(textureUnit, texture._glTarget, texture._glTextureId);
-
             var paramDirty = texture._minFilterDirty || texture._magFilterDirty ||
                              texture._addressUDirty || texture._addressVDirty || texture._addressWDirty ||
                              texture._anisotropyDirty || texture._compareModeDirty;
-            if (paramDirty) {
-                if (texture._minFilterDirty) {
-                    var filter = texture._minFilter;
-                    if (!texture._pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
-                        if (filter === pc.FILTER_NEAREST_MIPMAP_NEAREST || filter === pc.FILTER_NEAREST_MIPMAP_LINEAR) {
-                            filter = pc.FILTER_NEAREST;
-                        } else if (filter === pc.FILTER_LINEAR_MIPMAP_NEAREST || filter === pc.FILTER_LINEAR_MIPMAP_LINEAR) {
-                            filter = pc.FILTER_LINEAR;
-                        }
-                    }
-                    gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, this.glFilter[filter]);
-                    texture._minFilterDirty = false;
-                }
-                if (texture._magFilterDirty) {
-                    gl.texParameteri(texture._glTarget, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
-                    texture._magFilterDirty = false;
-                }
-                if (texture._addressUDirty) {
-                    if (this.webgl2) {
-                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
-                    } else {
-                        // WebGL1 doesn't support all addressing modes with NPOT textures
-                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
-                    }
-                    texture._addressUDirty = false;
-                }
-                if (texture._addressVDirty) {
-                    if (this.webgl2) {
-                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
-                    } else {
-                        // WebGL1 doesn't support all addressing modes with NPOT textures
-                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
-                    }
-                    texture._addressVDirty = false;
-                }
-                if (texture._addressWDirty) {
-                    if (this.webgl2) {
-                        gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
-                    }
-                    texture._addressWDirty = false;
-                }
-                if (texture._compareModeDirty) {
-                    if (this.webgl2) {
-                        gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
-                        gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_FUNC, this.glComparison[texture._compareFunc]);
-                    }
-                    texture._compareModeDirty = false;
-                }
-                if (texture._anisotropyDirty) {
-                    var ext = this.extTextureFilterAnisotropic;
-                    if (ext) gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.max(1, Math.min(Math.round(texture._anisotropy), this.maxAnisotropy)));
-                    texture._anisotropyDirty = false;
-                }
-            }
 
-            if (texture._needsUpload || texture._needsMipmapsUpload) {
-                this.uploadTexture(texture);
-                texture._needsUpload = false;
-                texture._needsMipmapsUpload = false;
+            if (paramDirty || texture._needsUpload || texture._needsMipmapsUpload) {
+                // Ensure the specified texture unit is active
+                this.activeTexture(textureUnit);
+                // Ensure the texture is bound on correct target of the specified texture unit
+                this.bindTexture(texture);
+
+                if (paramDirty) {
+                    if (texture._minFilterDirty) {
+                        var filter = texture._minFilter;
+                        if (!texture._pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
+                            if (filter === pc.FILTER_NEAREST_MIPMAP_NEAREST || filter === pc.FILTER_NEAREST_MIPMAP_LINEAR) {
+                                filter = pc.FILTER_NEAREST;
+                            } else if (filter === pc.FILTER_LINEAR_MIPMAP_NEAREST || filter === pc.FILTER_LINEAR_MIPMAP_LINEAR) {
+                                filter = pc.FILTER_LINEAR;
+                            }
+                        }
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, this.glFilter[filter]);
+                        texture._minFilterDirty = false;
+                    }
+                    if (texture._magFilterDirty) {
+                        gl.texParameteri(texture._glTarget, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
+                        texture._magFilterDirty = false;
+                    }
+                    if (texture._addressUDirty) {
+                        if (this.webgl2) {
+                            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
+                        } else {
+                            // WebGL1 doesn't support all addressing modes with NPOT textures
+                            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
+                        }
+                        texture._addressUDirty = false;
+                    }
+                    if (texture._addressVDirty) {
+                        if (this.webgl2) {
+                            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
+                        } else {
+                            // WebGL1 doesn't support all addressing modes with NPOT textures
+                            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
+                        }
+                        texture._addressVDirty = false;
+                    }
+                    if (texture._addressWDirty) {
+                        if (this.webgl2) {
+                            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
+                        }
+                        texture._addressWDirty = false;
+                    }
+                    if (texture._compareModeDirty) {
+                        if (this.webgl2) {
+                            gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
+                            gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_FUNC, this.glComparison[texture._compareFunc]);
+                        }
+                        texture._compareModeDirty = false;
+                    }
+                    if (texture._anisotropyDirty) {
+                        var ext = this.extTextureFilterAnisotropic;
+                        if (ext) gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.max(1, Math.min(Math.round(texture._anisotropy), this.maxAnisotropy)));
+                        texture._anisotropyDirty = false;
+                    }
+                }
+
+                if (texture._needsUpload || texture._needsMipmapsUpload) {
+                    this.uploadTexture(texture);
+                    texture._needsUpload = false;
+                    texture._needsMipmapsUpload = false;
+                }
+            } else {
+                // Ensure the texture is currently bound to the correct target on the specified texture unit.
+                // If the texture is already bound to the correct target on the specified unit, there's no need
+                // to actually make the specified texture unit active because the texture itself does not need
+                // to be udpated.
+                this.bindTextureOnUnit(texture, textureUnit);
             }
         },
 
