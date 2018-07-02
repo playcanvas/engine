@@ -1620,75 +1620,77 @@ Object.assign(pc, function () {
             }
         },
 
-        setTexture: function (texture, textureUnit) {
+        setTextureParameters: function (texture) {
             var gl = this.gl;
+            var flags = texture._parameterFlags;
+            var target = texture._glTarget;
 
+            if (flags & 1) {
+                var filter = texture._minFilter;
+                if (!texture._pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
+                    if (filter === pc.FILTER_NEAREST_MIPMAP_NEAREST || filter === pc.FILTER_NEAREST_MIPMAP_LINEAR) {
+                        filter = pc.FILTER_NEAREST;
+                    } else if (filter === pc.FILTER_LINEAR_MIPMAP_NEAREST || filter === pc.FILTER_LINEAR_MIPMAP_LINEAR) {
+                        filter = pc.FILTER_LINEAR;
+                    }
+                }
+                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, this.glFilter[filter]);
+            }
+            if (flags & 2) {
+                gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
+            }
+            if (flags & 4) {
+                if (this.webgl2) {
+                    gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
+                } else {
+                    // WebGL1 doesn't support all addressing modes with NPOT textures
+                    gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
+                }
+            }
+            if (flags & 8) {
+                if (this.webgl2) {
+                    gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
+                } else {
+                    // WebGL1 doesn't support all addressing modes with NPOT textures
+                    gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
+                }
+            }
+            if (flags & 16) {
+                if (this.webgl2) {
+                    gl.texParameteri(target, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
+                }
+            }
+            if (flags & 32) {
+                if (this.webgl2) {
+                    gl.texParameteri(target, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
+                }
+            }
+            if (flags & 64) {
+                if (this.webgl2) {
+                    gl.texParameteri(target, gl.TEXTURE_COMPARE_FUNC, this.glComparison[texture._compareFunc]);
+                }
+            }
+            if (flags & 128) {
+                var ext = this.extTextureFilterAnisotropic;
+                if (ext) {
+                    gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.max(1, Math.min(Math.round(texture._anisotropy), this.maxAnisotropy)));
+                }
+            }
+        },
+
+        setTexture: function (texture, textureUnit) {
             if (!texture._glTextureId)
                 this.initializeTexture(texture);
 
-            var paramDirty = texture._minFilterDirty || texture._magFilterDirty ||
-                             texture._addressUDirty || texture._addressVDirty || texture._addressWDirty ||
-                             texture._anisotropyDirty || texture._compareModeDirty;
-
-            if (paramDirty || texture._needsUpload || texture._needsMipmapsUpload) {
+            if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
                 // Ensure the specified texture unit is active
                 this.activeTexture(textureUnit);
                 // Ensure the texture is bound on correct target of the specified texture unit
                 this.bindTexture(texture);
 
-                if (paramDirty) {
-                    if (texture._minFilterDirty) {
-                        var filter = texture._minFilter;
-                        if (!texture._pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
-                            if (filter === pc.FILTER_NEAREST_MIPMAP_NEAREST || filter === pc.FILTER_NEAREST_MIPMAP_LINEAR) {
-                                filter = pc.FILTER_NEAREST;
-                            } else if (filter === pc.FILTER_LINEAR_MIPMAP_NEAREST || filter === pc.FILTER_LINEAR_MIPMAP_LINEAR) {
-                                filter = pc.FILTER_LINEAR;
-                            }
-                        }
-                        gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, this.glFilter[filter]);
-                        texture._minFilterDirty = false;
-                    }
-                    if (texture._magFilterDirty) {
-                        gl.texParameteri(texture._glTarget, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
-                        texture._magFilterDirty = false;
-                    }
-                    if (texture._addressUDirty) {
-                        if (this.webgl2) {
-                            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
-                        } else {
-                            // WebGL1 doesn't support all addressing modes with NPOT textures
-                            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
-                        }
-                        texture._addressUDirty = false;
-                    }
-                    if (texture._addressVDirty) {
-                        if (this.webgl2) {
-                            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
-                        } else {
-                            // WebGL1 doesn't support all addressing modes with NPOT textures
-                            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
-                        }
-                        texture._addressVDirty = false;
-                    }
-                    if (texture._addressWDirty) {
-                        if (this.webgl2) {
-                            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
-                        }
-                        texture._addressWDirty = false;
-                    }
-                    if (texture._compareModeDirty) {
-                        if (this.webgl2) {
-                            gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
-                            gl.texParameteri(texture._glTarget, gl.TEXTURE_COMPARE_FUNC, this.glComparison[texture._compareFunc]);
-                        }
-                        texture._compareModeDirty = false;
-                    }
-                    if (texture._anisotropyDirty) {
-                        var ext = this.extTextureFilterAnisotropic;
-                        if (ext) gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.max(1, Math.min(Math.round(texture._anisotropy), this.maxAnisotropy)));
-                        texture._anisotropyDirty = false;
-                    }
+                if (texture._parameterFlags) {
+                    this.setTextureParameters(texture);
+                    texture._parameterFlags = 0;
                 }
 
                 if (texture._needsUpload || texture._needsMipmapsUpload) {

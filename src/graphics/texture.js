@@ -195,7 +195,7 @@ Object.assign(pc, function () {
         set: function (v) {
             if (this._minFilter !== v) {
                 this._minFilter = v;
-                this._minFilterDirty = true;
+                this._parameterFlags |= 1;
             }
         }
     });
@@ -216,7 +216,7 @@ Object.assign(pc, function () {
         set: function (v) {
             if (this._magFilter !== v) {
                 this._magFilter = v;
-                this._magFilterDirty = true;
+                this._parameterFlags |= 2;
             }
         }
     });
@@ -238,7 +238,7 @@ Object.assign(pc, function () {
         set: function (v) {
             if (this._addressU !== v) {
                 this._addressU = v;
-                this._addressUDirty = true;
+                this._parameterFlags |= 4;
             }
         }
     });
@@ -260,7 +260,7 @@ Object.assign(pc, function () {
         set: function (v) {
             if (this._addressV !== v) {
                 this._addressV = v;
-                this._addressVDirty = true;
+                this._parameterFlags |= 8;
             }
         }
     });
@@ -282,12 +282,14 @@ Object.assign(pc, function () {
         set: function (addressW) {
             if (!this.device.webgl2) return;
             if (!this._volume) {
-                logWARNING("Can't set W addressing mode for a non-3D texture.");
+                // #ifdef DEBUG
+                console.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
+                // #endif
                 return;
             }
             if (addressW !== this._addressW) {
                 this._addressW = addressW;
-                this._addressWDirty = true;
+                this._parameterFlags |= 16;
             }
         }
     });
@@ -305,7 +307,7 @@ Object.assign(pc, function () {
         set: function (v) {
             if (this._compareOnRead !== v) {
                 this._compareOnRead = v;
-                this._compareModeDirty = true;
+                this._parameterFlags |= 32;
             }
         }
     });
@@ -331,7 +333,25 @@ Object.assign(pc, function () {
         set: function (v) {
             if (this._compareFunc !== v) {
                 this._compareFunc = v;
-                this._compareModeDirty = true;
+                this._parameterFlags |= 64;
+            }
+        }
+    });
+
+    /**
+     * @name pc.Texture#anisotropy
+     * @type Number
+     * @description Integer value specifying the level of anisotropic to apply to the texture
+     * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
+     */
+    Object.defineProperty(Texture.prototype, 'anisotropy', {
+        get: function () {
+            return this._anisotropy;
+        },
+        set: function (v) {
+            if (this._anisotropy !== v) {
+                this._anisotropy = v;
+                this._parameterFlags |= 128;
             }
         }
     });
@@ -367,24 +387,6 @@ Object.assign(pc, function () {
                 this._minFilterDirty = true;
 
                 if (v) this._needsMipmapsUpload = true;
-            }
-        }
-    });
-
-    /**
-     * @name pc.Texture#anisotropy
-     * @type Number
-     * @description Integer value specifying the level of anisotropic to apply to the texture
-     * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
-     */
-    Object.defineProperty(Texture.prototype, 'anisotropy', {
-        get: function () {
-            return this._anisotropy;
-        },
-        set: function (v) {
-            if (this._anisotropy !== v) {
-                this._anisotropy = v;
-                this._anisotropyDirty = true;
             }
         }
     });
@@ -611,13 +613,7 @@ Object.assign(pc, function () {
             this._needsMipmapsUpload = this._mipmaps;
             this._mipmapsUploaded = false;
 
-            this._minFilterDirty = true;
-            this._magFilterDirty = true;
-            this._addressUDirty = true;
-            this._addressVDirty = true;
-            this._addressWDirty = this._volume;
-            this._anisotropyDirty = true;
-            this._compareModeDirty = true;
+            this._parameterFlags = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
         },
 
         /**
