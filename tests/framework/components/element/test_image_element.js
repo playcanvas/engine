@@ -22,19 +22,21 @@ module('pc.ImageElement', {
             }
         });
 
+        this.app.assets.prefix = '../../';
+
         // list of assets to load
         var assets = [
             new pc.Asset('red-atlas', 'textureatlas', {
-                url: '../../../test-assets/sprite/red-atlas.json'
+                url: '../test-assets/sprite/red-atlas.json'
             }),
             new pc.Asset('red-sprite', 'sprite', {
-                url: '../../../test-assets/sprite/red-sprite.json'
+                url: '../test-assets/sprite/red-sprite.json'
             }),
             new pc.Asset('red-texture', 'texture', {
-                url: '../../../test-assets/sprite/red-atlas.png'
+                url: '../test-assets/sprite/red-atlas.png'
             }),
             new pc.Asset('red-material', 'material', {
-                url: '../../../test-assets/sprite/red-material.json'
+                url: '../test-assets/sprite/red-material.json'
             })
         ];
 
