@@ -214,6 +214,7 @@ Object.assign(pc, function () {
          * @name pc.AssetRegistry#remove
          * @description Remove an asset from the registry
          * @param {pc.Asset} asset The asset to remove
+         * @returns {Boolean} True if the asset was successfully removed and false otherwise
          * @example
          * var asset = app.assets.get(100);
          * app.assets.remove(asset);
@@ -233,13 +234,13 @@ Object.assign(pc, function () {
 
                 // update id cache and rebuild name cache
                 for (var i = 0, l = this._assets.length; i < l; i++) {
-                    var asset = this._assets[i];
+                    var a = this._assets[i];
 
-                    this._cache[asset.id] = i;
-                    if (!this._names[asset.name]) {
-                        this._names[asset.name] = [];
+                    this._cache[a.id] = i;
+                    if (!this._names[a.name]) {
+                        this._names[a.name] = [];
                     }
-                    this._names[asset.name].push(i);
+                    this._names[a.name].push(i);
                 }
 
                 var url = asset.file ? asset.file.url : null;
@@ -258,10 +259,10 @@ Object.assign(pc, function () {
                     this.fire("remove:url:" + url, asset);
 
                 return true;
-            } else {
-                // asset not in registry
-                return false;
             }
+
+            // asset not in registry
+            return false;
         },
 
         /**

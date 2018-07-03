@@ -3,9 +3,6 @@ Object.assign(pc, function () {
     var _debugLogging = false;
     // #endif
 
-    var maskOffset = 0.5;
-    var maskOffsetIncrement = 0.001;
-
     var ImageRenderable = function (entity, mesh, material) {
         this._entity = entity;
         this._element = entity.element;
@@ -120,12 +117,10 @@ Object.assign(pc, function () {
                 var child = getLastChild(last);
                 if (child) {
                     return child;
-                } else {
-                    return last;
                 }
-            } else {
-                return null;
+                return last;
             }
+            return null;
         };
 
         // The unmask mesh instance renders into the stencil buffer
@@ -155,7 +150,7 @@ Object.assign(pc, function () {
         if (_debugLogging) console.log('setDrawOrder: ', this.meshInstance.name, drawOrder);
         // #endif
         this.meshInstance.drawOrder = drawOrder;
-    }
+    };
 
     ImageRenderable.prototype.setCull = function (cull) {
         this.meshInstance.cull = cull;
@@ -292,7 +287,7 @@ Object.assign(pc, function () {
         _onDrawOrderChange: function (order) {
             this._renderable.setDrawOrder(order);
 
-            if (this.mask &&this._element.screen) {
+            if (this.mask && this._element.screen) {
                 this._element.screen.screen.once('syncdraworder', function () {
                     this._renderable.setUnmaskDrawOrder();
                 }, this);
@@ -775,8 +770,8 @@ Object.assign(pc, function () {
                 ref = this._element.maskedBy.element._image._maskRef;
             }
             if (this._renderable.unmaskMeshInstance) {
-                 var sp = new pc.StencilParameters({
-                    ref: ref+1,
+                var sp = new pc.StencilParameters({
+                    ref: ref + 1,
                     func: pc.FUNC_EQUAL,
                     zpass: pc.STENCILOP_DECREMENT
                 });
