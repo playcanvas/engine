@@ -35,8 +35,8 @@ Object.assign(pc, function () {
         // Create sprite resource
         open: function (url, data) {
             var sprite = new pc.Sprite(this._device);
-            // json data loaded from file
-            if (data) {
+            if (url) {
+                // if url field is present json data is being loaded from file
                 // store data on sprite object temporarily
                 sprite.__data = data;
             }
