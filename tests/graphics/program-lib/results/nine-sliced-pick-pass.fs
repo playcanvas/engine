@@ -40,7 +40,7 @@ void getOpacity() {
         dAlpha *= material_opacity;
     #endif
     #ifdef MAPTEXTURE
-        dAlpha *= texture2D(texture_opacityMap, nineSlicedUv).a;
+        dAlpha *= texture2D(texture_opacityMap, vUv0).a;
     #endif
     #ifdef MAPVERTEX
         dAlpha *= saturate(vVertexColor.VC);
