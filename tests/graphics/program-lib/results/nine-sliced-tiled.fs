@@ -30,15 +30,13 @@ float saturate(float x) {
 vec3 saturate(vec3 x) {
     return clamp(x, vec3(0.0), vec3(1.0));
 }
-
+#define NINESLICETILED
 varying vec2 vMask;
 varying vec2 vTiledUv;
 uniform vec4 innerOffset;
 uniform vec2 outerScale;
 uniform vec4 atlasRect;
-vec2 nineSlicedUv;
-#define NINESLICETILED
-vec4 dReflection;
+vec2 nineSlicedUv;vec4 dReflection;
 vec3 dAlbedo;
 vec3 dDiffuseLight;
 vec3 dSpecularLight;
@@ -175,12 +173,10 @@ void main(void) {
     dSpecularLight = vec3(0);
     dReflection = vec4(0);
     dSpecularity = vec3(0);
-
-    vec2 tileMask = step(vMask, vec2(0.99999));
-    vec2 clampedUv = mix(innerOffset.xy*0.5, vec2(1.0) - innerOffset.zw*0.5, fract(vTiledUv));
-    clampedUv = clampedUv * atlasRect.zw + atlasRect.xy;
-    nineSlicedUv = vUv0 * tileMask + clampedUv * (vec2(1.0) - tileMask);
-    getOpacity();
+vec2 tileMask = step(vMask, vec2(0.99999));
+vec2 clampedUv = mix(innerOffset.xy*0.5, vec2(1.0) - innerOffset.zw*0.5, fract(vTiledUv));
+clampedUv = clampedUv * atlasRect.zw + atlasRect.xy;
+nineSlicedUv = vUv0 * tileMask + clampedUv * (vec2(1.0) - tileMask);   getOpacity();
    getAlbedo();
    addAmbient();
 

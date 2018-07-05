@@ -24,12 +24,6 @@ mat3 dNormalMatrix;
 vec3 dLightPosW;
 vec3 dLightDirNormW;
 vec3 dNormalW;
-#define NINESLICED
-uniform vec4 innerOffset;
-uniform vec2 outerScale;
-uniform vec4 atlasRect;
-varying vec2 vTiledUv;
-varying vec2 vMask;
 #ifndef NINESLICE
 #define NINESLICE
 uniform vec4 innerOffset;
@@ -50,6 +44,7 @@ vec2 getUv0() {
     vMask = vertex_texCoord0.xy;
     return uv;
 }
+#define NINESLICED
 #ifdef PIXELSNAP
     uniform vec4 uScreenSize;
 #endif

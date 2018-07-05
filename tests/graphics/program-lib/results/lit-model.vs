@@ -41,6 +41,15 @@ vec2 getUv0() {
 #ifdef PIXELSNAP
     uniform vec4 uScreenSize;
 #endif
+#ifdef NINESLICED
+    #ifndef NINESLICE
+    #define NINESLICE
+    uniform vec4 innerOffset;
+    uniform vec2 outerScale;
+    uniform vec4 atlasRect;
+    varying vec2 vTiledUv;
+    #endif
+#endif
 mat4 getModelMatrix() {
     #ifdef DYNAMICBATCH
         return getBoneMatrix(vertex_boneIndices);
