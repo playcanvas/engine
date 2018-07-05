@@ -24,14 +24,13 @@ mat3 dNormalMatrix;
 vec3 dLightPosW;
 vec3 dLightDirNormW;
 vec3 dNormalW;
-#ifndef NINESLICE
-#define NINESLICE
+#define NINESLICED
 uniform vec4 innerOffset;
 uniform vec2 outerScale;
 uniform vec4 atlasRect;
 varying vec2 vTiledUv;
-#endif
 varying vec2 vMask;
+#ifdef NINESLICED
 vec2 getUv0() {
     vec2 uv = vertex_position.xz;
     // offset inner vertices inside
@@ -44,18 +43,13 @@ vec2 getUv0() {
     vMask = vertex_texCoord0.xy;
     return uv;
 }
-#define NINESLICED
+#else
+vec2 getUv0() {
+    return vertex_texCoord0;
+}
+#endif
 #ifdef PIXELSNAP
     uniform vec4 uScreenSize;
-#endif
-#ifdef NINESLICED
-    #ifndef NINESLICE
-    #define NINESLICE
-    uniform vec4 innerOffset;
-    uniform vec2 outerScale;
-    uniform vec4 atlasRect;
-    varying vec2 vTiledUv;
-    #endif
 #endif
 mat4 getModelMatrix() {
     #ifdef DYNAMICBATCH

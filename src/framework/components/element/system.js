@@ -1,22 +1,6 @@
 Object.assign(pc, function () {
     var _schema = ['enabled'];
 
-    var nineSliceBasePS = [
-        "varying vec2 vMask;",
-        "varying vec2 vTiledUv;",
-        "uniform vec4 innerOffset;",
-        "uniform vec2 outerScale;",
-        "uniform vec4 atlasRect;",
-        "vec2 nineSlicedUv;"
-    ].join('\n');
-
-    var nineSliceUvPs = [
-        "vec2 tileMask = step(vMask, vec2(0.99999));",
-        "vec2 clampedUv = mix(innerOffset.xy*0.5, vec2(1.0) - innerOffset.zw*0.5, fract(vTiledUv));",
-        "clampedUv = clampedUv * atlasRect.zw + atlasRect.xy;",
-        "nineSlicedUv = vUv0 * tileMask + clampedUv * (vec2(1.0) - tileMask);"
-    ].join('\n');
-
     /**
      * @constructor
      * @name pc.ElementComponentSystem
@@ -76,17 +60,11 @@ Object.assign(pc, function () {
         // 9 sliced material is like the default but with custom chunks
         this.defaultImage9SlicedMaterial = this.defaultImageMaterial.clone();
         this.defaultImage9SlicedMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_SLICED;
-        // this.defaultImage9SlicedMaterial.chunks.basePS = pc.shaderChunks.basePS + nineSliceBasePS;
-        // this.defaultImage9SlicedMaterial.chunks.startPS = pc.shaderChunks.startPS + "nineSlicedUv = vUv0;\n";
-        // this.defaultImage9SlicedMaterial.chunks.transformVS = "#define NINESLICED\n" + pc.shaderChunks.transformVS;
-        // this.defaultImage9SlicedMaterial.chunks.uv0VS = pc.shaderChunks.uv9SliceVS;
         this.defaultImage9SlicedMaterial.update();
 
         // 9-sliced in tiled mode
         this.defaultImage9TiledMaterial = this.defaultImage9SlicedMaterial.clone();
         this.defaultImage9TiledMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
-        // this.defaultImage9TiledMaterial.chunks.basePS = pc.shaderChunks.basePS + "#define NINESLICETILED\n" + nineSliceBasePS;
-        // this.defaultImage9TiledMaterial.chunks.startPS = pc.shaderChunks.startPS + nineSliceUvPs;
         this.defaultImage9TiledMaterial.update();
 
         // 9 sliced mask
@@ -123,8 +101,6 @@ Object.assign(pc, function () {
         // screen space 9-sliced in tiled mode
         this.defaultScreenSpaceImage9TiledMaterial = this.defaultScreenSpaceImage9SlicedMaterial.clone();
         this.defaultScreenSpaceImage9TiledMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
-        // this.defaultScreenSpaceImage9TiledMaterial.chunks.basePS = pc.shaderChunks.basePS + "#define NINESLICETILED\n" + nineSliceBasePS;
-        // this.defaultScreenSpaceImage9TiledMaterial.chunks.startPS = pc.shaderChunks.startPS + nineSliceUvPs;
         this.defaultScreenSpaceImage9TiledMaterial.update();
 
         // 9 sliced screen space mask

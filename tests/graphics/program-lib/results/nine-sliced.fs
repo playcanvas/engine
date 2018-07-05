@@ -30,12 +30,14 @@ float saturate(float x) {
 vec3 saturate(vec3 x) {
     return clamp(x, vec3(0.0), vec3(1.0));
 }
+#define NINESLICED
 varying vec2 vMask;
 varying vec2 vTiledUv;
 uniform vec4 innerOffset;
 uniform vec2 outerScale;
 uniform vec4 atlasRect;
-vec2 nineSlicedUv;vec4 dReflection;
+vec2 nineSlicedUv;
+vec4 dReflection;
 vec3 dAlbedo;
 vec3 dDiffuseLight;
 vec3 dSpecularLight;
