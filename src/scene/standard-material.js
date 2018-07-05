@@ -1102,7 +1102,8 @@ Object.assign(pc, function () {
                     msdf: !!this.msdfMap,
                     twoSidedLighting: this.twoSidedLighting,
                     pixelSnap: this.pixelSnap,
-                    pass: pass
+                    pass: pass,
+                    nineSlicedMode: this.nineSlicedMode
                 };
 
                 if (pass === pc.SHADER_FORWARDHDR) {
@@ -1292,6 +1293,7 @@ Object.assign(pc, function () {
         _defineFlag(obj, "forceUv1", false);
         _defineFlag(obj, "pixelSnap", false);
         _defineFlag(obj, "twoSidedLighting", false);
+        _defineFlag(obj, "nineSlicedMode", pc.SPRITE_RENDERMODE_SLICED);
 
         _defineTex2D(obj, "diffuse", 0, 3);
         _defineTex2D(obj, "specular", 0, 3);

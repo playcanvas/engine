@@ -214,21 +214,21 @@ pc.programlib.standard = {
 
         var expression;
 
-        // if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
-        //     expression = "nineSlicedUv";
-        // } else if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
-        //     expression = "nineSlicedUv, -1000";
-        // }
-
-        if (transformId === 0) {
-            expression = "vUv" + uvChannel;
+        if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
+            expression = "nineSlicedUv";
+        } else if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
+            expression = "nineSlicedUv, -1000.0";
         } else {
-            // note: different capitalization!
-            expression = "vUV" + uvChannel + "_" + transformId;
-        }
+            if (transformId === 0) {
+                expression = "vUv" + uvChannel;
+            } else {
+                // note: different capitalization!
+                expression = "vUV" + uvChannel + "_" + transformId;
+            }
 
-        if (options.heightMap) {
-            expression += " + dUvOffset";
+            if (options.heightMap) {
+                expression += " + dUvOffset";
+            }
         }
 
         return expression;
@@ -316,6 +316,61 @@ pc.programlib.standard = {
 
     _addVaryingIfNeeded: function (code, type, name) {
         return code.indexOf(name) >= 0 ? ("varying " + type + " " + name + ";\n") : "";
+    },
+
+    _vsAddTransformCode: function (code, device, chunks, options) {
+        code += chunks.transformVS;
+
+        return code;
+    },
+
+    _vsAddBaseCode: function (code, device, chunks, options) {
+        code += chunks.baseVS;
+        if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED ||
+            options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
+            code += chunks.baseNineSlicedVS;
+        }
+
+        return code;
+    },
+
+    /**
+     * Add "Base" Code section to fragment shader
+     * @param  {String} code                Current fragment shader code
+     * @param  {pc.GraphicsDevice} device   The graphics device
+     * @param  {Object}                     All available shader chunks
+     * @param  {Object} options             The Shader Definition options
+     * @return {String}                     The new fragment shader code (old+new)
+     */
+    _fsAddBaseCode: function (code, device, chunks, options) {
+        code += chunks.basePS;
+        if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
+            code += chunks.baseNineSlicedPS;
+        } else if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
+            code += chunks.baseNineSlicedTiledPS;
+        }
+
+        return code;
+    },
+
+    /**
+     * Add "Start" Code section to fragment shader
+     * @param  {String} code                Current fragment shader code
+     * @param  {pc.GraphicsDevice} device   The graphics device
+     * @param  {Object}                     All available shader chunks
+     * @param  {Object} options             The Shader Definition options
+     * @return {String}                     The new fragment shader code (old+new)
+     */
+    _fsAddStartCode: function (code, device, chunks, options) {
+        code += chunks.startPS;
+
+        if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
+            code += chunks.startNineSlicedPS;
+        } else if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
+            code += chunks.startNineSlicedTiledPS;
+        }
+
+        return code;
     },
 
     createShaderDefinition: function (device, options) {
@@ -411,7 +466,9 @@ pc.programlib.standard = {
             chunks = customChunks;
         }
 
-        code += chunks.baseVS;
+
+        // code += chunks.baseVS;
+        code = this._vsAddBaseCode(code, device, chunks, options);
 
         // Allow first shadow coords to be computed in VS
         var mainShadowLight = -1;
@@ -556,7 +613,9 @@ pc.programlib.standard = {
         if (options.pixelSnap) {
             code += "#define PIXELSNAP\n";
         }
-        code += chunks.transformVS;
+
+        code = this._vsAddTransformCode(code, device, chunks, options);
+
         if (needsNormal) code += chunks.normalVS;
 
         code += "\n";
@@ -767,13 +826,9 @@ pc.programlib.standard = {
 
         // ##### FORWARD/FORWARDHDR PASS #####
         code += varyings;
-        code += chunks.basePS;
 
-        // if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
-        //     code += chunks.baseNineSlicedPS;
-        // } else if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
-        //     code += chunks.baseNineSlicedTiledPS;
-        // }
+        // code += chunks.basePS;
+        code = this._fsAddBaseCode(code, device, chunks, options);
 
         var codeBegin = code;
         code = "";
@@ -1076,7 +1131,10 @@ pc.programlib.standard = {
         var usesCookieNow;
 
         // FRAGMENT SHADER BODY
-        code += chunks.startPS;
+
+        code = this._fsAddStartCode(code, device, chunks, options);
+
+        // code += chunks.startPS;
 
         // if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
         //     code += chunks.startNineSlicedPS;
