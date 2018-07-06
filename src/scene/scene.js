@@ -330,6 +330,14 @@
          */
         SORTMODE_FRONT2BACK: 4,
 
+        /**
+         * @private
+         * @enum pc.SORTMODE
+         * @name  pc.SORTMODE_CUSTOM
+         * @description Provide custom functions for sorting drawcalls and calculating distance
+         */
+        SORTMODE_CUSTOM: 5,
+
         COMPUPDATED_INSTANCES: 1,
         COMPUPDATED_LIGHTS: 2,
         COMPUPDATED_CAMERAS: 4,
