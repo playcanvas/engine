@@ -64,7 +64,9 @@ Object.assign(pc, function () {
         },
 
         _recurseDrawOrderSync: function (e, i) {
-            if (!(e instanceof pc.Entity)) return;
+            if (!(e instanceof pc.Entity)) {
+                return i;
+            }
 
             if (e.element) {
                 e.element.drawOrder = i++;
