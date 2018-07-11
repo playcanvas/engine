@@ -2,7 +2,6 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @private
      * @enum pc.SPRITE_RENDERMODE
      * @name pc.SPRITE_RENDERMODE_SIMPLE
      * @description This mode renders a sprite as a simple quad.
@@ -10,7 +9,6 @@ Object.assign(pc, function () {
     pc.SPRITE_RENDERMODE_SIMPLE = 0;
 
     /**
-     * @private
      * @enum pc.SPRITE_RENDERMODE
      * @name pc.SPRITE_RENDERMODE_SLICED
      * @description This mode renders a sprite using 9-slicing in 'sliced' mode. Sliced mode stretches the
@@ -20,7 +18,6 @@ Object.assign(pc, function () {
     pc.SPRITE_RENDERMODE_SLICED = 1;
 
     /**
-     * @private
      * @enum pc.SPRITE_RENDERMODE
      * @name pc.SPRITE_RENDERMODE_TILED
      * @description This mode renders a sprite using 9-slicing in 'tiled' mode. Tiled mode tiles the
@@ -45,7 +42,6 @@ Object.assign(pc, function () {
 
 
     /**
-     * @private
      * @constructor
      * @name pc.Sprite
      * @classdesc A pc.Sprite is contains references to one or more frames of a {@link pc.TextureAtlas}. It can be used
@@ -259,7 +255,6 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @private
      * @function
      * @name pc.Sprite#destroy
      * @description Free up the meshes created by the sprite.

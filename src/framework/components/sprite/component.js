@@ -2,7 +2,6 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @private
      * @enum pc.SPRITETYPE
      * @name pc.SPRITETYPE_SIMPLE
      * @description A {@link pc.SpriteComponent} that displays a single frame from a sprite asset.
@@ -11,7 +10,6 @@ Object.assign(pc, function () {
 
 
     /**
-     * @private
      * @enum pc.SPRITETYPE
      * @name pc.SPRITETYPE_ANIMATED
      * @description A {@link pc.SpriteComponent} that renders sprite animations.
@@ -27,7 +25,6 @@ Object.assign(pc, function () {
     var PARAM_ATLAS_RECT = 'atlasRect';
 
     /**
-     * @private
      * @component
      * @constructor
      * @name pc.SpriteComponent
@@ -419,7 +416,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.SpriteComponent#addClip
          * @description Creates and adds a new {@link pc.SpriteAnimationClip} to the component's clips.
@@ -447,7 +443,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.SpriteComponent#removeClip
          * @description Removes a clip by name.
@@ -458,7 +453,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.SpriteComponent#clip
          * @description Get an animation clip by name.
@@ -470,7 +464,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.SpriteComponent#play
          * @description Plays a sprite animation clip by name. If the animation clip is already playing then this will do nothing.
@@ -498,7 +491,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.SpriteComponent#pause
          * @description Pauses the current animation clip.
@@ -512,7 +504,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.SpriteComponent#resume
          * @description Resumes the current paused animation clip.
@@ -526,7 +517,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.SpriteComponent#stop
          * @description Stops the current animation clip and resets it to the first frame.
@@ -857,7 +847,6 @@ Object.assign(pc, function () {
 // Events Documentation
 
 /**
- * @private
  * @event
  * @name pc.SpriteComponent#play
  * @description Fired when an animation clip starts playing
@@ -865,7 +854,6 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.SpriteComponent#pause
  * @description Fired when an animation clip is paused.
@@ -873,7 +861,6 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.SpriteComponent#resume
  * @description Fired when an animation clip is resumed.
@@ -881,7 +868,6 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.SpriteComponent#stop
  * @description Fired when an animation clip is stopped.
@@ -889,7 +875,6 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.SpriteComponent#end
  * @description Fired when an animation clip stops playing because it reached its ending.
@@ -897,7 +882,6 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.SpriteComponent#loop
  * @description Fired when an animation clip reached the end of its current loop.
