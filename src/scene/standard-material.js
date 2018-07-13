@@ -721,8 +721,9 @@ Object.assign(pc, function () {
         },
 
         _setParameter: function (name, value) {
+            if (!this.parameters[name])
+                 this._propsSet.push(name);
             this.setParameter(name, value);
-            this._propsSet.push(name);
         },
 
         _clearParameters: function () {
@@ -759,6 +760,7 @@ Object.assign(pc, function () {
         },
 
         update: function () {
+            var uniform;
             this._clearParameters();
 
             this._setParameter('material_ambient', this.ambientUniform);
@@ -777,7 +779,8 @@ Object.assign(pc, function () {
                 }
             }
 
-            this._setParameter(this.getUniform("shininess", this.shininess, true));
+            uniform = this.getUniform("shininess", this.shininess, true);
+            this._setParameter(uniform.name, uniform.value);
 
             if (!this.emissiveMap || this.emissiveTint) {
                 this._setParameter('material_emissive', this.emissiveUniform);
@@ -814,7 +817,8 @@ Object.assign(pc, function () {
             }
 
             if (this.heightMap) {
-                this._setParameter(this.getUniform('heightMapFactor', this.heightMapFactor, true));
+                uniform = this.getUniform('heightMapFactor', this.heightMapFactor, true);
+                this._setParameter(uniform.name, uniform.value);
             }
 
             if (this.cubeMap) {
