@@ -104,6 +104,7 @@ Object.assign(pc, function () {
         this._shaderDefs |= mesh.vertexBuffer.format.hasUv0 ? pc.SHADERDEF_UV0 : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasUv1 ? pc.SHADERDEF_UV1 : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasColor ? pc.SHADERDEF_VCOLOR : 0;
+        this._shaderDefs |= mesh.vertexBuffer.format.hasTangents ? pc.SHADERDEF_TANGENTS : 0;
 
         this._lightHash = 0;
 
