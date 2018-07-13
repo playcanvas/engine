@@ -1129,6 +1129,7 @@ Object.assign(pc, function () {
                             options.dirLightMap = true;
                         }
                     }
+                    if (this.normalMap) options.hasTangents = (objDefs & pc.SHADERDEF_TANGENTS) !== 0;
                 }
                 options.screenSpace = (objDefs & pc.SHADERDEF_SCREENSPACE) !== 0;
                 options.skin = (objDefs & pc.SHADERDEF_SKIN) !== 0;
