@@ -4,7 +4,6 @@
         <meta charset="UTF-8">
         <title>PlayCanvas UI Example</title>
         <script src="../../build/output/playcanvas-latest.js"></script>
-        <script src="./selection-manager.js"></script>
         <style>
             body {
                 margin: 0;
@@ -52,10 +51,6 @@
             app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
             app.start();
-
-            // see selection-manager.js
-            var selectionManager = new SelectionManager(app, app.graphicsDevice);
-            selectionManager.attach(app);
 
             // create camera
             var c = new pc.Entity();

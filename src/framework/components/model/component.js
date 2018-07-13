@@ -203,30 +203,69 @@ Object.assign(pc, function () {
                         this.model = null;
                     }
                 } else {
+                    var system = this.system;
+                    var gd = system.app.graphicsDevice;
+
                     switch (newValue) {
                         case 'box':
-                            mesh = this.system.box;
+                            if (!system.box) {
+                                system.box = pc.createBox(gd, {
+                                    halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
+                                });
+                            }
+                            mesh = system.box;
                             this._area = { x: 2, y: 2, z: 2, uv: (2.0 / 3) };
                             break;
                         case 'capsule':
-                            mesh = this.system.capsule;
+                            if (!system.capsule) {
+                                system.capsule = pc.createCapsule(gd, {
+                                    radius: 0.5,
+                                    height: 2
+                                });
+                            }
+                            mesh = system.capsule;
                             this._area = { x: (Math.PI * 2), y: Math.PI, z: (Math.PI * 2), uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
                             break;
-                        case 'sphere':
-                            mesh = this.system.sphere;
-                            this._area = { x: Math.PI, y: Math.PI, z: Math.PI, uv: 1 };
-                            break;
                         case 'cone':
-                            mesh = this.system.cone;
+                            if (!system.cone) {
+                                system.cone = pc.createCone(gd, {
+                                    baseRadius: 0.5,
+                                    peakRadius: 0,
+                                    height: 1
+                                });
+                            }
+                            mesh = system.cone;
                             this._area = { x: 2.54, y: 2.54, z: 2.54, uv: (1.0 / 3 + (1.0 / 3) / 3) };
                             break;
                         case 'cylinder':
-                            mesh = this.system.cylinder;
+                            if (!system.cylinder) {
+                                system.cylinder = pc.createCylinder(gd, {
+                                    radius: 0.5,
+                                    height: 1
+                                });
+                            }
+                            mesh = system.cylinder;
                             this._area = { x: Math.PI, y: (0.79 * 2), z: Math.PI, uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
                             break;
                         case 'plane':
-                            mesh = this.system.plane;
+                            if (!system.plane) {
+                                system.plane = pc.createPlane(gd, {
+                                    halfExtents: new pc.Vec2(0.5, 0.5),
+                                    widthSegments: 1,
+                                    lengthSegments: 1
+                                });
+                            }
+                            mesh = system.plane;
                             this._area = { x: 0, y: 1, z: 0, uv: 1 };
+                            break;
+                        case 'sphere':
+                            if (!system.sphere) {
+                                system.sphere = pc.createSphere(gd, {
+                                    radius: 0.5
+                                });
+                            }
+                            mesh = system.sphere;
+                            this._area = { x: Math.PI, y: Math.PI, z: Math.PI, uv: 1 };
                             break;
                         default:
                             throw new Error("Invalid model type: " + newValue);
@@ -239,7 +278,7 @@ Object.assign(pc, function () {
 
                     model.meshInstances = [new pc.MeshInstance(node, mesh, data.material)];
 
-                    if (this.system._inTools)
+                    if (system._inTools)
                         model.generateWireframe();
 
                     this.model = model;

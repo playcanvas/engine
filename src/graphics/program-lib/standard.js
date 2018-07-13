@@ -787,7 +787,15 @@ pc.programlib.standard = {
 
 
         var uvOffset = options.heightMap ? " + dUvOffset" : "";
-        var tbn = options.fastTbn ? chunks.TBNfastPS : chunks.TBNPS;
+
+        var tbn;
+        if (!options.hasTangents) {
+            tbn = chunks.TBNderivativePS;
+        } else if (options.fastTbn) {
+            tbn = chunks.TBNfastPS;
+        } else {
+            tbn = chunks.TBNPS;
+        }
 
         if (needsNormal) {
             if (options.normalMap && useTangents) {
@@ -799,6 +807,7 @@ pc.programlib.standard = {
                 } else {
                     code += chunks.normalMapPS.replace(/\$UV/g, uv);
                 }
+                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, uv);
                 code += tbn;
             } else {
                 code += chunks.normalVertexPS;
@@ -849,7 +858,11 @@ pc.programlib.standard = {
         }
 
         if (options.heightMap) {
-            if (!options.normalMap) code += tbn;
+            if (!options.normalMap) {
+                var uv = this._uvSource(options.heightMapTransform, options.heightMapUv);
+                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, uv);
+                code += tbn;
+            }
             code += this._addMap("height", options, chunks, "", chunks.parallaxPS);
         }
 
