@@ -287,7 +287,6 @@ pc.programlib.standard = {
 
         var cubemapReflection = (options.cubeMap || (options.prefilteredCubemap && options.useSpecular)) && !options.sphereMap && !options.dpAtlas;
         var reflections = options.sphereMap || cubemapReflection || options.dpAtlas;
-        var useTangents = pc.precalculatedTangents;
         var useTexCubeLod = options.useTexCubeLod;
         if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
         if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
@@ -413,7 +412,7 @@ pc.programlib.standard = {
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
 
-            if ((options.heightMap || options.normalMap) && useTangents) {
+            if (options.heightMap || options.normalMap) {
                 attributes.vertex_tangent = pc.SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
@@ -798,7 +797,7 @@ pc.programlib.standard = {
         }
 
         if (needsNormal) {
-            if (options.normalMap && useTangents) {
+            if (options.normalMap) {
                 code += options.packedNormal ? chunks.normalXYPS : chunks.normalXYZPS;
 
                 var uv = this._uvSource(options.normalMapTransform, options.normalMapUv) + uvOffset;

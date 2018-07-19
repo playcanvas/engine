@@ -91,7 +91,6 @@ pc.fw = {
 
 Object.assign(pc.gfx, {
     drawQuadWithShader: pc.drawQuadWithShader,
-    precalculatedTangents: pc.precalculatedTangents,
     programlib: pc.programlib,
     shaderChunks: pc.shaderChunks,
     ContextCreationError: pc.ContextCreationError,

@@ -2865,7 +2865,6 @@ Object.assign(pc, function () {
     });
 
     return {
-        GraphicsDevice: GraphicsDevice,
-        precalculatedTangents: true
+        GraphicsDevice: GraphicsDevice
     };
 }());
