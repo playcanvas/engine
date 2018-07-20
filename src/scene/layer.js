@@ -218,6 +218,9 @@ Object.assign(pc, function () {
         this.transparentMeshInstances = this.instances.transparentMeshInstances;
         this.shadowCasters = this.instances.shadowCasters;
 
+        this.customSortCallback = null;
+        this.customCalculateSortValues = null;
+
         this._lightComponents = [];
         this._lights = [];
         this._sortedLights = [[], [], []];
@@ -669,17 +672,31 @@ Object.assign(pc, function () {
         var objects = this.instances;
         var sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
         if (sortMode === pc.SORTMODE_NONE) return;
+
         var visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
-        if (sortMode === pc.SORTMODE_BACK2FRONT || sortMode === pc.SORTMODE_FRONT2BACK) {
+
+        if (sortMode === pc.SORTMODE_CUSTOM) {
             sortPos = cameraNode.getPosition().data;
             sortDir = cameraNode.forward.data;
-            this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
-        }
+            if (this.customCalculateSortValues) {
+                this.customCalculateSortValues(visible.list, visible.length, sortPos, sortDir);
+            }
+            if (this.customSortCallback) {
+                visible.list.sort(this.customSortCallback);
+            }
+        } else {
+            if (sortMode === pc.SORTMODE_BACK2FRONT || sortMode === pc.SORTMODE_FRONT2BACK) {
+                sortPos = cameraNode.getPosition().data;
+                sortDir = cameraNode.forward.data;
+                this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
+            }
 
-        if (visible.list.length !== visible.length) {
-            visible.list.length = visible.length;
+            if (visible.list.length !== visible.length) {
+                visible.list.length = visible.length;
+            }
+
+            visible.list.sort(sortCallbacks[sortMode]);
         }
-        visible.list.sort(sortCallbacks[sortMode]);
     };
 
     return {

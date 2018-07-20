@@ -164,7 +164,10 @@ Object.assign(pc, function () {
                 flipY: source.flipY,
                 speed: source.speed,
                 clips: source.clips,
-                batchGroupId: source.batchGroupId
+                autoPlayClip: source.autoPlayClip,
+                batchGroupId: source.batchGroupId,
+                drawOrder: source.drawOrder,
+                layers: source.layers.slice(0)
             });
         },
 

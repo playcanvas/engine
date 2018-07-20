@@ -1,7 +1,6 @@
 Object.assign(pc, function () {
 
     /**
-     * @private
      * @constructor
      * @name pc.SpriteAnimationClip
      * @classdesc Handles playing of sprite animations and loading of relevant sprite assets.
@@ -204,7 +203,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.SpriteAnimationClip#play
          * @description Plays the animation. If it's already playing then this does nothing.
@@ -222,7 +220,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.SpriteAnimationClip#pause
          * @description Pauses the animation.
@@ -238,7 +235,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.SpriteAnimationClip#resume
          * @description Resumes the paused animation.
@@ -252,7 +248,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.SpriteAnimationClip#stop
          * @description Stops the animation and resets the animation to the first frame.
@@ -437,42 +432,36 @@ Object.assign(pc, function () {
 // Events Documentation
 
 /**
- * @private
  * @event
  * @name pc.SpriteAnimationClip#play
  * @description Fired when the clip starts playing
  */
 
 /**
- * @private
  * @event
  * @name pc.SpriteAnimationClip#pause
  * @description Fired when the clip is paused.
  */
 
 /**
- * @private
  * @event
  * @name pc.SpriteAnimationClip#resume
  * @description Fired when the clip is resumed.
  */
 
 /**
- * @private
  * @event
  * @name pc.SpriteAnimationClip#stop
  * @description Fired when the clip is stopped.
  */
 
 /**
- * @private
  * @event
  * @name pc.SpriteAnimationClip#end
  * @description Fired when the clip stops playing because it reached its ending.
  */
 
 /**
- * @private
  * @event
  * @name pc.SpriteAnimationClip#loop
  * @description Fired when the clip reached the end of its current loop.

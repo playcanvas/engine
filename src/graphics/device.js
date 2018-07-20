@@ -64,18 +64,6 @@ Object.assign(pc, function () {
         return true;
     }
 
-    function testUnsignedByteAttribute(gl) {
-        var storage = new ArrayBuffer(16);
-        var bufferId = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
-        gl.bufferData(gl.ARRAY_BUFFER, storage, gl.STATIC_DRAW);
-        gl.getError(); // Clear error flag
-        gl.vertexAttribPointer(0, 4, gl.UNSIGNED_BYTE, false, 4, 0);
-        var supported = (gl.getError() === 0);
-        gl.deleteBuffer(bufferId);
-        return supported;
-    }
-
     /**
      * @readonly
      * @name pc.GraphicsDevice#precision
@@ -488,9 +476,6 @@ Object.assign(pc, function () {
                 materialShaders: 0,
                 compileTime: 0
             };
-
-            // Handle IE11's inability to take UNSIGNED_BYTE as a param for vertexAttribPointer
-            this.supportsUnsignedByte = testUnsignedByteAttribute(gl);
 
             this.constantTexSource = this.scope.resolve("source");
 

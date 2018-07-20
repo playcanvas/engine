@@ -452,7 +452,6 @@ Object.assign(pc, function () {
         // Note: if this entity is itself a mask the stencil params
         // will be updated in updateMask to include masking
         _setMaskedBy: function (mask) {
-            var i, mi, len;
             var elem = this._image || this._text;
             if (!elem) return;
 
@@ -509,7 +508,7 @@ Object.assign(pc, function () {
 
                     // #ifdef DEBUG
                     if (_debugLogging) {
-                        console.log("masking from: " + this.entity.name + " with " + (sp.ref+1));
+                        console.log("masking from: " + this.entity.name + " with " + (sp.ref + 1));
                         console.log("depth++ to: ", depth);
                     }
                     // #endif
@@ -848,7 +847,7 @@ Object.assign(pc, function () {
         removeModelFromLayers: function (model) {
             var layer;
             var idx = this._addedModels.indexOf(model);
-            if(idx >= 0) {
+            if (idx >= 0) {
                 this._addedModels.splice(idx, 1);
             }
             for (var i = 0; i < this.layers.length; i++) {
@@ -951,7 +950,7 @@ Object.assign(pc, function () {
             }
 
             // screen priority is stored in the top 8 bits
-            this._drawOrder = (priority << 24) + value;;
+            this._drawOrder = (priority << 24) + value;
             this.fire('set:draworder', this._drawOrder);
         }
     });
@@ -1376,9 +1375,8 @@ Object.assign(pc, function () {
                 return this._image._maskedBy;
             } else if (this._text) {
                 return this._text._maskedBy;
-            } else {
-                return null;
             }
+            return null;
         }
     });
 

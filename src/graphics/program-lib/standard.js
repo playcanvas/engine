@@ -226,7 +226,8 @@ pc.programlib.standard = {
                 expression = "vUV" + uvChannel + "_" + transformId;
             }
 
-            if (options.heightMap) {
+            // if heightmap is enabled all maps except the heightmap and normal map are offset
+            if (options.heightMap && transformPropName !== "heightMapTransform") {
                 expression += " + dUvOffset";
             }
         }
@@ -899,8 +900,14 @@ pc.programlib.standard = {
         code += "\n"; // End of uniform declarations
 
 
-        // var uvOffset = options.heightMap ? " + dUvOffset" : "";
-        var tbn = options.fastTbn ? chunks.TBNfastPS : chunks.TBNPS;
+        var tbn;
+        if (!options.hasTangents) {
+            tbn = chunks.TBNderivativePS;
+        } else if (options.fastTbn) {
+            tbn = chunks.TBNfastPS;
+        } else {
+            tbn = chunks.TBNPS;
+        }
 
         if (needsNormal) {
             if (options.normalMap && useTangents) {
@@ -912,6 +919,7 @@ pc.programlib.standard = {
                 } else {
                     code += chunks.normalMapPS.replace(/\$UV/g, uv);
                 }
+                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, uv);
                 code += tbn;
             } else {
                 code += chunks.normalVertexPS;
@@ -964,7 +972,11 @@ pc.programlib.standard = {
         }
 
         if (options.heightMap) {
-            if (!options.normalMap) code += tbn;
+            if (!options.normalMap) {
+                var uv = this._getUvSourceExpression("heightMapTransform", "heightMapUv", options);
+                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, uv);
+                code += tbn;
+            }
             code += this._addMap("height", "parallaxPS", options, chunks);
         }
 

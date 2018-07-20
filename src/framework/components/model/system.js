@@ -38,31 +38,12 @@ Object.assign(pc, function () {
 
         this.schema = _schema;
 
-        var gd = app.graphicsDevice;
-        this.box = pc.createBox(gd, {
-            halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
-        });
-        this.capsule = pc.createCapsule(gd, {
-            radius: 0.5,
-            height: 2
-        });
-        this.sphere = pc.createSphere(gd, {
-            radius: 0.5
-        });
-        this.cone = pc.createCone(gd, {
-            baseRadius: 0.5,
-            peakRadius: 0,
-            height: 1
-        });
-        this.cylinder = pc.createCylinder(gd, {
-            radius: 0.5,
-            height: 1
-        });
-        this.plane = pc.createPlane(gd, {
-            halfExtents: new pc.Vec2(0.5, 0.5),
-            widthSegments: 1,
-            lengthSegments: 1
-        });
+        this.box = null;
+        this.capsule = null;
+        this.cone = null;
+        this.cylinder = null;
+        this.plane = null;
+        this.sphere = null;
 
         this.defaultMaterial = new pc.StandardMaterial();
 

@@ -117,10 +117,7 @@ Object.assign(pc, function () {
                     scope: scope
                 });
             }
-
-
-        },
-
+        }
     });
 
     return {
