@@ -629,7 +629,7 @@ pc.programlib.standard = {
             }
 
             if (shadowType === pc.SHADOW_VSM32) {
-                if (device.extTextureFloatHighPrecision) {
+                if (device.textureFloatHighPrecision) {
                     code += '#define VSM_EXPONENT 15.0\n\n';
                 } else {
                     code += '#define VSM_EXPONENT 5.54\n\n';
@@ -1181,7 +1181,7 @@ pc.programlib.standard = {
                         evsmExp = "5.54";
                     } else if (light._shadowType === pc.SHADOW_VSM32) {
                         shadowReadMode = "VSM32";
-                        if (device.extTextureFloatHighPrecision) {
+                        if (device.textureFloatHighPrecision) {
                             evsmExp = "15.0";
                         } else {
                             evsmExp = "5.54";

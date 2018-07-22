@@ -374,9 +374,9 @@ Object.assign(pc, function () {
                         if (rtId === 1) _backbufferRt2Used = true; // 2nd backbuffer RT used
                         if (layers[i].postEffect.hdr) {
                             // backbuffer RT must be HDR
-                            if (device.webgl2 && device.extTextureFloatRenderable) {
+                            if (device.webgl2 && device.textureFloatRenderable) {
                                 backbufferRtFormat = pc.PIXELFORMAT_111110F;
-                            } else if (device.extTextureHalfFloatLinear && device.extTextureHalfFloatRenderable) {
+                            } else if (device.extTextureHalfFloatLinear && device.textureHalfFloatRenderable) {
                                 backbufferRtFormat = pc.PIXELFORMAT_RGBA16F;
                             } else {
                                 backbufferRtFormat = pc.PIXELFORMAT_R8_G8_B8_A8;

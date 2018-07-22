@@ -482,22 +482,22 @@ Object.assign(pc, function () {
         if (this.extTextureFloat) {
             if (this.webgl2) {
                 // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
-                this.extTextureFloatRenderable = this.extColorBufferFloat;
+                this.textureFloatRenderable = !!this.extColorBufferFloat;
             } else {
                 // In WebGL1 we should just try rendering into a float texture
-                this.extTextureFloatRenderable = testRenderable(gl, gl.FLOAT);
+                this.textureFloatRenderable = testRenderable(gl, gl.FLOAT);
             }
         }
         if (this.extTextureHalfFloat) {
             if (this.webgl2) {
                 // EXT_color_buffer_float should affect both float and halffloat formats
-                this.extTextureHalfFloatRenderable = this.extColorBufferFloat;
+                this.textureHalfFloatRenderable = !!this.extColorBufferFloat;
             } else {
                 // Manual render check for half float
-                this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat.HALF_FLOAT_OES);
+                this.textureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat.HALF_FLOAT_OES);
             }
         }
-        if (this.extTextureFloatRenderable) {
+        if (this.textureFloatRenderable) {
             var device = this;
             var chunks = pc.shaderChunks;
             var test1 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTestPS, "ptest1");
@@ -541,7 +541,7 @@ Object.assign(pc, function () {
             var w = pixels[3] / 255.0;
             var f = x / (256.0 * 256.0 * 256.0) + y / (256.0 * 256.0) + z / 256.0 + w;
 
-            this.extTextureFloatHighPrecision = f === 0.0;
+            this.textureFloatHighPrecision = f === 0.0;
 
             tex.destroy();
             targ.destroy();
@@ -615,7 +615,7 @@ Object.assign(pc, function () {
                 this.extColorBufferFloat = null;
             }
 
-            this.extRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            this.extDebugRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
 
             this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
 
@@ -637,6 +637,7 @@ Object.assign(pc, function () {
 
         initializeCapabilities: function () {
             var gl = this.gl;
+            var ext;
 
             this.maxPrecision = this.precision = this.getPrecision();
 
@@ -653,17 +654,23 @@ Object.assign(pc, function () {
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.vertexUniformsCount = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
             this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
-            this.unmaskedRenderer = this.extRendererInfo ? gl.getParameter(this.extRendererInfo.UNMASKED_RENDERER_WEBGL) : '';
-            this.unmaskedVendor = this.extRendererInfo ? gl.getParameter(this.extRendererInfo.UNMASKED_VENDOR_WEBGL) : '';
             if (this.webgl2) {
                 this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
                 this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
                 this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
             } else {
-                this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
-                this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
+                ext = this.extDrawBuffers;
+                this.maxDrawBuffers = ext ? gl.getParameter(ext.MAX_DRAW_BUFFERS_EXT) : 1;
+                this.maxColorAttachments = ext ? gl.getParameter(ext.MAX_COLOR_ATTACHMENTS_EXT) : 1;
                 this.maxVolumeSize = 1;
             }
+
+            ext = this.extDebugRendererInfo;
+            this.unmaskedRenderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '';
+            this.unmaskedVendor = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : '';
+
+            ext = this.extTextureFilterAnisotropic;
+            this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
         },
 
         initializeRenderState: function () {
@@ -2685,9 +2692,9 @@ Object.assign(pc, function () {
         },
 
         getHdrFormat: function () {
-            if (this.extTextureHalfFloatRenderable) {
+            if (this.textureHalfFloatRenderable) {
                 return pc.PIXELFORMAT_RGB16F;
-            } else if (this.extTextureFloatRenderable) {
+            } else if (this.textureFloatRenderable) {
                 return pc.PIXELFORMAT_RGB32F;
             }
             return pc.PIXELFORMAT_R8_G8_B8_A8;
@@ -2720,15 +2727,6 @@ Object.assign(pc, function () {
          */
         setBoneLimit: function (maxBones) {
             this.boneLimit = maxBones;
-        },
-
-        /* DEPRECATED */
-        enableValidation: function (enable) {
-            console.warn('enableValidation: This function is deprecated and will be removed shortly.');
-        },
-
-        validate: function () {
-            console.warn('validate: This function is deprecated and will be removed shortly.');
         },
 
         /**
@@ -2826,32 +2824,6 @@ Object.assign(pc, function () {
         set: function (value) {
             this._enableAutoInstancing = value && this.extInstancing;
         }
-    });
-
-    /**
-     * @readonly
-     * @name pc.GraphicsDevice#maxAnisotropy
-     * @type Number
-     * @description The maximum supported texture anisotropy setting.
-     */
-    Object.defineProperty(GraphicsDevice.prototype, 'maxAnisotropy', {
-        get: ( function () {
-            var maxAniso;
-
-            return function () {
-                if (maxAniso === undefined) {
-                    maxAniso = 1;
-
-                    var gl = this.gl;
-                    var glExt = this.extTextureFilterAnisotropic;
-                    if (glExt) {
-                        maxAniso = gl.getParameter(glExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
-                    }
-                }
-
-                return maxAniso;
-            };
-        } )()
     });
 
     Object.defineProperty(GraphicsDevice.prototype, 'maxPixelRatio', {
