@@ -770,6 +770,7 @@ Object.assign(pc, function () {
             gl.enable(gl.SCISSOR_TEST);
 
             gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
         },
 
         initializeContext: function () {
@@ -1381,7 +1382,6 @@ Object.assign(pc, function () {
                     var face;
 
                     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
 
                     if ((mipObject[0] instanceof HTMLCanvasElement) || (mipObject[0] instanceof HTMLImageElement) || (mipObject[0] instanceof HTMLVideoElement)) {
                         // Upload the image, canvas or video
@@ -1486,7 +1486,6 @@ Object.assign(pc, function () {
 
                         // Upload the image, canvas or video
                         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture._flipY);
-                        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                         gl.texImage2D(
                             gl.TEXTURE_2D,
                             mipLevel,
