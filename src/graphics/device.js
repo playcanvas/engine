@@ -147,6 +147,12 @@ Object.assign(pc, function () {
      * @description The maximum supported dimension of a 3D texture (any axis).
      */
     /**
+     * @readonly
+     * @name pc.GraphicsDevice#maxAnisotropy
+     * @type Number
+     * @description The maximum supported texture anisotropy setting.
+     */
+    /**
      * @event
      * @name pc.GraphicsDevice#resizecanvas
      * @description The 'resizecanvas' event is fired when the canvas is resized
