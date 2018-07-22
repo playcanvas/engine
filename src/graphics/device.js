@@ -68,6 +68,60 @@ Object.assign(pc, function () {
         return result;
     }
 
+    function testTextureFloatHighPrecision(device) {
+        var chunks = pc.shaderChunks;
+        var test1 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTestPS, "ptest1");
+        var test2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTest2PS, "ptest2");
+        var size = 1;
+
+        var tex = new pc.Texture(device, {
+            format: pc.PIXELFORMAT_RGBA32F,
+            width: size,
+            height: size,
+            mipmaps: false,
+            minFilter: pc.FILTER_NEAREST,
+            magFilter: pc.FILTER_NEAREST
+        });
+        var targ = new pc.RenderTarget(device, tex, {
+            depth: false
+        });
+        pc.drawQuadWithShader(device, targ, test1);
+
+        var tex2 = new pc.Texture(device, {
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            width: size,
+            height: size,
+            mipmaps: false,
+            minFilter: pc.FILTER_NEAREST,
+            magFilter: pc.FILTER_NEAREST
+        });
+        var targ2 = new pc.RenderTarget(device, tex2, {
+            depth: false
+        });
+        this.constantTexSource.setValue(tex);
+        pc.drawQuadWithShader(device, targ2, test2);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, targ2._glFrameBuffer);
+
+        var pixels = new Uint8Array(size * size * 4);
+        gl.readPixels(0, 0, size, size, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, device.activeFramebuffer);
+
+        var x = pixels[0] / 255.0;
+        var y = pixels[1] / 255.0;
+        var z = pixels[2] / 255.0;
+        var w = pixels[3] / 255.0;
+        var f = x / (256.0 * 256.0 * 256.0) + y / (256.0 * 256.0) + z / 256.0 + w;
+
+        tex.destroy();
+        targ.destroy();
+        tex2.destroy();
+        targ2.destroy();
+
+        return f === 0.0;
+    }
+
     /**
      * @readonly
      * @name pc.GraphicsDevice#precision
@@ -496,59 +550,6 @@ Object.assign(pc, function () {
                 // Manual render check for half float
                 this.textureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat.HALF_FLOAT_OES);
             }
-        }
-        if (this.textureFloatRenderable) {
-            var device = this;
-            var chunks = pc.shaderChunks;
-            var test1 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTestPS, "ptest1");
-            var test2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTest2PS, "ptest2");
-            var size = 1;
-
-            var tex = new pc.Texture(device, {
-                format: pc.PIXELFORMAT_RGBA32F,
-                width: size,
-                height: size,
-                mipmaps: false,
-                minFilter: pc.FILTER_NEAREST,
-                magFilter: pc.FILTER_NEAREST
-            });
-            var targ = new pc.RenderTarget(device, tex, {
-                depth: false
-            });
-            pc.drawQuadWithShader(device, targ, test1);
-
-            var tex2 = new pc.Texture(device, {
-                format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                width: size,
-                height: size,
-                mipmaps: false,
-                minFilter: pc.FILTER_NEAREST,
-                magFilter: pc.FILTER_NEAREST
-            });
-            var targ2 = new pc.RenderTarget(device, tex2, {
-                depth: false
-            });
-            this.constantTexSource.setValue(tex);
-            pc.drawQuadWithShader(device, targ2, test2);
-
-            var pixels = new Uint8Array(size * size * 4);
-            gl.bindFramebuffer(gl.FRAMEBUFFER, targ2._glFrameBuffer);
-            gl.readPixels(0, 0, size, size, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-
-            var x = pixels[0] / 255.0;
-            var y = pixels[1] / 255.0;
-            var z = pixels[2] / 255.0;
-            var w = pixels[3] / 255.0;
-            var f = x / (256.0 * 256.0 * 256.0) + y / (256.0 * 256.0) + z / 256.0 + w;
-
-            this.textureFloatHighPrecision = f === 0.0;
-
-            tex.destroy();
-            targ.destroy();
-            tex2.destroy();
-            targ2.destroy();
-            pc.destroyPostEffectQuad();
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         }
     };
 
@@ -2833,6 +2834,15 @@ Object.assign(pc, function () {
         set: function (ratio) {
             this._maxPixelRatio = ratio;
             this.resizeCanvas(this._width, this._height);
+        }
+    });
+
+    Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
+        get: function () {
+            if (this. _textureFloatHighPrecision === undefined) {
+                this._textureFloatHighPrecision = testTextureFloatHighPrecision();
+            }
+            return this._textureFloatHighPrecision;
         }
     });
 
