@@ -98,7 +98,7 @@ Object.assign(pc, function () {
         var targ2 = new pc.RenderTarget(device, tex2, {
             depth: false
         });
-        this.constantTexSource.setValue(tex);
+        device.constantTexSource.setValue(tex);
         pc.drawQuadWithShader(device, targ2, test2);
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, targ2._glFrameBuffer);
@@ -2845,7 +2845,7 @@ Object.assign(pc, function () {
 
     Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
         get: function () {
-            if (this. _textureFloatHighPrecision === undefined) {
+            if (this._textureFloatHighPrecision === undefined) {
                 this._textureFloatHighPrecision = testTextureFloatHighPrecision();
             }
             return this._textureFloatHighPrecision;
