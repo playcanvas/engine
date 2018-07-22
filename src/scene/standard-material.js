@@ -722,7 +722,7 @@ Object.assign(pc, function () {
 
         _setParameter: function (name, value) {
             if (!this.parameters[name])
-                 this._propsSet.push(name);
+                this._propsSet.push(name);
             this.setParameter(name, value);
         },
 

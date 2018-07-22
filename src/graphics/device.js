@@ -2846,7 +2846,7 @@ Object.assign(pc, function () {
     Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
         get: function () {
             if (this._textureFloatHighPrecision === undefined) {
-                this._textureFloatHighPrecision = testTextureFloatHighPrecision();
+                this._textureFloatHighPrecision = testTextureFloatHighPrecision(this);
             }
             return this._textureFloatHighPrecision;
         }
