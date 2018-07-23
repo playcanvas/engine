@@ -555,7 +555,7 @@ Object.assign(pc, function () {
 
             this.vertexBuffer = undefined; // force regen VB
 
-            this.pack8 = (this.pack8 || !gd.extTextureFloatRenderable) && !this.useCpu;
+            this.pack8 = (this.pack8 || !gd.textureFloatRenderable) && !this.useCpu;
 
             particleTexHeight = (this.useCpu || this.pack8) ? 4 : 2;
 
