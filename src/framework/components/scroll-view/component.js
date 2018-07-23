@@ -470,6 +470,10 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
+            this._viewportReference.onParentComponentEnable();
+            this._contentReference.onParentComponentEnable();
+            this._scrollbarReferences[pc.ORIENTATION_HORIZONTAL].onParentComponentEnable();
+            this._scrollbarReferences[pc.ORIENTATION_VERTICAL].onParentComponentEnable();
             this._setScrollbarComponentsEnabled(true);
             this._setContentDraggingEnabled(true);
 

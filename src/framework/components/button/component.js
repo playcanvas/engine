@@ -431,6 +431,7 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
+            this._imageReference.onParentComponentEnable();
             this._toggleHitElementListeners('on');
             this._forceReapplyVisualState();
         },
