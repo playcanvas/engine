@@ -69,6 +69,7 @@ Object.assign(pc, function () {
     }
 
     function testTextureFloatHighPrecision(device) {
+        var gl = device.gl;
         var chunks = pc.shaderChunks;
         var test1 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTestPS, "ptest1");
         var test2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTest2PS, "ptest2");
