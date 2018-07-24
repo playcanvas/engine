@@ -1,0 +1,5 @@
+{
+    "mapping_format": "path",
+    "diffuse": [1,0,0],
+    "normalMap": "textures/l-red-grid-n.png"
+}

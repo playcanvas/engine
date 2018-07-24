@@ -1,0 +1,6 @@
+{
+    "mapping_format": "path",
+    "diffuseMap": "textures/l-red-grid.png",
+    "normalMap": "textures/l-red-grid-n.png",
+    "specularMap": "textures/l-red-grid-s.png"
+}

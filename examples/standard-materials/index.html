@@ -1,0 +1,155 @@
+<!doctype html>
+<html>
+<head>
+    <script src="../../build/output/playcanvas-latest.js"></script>
+    <link href="../style.css" rel="stylesheet" />
+</head>
+
+<!--
+
+This page renders a large combination of standard materials, you can compare material combinations to new changes
+In the future we will automatically compare changes by screenshots.
+
+Add a new combination by adding a material into the materials texture and loading it in this file
+
+-->
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the app and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+        var entity, light, camera;
+
+        // Create an Entity with a camera component
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.4, 0.45, 0.5),
+            projection: pc.PROJECTION_ORTHOGRAPHIC,
+            orthoHeight: 7
+        });
+        camera.translate(0, 0, 15);
+        app.root.addChild(camera);
+
+        // Create an Entity with a point light component
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "directional",
+            color: new pc.Color(1, 1, 1),
+            range: 100
+        });
+        light.translate(15, 0, 15);
+        light.rotateLocal(45,0,45);
+        app.root.addChild(light);
+
+        var loadTextures = function (urls) {
+            var assets = [];
+            var asset;
+            for (var i = 0; i < urls.length; i++) {
+                asset = new pc.Asset(urls[i], "texture", {
+                    url: urls[i]
+                }, {
+                    minfilter: 'linear',
+                    magfilter: 'linear'
+                });
+                app.assets.add(asset);
+                app.assets.load(asset);
+                assets.push(asset);
+            }
+
+            return assets;
+        }
+
+        var loadMaterials = function (urls) {
+            var assets = [];
+            var asset;
+            for (var i = 0; i < urls.length; i++) {
+                asset = new pc.Asset(urls[i], "material", {
+                    url: urls[i]
+                });
+                app.assets.add(asset);
+                app.assets.load(asset);
+
+                assets.push(asset);
+            }
+            return assets;
+        }
+
+
+        var addSphere = function (parent, x, y, materialAsset) {
+            var e = new pc.Entity();
+            e.addComponent("model", {
+                type: "box",
+                materialAsset: materialAsset
+            });
+            e.setLocalScale(2,2,2);
+            e.setLocalPosition(x, y, 0);
+            parent.addChild(e);
+
+            return e;
+        }
+
+        var textureUrls = [
+            './materials/textures/l-red-grid.png',
+            './materials/textures/l-red-grid-n.png',
+            './materials/textures/l-red-grid-h.png',
+            './materials/textures/l-red-grid-s.png'
+        ];
+
+        var textures = loadTextures(textureUrls);
+
+        var materialUrls = [
+            './materials/diffuse.json',
+            './materials/specular.json',
+            './materials/emissive.json',
+            './materials/diffuse-emissive.json',
+            './materials/diffuse-emissive-specular.json',
+            './materials/emissive-specular.json',
+            './materials/gloss.json',
+            './materials/glossMap.json',
+            './materials/specularMap.json',
+            './materials/normalMap.json',
+            './materials/heightMap.json',
+            './materials/emissiveMap.json',
+            './materials/diffuseMap.json',
+            './materials/diffuseMap-normalMap.json',
+            './materials/diffuseMap-specularMap.json',
+            './materials/diffuseMap-normalMap-specularMap.json',
+            './materials/diffuseMap-normalMap-heightMap.json',
+            './materials/diffuseMap-normalMap-heightMap-specularMap.json',
+            './materials/diffuseMap-normalMap-glossMap-metalnessMap.json',
+            './materials/normalMap-heightMap.json'
+        ];
+
+        var materials = loadMaterials(materialUrls);
+
+        var WIDTH = 10;
+        var HEIGHT = 10;
+        var OFFSET = 2.1;
+        var x = -WIDTH/2, y = HEIGHT/2;
+        for (var i = 0; i < materials.length; i++) {
+            addSphere(app.root, x, y, materials[i]);
+
+            x += OFFSET;
+            if (x > WIDTH/2) {
+                y -= OFFSET;
+                x = -WIDTH/2;
+            }
+        }
+
+    </script>
+</body>
+</html>
