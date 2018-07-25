@@ -74,7 +74,7 @@ Object.assign(pc, function () {
          */
         alert: function (text) {
             pc.log.write("ALERT:   " + text);
-            alert(text);
+            alert(text); // eslint-disable-line no-alert
         },
 
         /**
