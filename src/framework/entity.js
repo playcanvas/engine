@@ -316,6 +316,8 @@ Object.assign(pc, function () {
 
         if (this._callbackActive)
             this._callbackActive = null;
+
+        this._destroyed = true;
     };
 
     /**

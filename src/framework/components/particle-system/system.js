@@ -239,16 +239,7 @@ Object.assign(pc, function () {
         },
 
         onRemove: function (entity, component) {
-            var data = component.data;
-            if (data.model) {
-                entity.removeChild(data.model.getGraph());
-                data.model = null;
-            }
-
-            if (component.emitter) {
-                component.emitter.destroy();
-                component.emitter = null;
-            }
+            component.onDestroy();
         }
     });
 
