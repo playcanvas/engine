@@ -98,6 +98,9 @@ Object.assign(pc, function () {
 }());
 
 // Shortcuts to logging functions
+// ESLint disabled here because these vars may be accessed from other files
+// once all sources have been concatenated together and wrapped by the closure.
+/* eslint-disable no-unused-vars */
 var logINFO = pc.log.info;
 var logDEBUG = pc.log.debug;
 var logWARNING = pc.log.warning;
@@ -105,3 +108,4 @@ var logERROR = pc.log.error;
 
 var logALERT = pc.log.alert;
 var logASSERT = pc.log.assert;
+/* eslint-enable no-unused-vars */
