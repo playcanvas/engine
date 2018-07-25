@@ -223,7 +223,7 @@ Object.assign(pc, function () {
          * Must be called from the parent component's onEnable() method in order for entity
          * references to be correctly resolved when {@link pc.Entity#clone} is called.
          */
-        onParentComponentEnable: function() {
+        onParentComponentEnable: function () {
             // When an entity is cloned via the JS API, we won't be able to resolve the
             // entity reference until the cloned entity has been added to the scene graph.
             // We can detect this by waiting for the parent component to be enabled, in the
