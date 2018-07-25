@@ -800,13 +800,13 @@ pc.programlib.standard = {
             if (options.normalMap) {
                 code += options.packedNormal ? chunks.normalXYPS : chunks.normalXYZPS;
 
-                var uv = this._uvSource(options.normalMapTransform, options.normalMapUv) + uvOffset;
+                var transformedNormalMapUv = this._uvSource(options.normalMapTransform, options.normalMapUv) + uvOffset;
                 if (options.needsNormalFloat) {
-                    code += (options.fastTbn ? chunks.normalMapFloatTBNfastPS : chunks.normalMapFloatPS).replace(/\$UV/g, uv);
+                    code += (options.fastTbn ? chunks.normalMapFloatTBNfastPS : chunks.normalMapFloatPS).replace(/\$UV/g, transformedNormalMapUv);
                 } else {
-                    code += chunks.normalMapPS.replace(/\$UV/g, uv);
+                    code += chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
                 }
-                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, uv);
+                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedNormalMapUv);
                 code += tbn;
             } else {
                 code += chunks.normalVertexPS;
@@ -858,8 +858,8 @@ pc.programlib.standard = {
 
         if (options.heightMap) {
             if (!options.normalMap) {
-                var uv = this._uvSource(options.heightMapTransform, options.heightMapUv);
-                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, uv);
+                var transformedHeightMapUv = this._uvSource(options.heightMapTransform, options.heightMapUv);
+                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedHeightMapUv);
                 code += tbn;
             }
             code += this._addMap("height", options, chunks, "", chunks.parallaxPS);
