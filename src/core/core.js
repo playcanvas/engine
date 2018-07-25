@@ -14,6 +14,8 @@ var _typeLookup = function () {
     return result;
 }();
 
+// ESLint disabled here due to ifdef comments interleaved with block comment.
+// eslint-disable multiline-comment-style
 /**
  * @name pc
  * @namespace
@@ -28,6 +30,7 @@ var _typeLookup = function () {
  * PROFILER BUILD
 // #endif
  */
+// eslint-enable multiline-comment-style
 var pc = {
     version: "__CURRENT_SDK_VERSION__",
     revision: "__REVISION__",
