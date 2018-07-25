@@ -904,15 +904,15 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
-            var i, layer;
+            var i, j, layer;
 
             if (this._addedModels.length) {
                 for (i = 0; i < this._layers.length; i++) {
                     layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                     if (layer) {
-                        this._addedModels.forEach(function (model) {
-                            layer.removeMeshInstances(model.meshInstances);
-                        });
+                        for (j = 0; j < this._addedModels.length; j++) {
+                            layer.removeMeshInstances(this._addedModels[j].meshInstances);
+                        }
                     }
                 }
             }
@@ -923,9 +923,9 @@ Object.assign(pc, function () {
             for (i = 0; i < this._layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
-                    this._addedModels.forEach(function (model) {
-                        layer.addMeshInstances(model.meshInstances);
-                    });
+                    for (j = 0; j < this._addedModels.length; j++) {
+                        layer.removeMeshInstances(this._addedModels[j].meshInstances);
+                    }
                 }
             }
         }
