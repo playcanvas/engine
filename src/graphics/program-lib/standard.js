@@ -1146,14 +1146,6 @@ pc.programlib.standard = {
 
         code = this._fsAddStartCode(code, device, chunks, options);
 
-        // code += chunks.startPS;
-
-        // if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
-        //     code += chunks.startNineSlicedPS;
-        // } else if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
-        //     code += chunks.startNineSlicedTiledPS;
-        // }
-
         if (needsNormal) {
             if (options.twoSidedLighting) {
                 code += "   dVertexNormalW = gl_FrontFacing ? vNormalW : -vNormalW;\n";
