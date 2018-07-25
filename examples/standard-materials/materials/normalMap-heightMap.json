@@ -1,7 +1,0 @@
-{
-    "mapping_format": "path",
-    "diffuse": [1,0,0],
-    "normalMap": "textures/l-red-grid-n.png",
-    "heightMap": "textures/l-red-grid-h.png",
-    "heightMapFactor": 2
-}

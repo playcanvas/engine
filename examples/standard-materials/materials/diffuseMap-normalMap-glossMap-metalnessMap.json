@@ -1,8 +1,0 @@
-{
-    "mapping_format": "path",
-    "useMetalness": true,
-    "diffuseMap": "textures/l-red-grid.png",
-    "normalMap": "textures/l-red-grid-n.png",
-    "glossMap": "textures/l-red-grid-s.png",
-    "metalnessMap": "textures/l-red-grid-s.png"
-}
