@@ -217,7 +217,7 @@ Object.assign(pc, function () {
             this._isHovering = true;
 
             this._updateVisualState();
-            this.fire('mouseenter', event);
+            this._fireIfActive('mouseenter', event);
         },
 
         _onMouseLeave: function (event) {
@@ -225,28 +225,28 @@ Object.assign(pc, function () {
             this._isPressed = false;
 
             this._updateVisualState();
-            this.fire('mouseleave', event);
+            this._fireIfActive('mouseleave', event);
         },
 
         _onMouseDown: function (event) {
             this._isPressed = true;
 
             this._updateVisualState();
-            this.fire('mousedown', event);
+            this._fireIfActive('mousedown', event);
         },
 
         _onMouseUp: function (event) {
             this._isPressed = false;
 
             this._updateVisualState();
-            this.fire('mouseup', event);
+            this._fireIfActive('mouseup', event);
         },
 
         _onTouchStart: function (event) {
             this._isPressed = true;
 
             this._updateVisualState();
-            this.fire('touchstart', event);
+            this._fireIfActive('touchstart', event);
         },
 
         _onTouchEnd: function (event) {
@@ -263,25 +263,31 @@ Object.assign(pc, function () {
             this._isPressed = false;
 
             this._updateVisualState();
-            this.fire('touchend', event);
+            this._fireIfActive('touchend', event);
         },
 
         _onTouchLeave: function (event) {
             this._isPressed = false;
 
             this._updateVisualState();
-            this.fire('touchleave', event);
+            this._fireIfActive('touchleave', event);
         },
 
         _onTouchCancel: function (event) {
             this._isPressed = false;
 
             this._updateVisualState();
-            this.fire('touchcancel', event);
+            this._fireIfActive('touchcancel', event);
         },
 
         _onClick: function (event) {
-            this.fire('click', event);
+            this._fireIfActive('click', event);
+        },
+
+        _fireIfActive: function(name, event) {
+            if (this.data.active) {
+                this.fire(name, event);
+            }
         },
 
         _updateVisualState: function (force) {
@@ -292,19 +298,19 @@ Object.assign(pc, function () {
                 this._visualState = newVisualState;
 
                 if (oldVisualState === VisualState.HOVER) {
-                    this.fire('hoverend');
+                    this._fireIfActive('hoverend');
                 }
 
                 if (oldVisualState === VisualState.PRESSED) {
-                    this.fire('pressedend');
+                    this._fireIfActive('pressedend');
                 }
 
                 if (newVisualState === VisualState.HOVER) {
-                    this.fire('hoverstart');
+                    this._fireIfActive('hoverstart');
                 }
 
                 if (newVisualState === VisualState.PRESSED) {
-                    this.fire('pressedstart');
+                    this._fireIfActive('pressedstart');
                 }
 
                 switch (this.transitionMode) {
