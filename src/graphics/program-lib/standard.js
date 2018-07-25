@@ -226,7 +226,7 @@ pc.programlib.standard = {
                 expression = "vUV" + uvChannel + "_" + transformId;
             }
 
-            // if heightmap is enabled all maps except the heightmap and normal map are offset
+            // if heightmap is enabled all maps except the heightmap are offset
             if (options.heightMap && transformPropName !== "heightMapTransform") {
                 expression += " + dUvOffset";
             }
