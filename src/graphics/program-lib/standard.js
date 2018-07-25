@@ -412,7 +412,7 @@ pc.programlib.standard = {
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
 
-            if (options.heightMap || options.normalMap) {
+            if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 attributes.vertex_tangent = pc.SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
@@ -1036,7 +1036,7 @@ pc.programlib.standard = {
             } else {
                 code += "   dVertexNormalW = vNormalW;\n";
             }
-            if (options.heightMap || options.normalMap) {
+            if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 if (options.twoSidedLighting) {
                     code += "   dTangentW = gl_FrontFacing ? vTangentW : -vTangentW;\n";
                     code += "   dBinormalW = gl_FrontFacing ? vBinormalW : -vBinormalW;\n";
