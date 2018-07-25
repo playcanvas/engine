@@ -143,7 +143,7 @@ pc.events = {
 
     // ESLint rule disabled here as documenting arg1, arg2...argN as [...] rest
     // arguments is preferable to documenting each one individually.
-    // eslint-disable valid-jsdoc
+    /* eslint-disable valid-jsdoc */
     /**
      * @function
      * @name pc.events.fire
@@ -154,7 +154,7 @@ pc.events = {
      * @example
      * obj.fire('test', 'This is the message');
      */
-    // eslint-enable valid-jsdoc
+    /* eslint-enable valid-jsdoc */
     fire: function (name, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
         if (!name || !this._callbacks || !this._callbacks[name])
             return this;
