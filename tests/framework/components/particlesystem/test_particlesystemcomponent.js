@@ -51,7 +51,6 @@ test("colorMapAsset removes events", function () {
 
         e.removeComponent('particlesystem');
 
-
         equal(asset.hasEvent('remove'), false);
     });
 });
