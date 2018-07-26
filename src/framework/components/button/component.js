@@ -284,7 +284,7 @@ Object.assign(pc, function () {
             this._fireIfActive('click', event);
         },
 
-        _fireIfActive: function(name, event) {
+        _fireIfActive: function (name, event) {
             if (this.data.active) {
                 this.fire(name, event);
             }
