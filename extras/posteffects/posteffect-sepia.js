@@ -11,6 +11,8 @@ Object.assign(pc, function () {
      * @property {Number} amount Controls the intensity of the effect. Ranges from 0 to 1.
      */
     var SepiaEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.SEMANTIC_POSITION

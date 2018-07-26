@@ -14,6 +14,8 @@ Object.assign(pc, function () {
      * @property {Number} aspect Controls the blurring effect
      */
     var BokehEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         this.needsDepthBuffer = true;
 
         /**

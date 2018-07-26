@@ -12,6 +12,8 @@ Object.assign(pc, function () {
      * @property {Number} saturation Controls the saturation. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum saturation).
      */
     var HueSaturationEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         // Shader author: tapio / http://tapio.github.com/
         this.shader = new pc.Shader(graphicsDevice, {
             attributes: {

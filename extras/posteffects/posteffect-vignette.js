@@ -12,6 +12,8 @@ Object.assign(pc, function () {
      * @property {Number} darkness Controls the darkness of the effect.
      */
     var VignetteEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         // Shaders
         var attributes = {
             aPosition: pc.SEMANTIC_POSITION
