@@ -61,7 +61,7 @@ Object.assign(pc, function () {
     var ASSET_PROPERTIES = [
         'colorMapAsset',
         'normalMapAsset',
-        'mesh'
+        'meshAsset'
     ];
 
     var depthLayer;
