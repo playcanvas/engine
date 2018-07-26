@@ -395,7 +395,6 @@ pc.programlib.standard = {
 
         var cubemapReflection = (options.cubeMap || (options.prefilteredCubemap && options.useSpecular)) && !options.sphereMap && !options.dpAtlas;
         var reflections = options.sphereMap || cubemapReflection || options.dpAtlas;
-        var useTangents = pc.precalculatedTangents;
         var useTexCubeLod = options.useTexCubeLod;
         if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
         if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
@@ -523,7 +522,7 @@ pc.programlib.standard = {
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
 
-            if ((options.heightMap || options.normalMap) && useTangents) {
+            if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 attributes.vertex_tangent = pc.SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
@@ -742,7 +741,7 @@ pc.programlib.standard = {
             }
 
             if (shadowType === pc.SHADOW_VSM32) {
-                if (device.extTextureFloatHighPrecision) {
+                if (device.textureFloatHighPrecision) {
                     code += '#define VSM_EXPONENT 15.0\n\n';
                 } else {
                     code += '#define VSM_EXPONENT 5.54\n\n';
@@ -910,16 +909,16 @@ pc.programlib.standard = {
         }
 
         if (needsNormal) {
-            if (options.normalMap && useTangents) {
+            if (options.normalMap) {
                 code += options.packedNormal ? chunks.normalXYPS : chunks.normalXYZPS;
 
-                var uv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
+                var transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
                 if (options.needsNormalFloat) {
-                    code += (options.fastTbn ? chunks.normalMapFloatTBNfastPS : chunks.normalMapFloatPS).replace(/\$UV/g, uv);
+                    code += (options.fastTbn ? chunks.normalMapFloatTBNfastPS : chunks.normalMapFloatPS).replace(/\$UV/g, transformedNormalMapUv);
                 } else {
-                    code += chunks.normalMapPS.replace(/\$UV/g, uv);
+                    code += chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
                 }
-                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, uv);
+                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedNormalMapUv);
                 code += tbn;
             } else {
                 code += chunks.normalVertexPS;
@@ -973,8 +972,8 @@ pc.programlib.standard = {
 
         if (options.heightMap) {
             if (!options.normalMap) {
-                var uv = this._getUvSourceExpression("heightMapTransform", "heightMapUv", options);
-                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, uv);
+                var transformedHeightMapUv = this._getUvSourceExpression("heightMapTransform", "heightMapUv", options);
+                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedHeightMapUv);
                 code += tbn;
             }
             code += this._addMap("height", "parallaxPS", options, chunks);
@@ -1152,7 +1151,7 @@ pc.programlib.standard = {
             } else {
                 code += "   dVertexNormalW = vNormalW;\n";
             }
-            if (options.heightMap || options.normalMap) {
+            if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 if (options.twoSidedLighting) {
                     code += "   dTangentW = gl_FrontFacing ? vTangentW : -vTangentW;\n";
                     code += "   dBinormalW = gl_FrontFacing ? vBinormalW : -vBinormalW;\n";
@@ -1297,7 +1296,7 @@ pc.programlib.standard = {
                         evsmExp = "5.54";
                     } else if (light._shadowType === pc.SHADOW_VSM32) {
                         shadowReadMode = "VSM32";
-                        if (device.extTextureFloatHighPrecision) {
+                        if (device.textureFloatHighPrecision) {
                             evsmExp = "15.0";
                         } else {
                             evsmExp = "5.54";

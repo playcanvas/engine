@@ -30,6 +30,7 @@ Object.assign(pc, function () {
         'colorMapAsset',
         'normalMapAsset',
         'mesh',
+        'meshAsset',
         'localVelocityGraph',
         'localVelocityGraph2',
         'velocityGraph',
@@ -105,6 +106,14 @@ Object.assign(pc, function () {
             properties = [];
             var types = this.propertyTypes;
             var type;
+
+            // we store the mesh asset id as "mesh" (it should be "meshAsset")
+            // this re-maps "mesh" into "meshAsset" if it is an asset or an asset id
+            if (_data['mesh'] instanceof pc.Asset || typeof _data['mesh'] === 'number') {
+                // migrate into meshAsset property
+                _data['meshAsset'] = _data['mesh'];
+                delete _data['mesh'];
+            }
 
             for (var prop in _data) {
                 if (_data.hasOwnProperty(prop)) {

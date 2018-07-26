@@ -11,6 +11,8 @@ Object.assign(pc, function () {
      * @property {Number} focus Controls where the "focused" horizontal line lies
      */
     var VerticalTiltShiftEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         // Shader author: alteredq / http://alteredqualia.com/
         this.shader = new pc.Shader(graphicsDevice, {
             attributes: {

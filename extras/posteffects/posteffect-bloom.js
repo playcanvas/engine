@@ -63,6 +63,8 @@ Object.assign(pc, function () {
      * @property {Number} bloomIntensity The intensity of the effect.
      */
     var BloomEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         // Shaders
         var attributes = {
             aPosition: pc.SEMANTIC_POSITION

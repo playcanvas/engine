@@ -343,10 +343,10 @@ Object.assign(pc, function () {
                 value = pc.SHADOW_PCF3; // fallback from HW PCF to old PCF
             }
 
-            if (value === pc.SHADOW_VSM32 && !device.extTextureFloatRenderable) // fallback from vsm32 to vsm16
+            if (value === pc.SHADOW_VSM32 && !device.textureFloatRenderable) // fallback from vsm32 to vsm16
                 value = pc.SHADOW_VSM16;
 
-            if (value === pc.SHADOW_VSM16 && !device.extTextureHalfFloatRenderable) // fallback from vsm16 to vsm8
+            if (value === pc.SHADOW_VSM16 && !device.textureHalfFloatRenderable) // fallback from vsm16 to vsm8
                 value = pc.SHADOW_VSM8;
 
             this._isVsm = value >= pc.SHADOW_VSM8 && value <= pc.SHADOW_VSM32;

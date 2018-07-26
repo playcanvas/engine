@@ -462,8 +462,8 @@ Object.assign(pc, function () {
                 return;
             }
 
-            asset.once("load", function (asset) {
-                callback(null, asset);
+            asset.once("load", function (loadedAsset) {
+                callback(null, loadedAsset);
             });
             asset.once("error", function (err) {
                 callback(err);
@@ -481,14 +481,14 @@ Object.assign(pc, function () {
             var ext = pc.path.getExtension(url);
 
 
-            var _loadAsset = function (asset) {
-                asset.once("load", function (asset) {
-                    callback(null, asset);
+            var _loadAsset = function (assetToLoad) {
+                asset.once("load", function (loadedAsset) {
+                    callback(null, loadedAsset);
                 });
                 asset.once("error", function (err) {
                     callback(err);
                 });
-                self.load(asset);
+                self.load(assetToLoad);
             };
 
             if (ext === '.json') {
@@ -501,7 +501,7 @@ Object.assign(pc, function () {
                         return;
                     }
 
-                    self._loadMaterials(dir, data, function (err, materials) {
+                    self._loadMaterials(dir, data, function (e, materials) {
                         asset.data = data;
                         _loadAsset(asset);
                     });
@@ -520,9 +520,9 @@ Object.assign(pc, function () {
             var count = mapping.mapping.length;
             var materials = [];
 
-            var done = function (err, materials) {
-                self._loadTextures(materials, function (err, textures) {
-                    callback(null, materials);
+            var done = function (err, loadedMaterials) {
+                self._loadTextures(loadedMaterials, function (e, textures) {
+                    callback(null, loadedMaterials);
                 });
             };
 

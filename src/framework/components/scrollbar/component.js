@@ -155,6 +155,7 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
+            this._handleReference.onParentComponentEnable();
             this._setHandleDraggingEnabled(true);
         },
 
