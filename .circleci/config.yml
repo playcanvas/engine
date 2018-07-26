@@ -29,15 +29,7 @@ jobs:
             - ./node_modules
 
       - run:
-          command: |
-            mkdir -p ~/reports
-            npm run lint -- --format junit --output-file ~/reports/eslint.xml
-          when: always
-
-      - store_test_results:
-          path: ~/reports
-
-      - store_artifacts:
-          path: ~/reports
+          name: lint
+          command: npm run lint
 
 

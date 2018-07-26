@@ -548,6 +548,8 @@ Object.assign(pc, function () {
                 // In WebGL1 we should just try rendering into a float texture
                 this.textureFloatRenderable = testRenderable(gl, gl.FLOAT);
             }
+        } else {
+            this.textureFloatRenderable = false;
         }
         if (this.extTextureHalfFloat) {
             if (this.webgl2) {
@@ -557,7 +559,11 @@ Object.assign(pc, function () {
                 // Manual render check for half float
                 this.textureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat.HALF_FLOAT_OES);
             }
+        } else {
+            this.textureHalfFloatRenderable = false;
         }
+
+        this.textureFloatHighPrecision = testTextureFloatHighPrecision(this);
     };
 
     Object.assign(GraphicsDevice.prototype, {
@@ -2840,15 +2846,6 @@ Object.assign(pc, function () {
         set: function (ratio) {
             this._maxPixelRatio = ratio;
             this.resizeCanvas(this._width, this._height);
-        }
-    });
-
-    Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
-        get: function () {
-            if (this._textureFloatHighPrecision === undefined) {
-                this._textureFloatHighPrecision = testTextureFloatHighPrecision(this);
-            }
-            return this._textureFloatHighPrecision;
         }
     });
 

@@ -107,6 +107,9 @@ Object.assign(pc, function () {
      * @property {pc.Vec3} emitterExtents (Only for EMITTERSHAPE_BOX) The extents of a local space bounding box within which particles are spawned at random positions.
      * @property {Number} emitterRadius (Only for EMITTERSHAPE_SPHERE) The radius within which particles are spawned at random positions.
      * @property {pc.Vec3} wrapBounds The half extents of a world space box volume centered on the owner entity's position. If a particle crosses the boundary of one side of the volume, it teleports to the opposite side.
+     * @property {pc.Asset} colorMapAsset The {@link pc.Asset} used to set the colorMap.
+     * @property {pc.Asset} normalMapAsset The {@link pc.Asset} used to set the normalMap.
+     * @property {pc.Asset} meshAsset The {@link pc.Asset} used to set the mesh.
      * @property {pc.Texture} colorMap The color map texture to apply to all particles in the system. If no texture is assigned, a default spot texture is used.
      * @property {pc.Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
      * @property {pc.EMITTERSHAPE} emitterShape Shape of the emitter. Defines the bounds inside which particles are spawned. Also affects the direction of initial velocity.
@@ -142,6 +145,7 @@ Object.assign(pc, function () {
 
         this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
         this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
+        this.on("set_meshAsset", this.onSetMeshAsset, this);
         this.on("set_mesh", this.onSetMesh, this);
         this.on("set_loop", this.onSetLoop, this);
         this.on("set_blendType", this.onSetBlendType, this);
@@ -323,59 +327,66 @@ Object.assign(pc, function () {
             this.normalMapAsset = null;
         },
 
-        onSetMesh: function (name, oldValue, newValue) {
-            var self = this;
+        _bindMeshAsset: function (asset) {
+            asset.on('remove', this._onMeshAssetRemoved, this);
+            asset.on('load', this._onMeshAssetLoad, this);
+        },
+
+        _unbindMeshAsset: function (asset) {
+            asset.off('remove', this._onMeshAssetRemoved, this);
+            asset.off('load', this._onMeshAssetLoad, this);
+        },
+
+        _onMeshAssetLoad: function (asset) {
+            this._onMeshChanged(asset.resource);
+        },
+
+        onSetMeshAsset: function (name, oldValue, newValue) {
             var asset;
             var assets = this.system.app.assets;
 
-            if (oldValue && typeof oldValue === 'number') {
+            if (oldValue) {
                 asset = assets.get(oldValue);
                 if (asset) {
-                    asset.off('remove', this.onMeshRemoved, this);
+                    this._unbindMeshAsset(asset);
                 }
             }
 
             if (newValue) {
                 if (newValue instanceof pc.Asset) {
-                    this.data.mesh = newValue.id;
+                    this.data.meshAsset = newValue.id;
                     newValue = newValue.id;
                 }
 
-                if (typeof newValue === 'number') {
-                    asset = assets.get(newValue);
-                    if (asset) {
-                        asset.on('remove', this.onMeshRemoved, this);
-                        asset.ready(function (asset) {
-                            self._onMeshChanged(asset.resource);
-                        });
+                asset = assets.get(newValue);
+                if (asset) {
+                    this._bindMeshAsset(asset);
 
-                        if (self.enabled && self.entity.enabled) {
-                            assets.load(asset);
-                        }
+                    if (asset.resource) {
+                        this._onMeshChanged(asset.resource);
                     } else {
-                        assets.once('add:' + newValue, function (asset) {
-                            asset.on('remove', this.onMeshRemoved, this);
-                            asset.ready(function (asset) {
-                                self._onMeshChanged(asset.resource);
-                            });
-
-                            if (self.enabled && self.entity.enabled) {
-                                assets.load(asset);
-                            }
-                        });
+                        assets.load(asset);
                     }
-                } else {
-                    // model resource
-                    this._onMeshChanged(newValue);
                 }
             } else {
-                // null model
                 this._onMeshChanged(null);
+            }
+        },
+
+        onSetMesh: function (name, oldValue, newValue) {
+            // hack this for now
+            // if the value being set is null, an asset or an asset id, then assume we are
+            // setting the mesh asset, which will in turn update the mesh
+            if (!newValue || newValue instanceof pc.Asset || typeof newValue === 'number') {
+                this.meshAsset = newValue;
+            } else {
+                this._onMeshChanged(newValue);
             }
         },
 
         _onMeshChanged: function (mesh) {
             if (mesh && !(mesh instanceof pc.Mesh)) {
+                // if mesh is a pc.Model, use the first meshInstance
                 if (mesh.meshInstances[0]) {
                     mesh = mesh.meshInstances[0].mesh;
                 } else {
@@ -392,8 +403,8 @@ Object.assign(pc, function () {
             }
         },
 
-        onMeshRemoved: function (asset) {
-            asset.off('remove', this.onMeshRemoved, this);
+        onMeshAssetRemoved: function (asset) {
+            asset.off('remove', this.onMeshAssetRemoved, this);
             this.mesh = null;
         },
 

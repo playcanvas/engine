@@ -51,7 +51,24 @@ test("colorMapAsset removes events", function () {
 
         e.removeComponent('particlesystem');
 
-
-        equal(asset._callbacks.remove.length, 0);
+        equal(asset.hasEvent('remove'), false);
     });
-})
+});
+
+test("meshAsset removes events", function () {
+    var e = new pc.Entity();
+
+    stop();
+
+    this.loadAsset('Box', '../../../test-assets/box/box.json', 'model', function (asset) {
+        start();
+
+        e.addComponent('particlesystem', {
+            mesh: asset.id
+        });
+
+        e.removeComponent('particlesystem');
+
+        equal(asset.hasEvent('remove'), false);
+    });
+});
