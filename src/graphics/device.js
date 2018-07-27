@@ -28,14 +28,6 @@ Object.assign(pc, function () {
         return image;
     };
 
-    function _isIE() {
-        var ua = window.navigator.userAgent;
-        var msie = ua.indexOf("MSIE ");
-        var trident = navigator.userAgent.match(/Trident.*rv:11\./);
-
-        return (msie > 0 || !!trident);
-    }
-
     function testRenderable(gl, pixelFormat) {
         var result = true;
 
@@ -605,6 +597,17 @@ Object.assign(pc, function () {
         initializeExtensions: function () {
             var gl = this.gl;
 
+            var supportedExtensions = gl.getSupportedExtensions();
+            var getExtension = function () {
+                var extension = null;
+                for (var i = 0; i < arguments.length; i++) {
+                    if (supportedExtensions.indexOf(arguments[i]) !== -1) {
+                        extension = gl.getExtension(arguments[i]);
+                    }
+                };
+                return extension;
+            };
+
             if (this.webgl2) {
                 this.extBlendMinmax = true;
                 this.extDrawBuffers = true;
@@ -615,38 +618,26 @@ Object.assign(pc, function () {
                 this.extTextureHalfFloatLinear = true;
                 this.extTextureLod = true;
                 this.extUintElement = true;
-                this.extColorBufferFloat = gl.getExtension('EXT_color_buffer_float');
+                this.extColorBufferFloat = getExtension('EXT_color_buffer_float');
             } else {
-                this.extBlendMinmax = gl.getExtension("EXT_blend_minmax");
-                this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
-                this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
-                this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
-                this.extTextureFloat = gl.getExtension("OES_texture_float");
-                this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
-                this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
-                this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
-                this.extUintElement = gl.getExtension("OES_element_index_uint");
+                this.extBlendMinmax = getExtension("EXT_blend_minmax");
+                this.extDrawBuffers = getExtension('EXT_draw_buffers');
+                this.extInstancing = getExtension("ANGLE_instanced_arrays");
+                this.extStandardDerivatives = getExtension("OES_standard_derivatives");
+                this.extTextureFloat = getExtension("OES_texture_float");
+                this.extTextureHalfFloat = getExtension("OES_texture_half_float");
+                this.extTextureHalfFloatLinear = getExtension("OES_texture_half_float_linear");
+                this.extTextureLod = getExtension('EXT_shader_texture_lod');
+                this.extUintElement = getExtension("OES_element_index_uint");
                 this.extColorBufferFloat = null;
             }
 
-            this.extDebugRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
-
-            this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
-
-            this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic') ||
-                                               gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
-
-            this.extCompressedTextureETC1 = gl.getExtension('WEBGL_compressed_texture_etc1');
-
-            this.extCompressedTexturePVRTC = gl.getExtension('WEBGL_compressed_texture_pvrtc') ||
-                                             gl.getExtension('WEBKIT_WEBGL_compressed_texture_pvrtc');
-
-            this.extCompressedTextureS3TC = gl.getExtension('WEBGL_compressed_texture_s3tc') ||
-                                            gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
-
-            // IE 11 can't use mip maps with S3TC
-            if (this.extCompressedTextureS3TC && _isIE())
-                this.extCompressedTextureS3TC = null;
+            this.extDebugRendererInfo = getExtension('WEBGL_debug_renderer_info');
+            this.extTextureFloatLinear = getExtension("OES_texture_float_linear");
+            this.extTextureFilterAnisotropic = getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
+            this.extCompressedTextureETC1 = getExtension('WEBGL_compressed_texture_etc1');
+            this.extCompressedTexturePVRTC = getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
+            this.extCompressedTextureS3TC = getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
         },
 
         initializeCapabilities: function () {
