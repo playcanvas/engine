@@ -604,7 +604,7 @@ Object.assign(pc, function () {
                     if (supportedExtensions.indexOf(arguments[i]) !== -1) {
                         extension = gl.getExtension(arguments[i]);
                     }
-                };
+                }
                 return extension;
             };
 
