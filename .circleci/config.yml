@@ -12,6 +12,18 @@ jobs:
     steps:
       - checkout
 
+      # Install Chrome - required for running tests
+      # @see https://gist.github.com/phra/192b6c0ada3f6eaf4029e430430b79fe
+      - run:
+          name: install-chrome
+          command: |
+            sudo apt-get update
+            sudo apt-get install lsb-release libappindicator3-1
+            curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            sudo dpkg -i google-chrome.deb
+            sudo sed -i 's|HERE/chrome"|HERE/chrome" --no-sandbox|g' /opt/google/chrome/google-chrome
+            rm google-chrome.deb
+
       # Install java - required for running Closure Compiler
       # @see https://discuss.circleci.com/t/installing-java-on-a-docker-image-for-selenium-nightwatch-e2e-testing/14545/6
       - run:
@@ -21,15 +33,6 @@ jobs:
             sudo rm -rf /var/lib/apt/lists/*
             sudo apt-get update
             sudo apt install -t jessie-backports  openjdk-8-jre-headless ca-certificates-java
-
-      # Install Chrome - required for running tests
-      - run:
-          name: install-chrome
-          command: |
-            curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-            sudo dpkg -i google-chrome.deb
-            sudo sed -i 's|HERE/chrome\"|HERE/chrome\" --disable-setuid-sandbox|g' /opt/google/chrome/google-chrome
-            rm google-chrome.deb
 
       - run:
           name: update-npm
