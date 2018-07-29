@@ -188,6 +188,9 @@ PlayCanvas makes use of Karma for running unit tests, and provides three test wa
 
     # Watches all source and test files for changes, and automatically re-runs the tests when they change.
     # Open http://localhost:9876/debug.html in your browser to debug the tests in real time.
+    #
+    # You can also edit the `tests/**/test_*.js` glob in tests/karma.conf.js to run a subset of the tests,
+    # during development.
     npm run test:watch
 
     # Runs the tests once over playcanvas-latest.js - mainly used by CI, but sometimes useful if you want
