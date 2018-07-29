@@ -1,4 +1,4 @@
-module('pc.GraphNode');
+QUnit.module('pc.GraphNode');
 
 
 function buildGraph() {

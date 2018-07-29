@@ -1,12 +1,21 @@
 var m;
 
-module('pc.mouse', {
+QUnit.module('pc.mouse', {
     setup: function () {
+        this.prevDocumentElementStyle = document.documentElement.style;
+        this.prevBodyStyle = document.body.style;
+
+        document.documentElement.style = "height: 100%;";
+        document.body.style = "height: 100%;";
+
         m = new pc.Mouse();
         m.attach(document.body);
     },
 
     teardown: function () {
+        document.documentElement.style = this.prevDocumentElementStyle;
+        document.body.style = this.prevBodyStyle;
+
         m.detach(document.body);
     }
 });

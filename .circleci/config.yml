@@ -29,6 +29,18 @@ jobs:
             - ./node_modules
 
       - run:
+          name: build
+          command: npm run build
+
+      - run:
+          name: test-source
+          command: npm run test
+
+      - run:
+          name: test-release
+          command: npm run test:release
+
+      - run:
           name: lint
           command: npm run lint
 

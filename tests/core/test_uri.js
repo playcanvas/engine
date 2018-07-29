@@ -1,4 +1,4 @@
-module("pc.uri");
+QUnit.module("pc.uri");
 
 test("Parsed, all sections", function () {
     var s = "http://a/b/c/d;p?q=r#l";

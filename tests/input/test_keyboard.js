@@ -1,6 +1,6 @@
 var k;
 
-module('pc.keyboard', {
+QUnit.module('pc.keyboard', {
   setup: function () {
     k = new pc.Keyboard();
     k.attach(document.body);

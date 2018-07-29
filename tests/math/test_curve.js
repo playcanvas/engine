@@ -1,4 +1,4 @@
-module("pc.Curve");
+QUnit.module("pc.Curve");
 
 test("constructor: with args", function () {
     var c = new pc.Curve([0, 0, 1, 1]);

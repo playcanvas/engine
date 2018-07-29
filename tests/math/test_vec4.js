@@ -1,4 +1,4 @@
-module("pc.Vec4");
+QUnit.module("pc.Vec4");
 
 test("x", function() {
     var v1 = new pc.Vec4(2, 4, 6, 8);

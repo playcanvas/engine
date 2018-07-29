@@ -1,5 +1,5 @@
 (function() {
-    module("pc.ElementDragHelper", {
+    QUnit.module("pc.ElementDragHelper", {
         setup: function () {
             // Simulate the browser being touch capable, so that we can test touch-based dragging
             if (!('ontouchstart' in window)) {
