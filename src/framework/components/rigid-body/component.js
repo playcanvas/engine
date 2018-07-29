@@ -659,6 +659,46 @@ Object.assign(pc, function () {
             }
             this.syncEntityToBody();
         },
+        
+        /**
+         * @function
+         * @name pc.RigidBodyComponent#teleportOrientation
+		 * @description Rotates an entity without changing its position. This function
+         * should only be called for rigid bodies that are dynamic. This function has three valid signatures.
+         * The first takes a 3-dimensional vector for Euler rotation.
+         * The second takes a quaternion for rotation.
+         * The third takes 3 numbers for Euler rotation.
+		 * @param {pc.Vec3|pc.Quat|Number} [rx] - A  A 3-dimensional vector or quaternion holding 
+		 * the new rotation or the new Euler x-angle value.
+		 * @param {Number} [ry] - The new Euler y-angle value.
+		 * @param {Number} [rz] - The new Euler z-angle value.
+         * @example
+         * // Resets the orientation of an entity
+         * entity.rigidbody.teleportOrientation(pc.Vec3.ZERO);
+         * @example
+         * // Resets the orientation of an entity
+         * entity.rigidbody.teleportOrientation(0, 0, 0);
+         * @example
+         * // Sets the orientation of the entity to the one represented by the specified quaternion 
+         * var quat = new pc.quaternion(0,0,0,1);
+         * entity.rigidbody.teleportOrientation(quat);
+         */
+		teleportOrientation: function() {
+			if (arguments.length === 1) {
+				if (arguments[0]) {
+					if (arguments[0] instanceof pc.Quat) {
+						this.entity.setRotation(arguments[0]);
+					} else {
+						this.entity.setEulerAngles(arguments[0]);
+					}
+				}
+			} else {
+				if (arguments.length === 3) {
+                    this.entity.setEulerAngles(arguments[0], arguments[1], arguments[2]);
+				}
+			}
+			this.syncEntityToBody();
+		},
 
         /**
          * @private
