@@ -14,7 +14,7 @@ jobs:
 
       # Install java - required for running Closure Compiler
       # @see https://discuss.circleci.com/t/installing-java-on-a-docker-image-for-selenium-nightwatch-e2e-testing/14545/6
-      - run: sudo su -c   - run 'echo "deb http://deb.debian.org/debian jessie-backports main" >> /etc/apt/sources.list'
+      - run: sudo su -c 'echo "deb http://deb.debian.org/debian jessie-backports main" >> /etc/apt/sources.list'
       - run: |
           sudo rm -rf /var/lib/apt/lists/*
           sudo apt-get update
