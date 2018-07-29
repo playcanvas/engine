@@ -179,7 +179,7 @@ Specific engine versions:
 * https://code.playcanvas.com/playcanvas-0.181.11.js
 * https://code.playcanvas.com/playcanvas-0.181.11.min.js
 
-# How to run tests
+## How to run tests
 
 PlayCanvas makes use of Karma for running unit tests, and provides three test ways of executing them depending on what phase of development you're in:
 
