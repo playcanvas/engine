@@ -5,34 +5,12 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:8.11
+      - image: circleci/8-jdk-node-browsers
 
     working_directory: ~/repo
 
     steps:
       - checkout
-
-      # Install Chrome - required for running tests
-      # @see https://gist.github.com/phra/192b6c0ada3f6eaf4029e430430b79fe
-      - run:
-          name: install-chrome
-          command: |
-            sudo apt-get update
-            sudo apt-get install lsb-release libappindicator3-1 fonts-liberation libasound2 libnspr4 libnss3 libxss1 xdg-utils
-            curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-            sudo dpkg -i google-chrome.deb
-            sudo sed -i 's|HERE/chrome"|HERE/chrome" --no-sandbox|g' /opt/google/chrome/google-chrome
-            rm google-chrome.deb
-
-      # Install java - required for running Closure Compiler
-      # @see https://discuss.circleci.com/t/installing-java-on-a-docker-image-for-selenium-nightwatch-e2e-testing/14545/6
-      - run:
-          name: install-java
-          command: |
-            sudo su -c 'echo "deb http://deb.debian.org/debian jessie-backports main" >> /etc/apt/sources.list'
-            sudo rm -rf /var/lib/apt/lists/*
-            sudo apt-get update
-            sudo apt install -t jessie-backports  openjdk-8-jre-headless ca-certificates-java
 
       - run:
           name: update-npm
