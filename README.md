@@ -191,7 +191,8 @@ PlayCanvas makes use of Karma for running unit tests, and provides three test wa
     npm run test:watch
 
     # Runs the tests once over playcanvas-latest.js - mainly used by CI, but sometimes useful if you want
-    # to test the engine after building it
+    # to test the engine after building it. Make sure to do `npm run build` first to make sure you have
+    # an up-to-date build.
     npm run test:release
 
 ## Getting Help
