@@ -173,6 +173,10 @@ pc.events = {
             callbacks = this._callbacks[name].slice();
         }
 
+        // TODO: What does callbacks do here?
+        // In particular this condition check looks wrong: (i < (callbacks || this._callbackActive[name]).length)
+        // Because callbacks is not an integer
+        // eslint-disable-next-line no-unmodified-loop-condition
         for (var i = 0; (callbacks || this._callbackActive[name]) && (i < (callbacks || this._callbackActive[name]).length); i++) {
             var evt = (callbacks || this._callbackActive[name])[i];
             evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
