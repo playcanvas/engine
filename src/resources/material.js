@@ -146,6 +146,10 @@ Object.assign(pc, function () {
         this._device = app.graphicsDevice;
 
         this._createPlaceholders();
+
+
+        this._parsers = [];
+        this._parsers.push(new pc.JsonMaterialParser(this._device));
     };
 
     Object.assign(MaterialHandler.prototype, {
@@ -154,6 +158,7 @@ Object.assign(pc, function () {
             pc.http.get(url, function (err, response) {
                 if (!err) {
                     if (callback) {
+                        response._engine = true;
                         callback(null, response);
                     }
                 } else {
@@ -165,7 +170,18 @@ Object.assign(pc, function () {
         },
 
         open: function (url, data) {
+            var material = this._parsers[0].parse(data);
+
+            // temp storage for engine-only as we need this during patching
+            if (data._engine) {
+                material._data = data;
+            }
+
+            return material;
+
+            /* OLD
             var material = new pc.StandardMaterial();
+
 
             // TODO: this is a bit of a mess,
             // Probably should create a new data block for the material
@@ -178,6 +194,9 @@ Object.assign(pc, function () {
             material.init(data);
             material._data = data; // temp storage in case we need this during patching (engine-only)
             return material;
+
+
+            */
         },
 
         // creates placeholders for textures
@@ -241,11 +260,12 @@ Object.assign(pc, function () {
         },
 
         patch: function (asset, assets) {
-            if (asset.data.shader === undefined) {
-                // for engine-only users restore original material data
-                asset.data = asset.resource._data;
-                delete asset.resource._data;
+            if (asset.resource._data) {
+                // in an engine-only environment we manually copy the source data into the asset
+                asset._data = asset.resource._data; // use _data to avoid firing events
+                delete asset.resource._data; // remove from temp storage
             }
+
             this._updateStandardMaterial(asset, asset.data, assets);
 
             // handle changes to the material
@@ -280,7 +300,7 @@ Object.assign(pc, function () {
             if (!data.parameters)
                 this._createParameters(data);
 
-            var pathMapping = (data.mapping_format === "path");
+            var pathMapping = (data.mappingFormat === "path");
 
             data.chunks = asset.resource.chunks;
 
