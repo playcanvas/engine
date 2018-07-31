@@ -78,7 +78,6 @@ Object.assign(pc, function () {
 
     Object.defineProperty(OrientedBox.prototype, 'worldTransform', {
         get: function () {
-            this._worldTransform.copy(this._modelTransform).invert();
             return this._worldTransform;
         },
         set: function (value) {
