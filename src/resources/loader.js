@@ -47,6 +47,7 @@ Object.assign(pc, function () {
          * @param {String} url The URL of the resource to load.
          * @param {String} type The type of resource expected.
          * @param {Function} callback The callback used when the resource is loaded or an error occurs.
+         * @param {pc.Asset} [asset] Optional asset that is passed into handler
          * Passed (err, resource) where err is null if there are no errors.
          * @example
          * app.loader.load("../path/to/texture.png", "texture", function (err, texture) {
