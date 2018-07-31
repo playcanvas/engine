@@ -10,7 +10,7 @@ Object.assign(pc, function () {
         var validated = this._validate(migrated);
 
         var data = {
-            parameters: this._parameterize(validated),
+            parameters: this.parameterize(validated),
             chunks: []
         };
 
@@ -47,7 +47,7 @@ Object.assign(pc, function () {
 
     // convert json-style file-format data into typed parameters
     // that pc.StandardMaterial expects.
-    JsonMaterialParser.prototype._parameterize = function (data) {
+    JsonMaterialParser.prototype.parameterize = function (data) {
         var parameters = [];
 
         for (var key in data) {

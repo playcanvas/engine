@@ -147,7 +147,6 @@ Object.assign(pc, function () {
 
         this._createPlaceholders();
 
-
         this._parsers = [];
         this._parsers.push(new pc.JsonMaterialParser(this._device));
     };
@@ -260,8 +259,8 @@ Object.assign(pc, function () {
         },
 
         patch: function (asset, assets) {
+            // in an engine-only environment we manually copy the source data into the asset
             if (asset.resource._data) {
-                // in an engine-only environment we manually copy the source data into the asset
                 asset._data = asset.resource._data; // use _data to avoid firing events
                 delete asset.resource._data; // remove from temp storage
             }
