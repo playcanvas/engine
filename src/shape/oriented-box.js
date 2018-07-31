@@ -80,7 +80,7 @@ Object.assign(pc, function () {
         get: function () {
             this._worldTransform.copy(this._modelTransform).invert();
             return this._worldTransform;
-        }
+        },
         set: function (value) {
             this._worldTransform.copy(value);
             this._modelTransform.copy(value).invert();
