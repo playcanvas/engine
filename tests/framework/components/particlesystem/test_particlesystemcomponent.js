@@ -56,7 +56,7 @@ test("colorMapAsset removes events", function () {
 });
 
 // TODO Skipped because box.json doesn't exist in the repo
-QUnit.skip("meshAsset removes events", function () {
+test("meshAsset removes events", function () {
     var e = new pc.Entity();
 
     stop();

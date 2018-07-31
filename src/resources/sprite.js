@@ -64,8 +64,8 @@ Object.assign(pc, function () {
                     }
                 }
 
-                delete sprite.__data;
-
+                // note: we don't remove sprite.__data in case another asset is loaded from the same URL when it is fetched from the cache
+                // the __data is not re-assigned and so asset.data is not set up.
             }
 
             sprite.startUpdate();
