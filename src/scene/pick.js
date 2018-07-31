@@ -147,18 +147,7 @@ Object.assign(pc, function () {
      * in any way, pc.Picker#prepare does not need to be called again.
      * @param {pc.CameraComponent} camera The camera component used to render the scene.
      * @param {pc.Scene} scene The scene containing the pickable mesh instances.
-     * @param {pc.Layer} [layer] Layer from which objects will be picked. If not supplied, all layers rendering to backbuffer before this layer will be used.
-     */
-    /**
-     * @function
-     * @name pc.Picker#prepare^2
-     * @description Primes the pick buffer with a rendering of the specified models from the point of view
-     * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
-     * called multiple times on the same picker object. Therefore, if the models or camera do not change
-     * in any way, pc.Picker#prepare does not need to be called again.
-     * @param {pc.CameraComponent} camera The camera component used to render the scene.
-     * @param {pc.Scene} scene The scene containing the pickable mesh instances.
-     * @param {pc.RenderTarget} [renderTarget] Render target with mesh instances to pick. If not supplied, backbuffer is assumed.
+     * @param {pc.Layer|pc.RenderTarget} [layer|renderTarget] Layer or RenderTarget from which objects will be picked. If not supplied, all layers rendering to backbuffer before this layer will be used.
      */
     Picker.prototype.prepare = function (camera, scene, arg) {
         var device = this.device;

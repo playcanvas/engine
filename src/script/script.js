@@ -317,6 +317,10 @@ Object.assign(pc, function () {
          * because the Entity or any of its parents are disabled or the Script Component is disabled or the Script Instance is disabled.
          * When disabled no update methods will be called on each tick.
          * initialize and postInitialize methods will run once when the script instance is in `enabled` state during app tick.
+         * @param {Object} args
+         * @param {Object} args.app The {@link pc.Application} that is running the script
+         * @param {Object} args entity The {@link pc.Entity} that the script is attached to
+         *
          */
         var script = function (args) {
             // #ifdef DEBUG
