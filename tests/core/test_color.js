@@ -1,4 +1,4 @@
-module("pc.core.Color");
+QUnit.module("pc.core.Color");
 
 
 test('new Color()', function () {

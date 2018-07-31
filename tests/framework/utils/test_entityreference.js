@@ -1,5 +1,5 @@
 (function() {
-    module("pc.EntityReference", {
+    QUnit.module("pc.EntityReference", {
         setup: function () {
             this.app = new pc.Application(document.createElement("canvas"));
 

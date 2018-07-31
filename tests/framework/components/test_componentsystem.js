@@ -1,4 +1,4 @@
-module("pc.ComponentSystem", {
+QUnit.module("pc.ComponentSystem", {
     setup: function () {
         this.app = new pc.Application(document.createElement("canvas"));
         this.system = new pc.ComponentSystem(this.app);

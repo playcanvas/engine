@@ -1,4 +1,4 @@
-module('pc.events');
+QUnit.module('pc.events');
 
 test("Add events to object", function () {
    var o = {};

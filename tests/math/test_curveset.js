@@ -1,4 +1,4 @@
-module("pc.CurveSet");
+QUnit.module("pc.CurveSet");
 
 test("constructor: array of arrays", function () {
     var c = new pc.CurveSet([[0, 0, 1, 1], [0,0]]);

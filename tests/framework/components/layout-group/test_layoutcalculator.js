@@ -1,4 +1,4 @@
-module("pc.LayoutCalculator", {
+QUnit.module("pc.LayoutCalculator", {
     setup: function () {
         this.app = new pc.Application(document.createElement("canvas"));
         this.calculator = new pc.LayoutCalculator();
