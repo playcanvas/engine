@@ -82,17 +82,19 @@ test('Add new Component', function () {
 //        atEntity.addComponent (entity.js:116)
 //
 // Once this has been addressed they can be re-enabled.
-QUnit.skip('Add / Remove Component', function () {
+test('Add / Remove Component', function () {
     var e = new pc.Entity();
 
     e.addComponent('sprite', {});
+
+    ok(e.sprite);
 
     e.removeComponent('sprite');
 
     ok(!e.sprite);
 });
 
-QUnit.skip('Remove after destroy', function () {
+test('Remove after destroy', function () {
     var e = new pc.Entity();
     e.addComponent('sprite', {
         spriteAsset: this.spriteAsset
@@ -103,7 +105,7 @@ QUnit.skip('Remove after destroy', function () {
     ok(!e.sprite);
 });
 
-QUnit.skip('Sprites assets unbound on destroy', function () {
+test('Sprites assets unbound on destroy', function () {
     ok(!this.spriteAsset.hasEvent('add'));
     ok(!this.spriteAsset.hasEvent('load'));
     ok(!this.spriteAsset.hasEvent('remove'));
@@ -120,7 +122,7 @@ QUnit.skip('Sprites assets unbound on destroy', function () {
     ok(!this.spriteAsset.hasEvent('remove'));
 });
 
-QUnit.skip('Sprites assets unbound when reset', function () {
+test('Sprites assets unbound when reset', function () {
     ok(!this.spriteAsset.hasEvent('add'));
     ok(!this.spriteAsset.hasEvent('load'));
     ok(!this.spriteAsset.hasEvent('remove'));
