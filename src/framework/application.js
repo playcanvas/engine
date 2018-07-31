@@ -501,7 +501,7 @@ Object.assign(pc, function () {
 
         // bind tick function to current scope
 
-        /* eslint-disable-next-line */
+        /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     };
 
