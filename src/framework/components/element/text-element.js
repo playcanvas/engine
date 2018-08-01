@@ -113,7 +113,9 @@ Object.assign(pc, function () {
 
             if (text === undefined) text = this._text;
 
-            var textLength = text.length;
+            var symbols = pc.string.getSymbols(text);
+            var textLength = symbols.length;
+
             // handle null string
             if (textLength === 0) {
                 textLength = 1;
@@ -128,8 +130,8 @@ Object.assign(pc, function () {
 
             var charactersPerTexture = {};
 
-            for (var ch of text) {
-                var code = ch.codePointAt(0);
+            for (i = 0; i < textLength; i++) {
+                var code = symbols[i].code;
                 var info = this._font.data.chars[code];
                 if (!info) continue;
 
@@ -298,7 +300,8 @@ Object.assign(pc, function () {
             this._lineWidths = [];
             this._lineContents = [];
 
-            var l = text.length;
+            var symbols = pc.string.getSymbols(text);
+            var l = symbols.length;
             var _x = 0; // cursors
             var _xMinusTrailingWhitespace = 0;
             var _y = 0;
@@ -344,7 +347,14 @@ Object.assign(pc, function () {
 
             function breakLine(lineBreakIndex, lineBreakX) {
                 self._lineWidths.push(lineBreakX);
-                self._lineContents.push(text.substring(lineStartIndex, lineBreakIndex));
+                var substring = symbols
+                    .slice(lineStartIndex, lineBreakIndex)
+                    .map(function (pair) {
+                        return pair.char;
+                    })
+                    .join('');
+
+                self._lineContents.push(substring);
 
                 _x = 0;
                 _y -= self._lineHeight;
@@ -355,12 +365,9 @@ Object.assign(pc, function () {
                 lineStartIndex = lineBreakIndex;
             }
 
-            i = -1;
-
-            for (var char of text) {
-                charCode = char.codePointAt(0);
-
-                i++;
+            for (i = 0; i < l; i++) {
+                char = symbols[i].char;
+                charCode = symbols[i].code;
 
                 var x = 0;
                 var y = 0;
@@ -461,7 +468,7 @@ Object.assign(pc, function () {
                     _xMinusTrailingWhitespace = _x;
                 }
 
-                if (isWordBoundary) {
+                if (isWordBoundary) { // char is space, tab, or dash
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
                     wordStartIndex = i + 1;
