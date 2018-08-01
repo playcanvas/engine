@@ -254,13 +254,13 @@ Object.assign(pc, function () {
      * @function
      * @name  pc.BatchManager#getBatches
      * @description  Return a list of all {@link pc.Batch} objects that belong to the Batch Group supplied
-     * @param  {Number} batchId The id of the batch group
-     * @return {pc.Batch[]} A list of batches that are used to render the batch group
+     * @param  {Number} batchGroupId The id of the batch group
+     * @returns {pc.Batch[]} A list of batches that are used to render the batch group
      */
     BatchManager.prototype.getBatches = function (batchGroupId) {
         var results = [];
         var len = this._batchList.length;
-        for (var i = 0 ; i < len; i++) {
+        for (var i = 0; i < len; i++) {
             var batch = this._batchList[i];
             if (batch.batchGroupId === batchGroupId) {
                 results.push(batch);
@@ -268,7 +268,7 @@ Object.assign(pc, function () {
         }
 
         return results;
-    }
+    };
 
     // traverse full hierarchy and clear the batch group id from all model, element and sprite components
     BatchManager.prototype._removeModelsFromBatchGroup = function (node, id) {
