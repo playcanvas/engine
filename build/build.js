@@ -216,8 +216,7 @@ var run = function () {
             var options = {
               js: files,
               compilation_level: compilerLevel,
-              language_in: "ECMASCRIPT6",
-              language_out: "ECMASCRIPT6",
+              language_in: "ECMASCRIPT5",
               js_output_file: outputPath,
               output_wrapper_file: "./umd-wrapper.js",
               manage_closure_dependencies: true,

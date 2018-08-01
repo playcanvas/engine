@@ -106,10 +106,39 @@ pc.string = function () {
                     return false;
                 }
 
-                throw new Error('Not a boolean string');
+                throw new TypeError('Not a boolean string');
             }
 
             return false;
+        },
+        getSurrogatePair: function (string, strIndex) {
+            var first = string.charCodeAt(strIndex);
+            var second;
+            // See if the first char code has a high surrogate and there is another char code next to it
+            if (first >= 0xD800 && first <= 0xDBFF && string.length > strIndex + 1) {
+                // See if the next char code is a low surrogate
+                second = string.charCodeAt(strIndex + 1);
+                if (second >= 0xDC00 && second <= 0xDFFF) {
+                    // https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+                    var code = (first - 0xD800) * 0x400 + second - 0xDC00 + 0x10000;
+                    return { char: string.substring(strIndex, strIndex + 2), code: code };
+                }
+            }
+            return { char: string[strIndex], code: first };
+        },
+        getSymbols: function (string) {
+            if (typeof string !== 'string') {
+                throw new TypeError('Not a string');
+            }
+            var index = 0;
+            var length = string.length;
+            var output = [];
+            while (index < length - 1) {
+                var pair = this.getSurrogatePair(string, index);
+                output.push(pair);
+                index += pair.char.length;
+            }
+            return output;
         }
     };
 }();

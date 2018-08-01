@@ -39,10 +39,13 @@ var CanvasFont = function (app, options) {
     this.data = {};
 };
 
-CanvasFont.prototype.autoRender = function (chars) {
+CanvasFont.prototype.autoRender = function (text) {
     // strip duplicates
     var set = {};
-    for (var ch of chars) {
+    var symbols = pc.string.getSymbols(text);
+    var i;
+    for (i = 0; i < symbols.length; i++) {
+        var ch = symbols[i].char;
         if (set[ch]) continue;
         set[ch] = ch;
     }
@@ -60,7 +63,7 @@ CanvasFont.prototype.autoRender = function (chars) {
     }
 
     // compare sorted characters for difference
-    for (var i = 0; i < _chars.length; i++) {
+    for (i = 0; i < _chars.length; i++) {
         if (_chars[i] !== this.chars[i]) {
             this.renderAtlas(_chars);
             return;
@@ -68,8 +71,8 @@ CanvasFont.prototype.autoRender = function (chars) {
     }
 };
 
-CanvasFont.prototype.renderAtlas = function (chars) {
-    this.chars = chars;
+CanvasFont.prototype.renderAtlas = function (charsArray) {
+    this.chars = charsArray;
 
     var ctx = this.context;
     var w = ctx.canvas.width;
@@ -88,25 +91,27 @@ CanvasFont.prototype.renderAtlas = function (chars) {
 
     var sx = this.glyphSize;
     var sy = this.glyphSize;
-    var _x = sx/2;
+    var _x = sx / 2;
     var _y = sy;
 
-    for (var ch of this.chars) {
+    var symbols = pc.string.getSymbols(this.chars.join(''));
+    for (var i = 0; i < symbols.length; i++) {
+        var ch = symbols[i].char;
+        var code = symbols[i].code;
         ctx.fillText(ch, _x, _y);
         var width = ctx.measureText(ch).width;
-        var xoffset = (sx - width)/2;
+        var xoffset = (sx - width) / 2;
         var yoffset = 0;
         var xadvance = width;
 
-        var code = ch.codePointAt(0);
-        this.addChar(this.data, ch, code, _x-(sx/2), _y-sy, sx, sy, xoffset, yoffset, xadvance);
+        this.addChar(this.data, ch, code, _x - (sx / 2), _y - sy, sx, sy, xoffset, yoffset, xadvance);
 
         _x += (sx);
         if (_x > w) {
-            _x = sx/2;
+            _x = sx / 2;
             _y += sy;
         }
-    };
+    }
 
     // Copy the canvas into the texture
     this.textures[0].upload();
