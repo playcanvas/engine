@@ -37,6 +37,8 @@ Object.assign(pc, function () {
     };
 
     ImageRenderable.prototype.setMesh = function (mesh) {
+        if (!this.meshInstance) return;
+
         this.mesh = mesh;
 
         this.meshInstance.mesh = mesh;
@@ -49,6 +51,8 @@ Object.assign(pc, function () {
     };
 
     ImageRenderable.prototype.setMask = function (mask) {
+        if (!this.meshInstance) return;
+
         if (mask) {
             this.unmaskMeshInstance = new pc.MeshInstance(this.node, this.mesh, this.meshInstance.material);
             this.unmaskMeshInstance.name = 'Unmask: ' + this._entity.name;
@@ -80,6 +84,8 @@ Object.assign(pc, function () {
     };
 
     ImageRenderable.prototype.setMaterial = function (material) {
+        if (!this.meshInstance) return;
+
         this.meshInstance.material = material;
         if (this.unmaskMeshInstance) {
             this.unmaskMeshInstance.material = material;
@@ -87,6 +93,8 @@ Object.assign(pc, function () {
     };
 
     ImageRenderable.prototype.setParameter = function (name, value) {
+        if (!this.meshInstance) return;
+
         this.meshInstance.setParameter(name, value);
         if (this.unmaskMeshInstance) {
             this.unmaskMeshInstance.setParameter(name, value);
@@ -94,6 +102,8 @@ Object.assign(pc, function () {
     };
 
     ImageRenderable.prototype.deleteParameter = function (name) {
+        if (!this.meshInstance) return;
+
         this.meshInstance.deleteParameter(name);
         if (this.unmaskMeshInstance) {
             this.unmaskMeshInstance.deleteParameter(name);
@@ -101,6 +111,8 @@ Object.assign(pc, function () {
     };
 
     ImageRenderable.prototype.setUnmaskDrawOrder = function () {
+        if (!this.meshInstance) return;
+
         var getLastChild = function (e) {
             var last;
             var c = e.getChildren();
@@ -146,6 +158,7 @@ Object.assign(pc, function () {
     };
 
     ImageRenderable.prototype.setDrawOrder = function (drawOrder) {
+        if (!this.meshInstance) return;
         // #ifdef DEBUG
         if (_debugLogging) console.log('setDrawOrder: ', this.meshInstance.name, drawOrder);
         // #endif
@@ -153,6 +166,8 @@ Object.assign(pc, function () {
     };
 
     ImageRenderable.prototype.setCull = function (cull) {
+        if (!this.meshInstance) return;
+
         this.meshInstance.cull = cull;
 
         if (this.unmaskMeshInstance) {
@@ -162,6 +177,8 @@ Object.assign(pc, function () {
 
 
     ImageRenderable.prototype.setScreenSpace = function (screenSpace) {
+        if (!this.meshInstance) return;
+
         this.meshInstance.screenSpace = screenSpace;
 
         if (this.unmaskMeshInstance) {
@@ -171,6 +188,8 @@ Object.assign(pc, function () {
 
 
     ImageRenderable.prototype.setLayer = function (layer) {
+        if (!this.meshInstance) return;
+
         this.meshInstance.layer = layer;
 
         if (this.unmaskMeshInstance) {
@@ -179,6 +198,8 @@ Object.assign(pc, function () {
     };
 
     ImageRenderable.prototype.forceUpdateAabb = function (mask) {
+        if (!this.meshInstance) return;
+
         this.meshInstance._aabbVer = -1;
         if (this.unmaskMeshInstance) {
             this.unmaskMeshInstance._aabbVer = -1;
@@ -186,6 +207,8 @@ Object.assign(pc, function () {
     };
 
     ImageRenderable.prototype.setAabbFunc = function (fn) {
+        if (!this.meshInstance) return;
+
         this.meshInstance._updateAabbFunc = fn;
         if (this.unmaskMeshInstance) {
             this.unmaskMeshInstance._updateAabbFunc = fn;
