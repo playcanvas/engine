@@ -303,7 +303,7 @@ Object.assign(pc, function () {
 
                     if (param.data && !(param.data instanceof pc.Texture)) {
                         if (pathMapping) {
-                            asset = assets.getByUrl(pc.path.join(dir, param.data));
+                            asset = assets.getByUrl(pc.path.normalize(pc.path.join(dir, param.data)));
                         } else {
                             id = param.data;
                             asset = assets.get(param.data);
@@ -324,7 +324,7 @@ Object.assign(pc, function () {
                         // bind events
                         handler = material._assetHandlers[param.name] = {
                             id: id,
-                            url: pathMapping ? pc.path.join(dir, param.data) : '',
+                            url: pathMapping ? pc.path.normalize(pc.path.join(dir, param.data)) : '',
                             bind: function (asset) {
                                 // TODO
                                 // update specific param instead of all of them
@@ -349,8 +349,8 @@ Object.assign(pc, function () {
                             assets.on('load:' + id, handler.bind);
                             assets.on('remove:' + id, handler.remove);
                         } else if (pathMapping) {
-                            assets.on("load:url:" + pc.path.join(dir, param.data), handler.bind);
-                            assets.on('remove:url:' + pc.path.join(dir, param.data), handler.remove);
+                            assets.on("load:url:" + pc.path.normalize(pc.path.join(dir, param.data)), handler.bind);
+                            assets.on('remove:url:' + pc.path.normalize(pc.path.join(dir, param.data)), handler.remove);
                         }
 
                         if (asset) {
@@ -383,7 +383,7 @@ Object.assign(pc, function () {
                     }
                 } else if (param.type === 'cubemap' && param.data && !(param.data instanceof pc.Texture)) {
                     if (pathMapping) {
-                        asset = assets.getByUrl(pc.path.join(dir, param.data));
+                        asset = assets.getByUrl(pc.path.normalize(pc.path.join(dir, param.data)));
                     } else {
                         id = param.data;
                         asset = assets.get(param.data);
@@ -437,7 +437,7 @@ Object.assign(pc, function () {
                     } else if (id) {
                         assets.once("add:" + id, onAdd);
                     } else if (pathMapping) {
-                        assets.once("add:url:" + pc.path.join(dir, param.data), function (asset) {
+                        assets.once("add:url:" + pc.path.normalize(pc.path.join(dir, param.data)), function (asset) {
                             asset.ready(function (asset) {
                                 // TODO
                                 // update specific param instead of all of them

@@ -43,3 +43,22 @@ test("path.join, invalid values", function () {
        pc.path.join("a", undefined);
    }, "pc.path.join should raise an exception if there is an undefined argument" );
 });
+
+test("path.normalize", function () {
+    equal('a/b/c', pc.path.normalize('a/b/c'));
+    equal('/a/b/c', pc.path.normalize('/a/b/c'));
+    equal('a/b/c', pc.path.normalize('a//b/c'));
+    equal('b/c', pc.path.normalize('a/../b/c'));
+    equal('a/b/c', pc.path.normalize('a/./b/c'));
+    equal('a/b', pc.path.normalize('a/b/c/..'));
+    equal('a/b/c/', pc.path.normalize('a/b/c/'));
+    equal('../a/b/c/', pc.path.normalize('../a/b/c/'));
+    equal('../../a/b/c', pc.path.normalize('../../a/b/c'));
+    equal('/', pc.path.normalize('/'));
+    equal('../', pc.path.normalize('../'));
+    equal('./', pc.path.normalize('./'));
+    equal('./', pc.path.normalize('././'));
+    equal('../../', pc.path.normalize('../../'));
+    equal('.', pc.path.normalize('.'));
+    equal('..', pc.path.normalize('./../.'));
+});

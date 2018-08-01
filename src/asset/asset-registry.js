@@ -493,7 +493,7 @@ Object.assign(pc, function () {
 
             if (ext === '.json') {
                 // playcanvas model format supports material mapping file
-                var mappingUrl = pc.path.join(dir, basename.replace(".json", ".mapping.json"));
+                var mappingUrl = pc.path.normalize(pc.path.join(dir, basename.replace(".json", ".mapping.json")));
                 this._loader.load(mappingUrl, 'json', function (err, data) {
                     if (err) {
                         asset.data = { mapping: [] };
@@ -540,7 +540,7 @@ Object.assign(pc, function () {
             for (i = 0; i < mapping.mapping.length; i++) {
                 var path = mapping.mapping[i].path;
                 if (path) {
-                    self.loadFromUrl(pc.path.join(dir, path), "material", onLoadAsset);
+                    self.loadFromUrl(pc.path.normalize(pc.path.join(dir, path)), "material", onLoadAsset);
                 } else {
                     count--;
                 }
@@ -565,7 +565,7 @@ Object.assign(pc, function () {
                         if (params[j].type === "texture") {
                             var url = materials[i].getFileUrl();
                             var dir = pc.path.getDirectory(url);
-                            url = pc.path.join(dir, params[j].data);
+                            url = pc.path.normalize(pc.path.join(dir, params[j].data));
                             if (!used[url]) {
                                 used[url] = true;
                                 urls.push(url);
