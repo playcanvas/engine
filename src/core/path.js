@@ -60,7 +60,6 @@ pc.path = function () {
 
             var cleaned = [];
 
-            var count = 0;
             for (var i = 0; i < parts.length; i++) {
                 if (parts[i] === '') continue;
                 if (parts[i] === '.') continue;
@@ -71,7 +70,6 @@ pc.path = function () {
 
                 if (i > 0) cleaned.push(pc.path.delimiter);
                 cleaned.push(parts[i]);
-                count++;
             }
 
 

@@ -53,9 +53,12 @@ test("path.normalize", function () {
     equal('a/b', pc.path.normalize('a/b/c/..'));
     equal('a/b/c/', pc.path.normalize('a/b/c/'));
     equal('../a/b/c/', pc.path.normalize('../a/b/c/'));
+    equal('../../a/b/c', pc.path.normalize('../../a/b/c'));
     equal('/', pc.path.normalize('/'));
     equal('../', pc.path.normalize('../'));
     equal('./', pc.path.normalize('./'));
-    equal('', pc.path.normalize('.'));
+    equal('./', pc.path.normalize('././'));
+    equal('../../', pc.path.normalize('../../'));
+    equal('.', pc.path.normalize('.'));
     equal('..', pc.path.normalize('./../.'));
 });
