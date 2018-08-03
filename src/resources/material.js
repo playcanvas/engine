@@ -122,6 +122,9 @@ Object.assign(pc, function () {
         lightMap: 'white'
     };
 
+    /* eslint-disable no-invalid-this */
+    // onCubemapAssetLoad is used as an event handler with the material passed in as scope
+    // eslint doesn't like us using "this" in a function that is not a class method
     var onCubemapAssetLoad = function (asset, attribute, newValue, oldValue) {
         var props = [
             'cubeMap',
@@ -140,6 +143,7 @@ Object.assign(pc, function () {
 
         this.update();
     };
+    /* eslint-enable */
 
     var MaterialHandler = function (app) {
         this._assets = app.assets;

@@ -1,5 +1,5 @@
 (function() {
-    module("pc.Entity", {
+    QUnit.module("pc.Entity", {
         setup: function () {
             this.app = new pc.Application(document.createElement("canvas"));
 

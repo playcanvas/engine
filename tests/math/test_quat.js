@@ -1,4 +1,4 @@
-module("pc.Quat");
+QUnit.module("pc.Quat");
 
 test("constructor: args", function () { 
     var q = new pc.Quat(1, 2, 3, 4);

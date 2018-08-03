@@ -1,4 +1,4 @@
-module("pc.Batcher", {
+QUnit.module("pc.Batcher", {
     setup: function () {
         this.app = new pc.Application(document.createElement("canvas"));
         this.bg = this.app.batcher.addGroup("Test Group", false, 100);
@@ -11,11 +11,11 @@ module("pc.Batcher", {
 
     // loadAssets: function () {
     //     this.atlasAsset = new pc.Asset('red-atlas', 'textureatlas', {
-    //         url: '../test-assets/sprite/red-atlas.json'
+    //         url: 'base/tests/test-assets/sprite/red-atlas.json'
     //     });
 
     //     this.spriteAsset = new pc.Asset('red-sprite', 'sprite', {
-    //         url: '../test-assets/sprite/red-sprite.json'
+    //         url: 'base/tests/test-assets/sprite/red-sprite.json'
     //     });
 
     //     this.app.assets.add(this.atlasAsset);

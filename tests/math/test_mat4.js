@@ -1,4 +1,4 @@
-module("pc.Mat4");
+QUnit.module("pc.Mat4");
 
 function approx(actual, expected, message) {
     var epsilon = 0.00001;

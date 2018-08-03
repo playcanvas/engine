@@ -1,4 +1,4 @@
-module("pc.TextElement", {
+QUnit.module("pc.TextElement", {
     setup: function () {
         this.app = new pc.Application(document.createElement("canvas"));
 
@@ -15,7 +15,7 @@ module("pc.TextElement", {
         element.width = 200;
 
         var fontAsset = new pc.Asset("Arial", "font", {
-            url: "../../../../examples/assets/Arial/Arial.json"
+            url: "base/examples/assets/Arial/Arial.json"
         });
 
         fontAsset.ready(function() {

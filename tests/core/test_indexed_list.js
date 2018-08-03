@@ -1,4 +1,4 @@
-module('pc.IndexedList');
+QUnit.module('pc.IndexedList');
 
 test('new pc.IndexedList is empty', function () {
     var list = new pc.IndexedList();

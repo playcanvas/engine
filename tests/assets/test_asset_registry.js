@@ -1,4 +1,4 @@
-module('pc.AssetRegistry', {
+QUnit.module('pc.AssetRegistry', {
     setup: function () {
         this.loader = sinon.fake();
 

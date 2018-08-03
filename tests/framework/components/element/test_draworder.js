@@ -1,4 +1,4 @@
-module("pc.Element: drawOrder", {
+QUnit.module("pc.Element: drawOrder", {
     setup: function () {
         this.app = new pc.Application(document.createElement("canvas"));
     },

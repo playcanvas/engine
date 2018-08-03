@@ -1,4 +1,4 @@
-module("pc.ScriptComponent", {
+QUnit.module("pc.ScriptComponent", {
     setup: function () {
         this.app = new pc.Application(document.createElement("canvas"));
 
@@ -30,7 +30,7 @@ module("pc.ScriptComponent", {
                     "filename": "scriptA.js",
                     "size": 1,
                     "hash": "script a hash",
-                    "url": "scriptA.js"
+                    "url": "base/tests/framework/components/script/scriptA.js"
                 },
                 "region": "eu-west-1",
                 "id": "1"
@@ -55,7 +55,7 @@ module("pc.ScriptComponent", {
                     "filename": "scriptB.js",
                     "size": 1,
                     "hash": "script b hash",
-                    "url": "scriptB.js"
+                    "url": "base/tests/framework/components/script/scriptB.js"
                 },
                 "region": "eu-west-1",
                 "id": "2"
@@ -80,7 +80,7 @@ module("pc.ScriptComponent", {
                     "filename": "cloner.js",
                     "size": 1,
                     "hash": "cloner hash",
-                    "url": "cloner.js"
+                    "url": "base/tests/framework/components/script/cloner.js"
                 },
                 "region": "eu-west-1",
                 "id": "3"
@@ -105,7 +105,7 @@ module("pc.ScriptComponent", {
                     "filename": "enabler.js",
                     "size": 1,
                     "hash": "enabler hash",
-                    "url": "enabler.js"
+                    "url": "base/tests/framework/components/script/enabler.js"
                 },
                 "region": "eu-west-1",
                 "id": "4"
@@ -130,7 +130,7 @@ module("pc.ScriptComponent", {
                     "filename": "disabler.js",
                     "size": 1,
                     "hash": "disabler hash",
-                    "url": "disabler.js"
+                    "url": "base/tests/framework/components/script/disabler.js"
                 },
                 "region": "eu-west-1",
                 "id": "5"
@@ -163,7 +163,7 @@ module("pc.ScriptComponent", {
                     "filename": "scriptWithAttributes.js",
                     "size": 1,
                     "hash": "scriptWithAttributes hash",
-                    "url": "scriptWithAttributes.js"
+                    "url": "base/tests/framework/components/script/scriptWithAttributes.js"
                 },
                 "region": "eu-west-1",
                 "id": "6"
@@ -188,7 +188,7 @@ module("pc.ScriptComponent", {
                     "filename": "loadedLater.js",
                     "size": 1,
                     "hash": "loadedLater hash",
-                    "url": "loadedLater.js"
+                    "url": "base/tests/framework/components/script/loadedLater.js"
                 },
                 "region": "eu-west-1",
                 "id": "7"
@@ -213,7 +213,7 @@ module("pc.ScriptComponent", {
                     "filename": "destroyer.js",
                     "size": 1,
                     "hash": "destroyer hash",
-                    "url": "destroyer.js"
+                    "url": "base/tests/framework/components/script/destroyer.js"
                 },
                 "region": "eu-west-1",
                 "id": "8"
@@ -225,7 +225,7 @@ module("pc.ScriptComponent", {
                 console.error(err);
             }
 
-            app.loadScene('scene1.json', function () {
+            app.loadScene('base/tests/framework/components/script/scene1.json', function () {
                 app.start();
                 start();
             });
@@ -1003,7 +1003,7 @@ test('script attributes are initialized when reloading scene', function () {
 
     stop();
 
-    app.loadSceneHierarchy('scene1.json', function () {
+    app.loadSceneHierarchy('base/tests/framework/components/script/scene1.json', function () {
         start();
 
         // verify entities are loaded
@@ -1812,7 +1812,7 @@ test('destroying entity during initialize does not skip updating any other scrip
     var app = this.app;
 
     window.initializeCalls.length = 0;
-    this.app.loadScene('scene2.json', function () {
+    this.app.loadScene('base/tests/framework/components/script/scene2.json', function () {
         start();
 
         var e = app.root.findByName('A');
