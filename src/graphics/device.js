@@ -797,6 +797,7 @@ Object.assign(pc, function () {
             // Force all textures to be recreated and reuploaded
             for (i = 0, len = this.textures.length; i < len; i++) {
                 var texture = this.textures[i];
+                this.destroyTexture(texture);
                 texture.dirtyAll();
             }
             this.textureUnit = 0;
@@ -1032,7 +1033,7 @@ Object.assign(pc, function () {
                     // --- Init the provided color buffer (optional) ---
                     var colorBuffer = target._colorBuffer;
                     if (colorBuffer) {
-                        if (!colorBuffer._glTextureId) {
+                        if (!colorBuffer._glTexture) {
                             // Clamp the render buffer size to the maximum supported by the device
                             colorBuffer._width = Math.min(colorBuffer.width, this.maxRenderBufferSize);
                             colorBuffer._height = Math.min(colorBuffer.height, this.maxRenderBufferSize);
@@ -1043,7 +1044,7 @@ Object.assign(pc, function () {
                             gl.FRAMEBUFFER,
                             gl.COLOR_ATTACHMENT0,
                             colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                            colorBuffer._glTextureId,
+                            colorBuffer._glTexture,
                             0
                         );
                     }
@@ -1051,7 +1052,7 @@ Object.assign(pc, function () {
                     var depthBuffer = target._depthBuffer;
                     if (depthBuffer && this.webgl2) {
                         // --- Init the provided depth/stencil buffer (optional, WebGL2 only) ---
-                        if (!depthBuffer._glTextureId) {
+                        if (!depthBuffer._glTexture) {
                             // Clamp the render buffer size to the maximum supported by the device
                             depthBuffer._width = Math.min(depthBuffer.width, this.maxRenderBufferSize);
                             depthBuffer._height = Math.min(depthBuffer.height, this.maxRenderBufferSize);
@@ -1061,11 +1062,11 @@ Object.assign(pc, function () {
                         if (target._stencil) {
                             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT,
                                                     depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                                    target._depthBuffer._glTextureId, 0);
+                                                    target._depthBuffer._glTexture, 0);
                         } else {
                             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
                                                     depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                                    target._depthBuffer._glTextureId, 0);
+                                                    target._depthBuffer._glTexture, 0);
                         }
                     } else if (target._depth) {
                         // --- Init a new depth/stencil buffer (optional) ---
@@ -1159,8 +1160,8 @@ Object.assign(pc, function () {
             if (target) {
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
-                if (colorBuffer && colorBuffer._glTextureId && colorBuffer.mipmaps && colorBuffer._pot) {
-                    this.bindTexture(this.maxCombinedTextures - 1, colorBuffer._glTarget, colorBuffer._glTextureId);
+                if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && colorBuffer._pot) {
+                    this.bindTexture(this.maxCombinedTextures - 1, colorBuffer._glTarget, colorBuffer._glTexture);
                     gl.generateMipmap(colorBuffer._glTarget);
                 }
 
@@ -1175,7 +1176,7 @@ Object.assign(pc, function () {
             var gl = this.gl;
             var ext;
 
-            texture._glTextureId = gl.createTexture();
+            texture._glTexture = gl.createTexture();
 
             texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
                 (texture._volume ? gl.TEXTURE_3D : gl.TEXTURE_2D);
@@ -1343,6 +1344,50 @@ Object.assign(pc, function () {
                     texture._glInternalFormat = gl.SRGB8_ALPHA8;
                     texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
+            }
+
+            // Track this texture now that it is a WebGL resource
+            this.textures.push(texture);
+        },
+
+        destroyTexture: function (texture) {
+            if (texture._glTexture) {
+                // Remove texture from device's texture cache
+                var idx = this.textures.indexOf(texture);
+                if (idx !== -1) {
+                    this.textures.splice(idx, 1);
+                }
+
+                // Update shadowed texture unit state to remove texture from current unit
+                for (var i = 0; i < this.textureUnits.length; i++) {
+                    var textureUnit = this.textureUnits[i];
+                    for (var j = 0; j < textureUnit.length; j++) {
+                        if (textureUnit[j] === texture._glTexture) {
+                            textureUnit[j] = null;
+                        }
+                    }
+                }
+
+                // Blow away WebGL texture resource
+                var gl = this.gl;
+                gl.deleteTexture(texture._glTexture);
+                delete texture._glTexture;
+                delete texture._glTarget;
+                delete texture._glFormat;
+                delete texture._glInternalFormat;
+                delete texture._glPixelType;
+
+                // Update texture stats
+                this._vram.tex -= texture._gpuSize;
+                // #ifdef PROFILER
+                if (texture.profilerHint === pc.TEXHINT_SHADOWMAP) {
+                    this._vram.texShadow -= texture._gpuSize;
+                } else if (texture.profilerHint === pc.TEXHINT_ASSET) {
+                    this._vram.texAsset -= texture._gpuSize;
+                } else if (texture.profilerHint === pc.TEXHINT_LIGHTMAP) {
+                    this._vram.texLightmap -= texture._gpuSize;
+                }
+                // #endif
             }
         },
 
@@ -1582,7 +1627,7 @@ Object.assign(pc, function () {
         // unit, bind it
         bindTexture: function (texture) {
             var textureTarget = texture._glTarget;
-            var textureObject = texture._glTextureId;
+            var textureObject = texture._glTexture;
             var textureUnit = this.textureUnit;
             var slot = this.targetToSlot[textureTarget];
             if (this.textureUnits[textureUnit][slot] !== textureObject) {
@@ -1595,7 +1640,7 @@ Object.assign(pc, function () {
         // texture unit and bind the texture to it
         bindTextureOnUnit: function (texture, textureUnit) {
             var textureTarget = texture._glTarget;
-            var textureObject = texture._glTextureId;
+            var textureObject = texture._glTexture;
             var slot = this.targetToSlot[textureTarget];
             if (this.textureUnits[textureUnit][slot] !== textureObject) {
                 this.activeTexture(textureUnit);
@@ -1663,7 +1708,7 @@ Object.assign(pc, function () {
         },
 
         setTexture: function (texture, textureUnit) {
-            if (!texture._glTextureId)
+            if (!texture._glTexture)
                 this.initializeTexture(texture);
 
             if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
