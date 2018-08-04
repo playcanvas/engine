@@ -61,6 +61,9 @@ Object.assign(pc, function () {
     }
 
     function testTextureFloatHighPrecision(device) {
+        if (!device.textureFloatRenderable)
+            return false;
+
         var gl = device.gl;
         var chunks = pc.shaderChunks;
         var test1 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTestPS, "ptest1");
@@ -1358,7 +1361,15 @@ Object.assign(pc, function () {
                     this.textures.splice(idx, 1);
                 }
 
-                // Update shadowed texture unit state to remove texture from current unit
+                // Remove texture from any uniforms
+                for (var uniformName in this.scope.variables) {
+                    var uniform = this.scope.variables[uniformName];
+                    if (uniform.value === texture) {
+                        uniform.value = null;
+                    }
+                }
+
+                // Update shadowed texture unit state to remove texture from any units
                 for (var i = 0; i < this.textureUnits.length; i++) {
                     var textureUnit = this.textureUnits[i];
                     for (var j = 0; j < textureUnit.length; j++) {
