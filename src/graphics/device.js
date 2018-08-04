@@ -61,7 +61,7 @@ Object.assign(pc, function () {
     }
 
     function testTextureFloatHighPrecision(device) {
-        if (!this.textureFloatRenderable)
+        if (!device.textureFloatRenderable)
             return false;
 
         var gl = device.gl;
