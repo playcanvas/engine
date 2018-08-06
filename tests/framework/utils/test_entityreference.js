@@ -1,5 +1,5 @@
 (function() {
-    module("pc.EntityReference", {
+    QUnit.module("pc.EntityReference", {
         setup: function () {
             this.app = new pc.Application(document.createElement("canvas"));
 
@@ -47,6 +47,31 @@
         strictEqual(reference.entity, null);
 
         this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        strictEqual(reference.entity, this.otherEntity1);
+    });
+
+    test("does not attempt to resolve the entity reference if the parent component is not on the scene graph yet", function () {
+        this.app.root.removeChild(this.testEntity);
+
+        sinon.spy(this.app.root, "findByGuid");
+
+        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
+        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+
+        strictEqual(reference.entity, null);
+        strictEqual(this.app.root.findByGuid.callCount, 0);
+    });
+
+    test("resolves the entity reference when onParentComponentEnable() is called", function () {
+        this.app.root.removeChild(this.testEntity);
+
+        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
+        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        strictEqual(reference.entity, null);
+
+        this.app.root.addChild(this.testEntity);
+        reference.onParentComponentEnable();
+
         strictEqual(reference.entity, this.otherEntity1);
     });
 
@@ -319,10 +344,27 @@
 
         strictEqual(console.warn.callCount, 0);
 
-        this.testComponent.myEntity1 = this.otherEntity1;
+        this.testComponent.myEntity1 = {};
 
         strictEqual(console.warn.callCount, 1);
         strictEqual(console.warn.getCall(0).args[0], "Entity field `myEntity1` was set to unexpected type 'object'");
+    });
+
+    test("set reference to a pc.Entity instead of guid, converts property to guid", function () {
+        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
+        this.testComponent.myEntity1 = this.otherEntity1;
+
+        strictEqual(this.testComponent.myEntity1, this.otherEntity1.getGuid(), "Component property converted to guid");
+        strictEqual(reference.entity, this.otherEntity1);
+    });
+
+    test("set reference to a pc.Entity that is not in hierarchy, converts property to guid", function () {
+        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
+        var entity = new pc.Entity();
+        this.testComponent.myEntity1 = entity;
+
+        strictEqual(this.testComponent.myEntity1, entity.getGuid(), "Component property converted to guid");
+        strictEqual(reference.entity, entity);
     });
 
     test("hasComponent() returns false if the entity is not present", function () {

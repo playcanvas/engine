@@ -33,6 +33,8 @@ Object.assign(pc, function () {
          * @property {Number} rollOffFactor The factor used in the falloff equation.
          */
         SoundInstance3d = function (manager, sound, options) {
+            pc.SoundInstance.call(this, manager, sound, options);
+
             options = options || {};
 
             this._position = new pc.Vec3();
@@ -48,7 +50,8 @@ Object.assign(pc, function () {
             this.rollOffFactor = options.rollOffFactor !== undefined ? Number(options.rollOffFactor) : 1;
             this.distanceModel = options.distanceModel !== undefined ? options.distanceModel : pc.DISTANCE_LINEAR;
         };
-        SoundInstance3d = pc.inherits(SoundInstance3d, pc.SoundInstance);
+        SoundInstance3d.prototype = Object.create(pc.SoundInstance.prototype);
+        SoundInstance3d.prototype.constructor = SoundInstance3d;
 
         Object.assign(SoundInstance3d.prototype, {
             _initializeNodes: function () {
@@ -145,6 +148,8 @@ Object.assign(pc, function () {
         };
 
         SoundInstance3d = function (manager, sound, options) {
+            pc.SoundInstance.call(this, manager, sound, options);
+
             options = options || {};
 
             this._position = new pc.Vec3();
@@ -159,9 +164,9 @@ Object.assign(pc, function () {
             this._refDistance = options.refDistance !== undefined ? Number(options.refDistance) : 1;
             this._rollOffFactor = options.rollOffFactor !== undefined ? Number(options.rollOffFactor) : 1;
             this._distanceModel = options.distanceModel !== undefined ? options.distanceModel : pc.DISTANCE_LINEAR;
-
         };
-        SoundInstance3d = pc.inherits(SoundInstance3d, pc.SoundInstance);
+        SoundInstance3d.prototype = Object.create(pc.SoundInstance.prototype);
+        SoundInstance3d.prototype.constructor = SoundInstance3d;
 
         Object.defineProperty(SoundInstance3d.prototype, 'position', {
             get: function () {

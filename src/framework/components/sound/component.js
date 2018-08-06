@@ -18,6 +18,8 @@ Object.assign(pc, function () {
      * @property {Object} slots A dictionary that contains the {@link pc.SoundSlot}s managed by this Component.
      */
     var SoundComponent = function (system, entity) {
+        pc.Component.call(this, system, entity);
+
         this.on('set_slots', this.onSetSlots, this);
         this.on('set_volume', this.onSetVolume, this);
         this.on('set_pitch', this.onSetPitch, this);
@@ -27,8 +29,8 @@ Object.assign(pc, function () {
         this.on("set_distanceModel", this.onSetDistanceModel, this);
         this.on("set_positional", this.onSetPositional, this);
     };
-
-    SoundComponent = pc.inherits(SoundComponent, pc.Component);
+    SoundComponent.prototype = Object.create(pc.Component.prototype);
+    SoundComponent.prototype.constructor = SoundComponent;
 
     Object.assign(SoundComponent.prototype, {
         onSetSlots: function (name, oldValue, newValue) {
@@ -169,7 +171,7 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            SoundComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
 
             // do not run if running in Editor
             if (this.system._inTools) {
@@ -196,7 +198,7 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            SoundComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
 
             var slots = this.data.slots;
             var playingBeforeDisable = {};

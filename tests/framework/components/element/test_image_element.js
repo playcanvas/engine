@@ -1,4 +1,4 @@
-module('pc.ImageElement', {
+QUnit.module('pc.ImageElement', {
     setup: function () {
         stop();
         this.app = new pc.Application(document.createElement("canvas"));
@@ -22,19 +22,21 @@ module('pc.ImageElement', {
             }
         });
 
+        this.app.assets.prefix = '../../';
+
         // list of assets to load
         var assets = [
             new pc.Asset('red-atlas', 'textureatlas', {
-                url: '../../../assets/sprite/red-atlas.json'
+                url: 'base/tests/test-assets/sprite/red-atlas.json'
             }),
             new pc.Asset('red-sprite', 'sprite', {
-                url: '../../../assets/sprite/red-sprite.json'
+                url: 'base/tests/test-assets/sprite/red-sprite.json'
             }),
             new pc.Asset('red-texture', 'texture', {
-                url: '../../../assets/sprite/red-atlas.png'
+                url: 'base/tests/test-assets/sprite/red-atlas.png'
             }),
             new pc.Asset('red-material', 'material', {
-                url: '../../../assets/sprite/red-material.json'
+                url: 'base/tests/test-assets/sprite/red-material.json'
             })
         ];
 
@@ -162,4 +164,67 @@ test('Destroy Material Image Element', function () {
         ok(!e.element);
         start();
     });
+});
+
+
+test('Sprites assets unbound on destroy', function () {
+    ok(!this.assets.sprite.hasEvent('add'));
+    ok(!this.assets.sprite.hasEvent('load'));
+    ok(!this.assets.sprite.hasEvent('remove'));
+
+    var e = new pc.Entity();
+    e.addComponent('element', {
+        type: 'image',
+        spriteAsset: this.assets.sprite
+    });
+
+    e.destroy();
+
+    ok(!this.assets.sprite.hasEvent('add'));
+    ok(!this.assets.sprite.hasEvent('load'));
+    ok(!this.assets.sprite.hasEvent('remove'));
+});
+
+test('Sprites assets unbound when reset', function () {
+    ok(!this.assets.sprite.hasEvent('add'));
+    ok(!this.assets.sprite.hasEvent('load'));
+    ok(!this.assets.sprite.hasEvent('remove'));
+
+    var e = new pc.Entity();
+    e.addComponent('element', {
+        type: 'image',
+        spriteAsset: this.assets.sprite
+    });
+
+    e.element.spriteAsset = null;
+
+    ok(!this.assets.sprite.hasEvent('add'));
+    ok(!this.assets.sprite.hasEvent('load'));
+    ok(!this.assets.sprite.hasEvent('remove'));
+});
+
+
+test('Sprite resource unbound on destroy', function () {
+    var atlas = this.assets.textureatlas;
+
+    var e = new pc.Entity();
+    e.addComponent('element', {
+        type: 'image',
+        spriteAsset: this.assets.sprite
+    });
+
+    // var sprite = e.element.sprite;
+    // ok(!e.element.sprite.hasEvent('add'));
+    // ok(!e.element.sprite.hasEvent('load'));
+    // ok(!e.element.sprite.hasEvent('remove'));
+
+    ok(atlas.resource.hasEvent('set:texture'));
+
+    e.destroy();
+
+    ok(!atlas.resource.hasEvent('set:texture'));
+
+    // ok(!this.assets.sprite.hasEvent('add'));
+    // ok(!this.assets.sprite.hasEvent('load'));
+    // ok(!this.assets.sprite.hasEvent('remove'));
 });

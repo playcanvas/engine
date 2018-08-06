@@ -17,6 +17,8 @@ Object.assign(pc, function () {
      * @property {Number} excludeFromLayout If set to true, the child will be excluded from all layout calculations.
      */
     var LayoutChildComponent = function LayoutChildComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this._minWidth = 0;
         this._minHeight = 0;
         this._maxWidth = null;
@@ -25,7 +27,8 @@ Object.assign(pc, function () {
         this._fitHeightProportion = 0;
         this._excludeFromLayout = false;
     };
-    LayoutChildComponent = pc.inherits(LayoutChildComponent, pc.Component);
+    LayoutChildComponent.prototype = Object.create(pc.Component.prototype);
+    LayoutChildComponent.prototype.constructor = LayoutChildComponent;
 
     function defineResizeProperty(name) {
         var _name = '_' + name;

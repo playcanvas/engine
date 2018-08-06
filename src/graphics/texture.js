@@ -170,8 +170,6 @@ Object.assign(pc, function () {
         this.dirtyAll();
 
         this._gpuSize = 0;
-
-        this.device.textures.push(this);
     };
 
     // Public properties
@@ -195,7 +193,7 @@ Object.assign(pc, function () {
         set: function (v) {
             if (this._minFilter !== v) {
                 this._minFilter = v;
-                this._minFilterDirty = true;
+                this._parameterFlags |= 1;
             }
         }
     });
@@ -216,7 +214,7 @@ Object.assign(pc, function () {
         set: function (v) {
             if (this._magFilter !== v) {
                 this._magFilter = v;
-                this._magFilterDirty = true;
+                this._parameterFlags |= 2;
             }
         }
     });
@@ -238,7 +236,7 @@ Object.assign(pc, function () {
         set: function (v) {
             if (this._addressU !== v) {
                 this._addressU = v;
-                this._addressUDirty = true;
+                this._parameterFlags |= 4;
             }
         }
     });
@@ -260,7 +258,7 @@ Object.assign(pc, function () {
         set: function (v) {
             if (this._addressV !== v) {
                 this._addressV = v;
-                this._addressVDirty = true;
+                this._parameterFlags |= 8;
             }
         }
     });
@@ -282,12 +280,14 @@ Object.assign(pc, function () {
         set: function (addressW) {
             if (!this.device.webgl2) return;
             if (!this._volume) {
-                logWARNING("Can't set W addressing mode for a non-3D texture.");
+                // #ifdef DEBUG
+                console.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
+                // #endif
                 return;
             }
             if (addressW !== this._addressW) {
                 this._addressW = addressW;
-                this._addressWDirty = true;
+                this._parameterFlags |= 16;
             }
         }
     });
@@ -305,7 +305,7 @@ Object.assign(pc, function () {
         set: function (v) {
             if (this._compareOnRead !== v) {
                 this._compareOnRead = v;
-                this._compareModeDirty = true;
+                this._parameterFlags |= 32;
             }
         }
     });
@@ -331,7 +331,25 @@ Object.assign(pc, function () {
         set: function (v) {
             if (this._compareFunc !== v) {
                 this._compareFunc = v;
-                this._compareModeDirty = true;
+                this._parameterFlags |= 64;
+            }
+        }
+    });
+
+    /**
+     * @name pc.Texture#anisotropy
+     * @type Number
+     * @description Integer value specifying the level of anisotropic to apply to the texture
+     * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
+     */
+    Object.defineProperty(Texture.prototype, 'anisotropy', {
+        get: function () {
+            return this._anisotropy;
+        },
+        set: function (v) {
+            if (this._anisotropy !== v) {
+                this._anisotropy = v;
+                this._parameterFlags |= 128;
             }
         }
     });
@@ -367,24 +385,6 @@ Object.assign(pc, function () {
                 this._minFilterDirty = true;
 
                 if (v) this._needsMipmapsUpload = true;
-            }
-        }
-    });
-
-    /**
-     * @name pc.Texture#anisotropy
-     * @type Number
-     * @description Integer value specifying the level of anisotropic to apply to the texture
-     * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
-     */
-    Object.defineProperty(Texture.prototype, 'anisotropy', {
-        get: function () {
-            return this._anisotropy;
-        },
-        set: function (v) {
-            if (this._anisotropy !== v) {
-                this._anisotropy = v;
-                this._anisotropyDirty = true;
             }
         }
     });
@@ -577,47 +577,18 @@ Object.assign(pc, function () {
          * @description Forcibly free up the underlying WebGL resource owned by the texture.
          */
         destroy: function () {
-            var device = this.device;
-            var idx = device.textures.indexOf(this);
-            if (idx !== -1) {
-                device.textures.splice(idx, 1);
-            }
-
-            if (this._glTextureId) {
-                var gl = this.device.gl;
-                gl.deleteTexture(this._glTextureId);
-
-                this.device._vram.tex -= this._gpuSize;
-                // #ifdef PROFILER
-                if (this.profilerHint === pc.TEXHINT_SHADOWMAP) {
-                    this.device._vram.texShadow -= this._gpuSize;
-                } else if (this.profilerHint === pc.TEXHINT_ASSET) {
-                    this.device._vram.texAsset -= this._gpuSize;
-                } else if (this.profilerHint === pc.TEXHINT_LIGHTMAP) {
-                    this.device._vram.texLightmap -= this._gpuSize;
-                }
-                // #endif
-
-                this._glTextureId = null;
-            }
+            this.device.destroyTexture(this);
         },
 
         // Force a full resubmission of the texture to WebGL (used on a context restore event)
         dirtyAll: function () {
-            this._glTextureId = undefined;
             this._levelsUpdated = this._cubemap ? [[true, true, true, true, true, true]] : [true];
 
             this._needsUpload = true;
             this._needsMipmapsUpload = this._mipmaps;
             this._mipmapsUploaded = false;
 
-            this._minFilterDirty = true;
-            this._magFilterDirty = true;
-            this._addressUDirty = true;
-            this._addressVDirty = true;
-            this._addressWDirty = this._volume;
-            this._anisotropyDirty = true;
-            this._compareModeDirty = true;
+            this._parameterFlags = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
         },
 
         /**

@@ -1,4 +1,4 @@
-module('pc.path');
+QUnit.module('pc.path');
 
 test("path.getDirectory ", function() {
     equal("folder", pc.path.getDirectory("folder/file.txt"));

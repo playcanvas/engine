@@ -1,7 +1,7 @@
 Object.assign(pc, function () {
-    var topMasks = [];
-
+    // #ifdef DEBUG
     var _debugLogging = false;
+    // #endif
 
     /**
      * @enum pc.ELEMENTTYPE
@@ -92,6 +92,8 @@ Object.assign(pc, function () {
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var ElementComponent = function ElementComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this._anchor = new pc.Vec4();
         this._localAnchor = new pc.Vec4();
 
@@ -145,19 +147,25 @@ Object.assign(pc, function () {
         this._text = null;
         this._group = null;
 
+        this._drawOrder = 0;
+
         // input related
         this._useInput = false;
 
         this._layers = [pc.LAYERID_UI]; // assign to the default UI layer
-        this._addedModel = null;
+        this._addedModels = []; // store models that have been added to layer so we can re-add when layer is changed
 
         this._batchGroupId = -1;
         // #ifdef DEBUG
         this._batchGroup = null;
         // #endif
-    };
-    ElementComponent = pc.inherits(ElementComponent, pc.Component);
+        //
 
+        this._offsetReadAt = 0;
+        this._maskOffset = 0.5;
+    };
+    ElementComponent.prototype = Object.create(pc.Component.prototype);
+    ElementComponent.prototype.constructor = ElementComponent;
 
     Object.assign(ElementComponent.prototype, {
         _patch: function () {
@@ -350,40 +358,49 @@ Object.assign(pc, function () {
         },
 
         _dirtifyMask: function () {
-            var parent = this.entity;
-            while (parent) {
-                var next = parent.getParent();
-                if ((next === null || next.screen) && parent.element) {
+            var current = this.entity;
+            while (current) {
+                // search up the hierarchy until we find an entity which has:
+                // - no parent
+                // - screen component on parent
+                var next = current.getParent();
+                if ((next === null || next.screen) && current.element) {
                     if (!this.system._prerender || !this.system._prerender.length) {
                         this.system._prerender = [];
                         this.system.app.once('prerender', this._onPrerender, this);
 
+                        // #ifdef DEBUG
                         if (_debugLogging) console.log('register prerender');
+                        // #endif
                     }
                     var i = this.system._prerender.indexOf(this.entity);
                     if (i >= 0) {
                         this.system._prerender.splice(i, 1);
                     }
-                    var j = this.system._prerender.indexOf(parent);
+                    var j = this.system._prerender.indexOf(current);
                     if (j < 0) {
-                        this.system._prerender.push(parent);
+                        this.system._prerender.push(current);
                     }
-                    if (_debugLogging) console.log('set prerender root to: ' + parent.name);
+                    // #ifdef DEBUG
+                    if (_debugLogging) console.log('set prerender root to: ' + current.name);
+                    // #endif
                 }
 
-                parent = next;
+                current = next;
             }
         },
 
         _onPrerender: function () {
-            var ref = 0;
             for (var i = 0; i < this.system._prerender.length; i++) {
                 var mask = this.system._prerender[i];
+                // #ifdef DEBUG
                 if (_debugLogging) console.log('prerender from: ' + mask.name);
+                // #endif
 
                 // prevent call if element has been removed since being added
                 if (mask.element) {
-                    ref = mask.element.syncMask(ref) + 1;
+                    var depth = 1;
+                    mask.element.syncMask(depth);
                 }
             }
 
@@ -399,6 +416,7 @@ Object.assign(pc, function () {
                 this.screen.screen.off('remove', this._onScreenRemove, this);
             }
 
+            var previousScreen = this.screen;
             this.screen = screen;
             if (this.screen) {
                 this.screen.screen.on('set:resolution', this._onScreenResize, this);
@@ -410,7 +428,7 @@ Object.assign(pc, function () {
 
             this._calculateSize(this._hasSplitAnchorsX, this._hasSplitAnchorsY);
 
-            this.fire('set:screen', this.screen);
+            this.fire('set:screen', this.screen, previousScreen);
 
             this._anchorDirty = true;
 
@@ -424,117 +442,128 @@ Object.assign(pc, function () {
             if (this.screen) this.screen.screen.syncDrawOrder();
         },
 
-        syncMask: function (ref) {
+        syncMask: function (depth) {
             var result = this._parseUpToScreen();
-            return this._updateMask(result.mask, ref);
+            this._updateMask(result.mask, depth);
         },
 
+        // set the stencil buffer to check the mask value
+        // so as to only render inside the mask
+        // Note: if this entity is itself a mask the stencil params
+        // will be updated in updateMask to include masking
         _setMaskedBy: function (mask) {
-            var i, mi, len;
             var elem = this._image || this._text;
             if (!elem) return;
 
             if (mask) {
                 var ref = mask.element._image._maskRef;
+                // #ifdef DEBUG
                 if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
+                // #endif
+
                 var sp = new pc.StencilParameters({
                     ref: ref,
                     func: pc.FUNC_EQUAL
                 });
 
-                for (i = 0, len = elem._model.meshInstances.length; i < len; i++) {
-                    mi = elem._model.meshInstances[i];
-                    mi.stencilFront = mi.stencilBack = sp;
+                if (elem._setStencil) {
+                    elem._setStencil(sp);
                 }
 
                 elem._maskedBy = mask;
             } else {
+                // #ifdef DEBUG
                 if (_debugLogging) console.log("no masking on: " + this.entity.name);
+                // #endif
+
                 // remove mask
-                // restore default material
-                for (i = 0, len = elem._model.meshInstances.length; i < len; i++) {
-                    mi = elem._model.meshInstances[i];
-                    mi.stencilFront = mi.stencilBack = null;
+                if (elem._setStencil) {
+                    elem._setStencil(null);
                 }
                 elem._maskedBy = null;
             }
         },
 
-        _getMaskDepth: function () {
-            var depth = 1;
-            var parent = this.entity;
-
-            while (parent) {
-                parent = parent.getParent();
-                if (parent && parent.element && parent.element.mask) {
-                    depth++;
-
-                }
-            }
-
-            return depth;
-        },
-
-        // set the mask ancestor on this entity
-        _updateMask: function (mask, ref) {
+        // recursively update entity's stencil params
+        // to render the correct value into the stencil buffer
+        _updateMask: function (currentMask, depth) {
             var i, l, sp, children;
 
-            if (!ref) ref = 1;
+            if (currentMask) {
+                this._setMaskedBy(currentMask);
 
-            if (mask) {
-                this._setMaskedBy(mask);
-
+                // this element is also masking others
                 if (this.mask) {
-                    if (_debugLogging) console.log("masking: " + this.entity.name + " with " + ref);
-
+                    var ref = currentMask.element._image._maskRef;
                     sp = new pc.StencilParameters({
-                        ref: ref++,
+                        ref: ref,
                         func: pc.FUNC_EQUAL,
                         zpass: pc.STENCILOP_INCREMENT
                     });
-                    this._image._meshInstance.stencilFront = sp;
-                    this._image._meshInstance.stencilBack = sp;
-                    this._image._maskRef = ref;
-                    if (_debugLogging) console.log("masking from: " + this.entity.name + " with " + ref);
+                    this._image._setStencil(sp);
+                    this._image._maskRef = depth;
 
-                    mask = this.entity;
+                    // increment counter to count mask depth
+                    depth++;
+
+                    // #ifdef DEBUG
+                    if (_debugLogging) {
+                        console.log("masking from: " + this.entity.name + " with " + (sp.ref + 1));
+                        console.log("depth++ to: ", depth);
+                    }
+                    // #endif
+
+                    currentMask = this.entity;
                 }
 
                 // recurse through all children
                 children = this.entity.getChildren();
                 for (i = 0, l = children.length; i < l; i++) {
                     if (children[i].element) {
-                        children[i].element._updateMask(mask, ref);
+                        children[i].element._updateMask(currentMask, depth);
                     }
                 }
+
+                // if mask counter was increased, decrement it as we come back up the hierarchy
+                if (this.mask) depth--;
+
             } else {
                 // clearing mask
                 this._setMaskedBy(null);
 
-                // if this is mask we still need to mask children
                 if (this.mask) {
                     sp = new pc.StencilParameters({
+                        ref: depth,
                         func: pc.FUNC_ALWAYS,
-                        zpass: pc.STENCILOP_REPLACE,
-                        ref: ref
+                        zpass: pc.STENCILOP_REPLACE
                     });
-                    this._image._meshInstance.stencilFront = sp;
-                    this._image._meshInstance.stencilBack = sp;
-                    this._image._maskRef = ref;
-                    if (_debugLogging) console.log("masking from: " + this.entity.name + " with " + ref);
-                    mask = this.entity;
+                    this._image._setStencil(sp);
+                    this._image._maskRef = depth;
+
+                    // increment mask counter to count depth of masks
+                    depth++;
+
+                    // #ifdef DEBUG
+                    if (_debugLogging) {
+                        console.log("masking from: " + this.entity.name + " with " + sp.ref);
+                        console.log("depth++ to: ", depth);
+                    }
+                    // #endif
+
+                    currentMask = this.entity;
                 }
 
                 // recurse through all children
                 children = this.entity.getChildren();
                 for (i = 0, l = children.length; i < l; i++) {
                     if (children[i].element) {
-                        children[i].element._updateMask(mask, ref);
+                        children[i].element._updateMask(currentMask, depth);
                     }
                 }
-            }
 
-            return ref;
+                // decrement mask counter as we come back up the hierarchy
+                if (this.mask) depth--;
+            }
         },
 
         // search up the parent hierarchy until we reach a screen
@@ -643,21 +672,13 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            ElementComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
             if (this._image) this._image.onEnable();
             if (this._text) this._text.onEnable();
             if (this._group) this._group.onEnable();
 
             if (this.useInput && this.system.app.elementInput) {
                 this.system.app.elementInput.addElement(this);
-            }
-
-            if (this.mask) {
-                var maskDepth = this._getMaskDepth();
-                if (maskDepth === 1) {
-                    this._topMask = true;
-                    if (topMasks.indexOf(this) < 0) topMasks.push(this);
-                }
             }
 
             this.system.app.scene.on("set:layers", this.onLayersChanged, this);
@@ -670,7 +691,7 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            ElementComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
 
             this.system.app.scene.off("set:layers", this.onLayersChanged, this);
             if (this.system.app.scene.layers) {
@@ -684,12 +705,6 @@ Object.assign(pc, function () {
 
             if (this.system.app.elementInput && this.useInput) {
                 this.system.app.elementInput.removeElement(this);
-            }
-
-            if (this._topMask) {
-                var index = topMasks.indexOf(this);
-                if (index >= 0) topMasks.splice(index, 1);
-                this._topMask = false;
             }
 
             if (this._batchGroupId >= 0) {
@@ -710,10 +725,9 @@ Object.assign(pc, function () {
                 this.system.app.elementInput.removeElement(this);
             }
 
-            if (this._topMask) {
-                var index = topMasks.indexOf(this);
-                if (index >= 0) topMasks.splice(index, 1);
-                this._topMask = false;
+            // if there is a screen, update draw-order
+            if (this.screen) {
+                this.screen.screen.syncDrawOrder();
             }
         },
 
@@ -822,7 +836,7 @@ Object.assign(pc, function () {
 
         addModelToLayers: function (model) {
             var layer;
-            this._addedModel = model;
+            this._addedModels.push(model);
             for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
@@ -832,12 +846,28 @@ Object.assign(pc, function () {
 
         removeModelFromLayers: function (model) {
             var layer;
-            this._addedModel = null;
+            var idx = this._addedModels.indexOf(model);
+            if (idx >= 0) {
+                this._addedModels.splice(idx, 1);
+            }
             for (var i = 0; i < this.layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.removeMeshInstances(model.meshInstances);
             }
+        },
+
+        getMaskOffset: function () {
+            // reset offset on new frame
+            // we always count offset down from 0.5
+            var frame = this.system.app.frame;
+            if (this._offsetReadAt !== frame) {
+                this._maskOffset = 0.5;
+                this._offsetReadAt = frame;
+            }
+            var mo = this._maskOffset;
+            this._maskOffset -= 0.001;
+            return mo;
         }
     });
 
@@ -874,24 +904,28 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
-            var i, layer;
+            var i, j, layer;
 
-            if (this._addedModel) {
+            if (this._addedModels.length) {
                 for (i = 0; i < this._layers.length; i++) {
                     layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                     if (layer) {
-                        layer.removeMeshInstances(this._addedModel.meshInstances);
+                        for (j = 0; j < this._addedModels.length; j++) {
+                            layer.removeMeshInstances(this._addedModels[j].meshInstances);
+                        }
                     }
                 }
             }
 
             this._layers = value;
 
-            if (!this.enabled || !this.entity.enabled || !this._addedModel) return;
+            if (!this.enabled || !this.entity.enabled || !this._addedModels.length) return;
             for (i = 0; i < this._layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
-                    layer.addMeshInstances(this._addedModel.meshInstances);
+                    for (j = 0; j < this._addedModels.length; j++) {
+                        layer.removeMeshInstances(this._addedModels[j].meshInstances);
+                    }
                 }
             }
         }
@@ -903,7 +937,20 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
-            this._drawOrder = value;
+            var priority = 0;
+            if (this.screen) {
+                priority = this.screen.screen.priority;
+            }
+
+            if (value > 0xFFFFFF) {
+                // #ifdef DEBUG
+                console.warn("Element.drawOrder larger than max size of: " + 0xFFFFFF);
+                // #endif
+                value = 0xFFFFFF;
+            }
+
+            // screen priority is stored in the top 8 bits
+            this._drawOrder = (priority << 24) + value;
             this.fire('set:draworder', this._drawOrder);
         }
     });
@@ -1022,7 +1069,10 @@ Object.assign(pc, function () {
 
         set: function (value) {
             this._width = value;
-            this._setCalculatedWidth(value, true);
+
+            if (!this._hasSplitAnchorsX) {
+                this._setCalculatedWidth(value, true);
+            }
 
             this.fire('set:width', this._width);
         }
@@ -1035,7 +1085,10 @@ Object.assign(pc, function () {
 
         set: function (value) {
             this._height = value;
-            this._setCalculatedHeight(value, true);
+
+            if (!this._hasSplitAnchorsY) {
+                this._setCalculatedHeight(value, true);
+            }
 
             this.fire('set:height', this._height);
         }
@@ -1318,6 +1371,18 @@ Object.assign(pc, function () {
             }
 
             this._batchGroupId = value;
+        }
+    });
+
+    // read-only, get the entity that is currently masking this element
+    Object.defineProperty(ElementComponent.prototype, "maskedBy", {
+        get: function () {
+            if (this._image) {
+                return this._image._maskedBy;
+            } else if (this._text) {
+                return this._text._maskedBy;
+            }
+            return null;
         }
     });
 

@@ -214,28 +214,55 @@ Object.assign(pc, function () {
          * @name pc.AssetRegistry#remove
          * @description Remove an asset from the registry
          * @param {pc.Asset} asset The asset to remove
+         * @returns {Boolean} True if the asset was successfully removed and false otherwise
          * @example
          * var asset = app.assets.get(100);
          * app.assets.remove(asset);
          */
         remove: function (asset) {
-            delete this._cache[asset.id];
-            delete this._names[asset.name];
+            var idx = this._cache[asset.id];
 
-            var url = asset.file ? asset.file.url : null;
-            if (url)
-                delete this._urls[url];
+            if (idx !== undefined) {
+                // remove from list
+                this._assets.splice(idx, 1);
 
-            // tags cache
-            this._tags.removeItem(asset);
-            asset.tags.off('add', this._onTagAdd, this);
-            asset.tags.off('remove', this._onTagRemove, this);
+                // remove id -> index cache
+                delete this._cache[asset.id];
 
-            asset.fire("remove", asset);
-            this.fire("remove", asset);
-            this.fire("remove:" + asset.id, asset);
-            if (url)
-                this.fire("remove:url:" + url, asset);
+                // name cache needs to be completely rebuilt
+                this._names = {};
+
+                // update id cache and rebuild name cache
+                for (var i = 0, l = this._assets.length; i < l; i++) {
+                    var a = this._assets[i];
+
+                    this._cache[a.id] = i;
+                    if (!this._names[a.name]) {
+                        this._names[a.name] = [];
+                    }
+                    this._names[a.name].push(i);
+                }
+
+                var url = asset.file ? asset.file.url : null;
+                if (url)
+                    delete this._urls[url];
+
+                // tags cache
+                this._tags.removeItem(asset);
+                asset.tags.off('add', this._onTagAdd, this);
+                asset.tags.off('remove', this._onTagRemove, this);
+
+                asset.fire("remove", asset);
+                this.fire("remove", asset);
+                this.fire("remove:" + asset.id, asset);
+                if (url)
+                    this.fire("remove:url:" + url, asset);
+
+                return true;
+            }
+
+            // asset not in registry
+            return false;
         },
 
         /**
@@ -435,8 +462,8 @@ Object.assign(pc, function () {
                 return;
             }
 
-            asset.once("load", function (asset) {
-                callback(null, asset);
+            asset.once("load", function (loadedAsset) {
+                callback(null, loadedAsset);
             });
             asset.once("error", function (err) {
                 callback(err);
@@ -454,14 +481,14 @@ Object.assign(pc, function () {
             var ext = pc.path.getExtension(url);
 
 
-            var _loadAsset = function (asset) {
-                asset.once("load", function (asset) {
-                    callback(null, asset);
+            var _loadAsset = function (assetToLoad) {
+                asset.once("load", function (loadedAsset) {
+                    callback(null, loadedAsset);
                 });
                 asset.once("error", function (err) {
                     callback(err);
                 });
-                self.load(asset);
+                self.load(assetToLoad);
             };
 
             if (ext === '.json') {
@@ -474,7 +501,7 @@ Object.assign(pc, function () {
                         return;
                     }
 
-                    self._loadMaterials(dir, data, function (err, materials) {
+                    self._loadMaterials(dir, data, function (e, materials) {
                         asset.data = data;
                         _loadAsset(asset);
                     });
@@ -493,9 +520,9 @@ Object.assign(pc, function () {
             var count = mapping.mapping.length;
             var materials = [];
 
-            var done = function (err, materials) {
-                self._loadTextures(materials, function (err, textures) {
-                    callback(null, materials);
+            var done = function (err, loadedMaterials) {
+                self._loadTextures(loadedMaterials, function (e, textures) {
+                    callback(null, loadedMaterials);
                 });
             };
 

@@ -26,6 +26,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var AudioSourceComponentSystem = function (app, manager) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = "audiosource";
         this.description = "Specifies audio assets that can be played at the position of the Entity.";
         app.systems.add(this.id, this);
@@ -44,14 +46,15 @@ Object.assign(pc, function () {
 
         this.on('remove', this.onRemove, this);
     };
-    AudioSourceComponentSystem = pc.inherits(AudioSourceComponentSystem, pc.ComponentSystem);
+    AudioSourceComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    AudioSourceComponentSystem.prototype.constructor = AudioSourceComponentSystem;
 
     pc.Component._buildAccessors(pc.AudioSourceComponent.prototype, _schema);
 
     Object.assign(AudioSourceComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['activate', 'volume', 'pitch', 'loop', '3d', 'minDistance', 'maxDistance', 'rollOffFactor', 'distanceModel', 'enabled', 'assets'];
-            AudioSourceComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
 
             component.paused = !(component.enabled && component.activate);
         },

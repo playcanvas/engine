@@ -61,7 +61,7 @@ Object.assign(pc, function () {
     var ASSET_PROPERTIES = [
         'colorMapAsset',
         'normalMapAsset',
-        'mesh'
+        'meshAsset'
     ];
 
     var depthLayer;
@@ -107,6 +107,9 @@ Object.assign(pc, function () {
      * @property {pc.Vec3} emitterExtents (Only for EMITTERSHAPE_BOX) The extents of a local space bounding box within which particles are spawned at random positions.
      * @property {Number} emitterRadius (Only for EMITTERSHAPE_SPHERE) The radius within which particles are spawned at random positions.
      * @property {pc.Vec3} wrapBounds The half extents of a world space box volume centered on the owner entity's position. If a particle crosses the boundary of one side of the volume, it teleports to the opposite side.
+     * @property {pc.Asset} colorMapAsset The {@link pc.Asset} used to set the colorMap.
+     * @property {pc.Asset} normalMapAsset The {@link pc.Asset} used to set the normalMap.
+     * @property {pc.Asset} meshAsset The {@link pc.Asset} used to set the mesh.
      * @property {pc.Texture} colorMap The color map texture to apply to all particles in the system. If no texture is assigned, a default spot texture is used.
      * @property {pc.Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
      * @property {pc.EMITTERSHAPE} emitterShape Shape of the emitter. Defines the bounds inside which particles are spawned. Also affects the direction of initial velocity.
@@ -138,8 +141,11 @@ Object.assign(pc, function () {
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
         this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
+        this.on("set_meshAsset", this.onSetMeshAsset, this);
         this.on("set_mesh", this.onSetMesh, this);
         this.on("set_loop", this.onSetLoop, this);
         this.on("set_blendType", this.onSetBlendType, this);
@@ -160,8 +166,8 @@ Object.assign(pc, function () {
 
         this._requestedDepth = false;
     };
-
-    ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.Component);
+    ParticleSystemComponent.prototype = Object.create(pc.Component.prototype);
+    ParticleSystemComponent.prototype.constructor = ParticleSystemComponent;
 
     Object.assign(ParticleSystemComponent.prototype, {
         addModelToLayers: function () {
@@ -321,59 +327,66 @@ Object.assign(pc, function () {
             this.normalMapAsset = null;
         },
 
-        onSetMesh: function (name, oldValue, newValue) {
-            var self = this;
+        _bindMeshAsset: function (asset) {
+            asset.on('remove', this._onMeshAssetRemoved, this);
+            asset.on('load', this._onMeshAssetLoad, this);
+        },
+
+        _unbindMeshAsset: function (asset) {
+            asset.off('remove', this._onMeshAssetRemoved, this);
+            asset.off('load', this._onMeshAssetLoad, this);
+        },
+
+        _onMeshAssetLoad: function (asset) {
+            this._onMeshChanged(asset.resource);
+        },
+
+        onSetMeshAsset: function (name, oldValue, newValue) {
             var asset;
             var assets = this.system.app.assets;
 
-            if (oldValue && typeof oldValue === 'number') {
+            if (oldValue) {
                 asset = assets.get(oldValue);
                 if (asset) {
-                    asset.off('remove', this.onMeshRemoved, this);
+                    this._unbindMeshAsset(asset);
                 }
             }
 
             if (newValue) {
                 if (newValue instanceof pc.Asset) {
-                    this.data.mesh = newValue.id;
+                    this.data.meshAsset = newValue.id;
                     newValue = newValue.id;
                 }
 
-                if (typeof newValue === 'number') {
-                    asset = assets.get(newValue);
-                    if (asset) {
-                        asset.on('remove', this.onMeshRemoved, this);
-                        asset.ready(function (asset) {
-                            self._onMeshChanged(asset.resource);
-                        });
+                asset = assets.get(newValue);
+                if (asset) {
+                    this._bindMeshAsset(asset);
 
-                        if (self.enabled && self.entity.enabled) {
-                            assets.load(asset);
-                        }
+                    if (asset.resource) {
+                        this._onMeshChanged(asset.resource);
                     } else {
-                        assets.once('add:' + newValue, function (asset) {
-                            asset.on('remove', this.onMeshRemoved, this);
-                            asset.ready(function (asset) {
-                                self._onMeshChanged(asset.resource);
-                            });
-
-                            if (self.enabled && self.entity.enabled) {
-                                assets.load(asset);
-                            }
-                        });
+                        assets.load(asset);
                     }
-                } else {
-                    // model resource
-                    this._onMeshChanged(newValue);
                 }
             } else {
-                // null model
                 this._onMeshChanged(null);
+            }
+        },
+
+        onSetMesh: function (name, oldValue, newValue) {
+            // hack this for now
+            // if the value being set is null, an asset or an asset id, then assume we are
+            // setting the mesh asset, which will in turn update the mesh
+            if (!newValue || newValue instanceof pc.Asset || typeof newValue === 'number') {
+                this.meshAsset = newValue;
+            } else {
+                this._onMeshChanged(newValue);
             }
         },
 
         _onMeshChanged: function (mesh) {
             if (mesh && !(mesh instanceof pc.Mesh)) {
+                // if mesh is a pc.Model, use the first meshInstance
                 if (mesh.meshInstances[0]) {
                     mesh = mesh.meshInstances[0].mesh;
                 } else {
@@ -390,8 +403,8 @@ Object.assign(pc, function () {
             }
         },
 
-        onMeshRemoved: function (asset) {
-            asset.off('remove', this.onMeshRemoved, this);
+        onMeshAssetRemoved: function (asset) {
+            asset.off('remove', this.onMeshAssetRemoved, this);
             this.mesh = null;
         },
 
@@ -589,11 +602,11 @@ Object.assign(pc, function () {
                 this._requestDepth();
             }
 
-            ParticleSystemComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
         },
 
         onDisable: function () {
-            ParticleSystemComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
 
             this.system.app.scene.off("set:layers", this.onLayersChanged, this);
             if (this.system.app.scene.layers) {
@@ -697,6 +710,28 @@ Object.assign(pc, function () {
                 this.data.model.meshInstances = [this.emitter.meshInstance];
             }
             this.enabled = enabled;
+        },
+
+        onDestroy: function () {
+            var data = this.data;
+            if (data.model) {
+                this.entity.removeChild(data.model.getGraph());
+                data.model = null;
+            }
+
+            if (this.emitter) {
+                this.emitter.destroy();
+                this.emitter = null;
+            }
+
+            // clear all asset properties to remove any event listeners
+            for (var i = 0; i < ASSET_PROPERTIES.length; i++) {
+                var prop = ASSET_PROPERTIES[i];
+
+                if (data[prop]) {
+                    this[prop] = null;
+                }
+            }
         }
     });
 

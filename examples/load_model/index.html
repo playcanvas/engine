@@ -25,12 +25,15 @@
 
         var entity, light, camera;
 
+        // Load a model file and create a Entity with a model component
         var url = "../assets/statue/Statue_1.json";
-
         app.assets.loadFromUrl(url, "model", function (err, asset) {
             entity = new pc.Entity();
-            entity.addComponent("model");
-            entity.model.model = asset.resource;
+            entity.addComponent("model", {
+                type: "asset",
+                asset: asset,
+                castShadows: true
+            });
             app.root.addChild(entity);
         });
 
@@ -47,7 +50,8 @@
         light.addComponent("light", {
             type: "point",
             color: new pc.Color(1, 1, 1),
-            range: 100
+            range: 100,
+            castShadows: true
         });
         light.translate(5, 0, 15);
         app.root.addChild(light);

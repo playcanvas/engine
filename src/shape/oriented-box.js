@@ -18,6 +18,8 @@ Object.assign(pc, function () {
 
         worldTransform = worldTransform || tmpMat4.setIdentity();
         this._modelTransform = worldTransform.clone().invert();
+
+        this._worldTransform = worldTransform.clone(); // temp - currently only used in the worldTransform accessor, see future PR for more use
         this._aabb = new pc.BoundingBox(new pc.Vec3(), this.halfExtents);
     };
 
@@ -75,7 +77,11 @@ Object.assign(pc, function () {
     });
 
     Object.defineProperty(OrientedBox.prototype, 'worldTransform', {
+        get: function () {
+            return this._worldTransform;
+        },
         set: function (value) {
+            this._worldTransform.copy(value);
             this._modelTransform.copy(value).invert();
         }
     });

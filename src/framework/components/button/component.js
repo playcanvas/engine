@@ -49,18 +49,29 @@ Object.assign(pc, function () {
      * @property {Number} inactiveSpriteFrame Frame to be used from the inactive sprite.
      */
     var ButtonComponent = function ButtonComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this._visualState = VisualState.DEFAULT;
         this._isHovering = false;
         this._isPressed = false;
-        this._imageEntity = null;
 
         this._defaultTint = new pc.Color(1, 1, 1, 1);
         this._defaultSpriteAsset = null;
         this._defaultSpriteFrame = 0;
 
+        this._imageReference = new pc.EntityReference(this, 'imageEntity', {
+            'element#gain': this._onImageElementGain,
+            'element#lose': this._onImageElementLose,
+            'element#set:color': this._onSetColor,
+            'element#set:opacity': this._onSetOpacity,
+            'element#set:spriteAsset': this._onSetSpriteAsset,
+            'element#set:spriteFrame': this._onSetSpriteFrame
+        });
+
         this._toggleLifecycleListeners('on', system);
     };
-    ButtonComponent = pc.inherits(ButtonComponent, pc.Component);
+    ButtonComponent.prototype = Object.create(pc.Component.prototype);
+    ButtonComponent.prototype.constructor = ButtonComponent;
 
     Object.assign(ButtonComponent.prototype, {
         _toggleLifecycleListeners: function (onOrOff, system) {
@@ -75,13 +86,11 @@ Object.assign(pc, function () {
             this[onOrOff]('set_pressedSpriteFrame', this._onSetTransitionValue, this);
             this[onOrOff]('set_inactiveSpriteAsset', this._onSetTransitionValue, this);
             this[onOrOff]('set_inactiveSpriteFrame', this._onSetTransitionValue, this);
-            this[onOrOff]('set_imageEntity', this._onSetImageEntity, this);
 
-            pc.ComponentSystem[onOrOff]('postInitialize', this._onPostInitialize, this);
             pc.ComponentSystem[onOrOff]('update', this._onUpdate, this);
 
             system.app.systems.element[onOrOff]('add', this._onElementComponentAdd, this);
-            system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemoveOrImageEntityDestroy, this);
+            system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemove, this);
         },
 
         _onSetActive: function (name, oldValue, newValue) {
@@ -104,97 +113,57 @@ Object.assign(pc, function () {
             }
         },
 
-        _onSetImageEntity: function (name, oldGuid, newGuid) {
-            if (oldGuid !== newGuid) {
-                this._updateImageEntityReference();
-            }
-        },
-
-        _onPostInitialize: function () {
-            this._updateImageEntityReference();
-        },
-
-        // The public imageEntity property stores the entity guid (and this is what is
-        // persisted in the database), but internally we need a reference to the actual
-        // entity so that we can add listeners to it, modify its tint/sprite when the
-        // user interacts with it, etc. This method is called whenever the guid changes
-        // in order to resolve the guid to an actual entity reference.
-        _updateImageEntityReference: function () {
-            var imageGuid = this.data.imageEntity;
-            var hasChanged = !this._imageEntity || this._imageEntity.getGuid() !== imageGuid;
-
-            if (hasChanged) {
-                if (this._imageEntity) {
-                    this._onBeforeImageEntityChange();
-                }
-
-                this._imageEntity = imageGuid ? this.system.app.root.findByGuid(imageGuid) : null;
-
-                if (this._imageEntity) {
-                    this._onAfterImageEntityChange();
-                }
-            }
-        },
-
-        _onElementComponentRemoveOrImageEntityDestroy: function (entity) {
-            if (this._imageEntity === entity) {
-                this._cancelTween();
-                this._toggleImageListeners('off');
-                this._imageEntity = null;
+        _onElementComponentRemove: function (entity) {
+            if (this.entity === entity) {
+                this._toggleHitElementListeners('off');
             }
         },
 
         _onElementComponentAdd: function (entity) {
-            if (this._imageEntity === entity) {
-                this._onAfterImageEntityChange();
+            if (this.entity === entity) {
+                this._toggleHitElementListeners('on');
             }
         },
 
-        _onBeforeImageEntityChange: function () {
-            this._toggleImageListeners('off');
+        _onImageElementLose: function () {
+            this._cancelTween();
             this._resetToDefaultVisualState(this.transitionMode);
         },
 
-        _onAfterImageEntityChange: function () {
-            this._toggleImageListeners('on');
+        _onImageElementGain: function () {
             this._storeDefaultVisualState();
             this._forceReapplyVisualState();
         },
 
-        _toggleImageListeners: function (onOrOff) {
-            if (this._imageEntity && this._imageEntity.element) {
+        _toggleHitElementListeners: function (onOrOff) {
+            if (this.entity.element) {
                 var isAdding = (onOrOff === 'on');
 
                 // Prevent duplicate listeners
-                if (isAdding && this._hasImageListeners) {
+                if (isAdding && this._hasHitElementListeners) {
                     return;
                 }
 
-                this._imageEntity[onOrOff]('destroy', this._onElementComponentRemoveOrImageEntityDestroy, this);
-                this._imageEntity.element[onOrOff]('set:color', this._onSetColor, this);
-                this._imageEntity.element[onOrOff]('set:opacity', this._onSetOpacity, this);
-                this._imageEntity.element[onOrOff]('set:spriteAsset', this._onSetSpriteAsset, this);
-                this._imageEntity.element[onOrOff]('set:spriteFrame', this._onSetSpriteFrame, this);
-                this._imageEntity.element[onOrOff]('mouseenter', this._onMouseEnter, this);
-                this._imageEntity.element[onOrOff]('mouseleave', this._onMouseLeave, this);
-                this._imageEntity.element[onOrOff]('mousedown', this._onMouseDown, this);
-                this._imageEntity.element[onOrOff]('mouseup', this._onMouseUp, this);
-                this._imageEntity.element[onOrOff]('touchstart', this._onTouchStart, this);
-                this._imageEntity.element[onOrOff]('touchend', this._onTouchEnd, this);
-                this._imageEntity.element[onOrOff]('touchleave', this._onTouchLeave, this);
-                this._imageEntity.element[onOrOff]('touchcancel', this._onTouchCancel, this);
-                this._imageEntity.element[onOrOff]('click', this._onClick, this);
+                this.entity.element[onOrOff]('mouseenter', this._onMouseEnter, this);
+                this.entity.element[onOrOff]('mouseleave', this._onMouseLeave, this);
+                this.entity.element[onOrOff]('mousedown', this._onMouseDown, this);
+                this.entity.element[onOrOff]('mouseup', this._onMouseUp, this);
+                this.entity.element[onOrOff]('touchstart', this._onTouchStart, this);
+                this.entity.element[onOrOff]('touchend', this._onTouchEnd, this);
+                this.entity.element[onOrOff]('touchleave', this._onTouchLeave, this);
+                this.entity.element[onOrOff]('touchcancel', this._onTouchCancel, this);
+                this.entity.element[onOrOff]('click', this._onClick, this);
 
-                this._hasImageListeners = isAdding;
+                this._hasHitElementListeners = isAdding;
             }
         },
 
         _storeDefaultVisualState: function () {
-            if (this._imageEntity && this._imageEntity.element) {
-                this._storeDefaultColor(this._imageEntity.element.color);
-                this._storeDefaultOpacity(this._imageEntity.element.opacity);
-                this._storeDefaultSpriteAsset(this._imageEntity.element.spriteAsset);
-                this._storeDefaultSpriteFrame(this._imageEntity.element.spriteFrame);
+            if (this._imageReference.hasComponent('element')) {
+                this._storeDefaultColor(this._imageReference.entity.element.color);
+                this._storeDefaultOpacity(this._imageReference.entity.element.opacity);
+                this._storeDefaultSpriteAsset(this._imageReference.entity.element.spriteAsset);
+                this._storeDefaultSpriteFrame(this._imageReference.entity.element.spriteFrame);
             }
         },
 
@@ -248,7 +217,7 @@ Object.assign(pc, function () {
             this._isHovering = true;
 
             this._updateVisualState();
-            this.fire('mouseenter', event);
+            this._fireIfActive('mouseenter', event);
         },
 
         _onMouseLeave: function (event) {
@@ -256,28 +225,28 @@ Object.assign(pc, function () {
             this._isPressed = false;
 
             this._updateVisualState();
-            this.fire('mouseleave', event);
+            this._fireIfActive('mouseleave', event);
         },
 
         _onMouseDown: function (event) {
             this._isPressed = true;
 
             this._updateVisualState();
-            this.fire('mousedown', event);
+            this._fireIfActive('mousedown', event);
         },
 
         _onMouseUp: function (event) {
             this._isPressed = false;
 
             this._updateVisualState();
-            this.fire('mouseup', event);
+            this._fireIfActive('mouseup', event);
         },
 
         _onTouchStart: function (event) {
             this._isPressed = true;
 
             this._updateVisualState();
-            this.fire('touchstart', event);
+            this._fireIfActive('touchstart', event);
         },
 
         _onTouchEnd: function (event) {
@@ -294,25 +263,31 @@ Object.assign(pc, function () {
             this._isPressed = false;
 
             this._updateVisualState();
-            this.fire('touchend', event);
+            this._fireIfActive('touchend', event);
         },
 
         _onTouchLeave: function (event) {
             this._isPressed = false;
 
             this._updateVisualState();
-            this.fire('touchleave', event);
+            this._fireIfActive('touchleave', event);
         },
 
         _onTouchCancel: function (event) {
             this._isPressed = false;
 
             this._updateVisualState();
-            this.fire('touchcancel', event);
+            this._fireIfActive('touchcancel', event);
         },
 
         _onClick: function (event) {
-            this.fire('click', event);
+            this._fireIfActive('click', event);
+        },
+
+        _fireIfActive: function (name, event) {
+            if (this.data.active) {
+                this.fire(name, event);
+            }
         },
 
         _updateVisualState: function (force) {
@@ -321,6 +296,22 @@ Object.assign(pc, function () {
 
             if ((oldVisualState !== newVisualState || force) && this.enabled) {
                 this._visualState = newVisualState;
+
+                if (oldVisualState === VisualState.HOVER) {
+                    this._fireIfActive('hoverend');
+                }
+
+                if (oldVisualState === VisualState.PRESSED) {
+                    this._fireIfActive('pressedend');
+                }
+
+                if (newVisualState === VisualState.HOVER) {
+                    this._fireIfActive('hoverstart');
+                }
+
+                if (newVisualState === VisualState.PRESSED) {
+                    this._fireIfActive('pressedstart');
+                }
 
                 switch (this.transitionMode) {
                     case pc.BUTTON_TRANSITION_MODE_TINT:
@@ -351,7 +342,7 @@ Object.assign(pc, function () {
         // image back to its original tint. Note that this happens immediately, i.e.
         // without any animation.
         _resetToDefaultVisualState: function (transitionMode) {
-            if (this._imageEntity && this._imageEntity.element) {
+            if (this._imageReference.hasComponent('element')) {
                 switch (transitionMode) {
                     case pc.BUTTON_TRANSITION_MODE_TINT:
                         this._cancelTween();
@@ -380,10 +371,10 @@ Object.assign(pc, function () {
         _applySprite: function (spriteAsset, spriteFrame) {
             spriteFrame = spriteFrame || 0;
 
-            if (this._imageEntity && this._imageEntity.element) {
+            if (this._imageReference.hasComponent('element')) {
                 this._isApplyingSprite = true;
-                this._imageEntity.element.spriteAsset = spriteAsset;
-                this._imageEntity.element.spriteFrame = spriteFrame;
+                this._imageReference.entity.element.spriteAsset = spriteAsset;
+                this._imageReference.entity.element.spriteFrame = spriteFrame;
                 this._isApplyingSprite = false;
             }
         },
@@ -399,18 +390,18 @@ Object.assign(pc, function () {
         },
 
         _applyTintImmediately: function (tintColor) {
-            if (this._imageEntity && this._imageEntity.element && tintColor) {
+            if (this._imageReference.hasComponent('element') && tintColor) {
                 this._isApplyingTint = true;
-                this._imageEntity.element.color = toColor3(tintColor);
-                this._imageEntity.element.opacity = tintColor.a;
+                this._imageReference.entity.element.color = toColor3(tintColor);
+                this._imageReference.entity.element.opacity = tintColor.a;
                 this._isApplyingTint = false;
             }
         },
 
         _applyTintWithTween: function (tintColor) {
-            if (this._imageEntity && this._imageEntity.element && tintColor) {
-                var color = this._imageEntity.element.color;
-                var opacity = this._imageEntity.element.opacity;
+            if (this._imageReference.hasComponent('element') && tintColor) {
+                var color = this._imageReference.entity.element.color;
+                var opacity = this._imageReference.entity.element.opacity;
 
                 this._tweenInfo = {
                     startTime: pc.now(),
@@ -446,13 +437,13 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            this._updateImageEntityReference();
-            this._toggleImageListeners('on');
+            this._imageReference.onParentComponentEnable();
+            this._toggleHitElementListeners('on');
             this._forceReapplyVisualState();
         },
 
         onDisable: function () {
-            this._toggleImageListeners('off');
+            this._toggleHitElementListeners('off');
             this._resetToDefaultVisualState(this.transitionMode);
         },
 
@@ -541,4 +532,32 @@ Object.assign(pc, function () {
  * @name pc.ButtonComponent#touchleave
  * @description Fired when a touch leaves the component.
  * @param {pc.ElementTouchEvent} event The event
+ */
+
+/**
+ * @private
+ * @event
+ * @name pc.ButtonComponent#hoverstart
+ * @description Fired when the button changes state to be hovered
+ */
+
+/**
+ * @private
+ * @event
+ * @name pc.ButtonComponent#hoverend
+ * @description Fired when the button changes state to be not hovered
+ */
+
+/**
+ * @private
+ * @event
+ * @name pc.ButtonComponent#pressedstart
+ * @description Fired when the button changes state to be pressed
+ */
+
+/**
+ * @private
+ * @event
+ * @name pc.ButtonComponent#pressedend
+ * @description Fired when the button changes state to be not pressed
  */

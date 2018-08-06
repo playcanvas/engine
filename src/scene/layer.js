@@ -51,6 +51,18 @@ Object.assign(pc, function () {
         this.visibleTransparent = [];
     };
 
+    InstanceList.prototype.clearVisibleLists = function (cameraPass) {
+        if (this.visibleOpaque[cameraPass]) {
+            this.visibleOpaque[cameraPass].length = 0;
+            this.visibleOpaque[cameraPass].list.length = 0;
+        }
+
+        if (this.visibleTransparent[cameraPass]) {
+            this.visibleTransparent[cameraPass].length = 0;
+            this.visibleTransparent[cameraPass].list.length = 0;
+        }
+    };
+
     /**
      * @constructor
      * @name pc.Layer
@@ -205,6 +217,9 @@ Object.assign(pc, function () {
         this.opaqueMeshInstances = this.instances.opaqueMeshInstances;
         this.transparentMeshInstances = this.instances.transparentMeshInstances;
         this.shadowCasters = this.instances.shadowCasters;
+
+        this.customSortCallback = null;
+        this.customCalculateSortValues = null;
 
         this._lightComponents = [];
         this._lights = [];
@@ -617,6 +632,10 @@ Object.assign(pc, function () {
         if (id < 0) return;
         this.cameras.splice(id, 1);
         this._generateCameraHash();
+
+        // visible lists in layer are not updated after camera is removed
+        // so clear out any remaining mesh instances
+        this.instances.clearVisibleLists(id);
     };
 
     /**
@@ -653,17 +672,31 @@ Object.assign(pc, function () {
         var objects = this.instances;
         var sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
         if (sortMode === pc.SORTMODE_NONE) return;
+
         var visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
-        if (sortMode === pc.SORTMODE_BACK2FRONT || sortMode === pc.SORTMODE_FRONT2BACK) {
+
+        if (sortMode === pc.SORTMODE_CUSTOM) {
             sortPos = cameraNode.getPosition().data;
             sortDir = cameraNode.forward.data;
-            this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
-        }
+            if (this.customCalculateSortValues) {
+                this.customCalculateSortValues(visible.list, visible.length, sortPos, sortDir);
+            }
+            if (this.customSortCallback) {
+                visible.list.sort(this.customSortCallback);
+            }
+        } else {
+            if (sortMode === pc.SORTMODE_BACK2FRONT || sortMode === pc.SORTMODE_FRONT2BACK) {
+                sortPos = cameraNode.getPosition().data;
+                sortDir = cameraNode.forward.data;
+                this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
+            }
 
-        if (visible.list.length !== visible.length) {
-            visible.list.length = visible.length;
+            if (visible.list.length !== visible.length) {
+                visible.list.length = visible.length;
+            }
+
+            visible.list.sort(sortCallbacks[sortMode]);
         }
-        visible.list.sort(sortCallbacks[sortMode]);
     };
 
     return {

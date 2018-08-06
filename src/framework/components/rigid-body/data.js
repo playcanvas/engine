@@ -27,7 +27,6 @@ Object.assign(pc, function () {
         this.body = null;
         this.simulationEnabled = false;
     };
-    RigidBodyComponentData = pc.inherits(RigidBodyComponentData, pc.ComponentData);
 
     return {
         RigidBodyComponentData: RigidBodyComponentData

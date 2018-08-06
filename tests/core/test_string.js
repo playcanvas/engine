@@ -1,4 +1,4 @@
-module('pc.string');
+QUnit.module('pc.string');
 
 test("format: No args", function() {
     var src = "a string";

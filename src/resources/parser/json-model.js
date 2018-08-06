@@ -548,20 +548,10 @@ Object.assign(pc, function () {
                 for (attributeName in vertexData) {
                     attribute = vertexData[attributeName];
 
-                    var attribType = attribute.type;
-                    if (!this._device.supportsUnsignedByte) {
-                        if (attribType === "uint8") {
-                            attribType = "float32";
-                        }
-                        if (attribType === "int8") {
-                            attribType = "float32";
-                        }
-                    }
-
                     formatDesc.push({
                         semantic: attributeMap[attributeName],
                         components: attribute.components,
-                        type: JSON_VERTEX_ELEMENT_TYPE[attribType],
+                        type: JSON_VERTEX_ELEMENT_TYPE[attribute.type],
                         normalize: (attributeMap[attributeName] === pc.SEMANTIC_COLOR)
                     });
                 }

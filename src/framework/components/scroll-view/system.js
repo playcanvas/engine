@@ -23,6 +23,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var ScrollViewComponentSystem = function ScrollViewComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'scrollview';
         this.app = app;
         app.systems.add(this.id, this);
@@ -34,13 +36,14 @@ Object.assign(pc, function () {
 
         this.on('beforeremove', this._onRemoveComponent, this);
     };
-    ScrollViewComponentSystem = pc.inherits(ScrollViewComponentSystem, pc.ComponentSystem);
+    ScrollViewComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ScrollViewComponentSystem.prototype.constructor = ScrollViewComponentSystem;
 
     pc.Component._buildAccessors(pc.ScrollViewComponent.prototype, _schema);
 
     Object.assign(ScrollViewComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            ScrollViewComponentSystem._super.initializeComponentData.call(this, component, data, _schema);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
         },
 
         _onRemoveComponent: function (entity, component) {

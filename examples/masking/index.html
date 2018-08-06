@@ -32,7 +32,7 @@
             app.start();
 
             // create camera
-            var c = new pc.Entity();
+            var c = new pc.Entity("Camera");
             c.addComponent('camera', {
                 clearColor: new pc.Color(44/255, 62/255, 80/255),
                 farClip: 10000
@@ -81,7 +81,7 @@
                     height: 400,
                     opacity: 1,
                     color: new pc.Color(0.1, 0.7, 1.0),
-                    mask: false
+                    mask: true
                 });
 
                 app.root.addChild(menu);
@@ -199,6 +199,8 @@
             };
 
 
+            var p1,p2,p3;
+
             // called when all assets are loaded
             function onLoadComplete() {
                 // use nearest filtering on pixelized textures to prevent leaks
@@ -211,37 +213,23 @@
 
                 // create the entities
                 var parent = createMenu();
-                var p;
-                p = createPanel(parent);
-                p.translateLocal(-250,0,0);
+                p1 = createPanel(parent);
+                p1.translateLocal(-300,-25,0);
 
-                p = createPanel(parent);
-                p.translateLocal(250,0,0);
+                p2 = createPanel(parent);
+                p2.translateLocal(0,25,0);
 
-                var panel1 = app.root.findByName("Panel1");
+                p3 = createPanel(parent);
+                p3.translateLocal(300,-25,0);
 
-
-                var mousedown = false;
-                app.mouse.on("mousedown", function () {
-                    mousedown = true;
-                });
-                app.mouse.on("mouseup", function () {
-                    mousedown = false;
-                });
-                app.mouse.on("mousemove", function (e) {
-                    var evt = e.event;
-                    if (mousedown) {
-                        // panel1.translateLocal(e.x * 0.1, e.y * 0.1, 0);
-                        // panel1.translateLocal(2*(e.x/app.graphicsDevice.width)-1, -2*(e.y/app.graphicsDevice.height)-1, 0);
-                        var mousex = evt.clientX;
-                        var mousey = evt.clientY;
-                        panel1.setPosition((mousex/app.graphicsDevice.width)*2-1, -((mousey/app.graphicsDevice.height)*2-1), 0);
-                    }
-                });
+                // var panel1 = app.root.findByName("Panel1");
             }
 
+            var a =0;
             // update every frame
             app.on("update", function (dt) {
+                // a += dt;
+                // p2.setLocalPosition(300*Math.sin(a), 0, 0);
             });
 
             // hook up window resize events

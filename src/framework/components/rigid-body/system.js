@@ -142,6 +142,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var RigidBodyComponentSystem = function RigidBodyComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'rigidbody';
         this.description = "Adds the entity to the scene's physical simulation.";
         app.systems.add(this.id, this);
@@ -161,7 +163,8 @@ Object.assign(pc, function () {
 
         this.on('remove', this.onRemove, this);
     };
-    RigidBodyComponentSystem = pc.inherits(RigidBodyComponentSystem, pc.ComponentSystem);
+    RigidBodyComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    RigidBodyComponentSystem.prototype.constructor = RigidBodyComponentSystem;
 
     pc.Component._buildAccessors(pc.RigidBodyComponent.prototype, _schema);
 
@@ -210,7 +213,7 @@ Object.assign(pc, function () {
                 data.angularFactor = new pc.Vec3(data.angularFactor[0], data.angularFactor[1], data.angularFactor[2]);
             }
 
-            RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {

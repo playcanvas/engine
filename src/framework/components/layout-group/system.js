@@ -1,6 +1,8 @@
 Object.assign(pc, function () {
     var _schema = ['enabled'];
 
+    var MAX_ITERATIONS = 100;
+
     /**
      * @private
      * @name pc.LayoutGroupComponentSystem
@@ -10,6 +12,8 @@ Object.assign(pc, function () {
      * @extends pc.ComponentSystem
      */
     var LayoutGroupComponentSystem = function LayoutGroupComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'layoutgroup';
         this.app = app;
         app.systems.add(this.id, this);
@@ -26,7 +30,8 @@ Object.assign(pc, function () {
         // Perform reflow when running in the engine
         pc.ComponentSystem.on('postUpdate', this._onPostUpdate, this);
     };
-    LayoutGroupComponentSystem = pc.inherits(LayoutGroupComponentSystem, pc.ComponentSystem);
+    LayoutGroupComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    LayoutGroupComponentSystem.prototype.constructor = LayoutGroupComponentSystem;
 
     pc.Component._buildAccessors(pc.LayoutGroupComponent.prototype, _schema);
 
@@ -67,7 +72,7 @@ Object.assign(pc, function () {
             if (data.heightFitting !== undefined) component.heightFitting = data.heightFitting;
             if (data.wrap !== undefined) component.wrap = data.wrap;
 
-            LayoutGroupComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {
@@ -102,23 +107,31 @@ Object.assign(pc, function () {
                 return;
             }
 
-            // Sort in ascending order of depth within the graph (i.e. outermost first), so that
-            // any layout groups which are children of other layout groups will always have their
-            // new size set before their own reflow is calculated.
-            this._reflowQueue.sort(function (componentA, componentB) {
-                return componentA.entity.graphDepth < componentB.entity.graphDepth;
-            });
+            var iterationCount = 0;
 
             while (this._reflowQueue.length > 0) {
-                // Note that we leave the current item in the queue while performing its reflow
-                // and then remove it afterwards, rather than removing it first and then reflowing
-                // it. This is safer because the item cannot re-enter the queue while it is
-                // already in there (due to the check performed in the scheduleReflow() method).
-                this._reflowQueue[0].reflow();
-                this._reflowQueue.shift();
-            }
+                // Create a copy of the queue to sort and process. If processing the reflow of any
+                // layout groups results in additional groups being pushed to the queue, they will
+                // be processed on the next iteration of the while loop.
+                var queue = this._reflowQueue.slice();
+                this._reflowQueue.length = 0;
 
-            this._reflowQueue = [];
+                // Sort in ascending order of depth within the graph (i.e. outermost first), so that
+                // any layout groups which are children of other layout groups will always have their
+                // new size set before their own reflow is calculated.
+                queue.sort(function (componentA, componentB) {
+                    return componentA.entity.graphDepth > componentB.entity.graphDepth;
+                });
+
+                for (var i = 0; i < queue.length; ++i) {
+                    queue[i].reflow();
+                }
+
+                if (++iterationCount >= MAX_ITERATIONS) {
+                    console.warn('Max reflow iterations limit reached, bailing.');
+                    break;
+                }
+            }
         },
 
         _onRemoveComponent: function (entity, component) {

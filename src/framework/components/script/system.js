@@ -10,6 +10,8 @@ Object.assign(pc, function () {
      */
 
     var ScriptComponentSystem = function ScriptComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'script';
         this.app = app;
         app.systems.add(this.id, this);
@@ -32,7 +34,8 @@ Object.assign(pc, function () {
         pc.ComponentSystem.on('update', this._onUpdate, this);
         pc.ComponentSystem.on('postUpdate', this._onPostUpdate, this);
     };
-    ScriptComponentSystem = pc.inherits(ScriptComponentSystem, pc.ComponentSystem);
+    ScriptComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ScriptComponentSystem.prototype.constructor = ScriptComponentSystem;
 
     pc.Component._buildAccessors(pc.ScriptComponent.prototype, _schema);
 

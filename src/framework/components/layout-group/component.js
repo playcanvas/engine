@@ -40,6 +40,8 @@ Object.assign(pc, function () {
      * @property {Boolean} wrap Whether or not to wrap children onto a new row/column when the size of the container is exceeded. Defaults to false, which means that children will be be rendered in a single row (horizontal orientation) or column (vertical orientation).<br><br><em>Note that setting wrap to true makes it impossible for the {@link pc.FITTING_BOTH} fitting mode to operate in any logical manner. For this reason, when wrap is true, a {@link pc.LayoutGroupComponent#widthFitting} or {@link pc.LayoutGroupComponent#heightFitting} mode of {@link pc.FITTING_BOTH} will be coerced to {@link pc.FITTING_STRETCH}.<em>
      */
     var LayoutGroupComponent = function LayoutGroupComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this._orientation = pc.ORIENTATION_HORIZONTAL;
         this._reverseX = false;
         this._reverseY = true;
@@ -71,7 +73,8 @@ Object.assign(pc, function () {
         system.app.systems.layoutchild.on('add', this._onElementOrLayoutComponentAdd, this);
         system.app.systems.layoutchild.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
     };
-    LayoutGroupComponent = pc.inherits(LayoutGroupComponent, pc.Component);
+    LayoutGroupComponent.prototype = Object.create(pc.Component.prototype);
+    LayoutGroupComponent.prototype.constructor = LayoutGroupComponent;
 
     Object.assign(LayoutGroupComponent.prototype, {
         _isSelfOrChild: function (entity) {
