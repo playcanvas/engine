@@ -1,21 +1,24 @@
 Object.assign(pc, function () {
-    // designed to help manage the case where a object holds a reference to an asset
-    // the asset reference accepts callbacks that can be called when the asset status
-    // changes, e.g. the resource is loaded, or the asset is added or removed to the asset registry
-    //
-
     /**
      * @name pc.AssetReference
      * @description An object that manages the case where an object holds a reference to an asset and needs to be notified when
      * changes occur in the asset. e.g. notifications include load, add and remove events.
      * @param {String} propertyName The name of the property that the asset is stored under, passed into callbacks to enable updating.
-     * @param {pc.Asset} parent The parent object that contains the asset reference, passed into callbacks to enable updating. Currently an asset, but could be component or other.
+     * @param {pc.Asset|Object} parent The parent object that contains the asset reference, passed into callbacks to enable updating. Currently an asset, but could be component or other.
      * @param {pc.AssetRegistry} registry The asset registry that stores all assets.
      * @param {Object} callbacks A set of functions called when the asset state changes: load, add, remove.
      * @param {Object} [callbacks.load] The function called when the asset loads load(propertyName, parent, asset).
      * @param {Object} [callbacks.add] The function called when the asset is added to the registry add(propertyName, parent, asset).
      * @param {Object} [callbacks.remove] The function called when the asset is remove from the registry remove(propertyName, parent, asset).
      * @param {Object} scope The scope to call the callbacks in
+     * @example
+     *
+     * var reference = new pc.AssetReference('textureAsset', this, this.app.assets, {
+     *     load: this.onTextureAssetLoad,
+     *     add: this.onTextureAssetAdd,
+     *     remove: this.onTextureAssetRemove
+     * }, this);
+     * reference.setId(this.textureAsset.id);
      */
     var AssetReference = function (propertyName, parent, registry, callbacks, scope) {
         this.propertyName = propertyName;
@@ -33,6 +36,12 @@ Object.assign(pc, function () {
         this._onAssetRemove = callbacks.remove;
     };
 
+    /**
+     * @function
+     * @name pc.AssetReference#setId
+     * @description Set the asset id which this references. Either setId or setUrl must be called to initialize an asset reference
+     * @param {Number} id The asset id to which this is a reference
+     */
     AssetReference.prototype.setId = function (id) {
         if(this.url) throw Error("Can't set id and url");
 
@@ -44,6 +53,12 @@ Object.assign(pc, function () {
         this._bind();
     };
 
+    /**
+     * @function
+     * @name pc.AssetReference#setUrl
+     * @description Set the asset url which this references. Either setId or setUrl must be called to initialize an asset reference
+     * @param {String} url The asset id to which this is a reference
+     */
     AssetReference.prototype.setUrl = function (url) {
         if(this.id) throw Error("Can't set id and url");
 

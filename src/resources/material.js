@@ -22,7 +22,7 @@ Object.assign(pc, function () {
 
         this._placeholderTextures = null;
 
-        this._parser = new pc.JsonMaterialParser(this._device);
+        this._parser = new pc.JsonStandardMaterialParser(this._device);
     };
 
     Object.assign(MaterialHandler.prototype, {
