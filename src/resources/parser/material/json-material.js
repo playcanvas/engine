@@ -2,34 +2,33 @@ Object.assign(pc, function () {
 
     var JsonMaterialParser = function (device) {
         this._device = device;
+        this._validator = null;
         // this._assets = assets; // might need this
     };
 
     JsonMaterialParser.prototype.parse = function (input) {
-        var migrated = this._migrate(input);
+        var migrated = this.migrate(input);
         var validated = this._validate(migrated);
 
-        var data = {
-            parameters: this.parameterize(validated),
-            chunks: []
-        };
-
         var material = new pc.StandardMaterial();
-        material.init(data);
+        material.initialize(validated);
 
         return material;
     };
 
     // convert any properties that are out of date
-    // or from old versions into current
-    // version
-    JsonMaterialParser.prototype._migrate = function (data) {
-        if (data.shader === 'blinn') {
-            data.shadingModel = pc.SPECULAR_BLINN;
-        } else {
-            data.shadingModel = pc.SPECULAR_PHONG;
+    // or from old versions into current version
+    JsonMaterialParser.prototype.migrate = function (data) {
+        // replace old shader property with new shadingModel property
+        if (data.shadingModel === undefined) {
+            if (data.shader === 'blinn') {
+                data.shadingModel = pc.SPECULAR_BLINN;
+            } else {
+                data.shadingModel = pc.SPECULAR_PHONG;
+            }
         }
-        delete data.shader;
+        if (data.shader) delete data.shader;
+
 
         // make JS style
         if (data.mapping_format) {
@@ -37,11 +36,59 @@ Object.assign(pc, function () {
             delete data.mapping_format;
         }
 
+        var i;
+        // list of properties that have been renamed in StandardMaterial
+        // but may still exists in data in old format
+        var RENAMED_PROPERTIES = [
+            ["aoMapVertexColor", "aoVertexColor"],
+            ["diffuseMapVertexColor", "diffuseVertexColor"],
+            ["emissiveMapVertexColor", "emissiveVertexColor"],
+            ["specularMapVertexColor", "specularVertexColor"],
+            ["metalnessMapVertexColor", "metalnessVertexColor"],
+            ["opacityMapVertexColor", "opacityVertexColor"],
+            ["glossMapVertexColor", "glossVertexColor"],
+            ["lightMapVertexColor", "lightVertexColor"],
+
+            ["diffuseMapTint", "diffuseTint"],
+            ["specularMapTint", "specularTint"],
+            ["emissiveMapTint", "emissiveTint"],
+            ["metalnessMapTint", "metalnessTint"]
+        ];
+
+        // if an old property name exists without a new one,
+        // move property into new name and delete old one.
+        for (i = 0; i < RENAMED_PROPERTIES.length; i++) {
+            var _old = RENAMED_PROPERTIES[i][0];
+            var _new = RENAMED_PROPERTIES[i][1];
+
+            if (data[_old] !== undefined && !(data[_new] !== undefined)) {
+                data[_new] = data[_old];
+                delete data[_old];
+            }
+        }
+
+        // Properties that may exist in input data, but are now ignored
+        var DEPRECATED_PROPERTIES = [
+            'fresnelFactor'
+        ];
+
+        for (i = 0; i < DEPRECATED_PROPERTIES.length; i++) {
+            var name = DEPRECATED_PROPERTIES[i];
+            if (data.hasOwnProperty(name)) {
+                delete data[name];
+            }
+        }
+
         return data;
     };
 
     // check for invalid properties
     JsonMaterialParser.prototype._validate = function (data) {
+        if (!this._validator) {
+            this._validator = new pc.StandardMaterialValidator()
+        }
+        this._validator.validate(data);
+
         return data;
     };
 
