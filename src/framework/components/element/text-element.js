@@ -309,10 +309,7 @@ Object.assign(pc, function () {
 
             var lines = 1;
             var wordStartX = 0;
-            var wordInfo = {
-                startIndex: 0,
-                quadsPerMap: {}
-            };
+            var wordStartIndex = 0;
             var lineStartIndex = 0;
             var numWordsThisLine = 0;
             var numCharsThisLine = 0;
@@ -365,10 +362,6 @@ Object.assign(pc, function () {
                 lineStartIndex = lineBreakIndex;
             }
 
-            function valSum(sum, key) {
-                return sum + obj[key];
-            }
-
             for (i = 0; i < l; i++) {
                 char = symbols[i];
                 charCode = pc.string.getCodePoint(symbols[i]);
@@ -410,8 +403,7 @@ Object.assign(pc, function () {
 
                 if (isLineBreak) {
                     breakLine(i, _xMinusTrailingWhitespace);
-                    wordInfo.startIndex = i + 1;
-                    wordInfo.quadsPerMap = {};
+                    wordStartIndex = i + 1;
                     lineStartIndex = i + 1;
                     continue;
                 }
@@ -419,32 +411,26 @@ Object.assign(pc, function () {
                 var meshInfo = this._meshInfo[(data && data.map) || 0];
                 var candidateLineWidth = _x + glyphWidth + glyphMinX;
 
-                var quadsForMap = (wordInfo.quadsPerMap[(data && data.map) || 0]) || {};
-                var quadsForMapAndLine = quadsForMap[lines - 1] || 0;
-                var totalQuadsInMapForWord = Object.keys(quadsForMap).reduce(valSum, 0);
-
                 // If we've exceeded the maximum line width, move everything from the beginning of
                 // the current word onwards down onto a new line.
                 if (candidateLineWidth >= maxLineWidth && numCharsThisLine > 0 && !isWhitespace) {
                     // Handle the case where a line containing only a single long word needs to be
                     // broken onto multiple lines.
                     if (numWordsThisLine === 0) {
-                        wordInfo.startIndex = i;
-                        wordInfo.quadsPerMap = {};
-                        quadsForMap = {};
-                        quadsForMapAndLine = 0;
+                        wordStartIndex = i;
                         breakLine(i, _xMinusTrailingWhitespace);
                     } else {
                         // Move back to the beginning of the current word.
-                        i -= Math.max(i - wordInfo.startIndex, 0);
-                        // We should only backtrack the quads that were in the word from this same texture
+                        var backtrack = Math.max(i - wordStartIndex, 0);
+                        i -= backtrack + 1;
+                        // BUG: we should only backtrack the quads that were in the word from this same texture
                         // We will have to update N number of mesh infos as a result (all textures used in the word in question)
                         // Store the number of quads used in the word keyed by map number (wordInfo), so we can subtract
                         // from each of those here
-                        meshInfo.lines[lines - 1] -= quadsForMapAndLine;
-                        meshInfo.quad -= totalQuadsInMapForWord;
+                        meshInfo.lines[lines - 1] -= backtrack;
+                        meshInfo.quad -= backtrack;
 
-                        breakLine(wordInfo.startIndex, wordStartX);
+                        breakLine(wordStartIndex, wordStartX);
                         continue;
                     }
                 }
@@ -486,10 +472,7 @@ Object.assign(pc, function () {
                 if (isWordBoundary) { // char is space, tab, or dash
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
-                    wordInfo.startIndex = i + 1;
-                    wordInfo.quadsPerMap = {};
-                    quadsForMap = {};
-                    quadsForMapAndLine = 0;
+                    wordStartIndex = i + 1;
                 }
 
                 numCharsThisLine++;
@@ -509,8 +492,6 @@ Object.assign(pc, function () {
                 meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
 
                 meshInfo.quad++;
-                wordInfo.quadsPerMap[(data && data.map) || 0] = quadsForMap;
-                quadsForMapAndLine++;
             }
 
             // As we only break lines when the text becomes too wide for the container,
