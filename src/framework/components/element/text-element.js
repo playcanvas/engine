@@ -131,7 +131,7 @@ Object.assign(pc, function () {
             var charactersPerTexture = {};
 
             for (i = 0; i < textLength; i++) {
-                var code = symbols[i].code;
+                var code = pc.string.getCodePoint(symbols[i]);
                 var info = this._font.data.chars[code];
                 if (!info) continue;
 
@@ -349,9 +349,6 @@ Object.assign(pc, function () {
                 self._lineWidths.push(lineBreakX);
                 var substring = symbols
                     .slice(lineStartIndex, lineBreakIndex)
-                    .map(function (pair) {
-                        return pair.char;
-                    })
                     .join('');
 
                 self._lineContents.push(substring);
@@ -366,8 +363,8 @@ Object.assign(pc, function () {
             }
 
             for (i = 0; i < l; i++) {
-                char = symbols[i].char;
-                charCode = symbols[i].code;
+                char = symbols[i];
+                charCode = pc.string.getCodePoint(symbols[i]);
 
                 var x = 0;
                 var y = 0;
@@ -426,6 +423,10 @@ Object.assign(pc, function () {
                         // Move back to the beginning of the current word.
                         var backtrack = Math.max(i - wordStartIndex, 0);
                         i -= backtrack + 1;
+                        // BUG: we should only backtrack the quads that were in the word from this same texture
+                        // We will have to update N number of mesh infos as a result (all textures used in the word in question)
+                        // Store the number of quads used in the word keyed by map number (wordInfo), so we can subtract
+                        // from each of those here
                         meshInfo.lines[lines - 1] -= backtrack;
                         meshInfo.quad -= backtrack;
 
@@ -854,6 +855,12 @@ Object.assign(pc, function () {
             if (value.type !== previousFontType) {
                 var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
                 this._updateMaterial(screenSpace);
+            }
+
+            if (this._font) {
+                if (this._font.autoRender) {
+                    this._font.autoRender(this._text);
+                }
             }
 
             // make sure we have as many meshInfo entries
