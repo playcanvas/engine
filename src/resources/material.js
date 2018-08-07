@@ -1,7 +1,6 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var placeholders = { };
     var PLACEHOLDER_MAP = {
         aoMap: 'white',
         diffuseMap: 'gray',
@@ -113,7 +112,7 @@ Object.assign(pc, function () {
         },
 
         _onTextureLoad: function (parameterName, materialAsset, textureAsset) {
-            this._assignTexture(parameterName, materialAsset, textureAsset.resource)
+            this._assignTexture(parameterName, materialAsset, textureAsset.resource);
             materialAsset.resource.update();
         },
 
@@ -144,7 +143,7 @@ Object.assign(pc, function () {
         },
 
         _onCubemapLoad: function (parameterName, materialAsset, cubemapAsset) {
-            this._assignCubemap(parameterName, materialAsset, cubemapAsset.resources)
+            this._assignCubemap(parameterName, materialAsset, cubemapAsset.resources);
             materialAsset.resource.initialize(materialAsset.data);
         },
 
@@ -188,11 +187,12 @@ Object.assign(pc, function () {
 
             var TEXTURES = pc.StandardMaterial.TEXTURE_PARAMETERS;
 
+            var i, name, assetReference;
             // iterate through all texture parameters
-            for (var i = 0; i < TEXTURES.length; i++) {
-                var name = TEXTURES[i];
+            for (i = 0; i < TEXTURES.length; i++) {
+                name = TEXTURES[i];
 
-                var assetReference = material._assetReferences[name];
+                assetReference = material._assetReferences[name];
 
                 // data[name] contains an asset id for a texture
                 if (data[name] && !(data[name] instanceof pc.Texture)) {
@@ -207,9 +207,9 @@ Object.assign(pc, function () {
                     }
 
                     if (pathMapping) {
-                        assetReference.setUrl(data[name])
+                        assetReference.setUrl(data[name]);
                     } else {
-                        assetReference.setId(data[name])
+                        assetReference.setId(data[name]);
                     }
 
                     if (assetReference.asset) {
@@ -225,7 +225,7 @@ Object.assign(pc, function () {
                 } else {
                     if (assetReference) {
                         // texture has been removed
-                        if(pathMapping) {
+                        if (pathMapping) {
                             assetReference.setUrl(null);
                         } else {
                             assetReference.setId(null);
@@ -240,10 +240,10 @@ Object.assign(pc, function () {
             var CUBEMAPS = pc.StandardMaterial.CUBEMAP_PARAMETERS;
 
             // iterate through all cubemap parameters
-            for (var i = 0; i < CUBEMAPS.length; i++) {
-                var name = CUBEMAPS[i];
+            for (i = 0; i < CUBEMAPS.length; i++) {
+                name = CUBEMAPS[i];
 
-                var assetReference = material._assetReferences[name];
+                assetReference = material._assetReferences[name];
 
                 // data[name] contains an asset id for a cubemap
                 if (data[name] && !(data[name] instanceof pc.Texture)) {

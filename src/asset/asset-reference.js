@@ -43,7 +43,7 @@ Object.assign(pc, function () {
      * @param {Number} id The asset id to which this is a reference
      */
     AssetReference.prototype.setId = function (id) {
-        if(this.url) throw Error("Can't set id and url");
+        if (this.url) throw Error("Can't set id and url");
 
         this._unbind();
 
@@ -60,11 +60,11 @@ Object.assign(pc, function () {
      * @param {String} url The asset id to which this is a reference
      */
     AssetReference.prototype.setUrl = function (url) {
-        if(this.id) throw Error("Can't set id and url");
+        if (this.id) throw Error("Can't set id and url");
 
         this._unbind();
 
-        this.url = url
+        this.url = url;
         this.asset = this._registry.getByUrl(url);
 
         this._bind();
@@ -95,7 +95,7 @@ Object.assign(pc, function () {
             this._registry.off('add:' + this.url, this._onAdd, this);
             this._registry.off('remove:' + this.url, this._onRemove, this);
         }
-    }
+    };
 
     AssetReference.prototype._onLoad = function (asset) {
         this._onAssetLoad.call(this._scope, this.propertyName, this.parent, asset);
@@ -111,5 +111,5 @@ Object.assign(pc, function () {
 
     return {
         AssetReference: AssetReference
-    }
-}())
+    };
+}());

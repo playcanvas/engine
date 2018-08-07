@@ -631,7 +631,7 @@ Object.assign(pc, function () {
             // usual flow is that data is validated in resource loader
             // but if not, validate here.
             if (!data.validated) {
-                if(!this._validator) {
+                if (!this._validator) {
                     this._validator = new pc.StandardMaterialValidator();
                 }
                 this._validator.validate(data);
@@ -662,7 +662,7 @@ Object.assign(pc, function () {
                     } else {
                         this[key] = null;
                     }
-                } else if(type === 'boundingbox') {
+                } else if (type === 'boundingbox') {
                     var center = new pc.Vec3(value.center[0], value.center[1], value.center[2]);
                     var halfExtents = new pc.Vec3(value.halfExtents[0], value.halfExtents[1], value.halfExtents[2]);
                     this[key] = new pc.BoundingBox(center, halfExtents);

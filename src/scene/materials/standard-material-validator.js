@@ -1,26 +1,25 @@
 Object.assign(pc, function () {
     var StandardMaterialValidator = function () {
-        this.log = true;
         this.removeInvalid = true;
 
         this.valid = true; // start off valid
 
         this.enumValidators = {
             occludeSpecular: this._createEnumValidator([pc.SPECOCC_NONE, pc.SPECOCC_AO, pc.SPECOCC_GLOSSDEPENDENT])
-        }
+        };
     };
 
     StandardMaterialValidator.prototype.setInvalid = function (key, data) {
         this.valid = false;
 
-        if (this.log) {
-            console.warn('Invalid type of key: ' + key, data[key]);
-        }
+        // #ifdef DEBUG
+        console.warn('Ignoring invalid StandardMaterial property: ' + key, data[key]);
+        // #endif
 
         if (this.removeInvalid) {
-            delete data[key]
+            delete data[key];
         }
-    },
+    };
 
     StandardMaterialValidator.prototype.validate = function (data) {
          // validate input data against defined standard-material properties and types\
@@ -34,15 +33,20 @@ Object.assign(pc, function () {
             type = TYPES[key];
 
             if (!type) {
-                if (this.log) {
-                    console.warn('Invalid input property to standard material: ' + key);
-                }
+                // #ifdef DEBUG
+                console.warn('Ignoring unsupported input property to standard material: ' + key);
+                // #endif
                 this.valid = false;
                 continue;
             }
 
             if (type.startsWith("enum")) {
                 var enumType = type.split(":")[1];
+                if (this.enumValidators[enumType]) {
+                    if (!this.enumValidators[enumType](data[key])) {
+                        this.setInvalid(key, data);
+                    }
+                }
 
             } else if (type === 'number') {
                 if (typeof(data[key]) !== 'number') {
@@ -96,12 +100,11 @@ Object.assign(pc, function () {
                 }
 
             } else {
-                if (this.log) {
-                    console.error("Unknown material type");
-                }
+                console.error("Unknown material type: " + type);
             }
         }
 
+        // mark data as validated so we don't validate twice
         data.validated = true;
 
         return this.valid;

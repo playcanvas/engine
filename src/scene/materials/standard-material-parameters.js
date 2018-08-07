@@ -151,20 +151,21 @@
         // msdfVexterColorChannel
     };
 
+    var key, type;
     pc.StandardMaterial.TEXTURE_PARAMETERS = [];
-    for (var key in pc.StandardMaterial.PARAMETER_TYPES) {
-        var type = pc.StandardMaterial.PARAMETER_TYPES[key];
+    for (key in pc.StandardMaterial.PARAMETER_TYPES) {
+        type = pc.StandardMaterial.PARAMETER_TYPES[key];
         if (type === 'texture') {
             pc.StandardMaterial.TEXTURE_PARAMETERS.push(key);
         }
-    };
+    }
 
     pc.StandardMaterial.CUBEMAP_PARAMETERS = [];
-    for (var key in pc.StandardMaterial.PARAMETER_TYPES) {
-        var type = pc.StandardMaterial.PARAMETER_TYPES[key];
+    for (key in pc.StandardMaterial.PARAMETER_TYPES) {
+        type = pc.StandardMaterial.PARAMETER_TYPES[key];
         if (type === 'cubemap') {
             pc.StandardMaterial.CUBEMAP_PARAMETERS.push(key);
         }
-    };
+    }
 
 }());
