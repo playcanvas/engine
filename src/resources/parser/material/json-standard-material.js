@@ -45,6 +45,8 @@ Object.assign(pc, function () {
         var RENAMED_PROPERTIES = [
             ["bumpMapFactor", "bumpiness"],
 
+            ["aoUvSet", "aoMapUv"],
+
             ["aoMapVertexColor", "aoVertexColor"],
             ["diffuseMapVertexColor", "diffuseVertexColor"],
             ["emissiveMapVertexColor", "emissiveVertexColor"],
@@ -74,7 +76,8 @@ Object.assign(pc, function () {
 
         // Properties that may exist in input data, but are now ignored
         var DEPRECATED_PROPERTIES = [
-            'fresnelFactor'
+            'fresnelFactor',
+            'shadowSampleType'
         ];
 
         for (i = 0; i < DEPRECATED_PROPERTIES.length; i++) {
@@ -90,7 +93,7 @@ Object.assign(pc, function () {
     // check for invalid properties
     JsonStandardMaterialParser.prototype._validate = function (data) {
         if (!this._validator) {
-            this._validator = new pc.StandardMaterialValidator()
+            this._validator = new pc.StandardMaterialValidator();
         }
         this._validator.validate(data);
 
