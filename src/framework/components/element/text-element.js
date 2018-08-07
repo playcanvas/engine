@@ -422,13 +422,20 @@ Object.assign(pc, function () {
                     } else {
                         // Move back to the beginning of the current word.
                         var backtrack = Math.max(i - wordStartIndex, 0);
+                        if (this._meshInfo.length < 2) {
+                            meshInfo.lines[lines - 1] -= backtrack;
+                            meshInfo.quad -= backtrack;
+                        } else {
+                            // We should only backtrack the quads that were in the word from this same texture
+                            // We will have to update N number of mesh infos as a result (all textures used in the word in question)
+                            for (var j = wordStartIndex; j < i; j++) {
+                                var backCharData = json.chars[pc.string.getCodePoint(symbols[j])];
+                                var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
+                                backMeshInfo.lines[lines - 1] -= 1;
+                                backMeshInfo.quad -= 1;
+                            }
+                        }
                         i -= backtrack + 1;
-                        // BUG: we should only backtrack the quads that were in the word from this same texture
-                        // We will have to update N number of mesh infos as a result (all textures used in the word in question)
-                        // Store the number of quads used in the word keyed by map number (wordInfo), so we can subtract
-                        // from each of those here
-                        meshInfo.lines[lines - 1] -= backtrack;
-                        meshInfo.quad -= backtrack;
 
                         breakLine(wordStartIndex, wordStartX);
                         continue;
