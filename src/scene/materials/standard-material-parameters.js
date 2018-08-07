@@ -59,7 +59,6 @@
         glossMapOffset: 'vec2',
 
         fresnelModel: 'number',
-        // fresnelFactor: 'float', (unused?)
 
         emissive: 'rgb',
         emissiveTint: 'boolean',
@@ -77,8 +76,7 @@
         normalMapOffset: 'vec2',
         normalMapUv: 'number',
         bumpiness: 'number',
-        // normalMapFactor: 'number',
-        // bumpMapFactor: 'number',
+        // normalMapFactor: 'number', // TODO rename bumpiness to normalMapFactor
 
         heightMap: 'texture',
         heightMapChannel: 'string',
