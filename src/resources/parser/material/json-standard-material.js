@@ -43,6 +43,8 @@ Object.assign(pc, function () {
         // list of properties that have been renamed in StandardMaterial
         // but may still exists in data in old format
         var RENAMED_PROPERTIES = [
+            ["bumpMapFactor", "bumpiness"],
+
             ["aoMapVertexColor", "aoVertexColor"],
             ["diffuseMapVertexColor", "diffuseVertexColor"],
             ["emissiveMapVertexColor", "emissiveVertexColor"],
