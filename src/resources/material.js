@@ -22,7 +22,7 @@ Object.assign(pc, function () {
 
         this._placeholderTextures = null;
 
-        this._parser = new pc.JsonStandardMaterialParser(this._device);
+        this._parser = new pc.JsonStandardMaterialParser();
     };
 
     Object.assign(MaterialHandler.prototype, {
@@ -266,7 +266,7 @@ Object.assign(pc, function () {
                     if (assetReference.asset) {
                         if (assetReference.asset.resource) {
                             // asset loaded
-                            this._assignCubemap(name, materialAsset, assetReference.asset.resource);
+                            this._assignCubemap(name, materialAsset, assetReference.asset.resources);
                         }
 
                         assets.load(assetReference.asset);

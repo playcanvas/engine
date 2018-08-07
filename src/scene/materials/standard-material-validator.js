@@ -80,7 +80,7 @@ Object.assign(pc, function () {
                     this.setInvalid(key, data);
                 }
             } else if (type === 'cubemap') {
-                if (typeof(data[key]) === 'number' || data[key] === null) {
+                if (typeof(data[key]) === 'number' || data[key] === null || data[key] === undefined) {
                     // materials are often initialized with the asset id of textures which are assigned later
                     // this counts as a valid input
                     // null texture reference is also valid

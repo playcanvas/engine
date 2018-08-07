@@ -76,7 +76,9 @@
         normalMapTiling: 'vec2',
         normalMapOffset: 'vec2',
         normalMapUv: 'number',
-        bumpMapFactor: 'number',
+        bumpiness: 'number',
+        // normalMapFactor: 'number',
+        // bumpMapFactor: 'number',
 
         heightMap: 'texture',
         heightMapChannel: 'string',
