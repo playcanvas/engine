@@ -1164,7 +1164,8 @@ Object.assign(pc, function () {
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
                 if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && colorBuffer._pot) {
-                    this.bindTexture(this.maxCombinedTextures - 1, colorBuffer._glTarget, colorBuffer._glTexture);
+                    this.activeTexture(this.maxCombinedTextures - 1);
+                    this.bindTexture(colorBuffer);
                     gl.generateMipmap(colorBuffer._glTarget);
                 }
 
