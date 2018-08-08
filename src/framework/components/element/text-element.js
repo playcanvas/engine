@@ -422,7 +422,7 @@ Object.assign(pc, function () {
                     } else {
                         // Move back to the beginning of the current word.
                         var backtrack = Math.max(i - wordStartIndex, 0);
-                        if (this._meshInfo.length < 2) {
+                        if (this._meshInfo.length <= 1) {
                             meshInfo.lines[lines - 1] -= backtrack;
                             meshInfo.quad -= backtrack;
                         } else {
