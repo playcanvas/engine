@@ -686,34 +686,6 @@ Object.assign(pc, function () {
         init: function (data) {
             console.warn('StandardMaterial.init is deprecated. Use StandardMaterial.initialize instead');
             this.initialize(data);
-            // this.reset();
-
-            // // Initialise material from data
-            // this.name = data.name;
-
-            // if (data.chunks)
-            //     this.chunks.copy(data.chunks);
-
-            // for (var i = 0; i < data.parameters.length; i++) {
-            //     var param = data.parameters[i];
-            //     if (param.type === "vec3") {
-            //         this[param.name] = _createRgb(param);
-            //     } else if (param.type === "vec2") {
-            //         this[param.name] = _createVec2(param);
-            //     } else if (param.type === "texture") {
-            //         this[param.name] = _createTexture(param);
-            //     } else if (param.type === "cubemap") {
-            //         this[param.name] = _createCubemap(param);
-            //     } else if (param.name === "bumpMapFactor") { // Unfortunately, names don't match for bumpiness
-            //         this.bumpiness = param.data;
-            //     } else if (param.type === 'boundingbox') {
-            //         this[param.name] = _createBoundingBox(param);
-            //     } else {
-            //         this[param.name] = param.data;
-            //     }
-            // }
-
-            // this.update();
         },
 
         _updateMapTransform: function (transform, tiling, offset) {
