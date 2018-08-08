@@ -93,7 +93,7 @@ Object.assign(pc, function () {
                 delete asset.resource._data; // remove from temp storage
             }
 
-            this._bindAssets(asset, assets);
+            this._bindAndAssignAssets(asset, assets);
 
             asset.off('unload', this._onAssetUnload, this);
             asset.on('unload', this._onAssetUnload, this);
@@ -177,7 +177,7 @@ Object.assign(pc, function () {
             this._assignTexture(parameterName, materialAsset, texture);
         },
 
-        _bindAssets: function (materialAsset, assets) {
+        _bindAndAssignAssets: function (materialAsset, assets) {
             // always migrate before updating material from asset data
             var data = this._parser.migrate(materialAsset.data);
 
