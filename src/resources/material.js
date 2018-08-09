@@ -207,9 +207,9 @@ Object.assign(pc, function () {
                     }
 
                     if (pathMapping) {
-                        assetReference.setUrl(data[name]);
+                        assetReference.url = data[name];
                     } else {
-                        assetReference.setId(data[name]);
+                        assetReference.id = data[name];
                     }
 
                     if (assetReference.asset) {
@@ -226,9 +226,9 @@ Object.assign(pc, function () {
                     if (assetReference) {
                         // texture has been removed
                         if (pathMapping) {
-                            assetReference.setUrl(null);
+                            assetReference.url = null;
                         } else {
-                            assetReference.setId(null);
+                            assetReference.id = null;
                         }
                     } else {
                         // no asset reference and no data field
@@ -258,9 +258,9 @@ Object.assign(pc, function () {
                     }
 
                     if (pathMapping) {
-                        assetReference.setUrl(data[name]);
+                        assetReference.url = data[name];
                     } else {
-                        assetReference.setId(data[name]);
+                        assetReference.id = data[name];
                     }
 
                     if (assetReference.asset) {

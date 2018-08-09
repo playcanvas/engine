@@ -18,7 +18,7 @@ Object.assign(pc, function () {
      *     add: this.onTextureAssetAdd,
      *     remove: this.onTextureAssetRemove
      * }, this);
-     * reference.setId(this.textureAsset.id);
+     * reference.id = this.textureAsset.id;
      */
     var AssetReference = function (propertyName, parent, registry, callbacks, scope) {
         this.propertyName = propertyName;
@@ -36,64 +36,30 @@ Object.assign(pc, function () {
         this._onAssetRemove = callbacks.remove;
     };
 
-    /**
-     * @function
-     * @name pc.AssetReference#setId
-     * @description Set the asset id which this references. Either setId or setUrl must be called to initialize an asset reference
-     * @param {Number} id The asset id to which this is a reference
-     */
-    AssetReference.prototype.setId = function (id) {
-        if (this.url) throw Error("Can't set id and url");
-
-        this._unbind();
-
-        this.id = id;
-        this.asset = this._registry.get(id);
-
-        this._bind();
-    };
-
-    /**
-     * @function
-     * @name pc.AssetReference#setUrl
-     * @description Set the asset url which this references. Either setId or setUrl must be called to initialize an asset reference
-     * @param {String} url The asset id to which this is a reference
-     */
-    AssetReference.prototype.setUrl = function (url) {
-        if (this.id) throw Error("Can't set id and url");
-
-        this._unbind();
-
-        this.url = url;
-        this.asset = this._registry.getByUrl(url);
-
-        this._bind();
-    };
-
     AssetReference.prototype._bind = function () {
         if (this.id) {
-            this._registry.on("load:" + this.id, this._onLoad, this);
-            this._registry.once("add:" + this.id, this._onAdd, this);
-            this._registry.on("remove:" + this.id, this._onRemove, this);
+            if (this._onAssetLoad) this._registry.on("load:" + this.id, this._onLoad, this);
+            if (this._onAssetAdd) this._registry.once("add:" + this.id, this._onAdd, this);
+            if (this._onAssetRemove) this._registry.on("remove:" + this.id, this._onRemove, this);
         }
 
         if (this.url) {
-            this._registry.on("load:url:" + this.id, this._onLoad, this);
-            this._registry.once("add:url:" + this.id, this._onAdd, this);
-            this._registry.on("remove:url:" + this.id, this._onRemove, this);
+            if (this._onAssetLoad) this._registry.on("load:url:" + this.id, this._onLoad, this);
+            if (this._onAssetAdd) this._registry.once("add:url:" + this.id, this._onAdd, this);
+            if (this._onAssetRemove) this._registry.on("remove:url:" + this.id, this._onRemove, this);
         }
     };
 
     AssetReference.prototype._unbind = function () {
         if (this.id) {
-            this._registry.off('load:' + this.id, this._onLoad, this);
-            this._registry.off('add:' + this.id, this._onAdd, this);
-            this._registry.off('remove:' + this.id, this._onRemove, this);
+            if (this._onAssetLoad) this._registry.off('load:' + this.id, this._onLoad, this);
+            if (this._onAssetAdd) this._registry.off('add:' + this.id, this._onAdd, this);
+            if (this._onAssetRemove) this._registry.off('remove:' + this.id, this._onRemove, this);
         }
         if (this.url) {
-            this._registry.off('load:' + this.url, this._onLoad, this);
-            this._registry.off('add:' + this.url, this._onAdd, this);
-            this._registry.off('remove:' + this.url, this._onRemove, this);
+            if (this._onAssetLoad) this._registry.off('load:' + this.url, this._onLoad, this);
+            if (this._onAssetAdd) this._registry.off('add:' + this.url, this._onAdd, this);
+            if (this._onAssetRemove) this._registry.off('remove:' + this.url, this._onRemove, this);
         }
     };
 
@@ -108,6 +74,50 @@ Object.assign(pc, function () {
     AssetReference.prototype._onRemove = function (asset) {
         this._onAssetRemove.call(this._scope, this.propertyName, this.parent, asset);
     };
+
+    /**
+     * @property
+     * @name pc.AssetReference#id
+     * @type {Number}
+     * @description Get or set the asset id which this references. One of either id or url must be set to initialize an asset reference
+     */
+    Object.defineProperty(AssetReference.prototype, 'id', {
+        get: function () {
+            return this._id;
+        },
+        set: function (value) {
+            if (this.url) throw Error("Can't set id and url");
+
+            this._unbind();
+
+            this._id = value;
+            this.asset = this._registry.get(this._id);
+
+            this._bind();
+        }
+    });
+
+    /**
+     * @property
+     * @name pc.AssetReference#url
+     * @type {Number}
+     * @description Get or set the asset url which this references. One of either id or url must be called to initialize an asset reference
+     */
+    Object.defineProperty(AssetReference.prototype, 'url', {
+        get: function () {
+            return this._url;
+        },
+        set: function (value) {
+            if (this.id) throw Error("Can't set id and url");
+
+            this._unbind();
+
+            this._url = value;
+            this.asset = this._registry.getByUrl(this._url);
+
+            this._bind();
+        }
+    });
 
     return {
         AssetReference: AssetReference
