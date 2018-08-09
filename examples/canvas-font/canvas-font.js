@@ -71,25 +71,6 @@ CanvasFont.prototype.autoRender = function (text) {
     }
 };
 
-function showCanvas(oldCanvas, num) {
-
-    // create a new canvas
-    var newCanvas = document.createElement('canvas');
-    var context = newCanvas.getContext('2d');
-
-    // set dimensions
-    newCanvas.width = oldCanvas.width;
-    newCanvas.height = oldCanvas.height;
-
-    // apply the old canvas to the new one
-    context.drawImage(oldCanvas, 0, 0);
-
-    document.body.appendChild(newCanvas);
-    newCanvas.style.position = 'absolute';
-    newCanvas.style.top = '0px';
-    newCanvas.style.left = (num * (parseInt(newCanvas.width, 10) + 20)) + 'px';
-}
-
 CanvasFont.prototype.renderAtlas = function (charsArray) {
     this.chars = charsArray;
 
@@ -137,7 +118,6 @@ CanvasFont.prototype.renderAtlas = function (charsArray) {
                 // We ran out of space on this texture!
                 // Copy the canvas into the texture and upload it
                 this.textures[numTextures - 1].upload();
-                showCanvas(this.canvas, numTextures - 1);
                 // Create a new texture (if needed) and continue on
                 numTextures++;
                 _y = sy;
@@ -154,7 +134,7 @@ CanvasFont.prototype.renderAtlas = function (charsArray) {
                     ctx.font = this.weight + ' ' + this.fontSize.toString() + 'px "' + this.fontName + '"';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'bottom';
-                    this.context.clearRect(0, 0, w, h);
+                    ctx.clearRect(0, 0, w, h);
                     var texture = new pc.Texture(app.graphicsDevice, {
                         format: pc.PIXELFORMAT_R8_G8_B8_A8,
                         autoMipmap: true
@@ -171,7 +151,6 @@ CanvasFont.prototype.renderAtlas = function (charsArray) {
     }
     // Copy any remaining characters in the canvas into the last texture and upload it
     this.textures[numTextures - 1].upload();
-    showCanvas(this.canvas, numTextures - 1);
 
     // Cleanup any remaining (unused) textures
     if (numTextures < prevNumTextures) {
