@@ -122,12 +122,6 @@ Object.assign(pc, function () {
                 text = " ";
             }
 
-            if (this._font) {
-                if (this._font.autoRender) {
-                    this._font.autoRender(text);
-                }
-            }
-
             var charactersPerTexture = {};
 
             for (i = 0; i < textLength; i++) {
@@ -862,12 +856,6 @@ Object.assign(pc, function () {
             if (value.type !== previousFontType) {
                 var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
                 this._updateMaterial(screenSpace);
-            }
-
-            if (this._font) {
-                if (this._font.autoRender) {
-                    this._font.autoRender(this._text);
-                }
             }
 
             // make sure we have as many meshInfo entries

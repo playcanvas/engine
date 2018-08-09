@@ -39,7 +39,7 @@ var CanvasFont = function (app, options) {
     this.data = {};
 };
 
-CanvasFont.prototype.autoRender = function (text) {
+CanvasFont.prototype.createTexturesForText = function (text) {
     // strip duplicates
     var set = {};
     var symbols = pc.string.getSymbols(text);
