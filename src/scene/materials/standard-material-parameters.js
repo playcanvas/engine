@@ -117,9 +117,9 @@
         depthBias: 'number',
         slopeDepthBias: 'number',
 
-        cull: 'number',
-        blendType: 'number',
-        shadingModel: 'number',
+        cull: 'enum:cull',
+        blendType: 'enum:blendType',
+        shadingModel: 'enum:shadingModel',
 
         useFog: 'boolean',
         useLighting: 'boolean',

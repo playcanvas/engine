@@ -5,7 +5,34 @@ Object.assign(pc, function () {
         this.valid = true; // start off valid
 
         this.enumValidators = {
-            occludeSpecular: this._createEnumValidator([pc.SPECOCC_NONE, pc.SPECOCC_AO, pc.SPECOCC_GLOSSDEPENDENT])
+            occludeSpecular: this._createEnumValidator([
+                pc.SPECOCC_NONE,
+                pc.SPECOCC_AO,
+                pc.SPECOCC_GLOSSDEPENDENT
+            ]),
+            cull: this._createEnumValidator([
+                pc.CULLFACE_NONE,
+                pc.CULLFACE_BACK,
+                pc.CULLFACE_FRONT,
+                pc.CULLFACE_FRONTANDBACK
+            ]),
+            blendType: this._createEnumValidator([
+                pc.BLEND_SUBTRACTIVE,
+                pc.BLEND_ADDITIVE,
+                pc.BLEND_NORMAL,
+                pc.BLEND_NONE,
+                pc.BLEND_PREMULTIPLIED,
+                pc.BLEND_MULTIPLICATIVE,
+                pc.BLEND_ADDITIVEALPHA,
+                pc.BLEND_MULTIPLICATIVE2X,
+                pc.BLEND_SCREEN,
+                pc.BLEND_MIN,
+                pc.BLEND_MAX
+            ]),
+            shadingModel: this._createEnumValidator([
+                pc.SPECULAR_PHONG,
+                pc.SPECULAR_BLINN
+            ])
         };
     };
 
