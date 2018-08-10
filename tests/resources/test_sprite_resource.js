@@ -1,4 +1,4 @@
-module("pc.SpriteHandler", {
+QUnit.module("pc.SpriteHandler", {
     setup: function () {
         this.app = new pc.Application(document.createElement('canvas'));
     },
@@ -13,11 +13,11 @@ test("load from filesystem", function () {
     stop();
 
     var atlasAsset = new pc.Asset("Red Atlas", "textureatlas", {
-        url: '../test-assets/sprite/red-atlas.json'
+        url: 'base/tests/test-assets/sprite/red-atlas.json'
     });
 
     var spriteAsset = new pc.Asset("Red Sprite", "sprite", {
-        url: '../test-assets/sprite/red-sprite.json'
+        url: 'base/tests/test-assets/sprite/red-sprite.json'
     });
 
     this.app.assets.add(atlasAsset);
@@ -59,7 +59,7 @@ test("load from asset data", function () {
     stop();
 
     var atlasAsset = new pc.Asset("Red Atlas", "textureatlas", {
-        url: '../test-assets/sprite/red-atlas.json'
+        url: 'base/tests/test-assets/sprite/red-atlas.json'
     });
 
     var spriteAsset = new pc.Asset("Red Sprite", "sprite", null, {

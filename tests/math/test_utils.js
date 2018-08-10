@@ -1,4 +1,4 @@
-module('sdk.tests.math.utils');
+QUnit.module('sdk.tests.math.utils');
 
 test("intToBytes32", function () {
     var i, b;

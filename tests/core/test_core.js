@@ -1,4 +1,4 @@
-module('pc.core');
+QUnit.module('pc.core');
 test('type', function() {
     var types = [
         null,

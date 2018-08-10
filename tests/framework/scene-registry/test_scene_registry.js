@@ -1,4 +1,4 @@
-module("pc.SceneRegistry");
+QUnit.module("pc.SceneRegistry");
 
 test("new registry is empty", function () {
     var registry = new pc.SceneRegistry();

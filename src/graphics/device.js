@@ -28,52 +28,94 @@ Object.assign(pc, function () {
         return image;
     };
 
-    function _isIE() {
-        var ua = window.navigator.userAgent;
-        var msie = ua.indexOf("MSIE ");
-        var trident = navigator.userAgent.match(/Trident.*rv:11\./);
-
-        return (msie > 0 || !!trident);
-    }
-
     function testRenderable(gl, pixelFormat) {
+        var result = true;
+
+        // Create a 2x2 texture
         var texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, pixelFormat, null);
 
-        var width = 2;
-        var height = 2;
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, pixelFormat, null);
-
-        // Try to use this texture as a render target.
-        var fbo = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        // Try to use this texture as a render target
+        var framebuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-        gl.bindTexture(gl.TEXTURE_2D, null);
+
         // It is legal for a WebGL implementation exposing the OES_texture_float extension to
         // support floating-point textures but not as attachments to framebuffer objects.
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-            gl.deleteTexture(texture);
-            return false;
+            result = false;
         }
+
+        // Clean up
+        gl.bindTexture(gl.TEXTURE_2D, null);
         gl.deleteTexture(texture);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        return true;
+        gl.deleteFramebuffer(framebuffer);
+
+        return result;
     }
 
-    function testUnsignedByteAttribute(gl) {
-        var storage = new ArrayBuffer(16);
-        var bufferId = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
-        gl.bufferData(gl.ARRAY_BUFFER, storage, gl.STATIC_DRAW);
-        gl.getError(); // Clear error flag
-        gl.vertexAttribPointer(0, 4, gl.UNSIGNED_BYTE, false, 4, 0);
-        var supported = (gl.getError() === 0);
-        gl.deleteBuffer(bufferId);
-        return supported;
+    function testTextureFloatHighPrecision(device) {
+        if (!device.textureFloatRenderable)
+            return false;
+
+        var gl = device.gl;
+        var chunks = pc.shaderChunks;
+        var test1 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTestPS, "ptest1");
+        var test2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTest2PS, "ptest2");
+        var size = 1;
+
+        var tex = new pc.Texture(device, {
+            format: pc.PIXELFORMAT_RGBA32F,
+            width: size,
+            height: size,
+            mipmaps: false,
+            minFilter: pc.FILTER_NEAREST,
+            magFilter: pc.FILTER_NEAREST
+        });
+        var targ = new pc.RenderTarget(device, tex, {
+            depth: false
+        });
+        pc.drawQuadWithShader(device, targ, test1);
+
+        var tex2 = new pc.Texture(device, {
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,
+            width: size,
+            height: size,
+            mipmaps: false,
+            minFilter: pc.FILTER_NEAREST,
+            magFilter: pc.FILTER_NEAREST
+        });
+        var targ2 = new pc.RenderTarget(device, tex2, {
+            depth: false
+        });
+        device.constantTexSource.setValue(tex);
+        pc.drawQuadWithShader(device, targ2, test2);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, targ2._glFrameBuffer);
+
+        var pixels = new Uint8Array(size * size * 4);
+        gl.readPixels(0, 0, size, size, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, device.activeFramebuffer);
+
+        var x = pixels[0] / 255.0;
+        var y = pixels[1] / 255.0;
+        var z = pixels[2] / 255.0;
+        var w = pixels[3] / 255.0;
+        var f = x / (256.0 * 256.0 * 256.0) + y / (256.0 * 256.0) + z / 256.0 + w;
+
+        tex.destroy();
+        targ.destroy();
+        tex2.destroy();
+        targ2.destroy();
+
+        return f === 0.0;
     }
 
     /**
@@ -99,6 +141,12 @@ Object.assign(pc, function () {
      * @name pc.GraphicsDevice#maxVolumeSize
      * @type Number
      * @description The maximum supported dimension of a 3D texture (any axis).
+     */
+    /**
+     * @readonly
+     * @name pc.GraphicsDevice#maxAnisotropy
+     * @type Number
+     * @description The maximum supported texture anisotropy setting.
      */
     /**
      * @event
@@ -206,377 +254,311 @@ Object.assign(pc, function () {
             this.textureUnits.push([null, null, null]);
         }
 
-        // put the rest of the constructor in a function
-        // so that the constructor remains small. Small constructors
-        // are optimized by Firefox due to type inference
-        (function () {
-            this.defaultClearOptions = {
-                color: [0, 0, 0, 1],
-                depth: 1,
-                stencil: 0,
-                flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
-            };
+        this.defaultClearOptions = {
+            color: [0, 0, 0, 1],
+            depth: 1,
+            stencil: 0,
+            flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
+        };
 
-            this.glAddress = [
-                gl.REPEAT,
-                gl.CLAMP_TO_EDGE,
-                gl.MIRRORED_REPEAT
-            ];
+        this.glAddress = [
+            gl.REPEAT,
+            gl.CLAMP_TO_EDGE,
+            gl.MIRRORED_REPEAT
+        ];
 
-            this.glBlendEquation = [
-                gl.FUNC_ADD,
-                gl.FUNC_SUBTRACT,
-                gl.FUNC_REVERSE_SUBTRACT,
-                this.webgl2 ? gl.MIN : this.extBlendMinmax ? this.extBlendMinmax.MIN_EXT : gl.FUNC_ADD,
-                this.webgl2 ? gl.MAX : this.extBlendMinmax ? this.extBlendMinmax.MAX_EXT : gl.FUNC_ADD
-            ];
+        this.glBlendEquation = [
+            gl.FUNC_ADD,
+            gl.FUNC_SUBTRACT,
+            gl.FUNC_REVERSE_SUBTRACT,
+            this.webgl2 ? gl.MIN : this.extBlendMinmax ? this.extBlendMinmax.MIN_EXT : gl.FUNC_ADD,
+            this.webgl2 ? gl.MAX : this.extBlendMinmax ? this.extBlendMinmax.MAX_EXT : gl.FUNC_ADD
+        ];
 
-            this.glBlendFunction = [
-                gl.ZERO,
-                gl.ONE,
-                gl.SRC_COLOR,
-                gl.ONE_MINUS_SRC_COLOR,
-                gl.DST_COLOR,
-                gl.ONE_MINUS_DST_COLOR,
-                gl.SRC_ALPHA,
-                gl.SRC_ALPHA_SATURATE,
-                gl.ONE_MINUS_SRC_ALPHA,
-                gl.DST_ALPHA,
-                gl.ONE_MINUS_DST_ALPHA
-            ];
+        this.glBlendFunction = [
+            gl.ZERO,
+            gl.ONE,
+            gl.SRC_COLOR,
+            gl.ONE_MINUS_SRC_COLOR,
+            gl.DST_COLOR,
+            gl.ONE_MINUS_DST_COLOR,
+            gl.SRC_ALPHA,
+            gl.SRC_ALPHA_SATURATE,
+            gl.ONE_MINUS_SRC_ALPHA,
+            gl.DST_ALPHA,
+            gl.ONE_MINUS_DST_ALPHA
+        ];
 
-            this.glComparison = [
-                gl.NEVER,
-                gl.LESS,
-                gl.EQUAL,
-                gl.LEQUAL,
-                gl.GREATER,
-                gl.NOTEQUAL,
-                gl.GEQUAL,
-                gl.ALWAYS
-            ];
+        this.glComparison = [
+            gl.NEVER,
+            gl.LESS,
+            gl.EQUAL,
+            gl.LEQUAL,
+            gl.GREATER,
+            gl.NOTEQUAL,
+            gl.GEQUAL,
+            gl.ALWAYS
+        ];
 
-            this.glStencilOp = [
-                gl.KEEP,
-                gl.ZERO,
-                gl.REPLACE,
-                gl.INCR,
-                gl.INCR_WRAP,
-                gl.DECR,
-                gl.DECR_WRAP,
-                gl.INVERT
-            ];
+        this.glStencilOp = [
+            gl.KEEP,
+            gl.ZERO,
+            gl.REPLACE,
+            gl.INCR,
+            gl.INCR_WRAP,
+            gl.DECR,
+            gl.DECR_WRAP,
+            gl.INVERT
+        ];
 
-            this.glClearFlag = [
-                0,
-                gl.COLOR_BUFFER_BIT,
-                gl.DEPTH_BUFFER_BIT,
-                gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT,
-                gl.STENCIL_BUFFER_BIT,
-                gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT,
-                gl.STENCIL_BUFFER_BIT | gl.DEPTH_BUFFER_BIT,
-                gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
-            ];
+        this.glClearFlag = [
+            0,
+            gl.COLOR_BUFFER_BIT,
+            gl.DEPTH_BUFFER_BIT,
+            gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT,
+            gl.STENCIL_BUFFER_BIT,
+            gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT,
+            gl.STENCIL_BUFFER_BIT | gl.DEPTH_BUFFER_BIT,
+            gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
+        ];
 
-            this.glCull = [
-                0,
-                gl.BACK,
-                gl.FRONT,
-                gl.FRONT_AND_BACK
-            ];
+        this.glCull = [
+            0,
+            gl.BACK,
+            gl.FRONT,
+            gl.FRONT_AND_BACK
+        ];
 
-            this.glFilter = [
-                gl.NEAREST,
-                gl.LINEAR,
-                gl.NEAREST_MIPMAP_NEAREST,
-                gl.NEAREST_MIPMAP_LINEAR,
-                gl.LINEAR_MIPMAP_NEAREST,
-                gl.LINEAR_MIPMAP_LINEAR
-            ];
+        this.glFilter = [
+            gl.NEAREST,
+            gl.LINEAR,
+            gl.NEAREST_MIPMAP_NEAREST,
+            gl.NEAREST_MIPMAP_LINEAR,
+            gl.LINEAR_MIPMAP_NEAREST,
+            gl.LINEAR_MIPMAP_LINEAR
+        ];
 
-            this.glPrimitive = [
-                gl.POINTS,
-                gl.LINES,
-                gl.LINE_LOOP,
-                gl.LINE_STRIP,
-                gl.TRIANGLES,
-                gl.TRIANGLE_STRIP,
-                gl.TRIANGLE_FAN
-            ];
+        this.glPrimitive = [
+            gl.POINTS,
+            gl.LINES,
+            gl.LINE_LOOP,
+            gl.LINE_STRIP,
+            gl.TRIANGLES,
+            gl.TRIANGLE_STRIP,
+            gl.TRIANGLE_FAN
+        ];
 
-            this.glType = [
-                gl.BYTE,
-                gl.UNSIGNED_BYTE,
-                gl.SHORT,
-                gl.UNSIGNED_SHORT,
-                gl.INT,
-                gl.UNSIGNED_INT,
-                gl.FLOAT
-            ];
+        this.glType = [
+            gl.BYTE,
+            gl.UNSIGNED_BYTE,
+            gl.SHORT,
+            gl.UNSIGNED_SHORT,
+            gl.INT,
+            gl.UNSIGNED_INT,
+            gl.FLOAT
+        ];
 
-            this.targetToSlot = {};
-            this.targetToSlot[gl.TEXTURE_2D] = 0;
-            this.targetToSlot[gl.TEXTURE_CUBE_MAP] = 1;
-            this.targetToSlot[gl.TEXTURE_3D] = 2;
+        this.targetToSlot = {};
+        this.targetToSlot[gl.TEXTURE_2D] = 0;
+        this.targetToSlot[gl.TEXTURE_CUBE_MAP] = 1;
+        this.targetToSlot[gl.TEXTURE_3D] = 2;
 
-            // Define the uniform commit functions
-            var scopeX, scopeY, scopeZ, scopeW;
-            var uniformValue;
-            this.commitFunction = [];
-            this.commitFunction[pc.UNIFORMTYPE_BOOL] = function (uniform, value) {
-                if (uniform.value !== value) {
-                    gl.uniform1i(uniform.locationId, value);
-                    uniform.value = value;
-                }
-            };
-            this.commitFunction[pc.UNIFORMTYPE_INT] = this.commitFunction[pc.UNIFORMTYPE_BOOL];
-            this.commitFunction[pc.UNIFORMTYPE_FLOAT] = function (uniform, value) {
-                if (uniform.value !== value) {
-                    gl.uniform1f(uniform.locationId, value);
-                    uniform.value = value;
-                }
-            };
-            this.commitFunction[pc.UNIFORMTYPE_VEC2]  = function (uniform, value) {
-                uniformValue = uniform.value;
-                scopeX = value[0];
-                scopeY = value[1];
-                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
-                    gl.uniform2fv(uniform.locationId, value);
-                    uniformValue[0] = scopeX;
-                    uniformValue[1] = scopeY;
-                }
-            };
-            this.commitFunction[pc.UNIFORMTYPE_VEC3]  = function (uniform, value) {
-                uniformValue = uniform.value;
-                scopeX = value[0];
-                scopeY = value[1];
-                scopeZ = value[2];
-                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
-                    gl.uniform3fv(uniform.locationId, value);
-                    uniformValue[0] = scopeX;
-                    uniformValue[1] = scopeY;
-                    uniformValue[2] = scopeZ;
-                }
-            };
-            this.commitFunction[pc.UNIFORMTYPE_VEC4]  = function (uniform, value) {
-                uniformValue = uniform.value;
-                scopeX = value[0];
-                scopeY = value[1];
-                scopeZ = value[2];
-                scopeW = value[3];
-                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
-                    gl.uniform4fv(uniform.locationId, value);
-                    uniformValue[0] = scopeX;
-                    uniformValue[1] = scopeY;
-                    uniformValue[2] = scopeZ;
-                    uniformValue[3] = scopeW;
-                }
-            };
-            this.commitFunction[pc.UNIFORMTYPE_IVEC2] = function (uniform, value) {
-                uniformValue = uniform.value;
-                scopeX = value[0];
-                scopeY = value[1];
-                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
-                    gl.uniform2iv(uniform.locationId, value);
-                    uniformValue[0] = scopeX;
-                    uniformValue[1] = scopeY;
-                }
-            };
-            this.commitFunction[pc.UNIFORMTYPE_BVEC2] = this.commitFunction[pc.UNIFORMTYPE_IVEC2];
-            this.commitFunction[pc.UNIFORMTYPE_IVEC3] = function (uniform, value) {
-                uniformValue = uniform.value;
-                scopeX = value[0];
-                scopeY = value[1];
-                scopeZ = value[2];
-                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
-                    gl.uniform3iv(uniform.locationId, value);
-                    uniformValue[0] = scopeX;
-                    uniformValue[1] = scopeY;
-                    uniformValue[2] = scopeZ;
-                }
-            };
-            this.commitFunction[pc.UNIFORMTYPE_BVEC3] = this.commitFunction[pc.UNIFORMTYPE_IVEC3];
-            this.commitFunction[pc.UNIFORMTYPE_IVEC4] = function (uniform, value) {
-                uniformValue = uniform.value;
-                scopeX = value[0];
-                scopeY = value[1];
-                scopeZ = value[2];
-                scopeW = value[3];
-                if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
-                    gl.uniform4iv(uniform.locationId, value);
-                    uniformValue[0] = scopeX;
-                    uniformValue[1] = scopeY;
-                    uniformValue[2] = scopeZ;
-                    uniformValue[3] = scopeW;
-                }
-            };
-            this.commitFunction[pc.UNIFORMTYPE_BVEC4] = this.commitFunction[pc.UNIFORMTYPE_IVEC4];
-            this.commitFunction[pc.UNIFORMTYPE_MAT2]  = function (uniform, value) {
-                gl.uniformMatrix2fv(uniform.locationId, false, value);
-            };
-            this.commitFunction[pc.UNIFORMTYPE_MAT3]  = function (uniform, value) {
-                gl.uniformMatrix3fv(uniform.locationId, false, value);
-            };
-            this.commitFunction[pc.UNIFORMTYPE_MAT4]  = function (uniform, value) {
-                gl.uniformMatrix4fv(uniform.locationId, false, value);
-            };
-            this.commitFunction[pc.UNIFORMTYPE_FLOATARRAY] = function (uniform, value) {
-                gl.uniform1fv(uniform.locationId, value);
-            };
-
-            // Create the ScopeNamespace for shader attributes and variables
-            this.scope = new pc.ScopeSpace("Device");
-
-            this.programLib = new pc.ProgramLibrary(this);
-            for (var generator in pc.programlib)
-                this.programLib.register(generator, pc.programlib[generator]);
-
-            pc.events.attach(this);
-
-            this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
-            this.useTexCubeLod = this.extTextureLod && this.maxTextures < 16;
-
-            // Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
-            // based on the number of available uniforms and the number of uniforms required for non-
-            // bone data.  This is based off of the Standard shader.  A user defined shader may have
-            // even less space available for bones so this calculated value can be overridden via
-            // pc.GraphicsDevice.setBoneLimit.
-            var numUniforms = this.vertexUniformsCount;
-            numUniforms -= 4 * 4; // Model, view, projection and shadow matrices
-            numUniforms -= 8;     // 8 lights max, each specifying a position vector
-            numUniforms -= 1;     // Eye position
-            numUniforms -= 4 * 4; // Up to 4 texture transforms
-            this.boneLimit = Math.floor(numUniforms / 4);
-
-            // Put a limit on the number of supported bones before skin partitioning must be performed
-            // Some GPUs have demonstrated performance issues if the number of vectors allocated to the
-            // skin matrix palette is left unbounded
-            this.boneLimit = Math.min(this.boneLimit, 128);
-
-            if (this.unmaskedRenderer === 'Mali-450 MP') {
-                this.boneLimit = 34;
+        // Define the uniform commit functions
+        var scopeX, scopeY, scopeZ, scopeW;
+        var uniformValue;
+        this.commitFunction = [];
+        this.commitFunction[pc.UNIFORMTYPE_BOOL] = function (uniform, value) {
+            if (uniform.value !== value) {
+                gl.uniform1i(uniform.locationId, value);
+                uniform.value = value;
             }
-
-            if (this.unmaskedRenderer === 'Apple A8 GPU') {
-                this.forceCpuParticles = true;
+        };
+        this.commitFunction[pc.UNIFORMTYPE_INT] = this.commitFunction[pc.UNIFORMTYPE_BOOL];
+        this.commitFunction[pc.UNIFORMTYPE_FLOAT] = function (uniform, value) {
+            if (uniform.value !== value) {
+                gl.uniform1f(uniform.locationId, value);
+                uniform.value = value;
             }
-
-            // Profiler stats
-            this._drawCallsPerFrame = 0;
-            this._shaderSwitchesPerFrame = 0;
-            this._primsPerFrame = [];
-            for (i = pc.PRIMITIVE_POINTS; i <= pc.PRIMITIVE_TRIFAN; i++) {
-                this._primsPerFrame[i] = 0;
+        };
+        this.commitFunction[pc.UNIFORMTYPE_VEC2]  = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
+                gl.uniform2fv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
             }
-            this._renderTargetCreationTime = 0;
+        };
+        this.commitFunction[pc.UNIFORMTYPE_VEC3]  = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            scopeZ = value[2];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
+                gl.uniform3fv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+                uniformValue[2] = scopeZ;
+            }
+        };
+        this.commitFunction[pc.UNIFORMTYPE_VEC4]  = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            scopeZ = value[2];
+            scopeW = value[3];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
+                gl.uniform4fv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+                uniformValue[2] = scopeZ;
+                uniformValue[3] = scopeW;
+            }
+        };
+        this.commitFunction[pc.UNIFORMTYPE_IVEC2] = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
+                gl.uniform2iv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+            }
+        };
+        this.commitFunction[pc.UNIFORMTYPE_BVEC2] = this.commitFunction[pc.UNIFORMTYPE_IVEC2];
+        this.commitFunction[pc.UNIFORMTYPE_IVEC3] = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            scopeZ = value[2];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
+                gl.uniform3iv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+                uniformValue[2] = scopeZ;
+            }
+        };
+        this.commitFunction[pc.UNIFORMTYPE_BVEC3] = this.commitFunction[pc.UNIFORMTYPE_IVEC3];
+        this.commitFunction[pc.UNIFORMTYPE_IVEC4] = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            scopeZ = value[2];
+            scopeW = value[3];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
+                gl.uniform4iv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+                uniformValue[2] = scopeZ;
+                uniformValue[3] = scopeW;
+            }
+        };
+        this.commitFunction[pc.UNIFORMTYPE_BVEC4] = this.commitFunction[pc.UNIFORMTYPE_IVEC4];
+        this.commitFunction[pc.UNIFORMTYPE_MAT2]  = function (uniform, value) {
+            gl.uniformMatrix2fv(uniform.locationId, false, value);
+        };
+        this.commitFunction[pc.UNIFORMTYPE_MAT3]  = function (uniform, value) {
+            gl.uniformMatrix3fv(uniform.locationId, false, value);
+        };
+        this.commitFunction[pc.UNIFORMTYPE_MAT4]  = function (uniform, value) {
+            gl.uniformMatrix4fv(uniform.locationId, false, value);
+        };
+        this.commitFunction[pc.UNIFORMTYPE_FLOATARRAY] = function (uniform, value) {
+            gl.uniform1fv(uniform.locationId, value);
+        };
 
-            this._vram = {
-                // #ifdef PROFILER
-                texShadow: 0,
-                texAsset: 0,
-                texLightmap: 0,
-                // #endif
-                tex: 0,
-                vb: 0,
-                ib: 0
-            };
+        // Create the ScopeNamespace for shader attributes and variables
+        this.scope = new pc.ScopeSpace("Device");
 
-            this._shaderStats = {
-                vsCompiled: 0,
-                fsCompiled: 0,
-                linked: 0,
-                materialShaders: 0,
-                compileTime: 0
-            };
+        this.programLib = new pc.ProgramLibrary(this);
+        for (var generator in pc.programlib)
+            this.programLib.register(generator, pc.programlib[generator]);
 
-            // Handle IE11's inability to take UNSIGNED_BYTE as a param for vertexAttribPointer
-            this.supportsUnsignedByte = testUnsignedByteAttribute(gl);
+        pc.events.attach(this);
 
-            this.constantTexSource = this.scope.resolve("source");
+        this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
+        this.useTexCubeLod = this.extTextureLod && this.maxTextures < 16;
 
-            if (!pc._benchmarked) {
-                if (this.extTextureFloat) {
-                    if (this.webgl2) {
-                        // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
-                        this.extTextureFloatRenderable = this.extColorBufferFloat;
-                    } else {
-                        // In WebGL1 we should just try rendering into a float texture
-                        this.extTextureFloatRenderable = testRenderable(gl, gl.FLOAT);
-                    }
-                }
-                if (this.extTextureHalfFloat) {
-                    if (this.webgl2) {
-                        // EXT_color_buffer_float should affect both float and halffloat formats
-                        this.extTextureHalfFloatRenderable = this.extColorBufferFloat;
-                    } else {
-                        // Manual render check for half float
-                        this.extTextureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat.HALF_FLOAT_OES);
-                    }
-                }
-                if (this.extTextureFloatRenderable) {
-                    var device = this;
-                    var chunks = pc.shaderChunks;
-                    var test1 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTestPS, "ptest1");
-                    var test2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTest2PS, "ptest2");
-                    var size = 1;
+        // Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
+        // based on the number of available uniforms and the number of uniforms required for non-
+        // bone data.  This is based off of the Standard shader.  A user defined shader may have
+        // even less space available for bones so this calculated value can be overridden via
+        // pc.GraphicsDevice.setBoneLimit.
+        var numUniforms = this.vertexUniformsCount;
+        numUniforms -= 4 * 4; // Model, view, projection and shadow matrices
+        numUniforms -= 8;     // 8 lights max, each specifying a position vector
+        numUniforms -= 1;     // Eye position
+        numUniforms -= 4 * 4; // Up to 4 texture transforms
+        this.boneLimit = Math.floor(numUniforms / 4);
 
-                    var tex = new pc.Texture(device, {
-                        format: pc.PIXELFORMAT_RGBA32F,
-                        width: size,
-                        height: size,
-                        mipmaps: false,
-                        minFilter: pc.FILTER_NEAREST,
-                        magFilter: pc.FILTER_NEAREST
-                    });
-                    var targ = new pc.RenderTarget(device, tex, {
-                        depth: false
-                    });
-                    pc.drawQuadWithShader(device, targ, test1);
+        // Put a limit on the number of supported bones before skin partitioning must be performed
+        // Some GPUs have demonstrated performance issues if the number of vectors allocated to the
+        // skin matrix palette is left unbounded
+        this.boneLimit = Math.min(this.boneLimit, 128);
 
-                    var tex2 = new pc.Texture(device, {
-                        format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                        width: size,
-                        height: size,
-                        mipmaps: false,
-                        minFilter: pc.FILTER_NEAREST,
-                        magFilter: pc.FILTER_NEAREST
-                    });
-                    var targ2 = new pc.RenderTarget(device, tex2, {
-                        depth: false
-                    });
-                    this.constantTexSource.setValue(tex);
-                    pc.drawQuadWithShader(device, targ2, test2);
+        if (this.unmaskedRenderer === 'Mali-450 MP') {
+            this.boneLimit = 34;
+        }
 
-                    var pixels = new Uint8Array(size * size * 4);
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, targ2._glFrameBuffer);
-                    gl.readPixels(0, 0, size, size, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        if (this.unmaskedRenderer === 'Apple A8 GPU') {
+            this.forceCpuParticles = true;
+        }
 
-                    var x = pixels[0] / 255.0;
-                    var y = pixels[1] / 255.0;
-                    var z = pixels[2] / 255.0;
-                    var w = pixels[3] / 255.0;
-                    var f = x / (256.0 * 256.0 * 256.0) + y / (256.0 * 256.0) + z / 256.0 + w;
+        // Profiler stats
+        this._drawCallsPerFrame = 0;
+        this._shaderSwitchesPerFrame = 0;
+        this._primsPerFrame = [];
+        for (i = pc.PRIMITIVE_POINTS; i <= pc.PRIMITIVE_TRIFAN; i++) {
+            this._primsPerFrame[i] = 0;
+        }
+        this._renderTargetCreationTime = 0;
 
-                    this.extTextureFloatHighPrecision = f === 0.0;
+        this._vram = {
+            // #ifdef PROFILER
+            texShadow: 0,
+            texAsset: 0,
+            texLightmap: 0,
+            // #endif
+            tex: 0,
+            vb: 0,
+            ib: 0
+        };
 
-                    tex.destroy();
-                    targ.destroy();
-                    tex2.destroy();
-                    targ2.destroy();
-                    pc.destroyPostEffectQuad();
-                    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-                }
-                pc.extTextureFloatRenderable = this.extTextureFloatRenderable;
-                pc.extTextureHalfFloatRenderable = this.extTextureHalfFloatRenderable;
-                pc.extTextureFloatHighPrecision = this.extTextureFloatHighPrecision;
-                pc._benchmarked = true;
+        this._shaderStats = {
+            vsCompiled: 0,
+            fsCompiled: 0,
+            linked: 0,
+            materialShaders: 0,
+            compileTime: 0
+        };
+
+        this.constantTexSource = this.scope.resolve("source");
+
+        if (this.extTextureFloat) {
+            if (this.webgl2) {
+                // In WebGL2 float texture renderability is dictated by the EXT_color_buffer_float extension
+                this.textureFloatRenderable = !!this.extColorBufferFloat;
             } else {
-                this.extTextureFloatRenderable = pc.extTextureFloatRenderable;
-                this.extTextureHalfFloatRenderable = pc.extTextureHalfFloatRenderable;
-                this.extTextureFloatHighPrecision = pc.extTextureFloatHighPrecision;
+                // In WebGL1 we should just try rendering into a float texture
+                this.textureFloatRenderable = testRenderable(gl, gl.FLOAT);
             }
+        } else {
+            this.textureFloatRenderable = false;
+        }
+        if (this.extTextureHalfFloat) {
+            if (this.webgl2) {
+                // EXT_color_buffer_float should affect both float and halffloat formats
+                this.textureHalfFloatRenderable = !!this.extColorBufferFloat;
+            } else {
+                // Manual render check for half float
+                this.textureHalfFloatRenderable = testRenderable(gl, this.extTextureHalfFloat.HALF_FLOAT_OES);
+            }
+        } else {
+            this.textureHalfFloatRenderable = false;
+        }
 
-        }).call(this);
+        this.textureFloatHighPrecision = testTextureFloatHighPrecision(this);
     };
 
     Object.assign(GraphicsDevice.prototype, {
@@ -618,6 +600,17 @@ Object.assign(pc, function () {
         initializeExtensions: function () {
             var gl = this.gl;
 
+            var supportedExtensions = gl.getSupportedExtensions();
+            var getExtension = function () {
+                var extension = null;
+                for (var i = 0; i < arguments.length; i++) {
+                    if (supportedExtensions.indexOf(arguments[i]) !== -1) {
+                        extension = gl.getExtension(arguments[i]);
+                    }
+                }
+                return extension;
+            };
+
             if (this.webgl2) {
                 this.extBlendMinmax = true;
                 this.extDrawBuffers = true;
@@ -628,42 +621,31 @@ Object.assign(pc, function () {
                 this.extTextureHalfFloatLinear = true;
                 this.extTextureLod = true;
                 this.extUintElement = true;
+                this.extColorBufferFloat = getExtension('EXT_color_buffer_float');
             } else {
-                this.extBlendMinmax = gl.getExtension("EXT_blend_minmax");
-                this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
-                this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
-                this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
-                this.extTextureFloat = gl.getExtension("OES_texture_float");
-                this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
-                this.extTextureHalfFloatLinear = gl.getExtension("OES_texture_half_float_linear");
-                this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
-                this.extUintElement = gl.getExtension("OES_element_index_uint");
+                this.extBlendMinmax = getExtension("EXT_blend_minmax");
+                this.extDrawBuffers = getExtension('EXT_draw_buffers');
+                this.extInstancing = getExtension("ANGLE_instanced_arrays");
+                this.extStandardDerivatives = getExtension("OES_standard_derivatives");
+                this.extTextureFloat = getExtension("OES_texture_float");
+                this.extTextureHalfFloat = getExtension("OES_texture_half_float");
+                this.extTextureHalfFloatLinear = getExtension("OES_texture_half_float_linear");
+                this.extTextureLod = getExtension('EXT_shader_texture_lod');
+                this.extUintElement = getExtension("OES_element_index_uint");
+                this.extColorBufferFloat = null;
             }
 
-            this.extRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
-
-            this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
-
-            this.extColorBufferFloat = gl.getExtension('EXT_color_buffer_float');
-
-            this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic') ||
-                                               gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
-
-            this.extCompressedTextureETC1 = gl.getExtension('WEBGL_compressed_texture_etc1');
-
-            this.extCompressedTexturePVRTC = gl.getExtension('WEBGL_compressed_texture_pvrtc') ||
-                                             gl.getExtension('WEBKIT_WEBGL_compressed_texture_pvrtc');
-
-            this.extCompressedTextureS3TC = gl.getExtension('WEBGL_compressed_texture_s3tc') ||
-                                            gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
-
-            // IE 11 can't use mip maps with S3TC
-            if (this.extCompressedTextureS3TC && _isIE())
-                this.extCompressedTextureS3TC = null;
+            this.extDebugRendererInfo = getExtension('WEBGL_debug_renderer_info');
+            this.extTextureFloatLinear = getExtension("OES_texture_float_linear");
+            this.extTextureFilterAnisotropic = getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
+            this.extCompressedTextureETC1 = getExtension('WEBGL_compressed_texture_etc1');
+            this.extCompressedTexturePVRTC = getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
+            this.extCompressedTextureS3TC = getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
         },
 
         initializeCapabilities: function () {
             var gl = this.gl;
+            var ext;
 
             this.maxPrecision = this.precision = this.getPrecision();
 
@@ -680,17 +662,23 @@ Object.assign(pc, function () {
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.vertexUniformsCount = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
             this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
-            this.unmaskedRenderer = this.extRendererInfo ? gl.getParameter(this.extRendererInfo.UNMASKED_RENDERER_WEBGL) : '';
-            this.unmaskedVendor = this.extRendererInfo ? gl.getParameter(this.extRendererInfo.UNMASKED_VENDOR_WEBGL) : '';
             if (this.webgl2) {
                 this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
                 this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
                 this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
             } else {
-                this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
-                this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
+                ext = this.extDrawBuffers;
+                this.maxDrawBuffers = ext ? gl.getParameter(ext.MAX_DRAW_BUFFERS_EXT) : 1;
+                this.maxColorAttachments = ext ? gl.getParameter(ext.MAX_COLOR_ATTACHMENTS_EXT) : 1;
                 this.maxVolumeSize = 1;
             }
+
+            ext = this.extDebugRendererInfo;
+            this.unmaskedRenderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '';
+            this.unmaskedVendor = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : '';
+
+            ext = this.extTextureFilterAnisotropic;
+            this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
         },
 
         initializeRenderState: function () {
@@ -783,6 +771,7 @@ Object.assign(pc, function () {
             gl.enable(gl.SCISSOR_TEST);
 
             gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
         },
 
         initializeContext: function () {
@@ -811,6 +800,7 @@ Object.assign(pc, function () {
             // Force all textures to be recreated and reuploaded
             for (i = 0, len = this.textures.length; i < len; i++) {
                 var texture = this.textures[i];
+                this.destroyTexture(texture);
                 texture.dirtyAll();
             }
             this.textureUnit = 0;
@@ -1046,7 +1036,7 @@ Object.assign(pc, function () {
                     // --- Init the provided color buffer (optional) ---
                     var colorBuffer = target._colorBuffer;
                     if (colorBuffer) {
-                        if (!colorBuffer._glTextureId) {
+                        if (!colorBuffer._glTexture) {
                             // Clamp the render buffer size to the maximum supported by the device
                             colorBuffer._width = Math.min(colorBuffer.width, this.maxRenderBufferSize);
                             colorBuffer._height = Math.min(colorBuffer.height, this.maxRenderBufferSize);
@@ -1057,7 +1047,7 @@ Object.assign(pc, function () {
                             gl.FRAMEBUFFER,
                             gl.COLOR_ATTACHMENT0,
                             colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                            colorBuffer._glTextureId,
+                            colorBuffer._glTexture,
                             0
                         );
                     }
@@ -1065,7 +1055,7 @@ Object.assign(pc, function () {
                     var depthBuffer = target._depthBuffer;
                     if (depthBuffer && this.webgl2) {
                         // --- Init the provided depth/stencil buffer (optional, WebGL2 only) ---
-                        if (!depthBuffer._glTextureId) {
+                        if (!depthBuffer._glTexture) {
                             // Clamp the render buffer size to the maximum supported by the device
                             depthBuffer._width = Math.min(depthBuffer.width, this.maxRenderBufferSize);
                             depthBuffer._height = Math.min(depthBuffer.height, this.maxRenderBufferSize);
@@ -1075,11 +1065,11 @@ Object.assign(pc, function () {
                         if (target._stencil) {
                             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT,
                                                     depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                                    target._depthBuffer._glTextureId, 0);
+                                                    target._depthBuffer._glTexture, 0);
                         } else {
                             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
                                                     depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                                                    target._depthBuffer._glTextureId, 0);
+                                                    target._depthBuffer._glTexture, 0);
                         }
                     } else if (target._depth) {
                         // --- Init a new depth/stencil buffer (optional) ---
@@ -1173,8 +1163,9 @@ Object.assign(pc, function () {
             if (target) {
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
-                if (colorBuffer && colorBuffer._glTextureId && colorBuffer.mipmaps && colorBuffer._pot) {
-                    this.bindTexture(this.maxCombinedTextures - 1, colorBuffer._glTarget, colorBuffer._glTextureId);
+                if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && colorBuffer._pot) {
+                    this.activeTexture(this.maxCombinedTextures - 1);
+                    this.bindTexture(colorBuffer);
                     gl.generateMipmap(colorBuffer._glTarget);
                 }
 
@@ -1189,7 +1180,7 @@ Object.assign(pc, function () {
             var gl = this.gl;
             var ext;
 
-            texture._glTextureId = gl.createTexture();
+            texture._glTexture = gl.createTexture();
 
             texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
                 (texture._volume ? gl.TEXTURE_3D : gl.TEXTURE_2D);
@@ -1358,6 +1349,58 @@ Object.assign(pc, function () {
                     texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
             }
+
+            // Track this texture now that it is a WebGL resource
+            this.textures.push(texture);
+        },
+
+        destroyTexture: function (texture) {
+            if (texture._glTexture) {
+                // Remove texture from device's texture cache
+                var idx = this.textures.indexOf(texture);
+                if (idx !== -1) {
+                    this.textures.splice(idx, 1);
+                }
+
+                // Remove texture from any uniforms
+                for (var uniformName in this.scope.variables) {
+                    var uniform = this.scope.variables[uniformName];
+                    if (uniform.value === texture) {
+                        uniform.value = null;
+                    }
+                }
+
+                // Update shadowed texture unit state to remove texture from any units
+                for (var i = 0; i < this.textureUnits.length; i++) {
+                    var textureUnit = this.textureUnits[i];
+                    for (var j = 0; j < textureUnit.length; j++) {
+                        if (textureUnit[j] === texture._glTexture) {
+                            textureUnit[j] = null;
+                        }
+                    }
+                }
+
+                // Blow away WebGL texture resource
+                var gl = this.gl;
+                gl.deleteTexture(texture._glTexture);
+                delete texture._glTexture;
+                delete texture._glTarget;
+                delete texture._glFormat;
+                delete texture._glInternalFormat;
+                delete texture._glPixelType;
+
+                // Update texture stats
+                this._vram.tex -= texture._gpuSize;
+                // #ifdef PROFILER
+                if (texture.profilerHint === pc.TEXHINT_SHADOWMAP) {
+                    this._vram.texShadow -= texture._gpuSize;
+                } else if (texture.profilerHint === pc.TEXHINT_ASSET) {
+                    this._vram.texAsset -= texture._gpuSize;
+                } else if (texture.profilerHint === pc.TEXHINT_LIGHTMAP) {
+                    this._vram.texLightmap -= texture._gpuSize;
+                }
+                // #endif
+            }
         },
 
         uploadTexture: function (texture) {
@@ -1394,7 +1437,6 @@ Object.assign(pc, function () {
                     var face;
 
                     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
 
                     if ((mipObject[0] instanceof HTMLCanvasElement) || (mipObject[0] instanceof HTMLImageElement) || (mipObject[0] instanceof HTMLVideoElement)) {
                         // Upload the image, canvas or video
@@ -1499,7 +1541,6 @@ Object.assign(pc, function () {
 
                         // Upload the image, canvas or video
                         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture._flipY);
-                        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                         gl.texImage2D(
                             gl.TEXTURE_2D,
                             mipLevel,
@@ -1598,7 +1639,7 @@ Object.assign(pc, function () {
         // unit, bind it
         bindTexture: function (texture) {
             var textureTarget = texture._glTarget;
-            var textureObject = texture._glTextureId;
+            var textureObject = texture._glTexture;
             var textureUnit = this.textureUnit;
             var slot = this.targetToSlot[textureTarget];
             if (this.textureUnits[textureUnit][slot] !== textureObject) {
@@ -1611,7 +1652,7 @@ Object.assign(pc, function () {
         // texture unit and bind the texture to it
         bindTextureOnUnit: function (texture, textureUnit) {
             var textureTarget = texture._glTarget;
-            var textureObject = texture._glTextureId;
+            var textureObject = texture._glTexture;
             var slot = this.targetToSlot[textureTarget];
             if (this.textureUnits[textureUnit][slot] !== textureObject) {
                 this.activeTexture(textureUnit);
@@ -1679,7 +1720,7 @@ Object.assign(pc, function () {
         },
 
         setTexture: function (texture, textureUnit) {
-            if (!texture._glTextureId)
+            if (!texture._glTexture)
                 this.initializeTexture(texture);
 
             if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
@@ -2712,9 +2753,9 @@ Object.assign(pc, function () {
         },
 
         getHdrFormat: function () {
-            if (this.extTextureHalfFloatRenderable) {
+            if (this.textureHalfFloatRenderable) {
                 return pc.PIXELFORMAT_RGB16F;
-            } else if (this.extTextureFloatRenderable) {
+            } else if (this.textureFloatRenderable) {
                 return pc.PIXELFORMAT_RGB32F;
             }
             return pc.PIXELFORMAT_R8_G8_B8_A8;
@@ -2747,15 +2788,6 @@ Object.assign(pc, function () {
          */
         setBoneLimit: function (maxBones) {
             this.boneLimit = maxBones;
-        },
-
-        /* DEPRECATED */
-        enableValidation: function (enable) {
-            console.warn('enableValidation: This function is deprecated and will be removed shortly.');
-        },
-
-        validate: function () {
-            console.warn('validate: This function is deprecated and will be removed shortly.');
         },
 
         /**
@@ -2855,32 +2887,6 @@ Object.assign(pc, function () {
         }
     });
 
-    /**
-     * @readonly
-     * @name pc.GraphicsDevice#maxAnisotropy
-     * @type Number
-     * @description The maximum supported texture anisotropy setting.
-     */
-    Object.defineProperty(GraphicsDevice.prototype, 'maxAnisotropy', {
-        get: ( function () {
-            var maxAniso;
-
-            return function () {
-                if (maxAniso === undefined) {
-                    maxAniso = 1;
-
-                    var gl = this.gl;
-                    var glExt = this.extTextureFilterAnisotropic;
-                    if (glExt) {
-                        maxAniso = gl.getParameter(glExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
-                    }
-                }
-
-                return maxAniso;
-            };
-        } )()
-    });
-
     Object.defineProperty(GraphicsDevice.prototype, 'maxPixelRatio', {
         get: function () {
             return this._maxPixelRatio;
@@ -2892,7 +2898,6 @@ Object.assign(pc, function () {
     });
 
     return {
-        GraphicsDevice: GraphicsDevice,
-        precalculatedTangents: true
+        GraphicsDevice: GraphicsDevice
     };
 }());

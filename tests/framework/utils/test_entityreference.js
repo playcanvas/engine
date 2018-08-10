@@ -1,5 +1,5 @@
 (function() {
-    module("pc.EntityReference", {
+    QUnit.module("pc.EntityReference", {
         setup: function () {
             this.app = new pc.Application(document.createElement("canvas"));
 
@@ -47,6 +47,31 @@
         strictEqual(reference.entity, null);
 
         this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        strictEqual(reference.entity, this.otherEntity1);
+    });
+
+    test("does not attempt to resolve the entity reference if the parent component is not on the scene graph yet", function () {
+        this.app.root.removeChild(this.testEntity);
+
+        sinon.spy(this.app.root, "findByGuid");
+
+        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
+        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+
+        strictEqual(reference.entity, null);
+        strictEqual(this.app.root.findByGuid.callCount, 0);
+    });
+
+    test("resolves the entity reference when onParentComponentEnable() is called", function () {
+        this.app.root.removeChild(this.testEntity);
+
+        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
+        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        strictEqual(reference.entity, null);
+
+        this.app.root.addChild(this.testEntity);
+        reference.onParentComponentEnable();
+
         strictEqual(reference.entity, this.otherEntity1);
     });
 

@@ -233,6 +233,7 @@
         SHADERDEF_LM: 64,
         SHADERDEF_DIRLM: 128,
         SHADERDEF_SCREENSPACE: 256,
+        SHADERDEF_TANGENTS: 512,
 
         LINEBATCH_WORLD: 0,
         LINEBATCH_OVERLAY: 1,
@@ -329,6 +330,14 @@
          * @description Mesh instances are sorted front to back. Depending on GPU and the scene, this option may give better performance than pc.SORTMODE_MATERIALMESH due to reduced overdraw.
          */
         SORTMODE_FRONT2BACK: 4,
+
+        /**
+         * @private
+         * @enum pc.SORTMODE
+         * @name  pc.SORTMODE_CUSTOM
+         * @description Provide custom functions for sorting drawcalls and calculating distance
+         */
+        SORTMODE_CUSTOM: 5,
 
         COMPUPDATED_INSTANCES: 1,
         COMPUPDATED_LIGHTS: 2,

@@ -10,6 +10,8 @@ Object.assign(pc, function () {
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      */
     var FxaaEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         // Shaders
         var attributes = {
             aPosition: pc.SEMANTIC_POSITION

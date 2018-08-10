@@ -1,4 +1,4 @@
-module('pc.ImageElement', {
+QUnit.module('pc.ImageElement', {
     setup: function () {
         stop();
         this.app = new pc.Application(document.createElement("canvas"));
@@ -27,16 +27,16 @@ module('pc.ImageElement', {
         // list of assets to load
         var assets = [
             new pc.Asset('red-atlas', 'textureatlas', {
-                url: '../test-assets/sprite/red-atlas.json'
+                url: 'base/tests/test-assets/sprite/red-atlas.json'
             }),
             new pc.Asset('red-sprite', 'sprite', {
-                url: '../test-assets/sprite/red-sprite.json'
+                url: 'base/tests/test-assets/sprite/red-sprite.json'
             }),
             new pc.Asset('red-texture', 'texture', {
-                url: '../test-assets/sprite/red-atlas.png'
+                url: 'base/tests/test-assets/sprite/red-atlas.png'
             }),
             new pc.Asset('red-material', 'material', {
-                url: '../test-assets/sprite/red-material.json'
+                url: 'base/tests/test-assets/sprite/red-material.json'
             })
         ];
 

@@ -219,6 +219,20 @@ Object.assign(pc, function () {
             this._updateEntityReference();
         },
 
+        /**
+         * Must be called from the parent component's onEnable() method in order for entity
+         * references to be correctly resolved when {@link pc.Entity#clone} is called.
+         */
+        onParentComponentEnable: function () {
+            // When an entity is cloned via the JS API, we won't be able to resolve the
+            // entity reference until the cloned entity has been added to the scene graph.
+            // We can detect this by waiting for the parent component to be enabled, in the
+            // specific case where we haven't yet been able to resolve an entity reference.
+            if (!this._entity) {
+                this._updateEntityReference();
+            }
+        },
+
         // When running within the editor, postInitialize is fired before the scene graph
         // has been fully constructed. As such we use the special tools:sceneloaded event
         // in order to know when the graph is ready to traverse.
@@ -236,7 +250,10 @@ Object.assign(pc, function () {
                 nextEntityGuid = nextEntity.getGuid();
                 this._parentComponent.data[this._entityPropertyName] = nextEntityGuid;
             } else {
-                nextEntity = nextEntityGuid ? this._parentComponent.system.app.root.findByGuid(nextEntityGuid) : null;
+                var root = this._parentComponent.system.app.root;
+                var isOnSceneGraph = this._parentComponent.entity.isDescendantOf(root);
+
+                nextEntity = (isOnSceneGraph && nextEntityGuid) ? root.findByGuid(nextEntityGuid) : null;
             }
 
             var hasChanged = this._entity !== nextEntity;

@@ -1,4 +1,4 @@
-module("pc.Element: Masks", {
+QUnit.module("pc.Element: Masks", {
     setup: function () {
         this.app = new pc.Application(document.createElement("canvas"));
     },

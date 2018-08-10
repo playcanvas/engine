@@ -10,6 +10,8 @@ Object.assign(pc, function () {
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      */
     var LuminosityEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.SEMANTIC_POSITION
