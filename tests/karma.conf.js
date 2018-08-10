@@ -22,10 +22,8 @@ module.exports = function (config) {
         // list of files / patterns to load in the browser
         files: sourceFiles.concat([
             // libraries
-            'tests/qunit/qunit.js',
-            'tests/qunit/qunit-close-enough.js',
-            'tests/qunit/adapter.js',
             'node_modules/sinon/pkg/sinon.js',
+            'node_modules/chai/chai.js',
 
             // test environment setup
             'tests/setup.js',
@@ -51,7 +49,7 @@ module.exports = function (config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: [],
+        frameworks: ['mocha'],
 
         // test results reporter to use
         // possible values: 'dots', 'progress'
