@@ -681,6 +681,11 @@ Object.assign(pc, function () {
             if (this.customCalculateSortValues) {
                 this.customCalculateSortValues(visible.list, visible.length, sortPos, sortDir);
             }
+
+            if (visible.list.length !== visible.length) {
+                visible.list.length = visible.length;
+            }
+
             if (this.customSortCallback) {
                 visible.list.sort(this.customSortCallback);
             }
