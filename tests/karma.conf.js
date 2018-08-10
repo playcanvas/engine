@@ -32,6 +32,7 @@ module.exports = function (config) {
             'tests/assets/*.js',
             'tests/batching/*.js',
             'tests/core/*.js',
+            'tests/framework/components/element/test_draworder.js',
 
             // resources - list any files here that need to be loaded by tests (i.e. via XHR), or
             // need to be pre-loaded in order to provide helper functions etc.
