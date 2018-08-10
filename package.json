@@ -33,8 +33,11 @@
     "google-closure-compiler": "^20180204.0.0",
     "karma": "^2.0.5",
     "karma-chrome-launcher": "^2.2.0",
+    "karma-mocha": "^1.3.0",
+    "mocha": "^5.2.0",
+    "chai": "^4.1.2",
     "preprocessor": "^1.4.0",
-    "sinon": "^5.0.10",
+    "sinon": "^5.1.1",
     "uglify-js": "^3.3.26"
   },
   "optionalDependencies": {
@@ -51,5 +54,6 @@
   },
   "engines": {
     "node": ">= 0.6.12"
-  }
+  },
+  "dependencies": {}
 }

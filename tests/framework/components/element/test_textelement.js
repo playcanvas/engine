@@ -1,18 +1,20 @@
-QUnit.module("pc.TextElement", {
-    setup: function () {
-        this.app = new pc.Application(document.createElement("canvas"));
+describe("pc.TextElement", function () {
+    var app;
+    var entity;
+    var element;
 
-        stop();
+    beforeEach(function (done) {
+        app = new pc.Application(document.createElement("canvas"));
+        buildElement(done);
+    });
 
-        this.buildElement(start);
-    },
-
-    buildElement: function(callback) {
-        var entity = new pc.Entity("myEntity", this.app);
-        var element = this.app.systems.element.addComponent(entity, { type: pc.ELEMENTTYPE_TEXT });
+    var buildElement = function(callback) {
+        entity = new pc.Entity("myEntity", app);
+        element = app.systems.element.addComponent(entity, { type: pc.ELEMENTTYPE_TEXT });
         element.autoWidth = false;
         element.wrapLines = true;
         element.width = 200;
+
 
         var fontAsset = new pc.Asset("Arial", "font", {
             url: "base/examples/assets/Arial/Arial.json"
@@ -20,158 +22,157 @@ QUnit.module("pc.TextElement", {
 
         fontAsset.ready(function() {
             element.fontAsset = fontAsset;
-            callback(element);
+            callback();
         }.bind(this));
 
-        this.app.assets.add(fontAsset);
-        this.app.assets.load(fontAsset);
+        app.assets.add(fontAsset);
+        app.assets.load(fontAsset);
 
-        this.entity = entity;
-        this.element = element;
-        this.app.root.addChild(entity);
-    },
+        app.root.addChild(entity);
+    };
 
-    assertLineContents: function(expectedLineContents) {
-        deepEqual(this.element.lines.length, expectedLineContents.length);
-        deepEqual(this.element.lines, expectedLineContents);
-    },
+    var assertLineContents = function(expectedLineContents) {
+        expect(element.lines.length).to.equal(expectedLineContents.length);
+        expect(element.lines).to.deep.equal(expectedLineContents);
+    };
 
-    teardown: function () {
-        this.app.destroy();
-    }
+    afterEach(function () {
+        app.destroy();
+    });
+
+    it("does not break onto multiple lines if the text is short enough", function () {
+        element.text = "abcde fghij";
+        assertLineContents(["abcde fghij"]);
+    });
+
+    it("does not break onto multiple lines if the autoWidth is set to true", function () {
+        element.autoWidth = true;
+        element.text = "abcde fghij klmno pqrst uvwxyz";
+        assertLineContents(["abcde fghij klmno pqrst uvwxyz"]);
+    });
+
+    it("updates line wrapping once autoWidth becomes false and a width is set", function () {
+        element.autoWidth = true;
+        element.text = "abcde fghij klmno pqrst uvwxyz";
+        expect(element.lines.length).to.equal(1);
+        element.autoWidth = false;
+        element.width = 200;
+        expect(element.lines.length).to.equal(3);
+    });
+
+    it("does not break onto multiple lines if the wrapLines is set to false", function () {
+        element.wrapLines = false;
+        element.text = "abcde fghij klmno pqrst uvwxyz";
+        assertLineContents(["abcde fghij klmno pqrst uvwxyz"]);
+    });
+
+    it("updates line wrapping once wrapLines becomes true", function () {
+        element.wrapLines = false;
+        element.text = "abcde fghij klmno pqrst uvwxyz";
+        expect(element.lines.length).to.equal(1);
+        element.wrapLines = true;
+        expect(element.lines.length).to.equal(3);
+    });
+
+    it("breaks onto multiple lines if individual lines are too long", function () {
+        element.text = "abcde fghij klmno pqrst uvwxyz";
+        assertLineContents([
+            "abcde fghij ",
+            "klmno pqrst ",
+            "uvwxyz"
+        ]);
+    });
+
+    it("breaks individual words if they are too long to fit onto a line by themselves (single word case)", function () {
+        element.text = "abcdefghijklmnopqrstuvwxyz";
+        assertLineContents([
+            "abcdefghijklm",
+            "nopqrstuvwxy",
+            "z"
+        ]);
+    });
+
+    it("breaks individual words if they are too long to fit onto a line by themselves (multi word case)", function () {
+        element.text = "abcdefgh ijklmnopqrstuvwxyz";
+        assertLineContents([
+            "abcdefgh ",
+            "ijklmnopqrstu",
+            "vwxyz"
+        ]);
+    });
+
+    it("breaks individual characters onto separate lines if the width is really constrained", function () {
+        element.width = 1;
+        element.text = "abcdef ghijkl";
+        assertLineContents([
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f ",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+        ]);
+    });
+
+    it("does not include whitespace at the end of a line in width calculations", function () {
+        element.text = "abcdefgh        i";
+        assertLineContents([
+            "abcdefgh        ",
+            "i"
+        ]);
+    });
+
+    it("breaks words on hypens", function () {
+        element.text = "abcde fghij-klm nopqr stuvwxyz";
+        assertLineContents([
+            "abcde fghij-",
+            "klm nopqr ",
+            "stuvwxyz"
+        ]);
+    });
+
+    it("keeps hyphenated word segments together when wrapping them", function () {
+        element.width = 150;
+        element.text = "abcde fghij-klm nopqr stuvwxyz";
+        assertLineContents([
+            "abcde ",
+            "fghij-klm ",
+            "nopqr ",
+            "stuvwxyz"
+        ]);
+    });
+
+    it("splits lines on \\n", function () {
+        element.text = "abcde\nfghij";
+        assertLineContents([
+            "abcde",
+            "fghij"
+        ]);
+    });
+
+    it("splits lines on \\r", function () {
+        element.text = "abcde\rfghij";
+        assertLineContents([
+            "abcde",
+            "fghij"
+        ]);
+    });
+
+    it("splits lines on multiple \\n", function () {
+        element.text = "abcde\n\n\nfg\nhij";
+        assertLineContents([
+            "abcde",
+            "",
+            "",
+            "fg",
+            "hij"
+        ]);
+    });
 });
 
-test("does not break onto multiple lines if the text is short enough", function () {
-    this.element.text = "abcde fghij";
-    this.assertLineContents(["abcde fghij"]);
-});
-
-test("does not break onto multiple lines if the autoWidth is set to true", function () {
-    this.element.autoWidth = true;
-    this.element.text = "abcde fghij klmno pqrst uvwxyz";
-    this.assertLineContents(["abcde fghij klmno pqrst uvwxyz"]);
-});
-
-test("updates line wrapping once autoWidth becomes false and a width is set", function () {
-    this.element.autoWidth = true;
-    this.element.text = "abcde fghij klmno pqrst uvwxyz";
-    equal(this.element.lines.length, 1);
-    this.element.autoWidth = false;
-    this.element.width = 200;
-    equal(this.element.lines.length, 3);
-});
-
-test("does not break onto multiple lines if the wrapLines is set to false", function () {
-    this.element.wrapLines = false;
-    this.element.text = "abcde fghij klmno pqrst uvwxyz";
-    this.assertLineContents(["abcde fghij klmno pqrst uvwxyz"]);
-});
-
-test("updates line wrapping once wrapLines becomes true", function () {
-    this.element.wrapLines = false;
-    this.element.text = "abcde fghij klmno pqrst uvwxyz";
-    equal(this.element.lines.length, 1);
-    this.element.wrapLines = true;
-    equal(this.element.lines.length, 3);
-});
-
-test("breaks onto multiple lines if individual lines are too long", function () {
-    this.element.text = "abcde fghij klmno pqrst uvwxyz";
-    this.assertLineContents([
-        "abcde fghij ",
-        "klmno pqrst ",
-        "uvwxyz"
-    ]);
-});
-
-test("breaks individual words if they are too long to fit onto a line by themselves (single word case)", function () {
-    this.element.text = "abcdefghijklmnopqrstuvwxyz";
-    this.assertLineContents([
-        "abcdefghijklm",
-        "nopqrstuvwxy",
-        "z"
-    ]);
-});
-
-test("breaks individual words if they are too long to fit onto a line by themselves (multi word case)", function () {
-    this.element.text = "abcdefgh ijklmnopqrstuvwxyz";
-    this.assertLineContents([
-        "abcdefgh ",
-        "ijklmnopqrstu",
-        "vwxyz"
-    ]);
-});
-
-test("breaks individual characters onto separate lines if the width is really constrained", function () {
-    this.element.width = 1;
-    this.element.text = "abcdef ghijkl";
-    this.assertLineContents([
-        "a",
-        "b",
-        "c",
-        "d",
-        "e",
-        "f ",
-        "g",
-        "h",
-        "i",
-        "j",
-        "k",
-        "l",
-    ]);
-});
-
-test("does not include whitespace at the end of a line in width calculations", function () {
-    this.element.text = "abcdefgh        i";
-    this.assertLineContents([
-        "abcdefgh        ",
-        "i"
-    ]);
-});
-
-test("breaks words on hypens", function () {
-    this.element.text = "abcde fghij-klm nopqr stuvwxyz";
-    this.assertLineContents([
-        "abcde fghij-",
-        "klm nopqr ",
-        "stuvwxyz"
-    ]);
-});
-
-test("keeps hyphenated word segments together when wrapping them", function () {
-    this.element.width = 150;
-    this.element.text = "abcde fghij-klm nopqr stuvwxyz";
-    this.assertLineContents([
-        "abcde ",
-        "fghij-klm ",
-        "nopqr ",
-        "stuvwxyz"
-    ]);
-});
-
-test("splits lines on \\n", function () {
-    this.element.text = "abcde\nfghij";
-    this.assertLineContents([
-        "abcde",
-        "fghij"
-    ]);
-});
-
-test("splits lines on \\r", function () {
-    this.element.text = "abcde\rfghij";
-    this.assertLineContents([
-        "abcde",
-        "fghij"
-    ]);
-});
-
-test("splits lines on multiple \\n", function () {
-    this.element.text = "abcde\n\n\nfg\nhij";
-    this.assertLineContents([
-        "abcde",
-        "",
-        "",
-        "fg",
-        "hij"
-    ]);
-});
