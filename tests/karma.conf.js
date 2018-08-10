@@ -33,10 +33,11 @@ module.exports = function (config) {
             'tests/batching/*.js',
             'tests/core/*.js',
             'tests/framework/components/element/test_draworder.js',
+            'tests/framework/components/sprite/test_sprite_component.js',
 
             // resources - list any files here that need to be loaded by tests (i.e. via XHR), or
             // need to be pre-loaded in order to provide helper functions etc.
-            // { pattern: 'tests/test-assets/**/*.*', included: false, served: true, watched: true, nocache: true },
+            { pattern: 'tests/test-assets/**/*.*', included: false, served: true, watched: true, nocache: true },
             // { pattern: 'tests/helpers/**/*.js', included: true, served: true, watched: true, nocache: true },
             // { pattern: 'tests/framework/components/script/*.*', included: false, served: true, watched: true, nocache: true },
             // { pattern: 'tests/input/simulate_event.js', included: true, served: true, watched: true, nocache: true },
