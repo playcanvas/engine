@@ -1,3 +1,10 @@
+// move chai methods on window
+(function(window) {
+  window.should = window.chai.should();
+  window.expect = window.chai.expect;
+  window.assert = window.chai.assert;
+})(window);
+
 // Added these helpers to speed up porting to mocha
 // TODO: remove and replace with expect() calls in tests
 

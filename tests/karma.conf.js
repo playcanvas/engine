@@ -23,6 +23,7 @@ module.exports = function (config) {
         files: sourceFiles.concat([
             // libraries
             'node_modules/sinon/pkg/sinon.js',
+            'node_modules/chai/chai.js',
 
             // test environment setup
             'tests/setup.js',
@@ -48,7 +49,7 @@ module.exports = function (config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: ['mocha', 'chai'],
+        frameworks: ['mocha'],
 
         // test results reporter to use
         // possible values: 'dots', 'progress'
