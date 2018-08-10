@@ -51,7 +51,6 @@ describe("pc.ParticleSystemComponent", function () {
         });
     });
 
-    // TODO Skipped because box.json doesn't exist in the repo
     it("meshAsset removes events", function (done) {
         var e = new pc.Entity();
 

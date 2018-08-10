@@ -134,7 +134,7 @@ describe('pc.ImageElement', function () {
         });
     });
 
-    xit('Destroy Material Image Element', function (done) {
+    it('Destroy Material Image Element', function (done) {
         // patch
         var destroyed = false;
         var _onMaterialLoad = pc.ImageElement.prototype._onMaterialLoad;

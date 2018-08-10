@@ -1,25 +1,29 @@
-(function() {
-    QUnit.module("pc.EntityReference", {
-        setup: function () {
-            this.app = new pc.Application(document.createElement("canvas"));
+describe("pc.EntityReference", function () {
+    var app;
+    var testEntity;
+    var testComponent;
+    var otherEntity1;
+    var otherEntity2;
 
-            new pc.DummyComponentSystem(this.app);
+    beforeEach(function () {
+        app = new pc.Application(document.createElement("canvas"));
 
-            this.testEntity = new pc.Entity("testEntity", this.app);
-            this.testComponent = this.testEntity.addComponent("dummy", {});
+        new pc.DummyComponentSystem(app);
 
-            this.otherEntity1 = new pc.Entity("otherEntity1", this.app);
-            this.otherEntity1.addComponent("dummy", {});
-            this.otherEntity2 = new pc.Entity("otherEntity2", this.app);
+        testEntity = new pc.Entity("testEntity", app);
+        testComponent = testEntity.addComponent("dummy", {});
 
-            this.app.root.addChild(this.testEntity);
-            this.app.root.addChild(this.otherEntity1);
-            this.app.root.addChild(this.otherEntity2);
-        },
+        otherEntity1 = new pc.Entity("otherEntity1", app);
+        otherEntity1.addComponent("dummy", {});
+        otherEntity2 = new pc.Entity("otherEntity2", app);
 
-        teardown: function () {
-            sinon.restore();
-        }
+        app.root.addChild(testEntity);
+        app.root.addChild(otherEntity1);
+        app.root.addChild(otherEntity2);
+    });
+
+    afterEach(function () {
+        sinon.restore();
     });
 
     // Assertion helpers that rely on checking some private state. Usually I wouldn't do
@@ -42,349 +46,351 @@
         return (entity._callbacks && entity._callbacks[eventName] && entity._callbacks[eventName].length) || 0;
     }
 
-    test("provides a reference to the entity once the guid is populated", function () {
-        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
-        strictEqual(reference.entity, null);
+    it("provides a reference to the entity once the guid is populated", function () {
+        var reference = new pc.EntityReference(testComponent, "myEntity1");
+        expect(reference.entity).to.equal(null);
 
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
-        strictEqual(reference.entity, this.otherEntity1);
+        testComponent.myEntity1 = otherEntity1.getGuid();
+        expect(reference.entity).to.equal(otherEntity1);
     });
 
-    test("does not attempt to resolve the entity reference if the parent component is not on the scene graph yet", function () {
-        this.app.root.removeChild(this.testEntity);
+    it("does not attempt to resolve the entity reference if the parent component is not on the scene graph yet", function () {
+        app.root.removeChild(testEntity);
 
-        sinon.spy(this.app.root, "findByGuid");
+        sinon.spy(app.root, "findByGuid");
 
-        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        var reference = new pc.EntityReference(testComponent, "myEntity1");
+        testComponent.myEntity1 = otherEntity1.getGuid();
 
-        strictEqual(reference.entity, null);
-        strictEqual(this.app.root.findByGuid.callCount, 0);
+        expect(reference.entity).to.equal(null);
+        expect(app.root.findByGuid.callCount).to.equal(0);
     });
 
-    test("resolves the entity reference when onParentComponentEnable() is called", function () {
-        this.app.root.removeChild(this.testEntity);
+    it("resolves the entity reference when onParentComponentEnable() is called", function () {
+        app.root.removeChild(testEntity);
 
-        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
-        strictEqual(reference.entity, null);
+        var reference = new pc.EntityReference(testComponent, "myEntity1");
+        testComponent.myEntity1 = otherEntity1.getGuid();
+        expect(reference.entity).to.equal(null);
 
-        this.app.root.addChild(this.testEntity);
+        app.root.addChild(testEntity);
         reference.onParentComponentEnable();
 
-        strictEqual(reference.entity, this.otherEntity1);
+        expect(reference.entity).to.equal(otherEntity1);
     });
 
-    test("nullifies the reference when the guid is nullified", function () {
-        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
-        strictEqual(reference.entity, this.otherEntity1);
+    it("nullifies the reference when the guid is nullified", function () {
+        var reference = new pc.EntityReference(testComponent, "myEntity1");
+        testComponent.myEntity1 = otherEntity1.getGuid();
+        expect(reference.entity).to.equal(otherEntity1);
 
-        this.testComponent.myEntity1 = null;
-        strictEqual(reference.entity, null);
+        testComponent.myEntity1 = null;
+        expect(reference.entity).to.equal(null);
     });
 
-    test("nullifies the reference when the referenced entity is destroyed", function () {
-        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
-        strictEqual(reference.entity, this.otherEntity1);
+    it("nullifies the reference when the referenced entity is destroyed", function () {
+        var reference = new pc.EntityReference(testComponent, "myEntity1");
+        testComponent.myEntity1 = otherEntity1.getGuid();
+        expect(reference.entity).to.equal(otherEntity1);
 
-        this.otherEntity1.destroy();
-        strictEqual(reference.entity, null);
+        otherEntity1.destroy();
+        expect(reference.entity).to.equal(null);
     });
 
-    test("removes all entity and component listeners when the guid is reassigned", function () {
-        new pc.EntityReference(this.testComponent, "myEntity1", {
+    it("removes all entity and component listeners when the guid is reassigned", function () {
+        new pc.EntityReference(testComponent, "myEntity1", {
             "entity#foo": sinon.stub(),
             "dummy#bar": sinon.stub()
         });
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
-        strictEqual(getTotalEventListeners(this.otherEntity1), 2);
-        strictEqual(getNumListenersForEvent(this.otherEntity1.dummy, 'bar'), 1);
+        testComponent.myEntity1 = otherEntity1.getGuid();
+        expect(getTotalEventListeners(otherEntity1)).to.equal(2);
+        expect(getNumListenersForEvent(otherEntity1.dummy, 'bar')).to.equal(1);
 
-        this.testComponent.myEntity1 = this.otherEntity2.getGuid();
-        strictEqual(getTotalEventListeners(this.otherEntity1), 0);
-        strictEqual(getNumListenersForEvent(this.otherEntity1.dummy, 'bar'), 0);
+        testComponent.myEntity1 = otherEntity2.getGuid();
+        expect(getTotalEventListeners(otherEntity1)).to.equal(0);
+        expect(getNumListenersForEvent(otherEntity1.dummy, 'bar')).to.equal(0);
     });
 
-    test("removes all entity and component listeners when the parent component is removed", function () {
-        new pc.EntityReference(this.testComponent, "myEntity1", {
+    it("removes all entity and component listeners when the parent component is removed", function () {
+        new pc.EntityReference(testComponent, "myEntity1", {
             "entity#foo": sinon.stub(),
             "dummy#bar": sinon.stub()
         });
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
-        strictEqual(getTotalEventListeners(this.otherEntity1), 2);
-        strictEqual(getNumListenersForEvent(this.otherEntity1.dummy, 'bar'), 1);
-        strictEqual(getNumListenersForEvent(this.app.systems.dummy, 'add'), 1);
-        strictEqual(getNumListenersForEvent(this.app.systems.dummy, 'beforeremove'), 2);
+        testComponent.myEntity1 = otherEntity1.getGuid();
+        expect(getTotalEventListeners(otherEntity1)).to.equal(2);
+        expect(getNumListenersForEvent(otherEntity1.dummy, 'bar')).to.equal(1);
+        expect(getNumListenersForEvent(app.systems.dummy, 'add')).to.equal(1);
+        expect(getNumListenersForEvent(app.systems.dummy, 'beforeremove')).to.equal(2);
 
-        this.testEntity.removeComponent('dummy');
-        strictEqual(getTotalEventListeners(this.otherEntity1), 0);
-        strictEqual(getNumListenersForEvent(this.otherEntity1.dummy, 'bar'), 0);
-        strictEqual(getNumListenersForEvent(this.app.systems.dummy, 'add'), 0);
-        strictEqual(getNumListenersForEvent(this.app.systems.dummy, 'beforeremove'), 0);
+        testEntity.removeComponent('dummy');
+        expect(getTotalEventListeners(otherEntity1)).to.equal(0);
+        expect(getNumListenersForEvent(otherEntity1.dummy, 'bar')).to.equal(0);
+        expect(getNumListenersForEvent(app.systems.dummy, 'add')).to.equal(0);
+        expect(getNumListenersForEvent(app.systems.dummy, 'beforeremove')).to.equal(0);
     });
 
-    test("removes all entity and component listeners when the parent component's entity is destroyed", function () {
-        new pc.EntityReference(this.testComponent, "myEntity1", {
+    it("removes all entity and component listeners when the parent component's entity is destroyed", function () {
+        new pc.EntityReference(testComponent, "myEntity1", {
             "entity#foo": sinon.stub(),
             "dummy#bar": sinon.stub()
         });
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
-        strictEqual(getTotalEventListeners(this.otherEntity1), 2);
-        strictEqual(getNumListenersForEvent(this.otherEntity1.dummy, 'bar'), 1);
-        strictEqual(getNumListenersForEvent(this.app.systems.dummy, 'add'), 1);
-        strictEqual(getNumListenersForEvent(this.app.systems.dummy, 'beforeremove'), 2);
+        testComponent.myEntity1 = otherEntity1.getGuid();
+        expect(getTotalEventListeners(otherEntity1)).to.equal(2);
+        expect(getNumListenersForEvent(otherEntity1.dummy, 'bar')).to.equal(1);
+        expect(getNumListenersForEvent(app.systems.dummy, 'add')).to.equal(1);
+        expect(getNumListenersForEvent(app.systems.dummy, 'beforeremove')).to.equal(2);
 
-        this.testEntity.destroy();
-        strictEqual(getTotalEventListeners(this.otherEntity1), 0);
-        strictEqual(getNumListenersForEvent(this.otherEntity1.dummy, 'bar'), 0);
-        strictEqual(getNumListenersForEvent(this.app.systems.dummy, 'add'), 0);
-        strictEqual(getNumListenersForEvent(this.app.systems.dummy, 'beforeremove'), 0);
+        testEntity.destroy();
+        expect(getTotalEventListeners(otherEntity1)).to.equal(0);
+        expect(getNumListenersForEvent(otherEntity1.dummy, 'bar')).to.equal(0);
+        expect(getNumListenersForEvent(app.systems.dummy, 'add')).to.equal(0);
+        expect(getNumListenersForEvent(app.systems.dummy, 'beforeremove')).to.equal(0);
     });
 
-    test("fires component gain events when a guid is first assigned, if the referenced entity already has the component", function () {
+    it("fires component gain events when a guid is first assigned, if the referenced entity already has the component", function () {
         var gainListener = sinon.stub();
 
-        new pc.EntityReference(this.testComponent, "myEntity1", {
+        new pc.EntityReference(testComponent, "myEntity1", {
             "dummy#gain": gainListener
         });
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        testComponent.myEntity1 = otherEntity1.getGuid();
 
-        strictEqual(gainListener.callCount, 1);
+        expect(gainListener.callCount).to.equal(1);
     });
 
-    test("fires component gain events once a component is added", function () {
+    it("fires component gain events once a component is added", function () {
         var gainListener = sinon.stub();
 
-        new pc.EntityReference(this.testComponent, "myEntity2", {
+        new pc.EntityReference(testComponent, "myEntity2", {
             "dummy#gain": gainListener
         });
-        this.testComponent.myEntity2 = this.otherEntity2.getGuid();
+        testComponent.myEntity2 = otherEntity2.getGuid();
 
-        strictEqual(gainListener.callCount, 0);
+        expect(gainListener.callCount).to.equal(0);
 
-        this.otherEntity2.addComponent("dummy", {});
+        otherEntity2.addComponent("dummy", {});
 
-        strictEqual(gainListener.callCount, 1);
+        expect(gainListener.callCount).to.equal(1);
     });
 
-    test("fires component lose and gain events when a component is removed and re-added", function () {
+    it("fires component lose and gain events when a component is removed and re-added", function () {
         var gainListener = sinon.stub();
         var loseListener = sinon.stub();
 
-        new pc.EntityReference(this.testComponent, "myEntity1", {
+        new pc.EntityReference(testComponent, "myEntity1", {
             "dummy#gain": gainListener,
             "dummy#lose": loseListener
         });
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        testComponent.myEntity1 = otherEntity1.getGuid();
 
-        strictEqual(gainListener.callCount, 1);
-        strictEqual(loseListener.callCount, 0);
+        expect(gainListener.callCount).to.equal(1);
+        expect(loseListener.callCount).to.equal(0);
 
-        this.otherEntity1.removeComponent("dummy");
+        otherEntity1.removeComponent("dummy");
 
-        strictEqual(gainListener.callCount, 1);
-        strictEqual(loseListener.callCount, 1);
+        expect(gainListener.callCount).to.equal(1);
+        expect(loseListener.callCount).to.equal(1);
 
-        this.otherEntity1.addComponent("dummy", {});
+        otherEntity1.addComponent("dummy", {});
 
-        strictEqual(gainListener.callCount, 2);
-        strictEqual(loseListener.callCount, 1);
+        expect(gainListener.callCount).to.equal(2);
+        expect(loseListener.callCount).to.equal(1);
     });
 
-    test("fires component lose events when the guid is reassigned, but only for component types that the entity had", function () {
+    it("fires component lose events when the guid is reassigned, but only for component types that the entity had", function () {
         var dummyLoseListener = sinon.stub();
         var lightLoseListener = sinon.stub();
 
-        new pc.EntityReference(this.testComponent, "myEntity1", {
+        new pc.EntityReference(testComponent, "myEntity1", {
             "dummy#lose": dummyLoseListener,
             "light#lose": lightLoseListener
         });
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        testComponent.myEntity1 = otherEntity1.getGuid();
 
-        strictEqual(dummyLoseListener.callCount, 0);
-        strictEqual(lightLoseListener.callCount, 0);
+        expect(dummyLoseListener.callCount).to.equal(0);
+        expect(lightLoseListener.callCount).to.equal(0);
 
-        this.testComponent.myEntity1 = null;
+        testComponent.myEntity1 = null;
 
-        strictEqual(dummyLoseListener.callCount, 1);
-        strictEqual(lightLoseListener.callCount, 0);
+        expect(dummyLoseListener.callCount).to.equal(1);
+        expect(lightLoseListener.callCount).to.equal(0);
     });
 
-    test("forwards any events dispatched by a component", function () {
+    it("forwards any events dispatched by a component", function () {
         var fooListener = sinon.stub();
         var barListener = sinon.stub();
 
-        new pc.EntityReference(this.testComponent, "myEntity1", {
+        new pc.EntityReference(testComponent, "myEntity1", {
             "dummy#foo": fooListener,
             "dummy#bar": barListener
         });
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        testComponent.myEntity1 = otherEntity1.getGuid();
 
-        this.otherEntity1.dummy.fire("foo", "a", "b");
-        strictEqual(fooListener.callCount, 1);
-        strictEqual(fooListener.getCall(0).args[0], "a");
-        strictEqual(fooListener.getCall(0).args[1], "b");
-        strictEqual(barListener.callCount, 0);
+        otherEntity1.dummy.fire("foo", "a", "b");
+        expect(fooListener.callCount).to.equal(1);
+        expect(fooListener.getCall(0).args[0]).to.equal("a");
+        expect(fooListener.getCall(0).args[1]).to.equal("b");
+        expect(barListener.callCount).to.equal(0);
 
-        this.otherEntity1.dummy.fire("bar", "c", "d");
-        strictEqual(fooListener.callCount, 1);
-        strictEqual(barListener.callCount, 1);
-        strictEqual(barListener.getCall(0).args[0], "c");
-        strictEqual(barListener.getCall(0).args[1], "d");
+        otherEntity1.dummy.fire("bar", "c", "d");
+        expect(fooListener.callCount).to.equal(1);
+        expect(barListener.callCount).to.equal(1);
+        expect(barListener.getCall(0).args[0]).to.equal("c");
+        expect(barListener.getCall(0).args[1]).to.equal("d");
     });
 
-    test("correctly handles component event forwarding across component removal and subsequent re-addition", function () {
+    it("correctly handles component event forwarding across component removal and subsequent re-addition", function () {
         var fooListener = sinon.stub();
         var barListener = sinon.stub();
 
-        new pc.EntityReference(this.testComponent, "myEntity1", {
+        new pc.EntityReference(testComponent, "myEntity1", {
             "dummy#foo": fooListener,
             "dummy#bar": barListener
         });
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        testComponent.myEntity1 = otherEntity1.getGuid();
 
-        var oldDummyComponent = this.otherEntity1.dummy;
+        var oldDummyComponent = otherEntity1.dummy;
 
-        this.otherEntity1.removeComponent("dummy");
+        otherEntity1.removeComponent("dummy");
 
         oldDummyComponent.fire("foo");
         oldDummyComponent.fire("bar");
-        strictEqual(fooListener.callCount, 0);
-        strictEqual(barListener.callCount, 0);
+        expect(fooListener.callCount).to.equal(0);
+        expect(barListener.callCount).to.equal(0);
 
-        var newDummyComponent = this.otherEntity1.addComponent("dummy");
+        var newDummyComponent = otherEntity1.addComponent("dummy");
 
         newDummyComponent.fire("foo");
         newDummyComponent.fire("bar");
-        strictEqual(fooListener.callCount, 1);
-        strictEqual(barListener.callCount, 1);
+        expect(fooListener.callCount).to.equal(1);
+        expect(barListener.callCount).to.equal(1);
     });
 
-    test("forwards any events dispatched by the entity", function () {
+    it("forwards any events dispatched by the entity", function () {
         var fooListener = sinon.stub();
         var barListener = sinon.stub();
 
-        new pc.EntityReference(this.testComponent, "myEntity1", {
+        new pc.EntityReference(testComponent, "myEntity1", {
             "entity#foo": fooListener,
             "entity#bar": barListener
         });
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        testComponent.myEntity1 = otherEntity1.getGuid();
 
-        this.otherEntity1.fire("foo", "a", "b");
-        strictEqual(fooListener.callCount, 1);
-        strictEqual(fooListener.getCall(0).args[0], "a");
-        strictEqual(fooListener.getCall(0).args[1], "b");
-        strictEqual(barListener.callCount, 0);
+        otherEntity1.fire("foo", "a", "b");
+        expect(fooListener.callCount).to.equal(1);
+        expect(fooListener.getCall(0).args[0]).to.equal("a");
+        expect(fooListener.getCall(0).args[1]).to.equal("b");
+        expect(barListener.callCount).to.equal(0);
 
-        this.otherEntity1.fire("bar", "c", "d");
-        strictEqual(fooListener.callCount, 1);
-        strictEqual(barListener.callCount, 1);
-        strictEqual(barListener.getCall(0).args[0], "c");
-        strictEqual(barListener.getCall(0).args[1], "d");
+        otherEntity1.fire("bar", "c", "d");
+        expect(fooListener.callCount).to.equal(1);
+        expect(barListener.callCount).to.equal(1);
+        expect(barListener.getCall(0).args[0]).to.equal("c");
+        expect(barListener.getCall(0).args[1]).to.equal("d");
     });
 
-    test("correctly handles entity event forwarding across entity nullification and subsequent reassignment", function () {
+    it("correctly handles entity event forwarding across entity nullification and subsequent reassignment", function () {
         var fooListener = sinon.stub();
         var barListener = sinon.stub();
 
-        new pc.EntityReference(this.testComponent, "myEntity1", {
+        new pc.EntityReference(testComponent, "myEntity1", {
             "entity#foo": fooListener,
             "entity#bar": barListener
         });
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+        testComponent.myEntity1 = otherEntity1.getGuid();
 
-        this.testComponent.myEntity1 = null;
+        testComponent.myEntity1 = null;
 
-        this.otherEntity1.fire("foo");
-        this.otherEntity1.fire("bar");
-        strictEqual(fooListener.callCount, 0);
-        strictEqual(barListener.callCount, 0);
+        otherEntity1.fire("foo");
+        otherEntity1.fire("bar");
+        expect(fooListener.callCount).to.equal(0);
+        expect(barListener.callCount).to.equal(0);
 
-        this.testComponent.myEntity1 = this.otherEntity2.getGuid();
+        testComponent.myEntity1 = otherEntity2.getGuid();
 
-        this.otherEntity2.fire("foo");
-        this.otherEntity2.fire("bar");
-        strictEqual(fooListener.callCount, 1);
-        strictEqual(barListener.callCount, 1);
+        otherEntity2.fire("foo");
+        otherEntity2.fire("bar");
+        expect(fooListener.callCount).to.equal(1);
+        expect(barListener.callCount).to.equal(1);
     });
 
-    test("validates the event map", function () {
+    it("validates the event map", function () {
         function testEventMap(eventMap) {
-            new pc.EntityReference(this.testComponent, "myEntity1", eventMap);
+            new pc.EntityReference(testComponent, "myEntity1", eventMap);
         }
 
         var callback = sinon.stub();
 
-        throws(function() {
+        expect(function() {
             testEventMap({ "foo": callback });
-        }, "Invalid event listener description: `foo`");
+        }).to.throw("Invalid event listener description: `foo`");
 
-        throws(function() {
+        expect(function() {
             testEventMap({ "foo#": callback });
-        }, "Invalid event listener description: `foo#`");
+        }).to.throw("Invalid event listener description: `foo#`");
 
-        throws(function() {
+        expect(function() {
             testEventMap({ "#foo": callback });
-        }, "Invalid event listener description: `#foo`");
+        }).to.throw("Invalid event listener description: `#foo`");
 
-        throws(function() {
+        expect(function() {
             testEventMap({ "foo#bar": null });
-        }, "Invalid or missing callback for event listener `foo#bar`");
+        }).to.throw("Invalid or missing callback for event listener `foo#bar`");
     });
 
-    test("logs a warning if the entity property is set to anything other than a string, undefined or null", function () {
+    it("logs a warning if the entity property is set to anything other than a string, undefined or null", function () {
         sinon.stub(console, "warn");
 
-        new pc.EntityReference(this.testComponent, "myEntity1");
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
-        this.testComponent.myEntity1 = null;
-        this.testComponent.myEntity1 = undefined;
+        new pc.EntityReference(testComponent, "myEntity1");
+        testComponent.myEntity1 = otherEntity1.getGuid();
+        testComponent.myEntity1 = null;
+        testComponent.myEntity1 = undefined;
 
-        strictEqual(console.warn.callCount, 0);
+        expect(console.warn.callCount).to.equal(0);
 
-        this.testComponent.myEntity1 = {};
+        testComponent.myEntity1 = {};
 
-        strictEqual(console.warn.callCount, 1);
-        strictEqual(console.warn.getCall(0).args[0], "Entity field `myEntity1` was set to unexpected type 'object'");
+        expect(console.warn.callCount).to.equal(1);
+        expect(console.warn.getCall(0).args[0]).to.equal("Entity field `myEntity1` was set to unexpected type 'object'");
     });
 
-    test("set reference to a pc.Entity instead of guid, converts property to guid", function () {
-        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
-        this.testComponent.myEntity1 = this.otherEntity1;
+    it("set reference to a pc.Entity instead of guid, converts property to guid", function () {
+        var reference = new pc.EntityReference(testComponent, "myEntity1");
+        testComponent.myEntity1 = otherEntity1;
 
-        strictEqual(this.testComponent.myEntity1, this.otherEntity1.getGuid(), "Component property converted to guid");
-        strictEqual(reference.entity, this.otherEntity1);
+        expect(testComponent.myEntity1).to.equal(otherEntity1.getGuid(), "Component property converted to guid");
+        expect(reference.entity).to.equal(otherEntity1);
     });
 
-    test("set reference to a pc.Entity that is not in hierarchy, converts property to guid", function () {
-        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
+    it("set reference to a pc.Entity that is not in hierarchy, converts property to guid", function () {
+        var reference = new pc.EntityReference(testComponent, "myEntity1");
         var entity = new pc.Entity();
-        this.testComponent.myEntity1 = entity;
+        testComponent.myEntity1 = entity;
 
-        strictEqual(this.testComponent.myEntity1, entity.getGuid(), "Component property converted to guid");
-        strictEqual(reference.entity, entity);
+        expect(testComponent.myEntity1).to.equal(entity.getGuid(), "Component property converted to guid");
+        expect(reference.entity).to.equal(entity);
     });
 
-    test("hasComponent() returns false if the entity is not present", function () {
-        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
+    it("hasComponent() returns false if the entity is not present", function () {
+        var reference = new pc.EntityReference(testComponent, "myEntity1");
 
-        strictEqual(reference.hasComponent("dummy"), false);
+        expect(reference.hasComponent("dummy")).to.equal(false);
     });
 
-    test("hasComponent() returns false if the entity is present but does not have a component of the provided type", function () {
-        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
-        this.otherEntity1.removeComponent("dummy");
+    it("hasComponent() returns false if the entity is present but does not have a component of the provided type", function () {
+        var reference = new pc.EntityReference(testComponent, "myEntity1");
+        testComponent.myEntity1 = otherEntity1.getGuid();
+        otherEntity1.removeComponent("dummy");
 
-        strictEqual(reference.hasComponent("dummy"), false);
+        expect(reference.hasComponent("dummy")).to.equal(false);
     });
 
-    test("hasComponent() returns true if the entity is present and has a component of the provided type", function () {
-        var reference = new pc.EntityReference(this.testComponent, "myEntity1");
-        this.testComponent.myEntity1 = this.otherEntity1.getGuid();
+    it("hasComponent() returns true if the entity is present and has a component of the provided type", function () {
+        var reference = new pc.EntityReference(testComponent, "myEntity1");
+        testComponent.myEntity1 = otherEntity1.getGuid();
 
-        strictEqual(reference.hasComponent("dummy"), true);
+        expect(reference.hasComponent("dummy")).to.equal(true);
     });
-})();
+
+});
+
