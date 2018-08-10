@@ -1,41 +1,44 @@
-QUnit.module('pc.string');
 
-test("format: No args", function() {
-    var src = "a string";
-    var expected = src;
-    var result = pc.string.format(src);
+describe('pc.string', function () {
 
-    equal(result, expected);
-});
+    it("format: No args", function() {
+        var src = "a string";
+        var expected = src;
+        var result = pc.string.format(src);
 
-test("format: one arg", function() {
-    var src = "a string {0}";
-    var expected = "a string abc";
-    var result = pc.string.format(src, "abc");
+        expect(result).toBe(expected);
+    });
 
-    equal(result, expected);
-});
+    it("format: one arg", function() {
+        var src = "a string {0}";
+        var expected = "a string abc";
+        var result = pc.string.format(src, "abc");
 
-test("format: two args", function() {
-    var src = "{0} a string {1}";
-    var expected = "abc a string def";
-    var result = pc.string.format(src, "abc", "def");
+        expect(result).toBe(expected);
+    });
 
-    equal(result, expected);
-});
+    it("format: two args", function() {
+        var src = "{0} a string {1}";
+        var expected = "abc a string def";
+        var result = pc.string.format(src, "abc", "def");
+
+        expect(result).toBe(expected);
+    });
 
 
-test("toBool: strict", function () {
-    strictEqual(true, pc.string.toBool("true", true));
-    strictEqual(false, pc.string.toBool("false", true));
-    throws(function () {
-        pc.string.toBool("abc", true);
-    }, Error);
-});
+    it("toBool: strict", function () {
+        expect(true).toBe(pc.string.toBool("true", true));
+        expect(false).toBe(pc.string.toBool("false", true));
+        expect(function () {
+            pc.string.toBool("abc", true);
+        }).toThrow();
+    });
 
-test("toBool: non-strict", function () {
-    strictEqual(true, pc.string.toBool("true"));
-    strictEqual(false, pc.string.toBool("false"));
-    strictEqual(false, pc.string.toBool("abc"));
-    strictEqual(false, pc.string.toBool(undefined));
-});
+    it("toBool: non-strict", function () {
+        expect(true).toBe(pc.string.toBool("true"));
+        expect(false).toBe(pc.string.toBool("false"));
+        expect(false).toBe(pc.string.toBool("abc"));
+        expect(false).toBe(pc.string.toBool(undefined));
+    });
+
+})

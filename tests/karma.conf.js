@@ -22,24 +22,22 @@ module.exports = function (config) {
         // list of files / patterns to load in the browser
         files: sourceFiles.concat([
             // libraries
-            'tests/qunit/qunit.js',
-            'tests/qunit/qunit-close-enough.js',
-            'tests/qunit/adapter.js',
             'node_modules/sinon/pkg/sinon.js',
 
             // test environment setup
-            'tests/setup.js',
+            // 'tests/setup.js',
 
             // test files - change this to a specific file in order to run a single suite
-            'tests/**/test_*.js',
+            // 'tests/**/test_*.js',
+            'tests/core/test_string.js',
 
             // resources - list any files here that need to be loaded by tests (i.e. via XHR), or
             // need to be pre-loaded in order to provide helper functions etc.
-            { pattern: 'tests/test-assets/**/*.*', included: false, served: true, watched: true, nocache: true },
-            { pattern: 'tests/helpers/**/*.js', included: true, served: true, watched: true, nocache: true },
-            { pattern: 'tests/framework/components/script/*.*', included: false, served: true, watched: true, nocache: true },
-            { pattern: 'tests/input/simulate_event.js', included: true, served: true, watched: true, nocache: true },
-            { pattern: 'examples/**/*.*', included: false, served: true, watched: true, nocache: true }
+            // { pattern: 'tests/test-assets/**/*.*', included: false, served: true, watched: true, nocache: true },
+            // { pattern: 'tests/helpers/**/*.js', included: true, served: true, watched: true, nocache: true },
+            // { pattern: 'tests/framework/components/script/*.*', included: false, served: true, watched: true, nocache: true },
+            // { pattern: 'tests/input/simulate_event.js', included: true, served: true, watched: true, nocache: true },
+            // { pattern: 'examples/**/*.*', included: false, served: true, watched: true, nocache: true }
         ]),
 
         // list of files / patterns to exclude
@@ -51,7 +49,7 @@ module.exports = function (config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: [],
+        frameworks: ['jasmine'],
 
         // test results reporter to use
         // possible values: 'dots', 'progress'

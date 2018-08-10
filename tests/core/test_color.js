@@ -1,42 +1,44 @@
-QUnit.module("pc.core.Color");
+describe('pc.Color', function () {
 
+    it('new Color()', function () {
+        var c = new pc.Color();
 
-test('new Color()', function () {
-    var c = new pc.Color();
+        expect(c.r).toBe(0);
+        expect(c.g).toBe(0);
+        expect(c.b).toBe(0);
+        expect(c.a).toBe(1);
+    });
 
-    equal(c.r, 0);
-    equal(c.g, 0);
-    equal(c.b, 0);
-    equal(c.a, 1);
+    it('new Color(1,2,3,4)', function () {
+        var c = new pc.Color(1,2,3,4);
+
+        expect(c.r).toBe(1);
+        expect(c.g).toBe(2);
+        expect(c.b).toBe(3);
+        expect(c.a).toBe(4);
+    });
+
+    it('new Color(1,2,3)', function () {
+        var c = new pc.Color(1,2,3);
+
+        expect(c.r).toBe(1);
+        expect(c.g).toBe(2);
+        expect(c.b).toBe(3);
+        expect(c.a).toBe(1);
+    });
+
+    it('Color.toString()', function () {
+        var c = new pc.Color(1,1,1);
+        expect(c.toString()).toBe('#ffffff');
+        expect(c.toString(true)).toBe('#ffffffff');
+
+        var c = new pc.Color(1,0,1,0);
+        expect(c.toString()).toBe('#ff00ff');
+        expect(c.toString(true)).toBe('#ff00ff00');
+
+        var c = new pc.Color(0.729411780834198, 0.729411780834198, 0.6941176652908325, 1);
+        expect(c.toString(true)).toBe('#babab1ff');
+    });
+
 });
 
-test('new Color(1,2,3,4)', function () {
-    var c = new pc.Color(1,2,3,4);
-
-    equal(c.r, 1);
-    equal(c.g, 2);
-    equal(c.b, 3);
-    equal(c.a, 4);    
-});
-
-test('new Color(1,2,3)', function () {
-    var c = new pc.Color(1,2,3);
-
-    equal(c.r, 1);
-    equal(c.g, 2);
-    equal(c.b, 3);
-    equal(c.a, 1);
-});
-
-test('Color.toString()', function () {
-    var c = new pc.Color(1,1,1);
-    equal(c.toString(), '#ffffff');
-    equal(c.toString(true), '#ffffffff');
-
-    var c = new pc.Color(1,0,1,0);
-    equal(c.toString(), '#ff00ff');
-    equal(c.toString(true), '#ff00ff00');
-
-    var c = new pc.Color(0.729411780834198, 0.729411780834198, 0.6941176652908325, 1);
-    equal(c.toString(true), '#babab1ff');
-});

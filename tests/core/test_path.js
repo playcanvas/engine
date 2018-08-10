@@ -1,45 +1,46 @@
-QUnit.module('pc.path');
+describe('pc.path', function () {
+    it("path.getDirectory ", function() {
+        expect("folder").toBe(pc.path.getDirectory("folder/file.txt"));
+        expect("folder").toBe(pc.path.getDirectory("folder/another"));
+        expect("folder/another").toBe(pc.path.getDirectory("folder/another/"));
+        expect("").toBe(pc.path.getDirectory(""));
+        expect("").toBe(pc.path.getDirectory("/"));
+    });
 
-test("path.getDirectory ", function() {
-    equal("folder", pc.path.getDirectory("folder/file.txt"));
-    equal("folder", pc.path.getDirectory("folder/another"));
-    equal("folder/another", pc.path.getDirectory("folder/another/"));
-    equal("", pc.path.getDirectory(""));
-    equal("", pc.path.getDirectory("/"));
-});
+    it("path.join", function() {
+        expect("a/b").toBe(pc.path.join("a", "b"));
+        expect("/b").toBe(pc.path.join("a", "/b"));
+        expect("/a/b").toBe(pc.path.join("/a", "b"));
+        expect("a/b/c").toBe(pc.path.join("a", "b/c"));
+        expect("a/b/c").toBe(pc.path.join("a/b", "c"));
+        expect("a/b/").toBe(pc.path.join("a", "b/"));
+        expect("/b/").toBe(pc.path.join("a", "/b/"));
+        expect("a/b/").toBe(pc.path.join("a", "b/"));
+        expect("http://a.com/b").toBe(pc.path.join("http://a.com", "b"));
+        expect("a/b").toBe(pc.path.join("", "a/b"));
+        expect("a/b").toBe(pc.path.join("a/b", ""));
+    });
 
-test("path.join", function() {
-    equal("a/b", pc.path.join("a", "b"));
-    equal("/b", pc.path.join("a", "/b"));
-    equal("/a/b", pc.path.join("/a", "b"));
-    equal("a/b/c", pc.path.join("a", "b/c"));
-    equal("a/b/c", pc.path.join("a/b", "c"));
-    equal("a/b/", pc.path.join("a", "b/"));
-    equal("/b/", pc.path.join("a", "/b/"));
-    equal("a/b/", pc.path.join("a", "b/"));
-    equal("http://a.com/b", pc.path.join("http://a.com", "b"));
-    equal("a/b", pc.path.join("", "a/b"));
-    equal("a/b", pc.path.join("a/b", ""));
-});
+    it("path.join, more than two path sections", function () {
+        expect("a/b/c").toBe(pc.path.join("a", "b", "c"));
+        expect("/b/c").toBe(pc.path.join("a", "/b", "c"));
+        expect("/a/b/c").toBe(pc.path.join("/a", "b", "c"));
+        expect("a/b/c/d").toBe(pc.path.join("a/b", "c", "d"));
+        expect("a/b/c/d").toBe(pc.path.join("a", "b/c", "d"));
+        expect("a/b/c/d").toBe(pc.path.join("a", "b", "c/d"));
+        expect("a/b/c/").toBe(pc.path.join("a", "b", "c/"));
+        expect("/b/c/").toBe(pc.path.join("a", "/b", "c/"));
+        expect("http://a.com/b/c").toBe(pc.path.join("http://a.com", "b", "c"));
+        expect("b/c/").toBe(pc.path.join("", "b", "c/"));
+        expect("b/c/").toBe(pc.path.join("b", "c/", ""));
+        expect("/").toBe(pc.path.join("b", "c/", "/"));
+        expect("a/b/c/d").toBe(pc.path.join("a", "b", "c", "d"));
+    });
 
-test("path.join, more than two path sections", function () {
-    equal("a/b/c", pc.path.join("a", "b", "c"));
-    equal("/b/c", pc.path.join("a", "/b", "c"));
-    equal("/a/b/c", pc.path.join("/a", "b", "c"));
-    equal("a/b/c/d", pc.path.join("a/b", "c", "d"));
-    equal("a/b/c/d", pc.path.join("a", "b/c", "d"));
-    equal("a/b/c/d", pc.path.join("a", "b", "c/d"));
-    equal("a/b/c/", pc.path.join("a", "b", "c/"));
-    equal("/b/c/", pc.path.join("a", "/b", "c/"));
-    equal("http://a.com/b/c", pc.path.join("http://a.com", "b", "c"));
-    equal("b/c/", pc.path.join("", "b", "c/"));
-    equal("b/c/", pc.path.join("b", "c/", ""));
-    equal("/", pc.path.join("b", "c/", "/"));
-    equal("a/b/c/d", pc.path.join("a", "b", "c", "d"));
-});
+    it("path.join, invalid values", function () {
+        expect(function(){
+           pc.path.join("a", undefined);
+        }).toThrow();
+    });
 
-test("path.join, invalid values", function () {
-   raises(function(){
-       pc.path.join("a", undefined);
-   }, "pc.path.join should raise an exception if there is an undefined argument" );
-});
+})
