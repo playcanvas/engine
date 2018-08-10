@@ -122,16 +122,10 @@ Object.assign(pc, function () {
                 text = " ";
             }
 
-            if (this._font) {
-                if (this._font.autoRender) {
-                    this._font.autoRender(text);
-                }
-            }
-
             var charactersPerTexture = {};
 
             for (i = 0; i < textLength; i++) {
-                var code = symbols[i].code;
+                var code = pc.string.getCodePoint(symbols[i]);
                 var info = this._font.data.chars[code];
                 if (!info) continue;
 
@@ -349,9 +343,6 @@ Object.assign(pc, function () {
                 self._lineWidths.push(lineBreakX);
                 var substring = symbols
                     .slice(lineStartIndex, lineBreakIndex)
-                    .map(function (pair) {
-                        return pair.char;
-                    })
                     .join('');
 
                 self._lineContents.push(substring);
@@ -366,8 +357,8 @@ Object.assign(pc, function () {
             }
 
             for (i = 0; i < l; i++) {
-                char = symbols[i].char;
-                charCode = symbols[i].code;
+                char = symbols[i];
+                charCode = pc.string.getCodePoint(symbols[i]);
 
                 var x = 0;
                 var y = 0;
@@ -425,9 +416,20 @@ Object.assign(pc, function () {
                     } else {
                         // Move back to the beginning of the current word.
                         var backtrack = Math.max(i - wordStartIndex, 0);
+                        if (this._meshInfo.length <= 1) {
+                            meshInfo.lines[lines - 1] -= backtrack;
+                            meshInfo.quad -= backtrack;
+                        } else {
+                            // We should only backtrack the quads that were in the word from this same texture
+                            // We will have to update N number of mesh infos as a result (all textures used in the word in question)
+                            for (var j = wordStartIndex; j < i; j++) {
+                                var backCharData = json.chars[pc.string.getCodePoint(symbols[j])];
+                                var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
+                                backMeshInfo.lines[lines - 1] -= 1;
+                                backMeshInfo.quad -= 1;
+                            }
+                        }
                         i -= backtrack + 1;
-                        meshInfo.lines[lines - 1] -= backtrack;
-                        meshInfo.quad -= backtrack;
 
                         breakLine(wordStartIndex, wordStartX);
                         continue;
