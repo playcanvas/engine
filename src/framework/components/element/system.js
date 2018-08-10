@@ -394,7 +394,6 @@ Object.assign(pc, function () {
                     }
                     return this.defaultScreenSpaceTextMaterial;
                 } else {
-                    console.warn("bitmap font not implemented");
                     if (!this.defaultScreenSpaceBitmapTextMaterial) {
                         this.defaultScreenSpaceBitmapTextMaterial = new pc.StandardMaterial();
                         this.defaultScreenSpaceBitmapTextMaterial.emissiveMap = this._defaultTexture;
@@ -432,7 +431,6 @@ Object.assign(pc, function () {
                     }
                     return this.defaultTextMaterial;
                 } else {
-                    console.warn("bitmap font not implemented");
                     if (!this.defaultBitmapTextMaterial) {
                         this.defaultBitmapTextMaterial = new pc.StandardMaterial();
                         this.defaultBitmapTextMaterial.emissiveMap = this._defaultTexture;
