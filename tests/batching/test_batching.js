@@ -32,9 +32,9 @@ describe('pc.Batcher', function () {
         var layer = this.app.scene.layers.getLayerById(pc.LAYERID_WORLD);
         var instances = layer.opaqueMeshInstances;
 
-        expect(instances.length).toBe(1); // "Too many mesh instances in layer");
-        expect(instances[0]).not.toBe(e1.model.model.meshInstances[0]); //"e1 still references instance in layer");
-        expect(instances[1]).not.toBe(e2.model.model.meshInstances[0]); // "e2 still references instance in layer");
+        expect(instances.length).to.equal(1); // "Too many mesh instances in layer");
+        expect(instances[0]).not.to.equal(e1.model.model.meshInstances[0]); //"e1 still references instance in layer");
+        expect(instances[1]).not.to.equal(e2.model.model.meshInstances[0]); // "e2 still references instance in layer");
     });
 
     // it("generate: removes sprite component mesh instances from layer", function() {
@@ -93,7 +93,7 @@ describe('pc.Batcher', function () {
 
         e2.enabled = false;
 
-        expect(this.app.batcher._dirtyGroups[0]).toBe(this.bg.id);
+        expect(this.app.batcher._dirtyGroups[0]).to.equal(this.bg.id);
     });
 
 

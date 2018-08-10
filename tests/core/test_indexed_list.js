@@ -2,7 +2,7 @@ describe('pc.IndexedList', function () {
     it('new pc.IndexedList is empty', function () {
         var list = new pc.IndexedList();
 
-        expect(list.list().length).toBe(0);
+        expect(list.list().length).to.equal(0);
     });
 
     // push
@@ -21,9 +21,9 @@ describe('pc.IndexedList', function () {
 
         list.push(key, value);
 
-        expect(list.has(key)).toBe(true);
-        expect(list.has(notkey)).toBe(false);
-        expect(list.get(key)).toBe(value);
+        expect(list.has(key)).to.equal(true);
+        expect(list.has(notkey)).to.equal(false);
+        expect(list.get(key)).to.equal(value);
     });
 
     it('get() returns null if no key', function () {
@@ -31,7 +31,7 @@ describe('pc.IndexedList', function () {
 
         var nokey = 'nokey';
 
-        expect(list.get(nokey)).toBe(null);
+        expect(list.get(nokey)).to.equal(null);
 
     });
 
@@ -46,7 +46,7 @@ describe('pc.IndexedList', function () {
 
         list.remove(key);
 
-        expect(list.has(key)).toBe(false);
+        expect(list.has(key)).to.equal(false);
     });
 
 
@@ -73,24 +73,24 @@ describe('pc.IndexedList', function () {
 
         list.remove(key3);
 
-        expect(list.has(key1)).toBe(true);
-        expect(list.has(key2)).toBe(true);
-        expect(list.has(key3)).toBe(false);
-        expect(list.has(key4)).toBe(true);
-        expect(list.has(key5)).toBe(true);
+        expect(list.has(key1)).to.equal(true);
+        expect(list.has(key2)).to.equal(true);
+        expect(list.has(key3)).to.equal(false);
+        expect(list.has(key4)).to.equal(true);
+        expect(list.has(key5)).to.equal(true);
 
-        expect(list.get(key1)).toBe(value1);
-        expect(list.get(key2)).toBe(value2);
-        expect(list.get(key3)).toBe(null);
-        expect(list.get(key4)).toBe(value4);
-        expect(list.get(key5)).toBe(value5);
+        expect(list.get(key1)).to.equal(value1);
+        expect(list.get(key2)).to.equal(value2);
+        expect(list.get(key3)).to.equal(null);
+        expect(list.get(key4)).to.equal(value4);
+        expect(list.get(key5)).to.equal(value5);
 
         var all = list.list();
 
-        expect(all[0]).toBe(value1);
-        expect(all[1]).toBe(value2);
-        expect(all[2]).toBe(value4);
-        expect(all[3]).toBe(value5);
+        expect(all[0]).to.equal(value1);
+        expect(all[1]).to.equal(value2);
+        expect(all[2]).to.equal(value4);
+        expect(all[3]).to.equal(value5);
     });
 
     it('list() returns list in order', function () {
@@ -116,11 +116,11 @@ describe('pc.IndexedList', function () {
 
         var all = list.list()
 
-        expect(all[0]).toBe(value1);
-        expect(all[1]).toBe(value2);
-        expect(all[2]).toBe(value3);
-        expect(all[3]).toBe(value4);
-        expect(all[4]).toBe(value5);
+        expect(all[0]).to.equal(value1);
+        expect(all[1]).to.equal(value2);
+        expect(all[2]).to.equal(value3);
+        expect(all[3]).to.equal(value4);
+        expect(all[4]).to.equal(value5);
     });
 
     it('clear() removes all values', function () {
@@ -146,20 +146,20 @@ describe('pc.IndexedList', function () {
 
         list.clear();
 
-        expect(list.has(key1)).toBe(false);
-        expect(list.has(key2)).toBe(false);
-        expect(list.has(key3)).toBe(false);
-        expect(list.has(key4)).toBe(false);
-        expect(list.has(key5)).toBe(false);
+        expect(list.has(key1)).to.equal(false);
+        expect(list.has(key2)).to.equal(false);
+        expect(list.has(key3)).to.equal(false);
+        expect(list.has(key4)).to.equal(false);
+        expect(list.has(key5)).to.equal(false);
 
-        expect(list.get(key1)).toBe(null);
-        expect(list.get(key2)).toBe(null);
-        expect(list.get(key3)).toBe(null);
-        expect(list.get(key4)).toBe(null);
-        expect(list.get(key5)).toBe(null);
+        expect(list.get(key1)).to.equal(null);
+        expect(list.get(key2)).to.equal(null);
+        expect(list.get(key3)).to.equal(null);
+        expect(list.get(key4)).to.equal(null);
+        expect(list.get(key5)).to.equal(null);
 
         var all = list.list()
 
-        expect(all.length).toBe(0);
+        expect(all.length).to.equal(0);
     });
 });

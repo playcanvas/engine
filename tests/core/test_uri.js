@@ -4,11 +4,11 @@ describe('pc.URI', function () {
 
         var uri = new pc.URI(s);
 
-        expect(uri.scheme).toBe("http");
-        expect(uri.authority).toBe("a");
-        expect(uri.path).toBe("/b/c/d;p");
-        expect(uri.query).toBe("q=r");
-        expect(uri.fragment).toBe("l");
+        expect(uri.scheme).to.equal("http");
+        expect(uri.authority).to.equal("a");
+        expect(uri.path).to.equal("/b/c/d;p");
+        expect(uri.query).to.equal("q=r");
+        expect(uri.fragment).to.equal("l");
 
     });
 
@@ -17,11 +17,11 @@ describe('pc.URI', function () {
         var uri = new pc.URI(s);
         var undef;
 
-        expect(uri.scheme).toBe(undef);
-        expect(uri.authority).toBe("a");
-        expect(uri.path).toBe("/b/c/d;p");
-        expect(uri.query).toBe("q=r");
-        expect(uri.fragment).toBe("l");
+        expect(uri.scheme).to.equal(undef);
+        expect(uri.authority).to.equal("a");
+        expect(uri.path).to.equal("/b/c/d;p");
+        expect(uri.query).to.equal("q=r");
+        expect(uri.fragment).to.equal("l");
 
     });
 
@@ -30,11 +30,11 @@ describe('pc.URI', function () {
         var uri = new pc.URI(s);
         var undef;
 
-        expect(uri.scheme).toBe(undef);
-        expect(uri.authority).toBe(undef);
-        expect(uri.path).toBe("/b/c/d;p");
-        expect(uri.query).toBe("q=r");
-        expect(uri.fragment).toBe("l");
+        expect(uri.scheme).to.equal(undef);
+        expect(uri.authority).to.equal(undef);
+        expect(uri.path).to.equal("/b/c/d;p");
+        expect(uri.query).to.equal("q=r");
+        expect(uri.fragment).to.equal("l");
     });
 
     it("Parse, no query", function () {
@@ -42,11 +42,11 @@ describe('pc.URI', function () {
         var uri = new pc.URI(s);
         var undef;
 
-        expect(uri.scheme).toBe("http");
-        expect(uri.authority).toBe("a");
-        expect(uri.path).toBe("/b/c/d;p");
-        expect(uri.query).toBe(undef);
-        expect(uri.fragment).toBe("l");
+        expect(uri.scheme).to.equal("http");
+        expect(uri.authority).to.equal("a");
+        expect(uri.path).to.equal("/b/c/d;p");
+        expect(uri.query).to.equal(undef);
+        expect(uri.fragment).to.equal("l");
     });
 
     it("Parse, no fragment", function () {
@@ -54,11 +54,11 @@ describe('pc.URI', function () {
         var uri = new pc.URI(s);
         var undef;
 
-        expect(uri.scheme).toBe("http");
-        expect(uri.authority).toBe("a");
-        expect(uri.path).toBe("/b/c/d;p");
-        expect(uri.query).toBe("q=r");
-        expect(uri.fragment).toBe(undef);
+        expect(uri.scheme).to.equal("http");
+        expect(uri.authority).to.equal("a");
+        expect(uri.path).to.equal("/b/c/d;p");
+        expect(uri.query).to.equal("q=r");
+        expect(uri.fragment).to.equal(undef);
     });
 
     it("toString", function () {
@@ -66,7 +66,7 @@ describe('pc.URI', function () {
         var uri = new pc.URI(s);
         var r = uri.toString();
 
-        expect(s).toBe(r);
+        expect(s).to.equal(r);
     });
 
     it("Edit query", function() {
@@ -74,10 +74,10 @@ describe('pc.URI', function () {
         var uri = new pc.URI(s);
         uri.query = "q=abc";
 
-        expect(uri.toString()).toBe("http://example.com?q=abc");
+        expect(uri.toString()).to.equal("http://example.com?q=abc");
 
         uri.query = "";
-        expect(uri.toString()).toBe(s);
+        expect(uri.toString()).to.equal(s);
 
     });
 
@@ -87,9 +87,9 @@ describe('pc.URI', function () {
 
         var q = uri.getQuery();
 
-        expect(q.a).toBe("1");
-        expect(q.b).toBe("string");
-        expect(q.c).toBe("something spaced");
+        expect(q.a).to.equal("1");
+        expect(q.b).to.equal("string");
+        expect(q.c).to.equal("something spaced");
     });
 
     it("getQuery: emtpy", function () {
@@ -98,7 +98,7 @@ describe('pc.URI', function () {
 
         var q = uri.getQuery();
 
-        expect(Object.keys(q).length).toBe(0);
+        expect(Object.keys(q).length).to.equal(0);
     });
 
     it("setQuery", function () {
@@ -109,7 +109,7 @@ describe('pc.URI', function () {
         };
 
         uri.setQuery(q);
-        expect("key=value&with%20space=%22").toBe(uri.query)
+        expect("key=value&with%20space=%22").to.equal(uri.query)
     });
 
     it("createURI", function () {
@@ -120,24 +120,24 @@ describe('pc.URI', function () {
             authority: "example.com",
             path: "/abc"
         });
-        expect("http://example.com/abc").toBe(uri);
+        expect("http://example.com/abc").to.equal(uri);
 
         uri = pc.createURI({
             host: "http://example.com",
             path: "/abc"
         });
-        expect("http://example.com/abc").toBe(uri);
+        expect("http://example.com/abc").to.equal(uri);
 
         uri = pc.createURI({
             hostpath: "http://example.com/abc",
         });
-        expect("http://example.com/abc").toBe(uri);
+        expect("http://example.com/abc").to.equal(uri);
 
         uri = pc.createURI({
             hostpath: "http://example.com/abc",
             query: "a=b&c=d"
         });
-        expect("http://example.com/abc?a=b&c=d").toBe(uri);
+        expect("http://example.com/abc?a=b&c=d").to.equal(uri);
 
     });
 
@@ -147,28 +147,28 @@ describe('pc.URI', function () {
                 scheme: "http",
                 host: "http://test.com"
             });
-        }).toThrow();
+        }).to.throw();
 
         expect(function() {
             pc.createURI({
                 authority: "http",
                 host: "http://test.com"
             });
-        }).toThrow();
+        }).to.throw();
 
         expect(function() {
             pc.createURI({
                 scheme: "http",
                 hostpath: "http://test.com"
             });
-        }).toThrow();
+        }).to.throw();
 
         expect(function() {
             pc.createURI({
                 authority: "http",
                 hostpath: "http://test.com"
             });
-        }).toThrow();
+        }).to.throw();
 
         expect(function() {
             pc.createURI({
@@ -176,7 +176,7 @@ describe('pc.URI', function () {
                 authority: "e.com",
                 host: "http://test.com"
             });
-        }).toThrow();
+        }).to.throw();
 
         expect(function() {
             pc.createURI({
@@ -184,14 +184,14 @@ describe('pc.URI', function () {
                 authority: "http",
                 hostpath: "http://test.com"
             });
-        }).toThrow();
+        }).to.throw();
 
         expect(function() {
             pc.createURI({
                 host: "http://test.com",
                 hostpath: "http://test.com"
             });
-        }).toThrow();
+        }).to.throw();
     });
 });
 

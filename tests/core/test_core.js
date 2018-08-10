@@ -25,7 +25,7 @@ describe("Core", function () {
         var index;
 
         for (index = 0; index < types.length; index++ ) {
-            expect(pc.type(types[index])).toBe(expected[index]);
+            expect(pc.type(types[index])).to.equal(expected[index]);
         }
     });
 
@@ -42,10 +42,10 @@ describe("Core", function () {
 
         o1 = pc.extend(o1,o2);
 
-        expect(o1.a).toBe("a");
-        expect(o1.b).toBe("b");
-        expect(o1.c).toBe("c");
-        expect(o1.d).toBe("d");
+        expect(o1.a).to.equal("a");
+        expect(o1.b).to.equal("b");
+        expect(o1.c).to.equal("c");
+        expect(o1.d).to.equal("d");
     });
 
     it('extend: array, array', function() {
@@ -53,10 +53,10 @@ describe("Core", function () {
         var a2 = [4,5,6];
 
         a1 = pc.extend(a1,a2);
-        expect(a1.length).toBe(a2.length);
-        expect(a1[0]).toBe(a2[0]);
-        expect(a1[1]).toBe(a2[1]);
-        expect(a1[2]).toBe(a2[2]);
+        expect(a1.length).to.equal(a2.length);
+        expect(a1[0]).to.equal(a2[0]);
+        expect(a1[1]).to.equal(a2[1]);
+        expect(a1[2]).to.equal(a2[2]);
     });
 
     it('extend: object, array', function() {
@@ -65,9 +65,9 @@ describe("Core", function () {
 
         var o1 = pc.extend(o1,a1);
 
-        expect(o1.a).toBe("a");
-        expect(o1[0]).toBe( 1);
-        expect(o1[1]).toBe( 2);
+        expect(o1.a).to.equal("a");
+        expect(o1[0]).to.equal( 1);
+        expect(o1[1]).to.equal( 2);
     });
 
     it('extend: deep object', function() {
@@ -82,10 +82,10 @@ describe("Core", function () {
 
         o1 = pc.extend(o1,o2);
 
-        expect(o1.a.b).toBe("b");
-        expect(o1.c[0]).toBe(1);
-        expect(o1.c[1]).toBe(2);
-        expect(o1.A).toBe("A");
+        expect(o1.a.b).to.equal("b");
+        expect(o1.c[0]).to.equal(1);
+        expect(o1.c[1]).to.equal(2);
+        expect(o1.A).to.equal("A");
     });
 
     it('extend: deep object not reference', function() {
@@ -103,10 +103,10 @@ describe("Core", function () {
         // Change original so if o1 contains a reference test will fail
         o2.a.b = "z";
 
-        expect(o1.a.b).toBe("b");
-        expect(o1.c[0]).toBe(1);
-        expect(o1.c[1]).toBe(2);
-        expect(o1.A).toBe("A");
+        expect(o1.a.b).to.equal("b");
+        expect(o1.c[0]).to.equal(1);
+        expect(o1.c[1]).to.equal(2);
+        expect(o1.A).to.equal("A");
     });
 
     it('isDefined', function () {
@@ -115,9 +115,9 @@ describe("Core", function () {
         var c = null;
         var d = 1 / 0;
 
-        expect(pc.isDefined(a)).toBe(false);
-        expect(pc.isDefined(b)).toBe(true);
-        expect(pc.isDefined(c)).toBe(true);
-        expect(pc.isDefined(d)).toBe(true);
+        expect(pc.isDefined(a)).to.equal(false);
+        expect(pc.isDefined(b)).to.equal(true);
+        expect(pc.isDefined(c)).to.equal(true);
+        expect(pc.isDefined(d)).to.equal(true);
     });
 });

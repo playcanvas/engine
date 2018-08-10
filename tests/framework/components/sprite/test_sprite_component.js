@@ -66,7 +66,7 @@ describe("pc.SpriteComponent", function () {
 
         e.addComponent('sprite', {});
 
-        expect(e.sprite).toBeTruthy();
+        expect(e.sprite).to.exist;
     });
 
     // TODO This and other tests in this file are skipped because of the following error:
@@ -89,11 +89,11 @@ describe("pc.SpriteComponent", function () {
 
         e.addComponent('sprite', {});
 
-        expect(e.sprite).toBeTruthy();
+        expect(e.sprite).to.exist;
 
         e.removeComponent('sprite');
 
-        expect(!e.sprite).toBeTruthy();
+        expect(!e.sprite).to.exist;
     });
 
     it('Remove after destroy', function () {
@@ -104,13 +104,13 @@ describe("pc.SpriteComponent", function () {
 
         e.destroy();
 
-        expect(!e.sprite).toBeTruthy();
+        expect(!e.sprite).to.exist;
     });
 
     it('Sprites assets unbound on destroy', function () {
-        expect(!spriteAsset.hasEvent('add')).toBeTruthy();
-        expect(!spriteAsset.hasEvent('load')).toBeTruthy();
-        expect(!spriteAsset.hasEvent('remove')).toBeTruthy();
+        expect(!spriteAsset.hasEvent('add')).to.exist;
+        expect(!spriteAsset.hasEvent('load')).to.exist;
+        expect(!spriteAsset.hasEvent('remove')).to.exist;
 
         var e = new pc.Entity();
         e.addComponent('sprite', {
@@ -119,15 +119,15 @@ describe("pc.SpriteComponent", function () {
 
         e.destroy();
 
-        expect(!spriteAsset.hasEvent('add')).toBeTruthy();
-        expect(!spriteAsset.hasEvent('load')).toBeTruthy();
-        expect(!spriteAsset.hasEvent('remove')).toBeTruthy();
+        expect(!spriteAsset.hasEvent('add')).to.exist;
+        expect(!spriteAsset.hasEvent('load')).to.exist;
+        expect(!spriteAsset.hasEvent('remove')).to.exist;
     });
 
     it('Sprites assets unbound when reset', function () {
-        expect(!spriteAsset.hasEvent('add')).toBeTruthy();
-        expect(!spriteAsset.hasEvent('load')).toBeTruthy();
-        expect(!spriteAsset.hasEvent('remove')).toBeTruthy();
+        expect(!spriteAsset.hasEvent('add')).to.exist;
+        expect(!spriteAsset.hasEvent('load')).to.exist;
+        expect(!spriteAsset.hasEvent('remove')).to.exist;
 
         var e = new pc.Entity();
         e.addComponent('sprite', {
@@ -136,9 +136,9 @@ describe("pc.SpriteComponent", function () {
 
         e.sprite.spriteAsset = spriteAsset2;
 
-        expect(!spriteAsset.hasEvent('add')).toBeTruthy();
-        expect(!spriteAsset.hasEvent('load')).toBeTruthy();
-        expect(!spriteAsset.hasEvent('remove')).toBeTruthy();
+        expect(!spriteAsset.hasEvent('add')).to.exist;
+        expect(!spriteAsset.hasEvent('load')).to.exist;
+        expect(!spriteAsset.hasEvent('remove')).to.exist;
     });
 });
 

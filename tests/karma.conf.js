@@ -29,11 +29,16 @@ module.exports = function (config) {
 
             // test files - change this to a specific file in order to run a single suite
             // 'tests/**/test_*.js',
-            'tests/assets/*.js',
-            'tests/batching/*.js',
-            'tests/core/*.js',
-            'tests/framework/components/element/test_draworder.js',
-            'tests/framework/components/sprite/test_sprite_component.js',
+            // 'tests/assets/*.js',
+            // 'tests/batching/*.js',
+            // 'tests/core/*.js',
+            // 'tests/framework/components/element/test_draworder.js',
+            // 'tests/framework/components/element/test_elementdraghelper.js',
+            // 'tests/framework/components/element/test_elementmasks.js',
+            // 'tests/framework/components/element/test_image_element.js',
+            // 'tests/framework/components/element/test_textelement.js',
+            // 'tests/framework/components/sprite/test_sprite_component.js',
+            'tests/framework/components/particlesystem/test_particlesystemcomponent.js',
 
             // resources - list any files here that need to be loaded by tests (i.e. via XHR), or
             // need to be pre-loaded in order to provide helper functions etc.
@@ -41,7 +46,7 @@ module.exports = function (config) {
             // { pattern: 'tests/helpers/**/*.js', included: true, served: true, watched: true, nocache: true },
             // { pattern: 'tests/framework/components/script/*.*', included: false, served: true, watched: true, nocache: true },
             // { pattern: 'tests/input/simulate_event.js', included: true, served: true, watched: true, nocache: true },
-            // { pattern: 'examples/**/*.*', included: false, served: true, watched: true, nocache: true }
+            { pattern: 'examples/**/*.*', included: false, served: true, watched: true, nocache: true }
         ]),
 
         // list of files / patterns to exclude
@@ -53,7 +58,7 @@ module.exports = function (config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: ['jasmine'],
+        frameworks: ['mocha', 'chai'],
 
         // test results reporter to use
         // possible values: 'dots', 'progress'

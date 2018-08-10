@@ -17,7 +17,7 @@ describe('pc.AssetRegistry', () => {
 
     it('should create a new pc.AssetRegistry', function () {
         var reg = new pc.AssetRegistry(this.loader);
-        expect(reg instanceof pc.AssetRegistry).toBe(true);
+        expect(reg instanceof pc.AssetRegistry).to.equal(true);
     });
 
     it('add() adds asset', function () {
@@ -25,8 +25,8 @@ describe('pc.AssetRegistry', () => {
 
         var assets = this.assets.list();
 
-        expect(assets.length).toBe(1);
-        expect(assets[0].name).toBe(this.asset.name);
+        expect(assets.length).to.equal(1);
+        expect(assets[0].name).to.equal(this.asset.name);
     });
 
     it('get() retrieves asset by id', function () {
@@ -34,7 +34,7 @@ describe('pc.AssetRegistry', () => {
 
         var asset = this.assets.get(this.asset.id);
 
-        expect(asset).toBe(this.asset);
+        expect(asset).to.equal(this.asset);
     });
 
     it('getByUrl() retrieves asset by url', function () {
@@ -42,7 +42,7 @@ describe('pc.AssetRegistry', () => {
 
         var asset = this.assets.getByUrl(this.asset.file.url);
 
-        expect(asset).toBe(this.asset);
+        expect(asset).to.equal(this.asset);
     });
 
     it('list() lists all assets', function () {
@@ -62,9 +62,9 @@ describe('pc.AssetRegistry', () => {
 
         var assets = this.assets.list()
 
-        expect(assets[0]).toBe(asset1);
-        expect(assets[1]).toBe(asset2);
-        expect(assets[2]).toBe(asset3);
+        expect(assets[0]).to.equal(asset1);
+        expect(assets[1]).to.equal(asset2);
+        expect(assets[2]).to.equal(asset3);
     });
 
 
@@ -87,16 +87,16 @@ describe('pc.AssetRegistry', () => {
 
         var assets = this.assets.list()
 
-        expect(this.assets.get(asset1.id)).toBe(asset1);
-        expect(this.assets.get(asset2.id)).toBe(undefined);
-        expect(this.assets.get(asset3.id)).toBe(asset3);
+        expect(this.assets.get(asset1.id)).to.equal(asset1);
+        expect(this.assets.get(asset2.id)).to.equal(undefined);
+        expect(this.assets.get(asset3.id)).to.equal(asset3);
 
-        expect(this.assets.findAll(asset1.name)[0]).toBe(asset1);
-        expect(this.assets.findAll(asset2.name).length).toBe(0);
-        expect(this.assets.findAll(asset3.name)[0]).toBe(asset3);
+        expect(this.assets.findAll(asset1.name)[0]).to.equal(asset1);
+        expect(this.assets.findAll(asset2.name).length).to.equal(0);
+        expect(this.assets.findAll(asset3.name)[0]).to.equal(asset3);
 
-        expect(assets[0].id).toBe(asset1.id);
-        expect(assets[1].id).toBe(asset3.id);
+        expect(assets[0].id).to.equal(asset1.id);
+        expect(assets[1].id).to.equal(asset3.id);
     });
 
 });

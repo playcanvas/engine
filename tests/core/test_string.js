@@ -6,7 +6,7 @@ describe('pc.string', function () {
         var expected = src;
         var result = pc.string.format(src);
 
-        expect(result).toBe(expected);
+        expect(result).to.equal(expected);
     });
 
     it("format: one arg", function() {
@@ -14,7 +14,7 @@ describe('pc.string', function () {
         var expected = "a string abc";
         var result = pc.string.format(src, "abc");
 
-        expect(result).toBe(expected);
+        expect(result).to.equal(expected);
     });
 
     it("format: two args", function() {
@@ -22,23 +22,23 @@ describe('pc.string', function () {
         var expected = "abc a string def";
         var result = pc.string.format(src, "abc", "def");
 
-        expect(result).toBe(expected);
+        expect(result).to.equal(expected);
     });
 
 
     it("toBool: strict", function () {
-        expect(true).toBe(pc.string.toBool("true", true));
-        expect(false).toBe(pc.string.toBool("false", true));
+        expect(true).to.equal(pc.string.toBool("true", true));
+        expect(false).to.equal(pc.string.toBool("false", true));
         expect(function () {
             pc.string.toBool("abc", true);
-        }).toThrow();
+        }).to.throw;
     });
 
     it("toBool: non-strict", function () {
-        expect(true).toBe(pc.string.toBool("true"));
-        expect(false).toBe(pc.string.toBool("false"));
-        expect(false).toBe(pc.string.toBool("abc"));
-        expect(false).toBe(pc.string.toBool(undefined));
+        expect(true).to.equal(pc.string.toBool("true"));
+        expect(false).to.equal(pc.string.toBool("false"));
+        expect(false).to.equal(pc.string.toBool("abc"));
+        expect(false).to.equal(pc.string.toBool(undefined));
     });
 
 })

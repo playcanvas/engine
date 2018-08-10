@@ -1,31 +1,33 @@
-QUnit.module('pc.ImageElement', {
-    setup: function () {
-        stop();
-        this.app = new pc.Application(document.createElement("canvas"));
+describe('pc.ImageElement', function () {
+    var app;
+    var assets;
 
-        this.loadAssets(function () {
-            start();
+    beforeEach(function (done) {
+        app = new pc.Application(document.createElement("canvas"));
+        console.log("before")
+        loadAssets(function () {
+            done();
         });
-    },
+    });
 
-    teardown: function () {
-        this.app.destroy();
-    },
+    afterEach(function () {
+        app.destroy();
+    });
 
-    loadAssets: function (cb) {
+    var loadAssets = function (cb) {
         // listen for asset load events and fire cb() when all assets are loaded
         var count = 0;
-        this.app.assets.on('load', function (asset) {
+        app.assets.on('load', function (asset) {
             count++;
-            if (count === assets.length) {
+            if (count === assetsToLoad.length) {
                 cb();
             }
         });
 
-        this.app.assets.prefix = '../../';
+        app.assets.prefix = '../../';
 
         // list of assets to load
-        var assets = [
+        var assetsToLoad = [
             new pc.Asset('red-atlas', 'textureatlas', {
                 url: 'base/tests/test-assets/sprite/red-atlas.json'
             }),
@@ -41,190 +43,190 @@ QUnit.module('pc.ImageElement', {
         ];
 
         // add and load assets
-        for (var i = 0; i < assets.length; i++) {
-            this.app.assets.add(assets[i]);
-            this.app.assets.load(assets[i]);
+        for (var i = 0; i < assetsToLoad.length; i++) {
+            app.assets.add(assetsToLoad[i]);
+            app.assets.load(assetsToLoad[i]);
         }
 
         // convenient access to assets by type
-        this.assets = {
-            textureatlas: assets[0],
-            sprite: assets[1],
-            texture: assets[2],
-            material: assets[3]
+        assets = {
+            textureatlas: assetsToLoad[0],
+            sprite: assetsToLoad[1],
+            texture: assetsToLoad[2],
+            material: assetsToLoad[3]
         };
     }
+
+    it('Add Image Element', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image'
+        });
+
+        expect(e.element.type).to.equal('image');
+    });
+
+    it('Add / Remove Image Element', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image'
+        });
+
+        e.removeComponent('element');
+
+        expect(!e.element).to.exist;
+    });
+
+    it('Destroy Sprite Image Element', function () {
+        var e = new pc.Entity();
+
+        // patch
+        var destroyed = false;
+        var _onSpriteAssetLoaded = pc.ImageElement.prototype._onSpriteAssetLoaded;
+        pc.ImageElement.prototype._onSpriteAssetLoaded = function () {
+            if (destroyed) {
+                ok(false, "_onSpriteAssetLoaded called after Element is destroyed");
+            } else {
+                _onSpriteAssetLoaded.apply(this, arguments);
+            }
+        };
+
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: assets.sprite
+        });
+
+        e.destroy();
+        destroyed = true;
+
+        expect(!e.element).to.exist;
+    });
+
+    it('Destroy Texture Image Element', function (done) {
+        // patch
+        var destroyed = false;
+        var _onTextureLoad = pc.ImageElement.prototype._onTextureLoad;
+        pc.ImageElement.prototype._onTextureLoad = function () {
+            if (destroyed) {
+                fail("_onTextureLoad called after Element is destroyed");
+                done();
+            } else {
+                _onTextureLoad.apply(this, arguments);
+            }
+        };
+
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            textureAsset: assets.texture
+        });
+
+        e.destroy();
+        destroyed = true;
+
+        assets.texture.unload();
+        app.assets.load(assets.texture);
+
+        assets.texture.once('load', function () {
+            expect(!e.element).to.exist;
+            done();
+        });
+    });
+
+    xit('Destroy Material Image Element', function (done) {
+        // patch
+        var destroyed = false;
+        var _onMaterialLoad = pc.ImageElement.prototype._onMaterialLoad;
+        pc.ImageElement.prototype._onMaterialLoad = function () {
+            if (destroyed) {
+                fail(false, "_onMaterialLoad called after Element is destroyed");
+                done();
+            } else {
+                _onMaterialLoad.apply(this, arguments);
+            }
+        };
+
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            materialAsset: assets.material
+        });
+
+        e.destroy();
+        destroyed = true;
+
+        assets.material.unload();
+        app.assets.load(assets.material);
+        assets.material.once('load', function () {
+            expect(!e.element).to.exist;
+            done();
+        });
+    });
+
+
+    it('Sprites assets unbound on destroy', function () {
+        expect(!assets.sprite.hasEvent('add')).to.exist;
+        expect(!assets.sprite.hasEvent('load')).to.exist;
+        expect(!assets.sprite.hasEvent('remove')).to.exist;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: assets.sprite
+        });
+
+        e.destroy();
+
+        expect(!assets.sprite.hasEvent('add')).to.exist;
+        expect(!assets.sprite.hasEvent('load')).to.exist;
+        expect(!assets.sprite.hasEvent('remove')).to.exist;
+    });
+
+    it('Sprites assets unbound when reset', function () {
+        expect(!assets.sprite.hasEvent('add')).to.exist;
+        expect(!assets.sprite.hasEvent('load')).to.exist;
+        expect(!assets.sprite.hasEvent('remove')).to.exist;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: assets.sprite
+        });
+
+        e.element.spriteAsset = null;
+
+        expect(!assets.sprite.hasEvent('add')).to.exist;
+        expect(!assets.sprite.hasEvent('load')).to.exist;
+        expect(!assets.sprite.hasEvent('remove')).to.exist;
+    });
+
+
+    it('Sprite resource unbound on destroy', function () {
+        var atlas = assets.textureatlas;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: assets.sprite
+        });
+
+        // var sprite = e.element.sprite;
+        // ok(!e.element.sprite.hasEvent('add'));
+        // ok(!e.element.sprite.hasEvent('load'));
+        // ok(!e.element.sprite.hasEvent('remove'));
+
+        expect(atlas.resource.hasEvent('set:texture')).to.equal(true);
+
+        e.destroy();
+
+        expect(atlas.resource.hasEvent('set:texture')).to.equal(false);
+
+        // ok(!assets.sprite.hasEvent('add'));
+        // ok(!assets.sprite.hasEvent('load'));
+        // ok(!assets.sprite.hasEvent('remove'));
+    });
+
 });
 
-test('Add Image Element', function () {
-    var e = new pc.Entity();
-    e.addComponent('element', {
-        type: 'image'
-    });
-
-    equal(e.element.type, 'image');
-});
-
-test('Add / Remove Image Element', function () {
-    var e = new pc.Entity();
-    e.addComponent('element', {
-        type: 'image'
-    });
-
-    e.removeComponent('element');
-
-    ok(!e.element);
-});
-
-test('Destroy Sprite Image Element', function () {
-    var e = new pc.Entity();
-
-    // patch
-    var destroyed = false;
-    var _onSpriteAssetLoaded = pc.ImageElement.prototype._onSpriteAssetLoaded;
-    pc.ImageElement.prototype._onSpriteAssetLoaded = function () {
-        if (destroyed) {
-            ok(false, "_onSpriteAssetLoaded called after Element is destroyed");
-        } else {
-            _onSpriteAssetLoaded.apply(this, arguments);
-        }
-    };
-
-    e.addComponent('element', {
-        type: 'image',
-        spriteAsset: this.assets.sprite
-    });
-
-    e.destroy();
-    destroyed = true;
-
-    ok(!e.element);
-});
-
-test('Destroy Texture Image Element', function () {
-    stop();
-
-    // patch
-    var destroyed = false;
-    var _onTextureLoad = pc.ImageElement.prototype._onTextureLoad;
-    pc.ImageElement.prototype._onTextureLoad = function () {
-        if (destroyed) {
-            ok(false, "_onTextureLoad called after Element is destroyed");
-        } else {
-            _onTextureLoad.apply(this, arguments);
-        }
-    };
-
-
-    var e = new pc.Entity();
-    e.addComponent('element', {
-        type: 'image',
-        textureAsset: this.assets.texture
-    });
-
-    e.destroy();
-    destroyed = true;
-
-    this.assets.texture.unload();
-    this.app.assets.load(this.assets.texture);
-
-    this.assets.texture.once('load', function () {
-        ok(!e.element);
-        start();
-    });
-});
-
-test('Destroy Material Image Element', function () {
-    stop();
-
-    // patch
-    var destroyed = false;
-    var _onMaterialLoad = pc.ImageElement.prototype._onMaterialLoad;
-    pc.ImageElement.prototype._onMaterialLoad = function () {
-        if (destroyed) {
-            ok(false, "_onMaterialLoad called after Element is destroyed");
-        } else {
-            _onMaterialLoad.apply(this, arguments);
-        }
-    };
-
-
-    var e = new pc.Entity();
-    e.addComponent('element', {
-        type: 'image',
-        materialAsset: this.assets.material
-    });
-
-    e.destroy();
-    destroyed = true;
-
-    this.assets.material.unload();
-    this.app.assets.load(this.assets.material);
-    this.assets.material.once('load', function () {
-        ok(!e.element);
-        start();
-    });
-});
-
-
-test('Sprites assets unbound on destroy', function () {
-    ok(!this.assets.sprite.hasEvent('add'));
-    ok(!this.assets.sprite.hasEvent('load'));
-    ok(!this.assets.sprite.hasEvent('remove'));
-
-    var e = new pc.Entity();
-    e.addComponent('element', {
-        type: 'image',
-        spriteAsset: this.assets.sprite
-    });
-
-    e.destroy();
-
-    ok(!this.assets.sprite.hasEvent('add'));
-    ok(!this.assets.sprite.hasEvent('load'));
-    ok(!this.assets.sprite.hasEvent('remove'));
-});
-
-test('Sprites assets unbound when reset', function () {
-    ok(!this.assets.sprite.hasEvent('add'));
-    ok(!this.assets.sprite.hasEvent('load'));
-    ok(!this.assets.sprite.hasEvent('remove'));
-
-    var e = new pc.Entity();
-    e.addComponent('element', {
-        type: 'image',
-        spriteAsset: this.assets.sprite
-    });
-
-    e.element.spriteAsset = null;
-
-    ok(!this.assets.sprite.hasEvent('add'));
-    ok(!this.assets.sprite.hasEvent('load'));
-    ok(!this.assets.sprite.hasEvent('remove'));
-});
-
-
-test('Sprite resource unbound on destroy', function () {
-    var atlas = this.assets.textureatlas;
-
-    var e = new pc.Entity();
-    e.addComponent('element', {
-        type: 'image',
-        spriteAsset: this.assets.sprite
-    });
-
-    // var sprite = e.element.sprite;
-    // ok(!e.element.sprite.hasEvent('add'));
-    // ok(!e.element.sprite.hasEvent('load'));
-    // ok(!e.element.sprite.hasEvent('remove'));
-
-    ok(atlas.resource.hasEvent('set:texture'));
-
-    e.destroy();
-
-    ok(!atlas.resource.hasEvent('set:texture'));
-
-    // ok(!this.assets.sprite.hasEvent('add'));
-    // ok(!this.assets.sprite.hasEvent('load'));
-    // ok(!this.assets.sprite.hasEvent('remove'));
-});

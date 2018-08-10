@@ -27,8 +27,8 @@ describe("pc.Element#drawOrder", function () {
         // update forces draw order sync
         this.app.tick()
 
-        expect(p1.element.drawOrder).toBe(1);
-        expect(c1.element.drawOrder).toBe(2);
+        expect(p1.element.drawOrder).to.equal(1);
+        expect(c1.element.drawOrder).to.equal(2);
     });
 
     it("clamp max drawOrder", function () {
@@ -36,7 +36,7 @@ describe("pc.Element#drawOrder", function () {
         p1.addComponent('element');
         p1.element.drawOrder = 0x1FFFFFF;
 
-        expect(p1.element.drawOrder).toBe(0xFFFFFF);
+        expect(p1.element.drawOrder).to.equal(0xFFFFFF);
     });
 
     it("reorder children", function () {
@@ -67,9 +67,9 @@ describe("pc.Element#drawOrder", function () {
         // update forces draw order sync
         this.app.tick();
 
-        expect(p1.element.drawOrder).toBe(1);
-        expect(c2.element.drawOrder).toBe(2);
-        expect(c1.element.drawOrder).toBe(3);
+        expect(p1.element.drawOrder).to.equal(1);
+        expect(c2.element.drawOrder).to.equal(2);
+        expect(c1.element.drawOrder).to.equal(3);
     });
 
 
@@ -94,8 +94,8 @@ describe("pc.Element#drawOrder", function () {
         // update forces draw order sync
         this.app.tick();
 
-        expect(p1.element.drawOrder).toBe(1);
-        expect(c1.element.drawOrder).toBe(2);
+        expect(p1.element.drawOrder).to.equal(1);
+        expect(c1.element.drawOrder).to.equal(2);
     });
 
     it('reparent to screen', function () {
@@ -120,8 +120,8 @@ describe("pc.Element#drawOrder", function () {
         // update forces draw order sync
         this.app.tick();
 
-        expect(p1.element.drawOrder).toBe(1);
-        expect(c1.element.drawOrder).toBe(2);
+        expect(p1.element.drawOrder).to.equal(1);
+        expect(c1.element.drawOrder).to.equal(2);
     });
 
 
@@ -153,7 +153,7 @@ describe("pc.Element#drawOrder", function () {
         // update forces draw order sync
         this.app.tick();
 
-        expect(count).toBe(1);
+        expect(count).to.equal(1);
 
         // restore original
         pc.ScreenComponent.prototype._processDrawOrderSync = _processDrawOrderSync;
@@ -204,26 +204,26 @@ describe("pc.Element#drawOrder", function () {
         var m2Unmask = m2.element._image._renderable.unmaskMeshInstance.drawOrder;
         var m3Unmask = m3.element._image._renderable.unmaskMeshInstance.drawOrder;
 
-        expect(m1Unmask > m1DrawOrder).toBe(true, "unmask for m1 drawn after m1");
-        expect(m1Unmask > m2DrawOrder).toBe(true, "unmask for m1 drawn after m2");
-        expect(m1Unmask > m3DrawOrder).toBe(true, "unmask for m1 drawn after m3");
-        expect(m1Unmask > c1DrawOrder).toBe(true, "unmask for m1 drawn after c1");
-        expect(m1Unmask > m2Unmask).toBe(true, "unmask for m1 drawn after unmask m2");
-        expect(m1Unmask > m3Unmask).toBe(true, "unmask for m1 drawn after unmask m3");
+        expect(m1Unmask > m1DrawOrder).to.equal(true, "unmask for m1 drawn after m1");
+        expect(m1Unmask > m2DrawOrder).to.equal(true, "unmask for m1 drawn after m2");
+        expect(m1Unmask > m3DrawOrder).to.equal(true, "unmask for m1 drawn after m3");
+        expect(m1Unmask > c1DrawOrder).to.equal(true, "unmask for m1 drawn after c1");
+        expect(m1Unmask > m2Unmask).to.equal(true, "unmask for m1 drawn after unmask m2");
+        expect(m1Unmask > m3Unmask).to.equal(true, "unmask for m1 drawn after unmask m3");
 
-        expect(m2Unmask > m1DrawOrder).toBe(true, "unmask for m2 drawn after m1");
-        expect(m2Unmask > m2DrawOrder).toBe(true, "unmask for m2 drawn after m2");
-        expect(m2Unmask > m3DrawOrder).toBe(true, "unmask for m2 drawn after m3");
-        expect(m2Unmask < c1DrawOrder).toBe(true, "unmask for m2 drawn before c1");
-        expect(m2Unmask < m1Unmask).toBe(true, "unmask for m2 drawn before unmask m2");
-        expect(m2Unmask > m3Unmask).toBe(true, "unmask for m2 drawn after unmask m3");
+        expect(m2Unmask > m1DrawOrder).to.equal(true, "unmask for m2 drawn after m1");
+        expect(m2Unmask > m2DrawOrder).to.equal(true, "unmask for m2 drawn after m2");
+        expect(m2Unmask > m3DrawOrder).to.equal(true, "unmask for m2 drawn after m3");
+        expect(m2Unmask < c1DrawOrder).to.equal(true, "unmask for m2 drawn before c1");
+        expect(m2Unmask < m1Unmask).to.equal(true, "unmask for m2 drawn before unmask m2");
+        expect(m2Unmask > m3Unmask).to.equal(true, "unmask for m2 drawn after unmask m3");
 
-        expect(m3Unmask > m1DrawOrder).toBe(true, "unmask for m3 drawn after m1");
-        expect(m3Unmask > m2DrawOrder).toBe(true, "unmask for m3 drawn after m2");
-        expect(m3Unmask > m3DrawOrder).toBe(true, "unmask for m3 drawn after m3");
-        expect(m3Unmask < c1DrawOrder).toBe(true, "unmask for m3 drawn before c1");
-        expect(m3Unmask < m1Unmask).toBe(true, "unmask for m1 drawn before unmask m2");
-        expect(m3Unmask < m2Unmask).toBe(true, "unmask for m1 drawn before unmask m3");
+        expect(m3Unmask > m1DrawOrder).to.equal(true, "unmask for m3 drawn after m1");
+        expect(m3Unmask > m2DrawOrder).to.equal(true, "unmask for m3 drawn after m2");
+        expect(m3Unmask > m3DrawOrder).to.equal(true, "unmask for m3 drawn after m3");
+        expect(m3Unmask < c1DrawOrder).to.equal(true, "unmask for m3 drawn before c1");
+        expect(m3Unmask < m1Unmask).to.equal(true, "unmask for m1 drawn before unmask m2");
+        expect(m3Unmask < m2Unmask).to.equal(true, "unmask for m1 drawn before unmask m3");
 
     });
 
@@ -298,13 +298,13 @@ describe("pc.Element#drawOrder", function () {
             m3Unmask: m3.element._image._renderable.unmaskMeshInstance.drawOrder
         };
 
-        expect(beforeResult.m1DrawOrder).toBe(afterResult.m1DrawOrder);
-        expect(beforeResult.m2DrawOrder).toBe(afterResult.m2DrawOrder);
-        expect(beforeResult.m3DrawOrder).toBe(afterResult.m3DrawOrder);
-        expect(beforeResult.c1DrawOrder).toBe(afterResult.c1DrawOrder);
-        expect(beforeResult.m1Unmask).toBe(afterResult.m1Unmask);
-        expect(beforeResult.m2Unmask).toBe(afterResult.m2Unmask);
-        expect(beforeResult.m3Unmask).toBe(afterResult.m3Unmask);
+        expect(beforeResult.m1DrawOrder).to.equal(afterResult.m1DrawOrder);
+        expect(beforeResult.m2DrawOrder).to.equal(afterResult.m2DrawOrder);
+        expect(beforeResult.m3DrawOrder).to.equal(afterResult.m3DrawOrder);
+        expect(beforeResult.c1DrawOrder).to.equal(afterResult.c1DrawOrder);
+        expect(beforeResult.m1Unmask).to.equal(afterResult.m1Unmask);
+        expect(beforeResult.m2Unmask).to.equal(afterResult.m2Unmask);
+        expect(beforeResult.m3Unmask).to.equal(afterResult.m3Unmask);
     });
 
 });

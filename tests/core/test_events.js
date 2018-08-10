@@ -4,9 +4,9 @@ describe('pc.events', function () {
 
      o = pc.extend(o, pc.events);
 
-     expect(o.on).toBeTruthy();
-     expect(o.off).toBeTruthy();
-     expect(o.fire).toBeTruthy();
+     expect(o.on).to.exist;
+     expect(o.off).to.exist;
+     expect(o.fire).to.exist;
 
   });
 
@@ -21,8 +21,8 @@ describe('pc.events', function () {
 
      o.on("test", cb);
 
-     expect(o._callbacks["test"]).toBeTruthy();
-     expect(o._callbacks["test"][0].callback).toBe(cb);
+     expect(o._callbacks["test"]).to.exist;
+     expect(o._callbacks["test"][0].callback).to.equal(cb);
   });
 
   it("Bind and fire", function() {
@@ -39,7 +39,7 @@ describe('pc.events', function () {
 
      o.fire("test");
 
-     expect(called).toBeTruthy();
+     expect(called).to.exist;
   });
 
   it("Bind and unbind", function() {
@@ -52,12 +52,12 @@ describe('pc.events', function () {
 
      o.on("test", f1);
      o.on("test", f2);
-     expect(o._callbacks["test"].length).toBe(2);
+     expect(o._callbacks["test"].length).to.equal(2);
 
      o.off("test", f1);
 
-     expect(o._callbacks["test"].length).toBe(1);
-     expect(o._callbacks["test"][0].callback).toBe(f2);
+     expect(o._callbacks["test"].length).to.equal(1);
+     expect(o._callbacks["test"][0].callback).to.equal(f2);
   });
 
   it("Bind and unbind, last", function() {
@@ -70,12 +70,12 @@ describe('pc.events', function () {
 
      o.on("test", f1);
      o.on("test", f2);
-     expect(o._callbacks["test"].length).toBe(2);
+     expect(o._callbacks["test"].length).to.equal(2);
 
      o.off("test", f2);
 
-     expect(o._callbacks["test"].length).toBe(1);
-     expect(o._callbacks["test"][0].callback).toBe(f1);
+     expect(o._callbacks["test"].length).to.equal(1);
+     expect(o._callbacks["test"][0].callback).to.equal(f1);
   });
 
   it("Bind with scope", function() {
@@ -85,7 +85,7 @@ describe('pc.events', function () {
      o = pc.extend(o, pc.events);
 
      o.on("test", function() {
-      expect(this).toBe(m);
+      expect(this).to.equal(m);
      }, m);
 
      o.fire('test');
@@ -101,7 +101,7 @@ describe('pc.events', function () {
 
      o.off("test");
 
-     expect(o._callbacks["test"]).toBeUndefined();
+     expect(o._callbacks["test"]).to.be.undefined;
   });
 
   it("Bind two objects same event", function () {
@@ -120,8 +120,8 @@ describe('pc.events', function () {
 
      o.fire("test");
 
-     expect(r.o).toBe(true);
-     expect(r.p).toBe(false);
+     expect(r.o).to.equal(true);
+     expect(r.p).to.equal(false);
 
      r = {
          o: false,
@@ -129,8 +129,8 @@ describe('pc.events', function () {
      };
 
      p.fire("test");
-     expect(r.o).toBe(false);
-     expect(r.p).toBe(true);
+     expect(r.o).to.equal(false);
+     expect(r.p).to.equal(true);
 
   });
 
@@ -148,8 +148,8 @@ describe('pc.events', function () {
 
      o.fire("test");
 
-     expect(r.a).toBe(true);
-     expect(r.b).toBe(true);
+     expect(r.a).to.equal(true);
+     expect(r.b).to.equal(true);
   });
 
   it("Bind same function twice", function() {
@@ -166,7 +166,7 @@ describe('pc.events', function () {
 
     o.fire('test');
 
-    expect(count).toBe(2);
+    expect(count).to.equal(2);
   });
 
   it("Bind/Unbind same function twice", function() {
@@ -183,7 +183,7 @@ describe('pc.events', function () {
 
     o.off("test", fn);
 
-    expect(o._callbacks['test'].length).toBe(0);
+    expect(o._callbacks['test'].length).to.equal(0);
   });
 
   it("Bind same function different scope", function () {
@@ -202,7 +202,7 @@ describe('pc.events', function () {
 
     o.off("test", fn, o);
 
-    expect(o._callbacks['test'].length).toBe(1);
+    expect(o._callbacks['test'].length).to.equal(1);
   });
 
 
@@ -210,9 +210,11 @@ describe('pc.events', function () {
       var o = {}
       o = pc.extend(o, pc.events);
 
-      o.fire("test");
+      var fn = function () {
+        o.fire("test");
+      }
 
-      expect().nothing();
+      expect(fn).to.not.throw;
   })
 
   it("Unbind within a callback doesn't skip", function () {
@@ -224,7 +226,7 @@ describe('pc.events', function () {
     });
 
     o.on('test', function () {
-      expect().nothing();
+      expect(true).to.be.true; // just check we're being called
     });
 
     o.fire('test');
@@ -234,16 +236,18 @@ describe('pc.events', function () {
     var o = {};
     o = pc.extend(o, pc.events);
 
-    o.off('test');
+    var fn = function () {
+      o.off('test');
+    }
 
-    expect().nothing();
+    expect(fn).to.not.throw;
   });
 
   it("hasEvent() no handlers", function () {
     var o = {};
     o = pc.extend(o, pc.events);
 
-    expect(o.hasEvent('event_name')).toBe(false);
+    expect(o.hasEvent('event_name')).to.equal(false);
   });
 
   it("hasEvent() with handlers", function () {
@@ -252,7 +256,7 @@ describe('pc.events', function () {
 
     o.on('event_name', function () {});
 
-    expect(o.hasEvent('event_name')).toBe(true);
+    expect(o.hasEvent('event_name')).to.equal(true);
   });
 
   it("hasEvent() with different handler", function () {
@@ -261,7 +265,7 @@ describe('pc.events', function () {
 
     o.on('other_event', function () {});
 
-    expect(o.hasEvent('event_name')).toBe(false);
+    expect(o.hasEvent('event_name')).to.equal(false);
   });
 
   it("hasEvent() handler removed", function () {
@@ -269,7 +273,7 @@ describe('pc.events', function () {
     o = pc.extend(o, pc.events);
     o.on('event_name', function () {});
     o.off('event_name');
-    expect(o.hasEvent('event_name')).toBe(false);
+    expect(o.hasEvent('event_name')).to.equal(false);
   });
 
   it("Fire 1 argument", function () {
@@ -279,7 +283,7 @@ describe('pc.events', function () {
       pc.events.attach(o);
 
       o.on("test", function (a) {
-          expect(a).toBe(value);
+          expect(a).to.equal(value);
       });
 
       o.fire("test", value);
@@ -293,8 +297,8 @@ describe('pc.events', function () {
       pc.events.attach(o);
 
       o.on("test", function (a, b) {
-          expect(a).toBe(value);
-          expect(b).toBe(value2);
+          expect(a).to.equal(value);
+          expect(b).to.equal(value2);
       });
 
       o.fire("test", value, value2);

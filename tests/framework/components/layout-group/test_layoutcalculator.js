@@ -1,9 +1,17 @@
-QUnit.module("pc.LayoutCalculator", {
-    setup: function () {
-        this.app = new pc.Application(document.createElement("canvas"));
-        this.calculator = new pc.LayoutCalculator();
+describe("pc.LayoutCalculator", function () {
+    var app;
+    var calculator;
+    var options;
+    var mixedWidthElements;
+    var mixedHeightElements;
+    var mixedWidthElementsWithLayoutChildComponents;
+    var mixedHeightElementsWithLayoutChildComponents;
 
-        this.options = {
+    beforeEach(function () {
+        app = new pc.Application(document.createElement("canvas"));
+        calculator = new pc.LayoutCalculator();
+
+        options = {
             orientation: pc.ORIENTATION_HORIZONTAL,
             reverseX: false,
             reverseY: false,
@@ -16,7 +24,7 @@ QUnit.module("pc.LayoutCalculator", {
             containerSize: new pc.Vec2(500, 400),
         };
 
-        this.mixedWidthElements = this.buildElements([
+        mixedWidthElements = buildElements([
             {
                 width: 100,
                 height: 100,
@@ -44,7 +52,7 @@ QUnit.module("pc.LayoutCalculator", {
             },
         ]);
 
-        this.mixedHeightElements = this.buildElements([
+        mixedHeightElements = buildElements([
             {
                 width: 100,
                 height: 100,
@@ -72,7 +80,7 @@ QUnit.module("pc.LayoutCalculator", {
             },
         ]);
 
-        this.mixedWidthElementsWithLayoutChildComponents = this.buildElements([
+        mixedWidthElementsWithLayoutChildComponents = buildElements([
             {
                 width: 100,
                 height: 100,
@@ -125,7 +133,7 @@ QUnit.module("pc.LayoutCalculator", {
             },
         ]);
 
-        this.mixedHeightElementsWithLayoutChildComponents = this.buildElements([
+        mixedHeightElementsWithLayoutChildComponents = buildElements([
             {
                 width: 100,
                 height: 100,
@@ -177,46 +185,50 @@ QUnit.module("pc.LayoutCalculator", {
                 },
             },
         ]);
-    },
+    });
 
-    buildElements: function(elementSpecs) {
+    afterEach(function () {
+        app.destroy();
+    });
+
+    var buildElements = function(elementSpecs) {
         return elementSpecs.map(function(properties) {
-            return this.buildElement(properties);
+            return buildElement(properties);
         }.bind(this));
-    },
+    };
 
-    buildElement: function(properties) {
-        var entity = new pc.Entity("myEntity", this.app);
-        var element = this.app.systems.element.addComponent(entity, { type: pc.ELEMENTTYPE_GROUP });
+    var buildElement = function(properties) {
+        var entity = new pc.Entity("myEntity", app);
+        var element = app.systems.element.addComponent(entity, { type: pc.ELEMENTTYPE_GROUP });
 
         if (properties['layoutchild']) {
             var layoutChildProperties = properties['layoutchild'];
-            var layoutChildComponent = this.app.systems.layoutchild.addComponent(entity);
+            var layoutChildComponent = app.systems.layoutchild.addComponent(entity);
             delete properties['layoutchild'];
-            this.applyProperties(layoutChildComponent, layoutChildProperties);
+            applyProperties(layoutChildComponent, layoutChildProperties);
         }
 
-        this.applyProperties(element, properties);
+        applyProperties(element, properties);
 
-        this.app.root.addChild(entity);
+        app.root.addChild(entity);
 
         return element;
-    },
+    };
 
-    applyProperties: function(object, properties) {
+    var applyProperties = function(object, properties) {
         Object.keys(properties).forEach(function(propertyName) {
             object[propertyName] = properties[propertyName];
         });
-    },
+    };
 
-    calculate: function() {
-        return this.calculator.calculateLayout(this.elements, this.options);
-    },
+    var calculate = function() {
+        return calculator.calculateLayout(elements, options);
+    };
 
-    assertValues: function(property, values, options) {
+    var assertValues = function(property, values, options) {
         options = options || {};
 
-        this.elements.forEach(function(element, i) {
+        elements.forEach(function(element, i) {
             var propertyValue;
             if (property === 'x' || property === 'y') {
                 propertyValue = element.entity.localPosition[property];
@@ -225,607 +237,605 @@ QUnit.module("pc.LayoutCalculator", {
             }
 
             if (options.approx) {
-                QUnit.close(propertyValue, values[i], 0.001);
+                expect(propertyValue).to.be.closeTo(values[i], 0.001);
             } else {
-                strictEqual(propertyValue, values[i]);
+                expect(propertyValue).to.equal(values[i]);
             }
         });
-    },
+    };
 
-    teardown: function () {
-        this.app.destroy();
-    }
+    it("throws an error if provided with an unrecognized orientation", function () {
+        expect(function() {
+            elements = mixedWidthElements;
+            options.orientation = 42;
+            calculate();
+        }.bind(this)).to.throw('Unrecognized orientation value: 42');
+    });
+
+    it("lays children out horizontally when orientation is pc.ORIENTATION_HORIZONTAL", function () {
+        elements = mixedWidthElements;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+
+        calculate();
+
+        assertValues('x', [0, 100, 150, 250, 270]);
+        assertValues('y', [0,   0,   0,   0,   0]);
+    });
+
+    it("lays children out vertically when orientation is pc.ORIENTATION_VERTICAL", function () {
+        elements = mixedHeightElements;
+        options.orientation = pc.ORIENTATION_VERTICAL;
+
+        calculate();
+
+        assertValues('x', [0,   0,   0,   0,   0]);
+        assertValues('y', [0, 100, 150, 250, 270]);
+    });
+
+    it("takes into account each element's pivot when calculating horizontal positions", function () {
+        elements = mixedWidthElements;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+
+        elements[0].pivot = new pc.Vec2(0.5, 0.1);
+        elements[1].pivot = new pc.Vec2(0.2, 0.1);
+
+        calculate();
+
+        assertValues('x', [50, 110, 150, 250, 270], { approx: true });
+        assertValues('y', [10,  10,   0,   0,   0], { approx: true });
+    });
+
+    it("takes into account each element's pivot when calculating vertical positions", function () {
+        elements = mixedHeightElements;
+        options.orientation = pc.ORIENTATION_VERTICAL;
+
+        elements[0].pivot = new pc.Vec2(0.1, 0.5);
+        elements[1].pivot = new pc.Vec2(0.1, 0.2);
+
+        calculate();
+
+        assertValues('x', [10,  10,   0,   0,   0], { approx: true });
+        assertValues('y', [50, 110, 150, 250, 270], { approx: true });
+    });
+
+    it("returns a layoutInfo object containing the layout bounds", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.wrap = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+
+        var layoutInfo;
+
+        options.alignment.x = 0;
+        options.alignment.y = 0;
+        layoutInfo = calculate();
+        expect(layoutInfo.bounds.data).to.deep.equal(new Float32Array([0, 0, 300, 100]));
+
+        options.alignment.x = 1;
+        options.alignment.y = 0.5;
+        layoutInfo = calculate();
+        expect(layoutInfo.bounds.data).to.deep.equal(new Float32Array([200, 150, 300, 100]));
+
+        options.alignment.x = 0.5;
+        options.alignment.y = 1;
+        layoutInfo = calculate();
+        expect(layoutInfo.bounds.data).to.deep.equal(new Float32Array([100, 300, 300, 100]));
+
+        options.widthFitting = pc.FITTING_STRETCH;
+        layoutInfo = calculate();
+        expect(layoutInfo.bounds.data).to.deep.equal(new Float32Array([0, 300, 500, 100]));
+    });
+
+    it("{ wrap: false } pc.FITTING_NONE does not adjust the size or position of elements to match the container size", function () {
+        elements = mixedWidthElements;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+
+        calculate();
+
+        assertValues('x', [0, 100, 150, 250, 270]);
+        assertValues('y', [0,   0,   0,   0,   0]);
+
+        assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+    });
+
+    it("{ wrap: false } pc.FITTING_STRETCH uses natural widths when total is larger than container size", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_STRETCH;
+        options.containerSize.x = 250;
+
+        calculate();
+
+        assertValues('x', [0, 100, 150, 250, 270]);
+        assertValues('y', [0,   0,   0,   0,   0]);
+
+        assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+    });
+
+    it("{ wrap: false } pc.FITTING_STRETCH stretches elements proportionally when natural widths are less than container size", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_STRETCH;
+        options.containerSize.x = 400;
+
+        calculate();
+
+        assertValues('x', [0, 120, 210, 320, 350]);
+        assertValues('y', [0,   0,   0,   0,   0]);
+
+        assertValues('calculatedWidth',  [120,  90, 110,  30,  50], { approx: true });
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+    });
+
+    it("{ wrap: false } pc.FITTING_STRETCH does not make any elements wider than their maxWidth when increasing widths", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_STRETCH;
+        options.containerSize.x = 1000;
+
+        calculate();
+
+        assertValues('x', [0, 200, 300, 500, 540]);
+        assertValues('y', [0,   0,   0,   0,   0]);
+
+        assertValues('calculatedWidth',  [200, 100, 200,  40,  60], { approx: true });
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+    });
+
+    it("{ wrap: false } pc.FITTING_STRETCH distributes additional space among remaining elements when one element's maxWidth is very small", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_STRETCH;
+        options.containerSize.x = 1000;
+
+        elements[0].entity.layoutchild.maxWidth = 300;
+        elements[1].entity.layoutchild.maxWidth = 300;
+        elements[2].entity.layoutchild.minWidth = 0;
+        elements[2].entity.layoutchild.maxWidth = 1;
+        elements[3].entity.layoutchild.maxWidth = 300;
+        elements[4].entity.layoutchild.maxWidth = 300;
+
+        calculate();
+
+        assertValues('x', [0, 277.556, 577.556, 578.556, 722.370], { approx: true });
+        assertValues('y', [0,       0,       0,       0,       0]);
+
+        assertValues('calculatedWidth',  [277.555, 300,   1, 143.815, 277.630], { approx: true });
+        assertValues('calculatedHeight', [    100, 100, 100,     100,     100]);
+    });
+
+    it("{ wrap: false } pc.FITTING_STRETCH includes spacing and padding in calculations", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_STRETCH;
+        options.containerSize.x = 600;
+        options.padding.data[0] = 20;
+        options.padding.data[2] = 40;
+        options.spacing.x = 10;
+
+        calculate();
+
+        assertValues('x', [20, 196.667, 306.667, 450, 500], { approx: true });
+        assertValues('y', [ 0,       0,       0,   0,   0]);
+
+        assertValues('calculatedWidth',  [166.667, 100, 133.333,  40,  60], { approx: true });
+        assertValues('calculatedHeight', [    100, 100,     100, 100, 100]);
+    });
+
+    it("{ wrap: false } pc.FITTING_SHRINK uses natural widths when total is less than container size", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_SHRINK;
+        options.containerSize.x = 500;
+
+        calculate();
+
+        assertValues('x', [0, 100, 150, 250, 270]);
+        assertValues('y', [0,   0,   0,   0,   0]);
+
+        assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+    });
+
+    it("{ wrap: false } pc.FITTING_SHRINK shrinks elements proportionally when natural widths are greater than than container size", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_SHRINK;
+        options.containerSize.x = 290;
+
+        calculate();
+
+        assertValues('x', [0, 98, 146.5, 244.25, 262]);
+        assertValues('y', [0,  0,     0,      0,   0]);
+
+        assertValues('calculatedWidth',  [ 98, 48.5, 97.75, 17.75,  28]);
+        assertValues('calculatedHeight', [100,  100,   100,   100, 100]);
+    });
+
+    it("{ wrap: false } pc.FITTING_SHRINK does not make any elements smaller than their minWidth when reducing widths", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_SHRINK;
+        options.containerSize.x = 100;
+
+        calculate();
+
+        assertValues('x', [0, 60, 85, 140, 150]);
+        assertValues('y', [0,  0,  0,   0,   0]);
+
+        assertValues('calculatedWidth',  [ 60,  25,  55,  10,  15]);
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+    });
+
+    it("{ wrap: false } pc.FITTING_SHRINK distributes additional size reduction among remaining elements when one element's minWidth is very large", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_SHRINK;
+        options.containerSize.x = 100;
+
+        elements[0].entity.layoutchild.minWidth = 1;
+        elements[1].entity.layoutchild.minWidth = 1;
+        elements[2].entity.layoutchild.minWidth = 60;
+        elements[3].entity.layoutchild.minWidth = 1;
+        elements[4].entity.layoutchild.minWidth = 1;
+
+        calculate();
+
+        assertValues('x', [0, 58.71, 77.742, 137.742, 138.742], { approx: true });
+        assertValues('y', [0,     0,      0,       0,       0]);
+
+        assertValues('calculatedWidth',  [58.71, 19.032,  60,   1,   1], { approx: true });
+        assertValues('calculatedHeight', [  100,    100, 100, 100, 100]);
+    });
+
+    it("{ wrap: false } pc.FITTING_SHRINK includes spacing and padding in calculations", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_SHRINK;
+        options.containerSize.x = 300;
+        options.padding.data[0] = 20;
+        options.padding.data[2] = 40;
+        options.spacing.x = 10;
+
+        calculate();
+
+        assertValues('x', [20, 110, 155, 242.5, 262.5]);
+        assertValues('y', [ 0,   0,   0,     0,     0]);
+
+        assertValues('calculatedWidth',  [ 80,  35, 77.5,  10,  15]);
+        assertValues('calculatedHeight', [100, 100,  100, 100, 100]);
+    });
+
+    it("{ wrap: false } pc.FITTING_BOTH stretches elements proportionally when natural widths are less than container size", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_BOTH;
+        options.containerSize.x = 400;
+
+        calculate();
+
+        assertValues('x', [0, 120, 210, 320, 350]);
+        assertValues('y', [0,   0,   0,   0,   0]);
+
+        assertValues('calculatedWidth',  [120,  90, 110,  30,  50], { approx: true });
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+    });
+
+    it("{ wrap: false } pc.FITTING_BOTH shrinks elements proportionally when natural widths are greater than than container size", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_BOTH;
+        options.containerSize.x = 290;
+
+        calculate();
+
+        assertValues('x', [0, 98, 146.5, 244.25, 262]);
+        assertValues('y', [0,  0,     0,      0,   0]);
+
+        assertValues('calculatedWidth',  [ 98, 48.5, 97.75, 17.75,  28]);
+        assertValues('calculatedHeight', [100,  100,   100,   100, 100]);
+    });
+
+    it("{ wrap: false } can reverse elements on the x axis", function () {
+        elements = mixedWidthElements;
+        options.reverseX = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.containerSize.x = 260;
+
+        calculate();
+
+        assertValues('x', [200, 150, 50, 30, 0]);
+        assertValues('y', [0,     0,  0,  0, 0]);
+    });
+
+    it("{ wrap: false } can reverse elements on the y axis", function () {
+        elements = mixedHeightElements;
+        options.reverseY = true;
+        options.orientation = pc.ORIENTATION_VERTICAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.containerSize.x = 260;
+
+        calculate();
+
+        assertValues('x', [0,     0,  0,  0, 0]);
+        assertValues('y', [200, 150, 50, 30, 0]);
+    });
+
+    it("{ wrap: false } can align to [1, 0.5]", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.containerSize.x = 260;
+
+        options.alignment.x = 1;
+        options.alignment.y = 0.5;
+
+        calculate();
+
+        assertValues('x', [-40,  60, 110, 210, 230]);
+        assertValues('y', [150, 150, 150, 150, 150]);
+    });
+
+    it("{ wrap: false } can align to [0.5, 1]", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.containerSize.x = 260;
+
+        options.alignment.x = 0.5;
+        options.alignment.y = 1;
+
+        calculate();
+
+        assertValues('x', [-20,  80, 130, 230, 250]);
+        assertValues('y', [300, 300, 300, 300, 300]);
+    });
+
+    it("{ wrap: false } can exclude elements from the layout", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+
+        elements[1].entity.layoutchild.excludeFromLayout = true;
+
+        calculate();
+
+        assertValues('x', [0, 0, 100, 200, 220]);
+        assertValues('y', [0, 0,   0,   0,   0]);
+    });
+
+    it("{ wrap: true } pc.FITTING_NONE does not adjust the size or position of elements to match the container size", function () {
+        elements = mixedWidthElements;
+        options.wrap = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.containerSize.x = 260;
+
+        calculate();
+
+        assertValues('x', [0, 100, 150,   0,  20]);
+        assertValues('y', [0,   0,   0, 100, 100]);
+
+        assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+    });
+
+    it("{ wrap: true } pc.FITTING_NONE calculates line positions based on the largest element on the line", function () {
+        elements = mixedWidthElements;
+        options.wrap = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.containerSize.x = 260;
+
+        elements[2].height = 200;
+
+        calculate();
+
+        assertValues('x', [0, 100, 150,   0,  20]);
+        assertValues('y', [0,   0,   0, 200, 200]);
+
+        assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+        assertValues('calculatedHeight', [100, 100, 200, 100, 100]);
+    });
+
+    it("{ wrap: true } pc.FITTING_NONE does not adjust the size or position of elements to match the container size", function () {
+        elements = mixedWidthElements;
+        options.wrap = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.containerSize.x = 260;
+
+        calculate();
+
+        assertValues('x', [0, 100, 150,   0,  20]);
+        assertValues('y', [0,   0,   0, 100, 100]);
+
+        assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+    });
+
+    it("{ wrap: true } pc.FITTING_NONE includes spacing and padding in calculations", function () {
+        elements = mixedWidthElements;
+        options.wrap = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.padding.data[0] = 20;
+        options.padding.data[2] = 40;
+        options.spacing.x = 10;
+        options.spacing.y = 15;
+        options.containerSize.x = 260;
+
+        calculate();
+
+        assertValues('x', [20, 130,  20, 130, 160]);
+        assertValues('y', [0,    0, 115, 115, 115]);
+
+        assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
+    });
+
+    it("{ wrap: true } pc.FITTING_NONE includes spacing when calculating line breaks", function () {
+        elements = mixedWidthElements;
+        elements[0].width = 100;
+        elements[1].width = 100;
+        elements[2].width = 100;
+        elements[3].width = 100;
+        elements[4].width = 100;
+
+        options.wrap = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.spacing.x = 20;
+        options.containerSize.x = 500;
+
+        calculate();
+
+        assertValues('x', [0, 120, 240, 360,   0]);
+        assertValues('y', [0,    0,  0,   0, 100]);
+    });
+
+    it("{ wrap: true } pc.FITTING_STRETCH stretches elements proportionally when natural widths are less than container size", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.wrap = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_STRETCH;
+        options.containerSize.x = 265;
+
+        calculate();
+
+        assertValues('x', [0, 104.286, 162.857,   0,  40], { approx: true });
+        assertValues('y', [0,       0,       0, 100, 100]);
+
+        assertValues('calculatedWidth',  [104.286, 58.571, 102.143,  40,  60], { approx: true });
+        assertValues('calculatedHeight', [    100,    100,     100, 100, 100]);
+    });
+
+    it("{ wrap: true } pc.FITTING_SHRINK stretches elements proportionally when natural widths are less than container size", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.wrap = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_SHRINK;
+        options.containerSize.x = 265;
+
+        calculate();
+
+        assertValues('x', [0, 98.75, 147.917, 246.458,   0], { approx: true });
+        assertValues('y', [0,     0,       0,       0, 100]);
+
+        assertValues('calculatedWidth',  [98.75, 49.167, 98.542, 18.542,  30], { approx: true });
+        assertValues('calculatedHeight', [  100,    100,    100,    100, 100]);
+    });
+
+    it("{ wrap: true } pc.FITTING_BOTH stretches elements proportionally when natural widths are less than container size", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.wrap = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_BOTH;
+        options.containerSize.x = 265;
+
+        calculate();
+
+        assertValues('x', [0, 104.286, 162.857,   0,  40], { approx: true });
+        assertValues('y', [0,       0,       0, 100, 100]);
+
+        assertValues('calculatedWidth',  [104.286, 58.571, 102.143,  40,  60], { approx: true });
+        assertValues('calculatedHeight', [    100,    100,     100, 100, 100]);
+    });
+
+    it("{ wrap: true } can reverse elements on the x axis", function () {
+        elements = mixedWidthElements;
+        options.wrap = true;
+        options.reverseX = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.containerSize.x = 260;
+
+        calculate();
+
+        assertValues('x', [150, 100,  0,  30,   0]);
+        assertValues('y', [  0,   0,  0, 100, 100]);
+    });
+
+    it("{ wrap: true } can reverse elements on the y axis", function () {
+        elements = mixedWidthElements;
+        options.wrap = true;
+        options.reverseY = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.containerSize.x = 260;
+
+        calculate();
+
+        assertValues('x', [  0, 100, 150, 0, 20]);
+        assertValues('y', [100, 100, 100, 0, 0]);
+    });
+
+    it("{ wrap: true } can reverse elements both axes", function () {
+        elements = mixedWidthElements;
+        options.wrap = true;
+        options.reverseX = true;
+        options.reverseY = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.containerSize.x = 260;
+
+        calculate();
+
+        assertValues('x', [150, 100,   0, 30, 0]);
+        assertValues('y', [100, 100, 100,  0, 0]);
+    });
+
+    it("{ wrap: true } can align to [1, 0.5]", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.wrap = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.containerSize.x = 260;
+        options.containerSize.y = 400;
+
+        options.alignment.x = 1;
+        options.alignment.y = 0.5;
+
+        calculate();
+
+        assertValues('x', [ 10, 110, 160, 210, 230]);
+        assertValues('y', [100, 100, 100, 200, 200]);
+    });
+
+    it("{ wrap: true } can align to [0.5, 1]", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.wrap = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.containerSize.x = 260;
+        options.containerSize.y = 400;
+
+        options.alignment.x = 0.5;
+        options.alignment.y = 1;
+
+        calculate();
+
+        assertValues('x', [  5, 105, 155, 105, 125]);
+        assertValues('y', [200, 200, 200, 300, 300]);
+    });
+
+    it("{ wrap: false } can exclude elements from the layout", function () {
+        elements = mixedWidthElementsWithLayoutChildComponents;
+        options.wrap = true;
+        options.orientation = pc.ORIENTATION_HORIZONTAL;
+        options.widthFitting = pc.FITTING_NONE;
+        options.containerSize.x = 260;
+
+        elements[1].entity.layoutchild.excludeFromLayout = true;
+
+        calculate();
+
+        assertValues('x', [0, 0, 100, 200, 220]);
+        assertValues('y', [0, 0,   0,   0,   0]);
+    });
+
 });
 
-test("throws an error if provided with an unrecognized orientation", function () {
-    throws(function() {
-        this.elements = this.mixedWidthElements;
-        this.options.orientation = 42;
-        this.calculate();
-    }.bind(this), 'Unrecognized orientation value: 42');
-});
-
-test("lays children out horizontally when orientation is pc.ORIENTATION_HORIZONTAL", function () {
-    this.elements = this.mixedWidthElements;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 100, 150, 250, 270]);
-    this.assertValues('y', [0,   0,   0,   0,   0]);
-});
-
-test("lays children out vertically when orientation is pc.ORIENTATION_VERTICAL", function () {
-    this.elements = this.mixedHeightElements;
-    this.options.orientation = pc.ORIENTATION_VERTICAL;
-
-    this.calculate();
-
-    this.assertValues('x', [0,   0,   0,   0,   0]);
-    this.assertValues('y', [0, 100, 150, 250, 270]);
-});
-
-test("takes into account each element's pivot when calculating horizontal positions", function () {
-    this.elements = this.mixedWidthElements;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-
-    this.elements[0].pivot = new pc.Vec2(0.5, 0.1);
-    this.elements[1].pivot = new pc.Vec2(0.2, 0.1);
-
-    this.calculate();
-
-    this.assertValues('x', [50, 110, 150, 250, 270], { approx: true });
-    this.assertValues('y', [10,  10,   0,   0,   0], { approx: true });
-});
-
-test("takes into account each element's pivot when calculating vertical positions", function () {
-    this.elements = this.mixedHeightElements;
-    this.options.orientation = pc.ORIENTATION_VERTICAL;
-
-    this.elements[0].pivot = new pc.Vec2(0.1, 0.5);
-    this.elements[1].pivot = new pc.Vec2(0.1, 0.2);
-
-    this.calculate();
-
-    this.assertValues('x', [10,  10,   0,   0,   0], { approx: true });
-    this.assertValues('y', [50, 110, 150, 250, 270], { approx: true });
-});
-
-test("returns a layoutInfo object containing the layout bounds", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.wrap = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-
-    var layoutInfo;
-
-    this.options.alignment.x = 0;
-    this.options.alignment.y = 0;
-    layoutInfo = this.calculate();
-    deepEqual(layoutInfo.bounds.data, new Float32Array([0, 0, 300, 100]));
-
-    this.options.alignment.x = 1;
-    this.options.alignment.y = 0.5;
-    layoutInfo = this.calculate();
-    deepEqual(layoutInfo.bounds.data, new Float32Array([200, 150, 300, 100]));
-
-    this.options.alignment.x = 0.5;
-    this.options.alignment.y = 1;
-    layoutInfo = this.calculate();
-    deepEqual(layoutInfo.bounds.data, new Float32Array([100, 300, 300, 100]));
-
-    this.options.widthFitting = pc.FITTING_STRETCH;
-    layoutInfo = this.calculate();
-    deepEqual(layoutInfo.bounds.data, new Float32Array([0, 300, 500, 100]));
-});
-
-test("{ wrap: false } pc.FITTING_NONE does not adjust the size or position of elements to match the container size", function () {
-    this.elements = this.mixedWidthElements;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 100, 150, 250, 270]);
-    this.assertValues('y', [0,   0,   0,   0,   0]);
-
-    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
-    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
-});
-
-test("{ wrap: false } pc.FITTING_STRETCH uses natural widths when total is larger than container size", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_STRETCH;
-    this.options.containerSize.x = 250;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 100, 150, 250, 270]);
-    this.assertValues('y', [0,   0,   0,   0,   0]);
-
-    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
-    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
-});
-
-test("{ wrap: false } pc.FITTING_STRETCH stretches elements proportionally when natural widths are less than container size", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_STRETCH;
-    this.options.containerSize.x = 400;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 120, 210, 320, 350]);
-    this.assertValues('y', [0,   0,   0,   0,   0]);
-
-    this.assertValues('calculatedWidth',  [120,  90, 110,  30,  50], { approx: true });
-    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
-});
-
-test("{ wrap: false } pc.FITTING_STRETCH does not make any elements wider than their maxWidth when increasing widths", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_STRETCH;
-    this.options.containerSize.x = 1000;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 200, 300, 500, 540]);
-    this.assertValues('y', [0,   0,   0,   0,   0]);
-
-    this.assertValues('calculatedWidth',  [200, 100, 200,  40,  60], { approx: true });
-    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
-});
-
-test("{ wrap: false } pc.FITTING_STRETCH distributes additional space among remaining elements when one element's maxWidth is very small", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_STRETCH;
-    this.options.containerSize.x = 1000;
-
-    this.elements[0].entity.layoutchild.maxWidth = 300;
-    this.elements[1].entity.layoutchild.maxWidth = 300;
-    this.elements[2].entity.layoutchild.minWidth = 0;
-    this.elements[2].entity.layoutchild.maxWidth = 1;
-    this.elements[3].entity.layoutchild.maxWidth = 300;
-    this.elements[4].entity.layoutchild.maxWidth = 300;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 277.556, 577.556, 578.556, 722.370], { approx: true });
-    this.assertValues('y', [0,       0,       0,       0,       0]);
-
-    this.assertValues('calculatedWidth',  [277.555, 300,   1, 143.815, 277.630], { approx: true });
-    this.assertValues('calculatedHeight', [    100, 100, 100,     100,     100]);
-});
-
-test("{ wrap: false } pc.FITTING_STRETCH includes spacing and padding in calculations", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_STRETCH;
-    this.options.containerSize.x = 600;
-    this.options.padding.data[0] = 20;
-    this.options.padding.data[2] = 40;
-    this.options.spacing.x = 10;
-
-    this.calculate();
-
-    this.assertValues('x', [20, 196.667, 306.667, 450, 500], { approx: true });
-    this.assertValues('y', [ 0,       0,       0,   0,   0]);
-
-    this.assertValues('calculatedWidth',  [166.667, 100, 133.333,  40,  60], { approx: true });
-    this.assertValues('calculatedHeight', [    100, 100,     100, 100, 100]);
-});
-
-test("{ wrap: false } pc.FITTING_SHRINK uses natural widths when total is less than container size", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_SHRINK;
-    this.options.containerSize.x = 500;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 100, 150, 250, 270]);
-    this.assertValues('y', [0,   0,   0,   0,   0]);
-
-    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
-    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
-});
-
-test("{ wrap: false } pc.FITTING_SHRINK shrinks elements proportionally when natural widths are greater than than container size", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_SHRINK;
-    this.options.containerSize.x = 290;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 98, 146.5, 244.25, 262]);
-    this.assertValues('y', [0,  0,     0,      0,   0]);
-
-    this.assertValues('calculatedWidth',  [ 98, 48.5, 97.75, 17.75,  28]);
-    this.assertValues('calculatedHeight', [100,  100,   100,   100, 100]);
-});
-
-test("{ wrap: false } pc.FITTING_SHRINK does not make any elements smaller than their minWidth when reducing widths", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_SHRINK;
-    this.options.containerSize.x = 100;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 60, 85, 140, 150]);
-    this.assertValues('y', [0,  0,  0,   0,   0]);
-
-    this.assertValues('calculatedWidth',  [ 60,  25,  55,  10,  15]);
-    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
-});
-
-test("{ wrap: false } pc.FITTING_SHRINK distributes additional size reduction among remaining elements when one element's minWidth is very large", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_SHRINK;
-    this.options.containerSize.x = 100;
-
-    this.elements[0].entity.layoutchild.minWidth = 1;
-    this.elements[1].entity.layoutchild.minWidth = 1;
-    this.elements[2].entity.layoutchild.minWidth = 60;
-    this.elements[3].entity.layoutchild.minWidth = 1;
-    this.elements[4].entity.layoutchild.minWidth = 1;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 58.71, 77.742, 137.742, 138.742], { approx: true });
-    this.assertValues('y', [0,     0,      0,       0,       0]);
-
-    this.assertValues('calculatedWidth',  [58.71, 19.032,  60,   1,   1], { approx: true });
-    this.assertValues('calculatedHeight', [  100,    100, 100, 100, 100]);
-});
-
-test("{ wrap: false } pc.FITTING_SHRINK includes spacing and padding in calculations", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_SHRINK;
-    this.options.containerSize.x = 300;
-    this.options.padding.data[0] = 20;
-    this.options.padding.data[2] = 40;
-    this.options.spacing.x = 10;
-
-    this.calculate();
-
-    this.assertValues('x', [20, 110, 155, 242.5, 262.5]);
-    this.assertValues('y', [ 0,   0,   0,     0,     0]);
-
-    this.assertValues('calculatedWidth',  [ 80,  35, 77.5,  10,  15]);
-    this.assertValues('calculatedHeight', [100, 100,  100, 100, 100]);
-});
-
-test("{ wrap: false } pc.FITTING_BOTH stretches elements proportionally when natural widths are less than container size", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_BOTH;
-    this.options.containerSize.x = 400;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 120, 210, 320, 350]);
-    this.assertValues('y', [0,   0,   0,   0,   0]);
-
-    this.assertValues('calculatedWidth',  [120,  90, 110,  30,  50], { approx: true });
-    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
-});
-
-test("{ wrap: false } pc.FITTING_BOTH shrinks elements proportionally when natural widths are greater than than container size", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_BOTH;
-    this.options.containerSize.x = 290;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 98, 146.5, 244.25, 262]);
-    this.assertValues('y', [0,  0,     0,      0,   0]);
-
-    this.assertValues('calculatedWidth',  [ 98, 48.5, 97.75, 17.75,  28]);
-    this.assertValues('calculatedHeight', [100,  100,   100,   100, 100]);
-});
-
-test("{ wrap: false } can reverse elements on the x axis", function () {
-    this.elements = this.mixedWidthElements;
-    this.options.reverseX = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.containerSize.x = 260;
-
-    this.calculate();
-
-    this.assertValues('x', [200, 150, 50, 30, 0]);
-    this.assertValues('y', [0,     0,  0,  0, 0]);
-});
-
-test("{ wrap: false } can reverse elements on the y axis", function () {
-    this.elements = this.mixedHeightElements;
-    this.options.reverseY = true;
-    this.options.orientation = pc.ORIENTATION_VERTICAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.containerSize.x = 260;
-
-    this.calculate();
-
-    this.assertValues('x', [0,     0,  0,  0, 0]);
-    this.assertValues('y', [200, 150, 50, 30, 0]);
-});
-
-test("{ wrap: false } can align to [1, 0.5]", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.containerSize.x = 260;
-
-    this.options.alignment.x = 1;
-    this.options.alignment.y = 0.5;
-
-    this.calculate();
-
-    this.assertValues('x', [-40,  60, 110, 210, 230]);
-    this.assertValues('y', [150, 150, 150, 150, 150]);
-});
-
-test("{ wrap: false } can align to [0.5, 1]", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.containerSize.x = 260;
-
-    this.options.alignment.x = 0.5;
-    this.options.alignment.y = 1;
-
-    this.calculate();
-
-    this.assertValues('x', [-20,  80, 130, 230, 250]);
-    this.assertValues('y', [300, 300, 300, 300, 300]);
-});
-
-test("{ wrap: false } can exclude elements from the layout", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-
-    this.elements[1].entity.layoutchild.excludeFromLayout = true;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 0, 100, 200, 220]);
-    this.assertValues('y', [0, 0,   0,   0,   0]);
-});
-
-test("{ wrap: true } pc.FITTING_NONE does not adjust the size or position of elements to match the container size", function () {
-    this.elements = this.mixedWidthElements;
-    this.options.wrap = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.containerSize.x = 260;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 100, 150,   0,  20]);
-    this.assertValues('y', [0,   0,   0, 100, 100]);
-
-    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
-    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
-});
-
-test("{ wrap: true } pc.FITTING_NONE calculates line positions based on the largest element on the line", function () {
-    this.elements = this.mixedWidthElements;
-    this.options.wrap = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.containerSize.x = 260;
-
-    this.elements[2].height = 200;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 100, 150,   0,  20]);
-    this.assertValues('y', [0,   0,   0, 200, 200]);
-
-    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
-    this.assertValues('calculatedHeight', [100, 100, 200, 100, 100]);
-});
-
-test("{ wrap: true } pc.FITTING_NONE does not adjust the size or position of elements to match the container size", function () {
-    this.elements = this.mixedWidthElements;
-    this.options.wrap = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.containerSize.x = 260;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 100, 150,   0,  20]);
-    this.assertValues('y', [0,   0,   0, 100, 100]);
-
-    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
-    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
-});
-
-test("{ wrap: true } pc.FITTING_NONE includes spacing and padding in calculations", function () {
-    this.elements = this.mixedWidthElements;
-    this.options.wrap = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.padding.data[0] = 20;
-    this.options.padding.data[2] = 40;
-    this.options.spacing.x = 10;
-    this.options.spacing.y = 15;
-    this.options.containerSize.x = 260;
-
-    this.calculate();
-
-    this.assertValues('x', [20, 130,  20, 130, 160]);
-    this.assertValues('y', [0,    0, 115, 115, 115]);
-
-    this.assertValues('calculatedWidth',  [100,  50, 100,  20,  30]);
-    this.assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
-});
-
-test("{ wrap: true } pc.FITTING_NONE includes spacing when calculating line breaks", function () {
-    this.elements = this.mixedWidthElements;
-    this.elements[0].width = 100;
-    this.elements[1].width = 100;
-    this.elements[2].width = 100;
-    this.elements[3].width = 100;
-    this.elements[4].width = 100;
-
-    this.options.wrap = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.spacing.x = 20;
-    this.options.containerSize.x = 500;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 120, 240, 360,   0]);
-    this.assertValues('y', [0,    0,  0,   0, 100]);
-});
-
-test("{ wrap: true } pc.FITTING_STRETCH stretches elements proportionally when natural widths are less than container size", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.wrap = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_STRETCH;
-    this.options.containerSize.x = 265;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 104.286, 162.857,   0,  40], { approx: true });
-    this.assertValues('y', [0,       0,       0, 100, 100]);
-
-    this.assertValues('calculatedWidth',  [104.286, 58.571, 102.143,  40,  60], { approx: true });
-    this.assertValues('calculatedHeight', [    100,    100,     100, 100, 100]);
-});
-
-test("{ wrap: true } pc.FITTING_SHRINK stretches elements proportionally when natural widths are less than container size", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.wrap = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_SHRINK;
-    this.options.containerSize.x = 265;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 98.75, 147.917, 246.458,   0], { approx: true });
-    this.assertValues('y', [0,     0,       0,       0, 100]);
-
-    this.assertValues('calculatedWidth',  [98.75, 49.167, 98.542, 18.542,  30], { approx: true });
-    this.assertValues('calculatedHeight', [  100,    100,    100,    100, 100]);
-});
-
-test("{ wrap: true } pc.FITTING_BOTH stretches elements proportionally when natural widths are less than container size", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.wrap = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_BOTH;
-    this.options.containerSize.x = 265;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 104.286, 162.857,   0,  40], { approx: true });
-    this.assertValues('y', [0,       0,       0, 100, 100]);
-
-    this.assertValues('calculatedWidth',  [104.286, 58.571, 102.143,  40,  60], { approx: true });
-    this.assertValues('calculatedHeight', [    100,    100,     100, 100, 100]);
-});
-
-test("{ wrap: true } can reverse elements on the x axis", function () {
-    this.elements = this.mixedWidthElements;
-    this.options.wrap = true;
-    this.options.reverseX = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.containerSize.x = 260;
-
-    this.calculate();
-
-    this.assertValues('x', [150, 100,  0,  30,   0]);
-    this.assertValues('y', [  0,   0,  0, 100, 100]);
-});
-
-test("{ wrap: true } can reverse elements on the y axis", function () {
-    this.elements = this.mixedWidthElements;
-    this.options.wrap = true;
-    this.options.reverseY = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.containerSize.x = 260;
-
-    this.calculate();
-
-    this.assertValues('x', [  0, 100, 150, 0, 20]);
-    this.assertValues('y', [100, 100, 100, 0, 0]);
-});
-
-test("{ wrap: true } can reverse elements both axes", function () {
-    this.elements = this.mixedWidthElements;
-    this.options.wrap = true;
-    this.options.reverseX = true;
-    this.options.reverseY = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.containerSize.x = 260;
-
-    this.calculate();
-
-    this.assertValues('x', [150, 100,   0, 30, 0]);
-    this.assertValues('y', [100, 100, 100,  0, 0]);
-});
-
-test("{ wrap: true } can align to [1, 0.5]", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.wrap = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.containerSize.x = 260;
-    this.options.containerSize.y = 400;
-
-    this.options.alignment.x = 1;
-    this.options.alignment.y = 0.5;
-
-    this.calculate();
-
-    this.assertValues('x', [ 10, 110, 160, 210, 230]);
-    this.assertValues('y', [100, 100, 100, 200, 200]);
-});
-
-test("{ wrap: true } can align to [0.5, 1]", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.wrap = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.containerSize.x = 260;
-    this.options.containerSize.y = 400;
-
-    this.options.alignment.x = 0.5;
-    this.options.alignment.y = 1;
-
-    this.calculate();
-
-    this.assertValues('x', [  5, 105, 155, 105, 125]);
-    this.assertValues('y', [200, 200, 200, 300, 300]);
-});
-
-test("{ wrap: false } can exclude elements from the layout", function () {
-    this.elements = this.mixedWidthElementsWithLayoutChildComponents;
-    this.options.wrap = true;
-    this.options.orientation = pc.ORIENTATION_HORIZONTAL;
-    this.options.widthFitting = pc.FITTING_NONE;
-    this.options.containerSize.x = 260;
-
-    this.elements[1].entity.layoutchild.excludeFromLayout = true;
-
-    this.calculate();
-
-    this.assertValues('x', [0, 0, 100, 200, 220]);
-    this.assertValues('y', [0, 0,   0,   0,   0]);
-});
