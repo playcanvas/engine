@@ -1,202 +1,197 @@
-QUnit.module("pc.uri");
+describe('pc.URI', function () {
+    it("Parsed, all sections", function () {
+        var s = "http://a/b/c/d;p?q=r#l";
 
-describe('pc.uri', function () {
-  it("Parsed, all sections", function () {
-      var s = "http://a/b/c/d;p?q=r#l";
+        var uri = new pc.URI(s);
 
-      var uri = new pc.URI(s);
+        expect(uri.scheme).toBe("http");
+        expect(uri.authority).toBe("a");
+        expect(uri.path).toBe("/b/c/d;p");
+        expect(uri.query).toBe("q=r");
+        expect(uri.fragment).toBe("l");
 
-      expect(uri.scheme).toBe("http");
-      expect(uri.authority).toBe("a");
-      expect(uri.path).toBe("/b/c/d;p");
-      expect(uri.query).toBe("q=r");
-      expect(uri.fragment).toBe("l");
+    });
 
-  });
+    it("Parse, no scheme", function () {
+        var s = "//a/b/c/d;p?q=r#l";
+        var uri = new pc.URI(s);
+        var undef;
 
-  it("Parse, no scheme", function () {
-      var s = "//a/b/c/d;p?q=r#l";
-      var uri = new pc.URI(s);
-      var undef;
+        expect(uri.scheme).toBe(undef);
+        expect(uri.authority).toBe("a");
+        expect(uri.path).toBe("/b/c/d;p");
+        expect(uri.query).toBe("q=r");
+        expect(uri.fragment).toBe("l");
 
-      expect(uri.scheme).toBe(undef);
-      expect(uri.authority).toBe("a");
-      expect(uri.path).toBe("/b/c/d;p");
-      expect(uri.query).toBe("q=r");
-      expect(uri.fragment).toBe("l");
+    });
 
-  });
+    it("Parse, no authority", function () {
+        var s = "/b/c/d;p?q=r#l";
+        var uri = new pc.URI(s);
+        var undef;
 
-  it("Parse, no authority", function () {
-      var s = "/b/c/d;p?q=r#l";
-      var uri = new pc.URI(s);
-      var undef;
+        expect(uri.scheme).toBe(undef);
+        expect(uri.authority).toBe(undef);
+        expect(uri.path).toBe("/b/c/d;p");
+        expect(uri.query).toBe("q=r");
+        expect(uri.fragment).toBe("l");
+    });
 
-      expect(uri.scheme).toBe(undef);
-      expect(uri.authority).toBe(undef);
-      expect(uri.path).toBe("/b/c/d;p");
-      expect(uri.query).toBe("q=r");
-      expect(uri.fragment).toBe("l");
+    it("Parse, no query", function () {
+        var s = "http://a/b/c/d;p#l";
+        var uri = new pc.URI(s);
+        var undef;
 
-  });
+        expect(uri.scheme).toBe("http");
+        expect(uri.authority).toBe("a");
+        expect(uri.path).toBe("/b/c/d;p");
+        expect(uri.query).toBe(undef);
+        expect(uri.fragment).toBe("l");
+    });
 
-  it("Parse, no query", function () {
-      var s = "http://a/b/c/d;p#l";
-      var uri = new pc.URI(s);
-      var undef;
+    it("Parse, no fragment", function () {
+        var s = "http://a/b/c/d;p?q=r";
+        var uri = new pc.URI(s);
+        var undef;
 
-      expect(uri.scheme).toBe("http");
-      expect(uri.authority).toBe("a");
-      expect(uri.path).toBe("/b/c/d;p");
-      expect(uri.query).toBe(undef);
-      expect(uri.fragment).toBe("l");
+        expect(uri.scheme).toBe("http");
+        expect(uri.authority).toBe("a");
+        expect(uri.path).toBe("/b/c/d;p");
+        expect(uri.query).toBe("q=r");
+        expect(uri.fragment).toBe(undef);
+    });
 
-  });
+    it("toString", function () {
+        var s = "http://a/b/c/d;p?q=r#l";
+        var uri = new pc.URI(s);
+        var r = uri.toString();
 
-  it("Parse, no fragment", function () {
-      var s = "http://a/b/c/d;p?q=r";
-      var uri = new pc.URI(s);
-      var undef;
+        expect(s).toBe(r);
+    });
 
-      expect(uri.scheme).toBe("http");
-      expect(uri.authority).toBe("a");
-      expect(uri.path).toBe("/b/c/d;p");
-      expect(uri.query).toBe("q=r");
-      expect(uri.fragment).toBe(undef);
+    it("Edit query", function() {
+        var s = "http://example.com";
+        var uri = new pc.URI(s);
+        uri.query = "q=abc";
 
-  });
+        expect(uri.toString()).toBe("http://example.com?q=abc");
 
-  it("toString", function () {
-      var s = "http://a/b/c/d;p?q=r#l";
-      var uri = new pc.URI(s);
-      var r = uri.toString();
+        uri.query = "";
+        expect(uri.toString()).toBe(s);
 
-      expect(s).toBe(r);
-  });
+    });
 
-  it("Edit query", function() {
-      var s = "http://example.com";
-      var uri = new pc.URI(s);
-      uri.query = "q=abc";
+    it("getQuery", function () {
+        var s = "http://example.com/test?a=1&b=string&c=something%20spaced";
+        var uri = new pc.URI(s);
 
-      expect(uri.toString()).toBe("http://example.com?q=abc");
+        var q = uri.getQuery();
 
-      uri.query = "";
-      expect(uri.toString()).toBe(s);
+        expect(q.a).toBe("1");
+        expect(q.b).toBe("string");
+        expect(q.c).toBe("something spaced");
+    });
 
-  });
+    it("getQuery: emtpy", function () {
+        var s = "http://example.com/test";
+        var uri = new pc.URI(s);
 
-  it("getQuery", function () {
-      var s = "http://example.com/test?a=1&b=string&c=something%20spaced";
-      var uri = new pc.URI(s);
+        var q = uri.getQuery();
 
-      var q = uri.getQuery();
+        expect(Object.keys(q).length).toBe(0);
+    });
 
-      expect(q.a).toBe("1");
-      expect(q.b).toBe("string");
-      expect(q.c).toBe("something spaced");
-  });
-
-  it("getQuery: emtpy", function () {
-      var s = "http://example.com/test";
-      var uri = new pc.URI(s);
-
-      var q = uri.getQuery();
-
-      expect(Object.keys(q).length).toBe(0);
-  });
-
-  it("setQuery", function () {
-      var uri = new pc.URI("http://example.com/test");
-      var q = {
+    it("setQuery", function () {
+        var uri = new pc.URI("http://example.com/test");
+        var q = {
           key: "value",
           "with space": "\""
-      };
+        };
 
-      uri.setQuery(q);
-      expect("key=value&with%20space=%22").toBe(uri.query)
-  });
+        uri.setQuery(q);
+        expect("key=value&with%20space=%22").toBe(uri.query)
+    });
 
-  it("createURI", function () {
-     var uri;
+    it("createURI", function () {
+        var uri;
 
-     uri = pc.createURI({
-         scheme: "http",
-         authority: "example.com",
-         path: "/abc"
-     });
-     expect("http://example.com/abc").toBe(uri);
+        uri = pc.createURI({
+            scheme: "http",
+            authority: "example.com",
+            path: "/abc"
+        });
+        expect("http://example.com/abc").toBe(uri);
 
-     uri = pc.createURI({
-         host: "http://example.com",
-         path: "/abc"
-     });
-     expect("http://example.com/abc").toBe(uri);
+        uri = pc.createURI({
+            host: "http://example.com",
+            path: "/abc"
+        });
+        expect("http://example.com/abc").toBe(uri);
 
-     uri = pc.createURI({
-         hostpath: "http://example.com/abc",
-     });
-     expect("http://example.com/abc").toBe(uri);
+        uri = pc.createURI({
+            hostpath: "http://example.com/abc",
+        });
+        expect("http://example.com/abc").toBe(uri);
 
-     uri = pc.createURI({
-         hostpath: "http://example.com/abc",
-         query: "a=b&c=d"
-     });
-     expect("http://example.com/abc?a=b&c=d").toBe(uri);
+        uri = pc.createURI({
+            hostpath: "http://example.com/abc",
+            query: "a=b&c=d"
+        });
+        expect("http://example.com/abc?a=b&c=d").toBe(uri);
 
- });
+    });
 
-  it("createURI, exceptions", function () {
-     raises(function() {
-         pc.createURI({
-             scheme: "http",
-             host: "http://test.com"
-         });
-     });
+    it("createURI, exceptions", function () {
+        expect(function() {
+            pc.createURI({
+                scheme: "http",
+                host: "http://test.com"
+            });
+        }).toThrow();
 
-     raises(function() {
-         pc.createURI({
-             authority: "http",
-             host: "http://test.com"
-         });
-     });
+        expect(function() {
+            pc.createURI({
+                authority: "http",
+                host: "http://test.com"
+            });
+        }).toThrow();
 
-     raises(function() {
-         pc.createURI({
-             scheme: "http",
-             hostpath: "http://test.com"
-         });
-     });
+        expect(function() {
+            pc.createURI({
+                scheme: "http",
+                hostpath: "http://test.com"
+            });
+        }).toThrow();
 
-     raises(function() {
-         pc.createURI({
-             authority: "http",
-             hostpath: "http://test.com"
-         });
-     });
+        expect(function() {
+            pc.createURI({
+                authority: "http",
+                hostpath: "http://test.com"
+            });
+        }).toThrow();
 
-     raises(function() {
-         pc.createURI({
-             scheme: "http",
-             authority: "e.com",
-             host: "http://test.com"
-         });
-     });
+        expect(function() {
+            pc.createURI({
+                scheme: "http",
+                authority: "e.com",
+                host: "http://test.com"
+            });
+        }).toThrow();
 
-     raises(function() {
-         pc.createURI({
-             scheme: "abc",
-             authority: "http",
-             hostpath: "http://test.com"
-         });
-     });
+        expect(function() {
+            pc.createURI({
+                scheme: "abc",
+                authority: "http",
+                hostpath: "http://test.com"
+            });
+        }).toThrow();
 
-     raises(function() {
-         pc.createURI({
-             host: "http://test.com",
-             hostpath: "http://test.com"
-         });
-     });
- });
+        expect(function() {
+            pc.createURI({
+                host: "http://test.com",
+                hostpath: "http://test.com"
+            });
+        }).toThrow();
+    });
 });
 

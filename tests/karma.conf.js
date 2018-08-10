@@ -29,7 +29,9 @@ module.exports = function (config) {
 
             // test files - change this to a specific file in order to run a single suite
             // 'tests/**/test_*.js',
-            'tests/core/test_string.js',
+            'tests/assets/*.js',
+            'tests/batching/*.js',
+            'tests/core/*.js',
 
             // resources - list any files here that need to be loaded by tests (i.e. via XHR), or
             // need to be pre-loaded in order to provide helper functions etc.
