@@ -42,19 +42,16 @@ Object.assign(pc, function () {
         var h = options.height > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.height || DEFAULT_TEXTURE_SIZE);
 
         // Create a canvas to do the text rendering
-        this.canvas = document.createElement('canvas');
-        this.canvas.height = w;
-        this.canvas.width = h;
-        this.context = this.canvas.getContext('2d', {
-            alpha: true
-        });
+        var canvas = document.createElement('canvas');
+        canvas.height = w;
+        canvas.width = h;
 
         var texture = new pc.Texture(app.graphicsDevice, {
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             autoMipmap: true
         });
 
-        texture.setSource(this.canvas);
+        texture.setSource(canvas);
         texture.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
         texture.magFilter = pc.FILTER_LINEAR;
         texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
@@ -101,20 +98,16 @@ Object.assign(pc, function () {
      */
     CanvasFont.prototype.updateTextures = function (text) {
         var _chars = normalizeCharsSet(text);
-        var allContainedInCurrentSet = true;
+        var newCharsSet = [];
         for (var i = 0; i < _chars.length; i++) {
-            var code = pc.string.getCodePoint(_chars[i]);
+            var char = _chars[i];
+            var code = pc.string.getCodePoint(char);
             if (!this.data.chars[code]) {
-                allContainedInCurrentSet = false;
-                break;
+                newCharsSet.push(char);
             }
         }
-        if (!allContainedInCurrentSet) {
-            // We have to re-render all textures again because we don't know which ones will need to be updated
-            // and which ones won't, due to the fact that the newly-added chars can be in any order with
-            // respect to the existing chars.
-            // (The createTextures and _renderAtlas methods will attempt to reuse existing textures as much as possible)
-            this.createTextures(this.chars.join('') + _chars.join(''));
+        if (newCharsSet.length > 0) {
+            this._renderAtlas(this.chars.concat(newCharsSet));
         }
     };
 
@@ -130,10 +123,8 @@ Object.assign(pc, function () {
             this.textures[i].destroy();
         }
         // null instance variables to make it obvious this font is no longer valid
-        this.canvas = null;
         this.chars = null;
         this.color = null;
-        this.context = null;
         this.data = null;
         this.fontName = null;
         this.fontSize = null;
@@ -147,7 +138,11 @@ Object.assign(pc, function () {
     CanvasFont.prototype._renderAtlas = function (charsArray) {
         this.chars = charsArray;
 
-        var ctx = this.context;
+        var numTextures = 1;
+        var canvas = this.textures[numTextures - 1].getSource();
+        var ctx = canvas.getContext('2d', {
+            alpha: true
+        });
         var w = ctx.canvas.width;
         var h = ctx.canvas.height;
 
@@ -170,7 +165,6 @@ Object.assign(pc, function () {
 
         var symbols = pc.string.getSymbols(this.chars.join(''));
         var prevNumTextures = this.textures.length;
-        var numTextures = 1;
         for (i = 0; i < symbols.length; i++) {
             var ch = symbols[i];
             var code = pc.string.getCodePoint(symbols[i]);
@@ -195,13 +189,12 @@ Object.assign(pc, function () {
                     numTextures++;
                     _y = sy;
                     if (numTextures > prevNumTextures) {
-                        this.canvas = document.createElement('canvas');
-                        this.canvas.height = h;
-                        this.canvas.width = w;
-                        this.context = this.canvas.getContext('2d', {
+                        canvas = document.createElement('canvas');
+                        canvas.height = h;
+                        canvas.width = w;
+                        ctx = canvas.getContext('2d', {
                             alpha: true
                         });
-                        ctx = this.context;
                         // Write white text
                         ctx.fillStyle = this.color;
                         ctx.font = this.weight + ' ' + this.fontSize.toString() + 'px "' + this.fontName + '"';
@@ -212,12 +205,18 @@ Object.assign(pc, function () {
                             format: pc.PIXELFORMAT_R8_G8_B8_A8,
                             autoMipmap: true
                         });
-                        texture.setSource(this.canvas);
+                        texture.setSource(canvas);
                         texture.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
                         texture.magFilter = pc.FILTER_LINEAR;
                         texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                         texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
                         this.textures.push(texture);
+                    } else {
+                        canvas = this.textures[numTextures - 1].getSource();
+                        ctx = canvas.getContext('2d', {
+                            alpha: true
+                        });
+                        ctx.clearRect(0, 0, w, h);
                     }
                 }
             }
