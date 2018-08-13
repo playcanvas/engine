@@ -120,6 +120,7 @@ Object.assign(pc, function () {
             if (textLength === 0) {
                 textLength = 1;
                 text = " ";
+                symbols = [text];
             }
 
             var charactersPerTexture = {};
