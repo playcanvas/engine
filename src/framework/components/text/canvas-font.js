@@ -28,6 +28,8 @@ Object.assign(pc, function () {
     var CanvasFont = function (app, options) {
         this.type = "bitmap";
 
+        this.app = app;
+
         this.intensity = 0;
 
         options = options || {};
@@ -46,7 +48,7 @@ Object.assign(pc, function () {
         canvas.height = w;
         canvas.width = h;
 
-        var texture = new pc.Texture(app.graphicsDevice, {
+        var texture = new pc.Texture(this.app.graphicsDevice, {
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             autoMipmap: true
         });
@@ -201,7 +203,7 @@ Object.assign(pc, function () {
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'bottom';
                         ctx.clearRect(0, 0, w, h);
-                        var texture = new pc.Texture(app.graphicsDevice, {
+                        var texture = new pc.Texture(this.app.graphicsDevice, {
                             format: pc.PIXELFORMAT_R8_G8_B8_A8,
                             autoMipmap: true
                         });
