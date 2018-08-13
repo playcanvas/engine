@@ -393,63 +393,63 @@ Object.assign(pc, function () {
                         this.defaultScreenSpaceTextMaterial.update();
                     }
                     return this.defaultScreenSpaceTextMaterial;
-                } else {
-                    if (!this.defaultScreenSpaceBitmapTextMaterial) {
-                        this.defaultScreenSpaceBitmapTextMaterial = new pc.StandardMaterial();
-                        this.defaultScreenSpaceBitmapTextMaterial.emissiveMap = this._defaultTexture;
-                        this.defaultScreenSpaceBitmapTextMaterial.opacityMap = this._defaultTexture;
-                        this.defaultScreenSpaceBitmapTextMaterial.opacityMapChannel = 'a';
-                        this.defaultScreenSpaceBitmapTextMaterial.useLighting = false;
-                        this.defaultScreenSpaceBitmapTextMaterial.useGammaTonemap = false;
-                        this.defaultScreenSpaceBitmapTextMaterial.useFog = false;
-                        this.defaultScreenSpaceBitmapTextMaterial.useSkybox = false;
-                        this.defaultScreenSpaceBitmapTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-                        this.defaultScreenSpaceBitmapTextMaterial.emissive.set(1, 1, 1);
-                        this.defaultScreenSpaceBitmapTextMaterial.opacity = 0.5;
-                        this.defaultScreenSpaceBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
-                        this.defaultScreenSpaceBitmapTextMaterial.depthWrite = false;
-                        this.defaultScreenSpaceBitmapTextMaterial.depthTest = false;
-                        this.defaultScreenSpaceBitmapTextMaterial.update();
-                    }
-                    return this.defaultScreenSpaceBitmapTextMaterial;
                 }
-            } else {
-                if (msdf) {
-                    if (!this.defaultTextMaterial) {
-                        this.defaultTextMaterial = new pc.StandardMaterial();
-                        this.defaultTextMaterial.msdfMap = this._defaultTexture;
-                        this.defaultTextMaterial.useLighting = false;
-                        this.defaultTextMaterial.useGammaTonemap = false;
-                        this.defaultTextMaterial.useFog = false;
-                        this.defaultTextMaterial.useSkybox = false;
-                        this.defaultTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-                        this.defaultTextMaterial.emissive.set(1, 1, 1);
-                        this.defaultTextMaterial.opacity = 0.5;
-                        this.defaultTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
-                        this.defaultTextMaterial.depthWrite = false;
-                        this.defaultTextMaterial.update();
-                    }
-                    return this.defaultTextMaterial;
-                } else {
-                    if (!this.defaultBitmapTextMaterial) {
-                        this.defaultBitmapTextMaterial = new pc.StandardMaterial();
-                        this.defaultBitmapTextMaterial.emissiveMap = this._defaultTexture;
-                        this.defaultBitmapTextMaterial.opacityMap = this._defaultTexture;
-                        this.defaultBitmapTextMaterial.opacityMapChannel = 'a';
-                        this.defaultBitmapTextMaterial.useLighting = false;
-                        this.defaultBitmapTextMaterial.useGammaTonemap = false;
-                        this.defaultBitmapTextMaterial.useFog = false;
-                        this.defaultBitmapTextMaterial.useSkybox = false;
-                        this.defaultBitmapTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-                        this.defaultBitmapTextMaterial.emissive.set(1, 1, 1);
-                        this.defaultBitmapTextMaterial.opacity = 0.5;
-                        this.defaultBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
-                        this.defaultBitmapTextMaterial.depthWrite = false;
-                        this.defaultBitmapTextMaterial.update();
-                    }
-                    return this.defaultBitmapTextMaterial;
+                if (!this.defaultScreenSpaceBitmapTextMaterial) {
+                    this.defaultScreenSpaceBitmapTextMaterial = new pc.StandardMaterial();
+                    this.defaultScreenSpaceBitmapTextMaterial.emissiveMap = this._defaultTexture;
+                    this.defaultScreenSpaceBitmapTextMaterial.opacityMap = this._defaultTexture;
+                    this.defaultScreenSpaceBitmapTextMaterial.opacityMapChannel = 'a';
+                    this.defaultScreenSpaceBitmapTextMaterial.useLighting = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.useGammaTonemap = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.useFog = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.useSkybox = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+                    this.defaultScreenSpaceBitmapTextMaterial.emissive.set(1, 1, 1);
+                    this.defaultScreenSpaceBitmapTextMaterial.opacity = 0.5;
+                    this.defaultScreenSpaceBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+                    this.defaultScreenSpaceBitmapTextMaterial.depthWrite = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.depthTest = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.update();
                 }
+                return this.defaultScreenSpaceBitmapTextMaterial;
+
             }
+            if (msdf) {
+                if (!this.defaultTextMaterial) {
+                    this.defaultTextMaterial = new pc.StandardMaterial();
+                    this.defaultTextMaterial.msdfMap = this._defaultTexture;
+                    this.defaultTextMaterial.useLighting = false;
+                    this.defaultTextMaterial.useGammaTonemap = false;
+                    this.defaultTextMaterial.useFog = false;
+                    this.defaultTextMaterial.useSkybox = false;
+                    this.defaultTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+                    this.defaultTextMaterial.emissive.set(1, 1, 1);
+                    this.defaultTextMaterial.opacity = 0.5;
+                    this.defaultTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+                    this.defaultTextMaterial.depthWrite = false;
+                    this.defaultTextMaterial.update();
+                }
+                return this.defaultTextMaterial;
+            }
+            if (!this.defaultBitmapTextMaterial) {
+                this.defaultBitmapTextMaterial = new pc.StandardMaterial();
+                this.defaultBitmapTextMaterial.emissiveMap = this._defaultTexture;
+                this.defaultBitmapTextMaterial.opacityMap = this._defaultTexture;
+                this.defaultBitmapTextMaterial.opacityMapChannel = 'a';
+                this.defaultBitmapTextMaterial.useLighting = false;
+                this.defaultBitmapTextMaterial.useGammaTonemap = false;
+                this.defaultBitmapTextMaterial.useFog = false;
+                this.defaultBitmapTextMaterial.useSkybox = false;
+                this.defaultBitmapTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+                this.defaultBitmapTextMaterial.emissive.set(1, 1, 1);
+                this.defaultBitmapTextMaterial.opacity = 0.5;
+                this.defaultBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+                this.defaultBitmapTextMaterial.depthWrite = false;
+                this.defaultBitmapTextMaterial.update();
+            }
+            return this.defaultBitmapTextMaterial;
+
+
         },
 
         getImageElementMaterial: function (screenSpace, mask, nineSliced, nineSliceTiled) {
