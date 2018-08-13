@@ -132,22 +132,10 @@ Object.assign(pc, function () {
         this.defaultScreenSpaceImageMaskMaterial.alphaWrite = false;
         this.defaultScreenSpaceImageMaskMaterial.update();
 
-        this.defaultTextMaterial = new pc.StandardMaterial();
-        this.defaultTextMaterial.msdfMap = this._defaultTexture;
-        this.defaultTextMaterial.useLighting = false;
-        this.defaultTextMaterial.useGammaTonemap = false;
-        this.defaultTextMaterial.useFog = false;
-        this.defaultTextMaterial.useSkybox = false;
-        this.defaultTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-        this.defaultTextMaterial.emissive.set(1, 1, 1);
-        this.defaultTextMaterial.opacity = 0.5;
-        this.defaultTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
-        this.defaultTextMaterial.depthWrite = false;
-        this.defaultTextMaterial.update();
 
-        this.defaultScreenSpaceTextMaterial = this.defaultTextMaterial.clone();
-        this.defaultScreenSpaceTextMaterial.depthTest = false;
-        this.defaultScreenSpaceTextMaterial.update();
+        // text element materials created on demand by getTextElementMaterial()
+        this.defaultTextMaterial = null;
+        this.defaultScreenSpaceTextMaterial = null;
 
         this.defaultImageMaterials = [
             this.defaultImageMaterial,
@@ -384,6 +372,88 @@ Object.assign(pc, function () {
                 batchGroupId: source.batchGroupId,
                 mask: source.mask
             });
+        },
+
+        getTextElementMaterial: function (screenSpace, msdf) {
+            if (screenSpace) {
+                if (msdf) {
+                    if (!this.defaultScreenSpaceTextMaterial) {
+                        this.defaultScreenSpaceTextMaterial = new pc.StandardMaterial();
+                        this.defaultScreenSpaceTextMaterial.msdfMap = this._defaultTexture;
+                        this.defaultScreenSpaceTextMaterial.useLighting = false;
+                        this.defaultScreenSpaceTextMaterial.useGammaTonemap = false;
+                        this.defaultScreenSpaceTextMaterial.useFog = false;
+                        this.defaultScreenSpaceTextMaterial.useSkybox = false;
+                        this.defaultScreenSpaceTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+                        this.defaultScreenSpaceTextMaterial.emissive.set(1, 1, 1);
+                        this.defaultScreenSpaceTextMaterial.opacity = 0.5;
+                        this.defaultScreenSpaceTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+                        this.defaultScreenSpaceTextMaterial.depthWrite = false;
+                        this.defaultScreenSpaceTextMaterial.depthTest = false;
+                        this.defaultScreenSpaceTextMaterial.update();
+                    }
+                    return this.defaultScreenSpaceTextMaterial;
+                }
+                if (!this.defaultScreenSpaceBitmapTextMaterial) {
+                    this.defaultScreenSpaceBitmapTextMaterial = new pc.StandardMaterial();
+                    this.defaultScreenSpaceBitmapTextMaterial.emissiveMap = this._defaultTexture;
+                    this.defaultScreenSpaceBitmapTextMaterial.opacityMap = this._defaultTexture;
+                    this.defaultScreenSpaceBitmapTextMaterial.opacityMapChannel = 'a';
+                    this.defaultScreenSpaceBitmapTextMaterial.useLighting = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.useGammaTonemap = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.useFog = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.useSkybox = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+                    this.defaultScreenSpaceBitmapTextMaterial.emissive.set(1, 1, 1);
+                    this.defaultScreenSpaceBitmapTextMaterial.opacity = 0.5;
+                    this.defaultScreenSpaceBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+                    this.defaultScreenSpaceBitmapTextMaterial.depthWrite = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.depthTest = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.update();
+                }
+                return this.defaultScreenSpaceBitmapTextMaterial;
+
+            }
+            if (msdf) {
+                if (!this.defaultTextMaterial) {
+                    this.defaultTextMaterial = new pc.StandardMaterial();
+                    this.defaultTextMaterial.msdfMap = this._defaultTexture;
+                    this.defaultTextMaterial.useLighting = false;
+                    this.defaultTextMaterial.useGammaTonemap = false;
+                    this.defaultTextMaterial.useFog = false;
+                    this.defaultTextMaterial.useSkybox = false;
+                    this.defaultTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+                    this.defaultTextMaterial.emissive.set(1, 1, 1);
+                    this.defaultTextMaterial.opacity = 0.5;
+                    this.defaultTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+                    this.defaultTextMaterial.depthWrite = false;
+                    this.defaultTextMaterial.update();
+                }
+                return this.defaultTextMaterial;
+            }
+            if (!this.defaultBitmapTextMaterial) {
+                this.defaultBitmapTextMaterial = new pc.StandardMaterial();
+                this.defaultBitmapTextMaterial.emissiveMap = this._defaultTexture;
+                this.defaultBitmapTextMaterial.opacityMap = this._defaultTexture;
+                this.defaultBitmapTextMaterial.opacityMapChannel = 'a';
+                this.defaultBitmapTextMaterial.useLighting = false;
+                this.defaultBitmapTextMaterial.useGammaTonemap = false;
+                this.defaultBitmapTextMaterial.useFog = false;
+                this.defaultBitmapTextMaterial.useSkybox = false;
+                this.defaultBitmapTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+                this.defaultBitmapTextMaterial.emissive.set(1, 1, 1);
+                this.defaultBitmapTextMaterial.opacity = 0.5;
+                this.defaultBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
+                this.defaultBitmapTextMaterial.depthWrite = false;
+                this.defaultBitmapTextMaterial.update();
+            }
+            return this.defaultBitmapTextMaterial;
+
+
+        },
+
+        getImageElementMaterial: function (screenSpace, mask, nineSliced, nineSliceTiled) {
+            // TODO
         }
     });
 
