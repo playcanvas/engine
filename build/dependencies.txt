@@ -188,6 +188,7 @@
 ../src/framework/components/layout-child/system.js
 ../src/framework/components/layout-child/data.js
 ../src/framework/components/text/font.js
+../src/framework/components/text/canvas-font.js
 ../src/framework/components/zone/component.js
 ../src/framework/components/zone/system.js
 ../src/framework/components/zone/data.js

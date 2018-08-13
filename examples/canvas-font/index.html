@@ -16,9 +16,6 @@
     <body>
         <canvas id="application-canvas"></canvas>
 
-        <!-- <script src="arabic-converter.js"></script> -->
-        <script src="canvas-font.js"></script>
-
         <script>
             var canvas = document.getElementById('application-canvas');
             var app = new pc.Application(canvas, {
@@ -38,7 +35,7 @@
         <script>
             // Create a canvas font asset
             const size = 28;
-            var cf = new CanvasFont(app, {
+            var cf = new pc.CanvasFont(app, {
                 fontName: "Verdana",
                 fontSize: size,
                 width: 128,
@@ -49,14 +46,6 @@
             app.assets.add(asset);
             asset.resource = cf;
             asset.loaded = true;
-
-
-            var showCanvasAtlas = false;
-            if (showCanvasAtlas) {
-                document.body.appendChild(cf.canvas);
-                cf.canvas.style.position = 'absolute';
-                cf.canvas.style.top = '0px';
-            }
 
             // create camera
             var c = new pc.Entity();
@@ -74,13 +63,7 @@
             });
 
             // some sample text
-            // var jp = "祇辻飴葛蛸鯖鰯噌庖箸";
-            // var kailasa = "༄༅། །ཀ་ཁི་གུ་ངེ། ཅོ་ཆ་ཇ་ཉ༏";
-            // var arabic = arabicConverter.convertArabic("إذ.");
-            // var myLongArabic = arabicConverter.convertArabic("طهيس يس تآخت تهات يس وريتتآن فروم ريغت تو لآفت تهات يس وسآد").split("").reverse().join("");
-            // var longArabic = arabicConverter.convertArabic("ان عدة الشهور عند الله اثنا عشر شهرا في كتاب الله يوم خلق السماوات والارض منها اربعة حرم ذلك الدين القيم فلاتظلموا فيهن انفسكم وقاتلوا المشركين كافة كما يقاتلونكم كافة واعلموا ان الله مع المتقين").split("").reverse().join("");
-            // var lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-            var emoji = "😈Testing Emoji: 😀😀😀 🤢🤥🤝 😻 a👍🏽👨‍🎤😍a 🤔🤔 🦀🦀 🍑👻😗😏😒👽👾🎃😺💩😈🤒💑👢🐭🦁🐸🐍🦐🐙";
+            var emoji = "😈Testing Emoji: 😀😀😀 🤢🤥🤝 😻 a👍👨‍🎤😍a 🤔🤔 🦀🦀 🍑👻😗😏😒👽👾🎃😺💩😈🤒💑👢🐭🦁🐸🐍🦐🐙";
 
             var im = new pc.Entity();
             im.addComponent('element', {
@@ -93,7 +76,7 @@
             });
             scr.addChild(im);
 
-            cf.createTexturesForText(emoji);
+            cf.createTextures(emoji);
             var en = new pc.Entity();
             en.addComponent("element", {
                 type: "text",
@@ -110,9 +93,45 @@
                 alignment: [1,1]
             });
 
+            var emoji2 = "😈Testing Emoji: 😀😀😀 🤢🤥🤝 😻 a👍👨‍🎤😡💪🏿😍b 🤔💽🤔 🦀🦀 🍑👻😗😏😒👽👾🎃😺💩😈🤒💑👢🐭🦁🐸🐍🦐🐙";
+            // reuses the same texture as before
+            cf.updateTextures(emoji2);
+
+            var en2 = new pc.Entity();
+            en2.addComponent("element", {
+                type: "text",
+                fontAsset: asset,
+                fontSize: 32,
+                text: emoji2,
+                wrapLines: true,
+                autoWidth: false,
+                autoHeight: false,
+                width: 500,
+                height: 500,
+                anchor: [0, 1, 0, 1],
+                pivot: [0, 1],
+                alignment: [1, 1]
+            });
+
             app.root.addChild(scr);
             im.addChild(en);
-            en.translateLocal(0,-32,0)
+            en.translateLocal(0,-32,0);
+            im.addChild(en2);
+            en2.translateLocal(0, -300, 0);
+
+            // purely for debugging: do not do this in a real application
+            var showCanvasAtlasForDebug = false;
+            if (showCanvasAtlasForDebug) {
+                var wrapper = document.createElement('div');
+                for (var i = 0; i < cf.textures.length; i++) {
+                    var canvas = cf.textures[i].getSource();
+                    canvas.style.marginLeft = '20px';
+                    wrapper.appendChild(canvas);
+                }
+                wrapper.style.position = 'absolute';
+                wrapper.style.top = '0px';
+                document.body.appendChild(wrapper);
+            }
 
         </script>
     </body>
