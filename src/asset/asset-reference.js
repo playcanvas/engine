@@ -11,6 +11,8 @@ Object.assign(pc, function () {
      * @param {Object} [callbacks.add] The function called when the asset is added to the registry add(propertyName, parent, asset).
      * @param {Object} [callbacks.remove] The function called when the asset is remove from the registry remove(propertyName, parent, asset).
      * @param {Object} scope The scope to call the callbacks in
+     * @property {Number} id Get or set the asset id which this references. One of either id or url must be set to initialize an asset reference.
+     * @property {String} url Get or set the asset url which this references. One of either id or url must be called to initialize an asset reference.
      * @example
      *
      * var reference = new pc.AssetReference('textureAsset', this, this.app.assets, {
@@ -75,12 +77,6 @@ Object.assign(pc, function () {
         this._onAssetRemove.call(this._scope, this.propertyName, this.parent, asset);
     };
 
-    /**
-     * @property
-     * @name pc.AssetReference#id
-     * @type {Number}
-     * @description Get or set the asset id which this references. One of either id or url must be set to initialize an asset reference
-     */
     Object.defineProperty(AssetReference.prototype, 'id', {
         get: function () {
             return this._id;
@@ -97,12 +93,6 @@ Object.assign(pc, function () {
         }
     });
 
-    /**
-     * @property
-     * @name pc.AssetReference#url
-     * @type {Number}
-     * @description Get or set the asset url which this references. One of either id or url must be called to initialize an asset reference
-     */
     Object.defineProperty(AssetReference.prototype, 'url', {
         get: function () {
             return this._url;
