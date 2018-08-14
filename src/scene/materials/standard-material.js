@@ -245,44 +245,15 @@ Object.assign(pc, function () {
     var StandardMaterial = function () {
         pc.Material.call(this);
 
+        // storage for texture and cubemap asset references
+        this._assetReferences = {};
+        this._validator = null;
+
         this.reset();
         this.update();
     };
     StandardMaterial.prototype = Object.create(pc.Material.prototype);
     StandardMaterial.prototype.constructor = StandardMaterial;
-
-    var _createTexture = function (param) {
-        return (param.data instanceof pc.Texture) ? param.data : null;
-    };
-
-    var _createCubemap = function (param) {
-        return (param.data instanceof pc.Texture) ? param.data : null;
-    };
-
-    var _createVec2 = function (param) {
-        return new pc.Vec2(param.data[0], param.data[1]);
-    };
-
-    var _createBoundingBox = function (param) {
-        var center, halfExtents;
-
-        if (param.data && param.data.center) {
-            center = new pc.Vec3(param.data.center[0], param.data.center[1], param.data.center[2]);
-        } else {
-            center = new pc.Vec3(0, 0, 0);
-        }
-
-        if (param.data && param.data.halfExtents) {
-            halfExtents = new pc.Vec3(param.data.halfExtents[0], param.data.halfExtents[1], param.data.halfExtents[2]);
-        } else {
-            halfExtents = new pc.Vec3(0.5, 0.5, 0.5);
-        }
-        return new pc.BoundingBox(center, halfExtents);
-    };
-
-    var _createRgb = function (param) {
-        return new pc.Color(param.data[0], param.data[1], param.data[2]);
-    };
 
     var _propsSerial = [];
     var _propsSerialDefaultVal = [];
@@ -649,40 +620,72 @@ Object.assign(pc, function () {
 
         /**
          * @private
-         * @name pc.PhoneMaterial#init
+         * @function
+         * @name  pc.StandardMaterial#initialize
+         * @description  Initialize material properties from the material data block e.g. loading from server
+         * @param  {Object} data The data block that is used to initialize
+         */
+        initialize: function (data) {
+            this.reset();
+
+            // usual flow is that data is validated in resource loader
+            // but if not, validate here.
+            if (!data.validated) {
+                if (!this._validator) {
+                    this._validator = new pc.StandardMaterialValidator();
+                }
+                this._validator.validate(data);
+            }
+
+            if (data.chunks) {
+                this.chunks.copy(data.chunks);
+            }
+
+            // initialize material values from the input data
+            for (var key in data) {
+                var type = pc.StandardMaterial.PARAMETER_TYPES[key];
+                var value = data[key];
+
+                if (type === 'vec2') {
+                    this[key] = new pc.Vec2(value[0], value[1]);
+                } else if (type === 'rgb') {
+                    this[key] = new pc.Color(value[0], value[1], value[2]);
+                } else if (type === 'texture') {
+                    if (value instanceof pc.Texture) {
+                        this[key] = value;
+                    } else {
+                        this[key] = null;
+                    }
+                } else if (type === 'cubemap') {
+                    if (value instanceof pc.Texture) {
+                        this[key] = value;
+                    } else {
+                        this[key] = null;
+                    }
+                } else if (type === 'boundingbox') {
+                    var center = new pc.Vec3(value.center[0], value.center[1], value.center[2]);
+                    var halfExtents = new pc.Vec3(value.halfExtents[0], value.halfExtents[1], value.halfExtents[2]);
+                    this[key] = new pc.BoundingBox(center, halfExtents);
+                } else {
+                    // number, boolean and enum types don't require type creation
+                    this[key] = data[key];
+                }
+
+            }
+
+            this.update();
+        },
+
+        /**
+         * @private
+         * @name pc.StandardMaterial#init
          * @description Update material data from a data block, as found on a material Asset.
          * @param {Object} data JSON material data.
          * Note, init() expects texture parameters to contain a {@link pc.Texture} not a resource id.
          */
         init: function (data) {
-            this.reset();
-
-            // Initialise material from data
-            this.name = data.name;
-
-            if (data.chunks)
-                this.chunks.copy(data.chunks);
-
-            for (var i = 0; i < data.parameters.length; i++) {
-                var param = data.parameters[i];
-                if (param.type === "vec3") {
-                    this[param.name] = _createRgb(param);
-                } else if (param.type === "vec2") {
-                    this[param.name] = _createVec2(param);
-                } else if (param.type === "texture") {
-                    this[param.name] = _createTexture(param);
-                } else if (param.type === "cubemap") {
-                    this[param.name] = _createCubemap(param);
-                } else if (param.name === "bumpMapFactor") { // Unfortunately, names don't match for bumpiness
-                    this.bumpiness = param.data;
-                } else if (param.type === 'boundingbox') {
-                    this[param.name] = _createBoundingBox(param);
-                } else {
-                    this[param.name] = param.data;
-                }
-            }
-
-            this.update();
+            console.warn('StandardMaterial.init is deprecated. Use StandardMaterial.initialize instead');
+            this.initialize(data);
         },
 
         _updateMapTransform: function (transform, tiling, offset) {
