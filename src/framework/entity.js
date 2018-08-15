@@ -331,7 +331,7 @@ Object.assign(pc, function () {
     Entity.prototype.clone = function () {
         var duplicatedIdsMap = {};
         var c = this._cloneRecursively(duplicatedIdsMap);
-        duplicatedIdsMap[this.getGuid()] = c.getGuid();
+        duplicatedIdsMap[this.getGuid()] = c;
 
         resolveDuplicatedEntityReferenceProperties(this, this, c, duplicatedIdsMap);
 
@@ -354,7 +354,7 @@ Object.assign(pc, function () {
             if (oldChild instanceof pc.Entity) {
                 var newChild = oldChild._cloneRecursively(duplicatedIdsMap);
                 c.addChild(newChild);
-                duplicatedIdsMap[oldChild.getGuid()] = newChild.getGuid();
+                duplicatedIdsMap[oldChild.getGuid()] = newChild;
             }
         }
 
@@ -371,22 +371,24 @@ Object.assign(pc, function () {
     // within the new structure, and update the references accordingly. This
     // function implements that requirement.
     function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, newEntity, duplicatedIdsMap) {
-        // TODO Would be nice to also make this work for entity script attributes
+        var i, len;
 
         if (oldEntity instanceof pc.Entity) {
             var components = oldEntity.c;
 
-            Object.keys(components).forEach(function (componentName) {
+            // Handle component properties
+            for (var componentName in components) {
                 var component = components[componentName];
                 var entityProperties = component.system.getPropertiesOfType('entity');
 
-                entityProperties.forEach(function (propertyDescriptor) {
+                for (i = 0, len = entityProperties.length; i < len; i++) {
+                    var propertyDescriptor = entityProperties[i];
                     var propertyName = propertyDescriptor.name;
                     var oldEntityReferenceId = component[propertyName];
                     var entityIsWithinOldSubtree = !!oldSubtreeRoot.findByGuid(oldEntityReferenceId);
 
                     if (entityIsWithinOldSubtree) {
-                        var newEntityReferenceId = duplicatedIdsMap[oldEntityReferenceId];
+                        var newEntityReferenceId = duplicatedIdsMap[oldEntityReferenceId].getGuid();
 
                         if (newEntityReferenceId) {
                             newEntity.c[componentName][propertyName] = newEntityReferenceId;
@@ -394,8 +396,92 @@ Object.assign(pc, function () {
                             console.warn('Could not find corresponding entity id when resolving duplicated entity references');
                         }
                     }
-                });
-            });
+                }
+            }
+
+            // Handle entity script attributes
+            if (components.script && ! newEntity._app.useLegacyScriptAttributeCloning) {
+                // for each script in the compononent
+                for (var scriptName in components.script._scriptsIndex) {
+                    // get the script type from the script registry
+                    var scriptType = newEntity._app.scripts.get(scriptName);
+                    if (! scriptType) {
+                        continue;
+                    }
+
+                    // get the script from the component's index
+                    var script = components.script._scriptsIndex[scriptName];
+                    if (! script || ! script.instance) {
+                        continue;
+                    }
+
+                    // if __attributesRaw exists then it means that the new entity
+                    // has not yet initialized its attributes so put the new guid in there,
+                    // otherwise it means that the attributes have already been initialized
+                    // so convert the new guid to an entity
+                    // and put it in the new attributes
+                    var newAttributesRaw = newEntity.script[scriptName].__attributesRaw;
+                    var newAttributes = newEntity.script[scriptName].__attributes;
+                    if (! newAttributesRaw && ! newAttributes) {
+                        continue;
+                    }
+
+                    // get the old script attributes from the instance
+                    var oldAttributes = script.instance.__attributes;
+                    for (var attributeName in oldAttributes) {
+                        if (! oldAttributes[attributeName]) {
+                            continue;
+                        }
+
+                        // get the attribute definition from the script type
+                        var attribute = scriptType.attributes.get(attributeName);
+                        if (! attribute || attribute.type !== 'entity') {
+                            continue;
+                        }
+
+                        if (attribute.array) {
+                            // handle entity array attribute
+                            var oldGuidArray = oldAttributes[attributeName];
+                            len = oldGuidArray.length;
+                            if (! len) {
+                                continue;
+                            }
+
+                            var newGuidArray = oldGuidArray.slice();
+                            for (i = 0; i < len; i++) {
+                                var guid = newGuidArray[i] instanceof pc.Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
+                                if (duplicatedIdsMap[guid]) {
+                                    // if we are using attributesRaw then use the guid otherwise use the entity
+                                    newGuidArray[i] = newAttributesRaw ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
+                                }
+                            }
+
+                            if (newAttributesRaw) {
+                                newAttributesRaw[attributeName] = newGuidArray;
+                            } else {
+                                newAttributes[attributeName] = newGuidArray;
+                            }
+                        } else {
+                            // handle regular entity attribute
+                            var oldGuid = oldAttributes[attributeName];
+                            if (oldGuid instanceof pc.Entity) {
+                                oldGuid = oldGuid.getGuid();
+                            } else if (typeof oldGuid !== 'string') {
+                                continue;
+                            }
+
+                            if (duplicatedIdsMap[oldGuid]) {
+                                if (newAttributesRaw) {
+                                    newAttributesRaw[attributeName] = duplicatedIdsMap[oldGuid].getGuid();
+                                } else {
+                                    newAttributes[attributeName] = duplicatedIdsMap[oldGuid];
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
 
             // Recurse into children. Note that we continue to pass in the same `oldSubtreeRoot`,
             // in order to correctly handle cases where a child has an entity reference
@@ -407,9 +493,10 @@ Object.assign(pc, function () {
             var _new = newEntity.children.filter(function (e) {
                 return (e instanceof pc.Entity);
             });
-            _old.forEach(function (oldChild, index) {
-                resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldChild, _new[index], duplicatedIdsMap);
-            });
+
+            for (i = 0, len = _old.length; i < len; i++) {
+                resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, _old[i], _new[i], duplicatedIdsMap);
+            }
         }
     }
 
