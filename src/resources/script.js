@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
@@ -24,7 +24,7 @@ pc.extend(pc, function () {
         }
     };
 
-    ScriptHandler.prototype = {
+    Object.assign(ScriptHandler.prototype, {
         load: function (url, callback) {
             var self = this;
             pc.script.app = this._app;
@@ -96,7 +96,7 @@ pc.extend(pc, function () {
 
             head.appendChild(element);
         }
-    };
+    });
 
     return {
         ScriptHandler: ScriptHandler

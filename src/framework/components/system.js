@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ComponentSystem
@@ -14,7 +14,7 @@ pc.extend(pc, function () {
     };
 
     // Class methods
-    pc.extend(ComponentSystem, {
+    Object.assign(ComponentSystem, {
         initialize: function (root) {
             ComponentSystem.fire('initialize', root);
         },
@@ -137,7 +137,7 @@ pc.extend(pc, function () {
             data = data || {};
 
             // initialize
-            properties.forEach(function(descriptor) {
+            properties.forEach(function (descriptor) {
                 var name;
                 var type;
 
@@ -184,7 +184,7 @@ pc.extend(pc, function () {
             var matchingProperties = [];
             var schema = this.schema || [];
 
-            schema.forEach(function(descriptor) {
+            schema.forEach(function (descriptor) {
                 if (descriptor && typeof descriptor === 'object' && descriptor.type === type) {
                     matchingProperties.push(descriptor);
                 }

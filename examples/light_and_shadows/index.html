@@ -12,7 +12,7 @@
 
     <script>
         function createMaterial(colors) {
-            var material = new pc.PhongMaterial();
+            var material = new pc.StandardMaterial();
             for (var param in colors) {
                 material[param] = colors[param];
             }

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @private
      * @constructor
@@ -36,7 +36,6 @@ pc.extend(pc, function () {
         this.calculateTransform = null;
         this.calculateProjection = null;
     };
-    CameraComponentData = pc.inherits(CameraComponentData, pc.ComponentData);
 
     return {
         CameraComponentData: CameraComponentData

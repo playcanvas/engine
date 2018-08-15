@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Component
@@ -82,7 +82,7 @@ pc.extend(pc, function () {
 
         onDisable: function () { },
 
-        onPostStateChange: function() { }
+        onPostStateChange: function () { }
     };
 
     return {

@@ -1,6 +1,7 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @component
+     * @constructor
      * @name pc.LayoutGroupComponent
      * @description Create a new LayoutGroupComponent
      * @classdesc A LayoutGroupComponent enables the Entity to position and scale child {@link pc.ElementComponent}s according to configurable layout rules.
@@ -39,6 +40,8 @@ pc.extend(pc, function () {
      * @property {Boolean} wrap Whether or not to wrap children onto a new row/column when the size of the container is exceeded. Defaults to false, which means that children will be be rendered in a single row (horizontal orientation) or column (vertical orientation).<br><br><em>Note that setting wrap to true makes it impossible for the {@link pc.FITTING_BOTH} fitting mode to operate in any logical manner. For this reason, when wrap is true, a {@link pc.LayoutGroupComponent#widthFitting} or {@link pc.LayoutGroupComponent#heightFitting} mode of {@link pc.FITTING_BOTH} will be coerced to {@link pc.FITTING_STRETCH}.<em>
      */
     var LayoutGroupComponent = function LayoutGroupComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this._orientation = pc.ORIENTATION_HORIZONTAL;
         this._reverseX = false;
         this._reverseY = true;
@@ -54,7 +57,7 @@ pc.extend(pc, function () {
         this._listenForReflowEvents(this.entity, 'on');
 
         // Listen to existing children being resized
-        this.entity.children.forEach(function(child) {
+        this.entity.children.forEach(function (child) {
             this._listenForReflowEvents(child, 'on');
         }.bind(this));
 
@@ -70,14 +73,15 @@ pc.extend(pc, function () {
         system.app.systems.layoutchild.on('add', this._onElementOrLayoutComponentAdd, this);
         system.app.systems.layoutchild.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
     };
-    LayoutGroupComponent = pc.inherits(LayoutGroupComponent, pc.Component);
+    LayoutGroupComponent.prototype = Object.create(pc.Component.prototype);
+    LayoutGroupComponent.prototype.constructor = LayoutGroupComponent;
 
-    pc.extend(LayoutGroupComponent.prototype, {
-        _isSelfOrChild: function(entity) {
+    Object.assign(LayoutGroupComponent.prototype, {
+        _isSelfOrChild: function (entity) {
             return (entity === this.entity) || (this.entity.children.indexOf(entity) !== -1);
         },
 
-        _listenForReflowEvents: function(target, onOff) {
+        _listenForReflowEvents: function (target, onOff) {
             if (target.element) {
                 target.element[onOff]('enableelement', this._scheduleReflow, this);
                 target.element[onOff]('disableelement', this._scheduleReflow, this);
@@ -91,37 +95,37 @@ pc.extend(pc, function () {
             }
         },
 
-        _onElementOrLayoutComponentAdd: function(entity) {
+        _onElementOrLayoutComponentAdd: function (entity) {
             if (this._isSelfOrChild(entity)) {
                 this._listenForReflowEvents(entity, 'on');
                 this._scheduleReflow();
             }
         },
 
-        _onElementOrLayoutComponentRemove: function(entity) {
+        _onElementOrLayoutComponentRemove: function (entity) {
             if (this._isSelfOrChild(entity)) {
                 this._listenForReflowEvents(entity, 'off');
                 this._scheduleReflow();
             }
         },
 
-        _onChildInsert: function(child) {
+        _onChildInsert: function (child) {
             this._listenForReflowEvents(child, 'on');
             this._scheduleReflow();
         },
 
-        _onChildRemove: function(child) {
+        _onChildRemove: function (child) {
             this._listenForReflowEvents(child, 'off');
             this._scheduleReflow();
         },
 
-        _scheduleReflow: function() {
+        _scheduleReflow: function () {
             if (this.enabled && this.entity && this.entity.enabled && !this._isPerformingReflow) {
                 this.system.scheduleReflow(this);
             }
         },
 
-        reflow: function() {
+        reflow: function () {
             var container = getElement(this.entity);
             var elements = this.entity.children.filter(isEnabledAndHasEnabledElement).map(getElement);
 
@@ -149,11 +153,13 @@ pc.extend(pc, function () {
             // a child element triggers another reflow on the next frame, and so on)
             // we flag that a reflow is currently in progress.
             this._isPerformingReflow = true;
-            this._layoutCalculator.calculateLayout(elements, options);
+            var layoutInfo = this._layoutCalculator.calculateLayout(elements, options);
             this._isPerformingReflow = false;
+
+            this.fire('reflow', layoutInfo);
         },
 
-        onEnable: function() {
+        onEnable: function () {
             this._scheduleReflow();
         },
 
@@ -163,7 +169,7 @@ pc.extend(pc, function () {
 
             this._listenForReflowEvents(this.entity, 'off');
 
-            this.entity.children.forEach(function(child) {
+            this.entity.children.forEach(function (child) {
                 this._listenForReflowEvents(child, 'off');
             }.bind(this));
 

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var Version = function () {
@@ -7,7 +7,7 @@ pc.extend(pc, function () {
         this.revision = 0;
     };
 
-    Version.prototype = {
+    Object.assign(Version.prototype, {
         equals: function (other) {
             return this.globalId === other.globalId &&
                    this.revision === other.revision;
@@ -27,7 +27,7 @@ pc.extend(pc, function () {
             this.globalId = 0;
             this.revision = 0;
         }
-    };
+    });
 
     return {
         Version: Version

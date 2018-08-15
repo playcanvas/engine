@@ -1,4 +1,4 @@
-pc.extend(pc, function() {
+Object.assign(pc, function () {
 
     // properties that do not need rebuilding the particle system
     var SIMPLE_PROPERTIES = [
@@ -61,7 +61,7 @@ pc.extend(pc, function() {
     var ASSET_PROPERTIES = [
         'colorMapAsset',
         'normalMapAsset',
-        'mesh'
+        'meshAsset'
     ];
 
     var depthLayer;
@@ -107,6 +107,9 @@ pc.extend(pc, function() {
      * @property {pc.Vec3} emitterExtents (Only for EMITTERSHAPE_BOX) The extents of a local space bounding box within which particles are spawned at random positions.
      * @property {Number} emitterRadius (Only for EMITTERSHAPE_SPHERE) The radius within which particles are spawned at random positions.
      * @property {pc.Vec3} wrapBounds The half extents of a world space box volume centered on the owner entity's position. If a particle crosses the boundary of one side of the volume, it teleports to the opposite side.
+     * @property {pc.Asset} colorMapAsset The {@link pc.Asset} used to set the colorMap.
+     * @property {pc.Asset} normalMapAsset The {@link pc.Asset} used to set the normalMap.
+     * @property {pc.Asset} meshAsset The {@link pc.Asset} used to set the mesh.
      * @property {pc.Texture} colorMap The color map texture to apply to all particles in the system. If no texture is assigned, a default spot texture is used.
      * @property {pc.Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
      * @property {pc.EMITTERSHAPE} emitterShape Shape of the emitter. Defines the bounds inside which particles are spawned. Also affects the direction of initial velocity.
@@ -138,8 +141,11 @@ pc.extend(pc, function() {
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
         this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
+        this.on("set_meshAsset", this.onSetMeshAsset, this);
         this.on("set_mesh", this.onSetMesh, this);
         this.on("set_loop", this.onSetLoop, this);
         this.on("set_blendType", this.onSetBlendType, this);
@@ -160,11 +166,11 @@ pc.extend(pc, function() {
 
         this._requestedDepth = false;
     };
+    ParticleSystemComponent.prototype = Object.create(pc.Component.prototype);
+    ParticleSystemComponent.prototype.constructor = ParticleSystemComponent;
 
-    ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.Component);
-
-    pc.extend(ParticleSystemComponent.prototype, {
-        addModelToLayers: function() {
+    Object.assign(ParticleSystemComponent.prototype, {
+        addModelToLayers: function () {
             if (!this.data.model) return;
             var layer;
             for (var i = 0; i < this.layers.length; i++) {
@@ -175,7 +181,7 @@ pc.extend(pc, function() {
             }
         },
 
-        removeModelFromLayers: function(model) {
+        removeModelFromLayers: function (model) {
             if (!this.data.model) return;
             var layer;
             for (var i = 0; i < this.layers.length; i++) {
@@ -201,7 +207,7 @@ pc.extend(pc, function() {
             }
         },
 
-        onLayersChanged: function(oldComp, newComp) {
+        onLayersChanged: function (oldComp, newComp) {
             this.addModelToLayers();
             oldComp.off("add", this.onLayerAdded, this);
             oldComp.off("remove", this.onLayerRemoved, this);
@@ -209,14 +215,14 @@ pc.extend(pc, function() {
             newComp.on("remove", this.onLayerRemoved, this);
         },
 
-        onLayerAdded: function(layer) {
+        onLayerAdded: function (layer) {
             if (!this.data.model) return;
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             layer.addMeshInstances(this.data.model.meshInstances);
         },
 
-        onLayerRemoved: function(layer) {
+        onLayerRemoved: function (layer) {
             if (!this.data.model) return;
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
@@ -321,59 +327,66 @@ pc.extend(pc, function() {
             this.normalMapAsset = null;
         },
 
-        onSetMesh: function (name, oldValue, newValue) {
-            var self = this;
+        _bindMeshAsset: function (asset) {
+            asset.on('remove', this._onMeshAssetRemoved, this);
+            asset.on('load', this._onMeshAssetLoad, this);
+        },
+
+        _unbindMeshAsset: function (asset) {
+            asset.off('remove', this._onMeshAssetRemoved, this);
+            asset.off('load', this._onMeshAssetLoad, this);
+        },
+
+        _onMeshAssetLoad: function (asset) {
+            this._onMeshChanged(asset.resource);
+        },
+
+        onSetMeshAsset: function (name, oldValue, newValue) {
             var asset;
             var assets = this.system.app.assets;
 
-            if (oldValue && typeof(oldValue) === 'number') {
+            if (oldValue) {
                 asset = assets.get(oldValue);
                 if (asset) {
-                    asset.off('remove', this.onMeshRemoved, this);
+                    this._unbindMeshAsset(asset);
                 }
             }
 
             if (newValue) {
                 if (newValue instanceof pc.Asset) {
-                    this.data.mesh = newValue.id;
+                    this.data.meshAsset = newValue.id;
                     newValue = newValue.id;
                 }
 
-                if (typeof(newValue) === 'number') {
-                    asset = assets.get(newValue);
-                    if (asset) {
-                        asset.on('remove', this.onMeshRemoved, this);
-                        asset.ready(function (asset) {
-                            self._onMeshChanged(asset.resource);
-                        });
+                asset = assets.get(newValue);
+                if (asset) {
+                    this._bindMeshAsset(asset);
 
-                        if (self.enabled && self.entity.enabled) {
-                            assets.load(asset);
-                        }
+                    if (asset.resource) {
+                        this._onMeshChanged(asset.resource);
                     } else {
-                        assets.once('add:' + newValue, function (asset) {
-                            asset.on('remove', this.onMeshRemoved, this);
-                            asset.ready(function (asset) {
-                                self._onMeshChanged(asset.resource);
-                            });
-
-                            if (self.enabled && self.entity.enabled) {
-                                assets.load(asset);
-                            }
-                        });
+                        assets.load(asset);
                     }
-                } else {
-                    // model resource
-                    this._onMeshChanged(newValue);
                 }
             } else {
-                // null model
                 this._onMeshChanged(null);
             }
         },
 
+        onSetMesh: function (name, oldValue, newValue) {
+            // hack this for now
+            // if the value being set is null, an asset or an asset id, then assume we are
+            // setting the mesh asset, which will in turn update the mesh
+            if (!newValue || newValue instanceof pc.Asset || typeof newValue === 'number') {
+                this.meshAsset = newValue;
+            } else {
+                this._onMeshChanged(newValue);
+            }
+        },
+
         _onMeshChanged: function (mesh) {
-            if (mesh && ! (mesh instanceof pc.Mesh)) {
+            if (mesh && !(mesh instanceof pc.Mesh)) {
+                // if mesh is a pc.Model, use the first meshInstance
                 if (mesh.meshInstances[0]) {
                     mesh = mesh.meshInstances[0].mesh;
                 } else {
@@ -390,8 +403,8 @@ pc.extend(pc, function() {
             }
         },
 
-        onMeshRemoved: function (asset) {
-            asset.off('remove', this.onMeshRemoved, this);
+        onMeshAssetRemoved: function (asset) {
+            asset.off('remove', this.onMeshAssetRemoved, this);
             this.mesh = null;
         },
 
@@ -470,12 +483,15 @@ pc.extend(pc, function() {
         },
 
 
-        onEnable: function() {
+        onEnable: function () {
+            // get data store once
+            var data = this.data;
+
             // load any assets that haven't been loaded yet
             for (var i = 0, len = ASSET_PROPERTIES.length; i < len; i++) {
-                var asset = this.data[ASSET_PROPERTIES[i]];
+                var asset = data[ASSET_PROPERTIES[i]];
                 if (asset) {
-                    if (! (asset instanceof pc.Asset)) {
+                    if (!(asset instanceof pc.Asset)) {
                         var id = parseInt(asset, 10);
                         if (id >= 0) {
                             asset = this.system.app.assets.get(asset);
@@ -490,71 +506,71 @@ pc.extend(pc, function() {
                 }
             }
 
-            if (! this.emitter) {
+            if (!this.emitter) {
+                var mesh = data.mesh;
 
-                var mesh = this.data.mesh;
                 // mesh might be an asset id of an asset
                 // that hasn't been loaded yet
-                if (! (mesh instanceof pc.Mesh))
+                if (!(mesh instanceof pc.Mesh))
                     mesh = null;
 
                 this.emitter = new pc.ParticleEmitter(this.system.app.graphicsDevice, {
-                    numParticles: this.data.numParticles,
-                    emitterExtents: this.data.emitterExtents,
-                    emitterRadius: this.data.emitterRadius,
-                    emitterShape: this.data.emitterShape,
-                    initialVelocity: this.data.initialVelocity,
-                    wrap: this.data.wrap,
-                    localSpace: this.data.localSpace,
-                    wrapBounds: this.data.wrapBounds,
-                    lifetime: this.data.lifetime,
-                    rate: this.data.rate,
-                    rate2: this.data.rate2,
+                    numParticles: data.numParticles,
+                    emitterExtents: data.emitterExtents,
+                    emitterRadius: data.emitterRadius,
+                    emitterShape: data.emitterShape,
+                    initialVelocity: data.initialVelocity,
+                    wrap: data.wrap,
+                    localSpace: data.localSpace,
+                    wrapBounds: data.wrapBounds,
+                    lifetime: data.lifetime,
+                    rate: data.rate,
+                    rate2: data.rate2,
 
-                    animTilesX: this.data.animTilesX,
-                    animTilesY: this.data.animTilesY,
-                    animNumFrames: this.data.animNumFrames,
-                    animSpeed: this.data.animSpeed,
-                    animLoop: this.data.animLoop,
+                    animTilesX: data.animTilesX,
+                    animTilesY: data.animTilesY,
+                    animNumFrames: data.animNumFrames,
+                    animSpeed: data.animSpeed,
+                    animLoop: data.animLoop,
 
-                    startAngle: this.data.startAngle,
-                    startAngle2: this.data.startAngle2,
+                    startAngle: data.startAngle,
+                    startAngle2: data.startAngle2,
 
-                    scaleGraph: this.data.scaleGraph,
-                    scaleGraph2: this.data.scaleGraph2,
+                    scaleGraph: data.scaleGraph,
+                    scaleGraph2: data.scaleGraph2,
 
-                    colorGraph: this.data.colorGraph,
-                    colorGraph2: this.data.colorGraph2,
+                    colorGraph: data.colorGraph,
+                    colorGraph2: data.colorGraph2,
 
-                    alphaGraph: this.data.alphaGraph,
-                    alphaGraph2: this.data.alphaGraph2,
+                    alphaGraph: data.alphaGraph,
+                    alphaGraph2: data.alphaGraph2,
 
-                    localVelocityGraph: this.data.localVelocityGraph,
-                    localVelocityGraph2: this.data.localVelocityGraph2,
+                    localVelocityGraph: data.localVelocityGraph,
+                    localVelocityGraph2: data.localVelocityGraph2,
 
-                    velocityGraph: this.data.velocityGraph,
-                    velocityGraph2: this.data.velocityGraph2,
+                    velocityGraph: data.velocityGraph,
+                    velocityGraph2: data.velocityGraph2,
 
-                    rotationSpeedGraph: this.data.rotationSpeedGraph,
-                    rotationSpeedGraph2: this.data.rotationSpeedGraph2,
+                    rotationSpeedGraph: data.rotationSpeedGraph,
+                    rotationSpeedGraph2: data.rotationSpeedGraph2,
 
-                    colorMap: this.data.colorMap,
-                    normalMap: this.data.normalMap,
-                    loop: this.data.loop,
-                    preWarm: this.data.preWarm,
-                    sort: this.data.sort,
-                    stretch: this.data.stretch,
-                    alignToMotion: this.data.alignToMotion,
-                    lighting: this.data.lighting,
-                    halfLambert: this.data.halfLambert,
-                    intensity: this.data.intensity,
-                    depthSoftening: this.data.depthSoftening,
+                    colorMap: data.colorMap,
+                    normalMap: data.normalMap,
+                    loop: data.loop,
+                    preWarm: data.preWarm,
+                    sort: data.sort,
+                    stretch: data.stretch,
+                    alignToMotion: data.alignToMotion,
+                    lighting: data.lighting,
+                    halfLambert: data.halfLambert,
+                    intensity: data.intensity,
+                    depthSoftening: data.depthSoftening,
                     scene: this.system.app.scene,
                     mesh: mesh,
-                    depthWrite: this.data.depthWrite,
-                    noFog: this.data.noFog,
+                    depthWrite: data.depthWrite,
+                    noFog: data.noFog,
                     node: this.entity,
-                    blendType: this.data.blendType
+                    blendType: data.blendType
                 });
 
                 this.emitter.meshInstance.node = this.entity;
@@ -563,16 +579,16 @@ pc.extend(pc, function() {
                 this.psys.graph = this.entity;
                 this.psys.emitter = this.emitter;
                 this.psys.meshInstances = [this.emitter.meshInstance];
-                this.data.model = this.psys;
+                data.model = this.psys;
                 this.emitter.psys = this.psys;
 
-                if (!this.data.autoPlay) {
+                if (!data.autoPlay) {
                     this.pause();
                     this.emitter.meshInstance.visible = false;
                 }
             }
 
-            if (this.data.model && this.emitter.colorMap) {
+            if (data.model && this.emitter.colorMap) {
                 this.addModelToLayers();
             }
 
@@ -582,13 +598,15 @@ pc.extend(pc, function() {
                 this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
             }
 
-            if (this.enabled && this.entity.enabled) this._requestDepth();
+            if (this.enabled && this.entity.enabled && data.depthSoftening) {
+                this._requestDepth();
+            }
 
-            ParticleSystemComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
         },
 
-        onDisable: function() {
-            ParticleSystemComponent._super.onDisable.call(this);
+        onDisable: function () {
+            pc.Component.prototype.onDisable.call(this);
 
             this.system.app.scene.off("set:layers", this.onLayersChanged, this);
             if (this.system.app.scene.layers) {
@@ -603,22 +621,22 @@ pc.extend(pc, function() {
         },
 
         /**
-        * @function
-        * @name pc.ParticleSystemComponent#reset
-        * @description Resets particle state, doesn't affect playing.
-        */
-        reset: function() {
+         * @function
+         * @name pc.ParticleSystemComponent#reset
+         * @description Resets particle state, doesn't affect playing.
+         */
+        reset: function () {
             if (this.emitter) {
                 this.emitter.reset();
             }
         },
 
         /**
-        * @function
-        * @name pc.ParticleSystemComponent#stop
-        * @description Disables the emission of new particles, lets existing to finish their simulation.
-        */
-        stop: function() {
+         * @function
+         * @name pc.ParticleSystemComponent#stop
+         * @description Disables the emission of new particles, lets existing to finish their simulation.
+         */
+        stop: function () {
             if (this.emitter) {
                 this.emitter.loop = false;
                 this.emitter.resetTime();
@@ -627,29 +645,29 @@ pc.extend(pc, function() {
         },
 
         /**
-        * @function
-        * @name pc.ParticleSystemComponent#pause
-        * @description Freezes the simulation.
-        */
-        pause: function() {
+         * @function
+         * @name pc.ParticleSystemComponent#pause
+         * @description Freezes the simulation.
+         */
+        pause: function () {
             this.data.paused = true;
         },
 
         /**
-        * @function
-        * @name pc.ParticleSystemComponent#unpause
-        * @description Unfreezes the simulation.
-        */
+         * @function
+         * @name pc.ParticleSystemComponent#unpause
+         * @description Unfreezes the simulation.
+         */
         unpause: function () {
             this.data.paused = false;
         },
 
         /**
-        * @function
-        * @name pc.ParticleSystemComponent#play
-        * @description Enables/unfreezes the simulation.
-        */
-        play: function() {
+         * @function
+         * @name pc.ParticleSystemComponent#play
+         * @description Enables/unfreezes the simulation.
+         */
+        play: function () {
             this.data.paused = false;
             if (this.emitter) {
                 this.emitter.meshInstance.visible = true;
@@ -659,12 +677,12 @@ pc.extend(pc, function() {
         },
 
         /**
-        * @function
-        * @name pc.ParticleSystemComponent#isPlaying
-        * @description Checks if simulation is in progress.
-        * @returns {Boolean} true if the particle system is currently playing and false otherwise.
-        */
-        isPlaying: function() {
+         * @function
+         * @name pc.ParticleSystemComponent#isPlaying
+         * @description Checks if simulation is in progress.
+         * @returns {Boolean} true if the particle system is currently playing and false otherwise.
+         */
+        isPlaying: function () {
             if (this.data.paused) {
                 return false;
             }
@@ -678,12 +696,12 @@ pc.extend(pc, function() {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.ParticleSystemComponent#rebuild
-        * @description Rebuilds all data used by this particle system.
-        */
-        rebuild: function() {
+         * @private
+         * @function
+         * @name pc.ParticleSystemComponent#rebuild
+         * @description Rebuilds all data used by this particle system.
+         */
+        rebuild: function () {
             var enabled = this.enabled;
             this.enabled = false;
             if (this.emitter) {
@@ -692,6 +710,28 @@ pc.extend(pc, function() {
                 this.data.model.meshInstances = [this.emitter.meshInstance];
             }
             this.enabled = enabled;
+        },
+
+        onDestroy: function () {
+            var data = this.data;
+            if (data.model) {
+                this.entity.removeChild(data.model.getGraph());
+                data.model = null;
+            }
+
+            if (this.emitter) {
+                this.emitter.destroy();
+                this.emitter = null;
+            }
+
+            // clear all asset properties to remove any event listeners
+            for (var i = 0; i < ASSET_PROPERTIES.length; i++) {
+                var prop = ASSET_PROPERTIES[i];
+
+                if (data[prop]) {
+                    this[prop] = null;
+                }
+            }
         }
     });
 

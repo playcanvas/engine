@@ -1,10 +1,13 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var ScriptLegacyComponent = function ScriptLegacyComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this.on("set_scripts", this.onSetScripts, this);
     };
-    ScriptLegacyComponent = pc.inherits(ScriptLegacyComponent, pc.Component);
+    ScriptLegacyComponent.prototype = Object.create(pc.Component.prototype);
+    ScriptLegacyComponent.prototype.constructor = ScriptLegacyComponent;
 
-    pc.extend(ScriptLegacyComponent.prototype, {
+    Object.assign(ScriptLegacyComponent.prototype, {
         send: function (name, functionName) {
             console.warn("DEPRECATED: ScriptLegacyComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
             var args = pc.makeArray(arguments).slice(2);
@@ -21,7 +24,7 @@ pc.extend(pc, function () {
         },
 
         onEnable: function () {
-            ScriptLegacyComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
 
             // if the scripts of the component have been loaded
             // then call the appropriate methods on the component
@@ -39,11 +42,11 @@ pc.extend(pc, function () {
         },
 
         onDisable: function () {
-            ScriptLegacyComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
             this.system._disableScriptComponent(this);
         },
 
-        onSetScripts: function(name, oldValue, newValue) {
+        onSetScripts: function (name, oldValue, newValue) {
             if (!this.system._inTools || this.runInTools) {
                 // if we only need to update script attributes then update them and return
                 if (this._updateScriptAttributes(oldValue, newValue)) {
@@ -114,7 +117,7 @@ pc.extend(pc, function () {
 
             for (i = 0, len = urls.length; i < len; i++) {
                 var url = urls[i];
-                if (! regex.test(url)) {
+                if (!regex.test(url)) {
                     url = pc.path.join(prefix, url);
                 }
 

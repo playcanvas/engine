@@ -1,4 +1,4 @@
-pc.extend(pc, function() {
+Object.assign(pc, function () {
     var AnimationComponentData = function () {
         // Serialized
         this.assets = [];
@@ -20,7 +20,6 @@ pc.extend(pc, function() {
         this.blendTimeRemaining = 0;
         this.playing = false;
     };
-    AnimationComponentData = pc.inherits(AnimationComponentData, pc.ComponentData);
 
     return {
         AnimationComponentData: AnimationComponentData

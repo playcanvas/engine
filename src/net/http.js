@@ -1,10 +1,11 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
-    * @name pc.Http
-    * @class Used to send and receive HTTP requests.
-    * @description Create a new Http instance. By default, a PlayCanvas application creates an instance of this
-    * object at `pc.http`.
-    */
+     * @constructor
+     * @name pc.Http
+     * @classdesc Used to send and receive HTTP requests.
+     * @description Create a new Http instance. By default, a PlayCanvas application creates an instance of this
+     * object at `pc.http`.
+     */
     var Http = function Http() {
     };
 
@@ -43,7 +44,7 @@ pc.extend(pc, function () {
         '.dds'
     ];
 
-    Http.prototype = {
+    Object.assign(Http.prototype, {
 
         ContentType: Http.ContentType,
         ResponseType: Http.ResponseType,
@@ -53,7 +54,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Http#get
          * @description Perform an HTTP GET request to the given url.
-         * @param {String} url
+         * @param {String} url The URL to make the request to.
          * @param {Object} [options] Additional options
          * @param {Object} [options.headers] HTTP headers to add to the request
          * @param {Boolean} [options.async] Make the request asynchronously. Defaults to true.
@@ -71,9 +72,10 @@ pc.extend(pc, function () {
          * pc.http.get("http://example.com/", function (err, response) {
          *     console.log(response);
          * });
+         * @returns {XMLHttpRequest} The request object.
          */
         get: function (url, options, callback) {
-            if (typeof(options) === "function") {
+            if (typeof options === "function") {
                 callback = options;
                 options = {};
             }
@@ -83,8 +85,8 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.Http#post
-         * @description Perform an HTTP POST request to the given url
-         * @param {String} url The URL to make the request to
+         * @description Perform an HTTP POST request to the given url.
+         * @param {String} url The URL to make the request to.
          * @param {Object} data Data to send in the body of the request.
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
          * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
@@ -98,9 +100,10 @@ pc.extend(pc, function () {
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
+         * @returns {XMLHttpRequest} The request object.
          */
         post: function (url, data, options, callback) {
-            if (typeof(options) === "function") {
+            if (typeof options === "function") {
                 callback = options;
                 options = {};
             }
@@ -111,8 +114,8 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.Http#put
-         * @description Perform an HTTP PUT request to the given url
-         * @param {String} url The URL to make the request to
+         * @description Perform an HTTP PUT request to the given url.
+         * @param {String} url The URL to make the request to.
          * @param {Document | Object} data Data to send in the body of the request.
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
          * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
@@ -126,9 +129,10 @@ pc.extend(pc, function () {
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
+         * @returns {XMLHttpRequest} The request object.
          */
         put: function (url, data, options, callback) {
-            if (typeof(options) === "function") {
+            if (typeof options === "function") {
                 callback = options;
                 options = {};
             }
@@ -154,9 +158,10 @@ pc.extend(pc, function () {
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
+         * @returns {XMLHttpRequest} The request object.
          */
         del: function (url, options, callback) {
-            if (typeof(options) === "function") {
+            if (typeof options === "function") {
                 callback = options;
                 options = {};
             }
@@ -182,12 +187,13 @@ pc.extend(pc, function () {
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
+         * @returns {XMLHttpRequest} The request object.
          */
         request: function (method, url, options, callback) {
             var uri, query, timestamp, postdata, xhr;
             var errored = false;
 
-            if (typeof(options) === "function") {
+            if (typeof options === "function") {
                 callback = options;
                 options = {};
             }
@@ -397,7 +403,7 @@ pc.extend(pc, function () {
         _onError: function (method, url, options, xhr) {
             options.callback(xhr.status, null);
         }
-    };
+    });
 
     return {
         Http: Http,

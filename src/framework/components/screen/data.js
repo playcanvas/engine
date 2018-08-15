@@ -1,8 +1,7 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var ScreenComponentData = function () {
         this.enabled = true;
     };
-    ScreenComponentData = pc.inherits(ScreenComponentData, pc.ComponentData);
 
     return {
         ScreenComponentData: ScreenComponentData

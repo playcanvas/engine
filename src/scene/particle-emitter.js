@@ -1,5 +1,5 @@
 // Mr F
-pc.extend(pc, function() {
+Object.assign(pc, function () {
     var particleVerts = [
         [-1, -1],
         [1, -1],
@@ -7,7 +7,7 @@ pc.extend(pc, function() {
         [-1, 1]
     ];
 
-    var _createTexture = function(device, width, height, pixelData, format, mult8Bit, filter) {
+    var _createTexture = function (device, width, height, pixelData, format, mult8Bit, filter) {
         if (!format) format = pc.PIXELFORMAT_RGBA32F;
 
         var mipFilter = pc.FILTER_NEAREST;
@@ -43,6 +43,33 @@ pc.extend(pc, function() {
         return texture;
     };
 
+    function frac(f) {
+        return f - Math.floor(f);
+    }
+
+    function encodeFloatRGBA( v ) {
+        var encX = frac(v);
+        var encY = frac(255.0 * v);
+        var encZ = frac(65025.0 * v);
+        var encW = frac(160581375.0 * v);
+
+        encX -= encY / 255.0;
+        encY -= encZ / 255.0;
+        encZ -= encW / 255.0;
+        encW -= encW / 255.0;
+
+        return [encX, encY, encZ, encW];
+    }
+
+    function encodeFloatRG( v ) {
+        var encX = frac(v);
+        var encY = frac(255.0 * v);
+
+        encX -= encY / 255.0;
+        encY -= encY / 255.0;
+
+        return [encX, encY];
+    }
 
     function saturate(x) {
         return Math.max(Math.min(x, 1), 0);
@@ -134,18 +161,6 @@ pc.extend(pc, function() {
         return colors;
     }
 
-/*
-    function syncToCpu(device, targ) {
-        var tex = targ._colorBuffer;
-        var pixels = new Uint8Array(tex.width * tex.height * 4);
-        var gl = device.gl;
-        device.setFramebuffer(targ._glFrameBuffer);
-        gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-        if (!tex._levels) tex._levels = [];
-        tex._levels[0] = pixels;
-    }
-*/
-
     var ParticleEmitter = function (graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
         var gd = graphicsDevice;
@@ -156,10 +171,7 @@ pc.extend(pc, function() {
 
 
         if (!ParticleEmitter.DEFAULT_PARAM_TEXTURE) {
-            // 1x1 white opaque
-            // defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
-
-            // white radial gradient
+            // White radial gradient
             var resolution = 16;
             var centerPoint = resolution * 0.5 + 0.5;
             var dtex = new Float32Array(resolution * resolution * 4);
@@ -406,14 +418,14 @@ pc.extend(pc, function() {
         mat3.data[8] = mat4.data[10];
     }
 
-    ParticleEmitter.prototype = {
+    Object.assign(ParticleEmitter.prototype, {
 
-        onChangeCamera: function() {
+        onChangeCamera: function () {
             this.regenShader();
             this.resetMaterial();
         },
 
-        calculateBoundsMad: function() {
+        calculateBoundsMad: function () {
             this.worldBoundsMul.x = 1.0 / this.worldBoundsSize.x;
             this.worldBoundsMul.y = 1.0 / this.worldBoundsSize.y;
             this.worldBoundsMul.z = 1.0 / this.worldBoundsSize.z;
@@ -424,11 +436,8 @@ pc.extend(pc, function() {
             this.worldBoundsAdd.z += 0.5;
         },
 
-        calculateWorldBounds: function() {
+        calculateWorldBounds: function () {
             if (!this.node) return;
-
-            // var pos = this.node.getPosition();
-            // if (this.prevPos.equals(pos)) return; // TODO: test whole matrix?
 
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
@@ -456,7 +465,7 @@ pc.extend(pc, function() {
             if (this.pack8) this.calculateBoundsMad();
         },
 
-        calculateLocalBounds: function() {
+        calculateLocalBounds: function () {
             var minx = Number.MAX_VALUE;
             var miny = Number.MAX_VALUE;
             var minz = Number.MAX_VALUE;
@@ -530,7 +539,7 @@ pc.extend(pc, function() {
             this.localBounds.setMinMax(bMin, bMax);
         },
 
-        rebuild: function() {
+        rebuild: function () {
             var i;
             var gd = this.graphicsDevice;
 
@@ -546,7 +555,7 @@ pc.extend(pc, function() {
 
             this.vertexBuffer = undefined; // force regen VB
 
-            this.pack8 = (this.pack8 || !gd.extTextureFloatRenderable) && !this.useCpu;
+            this.pack8 = (this.pack8 || !gd.textureFloatRenderable) && !this.useCpu;
 
             particleTexHeight = (this.useCpu || this.pack8) ? 4 : 2;
 
@@ -650,10 +659,6 @@ pc.extend(pc, function() {
             this.material.cullMode = pc.CULLFACE_NONE;
             this.material.alphaWrite = false;
             this.material.blend = true;
-
-            // Premultiplied alpha. We can use it for both additive and alpha-transparent blending.
-            // this.material.blendSrc = pc.BLENDMODE_ONE;
-            // this.material.blendDst = pc.BLENDMODE_ONE_MINUS_SRC_ALPHA;
             this.material.blendType = this.blendType;
 
             this.material.depthWrite = this.depthWrite;
@@ -684,7 +689,7 @@ pc.extend(pc, function() {
                    (this.colorMap && this.colorMap !== ParticleEmitter.DEFAULT_PARAM_TEXTURE || this.normalMap);
         },
 
-        calcSpawnPosition: function(emitterPos, i) {
+        calcSpawnPosition: function (emitterPos, i) {
             var rX = Math.random();
             var rY = Math.random();
             var rZ = Math.random();
@@ -758,7 +763,7 @@ pc.extend(pc, function() {
             }
         },
 
-        rebuildGraphs: function() {
+        rebuildGraphs: function () {
             var precision = this.precision;
             var gd = this.graphicsDevice;
             var i;
@@ -839,7 +844,7 @@ pc.extend(pc, function() {
             }
         },
 
-        regenShader: function() {
+        regenShader: function () {
             var programLib = this.graphicsDevice.getProgramLibrary();
             var hasNormal = (this.normalMap !== null);
             this.normalOption = 0;
@@ -847,18 +852,17 @@ pc.extend(pc, function() {
                 this.normalOption = hasNormal ? 2 : 1;
             }
             // updateShader is also called by pc.Scene when all shaders need to be updated
-            this.material.updateShader = function() {
+            this.material.updateShader = function () {
 
-                /* The app works like this:
-                 1. Emitter init
-                 2. Update. No camera is assigned to emitters
-                 3. Render; activeCamera = camera; shader init
-                 4. Update. activeCamera is set to emitters
-                 -----
-                 The problem with 1st frame render is that we init the shader without having any camera set to emitter -
-                 so wrong shader is being compiled.
-                 To fix it, we need to check activeCamera!=emitter.camera in shader init too
-                 */
+                // The app works like this:
+                // 1. Emitter init
+                // 2. Update. No camera is assigned to emitters
+                // 3. Render; activeCamera = camera; shader init
+                // 4. Update. activeCamera is set to emitters
+                // -----
+                // The problem with 1st frame render is that we init the shader without having any camera set to emitter -
+                // so wrong shader is being compiled.
+                // To fix it, we need to check activeCamera!=emitter.camera in shader init too
                 if (this.emitter.scene) {
                     if (this.emitter.camera != this.emitter.scene._activeCamera) {
                         this.emitter.camera = this.emitter.scene._activeCamera;
@@ -889,7 +893,7 @@ pc.extend(pc, function() {
             this.material.updateShader();
         },
 
-        resetMaterial: function() {
+        resetMaterial: function () {
             var material = this.material;
 
             material.setParameter('stretch', this.stretch);
@@ -943,7 +947,7 @@ pc.extend(pc, function() {
 
 
         // Declares vertex format, creates VB and IB
-        _allocate: function(numParticles) {
+        _allocate: function (numParticles) {
             var psysVertCount = numParticles * this.numParticleVerts;
             var psysIndexCount = numParticles * this.numParticleIndices;
             var elements, particleFormat;
@@ -995,16 +999,8 @@ pc.extend(pc, function() {
                 }
 
                 var id;
-//              var rnd;
                 for (i = 0; i < psysVertCount; i++) {
                     id = Math.floor(i / this.numParticleVerts);
-/*
-                    if (this.useCpu) {
-                        if (i % this.numParticleVerts === 0) {
-                            rnd = this.particleTex[i * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
-                        }
-                    }
-*/
                     if (!this.useMesh) {
                         var vertID = i % 4;
                         data[i * 4] = particleVerts[vertID][0];
@@ -1054,7 +1050,7 @@ pc.extend(pc, function() {
             }
         },
 
-        reset: function() {
+        reset: function () {
             this.beenReset = true;
             this.seed = Math.random();
             this.material.setParameter('seed', this.seed);
@@ -1075,7 +1071,7 @@ pc.extend(pc, function() {
             }
         },
 
-        prewarm: function(time) {
+        prewarm: function (time) {
             var lifetimeFraction = time / this.lifetime;
             var iterations = Math.min(Math.floor(lifetimeFraction * this.precision), this.precision);
             var stepDelta = time / iterations;
@@ -1084,15 +1080,15 @@ pc.extend(pc, function() {
             }
         },
 
-        resetTime: function() {
+        resetTime: function () {
             this.endTime = calcEndTime(this);
         },
 
-        finishFrame: function() {
+        finishFrame: function () {
             if (this.useCpu) this.vertexBuffer.unlock();
         },
 
-        addTime: function(delta, isOnStop) {
+        addTime: function (delta, isOnStop) {
             var a, b, c, i, j;
             var device = this.graphicsDevice;
 
@@ -1256,7 +1252,7 @@ pc.extend(pc, function() {
                         c = nlife * precision1;
                         cf = Math.floor(c);
                         cc = Math.ceil(c);
-                        c = c % 1;
+                        c %= 1;
 
                         // var rotSpeed =           tex1D(this.qRotSpeed, nlife);
                         a = this.qRotSpeed[cf];
@@ -1335,12 +1331,9 @@ pc.extend(pc, function() {
                         b = this.qVelocity2[cc + 2];
                         velocityVec2.data[2] = a + (b - a) * c;
 
-                        // localVelocityVec.data[0] = pc.math.lerp(localVelocityVec.data[0], localVelocityVec2.data[0], rndFactor3Vec.data[0]);
-                        // localVelocityVec.data[1] = pc.math.lerp(localVelocityVec.data[1], localVelocityVec2.data[1], rndFactor3Vec.data[1]);
-                        // localVelocityVec.data[2] = pc.math.lerp(localVelocityVec.data[2], localVelocityVec2.data[2], rndFactor3Vec.data[2]);
-                        localVelocityVec.data[0] = localVelocityVec.data[0] + (localVelocityVec2.data[0] - localVelocityVec.data[0]) * rndFactor3Vec.data[0];
-                        localVelocityVec.data[1] = localVelocityVec.data[1] + (localVelocityVec2.data[1] - localVelocityVec.data[1]) * rndFactor3Vec.data[1];
-                        localVelocityVec.data[2] = localVelocityVec.data[2] + (localVelocityVec2.data[2] - localVelocityVec.data[2]) * rndFactor3Vec.data[2];
+                        localVelocityVec.data[0] += (localVelocityVec2.data[0] - localVelocityVec.data[0]) * rndFactor3Vec.data[0];
+                        localVelocityVec.data[1] += (localVelocityVec2.data[1] - localVelocityVec.data[1]) * rndFactor3Vec.data[1];
+                        localVelocityVec.data[2] += (localVelocityVec2.data[2] - localVelocityVec.data[2]) * rndFactor3Vec.data[2];
 
                         if (this.initialVelocity > 0) {
                             if (this.emitterShape === pc.EMITTERSHAPE_SPHERE) {
@@ -1351,16 +1344,11 @@ pc.extend(pc, function() {
                             }
                         }
 
-                        // velocityVec.data[0] = pc.math.lerp(velocityVec.data[0], velocityVec2.data[0], rndFactor3Vec.data[0]);
-                        // velocityVec.data[1] = pc.math.lerp(velocityVec.data[1], velocityVec2.data[1], rndFactor3Vec.data[1]);
-                        // velocityVec.data[2] = pc.math.lerp(velocityVec.data[2], velocityVec2.data[2], rndFactor3Vec.data[2]);
-                        velocityVec.data[0] = velocityVec.data[0] + (velocityVec2.data[0] - velocityVec.data[0]) * rndFactor3Vec.data[0];
-                        velocityVec.data[1] = velocityVec.data[1] + (velocityVec2.data[1] - velocityVec.data[1]) * rndFactor3Vec.data[1];
-                        velocityVec.data[2] = velocityVec.data[2] + (velocityVec2.data[2] - velocityVec.data[2]) * rndFactor3Vec.data[2];
+                        velocityVec.data[0] += (velocityVec2.data[0] - velocityVec.data[0]) * rndFactor3Vec.data[0];
+                        velocityVec.data[1] += (velocityVec2.data[1] - velocityVec.data[1]) * rndFactor3Vec.data[1];
+                        velocityVec.data[2] += (velocityVec2.data[2] - velocityVec.data[2]) * rndFactor3Vec.data[2];
 
-                        // rotSpeed = pc.math.lerp(rotSpeed, rotSpeed2, rndFactor3Vec.data[1]);
-                        // scale = pc.math.lerp(scale, scale2, (rndFactor * 10000.0) % 1.0) * uniformScale;
-                        rotSpeed = rotSpeed + (rotSpeed2 - rotSpeed) * rndFactor3Vec.data[1];
+                        rotSpeed += (rotSpeed2 - rotSpeed) * rndFactor3Vec.data[1];
                         scale = (scale + (scale2 - scale) * ((rndFactor * 10000.0) % 1.0)) * uniformScale;
                         alphaDiv = (alpha2 - alpha) * ((rndFactor * 1000.0) % 1.0);
 
@@ -1462,7 +1450,7 @@ pc.extend(pc, function() {
 
                     this.vbOld.set(this.vbCPU);
 
-                    this.vbToSort.sort(function(p1, p2) {
+                    this.vbToSort.sort(function (p1, p2) {
                         return p1[1] - p2[1];
                     });
 
@@ -1512,37 +1500,9 @@ pc.extend(pc, function() {
             this.shaderParticleUpdateNoRespawn = null;
             this.shaderParticleUpdateOnStop = null;
         }
-    };
+    });
 
     return {
         ParticleEmitter: ParticleEmitter
     };
 }());
-
-function frac(f) {
-    return f - Math.floor(f);
-}
-
-function encodeFloatRGBA ( v ) {
-    var encX = frac(v);
-    var encY = frac(255.0 * v);
-    var encZ = frac(65025.0 * v);
-    var encW = frac(160581375.0 * v);
-
-    encX -= encY / 255.0;
-    encY -= encZ / 255.0;
-    encZ -= encW / 255.0;
-    encW -= encW / 255.0;
-
-    return [encX, encY, encZ, encW];
-}
-
-function encodeFloatRG ( v ) {
-    var encX = frac(v);
-    var encY = frac(255.0 * v);
-
-    encX -= encY / 255.0;
-    encY -= encY / 255.0;
-
-    return [encX, encY];
-}

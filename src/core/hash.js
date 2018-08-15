@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     return {
         /**
          * @private
@@ -8,13 +8,12 @@ pc.extend(pc, (function () {
          * @param {String} str String
          * @returns {Number} Hash value
          */
-        hashCode: function(str){
+        hashCode: function (str) {
             var hash = 0;
-            if (str.length === 0) return hash;
-            for (var i = 0; i < str.length; i++) {
-                var char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
+            for (var i = 0, len = str.length; i < len; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                // Convert to 32bit integer
+                hash |= 0;
             }
             return hash;
         }

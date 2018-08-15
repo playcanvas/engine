@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var JSON_ADDRESS_MODE = {
@@ -43,7 +43,7 @@ pc.extend(pc, function () {
         }
     };
 
-    TextureHandler.prototype = {
+    Object.assign(TextureHandler.prototype, {
         load: function (url, callback) {
             var self = this;
             var image;
@@ -113,7 +113,7 @@ pc.extend(pc, function () {
         },
 
         open: function (url, data) {
-            if (! url)
+            if (!url)
                 return;
 
             var texture;
@@ -208,7 +208,7 @@ pc.extend(pc, function () {
                     }
                 }
 
-                if (! format) {
+                if (!format) {
                     // #ifdef DEBUG
                     console.error("This DDS pixel format is currently unsupported. Empty texture will be created instead.");
                     // #endif
@@ -284,7 +284,7 @@ pc.extend(pc, function () {
         patch: function (asset, assets) {
             var texture = asset.resource;
 
-            if (! texture)
+            if (!texture)
                 return;
 
             if (texture.name !== asset.name)
@@ -312,7 +312,7 @@ pc.extend(pc, function () {
             if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== rgbm)
                 texture.rgbm = rgbm;
         }
-    };
+    });
 
     return {
         TextureHandler: TextureHandler

@@ -1,16 +1,4 @@
-pc.extend(pc, {
-    /**
-     * @enum pc.ORIENTATION
-     * @name pc.ORIENTATION_HORIZONTAL
-     * @description Horizontal orientation.
-     */
-    ORIENTATION_HORIZONTAL: 0,
-    /**
-     * @enum pc.ORIENTATION
-     * @name pc.ORIENTATION_VERTICAL
-     * @description Vertical orientation.
-     */
-    ORIENTATION_VERTICAL: 1,
+Object.assign(pc, {
     /**
      * @enum pc.FITTING
      * @name pc.FITTING_NONE

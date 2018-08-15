@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ScriptRegistry
@@ -30,11 +30,11 @@ pc.extend(pc, function () {
      * // playerController Script Type will be added to pc.ScriptRegistry automatically
      * app.scripts.has('playerController') === true; // true
      */
-    ScriptRegistry.prototype.add = function(script) {
+    ScriptRegistry.prototype.add = function (script) {
         var self = this;
 
         if (this._scripts.hasOwnProperty(script.__name)) {
-            setTimeout(function() {
+            setTimeout(function () {
                 if (script.prototype.swap) {
                     // swapping
                     var old = self._scripts[script.__name];
@@ -59,8 +59,8 @@ pc.extend(pc, function () {
 
         // for all components awaiting Script Type
         // create script instance
-        setTimeout(function() {
-            if (! self._scripts.hasOwnProperty(script.__name))
+        setTimeout(function () {
+            if (!self._scripts.hasOwnProperty(script.__name))
                 return;
 
             var components = self.app.systems.script._components;
@@ -103,7 +103,7 @@ pc.extend(pc, function () {
 
             // call postInitialize()
             for (i = 0; i < scriptInstancesInitialized.length; i++) {
-                if (! scriptInstancesInitialized[i].enabled || scriptInstancesInitialized[i]._postInitialized) {
+                if (!scriptInstancesInitialized[i].enabled || scriptInstancesInitialized[i]._postInitialized) {
                     continue;
                 }
 
@@ -126,11 +126,11 @@ pc.extend(pc, function () {
      * @example
      * app.scripts.remove('playerController');
      */
-    ScriptRegistry.prototype.remove = function(name) {
-        if (typeof(name) === 'function')
+    ScriptRegistry.prototype.remove = function (name) {
+        if (typeof name === 'function')
             name = name.__name;
 
-        if (! this._scripts.hasOwnProperty(name))
+        if (!this._scripts.hasOwnProperty(name))
             return false;
 
         var item = this._scripts[name];
@@ -154,7 +154,7 @@ pc.extend(pc, function () {
      * @example
      * var PlayerController = app.scripts.get('playerController');
      */
-    ScriptRegistry.prototype.get = function(name) {
+    ScriptRegistry.prototype.get = function (name) {
         return this._scripts[name] || null;
     };
 
@@ -169,7 +169,7 @@ pc.extend(pc, function () {
      *     // playerController is in pc.ScriptRegistry
      * }
      */
-    ScriptRegistry.prototype.has = function(name) {
+    ScriptRegistry.prototype.has = function (name) {
         return this._scripts.hasOwnProperty(name);
     };
 
@@ -184,7 +184,7 @@ pc.extend(pc, function () {
      *     return o.name;
      * }));
      */
-    ScriptRegistry.prototype.list = function() {
+    ScriptRegistry.prototype.list = function () {
         return this._list;
     };
 

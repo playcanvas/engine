@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
@@ -170,8 +170,6 @@ pc.extend(pc, function () {
         this.dirtyAll();
 
         this._gpuSize = 0;
-
-        this.device.textures.push(this);
     };
 
     // Public properties
@@ -195,7 +193,7 @@ pc.extend(pc, function () {
         set: function (v) {
             if (this._minFilter !== v) {
                 this._minFilter = v;
-                this._minFilterDirty = true;
+                this._parameterFlags |= 1;
             }
         }
     });
@@ -216,7 +214,7 @@ pc.extend(pc, function () {
         set: function (v) {
             if (this._magFilter !== v) {
                 this._magFilter = v;
-                this._magFilterDirty = true;
+                this._parameterFlags |= 2;
             }
         }
     });
@@ -238,7 +236,7 @@ pc.extend(pc, function () {
         set: function (v) {
             if (this._addressU !== v) {
                 this._addressU = v;
-                this._addressUDirty = true;
+                this._parameterFlags |= 4;
             }
         }
     });
@@ -260,7 +258,7 @@ pc.extend(pc, function () {
         set: function (v) {
             if (this._addressV !== v) {
                 this._addressV = v;
-                this._addressVDirty = true;
+                this._parameterFlags |= 8;
             }
         }
     });
@@ -282,12 +280,14 @@ pc.extend(pc, function () {
         set: function (addressW) {
             if (!this.device.webgl2) return;
             if (!this._volume) {
-                logWARNING("Can't set W addressing mode for a non-3D texture.");
+                // #ifdef DEBUG
+                console.warn("pc.Texture#addressW: Can't set W addressing mode for a non-3D texture.");
+                // #endif
                 return;
             }
             if (addressW !== this._addressW) {
                 this._addressW = addressW;
-                this._addressWDirty = true;
+                this._parameterFlags |= 16;
             }
         }
     });
@@ -305,7 +305,7 @@ pc.extend(pc, function () {
         set: function (v) {
             if (this._compareOnRead !== v) {
                 this._compareOnRead = v;
-                this._compareModeDirty = true;
+                this._parameterFlags |= 32;
             }
         }
     });
@@ -331,7 +331,25 @@ pc.extend(pc, function () {
         set: function (v) {
             if (this._compareFunc !== v) {
                 this._compareFunc = v;
-                this._compareModeDirty = true;
+                this._parameterFlags |= 64;
+            }
+        }
+    });
+
+    /**
+     * @name pc.Texture#anisotropy
+     * @type Number
+     * @description Integer value specifying the level of anisotropic to apply to the texture
+     * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
+     */
+    Object.defineProperty(Texture.prototype, 'anisotropy', {
+        get: function () {
+            return this._anisotropy;
+        },
+        set: function (v) {
+            if (this._anisotropy !== v) {
+                this._anisotropy = v;
+                this._parameterFlags |= 128;
             }
         }
     });
@@ -367,24 +385,6 @@ pc.extend(pc, function () {
                 this._minFilterDirty = true;
 
                 if (v) this._needsMipmapsUpload = true;
-            }
-        }
-    });
-
-    /**
-     * @name pc.Texture#anisotropy
-     * @type Number
-     * @description Integer value specifying the level of anisotropic to apply to the texture
-     * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
-     */
-    Object.defineProperty(Texture.prototype, 'anisotropy', {
-        get: function () {
-            return this._anisotropy;
-        },
-        set: function (v) {
-            if (this._anisotropy !== v) {
-                this._anisotropy = v;
-                this._anisotropyDirty = true;
             }
         }
     });
@@ -472,6 +472,72 @@ pc.extend(pc, function () {
         }
     });
 
+    var _pixelFormat2Size = null;
+
+    Object.defineProperty(Texture.prototype, 'gpuSize', {
+        get: function () {
+            if (!_pixelFormat2Size) {
+                _pixelFormat2Size = [];
+                _pixelFormat2Size[pc.PIXELFORMAT_A8] = 1;
+                _pixelFormat2Size[pc.PIXELFORMAT_L8] = 1;
+                _pixelFormat2Size[pc.PIXELFORMAT_L8_A8] = 1;
+                _pixelFormat2Size[pc.PIXELFORMAT_R5_G6_B5] = 2;
+                _pixelFormat2Size[pc.PIXELFORMAT_R5_G5_B5_A1] = 2;
+                _pixelFormat2Size[pc.PIXELFORMAT_R4_G4_B4_A4] = 2;
+                _pixelFormat2Size[pc.PIXELFORMAT_R8_G8_B8] = 4;
+                _pixelFormat2Size[pc.PIXELFORMAT_R8_G8_B8_A8] = 4;
+                _pixelFormat2Size[pc.PIXELFORMAT_RGB16F] = 8;
+                _pixelFormat2Size[pc.PIXELFORMAT_RGBA16F] = 8;
+                _pixelFormat2Size[pc.PIXELFORMAT_RGB32F] = 16;
+                _pixelFormat2Size[pc.PIXELFORMAT_RGBA32F] = 16;
+                _pixelFormat2Size[pc.PIXELFORMAT_R32F] = 4;
+                _pixelFormat2Size[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
+                _pixelFormat2Size[pc.PIXELFORMAT_DEPTHSTENCIL] = 4;
+                _pixelFormat2Size[pc.PIXELFORMAT_111110F] = 4;
+                _pixelFormat2Size[pc.PIXELFORMAT_SRGB] = 4;
+                _pixelFormat2Size[pc.PIXELFORMAT_SRGBA] = 4;
+            }
+
+            var mips = 1;
+            if (this._pot && (this._mipmaps || this._minFilter === pc.FILTER_NEAREST_MIPMAP_NEAREST ||
+                this._minFilter === pc.FILTER_NEAREST_MIPMAP_LINEAR || this._minFilter === pc.FILTER_LINEAR_MIPMAP_NEAREST ||
+                this._minFilter === pc.FILTER_LINEAR_MIPMAP_LINEAR) && !(this._compressed && this._levels.length === 1)) {
+
+                mips = Math.round(Math.log2(Math.max(this._width, this._height)) + 1);
+            }
+            var mipWidth = this._width;
+            var mipHeight = this._height;
+            var mipDepth = this._depth;
+            var size = 0;
+
+            for (var i = 0; i < mips; i++) {
+                if (!this._compressed) {
+                    size += mipWidth * mipHeight * mipDepth * _pixelFormat2Size[this._format];
+                } else if (this._format === pc.PIXELFORMAT_ETC1) {
+                    size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8 * mipDepth;
+                } else if (this._format === pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || this._format === pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
+                    size += Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4 * mipDepth;
+                } else if (this._format === pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || this._format === pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
+                    size += Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2 * mipDepth;
+                } else {
+                    var DXT_BLOCK_WIDTH = 4;
+                    var DXT_BLOCK_HEIGHT = 4;
+                    var blockSize = this._format === pc.PIXELFORMAT_DXT1 ? 8 : 16;
+                    var numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
+                    var numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
+                    var numBlocks = numBlocksAcross * numBlocksDown;
+                    size += numBlocks * blockSize * mipDepth;
+                }
+                mipWidth = Math.max(mipWidth * 0.5, 1);
+                mipHeight = Math.max(mipHeight * 0.5, 1);
+                mipDepth = Math.max(mipDepth * 0.5, 1);
+            }
+
+            if (this._cubemap) size *= 6;
+            return size;
+        }
+    });
+
     /**
      * @readonly
      * @name pc.Texture#volume
@@ -504,54 +570,25 @@ pc.extend(pc, function () {
     });
 
     // Public methods
-    pc.extend(Texture.prototype, {
+    Object.assign(Texture.prototype, {
         /**
          * @function
          * @name pc.Texture#destroy
          * @description Forcibly free up the underlying WebGL resource owned by the texture.
          */
         destroy: function () {
-            var device = this.device;
-            var idx = device.textures.indexOf(this);
-            if (idx !== -1) {
-                device.textures.splice(idx, 1);
-            }
-
-            if (this._glTextureId) {
-                var gl = this.device.gl;
-                gl.deleteTexture(this._glTextureId);
-
-                this.device._vram.tex -= this._gpuSize;
-                // #ifdef PROFILER
-                if (this.profilerHint === pc.TEXHINT_SHADOWMAP) {
-                    this.device._vram.texShadow -= this._gpuSize;
-                } else if (this.profilerHint === pc.TEXHINT_ASSET) {
-                    this.device._vram.texAsset -= this._gpuSize;
-                } else if (this.profilerHint === pc.TEXHINT_LIGHTMAP) {
-                    this.device._vram.texLightmap -= this._gpuSize;
-                }
-                // #endif
-
-                this._glTextureId = null;
-            }
+            this.device.destroyTexture(this);
         },
 
         // Force a full resubmission of the texture to WebGL (used on a context restore event)
         dirtyAll: function () {
-            this._glTextureId = undefined;
             this._levelsUpdated = this._cubemap ? [[true, true, true, true, true, true]] : [true];
 
             this._needsUpload = true;
             this._needsMipmapsUpload = this._mipmaps;
             this._mipmapsUploaded = false;
 
-            this._minFilterDirty = true;
-            this._magFilterDirty = true;
-            this._addressUDirty = true;
-            this._addressVDirty = true;
-            this._addressWDirty = this._volume;
-            this._anisotropyDirty = true;
-            this._compareModeDirty = true;
+            this._parameterFlags = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
         },
 
         /**
@@ -644,12 +681,12 @@ pc.extend(pc, function () {
 
                     for (i = 0; i < 6; i++) {
                         // cubemap becomes invalid if any condition is not satisfied
-                        if (! source[i] || // face is missing
+                        if (!source[i] || // face is missing
                             source[i].width !== width || // face is different width
                             source[i].height !== height || // face is different height
-                            (! (source[i] instanceof HTMLImageElement) && // not image and
-                            ! (source[i] instanceof HTMLCanvasElement) && // not canvas and
-                            ! (source[i] instanceof HTMLVideoElement))) { // not video
+                            (!(source[i] instanceof HTMLImageElement) && // not image and
+                            !(source[i] instanceof HTMLCanvasElement) && // not canvas and
+                            !(source[i] instanceof HTMLVideoElement))) { // not video
 
                             invalid = true;
                             break;
@@ -669,7 +706,7 @@ pc.extend(pc, function () {
                 }
             } else {
                 // check if source is valid type of element
-                if (! (source instanceof HTMLImageElement) && ! (source instanceof HTMLCanvasElement) && ! (source instanceof HTMLVideoElement))
+                if (!(source instanceof HTMLImageElement) && !(source instanceof HTMLCanvasElement) && !(source instanceof HTMLVideoElement))
                     invalid = true;
 
                 if (!invalid) {
@@ -710,7 +747,7 @@ pc.extend(pc, function () {
             }
 
             // valid or changed state of validity
-            if (this._invalid !== invalid || ! invalid) {
+            if (this._invalid !== invalid || !invalid) {
                 this._invalid = invalid;
 
                 // reupload
@@ -735,7 +772,11 @@ pc.extend(pc, function () {
          * @description Unlocks the currently locked mip level and uploads it to VRAM.
          */
         unlock: function () {
-            logASSERT(this._lockedLevel !== -1, "Attempting to unlock a texture that is not locked");
+            // #ifdef DEBUG
+            if (this._lockedLevel === -1) {
+                console.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.");
+            }
+            // #endif
 
             // Upload the new pixel data
             this.upload();
@@ -774,7 +815,7 @@ pc.extend(pc, function () {
                     fsize += mipSize;
                 } else {
                     for (face = 0; face < 6; face++) {
-                        if (! this._levels[i][face]) {
+                        if (!this._levels[i][face]) {
                             console.error('No level data for mip ' + i + ', face ' + face);
                             return;
                         }

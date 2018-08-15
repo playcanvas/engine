@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     // pre-allocated temp variables
     var _deviceCoord = new pc.Vec3();
     var _far = new pc.Vec3();
@@ -71,7 +71,7 @@ pc.extend(pc, function () {
         this._component = null;
     };
 
-    Camera.prototype = {
+    Object.assign(Camera.prototype, {
         /**
          * @private
          * @function
@@ -272,7 +272,7 @@ pc.extend(pc, function () {
         releaseDepthMap: function () {
             this._renderDepthRequests--;
         }
-    };
+    });
 
     /**
      * @private
@@ -281,10 +281,10 @@ pc.extend(pc, function () {
      * @description Camera's aspect ratio.
      */
     Object.defineProperty(Camera.prototype, 'aspectRatio', {
-        get: function() {
+        get: function () {
             return this._aspect;
         },
-        set: function(v) {
+        set: function (v) {
             if (this._aspect !== v) {
                 this._aspect = v;
                 this._projMatDirty = true;
@@ -303,10 +303,10 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(Camera.prototype, 'projection', {
-        get: function() {
+        get: function () {
             return this._projection;
         },
-        set: function(v) {
+        set: function (v) {
             if (this._projection !== v) {
                 this._projection = v;
                 this._projMatDirty = true;
@@ -321,10 +321,10 @@ pc.extend(pc, function () {
      * @description Camera's distance to near clipping plane
      */
     Object.defineProperty(Camera.prototype, 'nearClip', {
-        get: function() {
+        get: function () {
             return this._nearClip;
         },
-        set: function(v) {
+        set: function (v) {
             if (this._nearClip !== v) {
                 this._nearClip = v;
                 this._projMatDirty = true;
@@ -339,10 +339,10 @@ pc.extend(pc, function () {
      * @description Camera's distance to far clipping plane
      */
     Object.defineProperty(Camera.prototype, 'farClip', {
-        get: function() {
+        get: function () {
             return this._farClip;
         },
-        set: function(v) {
+        set: function (v) {
             if (this._farClip !== v) {
                 this._farClip = v;
                 this._projMatDirty = true;
@@ -359,10 +359,10 @@ pc.extend(pc, function () {
      * hirozontalFov property defines the fov axis - vertical or horizontal.
      */
     Object.defineProperty(Camera.prototype, 'fov', {
-        get: function() {
+        get: function () {
             return this._fov;
         },
-        set: function(v) {
+        set: function (v) {
             if (this._fov !== v) {
                 this._fov = v;
                 this._projMatDirty = true;
@@ -377,10 +377,10 @@ pc.extend(pc, function () {
      * @description Camera's horizontal or vertical field of view.
      */
     Object.defineProperty(Camera.prototype, 'horizontalFov', {
-        get: function() {
+        get: function () {
             return this._horizontalFov;
         },
-        set: function(v) {
+        set: function (v) {
             if (this._horizontalFov !== v) {
                 this._horizontalFov = v;
                 this._projMatDirty = true;
@@ -395,10 +395,10 @@ pc.extend(pc, function () {
      * @description Camera's half height of the orthographics view.
      */
     Object.defineProperty(Camera.prototype, 'orthoHeight', {
-        get: function() {
+        get: function () {
             return this._orthoHeight;
         },
-        set: function(v) {
+        set: function (v) {
             if (this._orthoHeight !== v) {
                 this._orthoHeight = v;
                 this._projMatDirty = true;
@@ -413,10 +413,10 @@ pc.extend(pc, function () {
      * @description Camera's clear color.
      */
     Object.defineProperty(Camera.prototype, 'clearColor', {
-        get: function() {
+        get: function () {
             return this._clearOptions.color;
         },
-        set: function(v) {
+        set: function (v) {
             this._clearOptions.color[0] = v[0];
             this._clearOptions.color[1] = v[1];
             this._clearOptions.color[2] = v[2];
@@ -431,10 +431,10 @@ pc.extend(pc, function () {
      * @description Camera's clear depth value.
      */
     Object.defineProperty(Camera.prototype, 'clearDepth', {
-        get: function() {
+        get: function () {
             return this._clearOptions.depth;
         },
-        set: function(v) {
+        set: function (v) {
             this._clearOptions.depth = v;
         }
     });
@@ -446,10 +446,10 @@ pc.extend(pc, function () {
      * @description Camera's clear stencil value.
      */
     Object.defineProperty(Camera.prototype, 'clearStencil', {
-        get: function() {
+        get: function () {
             return this._clearOptions.stencil;
         },
-        set: function(v) {
+        set: function (v) {
             this._clearOptions.stencil = v;
         }
     });
@@ -461,10 +461,10 @@ pc.extend(pc, function () {
      * @description Camera's clear flags bits value.
      */
     Object.defineProperty(Camera.prototype, 'clearFlags', {
-        get: function() {
+        get: function () {
             return this._clearOptions.flags;
         },
-        set: function(v) {
+        set: function (v) {
             this._clearOptions.flags = v;
         }
     });

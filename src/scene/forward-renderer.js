@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     // Global shadowmap resources
     var scaleShift = new pc.Mat4().mul2(
@@ -111,202 +111,10 @@ pc.extend(pc, function () {
         return points;
     }
 
-/*
-    function StaticArray(size) {
-        var data = new Array(size);
-        var obj = function(idx) {
-            return data[idx];
-        };
-        obj.size = 0;
-        obj.push = function(v) {
-            data[this.size] = v;
-            ++this.size;
-        };
-        obj.data = data;
-        return obj;
-    }
-
-    var intersectCache = {
-        temp: [new pc.Vec3(), new pc.Vec3(), new pc.Vec3()],
-        vertices: new Array(3),
-        negative: new StaticArray(3),
-        positive: new StaticArray(3),
-        intersections: new StaticArray(3),
-        zCollection: new StaticArray(36)
-    };
-
-    function _groupVertices(coord, face, smallerIsNegative) {
-        var intersections = intersectCache.intersections;
-        var small, large;
-        if (smallerIsNegative) {
-            small = intersectCache.negative;
-            large = intersectCache.positive;
-        } else {
-            small = intersectCache.positive;
-            large = intersectCache.negative;
-        }
-
-        intersections.size = 0;
-        small.size = 0;
-        large.size = 0;
-
-        // Grouping vertices according to the position related to the face
-        var v;
-        for (var j = 0; j < 3; ++j) {
-            v = intersectCache.vertices[j];
-
-            if (v[coord] < face) {
-                small.push(v);
-            } else if (v[coord] === face) {
-                intersections.push(intersectCache.temp[intersections.size].copy(v));
-            } else {
-                large.push(v);
-            }
-        }
-    }
-
-    function _triXFace(zs, x, y, faceTest, yMin, yMax) {
-
-        var negative = intersectCache.negative;
-        var positive = intersectCache.positive;
-        var intersections = intersectCache.intersections;
-
-        // Find intersections
-        if (negative.size === 3) {
-            // Everything is on the negative side of the left face.
-            // The triangle won't intersect with the frustum. So ignore it
-            return false;
-        }
-
-        if (negative.size && positive.size) {
-            intersections.push(intersectCache.temp[intersections.size].lerp(
-                negative(0), positive(0), (faceTest - negative(0)[x]) / (positive(0)[x] - negative(0)[x])
-            ));
-            if (negative.size === 2) {
-                // 2 on the left, 1 on the right
-                intersections.push(intersectCache.temp[intersections.size].lerp(
-                    negative(1), positive(0), (faceTest - negative(1)[x]) / (positive(0)[x] - negative(1)[x])
-                ));
-            } else if (positive.size === 2) {
-                // 1 on the left, 2 on the right
-                intersections.push(intersectCache.temp[intersections.size].lerp(
-                    negative(0), positive(1), (faceTest - negative(0)[x]) / (positive(1)[x] - negative(0)[x])
-                ));
-            }
-        }
-
-        // Get the z of the intersections
-        if (intersections.size === 0) {
-            return true;
-        }
-        if (intersections.size === 1) {
-            // If there's only one vertex intersect the face
-            // Test if it's within the range of top/bottom faces.
-            if (yMin <= intersections(0)[y] && intersections(0)[y] <= yMax) {
-                zs.push(intersections(0).z);
-            }
-            return true;
-        }
-        // There's multiple intersections ( should only be two intersections. )
-        if (intersections(1)[y] === intersections(0)[y]) {
-            if (yMin <= intersections(0)[y] && intersections(0)[y] <= yMax) {
-                zs.push(intersections(0).z);
-                zs.push(intersections(1).z);
-            }
-        } else {
-            var delta = (intersections(1).z - intersections(0).z) / (intersections(1)[y] - intersections(0)[y]);
-            if (intersections(0)[y] > yMax) {
-                zs.push(intersections(0).z + delta * (yMax - intersections(0)[y]));
-            } else if (intersections(0)[y] < yMin) {
-                zs.push(intersections(0).z + delta * (yMin - intersections(0)[y]));
-            } else {
-                zs.push(intersections(0).z);
-            }
-            if (intersections(1)[y] > yMax) {
-                zs.push(intersections(1).z + delta * (yMax - intersections(1)[y]));
-            } else if (intersections(1)[y] < yMin) {
-                zs.push(intersections(1).z + delta * (yMin - intersections(1)[y]));
-            } else {
-                zs.push(intersections(1).z);
-            }
-        }
-        return true;
-    }
-*/
-
     var _sceneAABB_LS = [
         new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3(),
         new pc.Vec3(), new pc.Vec3(), new pc.Vec3(), new pc.Vec3()
     ];
-
-/*
-    var iAABBTriIndexes = [
-        0, 1, 2,  1, 2, 3,
-        4, 5, 6,  5, 6, 7,
-        0, 2, 4,  2, 4, 6,
-        1, 3, 5,  3, 5, 7,
-        0, 1, 4,  1, 4, 5,
-        2, 3, 6,  3, 6, 7
-    ];
-
-    function _getZFromAABB(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
-        _sceneAABB_LS[0].x = _sceneAABB_LS[1].x = _sceneAABB_LS[2].x = _sceneAABB_LS[3].x = aabbMin.x;
-        _sceneAABB_LS[1].y = _sceneAABB_LS[3].y = _sceneAABB_LS[7].y = _sceneAABB_LS[5].y = aabbMin.y;
-        _sceneAABB_LS[2].z = _sceneAABB_LS[3].z = _sceneAABB_LS[6].z = _sceneAABB_LS[7].z = aabbMin.z;
-        _sceneAABB_LS[4].x = _sceneAABB_LS[5].x = _sceneAABB_LS[6].x = _sceneAABB_LS[7].x = aabbMax.x;
-        _sceneAABB_LS[0].y = _sceneAABB_LS[2].y = _sceneAABB_LS[4].y = _sceneAABB_LS[6].y = aabbMax.y;
-        _sceneAABB_LS[0].z = _sceneAABB_LS[1].z = _sceneAABB_LS[4].z = _sceneAABB_LS[5].z = aabbMax.z;
-
-        for ( var i = 0; i < 8; ++i ) {
-            w2sc.transformPoint( _sceneAABB_LS[i], _sceneAABB_LS[i] );
-        }
-
-        var minz = 9999999999;
-        var maxz = -9999999999;
-
-        var vertices = intersectCache.vertices;
-        var positive = intersectCache.positive;
-        var zs       = intersectCache.zCollection;
-        zs.size = 0;
-
-        for (var AABBTriIter = 0; AABBTriIter < 12; ++AABBTriIter) {
-            vertices[0] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 0]];
-            vertices[1] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 1]];
-            vertices[2] = _sceneAABB_LS[iAABBTriIndexes[AABBTriIter * 3 + 2]];
-
-            var verticesWithinBound = 0;
-
-            _groupVertices("x", lcamMinX, true);
-            if (!_triXFace(zs, "x", "y", lcamMinX, lcamMinY, lcamMaxY)) continue;
-            verticesWithinBound += positive.size;
-
-            _groupVertices("x", lcamMaxX, false);
-            if (!_triXFace(zs, "x", "y", lcamMaxX, lcamMinY, lcamMaxY)) continue;
-            verticesWithinBound += positive.size;
-
-            _groupVertices("y", lcamMinY, true);
-            if (!_triXFace(zs, "y", "x", lcamMinY, lcamMinX, lcamMaxX)) continue;
-            verticesWithinBound += positive.size;
-
-            _groupVertices("y", lcamMaxY, false);
-            _triXFace(zs, "y", "x", lcamMaxY, lcamMinX, lcamMaxX);
-            if ( verticesWithinBound + positive.size == 12 ) {
-            // The triangle does not go outside of the frustum bound.
-                zs.push( vertices[0].z );
-                zs.push( vertices[1].z );
-                zs.push( vertices[2].z );
-            }
-        }
-
-        var z;
-        for (var j = 0, len = zs.size; j < len; j++) {
-            z = zs(j);
-            if (z < minz) minz = z;
-            if (z > maxz) maxz = z;
-        }
-        return { min: minz, max: maxz };
-    }
-*/
 
     function _getZFromAABBSimple(w2sc, aabbMin, aabbMax, lcamMinX, lcamMaxX, lcamMinY, lcamMaxY) {
         _sceneAABB_LS[0].x = _sceneAABB_LS[1].x = _sceneAABB_LS[2].x = _sceneAABB_LS[3].x = aabbMin.x;
@@ -330,9 +138,8 @@ pc.extend(pc, function () {
         return { min: minz, max: maxz };
     }
 
-    //////////////////////////////////////
-    // Shadow mapping support functions //
-    //////////////////////////////////////
+    // SHADOW MAPPING SUPPORT FUNCTIONS
+
     function getShadowFormat(device, shadowType) {
         if (shadowType === pc.SHADOW_VSM32) {
             return pc.PIXELFORMAT_RGBA32F;
@@ -642,9 +449,9 @@ pc.extend(pc, function () {
         m3.data[8] = m4.data[10];
     }
 
-    pc.extend(ForwardRenderer.prototype, {
+    Object.assign(ForwardRenderer.prototype, {
 
-        sortCompare: function(drawCallA, drawCallB) {
+        sortCompare: function (drawCallA, drawCallB) {
             if (drawCallA.layer === drawCallB.layer) {
                 if (drawCallA.drawOrder && drawCallB.drawOrder) {
                     return drawCallA.drawOrder - drawCallB.drawOrder;
@@ -658,7 +465,7 @@ pc.extend(pc, function () {
             return drawCallB._key[pc.SORTKEY_FORWARD] - drawCallA._key[pc.SORTKEY_FORWARD];
         },
 
-        sortCompareMesh: function(drawCallA, drawCallB) {
+        sortCompareMesh: function (drawCallA, drawCallB) {
             if (drawCallA.layer === drawCallB.layer) {
                 if (drawCallA.drawOrder && drawCallB.drawOrder) {
                     return drawCallA.drawOrder - drawCallB.drawOrder;
@@ -677,7 +484,7 @@ pc.extend(pc, function () {
             return keyB - keyA;
         },
 
-        depthSortCompare: function(drawCallA, drawCallB) {
+        depthSortCompare: function (drawCallA, drawCallB) {
             keyA = drawCallA._key[pc.SORTKEY_DEPTH];
             keyB = drawCallB._key[pc.SORTKEY_DEPTH];
 
@@ -688,11 +495,11 @@ pc.extend(pc, function () {
             return keyB - keyA;
         },
 
-        lightCompare: function(lightA, lightB) {
+        lightCompare: function (lightA, lightB) {
             return lightA.key - lightB.key;
         },
 
-        _isVisible: function(camera, meshInstance) {
+        _isVisible: function (camera, meshInstance) {
             if (!meshInstance.visible) return false;
 
             meshPos = meshInstance.aabb.center;
@@ -707,7 +514,7 @@ pc.extend(pc, function () {
             return camera.frustum.containsSphere(tempSphere);
         },
 
-        getShadowCamera: function(device, light) {
+        getShadowCamera: function (device, light) {
             var shadowCam = light._shadowCamera;
             var shadowBuffer;
 
@@ -724,7 +531,7 @@ pc.extend(pc, function () {
             return shadowCam;
         },
 
-        updateCameraFrustum: function(camera) {
+        updateCameraFrustum: function (camera) {
             if (camera.vrDisplay && camera.vrDisplay.presenting) {
                 projMat = camera.vrDisplay.combinedProj;
                 var parent = camera._node.getParent();
@@ -1058,14 +865,6 @@ pc.extend(pc, function () {
                 params[2] = bias;
                 params[3] = 1.0 / spot.attenuationEnd;
                 this.lightShadowParamsId[cnt].setValue(params);
-/*
-                if (this.mainLight < 0) {
-                    this.lightShadowMatrixVsId[cnt].setValue(spot._shadowMatrix.data);
-                    this.lightShadowParamsVsId[cnt].setValue(params);
-                    this.lightPosVsId[cnt].setValue(spot._position.data);
-                    this.mainLight = i;
-                }
-*/
             }
             if (spot._cookie) {
                 this.lightCookieId[cnt].setValue(spot._cookie);
@@ -1146,7 +945,7 @@ pc.extend(pc, function () {
             }
         },
 
-        cull: function(camera, drawCalls, visibleList) {
+        cull: function (camera, drawCalls, visibleList) {
             // #ifdef PROFILER
             var cullTime = pc.now();
             // #endif
@@ -1205,7 +1004,7 @@ pc.extend(pc, function () {
             return visibleLength;
         },
 
-        cullLights: function(camera, lights) {
+        cullLights: function (camera, lights) {
             var i, light, type;
             for (i = 0; i < lights.length; i++) {
                 light = lights[i];
@@ -1220,7 +1019,7 @@ pc.extend(pc, function () {
             }
         },
 
-        updateCpuSkinMatrices: function(drawCalls) {
+        updateCpuSkinMatrices: function (drawCalls) {
             var drawCallsCount = drawCalls.length;
             if (drawCallsCount === 0) return;
 
@@ -1242,7 +1041,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        updateGpuSkinMatrices: function(drawCalls) {
+        updateGpuSkinMatrices: function (drawCalls) {
             // #ifdef PROFILER
             var skinTime = pc.now();
             // #endif
@@ -1265,7 +1064,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        updateMorphedBounds: function(drawCalls) {
+        updateMorphedBounds: function (drawCalls) {
             // #ifdef PROFILER
             var morphTime = pc.now();
             // #endif
@@ -1283,7 +1082,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        updateMorphing: function(drawCalls) {
+        updateMorphing: function (drawCalls) {
             // #ifdef PROFILER
             var morphTime = pc.now();
             // #endif
@@ -1303,7 +1102,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        setBaseConstants: function(device, material) {
+        setBaseConstants: function (device, material) {
             // Cull mode
             device.setCullMode(material.cull);
             // Alpha test
@@ -1313,7 +1112,7 @@ pc.extend(pc, function () {
             }
         },
 
-        setSkinning: function(device, meshInstance, material) {
+        setSkinning: function (device, meshInstance, material) {
             if (meshInstance.skinInstance) {
                 this._skinDrawCalls++;
                 if (device.supportsBoneTextures) {
@@ -1328,7 +1127,7 @@ pc.extend(pc, function () {
             }
         },
 
-        drawInstance: function(device, meshInstance, mesh, style, normal) {
+        drawInstance: function (device, meshInstance, mesh, style, normal) {
             instancingData = meshInstance.instancingData;
             if (instancingData) {
                 this._instancedDrawCalls++;
@@ -1359,7 +1158,7 @@ pc.extend(pc, function () {
         },
 
         // used for stereo
-        drawInstance2: function(device, meshInstance, mesh, style) {
+        drawInstance2: function (device, meshInstance, mesh, style) {
             instancingData = meshInstance.instancingData;
             if (instancingData) {
                 this._instancedDrawCalls++;
@@ -1377,7 +1176,7 @@ pc.extend(pc, function () {
             }
         },
 
-        renderShadows: function(lights, cameraPass) {
+        renderShadows: function (lights, cameraPass) {
             var device = this.device;
             // #ifdef PROFILER
             var shadowMapStartTime = pc.now();
@@ -1550,16 +1349,27 @@ pc.extend(pc, function () {
                             var origShadowMap = shadowCam.renderTarget;
                             var tempRt = getShadowMapFromCache(device, light._shadowResolution, light._shadowType, 1);
 
+                            var isVsm8 = light._shadowType === pc.SHADOW_VSM8;
                             var blurMode = light.vsmBlurMode;
-                            var blurShader = (light._shadowType === pc.SHADOW_VSM8 ? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize];
+                            var blurShader = (isVsm8 ? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize];
                             if (!blurShader) {
                                 this.blurVsmWeights[filterSize] = gaussWeights(filterSize);
-                                var chunks = pc.shaderChunks;
-                                (light._shadowType === pc.SHADOW_VSM8 ? this.blurPackedVsmShader : this.blurVsmShader)[blurMode][filterSize] = blurShader =
-                                    chunks.createShaderFromCode(this.device, chunks.fullscreenQuadVS,
-                                    "#define SAMPLES " + filterSize + "\n" +
-                                    (light._shadowType === pc.SHADOW_VSM8 ? this.blurPackedVsmShaderCode : this.blurVsmShaderCode)[blurMode],
-                                    "blurVsm" + blurMode + "" + filterSize + "" + (light._shadowType === pc.SHADOW_VSM8));
+
+                                var blurVS = pc.shaderChunks.fullscreenQuadVS;
+                                var blurFS = "#define SAMPLES " + filterSize + "\n";
+                                if (isVsm8) {
+                                    blurFS += this.blurPackedVsmShaderCode[blurMode];
+                                } else {
+                                    blurFS += this.blurVsmShaderCode[blurMode];
+                                }
+                                var blurShaderName = "blurVsm" + blurMode + "" + filterSize + "" + isVsm8;
+                                blurShader = pc.shaderChunks.createShaderFromCode(this.device, blurVS, blurFS, blurShaderName);
+
+                                if (isVsm8) {
+                                    this.blurPackedVsmShader[blurMode][filterSize] = blurShader;
+                                } else {
+                                    this.blurVsmShader[blurMode][filterSize] = blurShader;
+                                }
                             }
 
                             blurScissorRect.z = light._shadowResolution - 2;
@@ -1597,13 +1407,13 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        updateShader: function(meshInstance, objDefs, staticLightList, pass, sortedLights) {
+        updateShader: function (meshInstance, objDefs, staticLightList, pass, sortedLights) {
             meshInstance.material._scene = this.scene;
             meshInstance.material.updateShader(this.device, this.scene, objDefs, staticLightList, pass, sortedLights);
             meshInstance._shader[pass] = meshInstance.material.shader;
         },
 
-        renderForward: function(camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer) {
+        renderForward: function (camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer) {
             var device = this.device;
             var scene = this.scene;
             var vrDisplay = camera.vrDisplay;
@@ -1846,7 +1656,7 @@ pc.extend(pc, function () {
             // #endif
         },
 
-        setupInstancing: function(device) {
+        setupInstancing: function (device) {
             if (!pc._instanceVertexFormat) {
                 var formatDesc = [
                     { semantic: pc.SEMANTIC_TEXCOORD2, components: 4, type: pc.TYPE_FLOAT32 },
@@ -1896,8 +1706,6 @@ pc.extend(pc, function () {
             var prepareTime = pc.now();
             var searchTime = 0;
             var subSearchTime = 0;
-            var cullTime = 0;
-            var subCullTime = 0;
             var triAabbTime = 0;
             var subTriAabbTime = 0;
             var writeMeshTime = 0;
@@ -1940,10 +1748,6 @@ pc.extend(pc, function () {
                 if (!drawCall.isStatic) {
                     newDrawCalls.push(drawCall);
                 } else {
-
-                    // #ifdef PROFILER
-                    subCullTime = pc.now();
-                    // #endif
                     aabb = drawCall.aabb;
                     staticLights.length = 0;
                     for (lightTypePass = pc.LIGHTTYPE_POINT; lightTypePass <= pc.LIGHTTYPE_SPOT; lightTypePass++) {
@@ -1970,9 +1774,6 @@ pc.extend(pc, function () {
                             }
                         }
                     }
-                    // #ifdef PROFILER
-                    cullTime += pc.now() - subCullTime;
-                    // #endif
 
                     if (staticLights.length === 0) {
                         newDrawCalls.push(drawCall);
@@ -2152,13 +1953,11 @@ pc.extend(pc, function () {
                             }
 
                             // uncomment to remove 32 lights limit
-                            /*
-                            var lnames = combIbName.split("_");
-                            lnames.length = lnames.length - 1;
-                            for(k=0; k<lnames.length; k++) {
-                                instance._staticLightList[k] = lights[ parseInt(lnames[k]) ];
-                            }
-                            */
+                            // var lnames = combIbName.split("_");
+                            // lnames.length = lnames.length - 1;
+                            // for(k = 0; k < lnames.length; k++) {
+                            //     instance._staticLightList[k] = lights[parseInt(lnames[k])];
+                            // }
 
                             // comment to remove 32 lights limit
                             for (k = 0; k < staticLights.length; k++) {
@@ -2384,8 +2183,8 @@ pc.extend(pc, function () {
         },
 
 
-        cullDirectionalShadowmap: function(light, drawCalls, camera, pass) {
-            var i, j, shadowCam, shadowCamNode, lightNode, frustumSize, vlen, visibleList;
+        cullDirectionalShadowmap: function (light, drawCalls, camera, pass) {
+            var i, shadowCam, shadowCamNode, lightNode, frustumSize, vlen, visibleList;
             var unitPerTexel, delta, p;
             var minx, miny, minz, maxx, maxy, maxz, centerx, centery;
             var visible, numInstances;
@@ -2417,16 +2216,16 @@ pc.extend(pc, function () {
             // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
             shadowCamView.copy( shadowCamNode.getWorldTransform() ).invert();
             c2sc.copy( shadowCamView ).mul( camera._node.worldTransform );
-            for (j = 0; j < 8; j++) {
-                c2sc.transformPoint(frustumPoints[j], frustumPoints[j]);
+            for (i = 0; i < 8; i++) {
+                c2sc.transformPoint(frustumPoints[i], frustumPoints[i]);
             }
 
             // 4. Come up with a bounding box (in light-space) by calculating the min
             // and max X, Y, and Z values from your 8 light-space frustum coordinates.
             minx = miny = minz = 1000000;
             maxx = maxy = maxz = -1000000;
-            for (j = 0; j < 8; j++) {
-                p = frustumPoints[j];
+            for (i = 0; i < 8; i++) {
+                p = frustumPoints[i];
                 if (p.x < minx) minx = p.x;
                 if (p.x > maxx) maxx = p.x;
                 if (p.y < miny) miny = p.y;
@@ -2467,8 +2266,8 @@ pc.extend(pc, function () {
             }
             vlen = light._visibleLength[pass] = 0;
 
-            for (j = 0, numInstances = drawCalls.length; j < numInstances; j++) {
-                meshInstance = drawCalls[j];
+            for (i = 0, numInstances = drawCalls.length; i < numInstances; i++) {
+                meshInstance = drawCalls[i];
                 visible = true;
                 if (meshInstance.cull) {
                     visible = this._isVisible(shadowCam, meshInstance);
@@ -2803,6 +2602,7 @@ pc.extend(pc, function () {
                     }
 
                     // Render directional shadows once for each camera (will reject more than 1 attempt in this function)
+
                     // #ifdef PROFILER
                     draws = this._shadowDrawCalls;
                     // #endif

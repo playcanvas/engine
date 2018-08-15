@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = [
         'enabled',
         'type',
@@ -26,7 +26,9 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The Application.
      * @extends pc.ComponentSystem
      */
-    var ModelComponentSystem = function ModelComponentSystem (app) {
+    var ModelComponentSystem = function ModelComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'model';
         this.description = "Renders a 3D model at the location of the Entity.";
         app.systems.add(this.id, this);
@@ -36,41 +38,23 @@ pc.extend(pc, function () {
 
         this.schema = _schema;
 
-        var gd = app.graphicsDevice;
-        this.box = pc.createBox(gd, {
-            halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
-        });
-        this.capsule = pc.createCapsule(gd, {
-            radius: 0.5,
-            height: 2
-        });
-        this.sphere = pc.createSphere(gd, {
-            radius: 0.5
-        });
-        this.cone = pc.createCone(gd, {
-            baseRadius: 0.5,
-            peakRadius: 0,
-            height: 1
-        });
-        this.cylinder = pc.createCylinder(gd, {
-            radius: 0.5,
-            height: 1
-        });
-        this.plane = pc.createPlane(gd, {
-            halfExtents: new pc.Vec2(0.5, 0.5),
-            widthSegments: 1,
-            lengthSegments: 1
-        });
+        this.box = null;
+        this.capsule = null;
+        this.cone = null;
+        this.cylinder = null;
+        this.plane = null;
+        this.sphere = null;
 
         this.defaultMaterial = new pc.StandardMaterial();
 
         this.on('beforeremove', this.onRemove, this);
     };
-    ModelComponentSystem = pc.inherits(ModelComponentSystem, pc.ComponentSystem);
+    ModelComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ModelComponentSystem.prototype.constructor = ModelComponentSystem;
 
     pc.Component._buildAccessors(pc.ModelComponent.prototype, _schema);
 
-    pc.extend(ModelComponentSystem.prototype, {
+    Object.assign(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
 
             // order matters here
@@ -95,8 +79,7 @@ pc.extend(pc, function () {
                 data.layers = data.layers.slice(0);
             }
 
-
-            ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         removeComponent: function (entity) {
@@ -108,7 +91,7 @@ pc.extend(pc, function () {
                 data.model = null;
             }
 
-            ModelComponentSystem._super.removeComponent.call(this, entity);
+            pc.ComponentSystem.prototype.removeComponent.call(this, entity);
         },
 
         cloneComponent: function (entity, clone) {
@@ -148,7 +131,7 @@ pc.extend(pc, function () {
 
             // clone the original model if the original model component is of type asset but
             // has no specified asset
-            if (entity.model.model && entity.model.type === 'asset' && ! entity.model.asset) {
+            if (entity.model.model && entity.model.type === 'asset' && !entity.model.asset) {
                 component.model = entity.model.model.clone();
                 component._clonedModel = true;
             }
@@ -168,7 +151,7 @@ pc.extend(pc, function () {
             }
         },
 
-        onRemove: function(entity, component) {
+        onRemove: function (entity, component) {
             // Unhook any material asset events
             entity.model.materialAsset = null;
             component.remove();
