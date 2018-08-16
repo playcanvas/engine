@@ -187,9 +187,9 @@ Object.assign(pc, function () {
 
             this._addChar(this.data, ch, code, _x - (sx / 2), _y - sy, sx, sy, xoffset, yoffset, xadvance, numTextures - 1, w, h);
 
-            _x += (sx);
-            if (_x > w) {
-                // Wrap to the next row of this canvas
+            _x += sx;
+            if (_x + sx > w) {
+                // Wrap to the next row of this canvas if the right edge of the next glyph would overflow
                 _x = sx / 2;
                 _y += sy;
                 if (_y > h) {
