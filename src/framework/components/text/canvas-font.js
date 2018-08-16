@@ -157,7 +157,7 @@ Object.assign(pc, function () {
         var color = getRgbaStringFromColor(this.color);
         var transparent = color.replace(/[\d\.]+\)$/, '0)');
 
-        // Clear the context to transparent
+        // Clear the context
         ctx.fillStyle = transparent;
         ctx.fillRect(0, 0, w, h);
         ctx.font = this.weight + ' ' + this.fontSize.toString() + 'px "' + this.fontName + '"';
@@ -206,7 +206,7 @@ Object.assign(pc, function () {
                         ctx = canvas.getContext('2d', {
                             alpha: true
                         });
-                        // Clear the context to transparent
+                        // Clear the context
                         ctx.font = this.weight + ' ' + this.fontSize.toString() + 'px "' + this.fontName + '"';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'bottom';
