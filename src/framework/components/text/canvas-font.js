@@ -17,6 +17,13 @@ Object.assign(pc, function () {
         return chars.sort();
     }
 
+    function getRgbaStringFromColor(color) {
+        var r = Math.round(color.r * 255);
+        var g = Math.round(color.g * 255);
+        var b = Math.round(color.b * 255);
+        return 'rgba(' + r + ',' + g + ',' + b + ',' + color.a + ')';
+    }
+
     /**
      * @private
      * @constructor
@@ -36,7 +43,7 @@ Object.assign(pc, function () {
         this.weight = options.weight || 'normal';
         this.fontSize = parseInt(options.fontSize, 10) || 32;
         this.fontName = options.fontName || 'Arial';
-        this.color = options.color || '#FFFFFF';
+        this.color = options.color || new pc.Color(1, 1, 1);
 
         this.glyphSize = options.glyphSize || this.fontSize + 4;
 
@@ -147,12 +154,12 @@ Object.assign(pc, function () {
         });
         var w = ctx.canvas.width;
         var h = ctx.canvas.height;
+        var color = getRgbaStringFromColor(this.color);
+        var transparent = color.replace(/[\d\.]+\)$/, '0)');
 
-        // Clear the context to black/transparent
-        ctx.clearRect(0, 0, w, h);
-
-        // Write white text
-        ctx.fillStyle = this.color;
+        // Clear the context
+        ctx.fillStyle = transparent;
+        ctx.fillRect(0, 0, w, h);
         ctx.font = this.weight + ' ' + this.fontSize.toString() + 'px "' + this.fontName + '"';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
@@ -170,6 +177,8 @@ Object.assign(pc, function () {
         for (i = 0; i < symbols.length; i++) {
             var ch = symbols[i];
             var code = pc.string.getCodePoint(symbols[i]);
+            ctx.fillStyle = color;
+            // Write text
             ctx.fillText(ch, _x, _y);
             var width = ctx.measureText(ch).width;
             var xoffset = (sx - width) / 2;
@@ -197,12 +206,12 @@ Object.assign(pc, function () {
                         ctx = canvas.getContext('2d', {
                             alpha: true
                         });
-                        // Write white text
-                        ctx.fillStyle = this.color;
+                        // Clear the context
                         ctx.font = this.weight + ' ' + this.fontSize.toString() + 'px "' + this.fontName + '"';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'bottom';
-                        ctx.clearRect(0, 0, w, h);
+                        ctx.fillStyle = transparent;
+                        ctx.fillRect(0, 0, w, h);
                         var texture = new pc.Texture(this.app.graphicsDevice, {
                             format: pc.PIXELFORMAT_R8_G8_B8_A8,
                             autoMipmap: true
@@ -218,7 +227,8 @@ Object.assign(pc, function () {
                         ctx = canvas.getContext('2d', {
                             alpha: true
                         });
-                        ctx.clearRect(0, 0, w, h);
+                        ctx.fillStyle = transparent;
+                        ctx.fillRect(0, 0, w, h);
                     }
                 }
             }
@@ -270,7 +280,8 @@ Object.assign(pc, function () {
             "yoffset": yoffset,
             "scale": 1,
             "range": 1,
-            "map": mapNum
+            "map": mapNum,
+            "bounds": [0, 0, w, h]
         };
     };
 
