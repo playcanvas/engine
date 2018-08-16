@@ -168,7 +168,8 @@ Object.assign(pc, function () {
 
         var sx = this.glyphSize;
         var sy = this.glyphSize;
-        var _x = sx / 2;
+        var halfWidth = sx / 2;
+        var _x = halfWidth;
         var _y = sy;
         var i;
 
@@ -185,12 +186,12 @@ Object.assign(pc, function () {
             var yoffset = 0;
             var xadvance = width;
 
-            this._addChar(this.data, ch, code, _x - (sx / 2), _y - sy, sx, sy, xoffset, yoffset, xadvance, numTextures - 1, w, h);
+            this._addChar(this.data, ch, code, _x - halfWidth, _y - sy, sx, sy, xoffset, yoffset, xadvance, numTextures - 1, w, h);
 
-            _x += (sx);
-            if (_x > w) {
-                // Wrap to the next row of this canvas
-                _x = sx / 2;
+            _x += sx;
+            if (_x + halfWidth > w) {
+                // Wrap to the next row of this canvas if the right edge of the next glyph would overflow
+                _x = halfWidth;
                 _y += sy;
                 if (_y > h) {
                     // We ran out of space on this texture!

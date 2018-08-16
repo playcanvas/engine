@@ -34,7 +34,7 @@
 
         <script>
             // Create a canvas font asset
-            const size = 28;
+            const size = 36;
             var cf = new pc.CanvasFont(app, {
                 color: new pc.Color(0, 0, 1), // blue
                 fontName: "Verdana",
@@ -127,6 +127,7 @@
                 for (var i = 0; i < cf.textures.length; i++) {
                     var canvas = cf.textures[i].getSource();
                     canvas.style.marginLeft = '20px';
+                    canvas.style.border = '1px solid blue';
                     wrapper.appendChild(canvas);
                 }
                 wrapper.style.position = 'absolute';
