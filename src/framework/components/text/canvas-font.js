@@ -31,6 +31,12 @@ Object.assign(pc, function () {
      * @classdesc Represents the resource of a canvas font asset.
      * @param {pc.Application} app The application
      * @param {Object} options The font options
+     * @param {String} [options.fontName] The name of the font, use in the same manner as a CSS font
+     * @param {String} [options.fontWeight] The weight of the font, e.g. 'normal', 'bold', defaults to "normal"
+     * @param {Number} [options.fontSize] The size the font will be rendered into to the texture atlas at, defaults to 32
+     * @param {pc.Color} [options.color] The color the font will be rendered into the texture atlas as, defaults to white
+     * @param {Number} [options.width] The width of each texture atlas, defaults to 2048
+     * @param {Number} [options.height] The height of each texture atlas, defaults to 2048
      */
     var CanvasFont = function (app, options) {
         this.type = "bitmap";
@@ -40,20 +46,19 @@ Object.assign(pc, function () {
         this.intensity = 0;
 
         options = options || {};
-        this.weight = options.weight || 'normal';
-        this.fontSize = parseInt(options.fontSize, 10) || 32;
+        this.fontWeight = options.fontWeight || 'normal';
+        this.fontSize = parseInt(options.fontSize, 10);
+        this.glyphSize = this.fontSize;
         this.fontName = options.fontName || 'Arial';
         this.color = options.color || new pc.Color(1, 1, 1);
-
-        this.glyphSize = options.glyphSize || this.fontSize + 4;
 
         var w = options.width > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.width || DEFAULT_TEXTURE_SIZE);
         var h = options.height > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.height || DEFAULT_TEXTURE_SIZE);
 
         // Create a canvas to do the text rendering
         var canvas = document.createElement('canvas');
-        canvas.height = w;
-        canvas.width = h;
+        canvas.height = h;
+        canvas.width = w;
 
         var texture = new pc.Texture(this.app.graphicsDevice, {
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
@@ -141,7 +146,7 @@ Object.assign(pc, function () {
         this.intensity = null;
         this.textures = null;
         this.type = null;
-        this.weight = null;
+        this.fontWeight = null;
     };
 
     CanvasFont.prototype._renderAtlas = function (charsArray) {
@@ -157,12 +162,15 @@ Object.assign(pc, function () {
         var color = getRgbaStringFromColor(this.color);
         var transparent = color.replace(/[\d\.]+\)$/, '0)');
 
+        var TEXT_ALIGN = 'center';
+        var TEXT_BASELINE = 'bottom';
+
         // Clear the context
         ctx.fillStyle = transparent;
         ctx.fillRect(0, 0, w, h);
-        ctx.font = this.weight + ' ' + this.fontSize.toString() + 'px "' + this.fontName + '"';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
+        ctx.font = this.fontWeight + ' ' + this.fontSize.toString() + 'px "' + this.fontName + '"';
+        ctx.textAlign = TEXT_ALIGN;
+        ctx.textBaseline = TEXT_BASELINE;
 
         this.data = this._createJson(this.chars, this.fontName, w, h);
 
@@ -178,6 +186,10 @@ Object.assign(pc, function () {
         for (i = 0; i < symbols.length; i++) {
             var ch = symbols[i];
             var code = pc.string.getCodePoint(symbols[i]);
+
+            var fs = this.getCharScale(code) * this.fontSize;
+            ctx.font = this.fontWeight + ' ' + fs.toString() + 'px "' + this.fontName + '"';
+
             ctx.fillStyle = color;
             // Write text
             ctx.fillText(ch, _x, _y);
@@ -208,9 +220,6 @@ Object.assign(pc, function () {
                             alpha: true
                         });
                         // Clear the context
-                        ctx.font = this.weight + ' ' + this.fontSize.toString() + 'px "' + this.fontName + '"';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'bottom';
                         ctx.fillStyle = transparent;
                         ctx.fillRect(0, 0, w, h);
                         var texture = new pc.Texture(this.app.graphicsDevice, {
@@ -249,7 +258,7 @@ Object.assign(pc, function () {
     CanvasFont.prototype._createJson = function (chars, fontName, width, height) {
         var base = {
             "version": 2,
-            "intensity": 0,
+            "intensity": this.intensity,
             "info": {
                 "face": fontName,
                 "width": width,
@@ -265,10 +274,38 @@ Object.assign(pc, function () {
         return base;
     };
 
+    // Most characters are rendered at the same pixel size as specified
+    // Some very tall characters will render outside of the box, for these
+    // we scale them down when rendering and character data in the font
+    // is set so that they are scaled up again when rendered in the quad
+    //
+    // This default implementation checks for capital letters with accemts
+    // and emoji-style unicode characters which are usually render too tall
+    //
+    // If we required we can allow a user-custom function here that users can
+    // supply special cases for their character set
+    CanvasFont.prototype.getCharScale = function (code) {
+        var scale = 1.0;
+
+        // capital letters with accents
+        if (code >= 0x00C0 && code <= 0x00DD) {
+            scale = (this.fontSize - (this.fontSize/8)) / this.fontSize;
+        }
+        // "emoji" misc. images and emoticon range of unicode
+        else if (code >= 0x1f000 && code <= 0x1F9FF) {
+            scale = (this.fontSize - (this.fontSize/8)) / this.fontSize;
+        }
+
+        return scale;
+    };
+
     CanvasFont.prototype._addChar = function (json, char, charCode, x, y, w, h, xoffset, yoffset, xadvance, mapNum, mapW, mapH) {
         if (json.info.maps.length < mapNum + 1) {
             json.info.maps.push({ "width": mapW, "height": mapH });
         }
+
+        var scale = this.getCharScale(charCode) * this.fontSize / 32;
+
         json.chars[charCode] = {
             "id": charCode,
             "letter": char,
@@ -276,13 +313,13 @@ Object.assign(pc, function () {
             "y": y,
             "width": w,
             "height": h,
-            "xadvance": xadvance,
-            "xoffset": xoffset,
-            "yoffset": yoffset,
-            "scale": 1,
+            "xadvance": xadvance / scale,
+            "xoffset": xoffset / scale,
+            "yoffset": yoffset / scale,
+            "scale": scale,
             "range": 1,
             "map": mapNum,
-            "bounds": [0, 0, w, h]
+            "bounds": [0, 0, w / scale, h / scale]
         };
     };
 

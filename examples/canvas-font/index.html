@@ -34,19 +34,24 @@
 
         <script>
             // Create a canvas font asset
-            const size = 36;
+            const size = 64;
+            const elSize = 32;
             var cf = new pc.CanvasFont(app, {
-                color: new pc.Color(0, 0, 1), // blue
-                fontName: "Verdana",
-                fontSize: size,
-                width: 128,
-                height: 128
+                color: new pc.Color(1, 1, 1), // blue
+                fontName: "Arial",
+                fontSize: size
             });
 
             var asset = new pc.Asset("CanvasFont", "font", {});
             app.assets.add(asset);
             asset.resource = cf;
             asset.loaded = true;
+
+            var fontAsset = new pc.Asset("Verdana", "font", {
+                url: "../assets/Arial/Arial.json"
+            });
+            app.assets.add(fontAsset);
+            app.assets.load(fontAsset);
 
             // create camera
             var c = new pc.Entity();
@@ -60,65 +65,84 @@
 
             var scr = new pc.Entity();
             scr.addComponent("screen", {
-                screenSpace: true
+                screenSpace: true,
+                referenceResolution: [1280, 720],
+                scaleMode: pc.SCALEMODE_BLEND,
+                scaleBlend: 1
             });
 
-            // some sample text
-            var emoji = "😈Testing Emoji: 😀😀😀 🤢🤥🤝 😻 a👍👨‍🎤😍a 🤔🤔 🦀🦀 🍑👻😗😏😒👽👾🎃😺💩😈🤒💑👢🐭🦁🐸🐍🦐🐙";
-
-            var im = new pc.Entity();
-            im.addComponent('element', {
+            var backing = new pc.Entity();
+            backing.addComponent('element', {
                 type: "image",
-                anchor: [0.5,0.5,0.5,0.5],
-                pivot: [0, 0],
-                width: 500,
+                anchor: [0.5,1,0.5,1],
+                pivot: [0.5, 1],
+                width: 768,
                 height: 500,
                 color: [0.3, 0.3, 0.3]
             });
-            scr.addChild(im);
+            scr.addChild(backing);
+            backing.translateLocal(0, -100, 0);
 
-            cf.createTextures(emoji);
-            var en = new pc.Entity();
-            en.addComponent("element", {
+            // some sample text
+            var firstline = "ÉÅAå 東京 🐇🔥🂡 font";
+            var secondline = "😀😀😀🤢🤥🤝😻👍👨‍🎤😡💪🏿😍🤔💽🦀🍑👻😗😏😒👽👾🎃😺💩😈🤒💑👢🐭🦁🐸🐍🦐🐙";
+            var thirdline = "Testing MSDF font";
+
+            cf.createTextures(firstline);
+
+            var canvasElementEntity1 = new pc.Entity();
+            canvasElementEntity1.addComponent("element", {
                 type: "text",
                 fontAsset: asset,
-                fontSize: 32,
-                text: emoji,
+                fontSize: elSize,
+                text: firstline,
                 wrapLines: true,
-                autoWidth: false,
-                autoHeight: false,
-                width: 500,
-                height: 500,
-                anchor: [0,1,0,1],
+                autoWidth: true,
+                autoHeight: true,
+                margin: [0,0,0,0],
+                anchor: [0,1,1,1],
                 pivot: [0, 1],
-                alignment: [1,1]
+                alignment: [1, 0]
             });
 
-            var emoji2 = "😈Testing Emoji: 😀😀😀 🤢🤥🤝 😻 a👍👨‍🎤😡💪🏿😍b 🤔💽🤔 🦀🦀 🍑👻😗😏😒👽👾🎃😺💩😈🤒💑👢🐭🦁🐸🐍🦐🐙";
-            // reuses the same texture as before
-            cf.updateTextures(emoji2);
-
-            var en2 = new pc.Entity();
-            en2.addComponent("element", {
+            cf.updateTextures(secondline);
+            var canvasElementEntity2 = new pc.Entity();
+            canvasElementEntity2.addComponent("element", {
                 type: "text",
                 fontAsset: asset,
-                fontSize: 32,
-                text: emoji2,
+                fontSize: elSize,
+                text: secondline,
                 wrapLines: true,
-                autoWidth: false,
-                autoHeight: false,
-                width: 500,
-                height: 500,
-                anchor: [0, 1, 0, 1],
+                autoWidth: true,
+                autoHeight: true,
+                margin: [0,0,0,0],
+                anchor: [0,1,1,1],
                 pivot: [0, 1],
-                alignment: [1, 1]
+                alignment: [1, 0]
+            });
+
+            var msdfElementEntity = new pc.Entity();
+            msdfElementEntity.addComponent("element", {
+                type: "text",
+                fontAsset: fontAsset,
+                fontSize: elSize,
+                text: thirdline,
+                wrapLines: true,
+                autoWidth: true,
+                autoHeight: true,
+                margin: [0,0,0,0],
+                anchor: [0, 1, 1, 1],
+                pivot: [0, 1],
+                alignment: [1, 0]
             });
 
             app.root.addChild(scr);
-            im.addChild(en);
-            en.translateLocal(0,-32,0);
-            im.addChild(en2);
-            en2.translateLocal(0, -300, 0);
+            backing.addChild(canvasElementEntity1);
+            canvasElementEntity1.translateLocal(0, 0, 0);
+            backing.addChild(canvasElementEntity2);
+            canvasElementEntity2.translateLocal(0, -elSize, 0);
+            backing.addChild(msdfElementEntity);
+            msdfElementEntity.translateLocal(0, -elSize*3, 0);
 
             // purely for debugging: do not do this in a real application
             var showCanvasAtlasForDebug = false;
