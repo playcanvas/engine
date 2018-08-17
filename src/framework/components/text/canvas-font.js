@@ -159,8 +159,18 @@ Object.assign(pc, function () {
         });
         var w = ctx.canvas.width;
         var h = ctx.canvas.height;
-        var color = getRgbaStringFromColor(this.color);
-        var transparent = color.replace(/[\d\.]+\)$/, '0)');
+
+        // fill color
+        var color = this.color.toString(false);
+
+        // generate a "transparent" color for the background
+        // browsers seem to optimize away all color data if alpha=0
+        // so setting alpha to min value and hope this isn't noticable
+        // might be able to
+        var a = this.color.a;
+        this.color.a = 1/255;
+        var transparent = this.color.toString(true);
+        this.color.a = a;
 
         var TEXT_ALIGN = 'center';
         var TEXT_BASELINE = 'bottom';

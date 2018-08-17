@@ -39,7 +39,9 @@
             var cf = new pc.CanvasFont(app, {
                 color: new pc.Color(1, 1, 1), // blue
                 fontName: "Arial",
-                fontSize: size
+                fontSize: size,
+                width: 128,
+                height: 128
             });
 
             var asset = new pc.Asset("CanvasFont", "font", {});
@@ -78,7 +80,7 @@
                 pivot: [0.5, 1],
                 width: 768,
                 height: 500,
-                color: [0.3, 0.3, 0.3]
+                color: [0.1,0.1,0.1]
             });
             scr.addChild(backing);
             backing.translateLocal(0, -100, 0);
