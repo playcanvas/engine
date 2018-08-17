@@ -189,6 +189,8 @@ Object.assign(pc, function () {
 
             var fs = this.getCharScale(code) * this.fontSize;
             ctx.font = this.fontWeight + ' ' + fs.toString() + 'px "' + this.fontName + '"';
+            ctx.textAlign = TEXT_ALIGN;
+            ctx.textBaseline = TEXT_BASELINE;
 
             ctx.fillStyle = color;
             // Write text
