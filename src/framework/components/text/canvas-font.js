@@ -17,13 +17,6 @@ Object.assign(pc, function () {
         return chars.sort();
     }
 
-    function getRgbaStringFromColor(color) {
-        var r = Math.round(color.r * 255);
-        var g = Math.round(color.g * 255);
-        var b = Math.round(color.b * 255);
-        return 'rgba(' + r + ',' + g + ',' + b + ',' + color.a + ')';
-    }
-
     /**
      * @private
      * @constructor
@@ -168,7 +161,7 @@ Object.assign(pc, function () {
         // so setting alpha to min value and hope this isn't noticable
         // might be able to
         var a = this.color.a;
-        this.color.a = 1/255;
+        this.color.a = 1 / 255;
         var transparent = this.color.toString(true);
         this.color.a = a;
 
@@ -299,13 +292,12 @@ Object.assign(pc, function () {
     CanvasFont.prototype.getCharScale = function (code) {
         var scale = 1.0;
 
-        // capital letters with accents
         if (code >= 0x00C0 && code <= 0x00DD) {
-            scale = (this.fontSize - (this.fontSize/8)) / this.fontSize;
-        }
-        // "emoji" misc. images and emoticon range of unicode
-        else if (code >= 0x1f000 && code <= 0x1F9FF) {
-            scale = (this.fontSize - (this.fontSize/8)) / this.fontSize;
+            // capital letters with accents
+            scale = (this.fontSize - (this.fontSize / 8)) / this.fontSize;
+        } else if (code >= 0x1f000 && code <= 0x1F9FF) {
+            // "emoji" misc. images and emoticon range of unicode
+            scale = (this.fontSize - (this.fontSize / 8)) / this.fontSize;
         }
 
         return scale;
