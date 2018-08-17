@@ -132,14 +132,12 @@ Object.assign(pc, function () {
 
         _onSetHorizontalScrollbarValue: function (scrollValueX) {
             if (!this._scrollbarUpdateFlags[pc.ORIENTATION_HORIZONTAL] && this.enabled && this.entity.enabled) {
-                this._velocity.set(0, 0, 0);
                 this._onSetScroll(scrollValueX, null);
             }
         },
 
         _onSetVerticalScrollbarValue: function (scrollValueY) {
             if (!this._scrollbarUpdateFlags[pc.ORIENTATION_VERTICAL] && this.enabled && this.entity.enabled) {
-                this._velocity.set(0, 0, 0);
                 this._onSetScroll(null, scrollValueY);
             }
         },
@@ -162,7 +160,11 @@ Object.assign(pc, function () {
             this._syncScrollbarPosition(pc.ORIENTATION_VERTICAL);
         },
 
-        _onSetScroll: function (x, y) {
+        _onSetScroll: function (x, y, resetVelocity) {
+            if (resetVelocity !== false) {
+                this._velocity.set(0, 0, 0);
+            }
+
             var hasChanged = false;
             hasChanged |= this._updateAxis(x, 'x', pc.ORIENTATION_HORIZONTAL);
             hasChanged |= this._updateAxis(y, 'y', pc.ORIENTATION_VERTICAL);
@@ -446,7 +448,7 @@ Object.assign(pc, function () {
 
         _setScrollFromContentPosition: function (position) {
             var scrollValue = this._contentPositionToScrollValue(position);
-            this._onSetScroll(scrollValue.x, scrollValue.y);
+            this._onSetScroll(scrollValue.x, scrollValue.y, false);
         },
 
         _isDragging: function () {
