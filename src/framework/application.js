@@ -152,6 +152,10 @@ Object.assign(pc, function () {
         this.autoRender = true;
         this.renderNextFrame = false;
 
+        // enable if you want entity type script attributes
+        // to not be re-mapped when an entity is cloned
+        this.useLegacyScriptAttributeCloning = false;
+
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
         this._resolutionMode = pc.RESOLUTION_FIXED;

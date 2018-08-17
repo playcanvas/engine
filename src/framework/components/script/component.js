@@ -569,6 +569,102 @@ Object.assign(pc, function () {
 
         /**
          * @function
+         * @private
+         * @name pc.ScriptComponent#resolveDuplicatedEntityReferenceProperties
+         * @description When an entity is cloned and it has entity script attributes that point
+         * to other entities in the same subtree that is cloned, then we want the new script attributes to point
+         * at the cloned entities. This method remaps the script attributes for this entity and it assumes that this
+         * entity is the result of the clone operation.
+         * @param {pc.ScriptComponent} oldScriptComponent The source script component that belongs to the entity that was being cloned.
+         * @param {Object} duplicatedIdsMap A dictionary with guid-entity values that contains the entities that were cloned
+         */
+        resolveDuplicatedEntityReferenceProperties: function (oldScriptComponent, duplicatedIdsMap) {
+            var newScriptComponent = this.entity.script;
+
+            // for each script in the old compononent
+            for (var scriptName in oldScriptComponent._scriptsIndex) {
+                // get the script type from the script registry
+                var scriptType = this.system.app.scripts.get(scriptName);
+                if (! scriptType) {
+                    continue;
+                }
+
+                // get the script from the component's index
+                var script = oldScriptComponent._scriptsIndex[scriptName];
+                if (! script || ! script.instance) {
+                    continue;
+                }
+
+                // if __attributesRaw exists then it means that the new entity
+                // has not yet initialized its attributes so put the new guid in there,
+                // otherwise it means that the attributes have already been initialized
+                // so convert the new guid to an entity
+                // and put it in the new attributes
+                var newAttributesRaw = newScriptComponent[scriptName].__attributesRaw;
+                var newAttributes = newScriptComponent[scriptName].__attributes;
+                if (! newAttributesRaw && ! newAttributes) {
+                    continue;
+                }
+
+                // get the old script attributes from the instance
+                var oldAttributes = script.instance.__attributes;
+                for (var attributeName in oldAttributes) {
+                    if (! oldAttributes[attributeName]) {
+                        continue;
+                    }
+
+                    // get the attribute definition from the script type
+                    var attribute = scriptType.attributes.get(attributeName);
+                    if (! attribute || attribute.type !== 'entity') {
+                        continue;
+                    }
+
+                    if (attribute.array) {
+                        // handle entity array attribute
+                        var oldGuidArray = oldAttributes[attributeName];
+                        var len = oldGuidArray.length;
+                        if (! len) {
+                            continue;
+                        }
+
+                        var newGuidArray = oldGuidArray.slice();
+                        for (var i = 0; i < len; i++) {
+                            var guid = newGuidArray[i] instanceof pc.Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
+                            if (duplicatedIdsMap[guid]) {
+                                // if we are using attributesRaw then use the guid otherwise use the entity
+                                newGuidArray[i] = newAttributesRaw ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
+                            }
+                        }
+
+                        if (newAttributesRaw) {
+                            newAttributesRaw[attributeName] = newGuidArray;
+                        } else {
+                            newAttributes[attributeName] = newGuidArray;
+                        }
+                    } else {
+                        // handle regular entity attribute
+                        var oldGuid = oldAttributes[attributeName];
+                        if (oldGuid instanceof pc.Entity) {
+                            oldGuid = oldGuid.getGuid();
+                        } else if (typeof oldGuid !== 'string') {
+                            continue;
+                        }
+
+                        if (duplicatedIdsMap[oldGuid]) {
+                            if (newAttributesRaw) {
+                                newAttributesRaw[attributeName] = duplicatedIdsMap[oldGuid].getGuid();
+                            } else {
+                                newAttributes[attributeName] = duplicatedIdsMap[oldGuid];
+                            }
+                        }
+
+                    }
+                }
+            }
+        },
+
+        /**
+         * @function
          * @name pc.ScriptComponent#move
          * @description Move script instance to different position to alter update order of scripts within entity.
          * @param {String} name The name of the Script Type
