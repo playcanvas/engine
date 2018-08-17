@@ -1069,7 +1069,10 @@ Object.assign(pc, function () {
 
         set: function (value) {
             this._width = value;
-            this._setCalculatedWidth(value, true);
+
+            if (!this._hasSplitAnchorsX) {
+                this._setCalculatedWidth(value, true);
+            }
 
             this.fire('set:width', this._width);
         }
@@ -1082,7 +1085,10 @@ Object.assign(pc, function () {
 
         set: function (value) {
             this._height = value;
-            this._setCalculatedHeight(value, true);
+
+            if (!this._hasSplitAnchorsY) {
+                this._setCalculatedHeight(value, true);
+            }
 
             this.fire('set:height', this._height);
         }

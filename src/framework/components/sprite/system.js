@@ -3,23 +3,6 @@ Object.assign(pc, function () {
 
     var _schema = ['enabled'];
 
-    var nineSliceBasePS = [
-        "varying vec2 vMask;",
-        "varying vec2 vTiledUv;",
-        "uniform vec4 innerOffset;",
-        "uniform vec2 outerScale;",
-        "uniform vec4 atlasRect;",
-        "vec2 nineSlicedUv;"
-    ].join('\n');
-
-    var nineSliceUvPs = [
-        "vec2 tileMask = step(vMask, vec2(0.99999));",
-        "vec2 clampedUv = mix(innerOffset.xy*0.5, vec2(1.0) - innerOffset.zw*0.5, fract(vTiledUv));",
-        "clampedUv = clampedUv * atlasRect.zw + atlasRect.xy;",
-        "nineSlicedUv = vUv0 * tileMask + clampedUv * (vec2(1.0) - tileMask);"
-    ].join('\n');
-
-
     /**
      * @private
      * @constructor
@@ -73,22 +56,12 @@ Object.assign(pc, function () {
 
         // material used for 9-slicing in sliced mode
         this.default9SlicedMaterialSlicedMode = this.defaultMaterial.clone();
-        this.default9SlicedMaterialSlicedMode.chunks.basePS = pc.shaderChunks.basePS + nineSliceBasePS;
-        this.default9SlicedMaterialSlicedMode.chunks.startPS = pc.shaderChunks.startPS + "nineSlicedUv = vUv0;\n";
-        this.default9SlicedMaterialSlicedMode.chunks.emissivePS = pc.shaderChunks.emissivePS.replace("$UV", "nineSlicedUv");
-        this.default9SlicedMaterialSlicedMode.chunks.opacityPS = pc.shaderChunks.opacityPS.replace("$UV", "nineSlicedUv");
-        this.default9SlicedMaterialSlicedMode.chunks.transformVS = "#define NINESLICED\n" + pc.shaderChunks.transformVS;
-        this.default9SlicedMaterialSlicedMode.chunks.uv0VS = pc.shaderChunks.uv9SliceVS;
+        this.default9SlicedMaterialSlicedMode.nineSlicedMode = pc.SPRITE_RENDERMODE_SLICED;
         this.default9SlicedMaterialSlicedMode.update();
 
         // material used for 9-slicing in tiled mode
         this.default9SlicedMaterialTiledMode = this.defaultMaterial.clone();
-        this.default9SlicedMaterialTiledMode.chunks.basePS = pc.shaderChunks.basePS + "#define NINESLICETILED\n" + nineSliceBasePS;
-        this.default9SlicedMaterialTiledMode.chunks.startPS = pc.shaderChunks.startPS + nineSliceUvPs;
-        this.default9SlicedMaterialTiledMode.chunks.emissivePS = pc.shaderChunks.emissivePS.replace("$UV", "nineSlicedUv, -1000.0");
-        this.default9SlicedMaterialTiledMode.chunks.opacityPS = pc.shaderChunks.opacityPS.replace("$UV", "nineSlicedUv, -1000.0");
-        this.default9SlicedMaterialTiledMode.chunks.transformVS = "#define NINESLICED\n" + pc.shaderChunks.transformVS;
-        this.default9SlicedMaterialTiledMode.chunks.uv0VS = pc.shaderChunks.uv9SliceVS;
+        this.default9SlicedMaterialTiledMode.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
         this.default9SlicedMaterialTiledMode.update();
 
         pc.ComponentSystem.on('update', this.onUpdate, this);

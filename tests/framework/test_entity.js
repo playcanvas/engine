@@ -1,66 +1,66 @@
-(function() {
-    module("pc.Entity", {
-        setup: function () {
-            this.app = new pc.Application(document.createElement("canvas"));
+describe("pc.Entity", function () {
+    var app;
 
-            new pc.DummyComponentSystem(this.app);
-        },
+    beforeEach(function () {
+        app = new pc.Application(document.createElement("canvas"));
 
-        createSubtree: function() {
-            // Naming indicates path within the tree, with underscores separating levels.
-            var a = new pc.Entity('a', this.app);
-            var a_a = new pc.Entity('a_a', this.app);
-            var a_b = new pc.Entity('a_b', this.app);
-            var a_a_a = new pc.Entity('a_a_a', this.app);
-            var a_a_b = new pc.Entity('a_a_b', this.app);
-
-            a.addChild(a_a);
-            a.addChild(a_b);
-
-            a_a.addChild(a_a_a);
-            a_a.addChild(a_a_b);
-
-            // Add some components for testing clone behaviour
-            a.addComponent('animation', { speed: 1, loop: true });
-            a.addComponent('camera', { nearClip: 2, farClip: 3 });
-            a_a.addComponent('collision', { radius: 4, height: 5 });
-            a_a.addComponent('light', { attenuationStart: 6, attenuationEnd: 7 });
-            a_a_b.addComponent('rigidbody', { point: new pc.Vec3(1, 2, 3), normal: new pc.Vec3(4, 5, 6) });
-            a_a_b.addComponent('sound', { volume: 8, pitch: 9 });
-
-            return {
-                a: a,
-                a_a: a_a,
-                a_b: a_b,
-                a_a_a: a_a_a,
-                a_a_b: a_a_b,
-            };
-        },
-
-        cloneSubtree: function(subtree) {
-            var a = subtree.a.clone();
-            var a_a = a.children[0];
-            var a_b = a.children[1];
-            var a_a_a = a_a.children[0];
-            var a_a_b = a_a.children[1];
-
-            return {
-                a: a,
-                a_a: a_a,
-                a_b: a_b,
-                a_a_a: a_a_a,
-                a_a_b: a_a_b,
-            };
-        },
-
-        teardown: function () {
-            this.app.destroy();
-        }
+        new pc.DummyComponentSystem(app);
     });
 
-    test("clone() returns a deep clone of the entity's subtree, including all components", function () {
-        var subtree1 = this.createSubtree();
-        var subtree2 = this.cloneSubtree(subtree1);
+    afterEach(function () {
+        app.destroy();
+    });
+
+    var createSubtree = function() {
+        // Naming indicates path within the tree, with underscores separating levels.
+        var a = new pc.Entity('a', app);
+        var a_a = new pc.Entity('a_a', app);
+        var a_b = new pc.Entity('a_b', app);
+        var a_a_a = new pc.Entity('a_a_a', app);
+        var a_a_b = new pc.Entity('a_a_b', app);
+
+        a.addChild(a_a);
+        a.addChild(a_b);
+
+        a_a.addChild(a_a_a);
+        a_a.addChild(a_a_b);
+
+        // Add some components for testing clone behaviour
+        a.addComponent('animation', { speed: 1, loop: true });
+        a.addComponent('camera', { nearClip: 2, farClip: 3 });
+        a_a.addComponent('collision', { radius: 4, height: 5 });
+        a_a.addComponent('light', { attenuationStart: 6, attenuationEnd: 7 });
+        a_a_b.addComponent('rigidbody', { point: new pc.Vec3(1, 2, 3), normal: new pc.Vec3(4, 5, 6) });
+        a_a_b.addComponent('sound', { volume: 8, pitch: 9 });
+
+        return {
+            a: a,
+            a_a: a_a,
+            a_b: a_b,
+            a_a_a: a_a_a,
+            a_a_b: a_a_b,
+        };
+    };
+
+    var cloneSubtree = function(subtree) {
+        var a = subtree.a.clone();
+        var a_a = a.children[0];
+        var a_b = a.children[1];
+        var a_a_a = a_a.children[0];
+        var a_a_b = a_a.children[1];
+
+        return {
+            a: a,
+            a_a: a_a,
+            a_b: a_b,
+            a_a_a: a_a_a,
+            a_a_b: a_a_b,
+        };
+    };
+
+    it("clone() returns a deep clone of the entity's subtree, including all components", function () {
+        var subtree1 = createSubtree();
+        var subtree2 = cloneSubtree(subtree1);
 
         // Ensure structures are identical at every level
         strictEqual(subtree1.a.name, subtree2.a.name);
@@ -111,49 +111,52 @@
         notEqual(subtree1.a_a_b.getGuid(), subtree2.a_a_b.getGuid());
     });
 
-    test("clone() resolves entity property references that refer to entities within the duplicated subtree", function () {
-        var subtree1 = this.createSubtree();
+    it("clone() resolves entity property references that refer to entities within the duplicated subtree", function () {
+        var subtree1 = createSubtree();
         subtree1.a.addComponent('dummy', { myEntity1: subtree1.a_a.getGuid(), myEntity2: subtree1.a_a_b.getGuid() });
         subtree1.a_a_a.addComponent('dummy', { myEntity1: subtree1.a.getGuid(), myEntity2: subtree1.a_b.getGuid() });
 
-        var subtree2 = this.cloneSubtree(subtree1);
+        var subtree2 = cloneSubtree(subtree1);
         strictEqual(subtree2.a.dummy.myEntity1, subtree2.a_a.getGuid());
         strictEqual(subtree2.a.dummy.myEntity2, subtree2.a_a_b.getGuid());
         strictEqual(subtree2.a_a_a.dummy.myEntity1, subtree2.a.getGuid());
         strictEqual(subtree2.a_a_a.dummy.myEntity2, subtree2.a_b.getGuid());
     });
 
-    test("clone() resolves entity property references that refer to the cloned entity itself", function () {
-        var subtree1 = this.createSubtree();
+    it("clone() resolves entity property references that refer to the cloned entity itself", function () {
+        var subtree1 = createSubtree();
         subtree1.a.addComponent('dummy', { myEntity1: subtree1.a.getGuid() });
         subtree1.a_a_a.addComponent('dummy', { myEntity1: subtree1.a_a_a.getGuid() });
 
-        var subtree2 = this.cloneSubtree(subtree1);
+        var subtree2 = cloneSubtree(subtree1);
         strictEqual(subtree2.a.dummy.myEntity1, subtree2.a.getGuid());
         strictEqual(subtree2.a_a_a.dummy.myEntity1, subtree2.a_a_a.getGuid());
     });
 
-    test("clone() does not attempt to resolve entity property references that refer to entities outside of the duplicated subtree", function () {
-        var root = new pc.Entity('root', this.app);
-        var sibling = new pc.Entity('sibling', this.app);
+    it("clone() does not attempt to resolve entity property references that refer to entities outside of the duplicated subtree", function () {
+        var root = new pc.Entity('root', app);
+        var sibling = new pc.Entity('sibling', app);
 
-        var subtree1 = this.createSubtree();
+        var subtree1 = createSubtree();
         root.addChild(subtree1.a);
         root.addChild(sibling);
 
         subtree1.a.addComponent('dummy', { myEntity1: root.getGuid(), myEntity2: sibling.getGuid() });
 
-        var subtree2 = this.cloneSubtree(subtree1);
+        var subtree2 = cloneSubtree(subtree1);
         strictEqual(subtree2.a.dummy.myEntity1, root.getGuid());
         strictEqual(subtree2.a.dummy.myEntity2, sibling.getGuid());
     });
 
-    test("clone() ignores null and undefined entity property references", function () {
-        var subtree1 = this.createSubtree();
+    it("clone() ignores null and undefined entity property references", function () {
+        var subtree1 = createSubtree();
         subtree1.a.addComponent('dummy', { myEntity1: null, myEntity2: undefined });
 
-        var subtree2 = this.cloneSubtree(subtree1);
+        var subtree2 = cloneSubtree(subtree1);
         strictEqual(subtree2.a.dummy.myEntity1, null);
         strictEqual(subtree2.a.dummy.myEntity2, undefined);
     });
-})();
+
+
+});
+

@@ -1706,8 +1706,6 @@ Object.assign(pc, function () {
             var prepareTime = pc.now();
             var searchTime = 0;
             var subSearchTime = 0;
-            var cullTime = 0;
-            var subCullTime = 0;
             var triAabbTime = 0;
             var subTriAabbTime = 0;
             var writeMeshTime = 0;
@@ -1750,10 +1748,6 @@ Object.assign(pc, function () {
                 if (!drawCall.isStatic) {
                     newDrawCalls.push(drawCall);
                 } else {
-
-                    // #ifdef PROFILER
-                    subCullTime = pc.now();
-                    // #endif
                     aabb = drawCall.aabb;
                     staticLights.length = 0;
                     for (lightTypePass = pc.LIGHTTYPE_POINT; lightTypePass <= pc.LIGHTTYPE_SPOT; lightTypePass++) {
@@ -1780,9 +1774,6 @@ Object.assign(pc, function () {
                             }
                         }
                     }
-                    // #ifdef PROFILER
-                    cullTime += pc.now() - subCullTime;
-                    // #endif
 
                     if (staticLights.length === 0) {
                         newDrawCalls.push(drawCall);

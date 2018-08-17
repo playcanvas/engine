@@ -5,7 +5,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:8.11
+      - image: circleci/openjdk:8-jdk-node-browsers
 
     working_directory: ~/repo
 
@@ -27,6 +27,18 @@ jobs:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+
+      - run:
+          name: build
+          command: npm run build
+
+      - run:
+          name: test-source
+          command: npm run test
+
+      - run:
+          name: test-release
+          command: npm run test:release
 
       - run:
           name: lint
