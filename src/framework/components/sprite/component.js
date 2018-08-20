@@ -219,7 +219,7 @@ Object.assign(pc, function () {
                 return;
             }
 
-            var material = this.system.defaultMaterial;
+            var material = this.material;
             if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
                 material = this.system.default9SlicedMaterialSlicedMode;
             } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
