@@ -45,6 +45,48 @@ pc.path = function () {
 
         /**
          * @function
+         * @name  pc.path.normalize
+         * @description  Normalize the path by removing '.' and '..' instances
+         * @param  {String} path The path to normalize
+         * @returns {String} The normalized path
+         */
+        normalize: function (path) {
+            var lead = path.startsWith(pc.path.delimiter);
+            var trail = path.endsWith(pc.path.delimiter);
+
+            var parts = path.split('/');
+
+            var result = '';
+
+            var cleaned = [];
+
+            for (var i = 0; i < parts.length; i++) {
+                if (parts[i] === '') continue;
+                if (parts[i] === '.') continue;
+                if (parts[i] === '..' && cleaned.length > 0) {
+                    cleaned = cleaned.slice(0, cleaned.length-2);
+                    continue;
+                }
+
+                if (i > 0) cleaned.push(pc.path.delimiter);
+                cleaned.push(parts[i]);
+            }
+
+
+            var result = cleaned.join('');
+            if (!lead && result[0] === pc.path.delimiter) {
+                result = result.slice(1);
+            }
+
+            if (trail && result[result.length-1] !== pc.path.delimiter) {
+                result += pc.path.delimiter;
+            }
+
+            return result;
+        },
+
+        /**
+         * @function
          * @name pc.path.split
          * @description Split the pathname path into a pair [head, tail] where tail is the final part of the path
          * after the last delimiter and head is everything leading up to that. tail will never contain a slash

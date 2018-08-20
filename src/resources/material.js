@@ -188,6 +188,9 @@ Object.assign(pc, function () {
 
             var TEXTURES = pc.StandardMaterial.TEXTURE_PARAMETERS;
 
+            // texture paths are measured from the material directory
+            var dir = pc.path.getDirectory(materialAsset.getFileUrl());
+
             var i, name, assetReference;
             // iterate through all texture parameters
             for (i = 0; i < TEXTURES.length; i++) {
@@ -208,7 +211,7 @@ Object.assign(pc, function () {
                     }
 
                     if (pathMapping) {
-                        assetReference.url = data[name];
+                        assetReference.url = pc.path.normalize(pc.path.join(dir, data[name]));
                     } else {
                         assetReference.id = data[name];
                     }
