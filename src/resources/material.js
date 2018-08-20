@@ -47,6 +47,7 @@ Object.assign(pc, function () {
             // temp storage for engine-only as we need this during patching
             if (data._engine) {
                 material._data = data;
+                delete data._engine;
             }
 
             return material;
