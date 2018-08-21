@@ -262,7 +262,7 @@ Object.assign(pc, function () {
 
     CanvasFont.prototype._createJson = function (chars, fontName, width, height) {
         var base = {
-            "version": 2,
+            "version": 3,
             "intensity": this.intensity,
             "info": {
                 "face": fontName,
@@ -310,7 +310,7 @@ Object.assign(pc, function () {
 
         var scale = this.getCharScale(charCode) * this.fontSize / 32;
 
-        json.chars[charCode] = {
+        json.chars[char] = {
             "id": charCode,
             "letter": char,
             "x": x,

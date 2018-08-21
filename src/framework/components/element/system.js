@@ -293,6 +293,7 @@ Object.assign(pc, function () {
             } else if (component.type === pc.ELEMENTTYPE_TEXT) {
                 if (data.autoWidth !== undefined) component.autoWidth = data.autoWidth;
                 if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
+                if (data.rtlReorder !== undefined) component.rtlReorder = data.rtlReorder;
                 if (data.text !== undefined) component.text = data.text;
                 if (data.color !== undefined) {
                     if (data.color instanceof pc.Color) {
@@ -350,6 +351,7 @@ Object.assign(pc, function () {
                 autoHeight: source.autoHeight,
                 type: source.type,
                 rect: source.rect && source.rect.clone() || source.rect,
+                rtlReorder: source.rtlReorder,
                 materialAsset: source.materialAsset,
                 material: source.material,
                 color: source.color && source.color.clone() || source.color,

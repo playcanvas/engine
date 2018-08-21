@@ -87,6 +87,7 @@ Object.assign(pc, function () {
      * @property {Number} materialAsset The id of the material asset to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {pc.Material} material The material to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {pc.Vec4} rect Specifies which region of the texture to use in order to render an image. Values range from 0 to 1 and indicate u, v, width, height. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
+     * @property {Function} rtlReorder Optional function to reorder the text for RTL languages.
      * @property {Number} batchGroupId Assign element to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
@@ -1417,6 +1418,7 @@ Object.assign(pc, function () {
     _define("alignment");
     _define("autoWidth");
     _define("autoHeight");
+    _define("rtlReorder");
 
     _define("text");
     _define("texture");

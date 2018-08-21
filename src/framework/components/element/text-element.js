@@ -114,6 +114,11 @@ Object.assign(pc, function () {
             if (text === undefined) text = this._text;
 
             var symbols = pc.string.getSymbols(text);
+
+            if (this.rtlReorder) {
+                symbols = this.rtlReorder(symbols);
+            }
+
             var textLength = symbols.length;
 
             // handle null string
@@ -126,8 +131,8 @@ Object.assign(pc, function () {
             var charactersPerTexture = {};
 
             for (i = 0; i < textLength; i++) {
-                var code = pc.string.getCodePoint(symbols[i]);
-                var info = this._font.data.chars[code];
+                var charId = this._font.data.version < 3 ? pc.string.getCodePoint(symbols[i]) : symbols[i];
+                var info = this._font.data.chars[charId];
                 if (!info) continue;
 
                 var map = info.map;
@@ -232,7 +237,7 @@ Object.assign(pc, function () {
                 this._element.addModelToLayers(this._model);
             }
 
-            this._updateMeshes(text);
+            this._updateMeshes(symbols);
         },
 
         _removeMeshInstance: function (meshInstance) {
@@ -286,7 +291,7 @@ Object.assign(pc, function () {
             }
         },
 
-        _updateMeshes: function (text) {
+        _updateMeshes: function (symbols) {
             var json = this._font.data;
             var self = this;
 
@@ -295,7 +300,6 @@ Object.assign(pc, function () {
             this._lineWidths = [];
             this._lineContents = [];
 
-            var symbols = pc.string.getSymbols(text);
             var l = symbols.length;
             var _x = 0; // cursors
             var _xMinusTrailingWhitespace = 0;
@@ -322,12 +326,12 @@ Object.assign(pc, function () {
             var scale = 1;
             var MAGIC = 32;
 
-            var char, charCode, data, i, quad;
+            var char, charId, data, i, quad;
 
             // TODO: Optimize this as it loops through all the chars in the asset
             // every time the text changes...
-            for (charCode in json.chars) {
-                data = json.chars[charCode];
+            for (charId in json.chars) {
+                data = json.chars[charId];
                 scale = (data.height / MAGIC) * this._fontSize / data.height;
                 if (data.bounds) {
                     fontMinY = Math.min(fontMinY, data.bounds[1] * scale);
@@ -359,7 +363,7 @@ Object.assign(pc, function () {
 
             for (i = 0; i < l; i++) {
                 char = symbols[i];
-                charCode = pc.string.getCodePoint(symbols[i]);
+                charId = json.version < 3 ? pc.string.getCodePoint(symbols[i]) : char;
 
                 var x = 0;
                 var y = 0;
@@ -368,7 +372,7 @@ Object.assign(pc, function () {
                 var glyphMinX = 0;
                 var glyphWidth = 0;
 
-                data = json.chars[charCode];
+                data = json.chars[charId];
                 if (data && data.scale) {
                     var size = (data.width + data.height) / 2;
                     scale = (size / MAGIC) * this._fontSize / size;
@@ -424,7 +428,8 @@ Object.assign(pc, function () {
                             // We should only backtrack the quads that were in the word from this same texture
                             // We will have to update N number of mesh infos as a result (all textures used in the word in question)
                             for (var j = wordStartIndex; j < i; j++) {
-                                var backCharData = json.chars[pc.string.getCodePoint(symbols[j])];
+                                var backCharId = json.version < 3 ? pc.string.getCodePoint(symbols[j]) : symbols[j];
+                                var backCharData = json.chars[backCharId];
                                 var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
                                 backMeshInfo.lines[lines - 1] -= 1;
                                 backMeshInfo.quad -= 1;
@@ -479,7 +484,7 @@ Object.assign(pc, function () {
 
                 numCharsThisLine++;
 
-                var uv = this._getUv(charCode);
+                var uv = this._getUv(charId);
 
                 meshInfo.uvs[quad * 4 * 2 + 0] = uv[0];
                 meshInfo.uvs[quad * 4 * 2 + 1] = uv[1];
@@ -635,8 +640,9 @@ Object.assign(pc, function () {
 
             if (!data.chars[char]) {
                 // missing char - return "space" if we have it
-                if (data.chars[32]) {
-                    return this._getUv(32);
+                var spaceId = data.version < 3 ? 32 : ' ';
+                if (data.chars[spaceId]) {
+                    return this._getUv(spaceId);
                 }
                 // otherwise - missing char
                 return [0, 0, 1, 1];
