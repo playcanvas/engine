@@ -288,8 +288,8 @@ describe("pc.ElementDragHelper", function() {
         runTransformTest.call(this, 0, defaultYDelta);
     });
 
-    test("takes device pixel ratio into account", function () {
-        this.app.graphicsDevice.maxPixelRatio = 2;
+    it("takes device pixel ratio into account", function () {
+        app.graphicsDevice.maxPixelRatio = 2;
         runTransformTest.call(this, defaultXDelta * 2, defaultYDelta * 2);
     });
 });
