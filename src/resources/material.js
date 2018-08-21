@@ -95,7 +95,7 @@ Object.assign(pc, function () {
             }
 
             // patch the name of the asset over the material name property
-            asset.data.name = asset.name
+            asset.data.name = asset.name;
             asset.resource.name = asset.name;
 
             this._bindAndAssignAssets(asset, assets);
