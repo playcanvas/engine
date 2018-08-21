@@ -94,6 +94,10 @@ Object.assign(pc, function () {
                 delete asset.resource._data; // remove from temp storage
             }
 
+            // patch the name of the asset over the material name property
+            asset.data.name = asset.name
+            asset.resource.name = asset.name;
+
             this._bindAndAssignAssets(asset, assets);
 
             asset.off('unload', this._onAssetUnload, this);
