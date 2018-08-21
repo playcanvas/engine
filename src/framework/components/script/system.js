@@ -79,8 +79,9 @@ Object.assign(pc, function () {
             }
 
             for (key in entity.script._scriptsIndex) {
-                if (key.awayting)
+                if (key.awaiting) {
                     order.splice(key.ind, 0, key);
+                }
             }
 
             var data = {

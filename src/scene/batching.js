@@ -217,6 +217,59 @@ Object.assign(pc, function () {
         delete this._batchGroups[id];
     };
 
+    /**
+     * @private
+     * @function
+     * @name pc.BatchManager.markGroupDirty
+     * @description Mark a specific batch group as dirty. Dirty groups are re-batched before the next frame is rendered.
+     * Note, re-batching a group is a potentially expensive operation
+     * @param  {Number} id Batch Group ID to mark as dirty
+     */
+    BatchManager.prototype.markGroupDirty = function (id) {
+        if (this._dirtyGroups.indexOf(id) < 0) {
+            this._dirtyGroups.push(id);
+        }
+    };
+
+    /**
+     * @function
+     * @name pc.BatchManager#getGroupByName
+     * @description Retrieves a {@link pc.BatchGroup} object with a corresponding name, if it exists, or null otherwise.
+     * @param {String} name Name
+     * @returns {pc.BatchGroup} Group object.
+     */
+    BatchManager.prototype.getGroupByName = function (name) {
+        var groups = this._batchGroups;
+        for (var group in groups) {
+            if (!groups.hasOwnProperty(group)) continue;
+            if (groups[group].name === name) {
+                return groups[group];
+            }
+        }
+        return null;
+    };
+
+    /**
+     * @private
+     * @function
+     * @name  pc.BatchManager#getBatches
+     * @description  Return a list of all {@link pc.Batch} objects that belong to the Batch Group supplied
+     * @param  {Number} batchGroupId The id of the batch group
+     * @returns {pc.Batch[]} A list of batches that are used to render the batch group
+     */
+    BatchManager.prototype.getBatches = function (batchGroupId) {
+        var results = [];
+        var len = this._batchList.length;
+        for (var i = 0; i < len; i++) {
+            var batch = this._batchList[i];
+            if (batch.batchGroupId === batchGroupId) {
+                results.push(batch);
+            }
+        }
+
+        return results;
+    };
+
     // traverse full hierarchy and clear the batch group id from all model, element and sprite components
     BatchManager.prototype._removeModelsFromBatchGroup = function (node, id) {
         if (!node.enabled) return;
@@ -319,20 +372,6 @@ Object.assign(pc, function () {
         }
     };
 
-    /**
-     * @private
-     * @function
-     * @name pc.BatchManager.markGroupDirty
-     * @description Mark a specific batch group as dirty. Dirty groups are re-batched before the next frame is rendered.
-     * Note, re-batching a group is a potentially expensive operation
-     * @param  {Number} id Batch Group ID to mark as dirty
-     */
-    BatchManager.prototype.markGroupDirty = function (id) {
-        if (this._dirtyGroups.indexOf(id) < 0) {
-            this._dirtyGroups.push(id);
-        }
-    };
-
     BatchManager.prototype._registerEntities = function (batch, meshInstances) {
         var node;
         var ents = [];
@@ -420,24 +459,6 @@ Object.assign(pc, function () {
                 this._registerEntities(batch, lists[i]);
             }
         }
-    };
-
-    /**
-     * @function
-     * @name pc.BatchManager#getGroupByName
-     * @description Retrieves a {@link pc.BatchGroup} object with a corresponding name, if it exists, or null otherwise.
-     * @param {String} name Name
-     * @returns {pc.BatchGroup} Group object.
-     */
-    BatchManager.prototype.getGroupByName = function (name) {
-        var groups = this._batchGroups;
-        for (var group in groups) {
-            if (!groups.hasOwnProperty(group)) continue;
-            if (groups[group].name === name) {
-                return groups[group];
-            }
-        }
-        return null;
     };
 
     function paramsIdentical(a, b) {

@@ -35,6 +35,7 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @function
      * @name pc.TextureAtlas#setFrame
      * @param {String} key The key of the frame.
      * @param {Object} data The properties of the frame.
@@ -67,6 +68,7 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @function
      * @name pc.TextureAtlas#removeFrame
      * @param {String} key The key of the frame.
      * @example

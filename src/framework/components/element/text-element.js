@@ -113,17 +113,20 @@ Object.assign(pc, function () {
 
             if (text === undefined) text = this._text;
 
-            var textLength = text.length;
+            var symbols = pc.string.getSymbols(text);
+            var textLength = symbols.length;
+
             // handle null string
             if (textLength === 0) {
                 textLength = 1;
                 text = " ";
+                symbols = [text];
             }
 
             var charactersPerTexture = {};
 
             for (i = 0; i < textLength; i++) {
-                var code = text.charCodeAt(i);
+                var code = pc.string.getCodePoint(symbols[i]);
                 var info = this._font.data.chars[code];
                 if (!info) continue;
 
@@ -196,6 +199,7 @@ Object.assign(pc, function () {
                     var mesh = pc.createMesh(this._system.app.graphicsDevice, meshInfo.positions, { uvs: meshInfo.uvs, normals: meshInfo.normals, indices: meshInfo.indices });
 
                     var mi = new pc.MeshInstance(this._node, mesh, this._material);
+                    mi.name = "Text Element: " + this._entity.name;
                     mi.castShadow = false;
                     mi.receiveShadow = false;
 
@@ -204,7 +208,7 @@ Object.assign(pc, function () {
                         mi.cull = false;
                     }
                     mi.screenSpace = screenSpace;
-                    mi.setParameter("texture_msdfMap", this._font.textures[i]);
+                    this._setTextureParams(mi, this._font.textures[i]);
                     mi.setParameter("material_emissive", this._color.data3);
                     mi.setParameter("material_opacity", this._color.data[3]);
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
@@ -268,13 +272,9 @@ Object.assign(pc, function () {
         _updateMaterial: function (screenSpace) {
             var cull;
 
-            if (screenSpace) {
-                this._material = this._system.defaultScreenSpaceTextMaterial;
-                cull = false;
-            } else {
-                this._material = this._system.defaultTextMaterial;
-                cull = true;
-            }
+            var msdf = this._font && this._font.type === pc.FONT_MSDF;
+            this._material = this._system.getTextElementMaterial(screenSpace, msdf);
+            cull = !screenSpace;
 
             if (this._model) {
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
@@ -295,7 +295,8 @@ Object.assign(pc, function () {
             this._lineWidths = [];
             this._lineContents = [];
 
-            var l = text.length;
+            var symbols = pc.string.getSymbols(text);
+            var l = symbols.length;
             var _x = 0; // cursors
             var _xMinusTrailingWhitespace = 0;
             var _y = 0;
@@ -341,7 +342,11 @@ Object.assign(pc, function () {
 
             function breakLine(lineBreakIndex, lineBreakX) {
                 self._lineWidths.push(lineBreakX);
-                self._lineContents.push(text.substring(lineStartIndex, lineBreakIndex));
+                var substring = symbols
+                    .slice(lineStartIndex, lineBreakIndex)
+                    .join('');
+
+                self._lineContents.push(substring);
 
                 _x = 0;
                 _y -= self._lineHeight;
@@ -353,8 +358,8 @@ Object.assign(pc, function () {
             }
 
             for (i = 0; i < l; i++) {
-                char = text.charAt(i);
-                charCode = text.charCodeAt(i);
+                char = symbols[i];
+                charCode = pc.string.getCodePoint(symbols[i]);
 
                 var x = 0;
                 var y = 0;
@@ -412,9 +417,20 @@ Object.assign(pc, function () {
                     } else {
                         // Move back to the beginning of the current word.
                         var backtrack = Math.max(i - wordStartIndex, 0);
+                        if (this._meshInfo.length <= 1) {
+                            meshInfo.lines[lines - 1] -= backtrack;
+                            meshInfo.quad -= backtrack;
+                        } else {
+                            // We should only backtrack the quads that were in the word from this same texture
+                            // We will have to update N number of mesh infos as a result (all textures used in the word in question)
+                            for (var j = wordStartIndex; j < i; j++) {
+                                var backCharData = json.chars[pc.string.getCodePoint(symbols[j])];
+                                var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
+                                backMeshInfo.lines[lines - 1] -= 1;
+                                backMeshInfo.quad -= 1;
+                            }
+                        }
                         i -= backtrack + 1;
-                        meshInfo.lines[lines - 1] -= backtrack;
-                        meshInfo.quad -= backtrack;
 
                         breakLine(wordStartIndex, wordStartX);
                         continue;
@@ -455,7 +471,7 @@ Object.assign(pc, function () {
                     _xMinusTrailingWhitespace = _x;
                 }
 
-                if (isWordBoundary) {
+                if (isWordBoundary) { // char is space, tab, or dash
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
                     wordStartIndex = i + 1;
@@ -586,6 +602,20 @@ Object.assign(pc, function () {
 
         _onFontRemove: function (asset) {
 
+        },
+
+        _setTextureParams: function (mi, texture) {
+            if (this._font) {
+                if (this._font.type === pc.FONT_MSDF) {
+                    mi.deleteParameter("texture_emissiveMap");
+                    mi.deleteParameter("texture_opacityMap");
+                    mi.setParameter("texture_msdfMap", texture);
+                } else if (this._font.type === pc.FONT_BITMAP) {
+                    mi.deleteParameter("texture_msdfMap");
+                    mi.setParameter("texture_emissiveMap", texture);
+                    mi.setParameter("texture_opacityMap", texture);
+                }
+            }
         },
 
         _getPxRange: function (font) {
@@ -816,8 +846,18 @@ Object.assign(pc, function () {
             var i;
             var len;
 
+            var previousFontType;
+
+            if (this._font) previousFontType = this._font.type;
+
             this._font = value;
             if (!value) return;
+
+            // if font type has changed we may need to get change material
+            if (value.type !== previousFontType) {
+                var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
+                this._updateMaterial(screenSpace);
+            }
 
             // make sure we have as many meshInfo entries
             // as the number of font textures
@@ -840,7 +880,7 @@ Object.assign(pc, function () {
                         mi.setParameter("font_sdfIntensity", this._font.intensity);
                         mi.setParameter("font_pxrange", this._getPxRange(this._font));
                         mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
-                        mi.setParameter("texture_msdfMap", this._font.textures[i]);
+                        this._setTextureParams(mi, this._font.textures[i]);
                     }
                 }
             }

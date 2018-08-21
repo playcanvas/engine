@@ -152,6 +152,10 @@ Object.assign(pc, function () {
         this.autoRender = true;
         this.renderNextFrame = false;
 
+        // enable if you want entity type script attributes
+        // to not be re-mapped when an entity is cloned
+        this.useLegacyScriptAttributeCloning = false;
+
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
         this._resolutionMode = pc.RESOLUTION_FIXED;
@@ -500,9 +504,10 @@ Object.assign(pc, function () {
         }
 
         // bind tick function to current scope
-        this.tick = makeTick(this);
-    };
 
+        /* eslint-disable-next-line no-use-before-define */
+        this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
+    };
 
     Application._currentApplication = null;
     Application._applications = {};
