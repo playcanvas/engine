@@ -480,7 +480,6 @@ Object.assign(pc, function () {
             var basename = pc.path.getBasename(url);
             var ext = pc.path.getExtension(url);
 
-
             var _loadAsset = function (assetToLoad) {
                 asset.once("load", function (loadedAsset) {
                     callback(null, loadedAsset);
@@ -540,41 +539,46 @@ Object.assign(pc, function () {
             for (i = 0; i < mapping.mapping.length; i++) {
                 var path = mapping.mapping[i].path;
                 if (path) {
-                    self.loadFromUrl(pc.path.join(dir, path), "material", onLoadAsset);
+                    path = pc.path.normalize(pc.path.join(dir, path));
+                    self.loadFromUrl(path, "material", onLoadAsset);
                 } else {
                     count--;
                 }
             }
-
-
         },
 
         // private method used for engine-only loading of model data
-        _loadTextures: function (materials, callback) {
+        _loadTextures: function (materialAssets, callback) {
             var self = this;
-            var i, j;
+            var i;
             var used = {}; // prevent duplicate urls
             var urls = [];
             var textures = [];
             var count = 0;
-            for (i = 0; i < materials.length; i++) {
-                if (materials[i].data.parameters) {
-                    // old material format
-                    var params = materials[i].data.parameters;
-                    for (j = 0; j < params.length; j++) {
-                        if (params[j].type === "texture") {
-                            var url = materials[i].getFileUrl();
-                            var dir = pc.path.getDirectory(url);
-                            url = pc.path.join(dir, params[j].data);
-                            if (!used[url]) {
-                                used[url] = true;
-                                urls.push(url);
-                                count++;
-                            }
+            for (i = 0; i < materialAssets.length; i++) {
+                var materialData = materialAssets[i].data;
+
+                if (materialData.mappingFormat !== 'path') {
+                    console.warn('Skipping: ' + materialAssets[i].name + ', material files must be mappingFormat: "path" to be loaded from URL');
+                    continue;
+                }
+
+                var url = materialAssets[i].getFileUrl();
+                var dir = pc.path.getDirectory(url);
+                var textureUrl;
+
+                for (var pi = 0; pi < pc.StandardMaterial.TEXTURE_PARAMETERS.length; pi++) {
+                    var paramName = pc.StandardMaterial.TEXTURE_PARAMETERS[pi];
+
+                    if (materialData[paramName]) {
+                        var texturePath = materialData[paramName];
+                        textureUrl = pc.path.normalize(pc.path.join(dir, texturePath));
+                        if (!used[textureUrl]) {
+                            used[textureUrl] = true;
+                            urls.push(textureUrl);
+                            count++;
                         }
                     }
-                } else {
-                    console.warn("Update material asset loader to support new material format");
                 }
             }
 
