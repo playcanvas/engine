@@ -550,7 +550,7 @@ Object.assign(pc, function () {
         // private method used for engine-only loading of model data
         _loadTextures: function (materialAssets, callback) {
             var self = this;
-            var i, j;
+            var i;
             var used = {}; // prevent duplicate urls
             var urls = [];
             var textures = [];

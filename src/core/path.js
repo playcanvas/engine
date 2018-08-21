@@ -64,7 +64,7 @@ pc.path = function () {
                 if (parts[i] === '') continue;
                 if (parts[i] === '.') continue;
                 if (parts[i] === '..' && cleaned.length > 0) {
-                    cleaned = cleaned.slice(0, cleaned.length-2);
+                    cleaned = cleaned.slice(0, cleaned.length - 2);
                     continue;
                 }
 
@@ -73,12 +73,12 @@ pc.path = function () {
             }
 
 
-            var result = cleaned.join('');
+            result = cleaned.join('');
             if (!lead && result[0] === pc.path.delimiter) {
                 result = result.slice(1);
             }
 
-            if (trail && result[result.length-1] !== pc.path.delimiter) {
+            if (trail && result[result.length - 1] !== pc.path.delimiter) {
                 result += pc.path.delimiter;
             }
 
