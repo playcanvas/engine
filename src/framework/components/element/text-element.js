@@ -224,8 +224,8 @@ Object.assign(pc, function () {
 
             // after creating new meshes
             // re-apply masking stencil params
-            if (this._maskedBy) {
-                this._element._setMaskedBy(this._maskedBy);
+            if (this._element.maskedBy) {
+                this._element._setMaskedBy(this._element.maskedBy);
             }
 
             if (removedModel && this._element.enabled && this._entity.enabled) {
