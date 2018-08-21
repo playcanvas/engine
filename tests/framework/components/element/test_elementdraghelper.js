@@ -216,8 +216,8 @@
         });
 
         strictEqual(this.dragMoveHandler.callCount, 1);
-        QUnit.close(this.dragMoveHandler.getCall(0).args[0].x, expectedXDelta, 0.01);
-        QUnit.close(this.dragMoveHandler.getCall(0).args[0].y, expectedYDelta, 0.01);
+        QUnit.close(this.dragMoveHandler.getCall(0).args[0].x, expectedXDelta, 0.02);
+        QUnit.close(this.dragMoveHandler.getCall(0).args[0].y, expectedYDelta, 0.02);
     }
 
     test("includes ancestral rotation in coordinate conversion", function () {
@@ -275,5 +275,10 @@
         this.createDragHelper("y");
 
         runTransformTest.call(this, 0, defaultYDelta);
+    });
+
+    test("takes device pixel ratio into account", function () {
+        this.app.graphicsDevice.maxPixelRatio = 2;
+        runTransformTest.call(this, defaultXDelta * 2, defaultYDelta * 2);
     });
 })();
