@@ -292,4 +292,4 @@ describe("pc.ElementDragHelper", function() {
         this.app.graphicsDevice.maxPixelRatio = 2;
         runTransformTest.call(this, defaultXDelta * 2, defaultYDelta * 2);
     });
-})();
+});
