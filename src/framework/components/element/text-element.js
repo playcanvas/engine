@@ -293,8 +293,8 @@ Object.assign(pc, function () {
             var self = this;
 
             // clear aabb
-            this._aabb.center.set(0,0,0);
-            this._aabb.halfExtents.set(0,0,0);
+            this._aabb.center.set(0, 0, 0);
+            this._aabb.halfExtents.set(0, 0, 0);
 
             this.width = 0;
             this.height = 0;
@@ -968,7 +968,7 @@ Object.assign(pc, function () {
     Object.defineProperty(TextElement.prototype, "aabb", {
         get: function () {
             return this._aabb;
-         }
+        }
     });
 
     return {
