@@ -1134,7 +1134,7 @@ Object.assign(pc, function () {
                 return this._renderable.meshInstance.aabb;
             }
             return null;
-         }
+        }
     });
 
     return {
