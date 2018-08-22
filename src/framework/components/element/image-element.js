@@ -1126,6 +1126,17 @@ Object.assign(pc, function () {
         }
     });
 
+
+    // private
+    Object.defineProperty(ImageElement.prototype, "aabb", {
+        get: function () {
+            if (this._renderable.meshInstance) {
+                return this._renderable.meshInstance.aabb;
+            }
+            return null;
+        }
+    });
+
     return {
         ImageElement: ImageElement
     };

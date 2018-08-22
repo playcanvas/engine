@@ -838,6 +838,16 @@ Object.assign(pc, function () {
         }
     });
 
+    Object.defineProperty(SpriteComponent.prototype, "aabb", {
+        get: function () {
+            if (this._meshInstance) {
+                return this._meshInstance.aabb;
+            }
+
+            return null;
+        }
+    });
+
     return {
         SpriteComponent: SpriteComponent
     };
