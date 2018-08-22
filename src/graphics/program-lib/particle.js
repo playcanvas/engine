@@ -1,5 +1,5 @@
 pc.programlib.particle = {
-    generateKey: function(device, options) {
+    generateKey: function (device, options) {
         var key = "particle";
         for (var prop in options) {
             if (options.hasOwnProperty(prop)) {
@@ -9,14 +9,14 @@ pc.programlib.particle = {
         return key;
     },
 
-    _animTex: function(options, chunk) {
+    _animTex: function (options, chunk) {
         var vshader = "";
         vshader += options.animTexLoop ? chunk.particleAnimFrameLoopVS : chunk.particleAnimFrameClampVS;
         vshader += chunk.particleAnimTexVS;
         return vshader;
     },
 
-    createShaderDefinition: function(device, options) {
+    createShaderDefinition: function (device, options) {
 
         var chunk = pc.shaderChunks;
 

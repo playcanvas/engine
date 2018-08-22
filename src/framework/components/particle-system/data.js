@@ -1,5 +1,5 @@
-pc.extend(pc, function() {
-    var ParticleSystemComponentData = function() {
+Object.assign(pc, function () {
+    var ParticleSystemComponentData = function () {
 
         this.numParticles = 1;                  // Amount of particles allocated (max particles = max GL texture width at this moment)
         this.rate = 1;                          // Emission rate
@@ -28,6 +28,7 @@ pc.extend(pc, function() {
         this.stretch = 0.0;
         this.alignToMotion = false;
         this.depthSoftening = 0;
+        this.meshAsset = null;
         this.mesh = null;                       // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                 // Leave undefined to use simple quads
         this.depthWrite = false;
@@ -70,7 +71,6 @@ pc.extend(pc, function() {
 
         this.layers = [pc.LAYERID_WORLD]; // assign to the default world layer
     };
-    ParticleSystemComponentData = pc.inherits(ParticleSystemComponentData, pc.ComponentData);
 
     return {
         ParticleSystemComponentData: ParticleSystemComponentData

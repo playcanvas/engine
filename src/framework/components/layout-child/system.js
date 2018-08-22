@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
@@ -10,6 +10,8 @@ pc.extend(pc, function () {
      * @extends pc.ComponentSystem
      */
     var LayoutChildComponentSystem = function LayoutChildComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'layoutchild';
         this.app = app;
         app.systems.add(this.id, this);
@@ -19,11 +21,12 @@ pc.extend(pc, function () {
 
         this.schema = _schema;
     };
-    LayoutChildComponentSystem = pc.inherits(LayoutChildComponentSystem, pc.ComponentSystem);
+    LayoutChildComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    LayoutChildComponentSystem.prototype.constructor = LayoutChildComponentSystem;
 
     pc.Component._buildAccessors(pc.LayoutChildComponent.prototype, _schema);
 
-    pc.extend(LayoutChildComponentSystem.prototype, {
+    Object.assign(LayoutChildComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (data.enabled !== undefined) component.enabled = data.enabled;
             if (data.minWidth !== undefined) component.minWidth = data.minWidth;
@@ -32,8 +35,9 @@ pc.extend(pc, function () {
             if (data.maxHeight !== undefined) component.maxHeight = data.maxHeight;
             if (data.fitWidthProportion !== undefined) component.fitWidthProportion = data.fitWidthProportion;
             if (data.fitHeightProportion !== undefined) component.fitHeightProportion = data.fitHeightProportion;
+            if (data.excludeFromLayout !== undefined) component.excludeFromLayout = data.excludeFromLayout;
 
-            LayoutChildComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {
@@ -46,7 +50,8 @@ pc.extend(pc, function () {
                 maxWidth: layoutChild.maxWidth,
                 maxHeight: layoutChild.maxHeight,
                 fitWidthProportion: layoutChild.fitWidthProportion,
-                fitHeightProportion: layoutChild.fitHeightProportion
+                fitHeightProportion: layoutChild.fitHeightProportion,
+                excludeFromLayout: layoutChild.excludeFromLayout
             });
         }
     });

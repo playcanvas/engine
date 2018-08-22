@@ -44,6 +44,7 @@ pc.events = {
      * @param {String} name Name of the event to bind the callback to
      * @param {Function} callback Function that is called when event is fired. Note the callback is limited to 8 arguments.
      * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
+     * @returns {*} 'this' for chaining
      * @example
      * obj.on('test', function (a, b) {
      *     console.log(a + b);
@@ -51,16 +52,16 @@ pc.events = {
      * obj.fire('test', 1, 2); // prints 3 to the console
      */
     on: function (name, callback, scope) {
-        if (! name || typeof(name) !== 'string' || ! callback)
+        if (!name || typeof name !== 'string' || !callback)
             return this;
 
-        if (! this._callbacks)
+        if (!this._callbacks)
             this._callbacks = { };
 
-        if (! this._callbacks[name])
+        if (!this._callbacks[name])
             this._callbacks[name] = [];
 
-        if (! this._callbackActive)
+        if (!this._callbackActive)
             this._callbackActive = { };
 
         if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
@@ -82,6 +83,7 @@ pc.events = {
      * @param {String} [name] Name of the event to unbind
      * @param {Function} [callback] Function to be unbound
      * @param {Object} [scope] Scope that was used as the this when the event is fired
+     * @returns {*} 'this' for chaining
      * @example
      * var handler = function () {
      * };
@@ -93,7 +95,7 @@ pc.events = {
      * obj.off('test', handler, this); // Removes all hander functions, called 'test' with scope this
      */
     off: function (name, callback, scope) {
-        if (! this._callbacks)
+        if (!this._callbacks)
             return this;
 
         if (this._callbackActive) {
@@ -102,7 +104,7 @@ pc.events = {
                     this._callbackActive[name] = this._callbackActive[name].slice();
             } else {
                 for (var key in this._callbackActive) {
-                    if (! this._callbacks[key])
+                    if (!this._callbacks[key])
                         continue;
 
                     if (this._callbacks[key] !== this._callbackActive[key])
@@ -113,14 +115,14 @@ pc.events = {
             }
         }
 
-        if (! name) {
+        if (!name) {
             this._callbacks = null;
-        } else if (! callback) {
+        } else if (!callback) {
             if (this._callbacks[name])
                 delete this._callbacks[name];
         } else {
             var events = this._callbacks[name];
-            if (! events)
+            if (!events)
                 return this;
 
             var i = events.length;
@@ -139,25 +141,30 @@ pc.events = {
         return this;
     },
 
+    // ESLint rule disabled here as documenting arg1, arg2...argN as [...] rest
+    // arguments is preferable to documenting each one individually.
+    /* eslint-disable valid-jsdoc */
     /**
      * @function
      * @name pc.events.fire
      * @description Fire an event, all additional arguments are passed on to the event listener
      * @param {Object} name Name of event to fire
      * @param {*} [...] Arguments that are passed to the event handler
+     * @returns {*} 'this' for chaining
      * @example
      * obj.fire('test', 'This is the message');
      */
+    /* eslint-enable valid-jsdoc */
     fire: function (name, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
-        if (! name || ! this._callbacks || ! this._callbacks[name])
+        if (!name || !this._callbacks || !this._callbacks[name])
             return this;
 
         var callbacks;
 
-        if (! this._callbackActive)
+        if (!this._callbackActive)
             this._callbackActive = { };
 
-        if (! this._callbackActive[name]) {
+        if (!this._callbackActive[name]) {
             this._callbackActive[name] = this._callbacks[name];
         } else {
             if (this._callbackActive[name] === this._callbacks[name])
@@ -166,6 +173,10 @@ pc.events = {
             callbacks = this._callbacks[name].slice();
         }
 
+        // TODO: What does callbacks do here?
+        // In particular this condition check looks wrong: (i < (callbacks || this._callbackActive[name]).length)
+        // Because callbacks is not an integer
+        // eslint-disable-next-line no-unmodified-loop-condition
         for (var i = 0; (callbacks || this._callbackActive[name]) && (i < (callbacks || this._callbackActive[name]).length); i++) {
             var evt = (callbacks || this._callbackActive[name])[i];
             evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
@@ -181,7 +192,7 @@ pc.events = {
             }
         }
 
-        if (! callbacks)
+        if (!callbacks)
             this._callbackActive[name] = null;
 
         return this;
@@ -194,6 +205,7 @@ pc.events = {
      * @param {String} name Name of the event to bind the callback to
      * @param {Function} callback Function that is called when event is fired. Note the callback is limited to 8 arguments.
      * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
+     * @returns {*} 'this' for chaining
      * @example
      * obj.once('test', function (a, b) {
      *     console.log(a + b);

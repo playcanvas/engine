@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Touch
@@ -56,7 +56,7 @@ pc.extend(pc, function () {
         }
     };
 
-    TouchEvent.prototype = {
+    Object.assign(TouchEvent.prototype, {
         /**
          * @function
          * @name pc.TouchEvent#getTouchById
@@ -76,7 +76,7 @@ pc.extend(pc, function () {
 
             return null;
         }
-    };
+    });
 
     /**
      * @constructor
@@ -98,14 +98,14 @@ pc.extend(pc, function () {
         pc.events.attach(this);
     };
 
-    TouchDevice.prototype = {
+    Object.assign(TouchDevice.prototype, {
         /**
-        * @function
-        * @name pc.TouchDevice#attach
-        * @description Attach a device to an element in the DOM.
-        * If the device is already attached to an element this method will detach it first
-        * @param {Element} element The element to attach to
-        */
+         * @function
+         * @name pc.TouchDevice#attach
+         * @description Attach a device to an element in the DOM.
+         * If the device is already attached to an element this method will detach it first
+         * @param {Element} element The element to attach to
+         */
         attach: function (element) {
             if (this._element) {
                 this.detach();
@@ -120,10 +120,10 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.TouchDevice#detach
-        * @description Detach a device from the element it is attached to
-        */
+         * @function
+         * @name pc.TouchDevice#detach
+         * @description Detach a device from the element it is attached to
+         */
         detach: function () {
             if (this._element) {
                 this._element.removeEventListener('touchstart', this._startHandler, false);
@@ -152,7 +152,7 @@ pc.extend(pc, function () {
         _handleTouchCancel: function (e) {
             this.fire('touchcancel', new TouchEvent(this, e));
         }
-    };
+    });
 
     return {
         /**

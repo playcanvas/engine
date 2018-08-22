@@ -1,6 +1,222 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
+    // #ifdef DEBUG
+    var _debugLogging = false;
+    // #endif
 
-    var ImageElement = function ImageElement (element) {
+    var ImageRenderable = function (entity, mesh, material) {
+        this._entity = entity;
+        this._element = entity.element;
+
+        this.model = new pc.Model();
+        this.node = new pc.GraphNode();
+        this.model.graph = this.node;
+
+        this.mesh = mesh;
+        this.meshInstance = new pc.MeshInstance(this.node, this.mesh, material);
+        this.meshInstance.name = 'ImageElement: ' + entity.name;
+        this.meshInstance.castShadow = false;
+        this.meshInstance.receiveShadow = false;
+
+        this.model.meshInstances.push(this.meshInstance);
+
+        this._entity.addChild(this.model.graph);
+        this.model._entity = this._entity;
+
+        this.unmaskMeshInstance = null;
+    };
+
+    ImageRenderable.prototype.destroy = function () {
+        this._element.removeModelFromLayers(this.model);
+        this.model.destroy();
+        this.model = null;
+        this.node = null;
+        this.mesh = null;
+        this.meshInstance = null;
+        this._entity = null;
+        this._element = null;
+    };
+
+    ImageRenderable.prototype.setMesh = function (mesh) {
+        if (!this.meshInstance) return;
+
+        this.mesh = mesh;
+
+        this.meshInstance.mesh = mesh;
+        this.meshInstance.visible = !!mesh;
+
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.mesh = mesh;
+        }
+        this.forceUpdateAabb();
+    };
+
+    ImageRenderable.prototype.setMask = function (mask) {
+        if (!this.meshInstance) return;
+
+        if (mask) {
+            this.unmaskMeshInstance = new pc.MeshInstance(this.node, this.mesh, this.meshInstance.material);
+            this.unmaskMeshInstance.name = 'Unmask: ' + this._entity.name;
+            this.unmaskMeshInstance.castShadow = false;
+            this.unmaskMeshInstance.receiveShadow = false;
+            this.unmaskMeshInstance.pick = false;
+
+            this.model.meshInstances.push(this.unmaskMeshInstance);
+
+            // copy parameters
+            for (var name in this.meshInstance.parameters) {
+                this.unmaskMeshInstance.setParameter(name, this.meshInstance.parameters[name].data);
+            }
+        } else {
+            // remove unmask mesh instance from model
+            var idx = this.model.meshInstances.indexOf(this.unmaskMeshInstance);
+            if (idx >= 0) {
+                this.model.meshInstances.splice(idx, 1);
+            }
+
+            this.unmaskMeshInstance = null;
+        }
+
+        // remove model then re-add to update to current mesh instances
+        if (this._entity.enabled && this._element.enabled) {
+            this._element.removeModelFromLayers(this.model);
+            this._element.addModelToLayers(this.model);
+        }
+    };
+
+    ImageRenderable.prototype.setMaterial = function (material) {
+        if (!this.meshInstance) return;
+
+        this.meshInstance.material = material;
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.material = material;
+        }
+    };
+
+    ImageRenderable.prototype.setParameter = function (name, value) {
+        if (!this.meshInstance) return;
+
+        this.meshInstance.setParameter(name, value);
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.setParameter(name, value);
+        }
+    };
+
+    ImageRenderable.prototype.deleteParameter = function (name) {
+        if (!this.meshInstance) return;
+
+        this.meshInstance.deleteParameter(name);
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.deleteParameter(name);
+        }
+    };
+
+    ImageRenderable.prototype.setUnmaskDrawOrder = function () {
+        if (!this.meshInstance) return;
+
+        var getLastChild = function (e) {
+            var last;
+            var c = e.getChildren();
+            var l = c.length;
+            if (l) {
+                for (var i = 0; i < l; i++) {
+                    if (c[i].element) {
+                        last = c[i];
+                    }
+                }
+
+                if (!last) return null;
+
+                var child = getLastChild(last);
+                if (child) {
+                    return child;
+                }
+                return last;
+            }
+            return null;
+        };
+
+        // The unmask mesh instance renders into the stencil buffer
+        // with the ref of the previous mask. This essentially "clears"
+        // the mask value
+        //
+        // The unmask has a drawOrder set to be mid-way between the last child of the
+        // masked hierarchy and the next child to be drawn.
+        //
+        // The offset is reduced by a small fraction each time so that if multiple masks
+        // end on the same last child they are unmasked in the correct order.
+        if (this.unmaskMeshInstance) {
+            var lastChild = getLastChild(this._entity);
+            if (lastChild && lastChild.element) {
+                this.unmaskMeshInstance.drawOrder = lastChild.element.drawOrder + lastChild.element.getMaskOffset();
+            } else {
+                this.unmaskMeshInstance.drawOrder = this.meshInstance.drawOrder + this._element.getMaskOffset();
+            }
+            // #ifdef DEBUG
+            if (_debugLogging) console.log('setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
+            // #endif
+        }
+    };
+
+    ImageRenderable.prototype.setDrawOrder = function (drawOrder) {
+        if (!this.meshInstance) return;
+        // #ifdef DEBUG
+        if (_debugLogging) console.log('setDrawOrder: ', this.meshInstance.name, drawOrder);
+        // #endif
+        this.meshInstance.drawOrder = drawOrder;
+    };
+
+    ImageRenderable.prototype.setCull = function (cull) {
+        if (!this.meshInstance) return;
+
+        this.meshInstance.cull = cull;
+
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.cull = cull;
+        }
+    };
+
+
+    ImageRenderable.prototype.setScreenSpace = function (screenSpace) {
+        if (!this.meshInstance) return;
+
+        this.meshInstance.screenSpace = screenSpace;
+
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.screenSpace = screenSpace;
+        }
+    };
+
+
+    ImageRenderable.prototype.setLayer = function (layer) {
+        if (!this.meshInstance) return;
+
+        this.meshInstance.layer = layer;
+
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance.layer = layer;
+        }
+    };
+
+    ImageRenderable.prototype.forceUpdateAabb = function (mask) {
+        if (!this.meshInstance) return;
+
+        this.meshInstance._aabbVer = -1;
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance._aabbVer = -1;
+        }
+    };
+
+    ImageRenderable.prototype.setAabbFunc = function (fn) {
+        if (!this.meshInstance) return;
+
+        this.meshInstance._updateAabbFunc = fn;
+        if (this.unmaskMeshInstance) {
+            this.unmaskMeshInstance._updateAabbFunc = fn;
+        }
+    };
+
+
+    var ImageElement = function ImageElement(element) {
         this._element = element;
         this._entity = element.entity;
         this._system = element.system;
@@ -34,20 +250,9 @@ pc.extend(pc, function () {
         this._atlasRect = new pc.Vec4();
 
         this._defaultMesh = this._createMesh();
-        this._mesh = this._defaultMesh;
-        this._node = new pc.GraphNode();
-        this._model = new pc.Model();
-        this._model.graph = this._node;
-        this._meshInstance = new pc.MeshInstance(this._node, this._mesh, this._material);
-        this._meshInstance.castShadow = false;
-        this._meshInstance.receiveShadow = false;
-        this._model.meshInstances.push(this._meshInstance);
-        this._drawOrder = 0;
+        this._renderable = new ImageRenderable(this._entity, this._defaultMesh, this._material);
 
         this._updateAabbFunc = this._updateAabb.bind(this);
-
-        this._entity.addChild(this._model.graph);
-        this._model._entity = this._entity;
 
         // initialize based on screen
         this._onScreenChange(this._element.screen);
@@ -61,17 +266,16 @@ pc.extend(pc, function () {
         this._element.on('screen:set:resolution', this._onResolutionChange, this);
     };
 
-    pc.extend(ImageElement.prototype, {
+    Object.assign(ImageElement.prototype, {
         destroy: function () {
-            if (this._model) {
-                this._element.removeModelFromLayers(this._model);
-                // reset mesh to the default because that's the mesh we want destroyed
-                // and not possible a mesh from the sprite asset that might be
-                // used elsewhere
-                this._meshInstance.mesh = this._defaultMesh;
-                this._model.destroy();
-                this._model = null;
-            }
+            // reset all assets to unbind all asset events
+            this.textureAsset = null;
+            this.spriteAsset = null;
+            this.materialAsset = null;
+
+            this._renderable.setMesh(this._defaultMesh);
+            this._renderable.destroy();
+            this._defaultMesh = null;
 
             this._element.off('resize', this._onParentResizeOrPivotChange, this);
             this._element.off('set:pivot', this._onParentResizeOrPivotChange, this);
@@ -85,25 +289,29 @@ pc.extend(pc, function () {
         },
 
         _onParentResizeOrPivotChange: function () {
-            if (this._mesh) this._updateMesh(this._mesh);
+            if (this._renderable.mesh) this._updateMesh(this._renderable.mesh);
         },
 
         _onScreenSpaceChange: function (value) {
             this._updateMaterial(value);
         },
 
-        _onScreenChange: function (screen) {
+        _onScreenChange: function (screen, previous) {
             if (screen) {
                 this._updateMaterial(screen.screen.screenSpace);
+
             } else {
                 this._updateMaterial(false);
             }
         },
 
         _onDrawOrderChange: function (order) {
-            this._drawOrder = order;
-            if (this._meshInstance) {
-                this._meshInstance.drawOrder = order;
+            this._renderable.setDrawOrder(order);
+
+            if (this.mask && this._element.screen) {
+                this._element.screen.screen.once('syncdraworder', function () {
+                    this._renderable.setUnmaskDrawOrder();
+                }, this);
             }
         },
 
@@ -114,12 +322,6 @@ pc.extend(pc, function () {
                    (!!this._material &&
                     this._system.defaultImageMaterials.indexOf(this._material) === -1);
         },
-
-        // assign a material internally without updating everything
-        // _setMaterial: function (material) {
-        //     this._material = material;
-        //     this._meshInstance.material = material;
-        // },
 
         _use9Slicing: function () {
             return this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED);
@@ -155,7 +357,8 @@ pc.extend(pc, function () {
                     }
 
                 }
-                if (this._meshInstance) this._meshInstance.cull = false;
+
+                if (this._renderable) this._renderable.setCull(false);
 
             } else {
                 if (!this._hasUserMaterial()) {
@@ -186,12 +389,13 @@ pc.extend(pc, function () {
                     }
                 }
 
-                if (this._meshInstance) this._meshInstance.cull = true;
+                if (this._renderable) this._renderable.setCull(true);
             }
-            if (this._meshInstance) {
-                this._meshInstance.material = this._material;
-                this._meshInstance.screenSpace = screenSpace;
-                this._meshInstance.layer = screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD;
+
+            if (this._renderable) {
+                this._renderable.setMaterial(this._material);
+                this._renderable.setScreenSpace(screenSpace);
+                this._renderable.setLayer(screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD);
             }
         },
 
@@ -254,9 +458,7 @@ pc.extend(pc, function () {
             }
 
             // force update meshInstance aabb
-            if (this._meshInstance) {
-                this._meshInstance._aabbVer = -1;
-            }
+            if (this._renderable) this._renderable.forceUpdateAabb();
 
             if (this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
 
@@ -297,22 +499,14 @@ pc.extend(pc, function () {
                 scaleY *= pc.math.clamp(h / (this._innerOffset.y * scaleMulY), 0.0001, 1);
 
                 // set scale
-                if (this._meshInstance) {
-                    // set inner offset
-                    this._meshInstance.setParameter("innerOffset", this._innerOffset.data);
-                    // set atlas rect
-                    this._meshInstance.setParameter("atlasRect", this._atlasRect.data);
-                    // set outer scale
-                    // use outerScale in ALL passes (depth, picker, etc) so the shape is correct
-                    this._meshInstance.setParameter("outerScale", this._outerScale.data, 0xFFFFFFFF);
-                    // set aabb update function
-                    this._meshInstance._updateAabbFunc = this._updateAabbFunc;
-                }
+                if (this._renderable) {
+                    this._renderable.setParameter('innerOffset', this._innerOffset.data);
+                    this._renderable.setParameter('atlasRect', this._atlasRect.data);
+                    this._renderable.setParameter('outerScale', this._outerScale.data);
+                    this._renderable.setAabbFunc(this._updateAabbFunc);
 
-                // set scale and pivot
-                if (this._node) {
-                    this._node.setLocalScale(scaleX, scaleY, 1);
-                    this._node.setLocalPosition((0.5 - this._element.pivot.x) * w, (0.5 - this._element.pivot.y) * h, 0);
+                    this._renderable.node.setLocalScale(scaleX, scaleY, 1);
+                    this._renderable.node.setLocalPosition((0.5 - this._element.pivot.x) * w, (0.5 - this._element.pivot.y) * h, 0);
                 }
             } else {
                 this._positions[0] = 0;
@@ -373,13 +567,11 @@ pc.extend(pc, function () {
 
                 mesh.aabb.compute(this._positions);
 
-                if (this._node) {
-                    this._node.setLocalScale(1, 1, 1);
-                    this._node.setLocalPosition(0, 0, 0);
-                }
+                if (this._renderable) {
+                    this._renderable.node.setLocalScale(1, 1, 1);
+                    this._renderable.node.setLocalPosition(0, 0, 0);
 
-                if (this._meshInstance) {
-                    this._meshInstance._updateAabbFunc = null;
+                    this._renderable.setAabbFunc(null);
                 }
 
             }
@@ -389,21 +581,8 @@ pc.extend(pc, function () {
         _updateAabb: function (aabb) {
             aabb.center.set(0, 0, 0);
             aabb.halfExtents.set(this._outerScale.x * 0.5, this._outerScale.y * 0.5, 0.001);
-            aabb.setFromTransformedAabb(aabb, this._node.getWorldTransform());
+            aabb.setFromTransformedAabb(aabb, this._renderable.node.getWorldTransform());
             return aabb;
-        },
-
-        _getHigherMask: function () {
-            var parent = this._entity;
-
-            while (parent) {
-                parent = parent.getParent();
-                if (parent && parent.element && parent.element.mask) {
-                    return parent;
-                }
-            }
-
-            return null;
         },
 
         _toggleMask: function () {
@@ -411,6 +590,8 @@ pc.extend(pc, function () {
 
             var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
             this._updateMaterial(screenSpace);
+
+            this._renderable.setMask(!!this._mask);
         },
 
         _onMaterialLoad: function (asset) {
@@ -434,6 +615,12 @@ pc.extend(pc, function () {
             } else {
                 this._system.app.assets.load(asset);
             }
+        },
+
+        _unbindMaterialAsset: function (asset) {
+            asset.off("load", this._onMaterialLoad, this);
+            asset.off("change", this._onMaterialChange, this);
+            asset.off("remove", this._onMaterialRemove, this);
         },
 
         _onMaterialChange: function () {
@@ -461,6 +648,12 @@ pc.extend(pc, function () {
             } else {
                 this._system.app.assets.load(asset);
             }
+        },
+
+        _unbindTextureAsset: function (asset) {
+            asset.off("load", this._onTextureLoad, this);
+            asset.off("change", this._onTextureChange, this);
+            asset.off("remove", this._onTextureRemove, this);
         },
 
         _onTextureLoad: function (asset) {
@@ -496,13 +689,38 @@ pc.extend(pc, function () {
             }
         },
 
+        _unbindSpriteAsset: function (asset) {
+            asset.off("load", this._onSpriteAssetLoad, this);
+            asset.off("change", this._onSpriteAssetChange, this);
+            asset.off("remove", this._onSpriteAssetRemove, this);
+        },
+
+        // Hook up event handlers on sprite asset
+        _bindSprite: function (sprite) {
+            sprite.on('set:meshes', this._onSpriteMeshesChange, this);
+            sprite.on('set:pixelsPerUnit', this._onSpritePpuChange, this);
+            sprite.on('set:atlas', this._onAtlasTextureChange, this);
+            if (sprite.atlas) {
+                sprite.atlas.on('set:texture', this._onAtlasTextureChange, this);
+            }
+        },
+
+        _unbindSprite: function (sprite) {
+            sprite.off('set:meshes', this._onSpriteMeshesChange, this);
+            sprite.off('set:pixelsPerUnit', this._onSpritePpuChange, this);
+            sprite.off('set:atlas', this._onAtlasTextureChange, this);
+            if (sprite.atlas) {
+                sprite.atlas.off('set:texture', this._onAtlasTextureChange, this);
+            }
+        },
+
         // When sprite asset is loaded make sure the texture atlas asset is loaded too
         // If so then set the sprite, otherwise wait for the atlas to be loaded first
         _onSpriteAssetLoad: function (asset) {
-            if (! asset.resource) {
+            if (!asset.resource) {
                 this.sprite = null;
             } else {
-                if (! asset.resource.atlas) {
+                if (!asset.resource.atlas) {
                     var atlasAssetId = asset.data.textureAtlasAsset;
                     var assets = this._system.app.assets;
                     assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
@@ -530,11 +748,11 @@ pc.extend(pc, function () {
 
         _onAtlasTextureChange: function () {
             if (this.sprite && this.sprite.atlas && this.sprite.atlas.texture) {
-                this._meshInstance.setParameter("texture_emissiveMap", this._sprite.atlas.texture);
-                this._meshInstance.setParameter("texture_opacityMap", this._sprite.atlas.texture);
+                this._renderable.setParameter('texture_emissiveMap', this._sprite.atlas.texture);
+                this._renderable.setParameter('texture_opacityMap', this._sprite.atlas.texture);
             } else {
-                this._meshInstance.deleteParameter("texture_emissiveMap");
-                this._meshInstance.deleteParameter("texture_opacityMap");
+                this._renderable.deleteParameter('texture_emissiveMap');
+                this._renderable.deleteParameter('texture_opacityMap');
             }
         },
 
@@ -557,14 +775,30 @@ pc.extend(pc, function () {
         },
 
         onEnable: function () {
-            if (this._model) {
-                this._element.addModelToLayers(this._model);
-            }
+            this._element.addModelToLayers(this._renderable.model);
         },
 
         onDisable: function () {
-            if (this._model) {
-                this._element.removeModelFromLayers(this._model);
+            this._element.removeModelFromLayers(this._renderable.model);
+        },
+
+        _setStencil: function (stencilParams) {
+            this._renderable.meshInstance.stencilFront = stencilParams;
+            this._renderable.meshInstance.stencilBack = stencilParams;
+
+            var ref = 0;
+            if (this._element.maskedBy) {
+                ref = this._element.maskedBy.element._image._maskRef;
+            }
+            if (this._renderable.unmaskMeshInstance) {
+                var sp = new pc.StencilParameters({
+                    ref: ref + 1,
+                    func: pc.FUNC_EQUAL,
+                    zpass: pc.STENCILOP_DECREMENT
+                });
+
+                this._renderable.unmaskMeshInstance.stencilFront = sp;
+                this._renderable.unmaskMeshInstance.stencilBack = sp;
             }
         }
     });
@@ -579,8 +813,10 @@ pc.extend(pc, function () {
             this._color.data[1] = value.data[1];
             this._color.data[2] = value.data[2];
 
-            if (this._meshInstance) {
-                this._meshInstance.setParameter('material_emissive', this._color.data3);
+            this._renderable.setParameter('material_emissive', this._color.data3);
+
+            if (this._element) {
+                this._element.fire('set:color', this._color);
             }
         }
     });
@@ -592,7 +828,12 @@ pc.extend(pc, function () {
 
         set: function (value) {
             this._color.data[3] = value;
-            this._meshInstance.setParameter("material_opacity", value);
+
+            this._renderable.setParameter('material_opacity', value);
+
+            if (this._element) {
+                this._element.fire('set:opacity', this._color.data[3]);
+            }
         }
     });
 
@@ -607,7 +848,7 @@ pc.extend(pc, function () {
             } else {
                 this._rect.set(value[0], value[1], value[2], value[3]);
             }
-            if (this._mesh) this._updateMesh(this._mesh);
+            if (this._renderable.mesh) this._updateMesh(this._renderable.mesh);
         }
     });
 
@@ -616,7 +857,7 @@ pc.extend(pc, function () {
             return this._material;
         },
         set: function (value) {
-            if (! value) {
+            if (!value) {
                 var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
                 value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
                 value = this._mask ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
@@ -624,19 +865,16 @@ pc.extend(pc, function () {
 
             this._material = value;
             if (value) {
-                this._meshInstance.material = value;
+                this._renderable.setMaterial(value);
 
                 // if this is not the default material then clear color and opacity overrides
-                if (value !== this._system.defaultScreenSpaceImageMaterial &&
-                    value !== this._system.defaultImageMaterial &&
-                    value !== this._system.defaultImageMaskMaterial &&
-                    value !== this._system.defaultScreenSpaceImageMaskMaterial) {
-                    this._meshInstance.deleteParameter('material_opacity');
-                    this._meshInstance.deleteParameter('material_emissive');
+                if (this._hasUserMaterial()) {
+                    this._renderable.deleteParameter('material_opacity');
+                    this._renderable.deleteParameter('material_emissive');
                 } else {
                     // otherwise if we are back to the defaults reset the color and opacity
-                    this._meshInstance.setParameter('material_emissive', this._color.data3);
-                    this._meshInstance.setParameter('material_opacity', this._color.data[3]);
+                    this._renderable.setParameter('material_emissive', this._color.data3);
+                    this._renderable.setParameter('material_opacity', this._color.data[3]);
                 }
             }
         }
@@ -668,7 +906,7 @@ pc.extend(pc, function () {
                 this._materialAsset = _id;
                 if (this._materialAsset) {
                     var asset = assets.get(this._materialAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.material = null;
                         assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
                     } else {
@@ -690,14 +928,14 @@ pc.extend(pc, function () {
 
             if (value) {
                 // default texture just uses emissive and opacity maps
-                this._meshInstance.setParameter("texture_emissiveMap", this._texture);
-                this._meshInstance.setParameter("texture_opacityMap", this._texture);
-                this._meshInstance.setParameter("material_emissive", this._color.data3);
-                this._meshInstance.setParameter("material_opacity", this._color.data[3]);
+                this._renderable.setParameter("texture_emissiveMap", this._texture);
+                this._renderable.setParameter("texture_opacityMap", this._texture);
+                this._renderable.setParameter("material_emissive", this._color.data3);
+                this._renderable.setParameter("material_opacity", this._color.data[3]);
             } else {
                 // clear texture params
-                this._meshInstance.deleteParameter("texture_emissiveMap");
-                this._meshInstance.deleteParameter("texture_opacityMap");
+                this._renderable.deleteParameter("texture_emissiveMap");
+                this._renderable.deleteParameter("texture_opacityMap");
             }
         }
     });
@@ -728,7 +966,7 @@ pc.extend(pc, function () {
                 this._textureAsset = _id;
                 if (this._textureAsset) {
                     var asset = assets.get(this._textureAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.texture = null;
                         assets.on('add:' + this._textureAsset, this._onTextureAdded, this);
                     } else {
@@ -757,16 +995,14 @@ pc.extend(pc, function () {
                 if (this._spriteAsset) {
                     var _prev = assets.get(this._spriteAsset);
                     if (_prev) {
-                        _prev.off("load", this._onSpriteAssetLoad, this);
-                        _prev.off("change", this._onSpriteAssetChange, this);
-                        _prev.off("remove", this._onSpriteAssetRemove, this);
+                        this._unbindSpriteAsset(_prev);
                     }
                 }
 
                 this._spriteAsset = _id;
                 if (this._spriteAsset) {
                     var asset = assets.get(this._spriteAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.sprite = null;
                         assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
                     } else {
@@ -774,6 +1010,10 @@ pc.extend(pc, function () {
                     }
                 } else {
                     this.sprite = null;
+                }
+
+                if (this._element) {
+                    this._element.fire('set:spriteAsset', _id);
                 }
             }
         }
@@ -785,35 +1025,23 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             if (this._sprite) {
-                this._sprite.off('set:meshes', this._onSpriteMeshesChange, this);
-                this._sprite.off('set:pixelsPerUnit', this._onSpritePpuChange, this);
-                this._sprite.off('set:atlas', this._onAtlasTextureChange, this);
-                if (this._sprite.atlas) {
-                    this._sprite.atlas.off('set:texture', this._onAtlasTextureChange, this);
-                }
+                this._unbindSprite(this._sprite);
             }
 
             this._sprite = value;
 
             if (this._sprite) {
-                this._sprite.on('set:meshes', this._onSpriteMeshesChange, this);
-                this._sprite.on('set:pixelsPerUnit', this._onSpritePpuChange, this);
-                this._sprite.on('set:atlas', this._onAtlasTextureChange, this);
-                if (this._sprite.atlas) {
-                    this._sprite.atlas.on('set:texture', this._onAtlasTextureChange, this);
-                }
+                this._bindSprite(this._sprite);
             }
 
-            if (this._meshInstance) {
-                if (this._sprite && this._sprite.atlas && this._sprite.atlas.texture) {
-                    // default texture just uses emissive and opacity maps
-                    this._meshInstance.setParameter("texture_emissiveMap", this._sprite.atlas.texture);
-                    this._meshInstance.setParameter("texture_opacityMap", this._sprite.atlas.texture);
-                } else {
-                    // clear texture params
-                    this._meshInstance.deleteParameter("texture_emissiveMap");
-                    this._meshInstance.deleteParameter("texture_opacityMap");
-                }
+            if (this._sprite && this._sprite.atlas && this._sprite.atlas.texture) {
+                // default texture just uses emissive and opacity maps
+                this._renderable.setParameter("texture_emissiveMap", this._sprite.atlas.texture);
+                this._renderable.setParameter("texture_opacityMap", this._sprite.atlas.texture);
+            } else {
+                // clear texture params
+                this._renderable.deleteParameter("texture_emissiveMap");
+                this._renderable.deleteParameter("texture_opacityMap");
             }
 
             this.spriteFrame = this.spriteFrame; // force update frame
@@ -847,24 +1075,25 @@ pc.extend(pc, function () {
             if (this.mesh) {
                 this._updateMesh(this.mesh);
             }
+
+            if (this._element) {
+                this._element.fire('set:spriteFrame', value);
+            }
         }
     });
 
     Object.defineProperty(ImageElement.prototype, "mesh", {
         get: function () {
-            return this._mesh;
+            return this._renderable.mesh;
         },
         set: function (value) {
-            this._mesh = value;
-            if (this._meshInstance) {
-                this._meshInstance.mesh = this._mesh;
-                this._meshInstance.visible = !!this._mesh;
-                this._meshInstance._aabbVer = -1;
-                if (this._mesh === this._defaultMesh) {
-                    this._meshInstance._updateAabbFunc = null;
-                } else {
-                    this._meshInstance._updateAabbFunc = this._updateAabbFunc;
-                }
+            // this._renderable.mesh = value;
+
+            this._renderable.setMesh(value);
+            if (this._defaultMesh === value) {
+                this._renderable.setAabbFunc(null);
+            } else {
+                this._renderable.setAabbFunc(this._updateAabbFunc);
             }
         }
     });
@@ -901,4 +1130,3 @@ pc.extend(pc, function () {
         ImageElement: ImageElement
     };
 }());
-

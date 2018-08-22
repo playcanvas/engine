@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var JSON_ADDRESS_MODE = {
         "repeat": pc.ADDRESS_REPEAT,
         "clamp": pc.ADDRESS_CLAMP_TO_EDGE,
@@ -20,7 +20,7 @@ pc.extend(pc, function () {
         this._loader = loader;
     };
 
-    TextureAtlasHandler.prototype = {
+    Object.assign(TextureAtlasHandler.prototype, {
         // Load the texture atlas texture using the texture resource loader
         load: function (url, callback) {
             var self = this;
@@ -61,7 +61,7 @@ pc.extend(pc, function () {
             } else {
                 var handler = this._loader.getHandler("texture");
                 var texture = handler.open(url, data);
-                if (! texture) return null;
+                if (!texture) return null;
                 resource.texture = texture;
             }
             return resource;
@@ -151,7 +151,7 @@ pc.extend(pc, function () {
 
                     if (value) {
                         // add or update frame
-                        if (! asset.resource.frames[frameKey]) {
+                        if (!asset.resource.frames[frameKey]) {
                             asset.resource.frames[frameKey] = {
                                 rect: new pc.Vec4(value.rect),
                                 pivot: new pc.Vec2(value.pivot),
@@ -177,7 +177,7 @@ pc.extend(pc, function () {
                 }
             }
         }
-    };
+    });
 
     return {
         TextureAtlasHandler: TextureAtlasHandler

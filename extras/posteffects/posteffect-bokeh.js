@@ -1,9 +1,11 @@
-//------------------------------ POST EFFECT DEFINITION----------------------------//
-pc.extend(pc, function () {
+// --------------- POST EFFECT DEFINITION --------------- //
+Object.assign(pc, function () {
+
     /**
+     * @constructor
      * @name pc.BokehEffect
-     * @class Implements the BokehEffect post processing effect
-     * @constructor Creates new instance of the post effect.
+     * @classdesc Implements the BokehEffect post processing effect
+     * @description Creates new instance of the post effect.
      * @extends pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} maxBlur The maximum amount of blurring. Ranges from 0 to 1
@@ -12,6 +14,8 @@ pc.extend(pc, function () {
      * @property {Number} aspect Controls the blurring effect
      */
     var BokehEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         this.needsDepthBuffer = true;
 
         /**
@@ -121,11 +125,12 @@ pc.extend(pc, function () {
         this.aperture = 0.025;
         this.focus = 1;
         this.aspect = 1;
-    }
+    };
 
-    BokehEffect = pc.inherits(BokehEffect, pc.PostEffect);
+    BokehEffect.prototype = Object.create(pc.PostEffect.prototype);
+    BokehEffect.prototype.constructor = BokehEffect;
 
-    BokehEffect.prototype = pc.extend(BokehEffect.prototype, {
+    Object.assign(BokehEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -145,8 +150,7 @@ pc.extend(pc, function () {
     };
 }());
 
-
-//------------------------------ SCRIPT DEFINITION----------------------------//
+// ----------------- SCRIPT DEFINITION ------------------ //
 var Bokeh = pc.createScript('bokeh');
 
 Bokeh.attributes.add('maxBlur', {
@@ -179,7 +183,7 @@ Bokeh.attributes.add('aspect', {
     title: 'Aspect'
 });
 
-Bokeh.prototype.initialize = function() {
+Bokeh.prototype.initialize = function () {
     this.effect = new pc.BokehEffect(this.app.graphicsDevice);
     this.effect.maxBlur = this.maxBlur;
     this.effect.aperture = this.aperture;

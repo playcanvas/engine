@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     var _schema = [
         'enabled',
@@ -17,6 +17,8 @@ pc.extend(pc, function () {
     var ON_DISABLE = 'onDisable';
 
     var ScriptLegacyComponentSystem = function ScriptLegacyComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
         app.systems.add(this.id, this);
@@ -43,11 +45,12 @@ pc.extend(pc, function () {
         pc.ComponentSystem.on(POST_UPDATE, this.onPostUpdate, this);
         pc.ComponentSystem.on(TOOLS_UPDATE, this.onToolsUpdate, this);
     };
-    ScriptLegacyComponentSystem = pc.inherits(ScriptLegacyComponentSystem, pc.ComponentSystem);
+    ScriptLegacyComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ScriptLegacyComponentSystem.prototype.constructor = ScriptLegacyComponentSystem;
 
     pc.Component._buildAccessors(pc.ScriptLegacyComponent.prototype, _schema);
 
-    pc.extend(ScriptLegacyComponentSystem.prototype, {
+    Object.assign(ScriptLegacyComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['runInTools', 'enabled', 'scripts'];
 
@@ -65,7 +68,7 @@ pc.extend(pc, function () {
                 });
             }
 
-            ScriptLegacyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {
@@ -148,7 +151,7 @@ pc.extend(pc, function () {
                 if (instances.hasOwnProperty(name)) {
                     var instance = instances[name].instance;
                     if (instance[method]) {
-                        instance[method].call(instance);
+                        instance[method]();
                     }
                 }
             }
@@ -229,7 +232,7 @@ pc.extend(pc, function () {
             for (var i = 0, len = updateList.length; i < len; i++) {
                 item = updateList[i];
                 if (item && item.entity && item.entity.enabled && item.entity.script.enabled) {
-                    item[method].call(item, dt);
+                    item[method](dt);
                 }
             }
         },

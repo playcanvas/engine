@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     // Shared math variable to avoid excessive allocation
     var ammoTransform;
     var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
@@ -45,7 +45,9 @@ pc.extend(pc, function () {
      * </ul>
      * Defaults to pc.BODYTYPE_STATIC.
      */
-    var RigidBodyComponent = function RigidBodyComponent (system, entity) {
+    var RigidBodyComponent = function RigidBodyComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         // Lazily create shared variable
         if (typeof Ammo !== 'undefined' && !ammoTransform) {
             ammoTransform = new Ammo.btTransform();
@@ -73,21 +75,22 @@ pc.extend(pc, function () {
         this._linearVelocity = new pc.Vec3(0, 0, 0);
         this._angularVelocity = new pc.Vec3(0, 0, 0);
     };
-    RigidBodyComponent = pc.inherits(RigidBodyComponent, pc.Component);
+    RigidBodyComponent.prototype = Object.create(pc.Component.prototype);
+    RigidBodyComponent.prototype.constructor = RigidBodyComponent;
 
     Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
-        get: function() {
+        get: function () {
             console.warn("WARNING: bodyType: Function is deprecated. Query type property instead.");
             return this.type;
         },
-        set: function(type) {
+        set: function (type) {
             console.warn("WARNING: bodyType: Function is deprecated. Set type property instead.");
             this.type = type;
         }
     });
 
     Object.defineProperty(RigidBodyComponent.prototype, "linearVelocity", {
-        get: function() {
+        get: function () {
             if (!this.isKinematic()) {
                 if (this.body) {
                     var vel = this.body.getLinearVelocity();
@@ -96,7 +99,7 @@ pc.extend(pc, function () {
             }
             return this._linearVelocity;
         },
-        set: function(lv) {
+        set: function (lv) {
             this.activate();
             if (!this.isKinematic()) {
                 if (this.body) {
@@ -109,7 +112,7 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(RigidBodyComponent.prototype, "angularVelocity", {
-        get: function() {
+        get: function () {
             if (!this.isKinematic()) {
                 if (this.body) {
                     var vel = this.body.getAngularVelocity();
@@ -118,7 +121,7 @@ pc.extend(pc, function () {
             }
             return this._angularVelocity;
         },
-        set: function(av) {
+        set: function (av) {
             this.activate();
             if (!this.isKinematic()) {
                 if (this.body) {
@@ -130,7 +133,7 @@ pc.extend(pc, function () {
         }
     });
 
-    pc.extend(RigidBodyComponent.prototype, {
+    Object.assign(RigidBodyComponent.prototype, {
         /**
          * @private
          * @function
@@ -493,7 +496,7 @@ pc.extend(pc, function () {
          * @example
          * // Apply via numbers
          * entity.rigidbody.applyTorqueImpulse(0, 10, 0);
-        */
+         */
         applyTorqueImpulse: function () {
             var x, y, z;
             switch (arguments.length) {
@@ -683,7 +686,7 @@ pc.extend(pc, function () {
         },
 
         onEnable: function () {
-            RigidBodyComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
             if (!this.body) {
                 this.createBody();
             }
@@ -692,7 +695,7 @@ pc.extend(pc, function () {
         },
 
         onDisable: function () {
-            RigidBodyComponent._super.onDisable.call(this);
+            pc.Component.prototype.onDisable.call(this);
             this.disableSimulation();
         },
 

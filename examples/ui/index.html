@@ -4,7 +4,6 @@
         <meta charset="UTF-8">
         <title>PlayCanvas UI Example</title>
         <script src="../../build/output/playcanvas-latest.js"></script>
-        <script src="./selection-manager.js"></script>
         <style>
             body {
                 margin: 0;
@@ -42,7 +41,8 @@
             var canvas = document.getElementById('application-canvas');
             var app = new pc.Application(canvas, {
                 mouse: new pc.Mouse(document.body),
-                touch: new pc.TouchDevice(document.body)
+                touch: new pc.TouchDevice(document.body),
+                elementInput: new pc.ElementInput(canvas)
             });
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -51,10 +51,6 @@
             app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
             app.start();
-
-            // see selection-manager.js
-            var selectionManager = new SelectionManager(app, app.graphicsDevice);
-            selectionManager.attach(app);
 
             // create camera
             var c = new pc.Entity();
@@ -67,10 +63,13 @@
             app.root.addChild(c);
 
             // Load Assets
-            var assets = [
-                new pc.Asset("red_button_atlas.png", "texture", {url: "../assets/button/red_button_atlas.png"}),
+            var assetsToLoad = [
+                new pc.Asset("red_button_atlas.json", "textureatlas", {url: "../assets/button/red_button_atlas.json"}),
+                new pc.Asset("Button Default", "sprite", {url: "../assets/button/red_button_default.json"}),
+                new pc.Asset("Button Pressed", "sprite", {url: "../assets/button/red_button_pressed.json"}),
+                new pc.Asset("Button Hover", "sprite", {url: "../assets/button/red_button_hover.json"}),
+                new pc.Asset("Button Disabled", "sprite", {url: "../assets/button/red_button_disabled.json"}),
                 new pc.Asset('Arial.json', "font", {url: "../assets/arial/Arial.json"}),
-                new pc.Asset("button.js", "script", {url: "./button.js"}),
                 new pc.Asset("heart.png", "texture", {url: "../assets/heart.png"}),
                 new pc.Asset("grey_panel.png", "texture", {url: "../assets/panel/blue_panel.png"})
             ]
@@ -78,20 +77,26 @@
             var count =0;
             app.assets.on('load', function () {
                 count++;
-                if (count === assets.length) {
+                if (count === assetsToLoad.length) {
                     onLoadComplete();
                 }
             });
 
-            for (var i = 0; i < assets.length; i++) {
-                app.assets.add(assets[i]);
-                app.assets.load(assets[i]);
+            for (var i = 0; i < assetsToLoad.length; i++) {
+                app.assets.add(assetsToLoad[i]);
+                app.assets.load(assetsToLoad[i]);
             }
 
-            var buttonAsset = assets[0];
-            var fontAsset = assets[1];
-            var heartAsset = assets[3];
-            var panelAsset = assets[4];
+            var assets = {
+                atlas: assetsToLoad[0],
+                buttonDefault: assetsToLoad[1],
+                buttonPressed: assetsToLoad[2],
+                buttonHover: assetsToLoad[3],
+                buttonDisabled: assetsToLoad[4],
+                font: assetsToLoad[5],
+                heart: assetsToLoad[6],
+                panel: assetsToLoad[7]
+            }
 
             // global ui elements
             var menu, panel;
@@ -101,35 +106,36 @@
             // create a button
             // an image element, with button script and selector attached
             // and a text element label
-            var createButton = function (text, x, y, callback) {
-                var button = new pc.Entity();
-                button.name = "button";
-                button.selector = new Selector(button, selectionManager);
+            var createButton = function (text, x, y, active) {
+                var button = new pc.Entity('Button');
                 button.addComponent('element', {
-                    anchor: new pc.Vec4(0.5,1,0.5,1),
-                    pivot: new pc.Vec2(0.5,1),
+                    type: 'image',
+                    anchor: [0.5,1,0.5,1],
+                    pivot: [0.5, 1],
                     width: 256,
                     height: 64,
-                    type: "image",
-                    rect: [0,0,1,0.25],
-                    textureAsset: buttonAsset
+                    spriteAsset: assets.buttonDefault
                 });
-                button.addComponent('script');
-                button.script.create('button', {
-                    attributes: {
-                        defaultTexture: buttonAsset,
-                        defaultUvs: [0,0.75,1,0.25],
-                        hoverTexture: buttonAsset,
-                        hoverUvs: [0,0.5,1,0.25],
-                        activatedTexture: buttonAsset,
-                        activatedUvs: [0,0.25,1,0.25],
-                        disabledTexture: buttonAsset,
-                        disabledUvs: [0,0,1,0.25],
-                    }
+                button.element.useInput = true;
+
+                button.addComponent('button', {
+                    active: active,
+                    transitionMode: pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE,
+                    hoverSpriteAsset: assets.buttonHover,
+                    pressedSpriteAsset: assets.buttonPressed,
+                    inactiveSpriteAsset: assets.buttonDisabled,
+                    imageEntity: button
                 });
-                button.element.rect = [0, 0.75, 1, 0.25];
+
                 button.setLocalPosition(x, y, 0);
-                button.script.button.on("press", callback);
+
+                button.button.on('pressedstart', function () {
+                    label.translateLocal(0, -4, 0);
+                });
+
+                button.button.on('pressedend', function () {
+                    label.translateLocal(0, 4, 0);
+                });
 
                 var label = new pc.Entity();
                 label.name = "label";
@@ -140,35 +146,12 @@
                     height: 64,
                     type: "text",
                     text: text,
-                    fontAsset: fontAsset,
-                    color: new pc.Color(1,1,1),
+                    fontAsset: assets.font,
+                    color: active ? new pc.Color(1,1,1) : new pc.Color(0.2,0.2,0.2),
                     opacity: 0.5
                 });
-                label.setLocalPosition(0, 8, 0)
+                label.setLocalPosition(0, 4, 0)
                 button.addChild(label);
-
-                button.script.button.on("disabledstate", function (state) {
-                    if (state) {
-                        label.element.color = new pc.Color(0,0,0,0.5);
-                    } else {
-                        label.element.color = new pc.Color(1,1,1,0.5);
-                    }
-                });
-
-                button.selector.on('pointerdown', function () {
-                    if (button.script.button.disabled) return;
-                    label.translateLocal(0,-8,0);
-                });
-                button.selector.on('pointerup', function () {
-                    if (button.script.button.disabled) return;
-                    label.translateLocal(0,8,0);
-                });
-                button.selector.on('pointerleave', function () {
-                    if (button.script.button.disabled) return;
-                    if (button.script.button.active) {
-                        label.translateLocal(0,8,0);
-                    }
-                });
 
                 return button;
             };
@@ -202,7 +185,6 @@
                 menu.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true});
                 menu.screen.scaleMode = "blend";
                 menu.screen.referenceResolution = new pc.Vec2(1280,720);
-                // menu.setLocalScale(1/480, 1/480, 1/480);
                 app.root.addChild(menu);
 
                 panel = new pc.Entity();
@@ -213,21 +195,23 @@
                     width: 300,
                     height: 300,
                     type: "image",
-                    textureAsset: panelAsset
+                    textureAsset: assets.panel
                 });
 
-                button = createButton("START", 0, -22, function () {
+                button = createButton("START", 0, -22, true);
+                button.button.on('click', function () {
                     showGame();
                 });
                 panel.addChild(button);
 
-                button = createButton("ANNOY", 0, -108, function () {
+                button = createButton("ANNOY", 0, -108, true);
+                button.button.on('click', function () {
                     toggleSpin();
                 });
                 panel.addChild(button);
 
-                button = createButton("DISABLED", 0, -192);
-                button.script.button.disabled = true;
+                button = createButton("DISABLED", 0, -192, false);
+
                 panel.addChild(button);
                 menu.addChild(panel);
                 menu.enabled = false;
@@ -248,25 +232,25 @@
                     type: "text",
                     text: "0",
                     fontSize: 64,
-                    fontAsset: fontAsset,
+                    fontAsset: assets.font,
                     color: new pc.Color(1,1,1)
                 });
-                score.translateLocal(-84, -10, 0);
                 hud.addChild(score);
+                score.translateLocal(-84, -10, 0);
 
                 lives = [];
                 for (var i = 0; i < 3; i++) {
-                    lives[i] = new pc.Entity();
+                    lives[i] = new pc.Entity("Life "+i);
                     lives[i].addComponent("element", {
                         anchor: [1,1,1,1],
                         pivot: [1,1],
                         width: 64,
                         height: 64,
                         type: "image",
-                        textureAsset: heartAsset
+                        textureAsset: assets.heart
                     });
-                    lives[i].translateLocal(-10, -64*i-10, 0);
                     hud.addChild(lives[i]);
+                    lives[i].translateLocal(-10, -64*i-10, 0);
                 }
                 app.root.addChild(hud);
                 hud.enabled = false;
@@ -281,7 +265,7 @@
                     type: "text",
                     text: "FPS",
                     fontSize: 16,
-                    fontAsset: fontAsset,
+                    fontAsset: assets.font,
                     color: new pc.Color(1,1,1),
                     opacity: 1
                 });
@@ -291,13 +275,6 @@
 
             // called when all assets are loaded
             function onLoadComplete() {
-                // use nearest filtering on pixelized textures to prevent leaks
-                for (var i = 0; i < assets.length; i++) {
-                    if (assets[i].type === "texture") {
-                        assets[i].resource.minFilter = pc.FILTER_NEAREST;
-                        assets[i].resource.magFilter = pc.FILTER_NEAREST;
-                    }
-                }
 
                 // create the entities
                 createMenu();

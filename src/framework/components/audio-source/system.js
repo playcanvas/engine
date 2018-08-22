@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = [
         'enabled',
         'assets',
@@ -26,6 +26,8 @@ pc.extend(pc, function () {
      * @extends pc.ComponentSystem
      */
     var AudioSourceComponentSystem = function (app, manager) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = "audiosource";
         this.description = "Specifies audio assets that can be played at the position of the Entity.";
         app.systems.add(this.id, this);
@@ -44,19 +46,20 @@ pc.extend(pc, function () {
 
         this.on('remove', this.onRemove, this);
     };
-    AudioSourceComponentSystem = pc.inherits(AudioSourceComponentSystem, pc.ComponentSystem);
+    AudioSourceComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    AudioSourceComponentSystem.prototype.constructor = AudioSourceComponentSystem;
 
     pc.Component._buildAccessors(pc.AudioSourceComponent.prototype, _schema);
 
-    pc.extend(AudioSourceComponentSystem.prototype, {
+    Object.assign(AudioSourceComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['activate', 'volume', 'pitch', 'loop', '3d', 'minDistance', 'maxDistance', 'rollOffFactor', 'distanceModel', 'enabled', 'assets'];
-            AudioSourceComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
 
             component.paused = !(component.enabled && component.activate);
         },
 
-        onInitialize: function(root) {
+        onInitialize: function (root) {
             if (root.audiosource &&
                 root.enabled &&
                 root.audiosource.enabled &&
@@ -76,7 +79,7 @@ pc.extend(pc, function () {
             this.initialized = true;
         },
 
-        onUpdate: function(dt) {
+        onUpdate: function (dt) {
             var components = this.store;
 
             for (var id in components) {

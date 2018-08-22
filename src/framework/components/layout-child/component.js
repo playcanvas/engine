@@ -1,7 +1,7 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
-     * @private
      * @component
+     * @constructor
      * @name pc.LayoutChildComponent
      * @description Create a new LayoutChildComponent
      * @classdesc A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent {@link pc.LayoutGroupComponent}.
@@ -14,16 +14,21 @@ pc.extend(pc, function () {
      * @property {Number} maxHeight The maximum height the element should be rendered at.
      * @property {Number} fitWidthProportion The amount of additional horizontal space that the element should take up, if necessary to satisfy a Stretch/Shrink fitting calculation. This is specified as a proportion, taking into account the proportion values of other siblings.
      * @property {Number} fitHeightProportion The amount of additional vertical space that the element should take up, if necessary to satisfy a Stretch/Shrink fitting calculation. This is specified as a proportion, taking into account the proportion values of other siblings.
+     * @property {Number} excludeFromLayout If set to true, the child will be excluded from all layout calculations.
      */
     var LayoutChildComponent = function LayoutChildComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         this._minWidth = 0;
         this._minHeight = 0;
         this._maxWidth = null;
         this._maxHeight = null;
         this._fitWidthProportion = 0;
         this._fitHeightProportion = 0;
+        this._excludeFromLayout = false;
     };
-    LayoutChildComponent = pc.inherits(LayoutChildComponent, pc.Component);
+    LayoutChildComponent.prototype = Object.create(pc.Component.prototype);
+    LayoutChildComponent.prototype.constructor = LayoutChildComponent;
 
     function defineResizeProperty(name) {
         var _name = '_' + name;
@@ -48,6 +53,7 @@ pc.extend(pc, function () {
     defineResizeProperty('maxHeight');
     defineResizeProperty('fitWidthProportion');
     defineResizeProperty('fitHeightProportion');
+    defineResizeProperty('excludeFromLayout');
 
     return {
         LayoutChildComponent: LayoutChildComponent

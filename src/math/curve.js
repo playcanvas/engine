@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -51,7 +51,7 @@ pc.extend(pc, (function () {
         this.sort();
     };
 
-    Curve.prototype = {
+    Object.assign(Curve.prototype, {
         /**
          * @function
          * @name pc.Curve#add
@@ -161,7 +161,7 @@ pc.extend(pc, (function () {
 
                 // back up index to left key
                 if (i > 0) {
-                    i = i - 1;
+                    i--;
                 }
 
                 if (i > 0) {
@@ -260,10 +260,10 @@ pc.extend(pc, (function () {
 
             return values;
         }
-    };
+    });
 
     Object.defineProperty(Curve.prototype, 'length', {
-        get: function() {
+        get: function () {
             return this.keys.length;
         }
     });

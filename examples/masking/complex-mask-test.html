@@ -1,0 +1,220 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>PlayCanvas UI Example</title>
+        <script src="../../build/output/playcanvas-latest.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="application-canvas"></canvas>
+        <script>
+
+            /**
+             * Build a somewhat complex hierarchy to test the behaviour of masking
+             * This hierarchy contains several sub-masks
+             * But places a visible red box outside of the sub-masks but rendering over them
+             */
+            var canvas = document.getElementById('application-canvas');
+            var app = new pc.Application(canvas, {
+                mouse: new pc.Mouse(document.body),
+                touch: new pc.TouchDevice(document.body)
+            });
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            // use device pixel ratio
+            app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
+
+            app.start();
+
+            // create camera
+            var c = new pc.Entity();
+            c.addComponent('camera', {
+                clearColor: new pc.Color(44/255, 62/255, 80/255),
+                farClip: 10000
+            });
+            c.translate(1,1,1);
+            c.lookAt(0,0,0);
+            app.root.addChild(c);
+
+            // Load Assets
+            var assets = [
+                new pc.Asset('Arial.json', "font", {url: "../assets/arial/Arial.json"})
+            ]
+
+            var count =0;
+            app.assets.on('load', function () {
+                count++;
+                if (count === assets.length) {
+                    onLoadComplete();
+                }
+            });
+
+            for (var i = 0; i < assets.length; i++) {
+                app.assets.add(assets[i]);
+                app.assets.load(assets[i]);
+            }
+
+            var fontAsset = assets[0];
+
+            var menu;
+
+            // create the menu screen, panel and list items
+            function createMenu() {
+                menu = new pc.Entity();
+                menu.name = "Menu"+c;
+                menu.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true});
+                menu.screen.scaleMode = "blend";
+                menu.screen.referenceResolution = new pc.Vec2(1280,720);
+
+                container = new pc.Entity();
+                container.name = "Container";
+                container.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    width: 900,
+                    height: 400,
+                    opacity: 1,
+                    color: new pc.Color(0.1, 0.7, 1.0),
+                    mask: false
+                });
+
+                app.root.addChild(menu);
+                menu.addChild(container)
+
+                return container;
+
+            };
+
+            var c = 0;
+            function createPanel(menu) {
+                c++;
+                var panel, mask, subpanel, submask, block, redBlock, greenBlock;
+
+                // create a panel
+                panel = new pc.Entity();
+                panel.name = "Panel"+c;
+                panel.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    width: 300,
+                    height: 300,
+                    opacity: 1,
+                    color: new pc.Color(1,1,1,1)
+                });
+
+                // create a mask
+                mask = new pc.Entity();
+                mask.name = "Mask"+c;
+                mask.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0, 0, 1, 1),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    margin: new pc.Vec4(0,0,0,0),
+                    color: new pc.Color(1,0.5,0.5),
+                    opacity: 1,
+                    mask: true
+                });
+
+                // create a panel
+                subpanel = new pc.Entity();
+                subpanel.name = "Subpanel"+c;
+                subpanel.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    width: 200,
+                    height: 200,
+                    opacity: 1,
+                    color: new pc.Color(0.5,0.5,0.5)
+                });
+
+                submask = new pc.Entity();
+                submask.name = "Submask"+c;
+                submask.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0, 0, 1, 1),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    margin: [0,0,0,0],
+                    opacity: 1,
+                    mask: true
+                });
+
+                subsubmask = new pc.Entity();
+                subsubmask.name = "SubSubmask"+c;
+                subsubmask.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0, 0, 1, 1),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    margin: [10,10,10,10],
+                    opacity: 1,
+                    mask: true
+                });
+
+                greenBlock = new pc.Entity();
+                greenBlock.name = "GreenBlock"+c;
+                greenBlock.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    width: 600,
+                    height: 100,
+                    opacity: 1,
+                    color: new pc.Color(0,1,0)
+                });
+
+                redBlock = new pc.Entity();
+                redBlock.name = "RedBlock"+c;
+                redBlock.addComponent("element", {
+                    type: "image",
+                    anchor: new pc.Vec4(0.5, 1, 0.5, 1),
+                    pivot: new pc.Vec2(0.5, 1),
+                    width: 100,
+                    height: 600,
+                    opacity: 1,
+                    color: new pc.Color(1,0,0)
+                });
+
+                panel.addChild(mask);
+                mask.addChild(subpanel);
+                subpanel.addChild(submask);
+                submask.addChild(subsubmask);
+                subsubmask.addChild(greenBlock);
+                subpanel.addChild(redBlock);
+
+                menu.addChild(panel);
+
+                return panel;
+            };
+
+
+            // called when all assets are loaded
+            function onLoadComplete() {
+                // create the entities
+                var parent = createMenu();
+                var p;
+                p = createPanel(parent);
+                var panel1 = app.root.findByName("Panel1");
+            }
+
+            // update every frame
+            app.on("update", function (dt) {
+            });
+
+            // hook up window resize events
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
+        </script>
+    </body>
+</html>

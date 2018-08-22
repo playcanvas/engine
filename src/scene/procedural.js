@@ -341,6 +341,7 @@ pc.createTorus = function (device, opts) {
     var rt = opts && opts.ringRadius !== undefined ? opts.ringRadius : 0.3;
     var segments = opts && opts.segments !== undefined ? opts.segments : 30;
     var sides = opts && opts.sides !== undefined ? opts.sides : 20;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Variable declarations
     var i, j;
@@ -386,7 +387,7 @@ pc.createTorus = function (device, opts) {
         indices: indices
     };
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(positions, normals, uvs, indices);
     }
 
@@ -632,22 +633,24 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
  * @returns {pc.Mesh} A new cylinder-shaped mesh.
  */
 pc.createCylinder = function (device, opts) {
-    // Check the supplied options and provide defaults for unspecified ones
     // #ifdef DEBUG
-    if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius'))
+    if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius')) {
         console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+    }
     // #endif
 
+    // Check the supplied options and provide defaults for unspecified ones
     var radius = opts && (opts.radius || opts.baseRadius);
     radius = radius !== undefined ? radius : 0.5;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 20;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = pc._createConeData(radius, radius, height, heightSegments, capSegments, false);
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
@@ -677,11 +680,12 @@ pc.createCapsule = function (device, opts) {
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
     var sides = opts && opts.sides !== undefined ? opts.sides : 20;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = pc._createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
@@ -713,10 +717,11 @@ pc.createCone = function (device, opts) {
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     var options = pc._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, false);
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
@@ -743,6 +748,7 @@ pc.createSphere = function (device, opts) {
     var radius = opts && opts.radius !== undefined ? opts.radius : 0.5;
     var latitudeBands = opts && opts.latitudeBands !== undefined ? opts.latitudeBands : 16;
     var longitudeBands = opts && opts.longitudeBands !== undefined ? opts.longitudeBands : 16;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Variable declarations
     var lon, lat;
@@ -794,7 +800,7 @@ pc.createSphere = function (device, opts) {
         indices: indices
     };
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(positions, normals, uvs, indices);
     }
 
@@ -823,6 +829,7 @@ pc.createPlane = function (device, opts) {
     var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : new pc.Vec2(0.5, 0.5);
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 5;
     var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 5;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Variable declarations
     var i, j;
@@ -840,7 +847,7 @@ pc.createPlane = function (device, opts) {
     //      |    |    |
     //      |    Z    |
     // (0,0)x---------x(1,0)
-    //         width
+    // width
     var vcounter = 0;
 
     for (i = 0; i <= ws; i++) {
@@ -871,7 +878,7 @@ pc.createPlane = function (device, opts) {
         indices: indices
     };
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(positions, normals, uvs, indices);
     }
 
@@ -901,6 +908,7 @@ pc.createBox = function (device, opts) {
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 1;
     var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 1;
     var hs = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     var corners = [
         new pc.Vec3(-he.x, -he.y,  he.z),
@@ -1002,7 +1010,7 @@ pc.createBox = function (device, opts) {
         indices: indices
     };
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(positions, normals, uvs, indices);
     }
 

@@ -1,10 +1,10 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var AnimationHandler = function () {
     };
 
-    AnimationHandler.prototype = {
+    Object.assign(AnimationHandler.prototype, {
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
                 if (err) {
@@ -92,7 +92,7 @@ pc.extend(pc, function () {
 
             return anim;
         }
-    };
+    });
 
     return {
         AnimationHandler: AnimationHandler

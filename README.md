@@ -179,11 +179,30 @@ Specific engine versions:
 * https://code.playcanvas.com/playcanvas-0.181.11.js
 * https://code.playcanvas.com/playcanvas-0.181.11.min.js
 
+## How to run tests
+
+PlayCanvas makes use of Karma for running unit tests, and provides three test ways of executing them depending on what phase of development you're in:
+
+    # Runs the tests once over the unbuilt source files - useful if you just want a quick 'all-clear'
+    npm run test
+
+    # Watches all source and test files for changes, and automatically re-runs the tests when they change.
+    # Open http://localhost:9876/debug.html in your browser to debug the tests in real time.
+    #
+    # You can also edit the `tests/**/test_*.js` glob in tests/karma.conf.js to run a subset of the tests,
+    # during development.
+    npm run test:watch
+
+    # Runs the tests once over playcanvas-latest.js - mainly used by CI, but sometimes useful if you want
+    # to test the engine after building it. Make sure to do `npm run build` first to make sure you have
+    # an up-to-date build.
+    npm run test:release
+
 ## Getting Help
 
 [**Forums**](https://forum.playcanvas.com) - Use the forum to ask/answer questions about PlayCanvas.
 
-[**Discord**](https://discord.gg/Abgck8a) - Real-time text, voice and video chat for the PlayCanvas developer community.
+[**Discord**](https://discord.gg/N67tQuU) - Real-time text, voice and video chat for the PlayCanvas developer community.
 
 ## Contributing
 

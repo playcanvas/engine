@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.PostEffectQueue
@@ -25,14 +25,14 @@ pc.extend(pc, function () {
         this.resizeTimeout = null;
         this.resizeLast = 0;
 
-        this._resizeTimeoutCallback = function() {
+        this._resizeTimeoutCallback = function () {
             self.resizeRenderTargets();
         };
 
         camera.on('set_rect', this.onCameraRectChanged, this);
     }
 
-    PostEffectQueue.prototype = {
+    Object.assign(PostEffectQueue.prototype, {
         /**
          * @private
          * @function
@@ -124,7 +124,7 @@ pc.extend(pc, function () {
                     name: "PostEffectQueue",
                     renderTarget: this.camera.renderTarget,
                     clear: false,
-                    onPostRender: function() {
+                    onPostRender: function () {
                         for (var i = 0; i < this._commandList.length; i++) {
                             this._commandList[i]();
                         }
@@ -373,7 +373,7 @@ pc.extend(pc, function () {
                 this.resizeRenderTargets();
             }
         }
-    };
+    });
 
     return {
         PostEffectQueue: PostEffectQueue

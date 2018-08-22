@@ -10,26 +10,13 @@ pc.path = function () {
          */
         delimiter: "/",
         /**
-         * Join two sections of file path together, insert a delimiter if needed.
-         * @param {String} one First part of path to join
-         * @param {String} two Second part of path to join
          * @function
          * @name pc.path.join
+         * @description Join two sections of file path together, insert a delimiter if needed.
+         * @param {String} one First part of path to join.
+         * @param {String} two Second part of path to join.
+         * @returns {String} The joined file path.
          */
-        /*
-        join: function(one, two) {
-            if(two[0] === pc.path.delimiter) {
-                return two;
-            }
-
-            if(one && two && one[one.length - 1] !== pc.path.delimiter && two[0] !== pc.path.delimiter) {
-                return one + pc.path.delimiter + two;
-            }
-            else {
-                return one + two;
-            }
-        },
-        */
         join: function () {
             var index;
             var num = arguments.length;
@@ -51,6 +38,48 @@ pc.path = function () {
                 } else {
                     result += (two);
                 }
+            }
+
+            return result;
+        },
+
+        /**
+         * @function
+         * @name  pc.path.normalize
+         * @description  Normalize the path by removing '.' and '..' instances
+         * @param  {String} path The path to normalize
+         * @returns {String} The normalized path
+         */
+        normalize: function (path) {
+            var lead = path.startsWith(pc.path.delimiter);
+            var trail = path.endsWith(pc.path.delimiter);
+
+            var parts = path.split('/');
+
+            var result = '';
+
+            var cleaned = [];
+
+            for (var i = 0; i < parts.length; i++) {
+                if (parts[i] === '') continue;
+                if (parts[i] === '.') continue;
+                if (parts[i] === '..' && cleaned.length > 0) {
+                    cleaned = cleaned.slice(0, cleaned.length - 2);
+                    continue;
+                }
+
+                if (i > 0) cleaned.push(pc.path.delimiter);
+                cleaned.push(parts[i]);
+            }
+
+
+            result = cleaned.join('');
+            if (!lead && result[0] === pc.path.delimiter) {
+                result = result.slice(1);
+            }
+
+            if (trail && result[result.length - 1] !== pc.path.delimiter) {
+                result += pc.path.delimiter;
             }
 
             return result;
@@ -82,7 +111,7 @@ pc.path = function () {
          * pc.path.getBasename("/path/to/file.txt"); // returns "path.txt"
          * pc.path.getBasename("/path/to/dir"); // returns "dir"
          */
-        getBasename: function(path) {
+        getBasename: function (path) {
             return pc.path.split(path)[1];
         },
 
@@ -93,7 +122,7 @@ pc.path = function () {
          * @param {String} path The path to get the directory from
          * @returns {String} The directory part of the path.
          */
-        getDirectory: function(path) {
+        getDirectory: function (path) {
             var parts = path.split(pc.path.delimiter);
             return parts.slice(0, parts.length - 1).join(pc.path.delimiter);
         },

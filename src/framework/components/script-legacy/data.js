@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var ScriptLegacyComponentData = function () {
         // serialized
         this.scripts = [];
@@ -13,7 +13,6 @@ pc.extend(pc, function () {
         this.postInitialized = false;
         this.areScriptsLoaded = false;
     };
-    ScriptLegacyComponentData = pc.inherits(ScriptLegacyComponentData, pc.ComponentData);
 
     return {
         ScriptLegacyComponentData: ScriptLegacyComponentData

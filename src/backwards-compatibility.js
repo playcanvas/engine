@@ -1,30 +1,47 @@
-/**
- * @private
- * @deprecated
- * Implementation of inheritance for JavaScript objects
- * @example
- * // Class can access all of Base's function prototypes
- * Base = function () {}
- * Class = function () {}
- * Class = Class.extendsFrom(Base)
- * @param {Object} Super Superclass
- * @returns {Function} Subclass
- */
-Function.prototype.extendsFrom = function (Super) {
-    var Self, Func;
-    var Temp = function () {};
+Object.assign(pc, function () {
+    return {
+        /**
+         * @private
+         * @deprecated
+         * @function
+         * @name pc.inherits
+         * @description Implementation of inheritance for JavaScript objects
+         * e.g. Class can access all of Base's function prototypes
+         * The super classes prototype is available on the derived class as _super
+         * @param {Function} Self Constructor of derived class
+         * @param {Function} Super Constructor of base class
+         * @returns {Function} New instance of Self which inherits from Super
+         * @example
+         * Base = function () {};
+         * Base.prototype.fn = function () {
+         *   console.log('base');
+         * };
+         * Class = function () {}
+         * Class = pc.inherits(Class, Base);
+         * Class.prototype.fn = function () {
+         *   // Call overridden method
+         *   Class._super.fn();
+         *   console.log('class');
+         * };
+         *
+         * var c = new Class();
+         * c.fn(); // prints 'base' then 'class'
+         */
+        inherits: function (Self, Super) {
+            var Temp = function () {};
+            var Func = function (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
+                Super.call(this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                Self.call(this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+                // this.constructor = Self;
+            };
+            Func._super = Super.prototype;
+            Temp.prototype = Super.prototype;
+            Func.prototype = new Temp();
 
-    Self = this;
-    Func = function () {
-        Super.apply(this, arguments);
-        Self.apply(this, arguments);
-        this.constructor = Self;
+            return Func;
+        }
     };
-    Func._super = Super.prototype;
-    Temp.prototype = Super.prototype;
-    Func.prototype = new Temp();
-    return Func;
-};
+}());
 
 // Continue to support the old engine namespaces
 pc.anim = {
@@ -72,9 +89,8 @@ pc.fw = {
     }
 };
 
-pc.extend(pc.gfx, {
+Object.assign(pc.gfx, {
     drawQuadWithShader: pc.drawQuadWithShader,
-    precalculatedTangents: pc.precalculatedTangents,
     programlib: pc.programlib,
     shaderChunks: pc.shaderChunks,
     ContextCreationError: pc.ContextCreationError,
@@ -92,7 +108,25 @@ pc.extend(pc.gfx, {
     VertexIterator: pc.VertexIterator
 });
 
-pc.extend(pc.input, {
+// Exceptions
+(function () {
+    function UnsupportedBrowserError(message) {
+        this.name = "UnsupportedBrowserError";
+        this.message = (message || "");
+    }
+    UnsupportedBrowserError.prototype = Error.prototype;
+
+    function ContextCreationError(message) {
+        this.name = "ContextCreationError";
+        this.message = (message || "");
+    }
+    ContextCreationError.prototype = Error.prototype;
+
+    pc.ContextCreationError = ContextCreationError;
+    pc.UnsupportedBrowserError = UnsupportedBrowserError;
+})();
+
+Object.assign(pc.input, {
     getTouchTargetCoords: pc.getTouchTargetCoords,
     Controller: pc.Controller,
     GamePads: pc.GamePads,
@@ -105,6 +139,18 @@ pc.extend(pc.input, {
     TouchEvent: pc.TouchEvent
 });
 
+/**
+ * @private
+ * @deprecated
+ * @name pc.math.INV_LOG2
+ * @description Inverse log 2. Use Math.LOG2E instead.
+ * @type Number
+ */
+pc.math.INV_LOG2 = Math.LOG2E;
+
+pc.math.intToBytes = pc.math.intToBytes32;
+pc.math.bytesToInt = pc.math.bytesToInt32;
+
 pc.posteffect = {
     createFullscreenQuad: pc.createFullscreenQuad,
     drawFullscreenQuad: pc.drawFullscreenQuad,
@@ -112,7 +158,7 @@ pc.posteffect = {
     PostEffectQueue: pc.PostEffectQueue
 };
 
-pc.extend(pc.scene, {
+Object.assign(pc.scene, {
     partitionSkin: pc.partitionSkin,
     procedural: {
         calculateTangents: pc.calculateTangents,
@@ -171,7 +217,7 @@ pc.ELEMENTTYPE_UINT32 = pc.TYPE_UINT32;
 pc.ELEMENTTYPE_FLOAT32 = pc.TYPE_FLOAT32;
 
 Object.defineProperty(pc.shaderChunks, "transformSkinnedVS", {
-    get: function() {
+    get: function () {
         return "#define SKIN\n" + pc.shaderChunks.transformVS;
     }
 });

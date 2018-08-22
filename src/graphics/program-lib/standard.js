@@ -1,85 +1,85 @@
-var _oldChunkWarn = function(oldName, newName) {
+var _oldChunkWarn = function (oldName, newName) {
     // #ifdef DEBUG
     console.warn("Shader chunk " + oldName + " is deprecated - override " + newName + " instead");
     // #endif
 };
 
-var _oldChunkFloat = function(s, o, p) {
+var _oldChunkFloat = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkColor = function(s, o, p) {
+var _oldChunkColor = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTex = function(s, o, p) {
+var _oldChunkTex = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPTEXTURE\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTexColor = function(s, o, p) {
+var _oldChunkTexColor = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPTEXTURECOLOR\n#ifdef MAPTEXTURE\n#ifdef MAPCOLOR\n#define MAPTEXTURECOLOR\n#endif\n#endif\n" +
             "#ifdef MAPTEXTURECOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTexFloat = function(s, o, p) {
+var _oldChunkTexFloat = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPTEXTUREFLOAT\n#ifdef MAPTEXTURE\n#ifdef MAPFLOAT\n#define MAPTEXTUREFLOAT\n#endif\n#endif\n" +
             "#ifdef MAPTEXTUREFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkVert = function(s, o, p) {
+var _oldChunkVert = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef MAPVERTEX\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkVertColor = function(s, o, p) {
+var _oldChunkVertColor = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPVERTEXCOLOR\n#ifdef MAPVERTEX\n#ifdef MAPCOLOR\n#define MAPVERTEXCOLOR\n#endif\n#endif\n" +
             "#ifdef MAPVERTEXCOLOR\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkVertFloat = function(s, o, p) {
+var _oldChunkVertFloat = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef MAPVERTEXFLOAT\n#ifdef MAPVERTEX\n#ifdef MAPFLOAT\n#define MAPVERTEXFLOAT\n#endif\n#endif\n" +
             "#ifdef MAPVERTEXFLOAT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformSkin = function(s, o, p) {
+var _oldChunkTransformSkin = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef SKIN\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformDynbatch = function(s, o, p) {
+var _oldChunkTransformDynbatch = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef DYNAMICBATCH\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformInstanced = function(s, o, p) {
+var _oldChunkTransformInstanced = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef INSTANCING\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformPixelSnap = function(s, o, p) {
+var _oldChunkTransformPixelSnap = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef PIXELSNAP\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformScreenSpace = function(s, o, p) {
+var _oldChunkTransformScreenSpace = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef SCREENSPACE\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformScreenSpaceBatch = function(s, o, p) {
+var _oldChunkTransformScreenSpaceBatch = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "#undef SCREENSPACEBATCH\n#ifdef SCREENSPACE\n#ifdef BATCH\n#define SCREENSPACEBATCH\n#endif\n#endif\n" +
             "#ifdef SCREENSPACEBATCH\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
 
-var _oldChunkTransformUv1 = function(s, o, p) {
+var _oldChunkTransformUv1 = function (s, o, p) {
     _oldChunkWarn(p, o);
     return "\n#ifdef UV1LAYOUT\n" + s + "\n#else\n" + pc.shaderChunks[o] + "\n#endif\n";
 };
@@ -172,7 +172,7 @@ pc.programlib.standard = {
         return pc.hashCode(key);
     },
 
-    _correctChannel: function(p, chan) {
+    _correctChannel: function (p, chan) {
         if (pc._matTex2D[p] > 0) {
             if (pc._matTex2D[p] < chan.length) {
                 return chan.substring(0, pc._matTex2D[p]);
@@ -199,17 +199,52 @@ pc.programlib.standard = {
         return codes;
     },
 
-    _uvSource: function(id, uv) {
-        return (id === 0) ? "vUv" + uv : ("vUV" + uv + "_" + id);
+    // get the value to replace $UV with in Map Shader functions
+
+    /**
+     * @private
+     * @function
+     * @name _getUvSourceExpression
+     * @description Get the code with which to to replace '$UV' in the map shader functions
+     * @param  {String} transformPropName Name of the transform id in the options block. Usually "basenameTransform"
+     * @param  {String} uVPropName        Name of the UV channel in the options block. Usually "basenameUv"
+     * @param  {Object} options           The options passed into createShaderDefinition
+     * @returns {String}                   The code used to replace "$UV" in the shader code
+     */
+    _getUvSourceExpression: function (transformPropName, uVPropName, options) {
+        var transformId = options[transformPropName];
+        var uvChannel = options[uVPropName];
+
+        var expression;
+
+        if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
+            expression = "nineSlicedUv";
+        } else if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
+            expression = "nineSlicedUv, -1000.0";
+        } else {
+            if (transformId === 0) {
+                expression = "vUv" + uvChannel;
+            } else {
+                // note: different capitalization!
+                expression = "vUV" + uvChannel + "_" + transformId;
+            }
+
+            // if heightmap is enabled all maps except the heightmap are offset
+            if (options.heightMap && transformPropName !== "heightMapTransform") {
+                expression += " + dUvOffset";
+            }
+        }
+
+        return expression;
     },
 
-    _addMapDef: function(name, enabled) {
+    _addMapDef: function (name, enabled) {
         var s = "\n#undef " + name + "\n";
         if (enabled) s += " #define " + name + "\n";
         return s;
     },
 
-    _addMapDefs: function(float, color, vertex, map) {
+    _addMapDefs: function (float, color, vertex, map) {
         var s = "";
         s += this._addMapDef("MAPFLOAT", float);
         s += this._addMapDef("MAPCOLOR", color);
@@ -217,33 +252,57 @@ pc.programlib.standard = {
         s += this._addMapDef("MAPTEXTURE", map);
         return s;
     },
+    /**
+     * @private
+     * @function
+     * @name  _addMap
+     * @description Add chunk for Map Types (used for all maps except Normal)
+     * @param {String} propName      The base name of the map: diffuse | emissive | opacity | light | height | metalness | specular | gloss | ao
+     * @param {String} chunkName     The name of the chunk to use. Usually "basenamePS"
+     * @param {Object} options       The options passed into to createShaderDefinition
+     * @param {Object} chunks        The set of shader chunks to choose from
+     * @param {String} samplerFormat Format of texture sampler to use - 0: "texture2DSRGB", 1: "texture2DRGBM", 2: "texture2D"
+     * @returns {String} The shader code to support this map
+     */
+    _addMap: function (propName, chunkName, options, chunks, samplerFormat) {
+        var mapPropName = propName + "Map";
 
-    _addMap: function(p, options, chunks, uvOffset, subCode, format) {
-        var mname = p + "Map";
-        var tint = options[p + "Tint"];
-        var vert = options[p + "VertexColor"];
-        var tex = options[mname];
-        if (!subCode) subCode = chunks[p + "PS"];
-        if (tex) {
-            var uname = mname + "Uv";
-            var tname = mname + "Transform";
-            var cname = mname + "Channel";
-            var uv = this._uvSource(options[tname], options[uname]) + uvOffset;
-            subCode = subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[cname]);
-            if (format !== undefined) {
-                var fmt = format === 0 ? "texture2DSRGB" : (format === 1 ? "texture2DRGBM" : "texture2D");
+        var uVPropName = mapPropName + "Uv";
+        var transformPropName = mapPropName + "Transform";
+        var channelPropName = mapPropName + "Channel";
+        var vertexColorChannelPropName = propName + "VertexColorChannel";
+        var tintPropName = propName + "Tint";
+        var vertexColorPropName = propName + "VertexColor";
+
+        var tintOption = options[tintPropName];
+        var vertexColorOption = options[vertexColorPropName];
+        var textureOption = options[mapPropName];
+
+        var subCode = chunks[chunkName];
+
+        if (textureOption) {
+            var uv = this._getUvSourceExpression(transformPropName, uVPropName, options);
+
+            subCode = subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[channelPropName]);
+
+            if (samplerFormat !== undefined) {
+                var fmt = samplerFormat === 0 ? "texture2DSRGB" : (samplerFormat === 1 ? "texture2DRGBM" : "texture2D");
                 subCode = subCode.replace(/\$texture2DSAMPLE/g, fmt);
             }
         }
-        if (vert) {
-            var vcname = p + "VertexColorChannel";
-            subCode = subCode.replace(/\$VC/g, options[vcname]);
+
+        if (vertexColorOption) {
+            subCode = subCode.replace(/\$VC/g, options[vertexColorChannelPropName]);
         }
-        subCode = this._addMapDefs(tint === 1, tint === 3, vert, tex) + subCode;
+
+        var isFloatTint = (tintOption === 1);
+        var isVecTint = (tintOption === 3);
+
+        subCode = this._addMapDefs(isFloatTint, isVecTint, vertexColorOption, textureOption) + subCode;
         return subCode.replace(/\$/g, "");
     },
 
-    _nonPointShadowMapProjection: function(device, light, shadowCoordArgs) {
+    _nonPointShadowMapProjection: function (device, light, shadowCoordArgs) {
         if (!light._normalOffsetBias || light._isVsm) {
             if (light._type === pc.LIGHTTYPE_SPOT) {
                 if (light._isPcf && (device.webgl2 || device.extStandardDerivatives)) {
@@ -262,8 +321,69 @@ pc.programlib.standard = {
         return "       getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
     },
 
-    _addVaryingIfNeeded: function(code, type, name) {
+    _addVaryingIfNeeded: function (code, type, name) {
         return code.indexOf(name) >= 0 ? ("varying " + type + " " + name + ";\n") : "";
+    },
+
+    _vsAddTransformCode: function (code, device, chunks, options) {
+        code += chunks.transformVS;
+
+        return code;
+    },
+
+    _vsAddBaseCode: function (code, device, chunks, options) {
+        code += chunks.baseVS;
+        if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED ||
+            options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
+            code += chunks.baseNineSlicedVS;
+        }
+
+        return code;
+    },
+
+    /**
+     * @private
+     * @function
+     * @name _fsAddBaseCode
+     * @description Add "Base" Code section to fragment shader
+     * @param  {String} code Current fragment shader code
+     * @param  {pc.GraphicsDevice} device The graphics device
+     * @param  {Object} chunks All available shader chunks
+     * @param  {Object} options The Shader Definition options
+     * @returns {String} The new fragment shader code (old+new)
+     */
+    _fsAddBaseCode: function (code, device, chunks, options) {
+        code += chunks.basePS;
+        if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
+            code += chunks.baseNineSlicedPS;
+        } else if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
+            code += chunks.baseNineSlicedTiledPS;
+        }
+
+        return code;
+    },
+
+    /**
+     * @private
+     * @function
+     * @name  _fsAddStartCode
+     * @description Add "Start" Code section to fragment shader
+     * @param  {String} code  Current fragment shader code
+     * @param  {pc.GraphicsDevice} device The graphics device
+     * @param  {Object} chunks All available shader chunks
+     * @param  {Object} options The Shader Definition options
+     * @returns {String} The new fragment shader code (old+new)
+     */
+    _fsAddStartCode: function (code, device, chunks, options) {
+        code += chunks.startPS;
+
+        if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
+            code += chunks.startNineSlicedPS;
+        } else if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
+            code += chunks.startNineSlicedTiledPS;
+        }
+
+        return code;
     },
 
     createShaderDefinition: function (device, options) {
@@ -287,7 +407,6 @@ pc.programlib.standard = {
 
         var cubemapReflection = (options.cubeMap || (options.prefilteredCubemap && options.useSpecular)) && !options.sphereMap && !options.dpAtlas;
         var reflections = options.sphereMap || cubemapReflection || options.dpAtlas;
-        var useTangents = pc.precalculatedTangents;
         var useTexCubeLod = options.useTexCubeLod;
         if (options.cubeMap) options.sphereMap = null; // cubeMaps have higher priority
         if (options.dpAtlas) options.prefilteredCubemap = null; // dp has even higher priority
@@ -297,9 +416,7 @@ pc.programlib.standard = {
 
         this.options = options;
 
-        ////////////////////////////
-        // GENERATE VERTEX SHADER //
-        ////////////////////////////
+        // GENERATE VERTEX SHADER
         var code = '';
         var codeBody = '';
 
@@ -361,7 +478,9 @@ pc.programlib.standard = {
             chunks = customChunks;
         }
 
-        code += chunks.baseVS;
+
+        // code += chunks.baseVS;
+        code = this._vsAddBaseCode(code, device, chunks, options);
 
         // Allow first shadow coords to be computed in VS
         var mainShadowLight = -1;
@@ -415,7 +534,7 @@ pc.programlib.standard = {
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
 
-            if ((options.heightMap || options.normalMap) && useTangents) {
+            if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 attributes.vertex_tangent = pc.SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
@@ -506,7 +625,9 @@ pc.programlib.standard = {
         if (options.pixelSnap) {
             code += "#define PIXELSNAP\n";
         }
-        code += chunks.transformVS;
+
+        code = this._vsAddTransformCode(code, device, chunks, options);
+
         if (needsNormal) code += chunks.normalVS;
 
         code += "\n";
@@ -545,9 +666,7 @@ pc.programlib.standard = {
             vshader = startCode + vshader;
         }
 
-        //////////////////////////////
-        // GENERATE FRAGMENT SHADER //
-        //////////////////////////////
+        // GENERATE FRAGMENT SHADER
         if (options.forceFragmentPrecision && options.forceFragmentPrecision != "highp" &&
             options.forceFragmentPrecision !== "mediump" && options.forceFragmentPrecision !== "lowp")
             options.forceFragmentPrecision = null;
@@ -583,7 +702,7 @@ pc.programlib.standard = {
             code += varyings;
             if (options.alphaTest) {
                 code += "float dAlpha;\n";
-                code += this._addMap("opacity", options, chunks, "");
+                code += this._addMap("opacity", "opacityPS", options, chunks);
                 code += chunks.alphaTestPS;
             }
             code += pc.programlib.begin();
@@ -606,7 +725,7 @@ pc.programlib.standard = {
             code += chunks.packDepthPS;
             if (options.alphaTest) {
                 code += "float dAlpha;\n";
-                code += this._addMap("opacity", options, chunks, "");
+                code += this._addMap("opacity", "opacityPS", options, chunks);
                 code += chunks.alphaTestPS;
             }
             code += pc.programlib.begin();
@@ -634,7 +753,7 @@ pc.programlib.standard = {
             }
 
             if (shadowType === pc.SHADOW_VSM32) {
-                if (device.extTextureFloatHighPrecision) {
+                if (device.textureFloatHighPrecision) {
                     code += '#define VSM_EXPONENT 15.0\n\n';
                 } else {
                     code += '#define VSM_EXPONENT 5.54\n\n';
@@ -651,7 +770,7 @@ pc.programlib.standard = {
             code += varyings;
             if (options.alphaTest) {
                 code += "float dAlpha;\n";
-                code += this._addMap("opacity", options, chunks, "");
+                code += this._addMap("opacity", "opacityPS", options, chunks);
                 code += chunks.alphaTestPS;
             }
 
@@ -719,7 +838,9 @@ pc.programlib.standard = {
 
         // ##### FORWARD/FORWARDHDR PASS #####
         code += varyings;
-        code += chunks.basePS;
+
+        // code += chunks.basePS;
+        code = this._fsAddBaseCode(code, device, chunks, options);
 
         var codeBegin = code;
         code = "";
@@ -790,19 +911,26 @@ pc.programlib.standard = {
         code += "\n"; // End of uniform declarations
 
 
-        var uvOffset = options.heightMap ? " + dUvOffset" : "";
-        var tbn = options.fastTbn ? chunks.TBNfastPS : chunks.TBNPS;
+        var tbn;
+        if (!options.hasTangents) {
+            tbn = chunks.TBNderivativePS;
+        } else if (options.fastTbn) {
+            tbn = chunks.TBNfastPS;
+        } else {
+            tbn = chunks.TBNPS;
+        }
 
         if (needsNormal) {
-            if (options.normalMap && useTangents) {
+            if (options.normalMap) {
                 code += options.packedNormal ? chunks.normalXYPS : chunks.normalXYZPS;
 
-                var uv = this._uvSource(options.normalMapTransform, options.normalMapUv) + uvOffset;
+                var transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
                 if (options.needsNormalFloat) {
-                    code += (options.fastTbn ? chunks.normalMapFloatTBNfastPS : chunks.normalMapFloatPS).replace(/\$UV/g, uv);
+                    code += (options.fastTbn ? chunks.normalMapFloatTBNfastPS : chunks.normalMapFloatPS).replace(/\$UV/g, transformedNormalMapUv);
                 } else {
-                    code += chunks.normalMapPS.replace(/\$UV/g, uv);
+                    code += chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
                 }
+                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedNormalMapUv);
                 code += tbn;
             } else {
                 code += chunks.normalVertexPS;
@@ -823,11 +951,11 @@ pc.programlib.standard = {
             code += options.skyboxIntensity ? chunks.envMultiplyPS : chunks.envConstPS;
         }
 
-        code += this._addMap("diffuse", options, chunks, uvOffset);
+        code += this._addMap("diffuse", "diffusePS", options, chunks);
         if (options.blendType !== pc.BLEND_NONE || options.alphaTest || options.alphaToCoverage) {
-            code += this._addMap("opacity", options, chunks, uvOffset);
+            code += this._addMap("opacity", "opacityPS", options, chunks);
         }
-        code += this._addMap("emissive", options, chunks, uvOffset, null, options.emissiveFormat);
+        code += this._addMap("emissive", "emissivePS", options, chunks, options.emissiveFormat);
 
         if (options.useSpecular && (lighting || reflections)) {
             if (options.specularAntialias && options.normalMap) {
@@ -839,8 +967,10 @@ pc.programlib.standard = {
             } else {
                 code += chunks.specularAaNonePS;
             }
-            code += this._addMap(options.useMetalness ? "metalness" : "specular", options, chunks, uvOffset);
-            code += this._addMap("gloss", options, chunks, uvOffset);
+
+            var specularPropName = options.useMetalness ? "metalness" : "specular";
+            code += this._addMap(specularPropName, specularPropName + "PS", options, chunks);
+            code += this._addMap("gloss", "glossPS", options, chunks);
             if (options.fresnelModel > 0) {
                 if (options.fresnelModel === pc.FRESNEL_SIMPLE) {
                     code += chunks.fresnelSimplePS;
@@ -853,13 +983,17 @@ pc.programlib.standard = {
         }
 
         if (options.heightMap) {
-            if (!options.normalMap) code += tbn;
-            code += this._addMap("height", options, chunks, "", chunks.parallaxPS);
+            if (!options.normalMap) {
+                var transformedHeightMapUv = this._getUvSourceExpression("heightMapTransform", "heightMapUv", options);
+                if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedHeightMapUv);
+                code += tbn;
+            }
+            code += this._addMap("height", "parallaxPS", options, chunks);
         }
 
         var useAo = options.aoMap || options.aoVertexColor;
         if (useAo) {
-            code += this._addMap("ao", options, chunks, uvOffset, options.aoVertexColor ? chunks.aoVertPS : chunks.aoTexPS);
+            code += this._addMap("ao", "aoPS", options, chunks);
             if (options.occludeSpecular) {
                 if (options.occludeSpecular === pc.SPECOCC_AO) {
                     code += options.occludeSpecularFloat ? chunks.aoSpecOccSimplePS : chunks.aoSpecOccConstSimplePS;
@@ -871,7 +1005,11 @@ pc.programlib.standard = {
 
         var reflectionDecode = options.rgbmReflection ? "decodeRGBM" : (options.hdrReflection ? "" : "gammaCorrectInput");
 
-        if (cubemapReflection) {
+        if (options.sphereMap) {
+            var scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
+            scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
+            code += scode;
+        } else if (cubemapReflection) {
             if (options.prefilteredCubemap) {
                 if (useTexCubeLod) {
                     code += chunks.reflectionPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
@@ -883,15 +1021,7 @@ pc.programlib.standard = {
                 code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g,
                                                         options.rgbmReflection ? "textureCubeRGBM" : (options.hdrReflection ? "textureCube" : "textureCubeSRGB"));
             }
-        }
-
-        if (options.sphereMap) {
-            var scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
-            scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
-            code += scode;
-        }
-
-        if (options.dpAtlas) {
+        } else if (options.dpAtlas) {
             code += chunks.reflectionDpAtlasPS.replace(/\$texture2DSAMPLE/g, options.rgbmReflection ? "texture2DRGBM" : (options.hdrReflection ? "texture2D" : "texture2DSRGB"));
         }
 
@@ -976,8 +1106,8 @@ pc.programlib.standard = {
 
         var addAmbient = true;
         if (options.lightMap || options.lightVertexColor) {
-            code += this._addMap("light", options, chunks, uvOffset,
-                                 options.dirLightMap ? chunks.lightmapDirPS : chunks.lightmapSinglePS, options.lightMapFormat);
+            var lightmapChunkPropName = options.dirLightMap ? 'lightmapDirPS' : 'lightmapSinglePS';
+            code += this._addMap("light", lightmapChunkPropName, options, chunks, options.lightMapFormat);
             addAmbient = options.lightMapWithoutAmbient;
         }
 
@@ -1024,7 +1154,8 @@ pc.programlib.standard = {
         var usesCookieNow;
 
         // FRAGMENT SHADER BODY
-        code += chunks.startPS;
+
+        code = this._fsAddStartCode(code, device, chunks, options);
 
         if (needsNormal) {
             if (options.twoSidedLighting) {
@@ -1032,7 +1163,7 @@ pc.programlib.standard = {
             } else {
                 code += "   dVertexNormalW = vNormalW;\n";
             }
-            if (options.heightMap || options.normalMap) {
+            if ((options.heightMap || options.normalMap) && options.hasTangents) {
                 if (options.twoSidedLighting) {
                     code += "   dTangentW = gl_FrontFacing ? vTangentW : -vTangentW;\n";
                     code += "   dBinormalW = gl_FrontFacing ? vBinormalW : -vBinormalW;\n";
@@ -1177,7 +1308,7 @@ pc.programlib.standard = {
                         evsmExp = "5.54";
                     } else if (light._shadowType === pc.SHADOW_VSM32) {
                         shadowReadMode = "VSM32";
-                        if (device.extTextureFloatHighPrecision) {
+                        if (device.textureFloatHighPrecision) {
                             evsmExp = "15.0";
                         } else {
                             evsmExp = "5.54";

@@ -1,11 +1,12 @@
-pc.extend(pc, function () {
-/*
-* @name pc.LightComponentSystem
-* @description Create a new LightComponentSystem.
-* @class A Light Component is used to dynamically light the scene.
-* @param {pc.Application} app The application.
-* @extends pc.ComponentSystem
-*/
+Object.assign(pc, function () {
+    /**
+     * @constructor
+     * @name pc.LightComponentSystem
+     * @classdesc A Light Component is used to dynamically light the scene.
+     * @description Create a new LightComponentSystem.
+     * @param {pc.Application} app The application.
+     * @extends pc.ComponentSystem
+     */
     var lightTypes = {
         'directional': pc.LIGHTTYPE_DIRECTIONAL,
         'point': pc.LIGHTTYPE_POINT,
@@ -13,6 +14,8 @@ pc.extend(pc, function () {
     };
 
     var LightComponentSystem = function (app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'light';
         this.description = "Enables the Entity to emit light.";
         app.systems.add(this.id, this);
@@ -20,9 +23,10 @@ pc.extend(pc, function () {
         this.ComponentType = pc.LightComponent;
         this.DataType = pc.LightComponentData;
     };
-    LightComponentSystem = pc.inherits(LightComponentSystem, pc.ComponentSystem);
+    LightComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    LightComponentSystem.prototype.constructor = LightComponentSystem;
 
-    pc.extend(LightComponentSystem.prototype, {
+    Object.assign(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data) {
             // duplicate because we're modifying the data
             var data = {};
@@ -62,14 +66,14 @@ pc.extend(pc, function () {
             light._scene = this.app.scene;
             component.data.light = light;
 
-            LightComponentSystem._super.initializeComponentData.call(this, component, data, _props);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _props);
         },
 
         removeComponent: function (entity) {
             var data = entity.light.data;
             data.light.destroy();
 
-            LightComponentSystem._super.removeComponent.call(this, entity);
+            pc.ComponentSystem.prototype.removeComponent.call(this, entity);
         },
 
         cloneComponent: function (entity, clone) {

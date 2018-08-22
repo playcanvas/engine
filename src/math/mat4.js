@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var typeNumber = 'number';
@@ -33,7 +33,7 @@ pc.extend(pc, (function () {
 
         this.data = new Float32Array(16);
 
-        if (typeof(v0) === typeNumber) {
+        if (typeof v0 === typeNumber) {
             this.data[0] = v0;
             this.data[1] = v1;
             this.data[2] = v2;
@@ -55,7 +55,7 @@ pc.extend(pc, (function () {
         }
     };
 
-    Mat4.prototype = {
+    Object.assign(Mat4.prototype, {
         /**
          * @function
          * @name pc.Mat4#add2
@@ -807,9 +807,6 @@ pc.extend(pc, (function () {
 
             det = (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
             if (det === 0) {
-                // #ifdef DEBUG
-                console.warn('pc.Mat4#invert: Cannot invert matrix, determinant is 0');
-                // #endif
                 this.setIdentity();
             } else {
                 invDet = 1 / det;
@@ -1040,9 +1037,6 @@ pc.extend(pc, (function () {
 
             det =  m0 * a11 + m1 * a12 + m2 * a13;
             if (det === 0) { // no inverse
-                // #ifdef DEBUG
-                console.warn('pc.Mat4#invertTo3x3: Can\'t invert matrix, determinant is 0');
-                // #endif
                 return this;
             }
 
@@ -1301,7 +1295,7 @@ pc.extend(pc, (function () {
             t += ']';
             return t;
         }
-    };
+    });
 
     /**
      * @field

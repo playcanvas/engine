@@ -23,7 +23,7 @@ pc.programlib = {
         return pc.shaderChunks.tonemappingNonePS;
     },
 
-    fogCode: function(value) {
+    fogCode: function (value) {
         if (value === 'linear') {
             return pc.shaderChunks.fogLinearPS;
         } else if (value === 'exp') {
@@ -34,7 +34,7 @@ pc.programlib = {
         return pc.shaderChunks.fogNonePS;
     },
 
-    skinCode: function(device, chunks) {
+    skinCode: function (device, chunks) {
         if (!chunks) chunks = pc.shaderChunks;
         if (device.supportsBoneTextures) {
             return chunks.skinTexVS;
@@ -42,7 +42,7 @@ pc.programlib = {
         return "#define BONE_LIMIT " + device.getBoneLimit() + "\n" + chunks.skinConstVS;
     },
 
-    precisionCode: function(device) {
+    precisionCode: function (device) {
         var pcode = 'precision ' + device.precision + ' float;\n';
         if (device.webgl2) {
             pcode += '#ifdef GL2\nprecision ' + device.precision + ' sampler2DShadow;\n#endif\n';
@@ -50,20 +50,19 @@ pc.programlib = {
         return pcode;
     },
 
-    versionCode: function(device) {
+    versionCode: function (device) {
         return device.webgl2 ? "#version 300 es\n" : "";
     },
 
-    dummyFragmentCode: function() {
+    dummyFragmentCode: function () {
         return "void main(void) {gl_FragColor = vec4(0.0);}";
     },
 
-    begin: function() {
+    begin: function () {
         return 'void main(void)\n{\n';
     },
 
-    end: function() {
+    end: function () {
         return '}\n';
     }
 };
-

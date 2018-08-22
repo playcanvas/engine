@@ -1,11 +1,11 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     function addLineNumbers(src) {
         var chunks = src.split("\n");
 
         // Chrome reports shader errors on lines indexed from 1
-        for (var i = 0, len = chunks.length; i < len; i ++) {
+        for (var i = 0, len = chunks.length; i < len; i++) {
             chunks[i] = (i + 1) + ":\t" + chunks[i];
         }
 
@@ -86,7 +86,7 @@ pc.extend(pc, function () {
         this.device.shaders.push(this);
     };
 
-    Shader.prototype = {
+    Object.assign(Shader.prototype, {
         compile: function () {
             this.ready = false;
 
@@ -147,19 +147,20 @@ pc.extend(pc, function () {
 
             gl.linkProgram(this.program);
 
-            // check for errors
+            // Check for errors
+
             // vshader
-            if (! gl.getShaderParameter(this.vshader, gl.COMPILE_STATUS)) {
+            if (!gl.getShaderParameter(this.vshader, gl.COMPILE_STATUS)) {
                 logERROR("Failed to compile vertex shader:\n\n" + addLineNumbers(this.definition.vshader) + "\n\n" + gl.getShaderInfoLog(this.vshader));
                 retValue = false;
             }
             // fshader
-            if (! gl.getShaderParameter(this.fshader, gl.COMPILE_STATUS)) {
+            if (!gl.getShaderParameter(this.fshader, gl.COMPILE_STATUS)) {
                 logERROR("Failed to compile fragment shader:\n\n" + addLineNumbers(this.definition.fshader) + "\n\n" + gl.getShaderInfoLog(this.fshader));
                 retValue = false;
             }
             // program
-            if (! gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+            if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
                 logERROR("Failed to link shader program. Error: " + gl.getProgramInfoLog(this.program));
                 retValue = false;
             }
@@ -260,7 +261,7 @@ pc.extend(pc, function () {
                 this.device.removeShaderFromCache(this);
             }
         }
-    };
+    });
 
     return {
         Shader: Shader

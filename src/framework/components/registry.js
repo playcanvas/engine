@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ComponentSystemRegistry
@@ -8,7 +8,7 @@ pc.extend(pc, function () {
     var ComponentSystemRegistry = function () {
     };
 
-    ComponentSystemRegistry.prototype = {
+    Object.assign(ComponentSystemRegistry.prototype, {
         /**
          * @private
          * @function
@@ -32,7 +32,7 @@ pc.extend(pc, function () {
          * @description Remove a Component type
          * @param {Object} name The name of the Component remove
          */
-        remove: function(name) {
+        remove: function (name) {
             if (!this[name]) {
                 throw new Error(pc.string.format("No ComponentSystem named '{0}' registered", name));
             }
@@ -88,7 +88,7 @@ pc.extend(pc, function () {
 
             return names;
         }
-    };
+    });
 
     return {
         ComponentSystemRegistry: ComponentSystemRegistry

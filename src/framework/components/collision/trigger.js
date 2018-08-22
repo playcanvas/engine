@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     var ammoVec1, ammoQuat;
 
@@ -12,7 +12,7 @@ pc.extend(pc, function () {
      * @param {pc.Component} component The component for which the trigger will be created
      * @param {pc.ComponentData} data The data for the component
      */
-    var Trigger = function Trigger (app, component, data) {
+    var Trigger = function Trigger(app, component, data) {
         this.entity = component.entity;
         this.component = component;
         this.app = app;
@@ -25,7 +25,7 @@ pc.extend(pc, function () {
         this.initialize(data);
     };
 
-    Trigger.prototype =  {
+    Object.assign(Trigger.prototype,  {
         initialize: function (data) {
             var entity = this.entity;
             var shape = data.shape;
@@ -117,10 +117,9 @@ pc.extend(pc, function () {
             // that it properly deactivates after we remove it from the physics world
             body.forceActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
         }
-    };
+    });
 
     return {
         Trigger: Trigger
     };
-
 }());

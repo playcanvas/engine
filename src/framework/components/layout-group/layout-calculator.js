@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @private
      * @constructor
@@ -50,12 +50,13 @@ pc.extend(pc, function () {
         APPLY_SHRINKING: 'APPLY_SHRINKING'
     };
 
+    var availableSpace = new pc.Vec2();
+
     // The layout logic is largely identical for the horizontal and vertical orientations,
     // with the exception of a few bits of swizzling re the primary and secondary axes to
     // use etc. This function generates a calculator for a given orientation, with each of
     // the swizzled properties conveniently placed in closure scope.
     function createCalculator(orientation) {
-        var availableSpace;
         var options;
 
         // Choose which axes to operate on based on the orientation that we're using. For
@@ -73,12 +74,11 @@ pc.extend(pc, function () {
         function maxExtentB(element, size) { return  size[b.size] * (1 - element.pivot[b.axis]); } // eslint-disable-line
 
         function calculateAll(allElements, layoutOptions) {
+            allElements = allElements.filter(shouldIncludeInLayout);
             options = layoutOptions;
 
-            availableSpace = new pc.Vec2(
-                options.containerSize.x - options.padding.data[0] - options.padding.data[2],
-                options.containerSize.y - options.padding.data[1] - options.padding.data[3]
-            );
+            availableSpace.x = options.containerSize.x - options.padding.data[0] - options.padding.data[2];
+            availableSpace.y = options.containerSize.y - options.padding.data[1] - options.padding.data[3];
 
             resetAnchors(allElements);
 
@@ -88,6 +88,14 @@ pc.extend(pc, function () {
 
             applyAlignmentAndPadding(lines, sizes, positions);
             applySizesAndPositions(lines, sizes, positions);
+
+            return createLayoutInfo(lines, sizes, positions);
+        }
+
+        function shouldIncludeInLayout(element) {
+            var layoutChildComponent = element.entity.layoutchild;
+
+            return !layoutChildComponent || !layoutChildComponent.enabled || !layoutChildComponent.excludeFromLayout;
         }
 
         // Setting the anchors of child elements to anything other than 0,0,0,0 results
@@ -348,7 +356,6 @@ pc.extend(pc, function () {
 
                 // Similar to the stretch calculation above, we calculate the ideal
                 // size reduction value for this element based on its fitting proportion.
-                //
                 // However, note that we're using the inverse of the fitting value, as
                 // using the regular value would mean that an element with a fitting
                 // value of, say, 0.4, ends up rendering very small when shrinking is
@@ -386,6 +393,8 @@ pc.extend(pc, function () {
             cursor[a.axis] = 0;
             cursor[b.axis] = 0;
 
+            lines[a.size] = Number.NEGATIVE_INFINITY;
+
             var positionsAllLines = [];
 
             for (var lineIndex = 0; lineIndex < lines.length; ++lineIndex) {
@@ -417,6 +426,9 @@ pc.extend(pc, function () {
                 // Record the size of the overall line
                 line[a.size] = cursor[a.axis] - options.spacing[a.axis];
                 line[b.size] = line.largestSize[b.size];
+
+                // Keep track of the longest line
+                lines[a.size] = Math.max(lines[a.size], line[a.size]);
 
                 // Move the cursor to the next line
                 cursor[a.axis] = 0;
@@ -486,6 +498,23 @@ pc.extend(pc, function () {
             }
         }
 
+        function createLayoutInfo(lines) {
+            var layoutWidth = lines.width;
+            var layoutHeight = lines.height;
+
+            var xOffset = (availableSpace.x - layoutWidth) * options.alignment.x + options.padding.x;
+            var yOffset = (availableSpace.y - layoutHeight) * options.alignment.y + options.padding.y;
+
+            return {
+                bounds: new pc.Vec4(
+                    xOffset,
+                    yOffset,
+                    layoutWidth,
+                    layoutHeight
+                )
+            };
+        }
+
         // Reads all size-related properties for each element and applies some basic
         // sanitization to ensure that minWidth is greater than 0, maxWidth is greater
         // than minWidth, etc.
@@ -518,16 +547,6 @@ pc.extend(pc, function () {
             return sizeProperties;
         }
 
-        function getProperties(elements, propertyName) {
-            var properties = [];
-
-            for (var i = 0; i < elements.length; ++i) {
-                properties.push(getProperty(elements[i], propertyName));
-            }
-
-            return properties;
-        }
-
         // When reading an element's width/height, minWidth/minHeight etc, we have to look in
         // a few different places in order. This is because the presence of a LayoutChildComponent
         // on each element is optional, and each property value also has a set of fallback defaults
@@ -550,7 +569,7 @@ pc.extend(pc, function () {
         }
 
         function sumValues(items, propertyName) {
-            return items.reduce(function(accumulator, current) {
+            return items.reduce(function (accumulator, current) {
                 return accumulator + current[propertyName];
             }, 0);
         }
@@ -595,7 +614,7 @@ pc.extend(pc, function () {
 
             return items
                 .slice()
-                .sort(function(itemA, itemB) {
+                .sort(function (itemA, itemB) {
                     return descending ? itemB[orderBy] - itemA[orderBy] : itemA[orderBy] - itemB[orderBy];
                 })
                 .map(getIndex);
@@ -611,7 +630,6 @@ pc.extend(pc, function () {
 
         // Returns a new array containing the sums of the values in the original array,
         // running from right to left.
-        //
         // For example, given: [0.2, 0.2, 0.3, 0.1, 0.2]
         // Will return:        [1.0, 0.8, 0.6, 0.3, 0.2]
         function createSumArray(values, order) {
@@ -632,17 +650,17 @@ pc.extend(pc, function () {
     CALCULATE_FNS[pc.ORIENTATION_HORIZONTAL] = createCalculator(pc.ORIENTATION_HORIZONTAL);
     CALCULATE_FNS[pc.ORIENTATION_VERTICAL] = createCalculator(pc.ORIENTATION_VERTICAL);
 
-    LayoutCalculator.prototype = {
+    Object.assign(LayoutCalculator.prototype, {
         calculateLayout: function (elements, options) {
             var calculateFn = CALCULATE_FNS[options.orientation];
 
             if (!calculateFn) {
                 throw new Error('Unrecognized orientation value: ' + options.orientation);
             } else {
-                calculateFn(elements, options);
+                return calculateFn(elements, options);
             }
         }
-    };
+    });
 
     return {
         LayoutCalculator: LayoutCalculator

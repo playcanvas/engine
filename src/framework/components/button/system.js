@@ -1,0 +1,60 @@
+Object.assign(pc, function () {
+    var _schema = [
+        'enabled',
+        'active',
+        { name: 'imageEntity', type: 'entity' },
+        { name: 'hitPadding', type: 'vec4' },
+        'transitionMode',
+        { name: 'hoverTint', type: 'rgba' },
+        { name: 'pressedTint', type: 'rgba' },
+        { name: 'inactiveTint', type: 'rgba' },
+        'fadeDuration',
+        'hoverSpriteAsset',
+        'hoverSpriteFrame',
+        'pressedSpriteAsset',
+        'pressedSpriteFrame',
+        'inactiveSpriteAsset',
+        'inactiveSpriteFrame'
+    ];
+
+    /**
+     * @private
+     * @name pc.ButtonComponentSystem
+     * @description Create a new ButtonComponentSystem
+     * @classdesc Manages creation of {@link pc.ButtonComponent}s.
+     * @param {pc.Application} app The application
+     * @extends pc.ComponentSystem
+     */
+    var ButtonComponentSystem = function ButtonComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
+        this.id = 'button';
+        this.app = app;
+        app.systems.add(this.id, this);
+
+        this.ComponentType = pc.ButtonComponent;
+        this.DataType = pc.ButtonComponentData;
+
+        this.schema = _schema;
+
+        this.on('beforeremove', this._onRemoveComponent, this);
+    };
+    ButtonComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ButtonComponentSystem.prototype.constructor = ButtonComponentSystem;
+
+    pc.Component._buildAccessors(pc.ButtonComponent.prototype, _schema);
+
+    Object.assign(ButtonComponentSystem.prototype, {
+        initializeComponentData: function (component, data, properties) {
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
+        },
+
+        _onRemoveComponent: function (entity, component) {
+            component.onRemove();
+        }
+    });
+
+    return {
+        ButtonComponentSystem: ButtonComponentSystem
+    };
+}());

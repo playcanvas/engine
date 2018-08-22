@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var Channel;
@@ -38,7 +38,7 @@ pc.extend(pc, function () {
             this.gain = context.createGain();
         };
 
-        Channel.prototype = {
+        Object.assign(Channel.prototype, {
             /**
              * @private
              * @function
@@ -195,7 +195,7 @@ pc.extend(pc, function () {
                     }
                 }
             }
-        };
+        });
     } else if (pc.AudioManager.hasAudio()) {
         Channel = function (manager, sound, options) {
             this.volume = options.volume || 1;
@@ -215,7 +215,7 @@ pc.extend(pc, function () {
             }
         };
 
-        Channel.prototype = {
+        Object.assign(Channel.prototype, {
             play: function () {
                 if (this.source) {
                     this.paused = false;
@@ -288,14 +288,14 @@ pc.extend(pc, function () {
             isPlaying: function () {
                 return !this.source.paused;
             }
-        };
+        });
     } else {
         Channel = function () {
         };
     }
 
     // Add functions which don't depend on source type
-    pc.extend(Channel.prototype, {
+    Object.assign(Channel.prototype, {
         /**
          * @private
          * @function

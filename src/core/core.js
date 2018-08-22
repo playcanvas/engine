@@ -14,6 +14,8 @@ var _typeLookup = function () {
     return result;
 }();
 
+// ESLint disabled here due to ifdef comments interleaved with block comment.
+/* eslint-disable multiline-comment-style */
 /**
  * @name pc
  * @namespace
@@ -28,6 +30,7 @@ var _typeLookup = function () {
  * PROFILER BUILD
 // #endif
  */
+/* eslint-enable multiline-comment-style */
 var pc = {
     version: "__CURRENT_SDK_VERSION__",
     revision: "__REVISION__",
@@ -80,9 +83,9 @@ var pc = {
             return "null";
         }
 
-        var type = typeof(obj);
+        var type = typeof obj;
 
-        if (type == "undefined" || type == "number" || type == "string" || type == "boolean") {
+        if (type === "undefined" || type === "number" || type === "string" || type === "boolean") {
             return type;
         }
 
@@ -107,7 +110,7 @@ var pc = {
      * A.b();
      * // logs "b"
      */
-    extend: function(target, ex) {
+    extend: function (target, ex) {
         var prop,
             copy;
 
@@ -134,11 +137,11 @@ var pc = {
      * @param {Object} o The Object to test
      * @returns {Boolean} True if the Object is not undefined
      */
-    isDefined: function(o) {
+    isDefined: function (o) {
         var a;
         return (o !== a);
     }
 };
 
-if (typeof (exports) !== 'undefined')
+if (typeof exports !== 'undefined')
     exports.pc = pc;

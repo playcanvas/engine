@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @private
      * @constructor
@@ -27,7 +27,6 @@ pc.extend(pc, function () {
         this.body = null;
         this.simulationEnabled = false;
     };
-    RigidBodyComponentData = pc.inherits(RigidBodyComponentData, pc.ComponentData);
 
     return {
         RigidBodyComponentData: RigidBodyComponentData

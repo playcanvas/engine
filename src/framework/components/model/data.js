@@ -1,4 +1,4 @@
-pc.extend(pc, function() {
+Object.assign(pc, function () {
 
     /**
      * @private
@@ -28,7 +28,6 @@ pc.extend(pc, function() {
         this.material = null;
         this.model = null;
     };
-    ModelComponentData = pc.inherits(ModelComponentData, pc.ComponentData);
 
     return {
         ModelComponentData: ModelComponentData

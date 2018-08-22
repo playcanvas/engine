@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     // Draws shaded full-screen quad in a single call
@@ -90,4 +90,3 @@ pc.extend(pc, (function () {
         destroyPostEffectQuad: destroyPostEffectQuad
     };
 }()));
-
