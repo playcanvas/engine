@@ -218,9 +218,7 @@ Object.assign(pc, function () {
                     }
 
                     if (pathMapping) {
-                        var uri = new pc.URI(pc.path.join(dir, data[name]));
-                        uri.path = pc.path.normalize(uri.path);
-                        assetReference.url = uri.toString();
+                        assetReference.url = pc.path.join(dir, data[name]);
                     } else {
                         assetReference.id = data[name];
                     }

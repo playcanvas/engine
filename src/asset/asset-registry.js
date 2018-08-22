@@ -539,9 +539,7 @@ Object.assign(pc, function () {
             for (i = 0; i < mapping.mapping.length; i++) {
                 var path = mapping.mapping[i].path;
                 if (path) {
-                    var uri = new pc.URI(pc.path.join(dir, path));
-                    uri.path = pc.path.normalize(uri.path);
-                    path = uri.toString();
+                    path = pc.path.join(dir, path);
                     self.loadFromUrl(path, "material", onLoadAsset);
                 } else {
                     count--;
@@ -574,9 +572,7 @@ Object.assign(pc, function () {
 
                     if (materialData[paramName]) {
                         var texturePath = materialData[paramName];
-                        var uri = new pc.URI(pc.path.join(dir, texturePath));
-                        uri.path = pc.path.normalize(uri.path);
-                        textureUrl = uri.toString();
+                        textureUrl = pc.path.join(dir, texturePath);
                         if (!used[textureUrl]) {
                             used[textureUrl] = true;
                             urls.push(textureUrl);
