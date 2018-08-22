@@ -116,6 +116,21 @@ Object.assign(pc, function () {
             materialAsset.resource[parameterName] = texture;
         },
 
+        // assign a placeholder texture while waiting for one to load
+        // placeholder textures do not replace the data[parameterName] value
+        // in the asset.data thus preserving the final asset id until it is loaded
+        _assignPlaceholderTexture: function (parameterName, materialAsset) {
+            // create placeholder textures on-demand
+            if (!this._placeholderTextures) {
+                this._createPlaceholders();
+            }
+
+            var placeholder = PLACEHOLDER_MAP[parameterName];
+            var texture = this._placeholderTextures[placeholder];
+
+            materialAsset.resource[parameterName] = texture;
+        },
+
         _onTextureLoad: function (parameterName, materialAsset, textureAsset) {
             this._assignTexture(parameterName, materialAsset, textureAsset.resource);
             materialAsset.resource.update();
@@ -168,18 +183,6 @@ Object.assign(pc, function () {
                 this._assignCubemap(parameterName, materialAsset, [null, null, null, null, null, null, null]);
                 material.update();
             }
-        },
-
-        // assign a placeholder texture while waiting for one to load
-        _assignPlaceholderTexture: function (parameterName, materialAsset) {
-            // create placeholder textures on-demand
-            if (!this._placeholderTextures) {
-                this._createPlaceholders();
-            }
-
-            var placeholder = PLACEHOLDER_MAP[parameterName];
-            var texture = this._placeholderTextures[placeholder];
-            this._assignTexture(parameterName, materialAsset, texture);
         },
 
         _bindAndAssignAssets: function (materialAsset, assets) {
