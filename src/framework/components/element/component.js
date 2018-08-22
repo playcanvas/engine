@@ -1191,6 +1191,15 @@ Object.assign(pc, function () {
         }
     });
 
+    Object.defineProperty(ElementComponent.prototype, "aabb", {
+        get: function () {
+            if (this._image) return this._image.aabb;
+            if (this._text) return this._text.aabb;
+
+            return null;
+        }
+    });
+
     // Returns the 4 corners of the element relative to its screen component.
     // Only works for elements that have a screen.
     // Order is bottom left, bottom right, top right, top left.
