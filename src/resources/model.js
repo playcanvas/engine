@@ -107,8 +107,10 @@ Object.assign(pc, function () {
                         // url mapping
                         var fileUrl = asset.getFileUrl();
                         var dirUrl = pc.path.getDirectory(fileUrl);
-                        var path = pc.path.normalize(pc.path.join(dirUrl, data.mapping[i].path));
-                        material = assets.getByUrl(path);
+
+                        var uri = new pc.URI(pc.path.join(dirUrl, data.mapping[i].path));
+                        uri.path = pc.path.normalize(uri.path);
+                        material = assets.getByUrl(uri.toString());
 
                         if (material) {
                             handleMaterial(material);
