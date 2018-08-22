@@ -26,18 +26,28 @@ pc.string = function () {
     var VARIATION_MODIFIER_BEGIN = 0xFE00;
     var VARIATION_MODIFIER_END = 0xFE0F;
 
-    function getCodePoint(string) {
+    function getCodePointData(string, i) {
         var size = string.length;
-        var first = string.charCodeAt(0);
+        i = i || 0;
+        // Account for out-of-bounds indices:
+        if (i < 0 || i >= size) {
+            return undefined;
+        }
+        var first = string.charCodeAt(i);
         var second;
         if (size > 1 && first >= HIGH_SURROGATE_BEGIN && first <= HIGH_SURROGATE_END) {
-            second = string.charCodeAt(1);
+            second = string.charCodeAt(i + 1);
             if (second >= LOW_SURROGATE_BEGIN && second <= LOW_SURROGATE_END) {
                 // https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
-                return (first - HIGH_SURROGATE_BEGIN) * 0x400 + second - LOW_SURROGATE_BEGIN + 0x10000;
+                return { code: (first - HIGH_SURROGATE_BEGIN) * 0x400 + second - LOW_SURROGATE_BEGIN + 0x10000, long: true };
             }
         }
-        return first;
+        return { code: first, long: false };
+    }
+
+    function getCodePoint(string, i) {
+        var codePointData = getCodePointData(string, i);
+        return codePointData === undefined ? NaN : codePointData.code;
     }
 
     function isCodeBetween(string, begin, end) {
@@ -175,6 +185,19 @@ pc.string = function () {
             return false;
         },
         getCodePoint: getCodePoint,
+        getCodePoints: function (string) {
+            if (typeof string !== 'string') {
+                throw new TypeError('Not a string');
+            }
+            var i = 0;
+            var arr = [];
+            var codePoint;
+            while (!!(codePoint = getCodePointData(string, i))) {
+                arr.push(codePoint.code);
+                i += codePoint.long ? 2 : 1;
+            }
+            return arr;
+        },
         getSymbols: function (string) {
             if (typeof string !== 'string') {
                 throw new TypeError('Not a string');
@@ -205,6 +228,16 @@ pc.string = function () {
                 take = 0;
             }
             return output;
+        },
+        fromCodePoint: function () {
+            var chars = [], point, offset, units, i;
+            for (i = 0; i < arguments.length; ++i) {
+                point = arguments[i];
+                offset = point - 0x10000;
+                units = point > 0xFFFF ? [0xD800 + (offset >> 10), 0xDC00 + (offset & 0x3FF)] : [point];
+                chars.push(String.fromCharCode.apply(null, units));
+            }
+            return chars.join('');
         }
     };
 }();

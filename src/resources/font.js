@@ -72,6 +72,17 @@ Object.assign(pc, function () {
 
         open: function (url, data, asset) {
             var font;
+            // convert v2 to v3 font data
+            if (data.version < 3) {
+                data.chars = Object.keys(data.chars).reduce(function (newChars, key) {
+                    var existing = data.chars[key];
+                    // key by letter instead of char code
+                    var newKey = existing.letter !== undefined ? existing.letter : String.fromCharCode(key);
+                    newChars[newKey] = existing;
+                    return chars;
+                }, {});
+                data.version = 3;
+            }
             if (data.textures) {
                 // both data and textures exist
                 font = new pc.Font(data.textures, data.data);

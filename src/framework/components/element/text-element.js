@@ -116,7 +116,12 @@ Object.assign(pc, function () {
             var symbols = pc.string.getSymbols(text);
 
             if (this.rtlReorder) {
-                symbols = this.rtlReorder(symbols);
+                var rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
+                if (rtlReorderFunc) {
+                    symbols = rtlReorderFunc(symbols);
+                } else {
+                    console.warn('Element created with rtlReorder option but no rtlReorder function registered');
+                }
             }
 
             var textLength = symbols.length;
@@ -131,8 +136,8 @@ Object.assign(pc, function () {
             var charactersPerTexture = {};
 
             for (i = 0; i < textLength; i++) {
-                var charId = this._font.data.version < 3 ? pc.string.getCodePoint(symbols[i]) : symbols[i];
-                var info = this._font.data.chars[charId];
+                var char = symbols[i];
+                var info = this._font.data.chars[char];
                 if (!info) continue;
 
                 var map = info.map;
@@ -363,7 +368,6 @@ Object.assign(pc, function () {
 
             for (i = 0; i < l; i++) {
                 char = symbols[i];
-                charId = json.version < 3 ? pc.string.getCodePoint(symbols[i]) : char;
 
                 var x = 0;
                 var y = 0;
@@ -372,7 +376,7 @@ Object.assign(pc, function () {
                 var glyphMinX = 0;
                 var glyphWidth = 0;
 
-                data = json.chars[charId];
+                data = json.chars[char];
                 if (data && data.scale) {
                     var size = (data.width + data.height) / 2;
                     scale = (size / MAGIC) * this._fontSize / size;
@@ -428,8 +432,8 @@ Object.assign(pc, function () {
                             // We should only backtrack the quads that were in the word from this same texture
                             // We will have to update N number of mesh infos as a result (all textures used in the word in question)
                             for (var j = wordStartIndex; j < i; j++) {
-                                var backCharId = json.version < 3 ? pc.string.getCodePoint(symbols[j]) : symbols[j];
-                                var backCharData = json.chars[backCharId];
+                                var backChar = symbols[j];
+                                var backCharData = json.chars[backChar];
                                 var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
                                 backMeshInfo.lines[lines - 1] -= 1;
                                 backMeshInfo.quad -= 1;
@@ -484,7 +488,7 @@ Object.assign(pc, function () {
 
                 numCharsThisLine++;
 
-                var uv = this._getUv(charId);
+                var uv = this._getUv(char);
 
                 meshInfo.uvs[quad * 4 * 2 + 0] = uv[0];
                 meshInfo.uvs[quad * 4 * 2 + 1] = uv[1];
@@ -640,9 +644,9 @@ Object.assign(pc, function () {
 
             if (!data.chars[char]) {
                 // missing char - return "space" if we have it
-                var spaceId = data.version < 3 ? 32 : ' ';
-                if (data.chars[spaceId]) {
-                    return this._getUv(spaceId);
+                var space = ' ';
+                if (data.chars[space]) {
+                    return this._getUv(space);
                 }
                 // otherwise - missing char
                 return [0, 0, 1, 1];
@@ -699,6 +703,14 @@ Object.assign(pc, function () {
 
         set: function (value) {
             var str = value.toString();
+            if (this.unicodeConverter) {
+                var unicodeConverterFunc = this._system.app.systems.element.getUnicodeConverter();
+                if (unicodeConverterFunc) {
+                    str = unicodeConverterFunc(str);
+                } else {
+                    console.warn('Element created with unicodeConverter option but no unicodeConverter function registered');
+                }
+            }
             if (this._text !== str) {
                 if (this._font) {
                     this._updateText(str);

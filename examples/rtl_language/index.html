@@ -20,8 +20,9 @@
   <canvas id="application-canvas"></canvas>
 
   <script>
-    var convert = arabicConverter.convertArabic;
-    var reorder = UnicodeBidirectional.reorder;
+    var convertArabicToPresentationForms = arabicConverter.convertArabic;
+    var reorderUnicode = UnicodeBidirectional.reorder;
+    var resolveRtlOrLtr = UnicodeBidirectional.resolve;
 
     var canvas = document.getElementById('application-canvas');
     var app = new pc.Application(canvas, {
@@ -92,8 +93,24 @@
     backing.translateLocal(0, -100, 0);
 
     // some sample text
-    var arabic = convert(".عدد المرات التي تم فيها استخدام الجيوفلتر :uses");
+    var arabic = ".عدد المرات التي تم فيها استخدام الجيوفلتر :a💪🏿😍💪😻👍👨‍🎤👨‍👩‍👧‍👧z";
     var emoji = "😀😀😀🤢🤥🤝😻👍👨‍🎤😡💪🏿😍💪🤔💪🏻💽🦀🍑👻😗😏😒👽👾🎃😺💩😈🤒💑👢🐭🦁🐸🐍🦐🐙";
+
+    app.systems.element.registerUnicodeConverter(convertArabicToPresentationForms);
+    app.systems.element.registerRtlReorder(function (symbols) {
+      // We need to convert the array of string symbols because UnicodeBidirectional.reorder only works with codepoints.
+      // Also some emoji are made up of multiple codepoints, so we have to do some special logic to handle those.
+      var codes = [];
+      for (var i = 0; i < symbols.length; i++) {
+        var symbol = symbols[i];
+        codes.push.apply(codes, pc.string.getCodePoints(symbol));
+      };
+      codes = reorderUnicode(codes, resolveRtlOrLtr(codes, 0));
+      symbols = codes.map(function (code) {
+        return pc.string.fromCodePoint(code);
+      });
+      return pc.string.getSymbols(symbols.join(''));
+    });
 
     cf.createTextures(arabic);
 
@@ -110,24 +127,8 @@
       anchor: [0, 1, 1, 1],
       pivot: [0, 1],
       alignment: [1, 0],
-      rtlReorder: function (symbols) {
-          // UnicodeBidirectional.reorder only works with codepoints -- we need to convert the array of strings...
-          // Note: some emoji are made up of multiple codepoints, so the map-based approach below will not work correctly
-          // for those specific emoji
-          var codes = symbols.map(function (str) {
-              return pc.string.getCodePoint(str);
-          });
-
-          var charMap = {};
-          for (i = 0; i < symbols.length; i++) {
-              charMap[codes[i]] = symbols[i];
-          }
-          codes = UnicodeBidirectional.reorder(codes, UnicodeBidirectional.resolve(codes, 0));
-          symbols = codes.map(function (code) {
-              return charMap[code];
-          });
-          return symbols;
-      }
+      unicodeConverter: true,
+      rtlReorder: true
     });
 
     cf.updateTextures(emoji);
@@ -153,7 +154,7 @@
     canvasElementEntity2.translateLocal(0, -elSize, 0);
 
     // purely for debugging: do not do this in a real application
-    var showCanvasAtlasForDebug = false;
+    var showCanvasAtlasForDebug = true;
     if (showCanvasAtlasForDebug) {
       var wrapper = document.createElement('div');
       for (var i = 0; i < cf.textures.length; i++) {
