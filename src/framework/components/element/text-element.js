@@ -561,7 +561,12 @@ Object.assign(pc, function () {
                 this._meshInfo[i].meshInstance._aabbVer = -1;
 
                 // cache the total aabb
-                this._aabb.add(this._meshInfo[i].meshInstance.aabb);
+                if (i === 0) {
+                    this._aabb.copy(this._meshInfo[i].meshInstance.aabb); // set the first time
+                } else {
+                    this._aabb.add(this._meshInfo[i].meshInstance.aabb); // then update
+                }
+
             }
         },
 
