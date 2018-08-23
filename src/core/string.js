@@ -45,16 +45,15 @@ pc.string = function () {
         return { code: first, long: false };
     }
 
-    function getCodePoint(string, i) {
-        var codePointData = getCodePointData(string, i);
-        return codePointData && codePointData.code;
-    }
-
     function isCodeBetween(string, begin, end) {
         if (!string)
             return false;
-        var code = getCodePoint(string);
-        return code >= begin && code <= end;
+        var codeData = getCodePointData(string);
+        if (codeData) {
+            var code = codeData.code;
+            return code >= begin && code <= end;
+        }
+        return false;
     }
 
     function numCharsToTakeForNextSymbol(string, index) {
@@ -193,7 +192,10 @@ pc.string = function () {
          * @param {Number} [i] The index in the string
          * @returns {Number} The code point value for the character in the string
          */
-        getCodePoint: getCodePoint,
+        getCodePoint: function (string, i) {
+            var codePointData = getCodePointData(string, i);
+            return codePointData && codePointData.code;
+        },
         /**
          * @function
          * @name pc.string.getCodePoints
