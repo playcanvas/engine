@@ -10,7 +10,7 @@ Object.assign(pc, function () {
                     height: data.info.height
                 }];
             }
-            data.chars = Object.keys(data.chars).reduce(function (newChars, key) {
+            data.chars = Object.keys(data.chars || {}).reduce(function (newChars, key) {
                 var existing = data.chars[key];
                 // key by letter instead of char code
                 var newKey = existing.letter !== undefined ? existing.letter : pc.string.fromCodePoint(key);
@@ -18,7 +18,7 @@ Object.assign(pc, function () {
                     existing.map = existing.map || 0;
                 }
                 newChars[newKey] = existing;
-                return chars;
+                return newChars;
             }, {});
             data.version = 3;
         }
@@ -62,6 +62,7 @@ Object.assign(pc, function () {
             if (data && data.version >= 2) {
                 numTextures = data.info.maps.length;
             }
+            data = upgradeDataSchema(data);
 
             var textures = new Array(numTextures);
             var loader = this._loader;
@@ -96,7 +97,6 @@ Object.assign(pc, function () {
 
         open: function (url, data, asset) {
             var font;
-            data = upgradeDataSchema(data);
             if (data.textures) {
                 // both data and textures exist
                 font = new pc.Font(data.textures, data.data);
