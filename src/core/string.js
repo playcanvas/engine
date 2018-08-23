@@ -31,7 +31,7 @@ pc.string = function () {
         i = i || 0;
         // Account for out-of-bounds indices:
         if (i < 0 || i >= size) {
-            return undefined;
+            return null;
         }
         var first = string.charCodeAt(i);
         var second;
@@ -47,7 +47,7 @@ pc.string = function () {
 
     function getCodePoint(string, i) {
         var codePointData = getCodePointData(string, i);
-        return codePointData === undefined ? NaN : codePointData.code;
+        return codePointData && codePointData.code;
     }
 
     function isCodeBetween(string, begin, end) {
@@ -184,7 +184,23 @@ pc.string = function () {
 
             return false;
         },
+        /**
+         * @function
+         * @name pc.string.getCodePoint
+         * @description Get the code point number for a character in a string. Polyfill for
+         * [<code>codePointAt</code>]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/codePointAt}.
+         * @param {String} string The string to get the code point from
+         * @param {Number} [i] The index in the string
+         * @returns {Number} The code point value for the character in the string
+         */
         getCodePoint: getCodePoint,
+        /**
+         * @function
+         * @name pc.string.getCodePoints
+         * @description Gets an array of all code points in a string
+         * @param {String} string The string to get code points from
+         * @returns {Number[]} The code points in the string
+         */
         getCodePoints: function (string) {
             if (typeof string !== 'string') {
                 throw new TypeError('Not a string');
@@ -198,6 +214,15 @@ pc.string = function () {
             }
             return arr;
         },
+        /**
+         * @function
+         * @name pc.string.getSymbols
+         * @description Gets an array of all grapheme clusters (visible symbols) in a string. This is needed because
+         * some symbols (such as emoji or accented characters) are actually made up of multiple character codes.
+         * @param {String} string The string to break into symbols
+         * @returns {String[]} The symbols in the string
+         * @see {@link https://mathiasbynens.be/notes/javascript-unicode Unicode strings in JavaScript}
+         */
         getSymbols: function (string) {
             if (typeof string !== 'string') {
                 throw new TypeError('Not a string');
@@ -229,12 +254,23 @@ pc.string = function () {
             }
             return output;
         },
-        fromCodePoint: function () {
-            var chars = [], point, offset, units, i;
-            for (i = 0; i < arguments.length; ++i) {
-                point = arguments[i];
-                offset = point - 0x10000;
-                units = point > 0xFFFF ? [0xD800 + (offset >> 10), 0xDC00 + (offset & 0x3FF)] : [point];
+        /**
+         * @function
+         * @name pc.string.fromCodePoint
+         * @description Get the string for a given code point or set of code points. Polyfill for
+         * [<code>fromCodePoint</code>]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/fromCodePoint}.
+         * @param {...Number} args The code points to convert to a string
+         * @returns {String} The converted string
+         */
+        fromCodePoint: function (/* ...args */) {
+            var chars = [];
+            var current;
+            var codePoint;
+            var units;
+            for (var i = 0; i < arguments.length; ++i) {
+                current = Number(arguments[i]);
+                codePoint = point - 0x10000;
+                units = current > 0xFFFF ? [(codePoint >> 10) + 0xD800, (codePoint % 0x400) + 0xDC00] : [current];
                 chars.push(String.fromCharCode.apply(null, units));
             }
             return chars.join('');
