@@ -19,6 +19,8 @@ Object.assign(pc, function () {
         this.DataType = pc.ElementComponentData;
 
         this.schema = _schema;
+        this._unicodeConverter = null;
+        this._rtlReorder = null;
 
         // default texture - make white so we can tint it with emissive color
         this._defaultTexture = new pc.Texture(app.graphicsDevice, { width: 1, height: 1, format: pc.PIXELFORMAT_R8_G8_B8_A8 });
@@ -293,6 +295,8 @@ Object.assign(pc, function () {
             } else if (component.type === pc.ELEMENTTYPE_TEXT) {
                 if (data.autoWidth !== undefined) component.autoWidth = data.autoWidth;
                 if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
+                if (data.rtlReorder !== undefined) component.rtlReorder = data.rtlReorder;
+                if (data.unicodeConverter !== undefined) component.unicodeConverter = data.unicodeConverter;
                 if (data.text !== undefined) component.text = data.text;
                 if (data.color !== undefined) {
                     if (data.color instanceof pc.Color) {
@@ -350,6 +354,8 @@ Object.assign(pc, function () {
                 autoHeight: source.autoHeight,
                 type: source.type,
                 rect: source.rect && source.rect.clone() || source.rect,
+                rtlReorder: source.rtlReorder,
+                unicodeConverter: source.unicodeConverter,
                 materialAsset: source.materialAsset,
                 material: source.material,
                 color: source.color && source.color.clone() || source.color,
@@ -454,6 +460,22 @@ Object.assign(pc, function () {
 
         getImageElementMaterial: function (screenSpace, mask, nineSliced, nineSliceTiled) {
             // TODO
+        },
+
+        registerUnicodeConverter: function (func) {
+            this._unicodeConverter = func;
+        },
+
+        registerRtlReorder: function (func) {
+            this._rtlReorder = func;
+        },
+
+        getUnicodeConverter: function () {
+            return this._unicodeConverter;
+        },
+
+        getRtlReorder: function () {
+            return this._rtlReorder;
         }
     });
 

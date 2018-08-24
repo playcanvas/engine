@@ -1,6 +1,30 @@
 Object.assign(pc, function () {
     'use strict';
 
+    function upgradeDataSchema(data) {
+        // convert v1 and v2 to v3 font data schema
+        if (data.version < 3) {
+            if (data.version < 2) {
+                data.info.maps = data.info.maps || [{
+                    width: data.info.width,
+                    height: data.info.height
+                }];
+            }
+            data.chars = Object.keys(data.chars || {}).reduce(function (newChars, key) {
+                var existing = data.chars[key];
+                // key by letter instead of char code
+                var newKey = existing.letter !== undefined ? existing.letter : pc.string.fromCodePoint(key);
+                if (data.version < 2) {
+                    existing.map = existing.map || 0;
+                }
+                newChars[newKey] = existing;
+                return newChars;
+            }, {});
+            data.version = 3;
+        }
+        return data;
+    }
+
     var FontHandler = function (loader) {
         this._loader = loader;
     };
@@ -11,12 +35,14 @@ Object.assign(pc, function () {
             if (pc.path.getExtension(url) === '.json') {
                 // load json data then load texture of same name
                 pc.http.get(url, function (err, response) {
+                    // update asset data
+                    var data = upgradeDataSchema(response);
                     if (!err) {
-                        self._loadTextures(url.replace('.json', '.png'), response, function (err, textures) {
+                        self._loadTextures(url.replace('.json', '.png'), data, function (err, textures) {
                             if (err) return callback(err);
 
                             callback(null, {
-                                data: response,
+                                data: data,
                                 textures: textures
                             });
                         });
@@ -26,18 +52,18 @@ Object.assign(pc, function () {
                 });
 
             } else {
+                // upgrade asset data
+                if (asset && asset.data) {
+                    asset.data = upgradeDataSchema(asset.data);
+                }
                 this._loadTextures(url, asset && asset.data, callback);
             }
         },
 
         _loadTextures: function (url, data, callback) {
-            var numTextures = 1;
+            var numTextures = data.info.maps.length;
             var numLoaded = 0;
             var error = null;
-
-            if (data && data.version >= 2) {
-                numTextures = data.info.maps.length;
-            }
 
             var textures = new Array(numTextures);
             var loader = this._loader;

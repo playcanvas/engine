@@ -3,6 +3,11 @@ Object.assign(pc, function () {
     var DEFAULT_TEXTURE_SIZE = 2048;
 
     function normalizeCharsSet(text) {
+        // normalize unicode if needed
+        var unicodeConverterFunc = this.app.systems.element.getUnicodeConverter();
+        if (unicodeConverterFunc) {
+            text = unicodeConverterFunc(text);
+        }
         // strip duplicates
         var set = {};
         var symbols = pc.string.getSymbols(text);
@@ -111,8 +116,7 @@ Object.assign(pc, function () {
         var newCharsSet = [];
         for (var i = 0; i < _chars.length; i++) {
             var char = _chars[i];
-            var code = pc.string.getCodePoint(char);
-            if (!this.data.chars[code]) {
+            if (!this.data.chars[char]) {
                 newCharsSet.push(char);
             }
         }
@@ -265,7 +269,7 @@ Object.assign(pc, function () {
 
     CanvasFont.prototype._createJson = function (chars, fontName, width, height) {
         var base = {
-            "version": 2,
+            "version": 3,
             "intensity": this.intensity,
             "info": {
                 "face": fontName,
@@ -320,7 +324,7 @@ Object.assign(pc, function () {
 
         var scale = this._getCharScale(charCode) * this.fontSize / 32;
 
-        json.chars[charCode] = {
+        json.chars[char] = {
             "id": charCode,
             "letter": char,
             "x": x,
