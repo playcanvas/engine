@@ -35,12 +35,14 @@ Object.assign(pc, function () {
             if (pc.path.getExtension(url) === '.json') {
                 // load json data then load texture of same name
                 pc.http.get(url, function (err, response) {
+                    // update asset data
+                    var data = upgradeDataSchema(response);
                     if (!err) {
-                        self._loadTextures(url.replace('.json', '.png'), response, function (err, textures) {
+                        self._loadTextures(url.replace('.json', '.png'), data, function (err, textures) {
                             if (err) return callback(err);
 
                             callback(null, {
-                                data: response,
+                                data: data,
                                 textures: textures
                             });
                         });
@@ -50,6 +52,10 @@ Object.assign(pc, function () {
                 });
 
             } else {
+                // upgrade asset data
+                if (asset && asset.data) {
+                    asset.data = upgradeDataSchema(asset.data);
+                }
                 this._loadTextures(url, asset && asset.data, callback);
             }
         },
@@ -62,7 +68,6 @@ Object.assign(pc, function () {
             if (data && data.version >= 2) {
                 numTextures = data.info.maps.length;
             }
-            data = upgradeDataSchema(data);
 
             var textures = new Array(numTextures);
             var loader = this._loader;
