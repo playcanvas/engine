@@ -843,15 +843,29 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            var rect = this._rect;
+            var x, y, z, w;
             if (value instanceof pc.Vec4) {
-                this._rect.set(value.x, value.y, value.z, value.w);
+                x = value.x;
+                y = value.y;
+                z = value.z;
+                w = value.w;
             } else {
-                this._rect.set(value[0], value[1], value[2], value[3]);
+                x = value[0];
+                y = value[1];
+                z = value[2];
+                w = value[3];
             }
-            if (this._renderable.mesh) this._updateMesh(this._renderable.mesh);
+
+            if (rect.x !== x || rect.y !== y || rect.z !== z || rect.w !== w) {
+                rect.set(x, y, z, w);
+
+                if (this._renderable.mesh) {
+                    this._updateMesh(this._renderable.mesh);
+                }
+            }
         }
     });
-
     Object.defineProperty(ImageElement.prototype, "material", {
         get: function () {
             return this._material;
