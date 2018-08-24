@@ -61,13 +61,9 @@ Object.assign(pc, function () {
         },
 
         _loadTextures: function (url, data, callback) {
-            var numTextures = 1;
+            var numTextures = data.info.maps.length;
             var numLoaded = 0;
             var error = null;
-
-            if (data && data.version >= 2) {
-                numTextures = data.info.maps.length;
-            }
 
             var textures = new Array(numTextures);
             var loader = this._loader;
