@@ -170,11 +170,12 @@ Object.assign(pc, function () {
             if (this._attached) return;
             this._attached = true;
 
-            window.addEventListener("mouseup", this._upHandler, false);
-            window.addEventListener("mousedown", this._downHandler, false);
-            window.addEventListener("mousemove", this._moveHandler, false);
-            window.addEventListener("mousewheel", this._wheelHandler, false); // WekKit
-            window.addEventListener("DOMMouseScroll", this._wheelHandler, false); // Gecko
+            var target = this._target || window;
+            target.addEventListener("mouseup", this._upHandler, false);
+            target.addEventListener("mousedown", this._downHandler, false);
+            target.addEventListener("mousemove", this._moveHandler, false);
+            target.addEventListener("mousewheel", this._wheelHandler, false); // WekKit
+            target.addEventListener("DOMMouseScroll", this._wheelHandler, false); // Gecko
         },
 
         /**
@@ -186,11 +187,12 @@ Object.assign(pc, function () {
             if (!this._attached) return;
             this._attached = false;
 
-            window.removeEventListener("mouseup", this._upHandler);
-            window.removeEventListener("mousedown", this._downHandler);
-            window.removeEventListener("mousemove", this._moveHandler);
-            window.removeEventListener("mousewheel", this._wheelHandler); // WekKit
-            window.removeEventListener("DOMMouseScroll", this._wheelHandler); // Gecko
+            var target = this._target || window;
+            target.removeEventListener("mouseup", this._upHandler);
+            target.removeEventListener("mousedown", this._downHandler);
+            target.removeEventListener("mousemove", this._moveHandler);
+            target.removeEventListener("mousewheel", this._wheelHandler); // WekKit
+            target.removeEventListener("DOMMouseScroll", this._wheelHandler); // Gecko
         },
 
         /**
