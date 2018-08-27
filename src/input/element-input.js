@@ -183,12 +183,10 @@ Object.assign(pc, function () {
      * @classdesc Handles mouse and touch events for {@link pc.ElementComponent}s. When input events
      * occur on an ElementComponent this fires the appropriate events on the ElementComponent.
      * @description Create a new pc.ElementInput instance.
-     * @param {Element} domElement The DOM element
+     * @param {Element} element The element to attach listen for events on
      */
-    var ElementInput = function (domElement) {
+    var ElementInput = function (element) {
         this._app = null;
-        this._attached = false;
-        this._target = null;
 
         // force disable all element input events
         this._enabled = true;
@@ -211,11 +209,11 @@ Object.assign(pc, function () {
         this._touchedElements = {};
         this._touchesForWhichTouchLeaveHasFired = {};
 
-        if ('ontouchstart' in window) {
+        if ('ontouchstart' in element) {
             this._clickedEntities = {};
         }
 
-        this.attach(domElement);
+        this.attach(element);
     };
 
     Object.assign(ElementInput.prototype, {
@@ -223,30 +221,28 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ElementInput#attach
          * @description Attach mouse and touch events to a DOM element.
-         * @param {Element} domElement The DOM element
+         * @param {Element} element The element to attach to
          */
-        attach: function (domElement) {
-            if (this._attached) {
-                this._attached = false;
+        attach: function (element) {
+            if (this._element) {
                 this.detach();
             }
 
-            this._target = domElement;
-            this._attached = true;
+            this._element = element;
 
-            window.addEventListener('mouseup', this._upHandler, { passive: true });
-            window.addEventListener('mousedown', this._downHandler, { passive: true });
-            window.addEventListener('mousemove', this._moveHandler, { passive: true });
-            window.addEventListener('mousewheel', this._wheelHandler, { passive: true });
-            window.addEventListener('DOMMouseScroll', this._wheelHandler, { passive: true });
+            this._element.addEventListener('mouseup', this._upHandler, { passive: true });
+            this._element.addEventListener('mousedown', this._downHandler, { passive: true });
+            this._element.addEventListener('mousemove', this._moveHandler, { passive: true });
+            this._element.addEventListener('mousewheel', this._wheelHandler, { passive: true });
+            this._element.addEventListener('DOMMouseScroll', this._wheelHandler, { passive: true });
 
-            if ('ontouchstart' in window) {
-                this._target.addEventListener('touchstart', this._touchstartHandler, { passive: true });
+            if ('ontouchstart' in this._element) {
+                this._element.addEventListener('touchstart', this._touchstartHandler, { passive: true });
                 // Passive is not used for the touchend event because some components need to be
                 // able to call preventDefault(). See notes in button/component.js for more details.
-                this._target.addEventListener('touchend', this._touchendHandler, false);
-                this._target.addEventListener('touchmove', this._touchmoveHandler, false);
-                this._target.addEventListener('touchcancel', this._touchcancelHandler, { passive: true });
+                this._element.addEventListener('touchend', this._touchendHandler, false);
+                this._element.addEventListener('touchmove', this._touchmoveHandler, false);
+                this._element.addEventListener('touchcancel', this._touchcancelHandler, { passive: true });
             }
         },
 
@@ -256,21 +252,21 @@ Object.assign(pc, function () {
          * @description Remove mouse and touch events from the DOM element that it is attached to
          */
         detach: function () {
-            if (!this._attached) return;
-            this._attached = false;
+            if (this._element) {
+                this._element.removeEventListener('mouseup', this._upHandler, false);
+                this._element.removeEventListener('mousedown', this._downHandler, false);
+                this._element.removeEventListener('mousemove', this._moveHandler, false);
+                this._element.removeEventListener('mousewheel', this._wheelHandler, false);
+                this._element.removeEventListener('DOMMouseScroll', this._wheelHandler, false);
+            }
 
-            window.removeEventListener('mouseup', this._upHandler, false);
-            window.removeEventListener('mousedown', this._downHandler, false);
-            window.removeEventListener('mousemove', this._moveHandler, false);
-            window.removeEventListener('mousewheel', this._wheelHandler, false);
-            window.removeEventListener('DOMMouseScroll', this._wheelHandler, false);
-
-            this._target.removeEventListener('touchstart', this._touchstartHandler, false);
-            this._target.removeEventListener('touchend', this._touchendHandler, false);
-            this._target.removeEventListener('touchmove', this._touchmoveHandler, false);
-            this._target.removeEventListener('touchcancel', this._touchcancelHandler, false);
-
-            this._target = null;
+            if ('ontouchstart' in this._element) {
+                this._element.removeEventListener('touchstart', this._touchstartHandler, false);
+                this._element.removeEventListener('touchend', this._touchendHandler, false);
+                this._element.removeEventListener('touchmove', this._touchmoveHandler, false);
+                this._element.removeEventListener('touchcancel', this._touchcancelHandler, false);
+            }
+            this._element = null;
         },
 
         /**
@@ -567,15 +563,15 @@ Object.assign(pc, function () {
         },
 
         _calcMouseCoords: function (event) {
-            var rect = this._target.getBoundingClientRect();
+            var rect = this._element.getBoundingClientRect();
             var left = Math.floor(rect.left);
             var top = Math.floor(rect.top);
 
             // mouse is outside of canvas
             if (event.clientX < left ||
-                event.clientX >= left + this._target.clientWidth ||
+                event.clientX >= left + this._element.clientWidth ||
                 event.clientY < top ||
-                event.clientY >= top + this._target.clientHeight) {
+                event.clientY >= top + this._element.clientHeight) {
 
                 targetX = null;
                 targetY = null;
@@ -716,8 +712,8 @@ Object.assign(pc, function () {
             var cameraBottom = (1 - camera.rect.y) * sh;
             var cameraTop = cameraBottom - cameraHeight;
 
-            var _x = x * sw / this._target.clientWidth;
-            var _y = y * sh / this._target.clientHeight;
+            var _x = x * sw / this._element.clientWidth;
+            var _y = y * sh / this._element.clientHeight;
 
             // check window coords are within camera rect
             if (_x >= cameraLeft && _x <= cameraRight &&
@@ -750,8 +746,8 @@ Object.assign(pc, function () {
                 if (!result) return false;
             }
 
-            var sw = this._target.clientWidth;
-            var sh = this._target.clientHeight;
+            var sw = this._element.clientWidth;
+            var sh = this._element.clientHeight;
 
             var cameraWidth = camera.rect.z * sw;
             var cameraHeight = camera.rect.w * sh;
