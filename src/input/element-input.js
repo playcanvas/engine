@@ -258,13 +258,13 @@ Object.assign(pc, function () {
                 this._element.removeEventListener('mousemove', this._moveHandler, false);
                 this._element.removeEventListener('mousewheel', this._wheelHandler, false);
                 this._element.removeEventListener('DOMMouseScroll', this._wheelHandler, false);
-            }
 
-            if ('ontouchstart' in this._element) {
-                this._element.removeEventListener('touchstart', this._touchstartHandler, false);
-                this._element.removeEventListener('touchend', this._touchendHandler, false);
-                this._element.removeEventListener('touchmove', this._touchmoveHandler, false);
-                this._element.removeEventListener('touchcancel', this._touchcancelHandler, false);
+                if ('ontouchstart' in this._element) {
+                    this._element.removeEventListener('touchstart', this._touchstartHandler, false);
+                    this._element.removeEventListener('touchend', this._touchendHandler, false);
+                    this._element.removeEventListener('touchmove', this._touchmoveHandler, false);
+                    this._element.removeEventListener('touchcancel', this._touchcancelHandler, false);
+                }
             }
             this._element = null;
         },
