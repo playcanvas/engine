@@ -52,6 +52,7 @@ Object.assign(pc, function () {
 
     // Non-standard
     var FCC_ETC1 = makeFourCC('ETC1');
+    var FCC_ETC2 = makeFourCC('ETC2');
     var FCC_PVRTC_2BPP_RGB_1 = makeFourCC('P231');
     var FCC_PVRTC_2BPP_RGBA_1 = makeFourCC('P241');
     var FCC_PVRTC_4BPP_RGB_1 = makeFourCC('P431');
@@ -148,7 +149,7 @@ Object.assign(pc, function () {
 
             for (var mip = 0; mip < numMips; mip++) {
                 var mipSize;
-                if ((fcc === FCC_DXT1) || (fcc === FCC_DXT5) || (fcc === FCC_ETC1)) {
+                if ((fcc === FCC_DXT1) || (fcc === FCC_DXT5) || (fcc === FCC_ETC1) || (fcc === FCC_ETC2)) {
                     var bytesPerBlock = (fcc === FCC_DXT5) ? 16 : 8;
                     mipSize = Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * bytesPerBlock;
                 } else if ((fcc === FCC_PVRTC_2BPP_RGB_1 || fcc === FCC_PVRTC_2BPP_RGBA_1)) {
@@ -160,7 +161,7 @@ Object.assign(pc, function () {
                     mipSize = mipWidth * mipHeight * 4 * 4;
                 }
 
-                var mipData = floating ? new Float32Array(data, offset, mipSize / 4) : new Uint8Array(data, offset, mipSize);
+                var mipData = (fcc === FCC_FP32) ? new Float32Array(arrayBuffer, offset, mipSize / 4) : new Uint8Array(arrayBuffer, offset, mipSize);
                 levels[face].push(mipData);
 
                 offset += mipSize;
@@ -169,7 +170,7 @@ Object.assign(pc, function () {
             }
         }
 
-        this.format = isFcc ? fccToFormat[format] : pc.PIXELFORMAT_R8_G8_B8_A8,
+        this.format = isFcc ? fccToFormat[fcc] : pc.PIXELFORMAT_R8_G8_B8_A8,
         this.width = header.width,
         this.height = header.height,
         this.levels = levels
