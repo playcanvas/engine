@@ -13,14 +13,26 @@ Object.assign(pc, function () {
     var ScriptComponent = function ScriptComponent(system, entity) {
         pc.Component.call(this, system, entity);
 
+        // holds all script instances for this component
         this._scripts = [];
+
         this._scriptsIndex = {};
         this._destroyedScripts = [];
         this._destroyed = false;
         this._scriptsData = null;
         this._oldState = true;
+
+        // whether this component is currently being enabled
         this._beingEnabled = false;
+        // if true then we are currently looping through
+        // script instances. This is used to prevent a scripts array
+        // from being modified while a loop is being executed
         this._isLoopingThroughScripts = false;
+
+        // the order that this component will be updated
+        // by the script system. This is set by the system itself.
+        this._executionOrder = -1;
+
         this.on('set_enabled', this._onSetEnabled, this);
     };
     ScriptComponent.prototype = Object.create(pc.Component.prototype);
@@ -236,6 +248,12 @@ Object.assign(pc, function () {
 
             this.fire(state ? 'enable' : 'disable');
             this.fire('state', state);
+
+            if (state) {
+                this.system._addComponentToEnabled(this);
+            } else {
+                this.system._removeComponentFromEnabled(this);
+            }
 
             var wasLooping = this._beginLooping();
 
