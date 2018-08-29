@@ -46,9 +46,9 @@ Object.assign(pc, function () {
         }
 
         if (this.url) {
-            if (this._onAssetLoad) this._registry.on("load:url:" + this.id, this._onLoad, this);
-            if (this._onAssetAdd) this._registry.once("add:url:" + this.id, this._onAdd, this);
-            if (this._onAssetRemove) this._registry.on("remove:url:" + this.id, this._onRemove, this);
+            if (this._onAssetLoad) this._registry.on("load:url:" + this.url, this._onLoad, this);
+            if (this._onAssetAdd) this._registry.once("add:url:" + this.url, this._onAdd, this);
+            if (this._onAssetRemove) this._registry.on("remove:url:" + this.url, this._onRemove, this);
         }
     };
 

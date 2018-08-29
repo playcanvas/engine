@@ -240,7 +240,11 @@ Object.assign(pc, function () {
                 if (prevContentSize !== null && Math.abs(prevContentSize - currContentSize) > 1e-4) {
                     var prevMaxOffset = this._getMaxOffset(orientation, prevContentSize);
                     var currMaxOffset = this._getMaxOffset(orientation, currContentSize);
-                    this._scroll[axis] = pc.math.clamp(this._scroll[axis] * prevMaxOffset / currMaxOffset, 0, 1);
+                    if (currMaxOffset === 0) {
+                        this._scroll[axis] = 1;
+                    } else {
+                        this._scroll[axis] = pc.math.clamp(this._scroll[axis] * prevMaxOffset / currMaxOffset, 0, 1);
+                    }
                 }
 
                 var offset = this._scroll[axis] * this._getMaxOffset(orientation);

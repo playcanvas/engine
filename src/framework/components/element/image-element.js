@@ -238,8 +238,6 @@ Object.assign(pc, function () {
         this._mask = false; // this image element is a mask
         this._maskRef = 0; // id used in stencil buffer to mask
 
-        this._maskedBy = null; // entity that is masking this element
-
         // private
         this._positions = [];
         this._normals = [];
@@ -1125,6 +1123,17 @@ Object.assign(pc, function () {
                 this.spriteFrame = this.spriteFrame;
             }
 
+        }
+    });
+
+
+    // private
+    Object.defineProperty(ImageElement.prototype, "aabb", {
+        get: function () {
+            if (this._renderable.meshInstance) {
+                return this._renderable.meshInstance.aabb;
+            }
+            return null;
         }
     });
 

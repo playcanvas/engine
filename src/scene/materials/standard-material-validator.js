@@ -56,6 +56,8 @@ Object.assign(pc, function () {
         var type;
         var i;
 
+        var pathMapping = (data.mappingFormat === "path");
+
         for (var key in data) {
             type = TYPES[key];
 
@@ -96,12 +98,20 @@ Object.assign(pc, function () {
                     this.setInvalid(key, data);
                 }
             } else if (type === 'texture') {
-                if (typeof(data[key]) === 'number' || data[key] === null) {
-                    // materials are often initialized with the asset id of textures which are assigned later
-                    // this counts as a valid input
-                    // null texture reference is also valid
-                } else if (!(data[key] instanceof pc.Texture)) {
-                    this.setInvalid(key, data);
+                if (!pathMapping) {
+                    if (typeof(data[key]) === 'number' || data[key] === null) {
+                        // materials are often initialized with the asset id of textures which are assigned later
+                        // this counts as a valid input
+                        // null texture reference is also valid
+                    } else if (!(data[key] instanceof pc.Texture)) {
+                        this.setInvalid(key, data);
+                    }
+                } else {
+                    if (typeof(data[key]) === 'string' || data[key === null]) {
+                        // fpr path mapped we expect a string not an asset id
+                    } else if (!(data[key] instanceof pc.Texture)) {
+                        this.setInvalid(key, data);
+                    }
                 }
             } else if (type === 'boundingbox') {
                 if (!(data[key].center && data[key].center instanceof Array && data[key].center.length === 3)) {

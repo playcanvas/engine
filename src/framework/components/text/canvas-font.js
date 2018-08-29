@@ -15,6 +15,7 @@ Object.assign(pc, function () {
      * @param {pc.Color} [options.color] The color the font will be rendered into the texture atlas as, defaults to white
      * @param {Number} [options.width] The width of each texture atlas, defaults to 2048
      * @param {Number} [options.height] The height of each texture atlas, defaults to 2048
+     * @param {Number} [options.getCharScale] A custom function which takes a codepoint and return scale value 0-1 to scale char down before rendering into atlas. Return -1 to use default scale value.
      */
     var CanvasFont = function (app, options) {
         this.type = "bitmap";
@@ -29,6 +30,8 @@ Object.assign(pc, function () {
         this.glyphSize = this.fontSize;
         this.fontName = options.fontName || 'Arial';
         this.color = options.color || new pc.Color(1, 1, 1);
+
+        this._customGetCharScale = options.getCharScale || null;
 
         var w = options.width > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.width || DEFAULT_TEXTURE_SIZE);
         var h = options.height > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.height || DEFAULT_TEXTURE_SIZE);
@@ -174,7 +177,7 @@ Object.assign(pc, function () {
             var ch = symbols[i];
             var code = pc.string.getCodePoint(symbols[i]);
 
-            var fs = this.getCharScale(code) * this.fontSize;
+            var fs = this._getCharScale(code) * this.fontSize;
             ctx.font = this.fontWeight + ' ' + fs.toString() + 'px "' + this.fontName + '"';
             ctx.textAlign = TEXT_ALIGN;
             ctx.textBaseline = TEXT_BASELINE;
@@ -273,18 +276,25 @@ Object.assign(pc, function () {
     //
     // If we required we can allow a user-custom function here that users can
     // supply special cases for their character set
-    CanvasFont.prototype.getCharScale = function (code) {
-        var scale = 1.0;
+    CanvasFont.prototype._getCharScale = function (code) {
+        // if a custom scale function is available use it
+        // custom scale function can ignore chars by return -1
+        if (this._customGetCharScale) {
+            var scale = this._customGetCharScale(code);
+            if (scale >= 0) {
+                return scale;
+            }
+        }
 
         if (code >= 0x00C0 && code <= 0x00DD) {
             // capital letters with accents
-            scale = (this.fontSize - (this.fontSize / 8)) / this.fontSize;
+            return 0.875;
         } else if (code >= 0x1f000 && code <= 0x1F9FF) {
             // "emoji" misc. images and emoticon range of unicode
-            scale = (this.fontSize - (this.fontSize / 8)) / this.fontSize;
+            return 0.875;
         }
 
-        return scale;
+        return 1.0;
     };
 
     CanvasFont.prototype._addChar = function (json, char, charCode, x, y, w, h, xoffset, yoffset, xadvance, mapNum, mapW, mapH) {
@@ -292,7 +302,7 @@ Object.assign(pc, function () {
             json.info.maps.push({ "width": mapW, "height": mapH });
         }
 
-        var scale = this.getCharScale(charCode) * this.fontSize / 32;
+        var scale = this._getCharScale(charCode) * this.fontSize / 32;
 
         json.chars[char] = {
             "id": charCode,

@@ -47,6 +47,7 @@ Object.assign(pc, function () {
             // temp storage for engine-only as we need this during patching
             if (data._engine) {
                 material._data = data;
+                delete data._engine;
             }
 
             return material;
@@ -93,6 +94,10 @@ Object.assign(pc, function () {
                 delete asset.resource._data; // remove from temp storage
             }
 
+            // patch the name of the asset over the material name property
+            asset.data.name = asset.name;
+            asset.resource.name = asset.name;
+
             this._bindAndAssignAssets(asset, assets);
 
             asset.off('unload', this._onAssetUnload, this);
@@ -108,6 +113,21 @@ Object.assign(pc, function () {
 
         _assignTexture: function (parameterName, materialAsset, texture) {
             materialAsset.data[parameterName] = texture;
+            materialAsset.resource[parameterName] = texture;
+        },
+
+        // assign a placeholder texture while waiting for one to load
+        // placeholder textures do not replace the data[parameterName] value
+        // in the asset.data thus preserving the final asset id until it is loaded
+        _assignPlaceholderTexture: function (parameterName, materialAsset) {
+            // create placeholder textures on-demand
+            if (!this._placeholderTextures) {
+                this._createPlaceholders();
+            }
+
+            var placeholder = PLACEHOLDER_MAP[parameterName];
+            var texture = this._placeholderTextures[placeholder];
+
             materialAsset.resource[parameterName] = texture;
         },
 
@@ -165,18 +185,6 @@ Object.assign(pc, function () {
             }
         },
 
-        // assign a placeholder texture while waiting for one to load
-        _assignPlaceholderTexture: function (parameterName, materialAsset) {
-            // create placeholder textures on-demand
-            if (!this._placeholderTextures) {
-                this._createPlaceholders();
-            }
-
-            var placeholder = PLACEHOLDER_MAP[parameterName];
-            var texture = this._placeholderTextures[placeholder];
-            this._assignTexture(parameterName, materialAsset, texture);
-        },
-
         _bindAndAssignAssets: function (materialAsset, assets) {
             // always migrate before updating material from asset data
             var data = this._parser.migrate(materialAsset.data);
@@ -186,6 +194,12 @@ Object.assign(pc, function () {
             var pathMapping = (data.mappingFormat === "path");
 
             var TEXTURES = pc.StandardMaterial.TEXTURE_PARAMETERS;
+
+            // texture paths are measured from the material directory
+            var dir;
+            if (pathMapping) {
+                dir = pc.path.getDirectory(materialAsset.getFileUrl());
+            }
 
             var i, name, assetReference;
             // iterate through all texture parameters
@@ -207,7 +221,7 @@ Object.assign(pc, function () {
                     }
 
                     if (pathMapping) {
-                        assetReference.url = data[name];
+                        assetReference.url = pc.path.join(dir, data[name]);
                     } else {
                         assetReference.id = data[name];
                     }

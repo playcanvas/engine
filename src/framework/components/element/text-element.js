@@ -37,6 +37,8 @@ Object.assign(pc, function () {
         this._meshInfo = [];
         this._material = null;
 
+        this._aabb = new pc.BoundingBox();
+
         this._noResize = false; // flag used to disable resizing events
 
         this._currentMaterialType = null; // save the material type (screenspace or not) to prevent overwriting
@@ -234,8 +236,8 @@ Object.assign(pc, function () {
 
             // after creating new meshes
             // re-apply masking stencil params
-            if (this._maskedBy) {
-                this._element._setMaskedBy(this._maskedBy);
+            if (this._element.maskedBy) {
+                this._element._setMaskedBy(this._element.maskedBy);
             }
 
             if (removedModel && this._element.enabled && this._entity.enabled) {
@@ -299,6 +301,10 @@ Object.assign(pc, function () {
         _updateMeshes: function (symbols) {
             var json = this._font.data;
             var self = this;
+
+            // clear aabb
+            this._aabb.center.set(0, 0, 0);
+            this._aabb.halfExtents.set(0, 0, 0);
 
             this.width = 0;
             this.height = 0;
@@ -562,6 +568,14 @@ Object.assign(pc, function () {
 
                 // force update meshInstance aabb
                 this._meshInfo[i].meshInstance._aabbVer = -1;
+
+                // cache the total aabb
+                if (i === 0) {
+                    this._aabb.copy(this._meshInfo[i].meshInstance.aabb); // set the first time
+                } else {
+                    this._aabb.add(this._meshInfo[i].meshInstance.aabb); // then update
+                }
+
             }
         },
 
@@ -970,6 +984,13 @@ Object.assign(pc, function () {
             if (value && Math.abs(this._element.anchor.y - this._element.anchor.w) < 0.0001) {
                 this._element.height = this.height;
             }
+        }
+    });
+
+    // private
+    Object.defineProperty(TextElement.prototype, "aabb", {
+        get: function () {
+            return this._aabb;
         }
     });
 

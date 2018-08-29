@@ -165,6 +165,7 @@ Object.assign(pc, function () {
 
         this._offsetReadAt = 0;
         this._maskOffset = 0.5;
+        this._maskedBy = null; // the entity that is masking this element
     };
     ElementComponent.prototype = Object.create(pc.Component.prototype);
     ElementComponent.prototype.constructor = ElementComponent;
@@ -449,13 +450,13 @@ Object.assign(pc, function () {
             this._updateMask(result.mask, depth);
         },
 
-        // set the stencil buffer to check the mask value
-        // so as to only render inside the mask
-        // Note: if this entity is itself a mask the stencil params
-        // will be updated in updateMask to include masking
+        // set the maskedby property to the entity that is masking this element
+        // - set the stencil buffer to check the mask value
+        //   so as to only render inside the mask
+        //   Note: if this entity is itself a mask the stencil params
+        //   will be updated in updateMask to include masking
         _setMaskedBy: function (mask) {
-            var elem = this._image || this._text;
-            if (!elem) return;
+            var renderableElement = this._image || this._text;
 
             if (mask) {
                 var ref = mask.element._image._maskRef;
@@ -468,21 +469,22 @@ Object.assign(pc, function () {
                     func: pc.FUNC_EQUAL
                 });
 
-                if (elem._setStencil) {
-                    elem._setStencil(sp);
+                // if this is image or text, set the stencil parameters
+                if (renderableElement && renderableElement._setStencil) {
+                    renderableElement._setStencil(sp);
                 }
 
-                elem._maskedBy = mask;
+                this._maskedBy = mask;
             } else {
                 // #ifdef DEBUG
                 if (_debugLogging) console.log("no masking on: " + this.entity.name);
                 // #endif
 
-                // remove mask
-                if (elem._setStencil) {
-                    elem._setStencil(null);
+                // remove stencil params if this is image or text
+                if (renderableElement && renderableElement._setStencil) {
+                    renderableElement._setStencil(null);
                 }
-                elem._maskedBy = null;
+                this._maskedBy = null;
             }
         },
 
@@ -1191,6 +1193,15 @@ Object.assign(pc, function () {
         }
     });
 
+    Object.defineProperty(ElementComponent.prototype, "aabb", {
+        get: function () {
+            if (this._image) return this._image.aabb;
+            if (this._text) return this._text.aabb;
+
+            return null;
+        }
+    });
+
     // Returns the 4 corners of the element relative to its screen component.
     // Only works for elements that have a screen.
     // Order is bottom left, bottom right, top right, top left.
@@ -1379,12 +1390,7 @@ Object.assign(pc, function () {
     // read-only, get the entity that is currently masking this element
     Object.defineProperty(ElementComponent.prototype, "maskedBy", {
         get: function () {
-            if (this._image) {
-                return this._image._maskedBy;
-            } else if (this._text) {
-                return this._text._maskedBy;
-            }
-            return null;
+            return this._maskedBy;
         }
     });
 

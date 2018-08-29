@@ -41,7 +41,15 @@
                 fontName: "Arial",
                 fontSize: size,
                 width: 128,
-                height: 128
+                height: 128,
+                getCharScale: function (code) {
+                    // finger pointing up is a particular long character, use more scaling
+                    if (code === 0x261D) {
+                        return 0.8;
+                    } else {
+                        return -1; // use default scaler
+                    }
+                }
             });
 
             var asset = new pc.Asset("CanvasFont", "font", {});
@@ -87,7 +95,7 @@
 
             // some sample text
             var firstline = "ÉÅAå 東京 🐇🔥🂡 font";
-            var secondline = "😀😀😀🤢🤥🤝😻👍👨‍🎤😡💪🏿😍🤔💽🦀🍑👻😗😏😒👽👾🎃😺💩😈🤒💑👢🐭🦁🐸🐍🦐🐙";
+            var secondline = "☝😀😀😀🤢🤥🤝😻👍👨‍🎤😡💪🏿😍🤔💽🦀🍑👻😗😏😒👽👾🎃😺💩😈🤒💑👢🐭🦁🐸🐍🦐🐙";
             var thirdline = "Testing MSDF font";
 
             cf.createTextures(firstline);
