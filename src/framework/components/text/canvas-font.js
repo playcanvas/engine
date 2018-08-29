@@ -343,7 +343,7 @@ Object.assign(pc, function () {
         var chars = Object.keys(set);
         // sort
         return chars.sort();
-    }
+    };
 
     return {
         CanvasFont: CanvasFont
