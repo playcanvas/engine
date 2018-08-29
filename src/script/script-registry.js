@@ -63,6 +63,14 @@ Object.assign(pc, function () {
             if (!self._scripts.hasOwnProperty(script.__name))
                 return;
 
+
+            // this is a check for a possible error
+            // that might happen if the app has been destroyed before
+            // setTimeout has finished
+            if (! self.app.systems.script) {
+                return;
+            }
+
             var components = self.app.systems.script._components;
             var i, scriptInstance, attributes;
             var scriptInstances = [];
