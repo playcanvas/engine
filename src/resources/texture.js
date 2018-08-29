@@ -141,8 +141,7 @@ Object.assign(pc, function () {
 
                 switch (ext) {
                     case '.dds':
-                        // Option 1
-                        textureData = new pc.Dds(data);
+                        textureData = new pc.DdsParser(data);
                         break;
                     case '.ktx':
                         console.warn('KTX container not supported.');

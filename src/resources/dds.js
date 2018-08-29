@@ -176,6 +176,6 @@ Object.assign(pc, function () {
 	};
 
     return {
-        parseDds: parseDds
+        DdsParser: DdsParser
     };
 }());
