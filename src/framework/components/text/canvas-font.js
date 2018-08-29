@@ -2,26 +2,6 @@ Object.assign(pc, function () {
     var MAX_TEXTURE_SIZE = 4096;
     var DEFAULT_TEXTURE_SIZE = 2048;
 
-    function normalizeCharsSet(text) {
-        // normalize unicode if needed
-        var unicodeConverterFunc = this.app.systems.element.getUnicodeConverter();
-        if (unicodeConverterFunc) {
-            text = unicodeConverterFunc(text);
-        }
-        // strip duplicates
-        var set = {};
-        var symbols = pc.string.getSymbols(text);
-        var i;
-        for (i = 0; i < symbols.length; i++) {
-            var ch = symbols[i];
-            if (set[ch]) continue;
-            set[ch] = ch;
-        }
-        var chars = Object.keys(set);
-        // sort
-        return chars.sort();
-    }
-
     /**
      * @private
      * @constructor
@@ -83,7 +63,7 @@ Object.assign(pc, function () {
      * @param {String} text The string to look in
      */
     CanvasFont.prototype.createTextures = function (text) {
-        var _chars = normalizeCharsSet(text);
+        var _chars = this._normalizeCharsSet(text);
 
         // different length so definitely update
         if (_chars.length !== this.chars.length) {
@@ -109,7 +89,7 @@ Object.assign(pc, function () {
      * @param {String} text The string to look for new characters in
      */
     CanvasFont.prototype.updateTextures = function (text) {
-        var _chars = normalizeCharsSet(text);
+        var _chars = this._normalizeCharsSet(text);
         var newCharsSet = [];
         for (var i = 0; i < _chars.length; i++) {
             var char = _chars[i];
@@ -288,7 +268,7 @@ Object.assign(pc, function () {
     // we scale them down when rendering and character data in the font
     // is set so that they are scaled up again when rendered in the quad
     //
-    // This default implementation checks for capital letters with accemts
+    // This default implementation checks for capital letters with accents
     // and emoji-style unicode characters which are usually render too tall
     //
     // If we required we can allow a user-custom function here that users can
@@ -330,6 +310,30 @@ Object.assign(pc, function () {
             "bounds": [0, 0, w / scale, h / scale]
         };
     };
+
+
+    // take a unicode string and produce
+    // the set of characters used to create that string
+    // e.g. "abcabcabc" -> ['a', 'b', 'c']
+    CanvasFont.prototype._normalizeCharsSet = function (text) {
+        // normalize unicode if needed
+        var unicodeConverterFunc = this.app.systems.element.getUnicodeConverter();
+        if (unicodeConverterFunc) {
+            text = unicodeConverterFunc(text);
+        }
+        // strip duplicates
+        var set = {};
+        var symbols = pc.string.getSymbols(text);
+        var i;
+        for (i = 0; i < symbols.length; i++) {
+            var ch = symbols[i];
+            if (set[ch]) continue;
+            set[ch] = ch;
+        }
+        var chars = Object.keys(set);
+        // sort
+        return chars.sort();
+    }
 
     return {
         CanvasFont: CanvasFont

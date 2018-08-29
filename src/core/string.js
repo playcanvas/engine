@@ -271,7 +271,7 @@ pc.string = function () {
             var units;
             for (var i = 0; i < arguments.length; ++i) {
                 current = Number(arguments[i]);
-                codePoint = point - 0x10000;
+                codePoint = current - 0x10000;
                 units = current > 0xFFFF ? [(codePoint >> 10) + 0xD800, (codePoint % 0x400) + 0xDC00] : [current];
                 chars.push(String.fromCharCode.apply(null, units));
             }
