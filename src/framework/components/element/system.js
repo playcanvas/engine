@@ -40,7 +40,6 @@ Object.assign(pc, function () {
         this.defaultImageMaterial.emissiveTint = true;
         this.defaultImageMaterial.opacityMap = this._defaultTexture;
         this.defaultImageMaterial.opacityMapChannel = "a";
-        this.defaultImageMaterial.opacityTint = true;
         this.defaultImageMaterial.opacity = 0; // use non-1 opacity to compile shader correctly
         this.defaultImageMaterial.useLighting = false;
         this.defaultImageMaterial.useGammaTonemap = false;
@@ -385,6 +384,7 @@ Object.assign(pc, function () {
                 if (msdf) {
                     if (!this.defaultScreenSpaceTextMaterial) {
                         this.defaultScreenSpaceTextMaterial = new pc.StandardMaterial();
+                        this.defaultScreenSpaceTextMaterial.name = "defaultScreenSpaceTextMaterial";
                         this.defaultScreenSpaceTextMaterial.msdfMap = this._defaultTexture;
                         this.defaultScreenSpaceTextMaterial.useLighting = false;
                         this.defaultScreenSpaceTextMaterial.useGammaTonemap = false;
@@ -402,7 +402,11 @@ Object.assign(pc, function () {
                 }
                 if (!this.defaultScreenSpaceBitmapTextMaterial) {
                     this.defaultScreenSpaceBitmapTextMaterial = new pc.StandardMaterial();
+                    this.defaultScreenSpaceBitmapTextMaterial.name = "defaultScreenSpaceBitmapTextMaterial";
+                    this.defaultScreenSpaceBitmapTextMaterial.emissive.set(0.5, 0.5, 0.5); // set to non-(1,1,1) so that tint is actually applied
                     this.defaultScreenSpaceBitmapTextMaterial.emissiveMap = this._defaultTexture;
+                    this.defaultScreenSpaceBitmapTextMaterial.emissiveTint = true;
+                    this.defaultScreenSpaceBitmapTextMaterial.opacity = 0.5;
                     this.defaultScreenSpaceBitmapTextMaterial.opacityMap = this._defaultTexture;
                     this.defaultScreenSpaceBitmapTextMaterial.opacityMapChannel = 'a';
                     this.defaultScreenSpaceBitmapTextMaterial.useLighting = false;
@@ -410,8 +414,6 @@ Object.assign(pc, function () {
                     this.defaultScreenSpaceBitmapTextMaterial.useFog = false;
                     this.defaultScreenSpaceBitmapTextMaterial.useSkybox = false;
                     this.defaultScreenSpaceBitmapTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-                    this.defaultScreenSpaceBitmapTextMaterial.emissive.set(1, 1, 1);
-                    this.defaultScreenSpaceBitmapTextMaterial.opacity = 0.5;
                     this.defaultScreenSpaceBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                     this.defaultScreenSpaceBitmapTextMaterial.depthWrite = false;
                     this.defaultScreenSpaceBitmapTextMaterial.depthTest = false;
@@ -423,6 +425,7 @@ Object.assign(pc, function () {
             if (msdf) {
                 if (!this.defaultTextMaterial) {
                     this.defaultTextMaterial = new pc.StandardMaterial();
+                    this.defaultTextMaterial.name = "defaultTextMaterial";
                     this.defaultTextMaterial.msdfMap = this._defaultTexture;
                     this.defaultTextMaterial.useLighting = false;
                     this.defaultTextMaterial.useGammaTonemap = false;
@@ -439,7 +442,11 @@ Object.assign(pc, function () {
             }
             if (!this.defaultBitmapTextMaterial) {
                 this.defaultBitmapTextMaterial = new pc.StandardMaterial();
+                this.defaultBitmapTextMaterial.name = "defaultBitmapTextMaterial";
+                this.defaultBitmapTextMaterial.emissive.set(0.5, 0.5, 0.5);  // set to non-(1,1,1) so that tint is actually applied
+                this.defaultBitmapTextMaterial.emissiveTint = true;
                 this.defaultBitmapTextMaterial.emissiveMap = this._defaultTexture;
+                this.defaultBitmapTextMaterial.opacity = 0.5;
                 this.defaultBitmapTextMaterial.opacityMap = this._defaultTexture;
                 this.defaultBitmapTextMaterial.opacityMapChannel = 'a';
                 this.defaultBitmapTextMaterial.useLighting = false;
@@ -447,8 +454,6 @@ Object.assign(pc, function () {
                 this.defaultBitmapTextMaterial.useFog = false;
                 this.defaultBitmapTextMaterial.useSkybox = false;
                 this.defaultBitmapTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-                this.defaultBitmapTextMaterial.emissive.set(1, 1, 1);
-                this.defaultBitmapTextMaterial.opacity = 0.5;
                 this.defaultBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                 this.defaultBitmapTextMaterial.depthWrite = false;
                 this.defaultBitmapTextMaterial.update();
