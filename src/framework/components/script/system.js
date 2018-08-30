@@ -1,6 +1,4 @@
 Object.assign(pc, function () {
-    var _schema = ['enabled'];
-
     var METHOD_INITIALIZE_ATTRIBUTES = '_onInitializeAttributes';
     var METHOD_INITIALIZE = '_onInitialize';
     var METHOD_POST_INITIALIZE = '_onPostInitialize';
@@ -34,8 +32,6 @@ Object.assign(pc, function () {
         this.ComponentType = pc.ScriptComponent;
         this.DataType = pc.ScriptComponentData;
 
-        this.schema = _schema;
-
         // list of all entities script components
         // we are using pc.SortedLoopArray because it is
         // safe to modify while looping through it
@@ -65,10 +61,8 @@ Object.assign(pc, function () {
     ScriptComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     ScriptComponentSystem.prototype.constructor = ScriptComponentSystem;
 
-    pc.Component._buildAccessors(pc.ScriptComponent.prototype, _schema);
-
     Object.assign(ScriptComponentSystem.prototype, {
-        initializeComponentData: function (component, data, properties) {
+        initializeComponentData: function (component, data) {
             // Set execution order to an ever-increasing number
             // and add to the end of the components array.
             component._executionOrder = executionOrderCounter++;

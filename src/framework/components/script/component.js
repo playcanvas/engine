@@ -26,6 +26,10 @@ Object.assign(pc, function () {
         this._scriptsData = null;
         this._oldState = true;
 
+        // override default 'enabled' property of base pc.Component
+        // because this is faster
+        this._enabled = true;
+
         // whether this component is currently being enabled
         this._beingEnabled = false;
         // if true then we are currently looping through
@@ -822,6 +826,16 @@ Object.assign(pc, function () {
         }
     });
 
+    Object.defineProperty(ScriptComponent.prototype, 'enabled', {
+        get: function () {
+            return this._enabled;
+        },
+        set: function (value) {
+            var oldValue = this._enabled;
+            this._enabled = value;
+            this.fire('set', 'enabled', oldValue, value);
+        }
+    });
 
     Object.defineProperty(ScriptComponent.prototype, 'scripts', {
         get: function () {
