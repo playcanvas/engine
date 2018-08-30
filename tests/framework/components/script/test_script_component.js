@@ -232,7 +232,6 @@ describe("pc.ScriptComponent", function () {
 
     afterEach(function () {
         app.destroy();
-
         delete window.initializeCalls;
     });
 
@@ -2831,5 +2830,204 @@ describe("pc.ScriptComponent", function () {
         checkInitCall(entities[3], 1, 'update scriptA');
         checkInitCall(entities[2], 2, 'postUpdate scriptA');
         checkInitCall(entities[3], 3, 'postUpdate scriptA');
+    });
+
+    it('move() moves script instance after others', function () {
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        e.script.move('scriptA', 1);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(e, 0, 'update scriptB');
+        checkInitCall(e, 1, 'update scriptA');
+        checkInitCall(e, 2, 'postUpdate scriptB');
+        checkInitCall(e, 3, 'postUpdate scriptA');
+    });
+
+    it('move() does not accept index larger than scripts array length', function () {
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        e.script.move('scriptB', 2);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(e, 0, 'update scriptA');
+        checkInitCall(e, 1, 'update scriptB');
+        checkInitCall(e, 2, 'postUpdate scriptA');
+        checkInitCall(e, 3, 'postUpdate scriptB');
+    });
+
+    it('move() does not accept negative index', function () {
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        e.script.move('scriptB', -1);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(e, 0, 'update scriptA');
+        checkInitCall(e, 1, 'update scriptB');
+        checkInitCall(e, 2, 'postUpdate scriptA');
+        checkInitCall(e, 3, 'postUpdate scriptB');
+    });
+
+    it('move() during update loop will update moved script again if new index is after the script who called move()', function () {
+        var Move = pc.createScript('mover');
+        Move.prototype.update = function () {
+            this.entity.script.move('scriptA', 2);
+        };
+
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'mover', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                mover: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(5);
+        checkInitCall(e, 0, 'update scriptA');
+        checkInitCall(e, 1, 'update scriptB');
+        checkInitCall(e, 2, 'update scriptA');
+        checkInitCall(e, 3, 'postUpdate scriptB');
+        checkInitCall(e, 4, 'postUpdate scriptA');
+    });
+
+    it('move() during update loop will not update moved script if new index is before the script who called move()', function () {
+        var Move = pc.createScript('mover');
+        Move.prototype.update = function () {
+            this.entity.script.move('scriptB', 0);
+        };
+
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'mover', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                mover: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        expect(window.initializeCalls.length).to.equal(3);
+        checkInitCall(e, 0, 'update scriptA');
+        checkInitCall(e, 1, 'postUpdate scriptB');
+        checkInitCall(e, 2, 'postUpdate scriptA');
+    });
+
+    it('swap() uses the new script', function (done) {
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        // create new script with the same name
+        // so that 'swap' is triggered
+        var NewScriptA = pc.createScript('scriptA');
+        NewScriptA.prototype.update = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' update new scriptA');
+        };
+        NewScriptA.prototype.postUpdate = function () {
+            window.initializeCalls.push(this.entity.getGuid() + ' postUpdate new scriptA');
+        };
+        NewScriptA.prototype.swap = function () {
+        };
+
+        app.scripts.on('swap', function () {
+            setTimeout(function () {
+                window.initializeCalls.length = 0;
+                app.update();
+
+                expect(window.initializeCalls.length).to.equal(4);
+                checkInitCall(e, 0, 'update new scriptA');
+                checkInitCall(e, 1, 'update scriptB');
+                checkInitCall(e, 2, 'postUpdate new scriptA');
+                checkInitCall(e, 3, 'postUpdate scriptB');
+
+                done();
+            });
+
+        });
+
+
     });
 });

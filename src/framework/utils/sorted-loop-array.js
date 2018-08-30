@@ -29,6 +29,7 @@ Object.assign(pc, function () {
         this.items = [];
         this.length = 0;
         this.loopIndex = -1;
+        this._sortHandler = this._doSort.bind(this);
     };
 
     /**
@@ -57,6 +58,11 @@ Object.assign(pc, function () {
         }
 
         return left;
+    };
+
+    SortedLoopArray.prototype._doSort = function (a, b) {
+        var sortBy = this._sortBy;
+        return a[sortBy] - b[sortBy];
     };
 
     /**
@@ -106,6 +112,28 @@ Object.assign(pc, function () {
         this.length--;
         if (this.loopIndex >= idx) {
             this.loopIndex--;
+        }
+    };
+
+    /**
+     * @private
+     * @function
+     * @name pc.SortedLoopArray#sort
+     * @description Sorts elements in the array based on the 'sortBy' field
+     * passed into the constructor. This also updates the loopIndex
+     * if we are currently looping.
+     * WARNING: Be careful if you are sorting while iterating because if after
+     * sorting the array element that you are currently processing is moved
+     * behind other elements then you might end up iterating over elements more than once!
+     */
+    SortedLoopArray.prototype.sort = function () {
+        // get current item pointed to by loopIndex
+        var current = (this.loopIndex >= 0 ? this.items[this.loopIndex] : null);
+        // sort
+        this.items.sort(this._sortHandler);
+        // find new loopIndex
+        if (current !== null) {
+            this.loopIndex = this.items.indexOf(current);
         }
     };
 

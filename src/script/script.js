@@ -339,6 +339,11 @@ Object.assign(pc, function () {
             this.__attributes = { };
             this.__attributesRaw = args.attributes || null;
             this.__scriptType = script;
+
+            // the order in the script component that the
+            // methods of this script instance will run relative to
+            // other script instances in the component
+            this.__executionOrder = -1;
         };
 
         /**
@@ -579,7 +584,7 @@ Object.assign(pc, function () {
     // reserved script attribute names
     createScript.reservedAttributes = [
         'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
-        '__attributes', '__attributesRaw', '__scriptType',
+        '__attributes', '__attributesRaw', '__scriptType', '__executionOrder',
         '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
     ];
     var reservedAttributes = { };
