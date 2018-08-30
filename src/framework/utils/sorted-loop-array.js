@@ -33,7 +33,9 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * Searches for the right spot to insert the specified item
+     * @function
+     * @name pc.SortedLoopArray#_binarySearch
+     * @description Searches for the right spot to insert the specified item
      * @param {Object} item The item
      * @returns {Number} The index where to insert the item
      */
@@ -59,7 +61,9 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * Inserts the specified item into the array at the right
+     * @function
+     * @name pc.SortedLoopArray#insert
+     * @description Inserts the specified item into the array at the right
      * index based on the 'sortBy' field passed into the constructor. This
      * also adjusts the loopIndex accordingly.
      * @param {Object} item The item to insert
@@ -75,7 +79,9 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * Appendss the specified item to the end of the array. Faster than insert()
+     * @function
+     * @name pc.SortedLoopArray#append
+     * @description Appends the specified item to the end of the array. Faster than insert()
      * as it does not binary search for the right index. This also adjusts
      * the loopIndex accordingly.
      * @param {Object} item The item to append
@@ -87,7 +93,9 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * Removes the specified item from the array.
+     * @function
+     * @name pc.SortedLoopArray#remove
+     * @description Removes the specified item from the array.
      * @param {Object} item The item to remove
      */
     SortedLoopArray.prototype.remove = function (item) {

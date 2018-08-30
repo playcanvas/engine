@@ -2777,4 +2777,59 @@ describe("pc.ScriptComponent", function () {
         checkInitCall(a, 4, 'postUpdate scriptA');
 
     });
+
+    it('execution order remains consistent when components are destroyed', function () {
+        var e;
+        var entities = [];
+
+        // make 3 entities with scriptA
+        for (var i = 0; i < 3; i++) {
+            e = new pc.Entity();
+            e.addComponent('script', {
+                enabled: true,
+                order: ['scriptA'],
+                scripts: {
+                    scriptA: {
+                        enabled: true
+                    }
+                }
+            });
+            app.root.addChild(e);
+            entities.push(e);
+        }
+
+        // destroy first 2 entities
+        entities[0].destroy();
+        entities[1].destroy();
+
+        // make new entity
+        e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
+        entities.push(e);
+
+        // disable 3rd entity
+        entities[2].enabled = false;
+
+        // enable 3rd entity
+        entities[2].enabled = true;
+
+        window.initializeCalls.length = 0;
+        app.update();
+
+        // order of updates should remain consistent (3rd entity before 4th)
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(entities[2], 0, 'update scriptA');
+        checkInitCall(entities[3], 1, 'update scriptA');
+        checkInitCall(entities[2], 2, 'postUpdate scriptA');
+        checkInitCall(entities[3], 3, 'postUpdate scriptA');
+    });
 });

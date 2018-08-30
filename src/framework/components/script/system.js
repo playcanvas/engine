@@ -7,6 +7,15 @@ Object.assign(pc, function () {
     var METHOD_UPDATE = '_onUpdate';
     var METHOD_POST_UPDATE = '_onPostUpdate';
 
+    // Ever-increasing integer used as the
+    // execution order of new script components.
+    // We are using an ever-increasing number and not
+    // the order of the script component in the components
+    // array because if we ever remove components from the array
+    // we would have to re-calculate the execution order for all subsequent
+    // script components in the array every time, which would be slow
+    var executionOrderCounter = 0;
+
     /**
      * @name pc.ScriptComponentSystem
      * @description Create a new ScriptComponentSystem
@@ -60,9 +69,15 @@ Object.assign(pc, function () {
 
     Object.assign(ScriptComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            // set execution order and add to the end of the components array
-            component._executionOrder = this._components.length;
+            // Set execution order to an ever-increasing number
+            // and add to the end of the components array.
+            component._executionOrder = executionOrderCounter++;
             this._components.append(component);
+
+            // check we don't overflow executionOrderCounter
+            if (executionOrderCounter > Number.MAX_SAFE_INTEGER) {
+                this._resetExecutionOrder();
+            }
 
             component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
             // if enabled then add this component to the end of the enabledComponents array
@@ -122,6 +137,13 @@ Object.assign(pc, function () {
             return this.addComponent(clone, data);
         },
 
+        _resetExecutionOrder: function () {
+            executionOrderCounter = 0;
+            for (var i = 0, len = this._components.length; i < len; i++) {
+                this._components.items[i]._executionOrder = executionOrderCounter++;
+            }
+        },
+
         _callComponentMethod: function (components, name, dt) {
             for (components.loopIndex = 0; components.loopIndex < components.length; components.loopIndex++) {
                 components.items[components.loopIndex][name](dt);
@@ -171,6 +193,8 @@ Object.assign(pc, function () {
             }
 
             this._removeComponentFromEnabled(component);
+
+            // remove from components array
             this._components.remove(component);
         }
     });
