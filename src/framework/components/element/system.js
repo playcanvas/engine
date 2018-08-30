@@ -33,126 +33,26 @@ Object.assign(pc, function () {
         pixels.set(pixelData);
         this._defaultTexture.unlock();
 
-        this.defaultImageMaterial = new pc.StandardMaterial();
-        this.defaultImageMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-        this.defaultImageMaterial.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
-        this.defaultImageMaterial.emissiveMap = this._defaultTexture;
-        this.defaultImageMaterial.emissiveTint = true;
-        this.defaultImageMaterial.opacityMap = this._defaultTexture;
-        this.defaultImageMaterial.opacityMapChannel = "a";
-        this.defaultImageMaterial.opacityTint = true;
-        this.defaultImageMaterial.opacity = 0; // use non-1 opacity to compile shader correctly
-        this.defaultImageMaterial.useLighting = false;
-        this.defaultImageMaterial.useGammaTonemap = false;
-        this.defaultImageMaterial.useFog = false;
-        this.defaultImageMaterial.useSkybox = false;
-        this.defaultImageMaterial.blendType = pc.BLEND_PREMULTIPLIED;
-        this.defaultImageMaterial.depthWrite = false;
-        this.defaultImageMaterial.update();
-
-        // mask material is a clone but only renders into stencil buffer
-        this.defaultImageMaskMaterial = this.defaultImageMaterial.clone();
-        this.defaultImageMaskMaterial.alphaTest = 1;
-        this.defaultImageMaskMaterial.redWrite = false;
-        this.defaultImageMaskMaterial.greenWrite = false;
-        this.defaultImageMaskMaterial.blueWrite = false;
-        this.defaultImageMaskMaterial.alphaWrite = false;
-        this.defaultImageMaskMaterial.update();
-
-        // 9 sliced material is like the default but with custom chunks
-        this.defaultImage9SlicedMaterial = this.defaultImageMaterial.clone();
-        this.defaultImage9SlicedMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_SLICED;
-        this.defaultImage9SlicedMaterial.update();
-
-        // 9-sliced in tiled mode
-        this.defaultImage9TiledMaterial = this.defaultImage9SlicedMaterial.clone();
-        this.defaultImage9TiledMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
-        this.defaultImage9TiledMaterial.update();
-
-        // 9 sliced mask
-        this.defaultImage9SlicedMaskMaterial = this.defaultImage9SlicedMaterial.clone();
-        this.defaultImage9SlicedMaskMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_SLICED;
-        this.defaultImage9SlicedMaskMaterial.alphaTest = 1;
-        this.defaultImage9SlicedMaskMaterial.redWrite = false;
-        this.defaultImage9SlicedMaskMaterial.greenWrite = false;
-        this.defaultImage9SlicedMaskMaterial.blueWrite = false;
-        this.defaultImage9SlicedMaskMaterial.alphaWrite = false;
-        this.defaultImage9SlicedMaskMaterial.update();
-
-        // 9 sliced tiled mask
-        this.defaultImage9TiledMaskMaterial = this.defaultImage9TiledMaterial.clone();
-        this.defaultImage9TiledMaskMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
-        this.defaultImage9TiledMaskMaterial.alphaTest = 1;
-        this.defaultImage9TiledMaskMaterial.redWrite = false;
-        this.defaultImage9TiledMaskMaterial.greenWrite = false;
-        this.defaultImage9TiledMaskMaterial.blueWrite = false;
-        this.defaultImage9TiledMaskMaterial.alphaWrite = false;
-        this.defaultImage9TiledMaskMaterial.update();
-
-        // screen space image material is like the default but with no depth test
-        this.defaultScreenSpaceImageMaterial = this.defaultImageMaterial.clone();
-        this.defaultScreenSpaceImageMaterial.depthTest = false;
-        this.defaultScreenSpaceImageMaterial.update();
-
-        // 9 sliced screen space
-        this.defaultScreenSpaceImage9SlicedMaterial = this.defaultImage9SlicedMaterial.clone();
-        this.defaultScreenSpaceImage9SlicedMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_SLICED;
-        this.defaultScreenSpaceImage9SlicedMaterial.depthTest = false;
-        this.defaultScreenSpaceImage9SlicedMaterial.update();
-
-        // screen space 9-sliced in tiled mode
-        this.defaultScreenSpaceImage9TiledMaterial = this.defaultScreenSpaceImage9SlicedMaterial.clone();
-        this.defaultScreenSpaceImage9TiledMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
-        this.defaultScreenSpaceImage9TiledMaterial.update();
-
-        // 9 sliced screen space mask
-        this.defaultScreenSpaceImageMask9SlicedMaterial = this.defaultScreenSpaceImage9SlicedMaterial.clone();
-        this.defaultScreenSpaceImageMask9SlicedMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_SLICED;
-        this.defaultScreenSpaceImageMask9SlicedMaterial.alphaTest = 1;
-        this.defaultScreenSpaceImageMask9SlicedMaterial.redWrite = false;
-        this.defaultScreenSpaceImageMask9SlicedMaterial.greenWrite = false;
-        this.defaultScreenSpaceImageMask9SlicedMaterial.blueWrite = false;
-        this.defaultScreenSpaceImageMask9SlicedMaterial.alphaWrite = false;
-        this.defaultScreenSpaceImageMask9SlicedMaterial.update();
-
-        // 9 sliced tiled screen space mask
-        this.defaultScreenSpaceImageMask9TiledMaterial = this.defaultScreenSpaceImage9TiledMaterial.clone();
-        this.defaultScreenSpaceImageMask9TiledMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
-        this.defaultScreenSpaceImageMask9TiledMaterial.alphaTest = 1;
-        this.defaultScreenSpaceImageMask9TiledMaterial.redWrite = false;
-        this.defaultScreenSpaceImageMask9TiledMaterial.greenWrite = false;
-        this.defaultScreenSpaceImageMask9TiledMaterial.blueWrite = false;
-        this.defaultScreenSpaceImageMask9TiledMaterial.alphaWrite = false;
-        this.defaultScreenSpaceImageMask9TiledMaterial.update();
-
-        // mask material is a clone but only renders into stencil buffer
-        this.defaultScreenSpaceImageMaskMaterial = this.defaultScreenSpaceImageMaterial.clone();
-        this.defaultScreenSpaceImageMaskMaterial.alphaTest = 1;
-        this.defaultScreenSpaceImageMaskMaterial.redWrite = false;
-        this.defaultScreenSpaceImageMaskMaterial.greenWrite = false;
-        this.defaultScreenSpaceImageMaskMaterial.blueWrite = false;
-        this.defaultScreenSpaceImageMaskMaterial.alphaWrite = false;
-        this.defaultScreenSpaceImageMaskMaterial.update();
-
+        this.defaultImageMaterial = null;
+        this.defaultImage9SlicedMaterial = null;
+        this.defaultImage9TiledMaterial = null;
+        this.defaultImageMaskMaterial = null;
+        this.defaultImage9SlicedMaskMaterial = null;
+        this.defaultImage9TiledMaskMaterial = null;
+        this.defaultScreenSpaceImageMaterial = null;
+        this.defaultScreenSpaceImage9SlicedMaterial = null;
+        this.defaultScreenSpaceImage9TiledMaterial = null;
+        this.defaultScreenSpaceImageMask9SlicedMaterial = null;
+        this.defaultScreenSpaceImageMask9TiledMaterial = null;
+        this.defaultScreenSpaceImageMaskMaterial = null;
 
         // text element materials created on demand by getTextElementMaterial()
         this.defaultTextMaterial = null;
+        this.defaultBitmapTextMaterial = null;
         this.defaultScreenSpaceTextMaterial = null;
+        this.defaultScreenSpaceBitmapTextMaterial = null;
 
-        this.defaultImageMaterials = [
-            this.defaultImageMaterial,
-            this.defaultImageMaskMaterial,
-            this.defaultImage9SlicedMaterial,
-            this.defaultImage9TiledMaterial,
-            this.defaultImage9SlicedMaskMaterial,
-            this.defaultImage9TiledMaskMaterial,
-            this.defaultScreenSpaceImageMaterial,
-            this.defaultScreenSpaceImage9SlicedMaterial,
-            this.defaultScreenSpaceImage9TiledMaterial,
-            this.defaultScreenSpaceImageMask9SlicedMaterial,
-            this.defaultScreenSpaceImageMask9TiledMaterial,
-            this.defaultScreenSpaceImageMaskMaterial
-        ];
+        this.defaultImageMaterials = [];
 
         this.on('beforeremove', this.onRemoveComponent, this);
     };
@@ -458,8 +358,194 @@ Object.assign(pc, function () {
 
         },
 
+        _createBaseImageMaterial: function () {
+            var material = new pc.StandardMaterial();
+
+            material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
+            material.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
+            material.emissiveMap = this._defaultTexture;
+            material.emissiveTint = true;
+            material.opacityMap = this._defaultTexture;
+            material.opacityMapChannel = "a";
+            material.opacityTint = true;
+            material.opacity = 0; // use non-1 opacity to compile shader correctly
+            material.useLighting = false;
+            material.useGammaTonemap = false;
+            material.useFog = false;
+            material.useSkybox = false;
+            material.blendType = pc.BLEND_PREMULTIPLIED;
+            material.depthWrite = false;
+
+            return material;
+        },
+
         getImageElementMaterial: function (screenSpace, mask, nineSliced, nineSliceTiled) {
-            // TODO
+            if (screenSpace) {
+                if (mask) {
+                    if (nineSliced) {
+                        if (!this.defaultScreenSpaceImageMask9SlicedMaterial) {
+                            this.defaultScreenSpaceImageMask9SlicedMaterial = this._createBaseImageMaterial();
+                            this.defaultScreenSpaceImageMask9SlicedMaterial.name = "defaultScreenSpaceImageMask9SlicedMaterial";
+                            this.defaultScreenSpaceImageMask9SlicedMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_SLICED;
+                            this.defaultScreenSpaceImageMask9SlicedMaterial.depthTest = false;
+                            this.defaultScreenSpaceImageMask9SlicedMaterial.alphaTest = 1;
+                            this.defaultScreenSpaceImageMask9SlicedMaterial.redWrite = false;
+                            this.defaultScreenSpaceImageMask9SlicedMaterial.greenWrite = false;
+                            this.defaultScreenSpaceImageMask9SlicedMaterial.blueWrite = false;
+                            this.defaultScreenSpaceImageMask9SlicedMaterial.alphaWrite = false;
+                            this.defaultScreenSpaceImageMask9SlicedMaterial.update();
+
+                            this.defaultImageMaterials.push(this.defaultScreenSpaceImageMask9SlicedMaterial);
+                        }
+                        return this.defaultScreenSpaceImageMask9SlicedMaterial;
+                    } else if (nineSliceTiled) {
+                        if (!this.defaultScreenSpaceImageMask9TiledMaterial) {
+                            this.defaultScreenSpaceImageMask9TiledMaterial = this.defaultScreenSpaceImage9TiledMaterial.clone();
+                            this.defaultScreenSpaceImageMask9TiledMaterial.name = "defaultScreenSpaceImageMask9TiledMaterial";
+                            this.defaultScreenSpaceImageMask9TiledMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
+                            this.defaultScreenSpaceImageMask9TiledMaterial.depthTest = false;
+                            this.defaultScreenSpaceImageMask9TiledMaterial.alphaTest = 1;
+                            this.defaultScreenSpaceImageMask9TiledMaterial.redWrite = false;
+                            this.defaultScreenSpaceImageMask9TiledMaterial.greenWrite = false;
+                            this.defaultScreenSpaceImageMask9TiledMaterial.blueWrite = false;
+                            this.defaultScreenSpaceImageMask9TiledMaterial.alphaWrite = false;
+                            this.defaultScreenSpaceImageMask9TiledMaterial.update();
+
+                            this.defaultImageMaterials.push(this.defaultScreenSpaceImageMask9TiledMaterial);
+                        }
+                        return this.defaultScreenSpaceImageMask9TiledMaterial;
+                    } else {
+                        if (!this.defaultScreenSpaceImageMaskMaterial) {
+                            this.defaultScreenSpaceImageMaskMaterial = this._createBaseImageMaterial();
+                            this.defaultScreenSpaceImageMaskMaterial.name = "defaultScreenSpaceImageMaskMaterial";
+                            this.defaultScreenSpaceImageMaskMaterial.depthTest = false;
+                            this.defaultScreenSpaceImageMaskMaterial.alphaTest = 1;
+                            this.defaultScreenSpaceImageMaskMaterial.redWrite = false;
+                            this.defaultScreenSpaceImageMaskMaterial.greenWrite = false;
+                            this.defaultScreenSpaceImageMaskMaterial.blueWrite = false;
+                            this.defaultScreenSpaceImageMaskMaterial.alphaWrite = false;
+                            this.defaultScreenSpaceImageMaskMaterial.update();
+
+                            this.defaultImageMaterials.push(this.defaultScreenSpaceImageMaskMaterial);
+                        }
+                        return this.defaultScreenSpaceImageMaskMaterial;
+                    }
+                } else {
+                    if (nineSliced) {
+                        if (!this.defaultScreenSpaceImage9SlicedMaterial) {
+                            this.defaultScreenSpaceImage9SlicedMaterial = this._createBaseImageMaterial();
+                            this.defaultScreenSpaceImage9SlicedMaterial.name = "defaultScreenSpaceImage9SlicedMaterial";
+                            this.defaultScreenSpaceImage9SlicedMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_SLICED;
+                            this.defaultScreenSpaceImage9SlicedMaterial.depthTest = false;
+                            this.defaultScreenSpaceImage9SlicedMaterial.update();
+
+                            this.defaultImageMaterials.push(this.defaultScreenSpaceImage9SlicedMaterial);
+                        }
+                        return this.defaultScreenSpaceImage9SlicedMaterial;
+                    } else if (nineSliceTiled) {
+                        if (!this.defaultScreenSpaceImage9TiledMaterial) {
+                            this.defaultScreenSpaceImage9TiledMaterial = this._createBaseImageMaterial();
+                            this.defaultScreenSpaceImage9TiledMaterial.name = "defaultScreenSpaceImage9TiledMaterial";
+                            this.defaultScreenSpaceImage9TiledMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
+                            this.defaultScreenSpaceImage9TiledMaterial.depthTest = false;
+                            this.defaultScreenSpaceImage9TiledMaterial.update();
+
+                            this.defaultImageMaterials.push(this.defaultScreenSpaceImage9TiledMaterial);
+                        }
+
+                        return this.defaultScreenSpaceImage9TiledMaterial;
+                    } else {
+                        if (!this.defaultScreenSpaceImageMaterial) {
+                            this.defaultScreenSpaceImageMaterial = this._createBaseImageMaterial();
+                            this.defaultScreenSpaceImageMaterial.name = "defaultScreenSpaceImageMaterial";
+                            this.defaultScreenSpaceImageMaterial.depthTest = false;
+                            this.defaultScreenSpaceImageMaterial.update();
+
+                            this.defaultImageMaterials.push(this.defaultScreenSpaceImageMaterial);
+                        }
+                        return this.defaultScreenSpaceImageMaterial;
+                    }
+                }
+            } else {
+                if (mask) {
+                    if (nineSliced) {
+                        if (!this.defaultImage9SlicedMaskMaterial) {
+                            this.defaultImage9SlicedMaskMaterial = this._createBaseImageMaterial();
+                            this.defaultImage9SlicedMaskMaterial.name = "defaultImage9SlicedMaskMaterial";
+                            this.defaultImage9SlicedMaskMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_SLICED;
+                            this.defaultImage9SlicedMaskMaterial.alphaTest = 1;
+                            this.defaultImage9SlicedMaskMaterial.redWrite = false;
+                            this.defaultImage9SlicedMaskMaterial.greenWrite = false;
+                            this.defaultImage9SlicedMaskMaterial.blueWrite = false;
+                            this.defaultImage9SlicedMaskMaterial.alphaWrite = false;
+                            this.defaultImage9SlicedMaskMaterial.update();
+
+                            this.defaultImageMaterials.push(this.defaultImage9SlicedMaskMaterial);
+                        }
+                        return this.defaultImage9SlicedMaskMaterial;
+                    } else if (nineSliceTiled) {
+                        if(!this.defaultImage9TiledMaskMaterial) {
+                            this.defaultImage9TiledMaskMaterial = this._createBaseImageMaterial();
+                            this.defaultImage9TiledMaskMaterial.name = "defaultImage9TiledMaskMaterial";
+                            this.defaultImage9TiledMaskMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
+                            this.defaultImage9TiledMaskMaterial.alphaTest = 1;
+                            this.defaultImage9TiledMaskMaterial.redWrite = false;
+                            this.defaultImage9TiledMaskMaterial.greenWrite = false;
+                            this.defaultImage9TiledMaskMaterial.blueWrite = false;
+                            this.defaultImage9TiledMaskMaterial.alphaWrite = false;
+                            this.defaultImage9TiledMaskMaterial.update();
+
+                            this.defaultImageMaterials.push(this.defaultImage9TiledMaskMaterial);
+                        }
+                        return this.defaultImage9TiledMaskMaterial;
+                    } else {
+                        if (!this.defaultImageMaskMaterial) {
+                            this.defaultImageMaskMaterial = this._createBaseImageMaterial();
+                            this.defaultImageMaskMaterial.name = "defaultImageMaskMaterial";
+                            this.defaultImageMaskMaterial.alphaTest = 1;
+                            this.defaultImageMaskMaterial.redWrite = false;
+                            this.defaultImageMaskMaterial.greenWrite = false;
+                            this.defaultImageMaskMaterial.blueWrite = false;
+                            this.defaultImageMaskMaterial.alphaWrite = false;
+                            this.defaultImageMaskMaterial.update();
+
+                            this.defaultImageMaterials.push(this.defaultImageMaskMaterial);
+                        }
+                        return this.defaultImageMaskMaterial;
+                    }
+                } else {
+                    if (nineSliced) {
+                        if (!this.defaultImage9SlicedMaterial) {
+                            this.defaultImage9SlicedMaterial = this._createBaseImageMaterial();
+                            this.defaultImage9SlicedMaterial.name = "defaultImage9SlicedMaterial";
+                            this.defaultImage9SlicedMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_SLICED;
+                            this.defaultImage9SlicedMaterial.update();
+
+                            this.defaultImageMaterials.push(this.defaultImage9SlicedMaterial);
+                        }
+                        return this.defaultImage9SlicedMaterial;
+                    } else if (nineSliceTiled) {
+                        if (!this.defaultImage9TiledMaterial) {
+                            this.defaultImage9TiledMaterial = this._createBaseImageMaterial();
+                            this.defaultImage9TiledMaterial.name = "defaultImage9TiledMaterial";
+                            this.defaultImage9TiledMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
+                            this.defaultImage9TiledMaterial.update();
+
+                            this.defaultImageMaterials.push(this.defaultImage9TiledMaterial);
+                        }
+                        return this.defaultImage9TiledMaterial;
+                    } else {
+                        if (!this.defaultImageMaterial) {
+                            this.defaultImageMaterial = this._createBaseImageMaterial();
+                            this.defaultImageMaterial.name = "defaultImageMaterial";
+                            this.defaultImageMaterial.update();
+
+                            this.defaultImageMaterials.push(this.defaultImageMaterial);
+                        }
+                        return this.defaultImageMaterial;
+                    }
+                }
+            }
         },
 
         registerUnicodeConverter: function (func) {
