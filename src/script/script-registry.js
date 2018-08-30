@@ -76,15 +76,16 @@ Object.assign(pc, function () {
             var scriptInstances = [];
             var scriptInstancesInitialized = [];
 
-            for (i = 0; i < components.length; i++) {
+            for (components.loopIndex = 0; components.loopIndex < components.length; components.loopIndex++) {
+                var component = components.items[components.loopIndex];
                 // check if awaiting for script
-                if (components[i]._scriptsIndex[script.__name] && components[i]._scriptsIndex[script.__name].awaiting) {
-                    if (components[i]._scriptsData && components[i]._scriptsData[script.__name])
-                        attributes = components[i]._scriptsData[script.__name].attributes;
+                if (component._scriptsIndex[script.__name] && component._scriptsIndex[script.__name].awaiting) {
+                    if (component._scriptsData && component._scriptsData[script.__name])
+                        attributes = component._scriptsData[script.__name].attributes;
 
-                    scriptInstance = components[i].create(script.__name, {
+                    scriptInstance = component.create(script.__name, {
                         preloading: true,
-                        ind: components[i]._scriptsIndex[script.__name].ind,
+                        ind: component._scriptsIndex[script.__name].ind,
                         attributes: attributes
                     });
 
