@@ -440,6 +440,7 @@ Object.assign(pc, function () {
             if (!this.defaultBitmapTextMaterial) {
                 this.defaultBitmapTextMaterial = new pc.StandardMaterial();
                 this.defaultBitmapTextMaterial.emissiveMap = this._defaultTexture;
+                this.defaultBitmapTextMaterial.emissiveTint = true;
                 this.defaultBitmapTextMaterial.opacityMap = this._defaultTexture;
                 this.defaultBitmapTextMaterial.opacityMapChannel = 'a';
                 this.defaultBitmapTextMaterial.useLighting = false;
