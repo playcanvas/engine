@@ -660,11 +660,11 @@ Object.assign(pc, function () {
             drawCall = drawCalls[i];
             if (drawCall.command) continue;
             if (drawCall.layer <= pc.scene.LAYER_FX) continue; // Only alpha sort mesh instances in the main world (backwards comp)
-            meshPos = drawCall.aabb.center.data;
-            tempx = meshPos[0] - camPos[0];
-            tempy = meshPos[1] - camPos[1];
-            tempz = meshPos[2] - camPos[2];
-            drawCall.zdist = tempx * camFwd[0] + tempy * camFwd[1] + tempz * camFwd[2];
+            meshPos = drawCall.aabb.center;
+            tempx = meshPos.x - camPos.x;
+            tempy = meshPos.y - camPos.y;
+            tempz = meshPos.z - camPos.z;
+            drawCall.zdist = tempx * camFwd.x + tempy * camFwd.y + tempz * camFwd.z;
         }
     };
 
@@ -691,8 +691,8 @@ Object.assign(pc, function () {
             }
         } else {
             if (sortMode === pc.SORTMODE_BACK2FRONT || sortMode === pc.SORTMODE_FRONT2BACK) {
-                sortPos = cameraNode.getPosition().data;
-                sortDir = cameraNode.forward.data;
+                sortPos = cameraNode.getPosition();
+                sortDir = cameraNode.forward;
                 this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
             }
 

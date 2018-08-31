@@ -365,11 +365,11 @@ Object.assign(pc, function () {
         },
 
         onSetRect: function (name, oldValue, newValue) {
-            this.data.camera.setRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
+            this.data.camera.setRect(newValue.x, newValue.y, newValue.z, newValue.w);
         },
 
         onSetScissorRect: function (name, oldValue, newValue) {
-            this.data.camera.setScissorRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
+            this.data.camera.setScissorRect(newValue.x, newValue.y, newValue.z, newValue.w);
         },
 
         onEnable: function () {

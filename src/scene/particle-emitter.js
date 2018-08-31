@@ -701,9 +701,9 @@ Object.assign(pc, function () {
                 // this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = 1; // hide/show
             }
 
-            randomPos.data[0] = rX - 0.5;
-            randomPos.data[1] = rY - 0.5;
-            randomPos.data[2] = rZ - 0.5;
+            randomPos.x = rX - 0.5;
+            randomPos.y = rY - 0.5;
+            randomPos.z = rZ - 0.5;
 
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                 randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
@@ -714,9 +714,9 @@ Object.assign(pc, function () {
 
             var particleRate, startSpawnTime;
             if (this.pack8) {
-                var packX = (randomPosTformed.data[0] - this.worldBounds.center.data[0]) / this.worldBoundsSize.data[0] + 0.5;
-                var packY = (randomPosTformed.data[1] - this.worldBounds.center.data[1]) / this.worldBoundsSize.data[1] + 0.5;
-                var packZ = (randomPosTformed.data[2] - this.worldBounds.center.data[2]) / this.worldBoundsSize.data[2] + 0.5;
+                var packX = (randomPosTformed.x - this.worldBounds.center.x) / this.worldBoundsSize.x + 0.5;
+                var packY = (randomPosTformed.y - this.worldBounds.center.y) / this.worldBoundsSize.y + 0.5;
+                var packZ = (randomPosTformed.z - this.worldBounds.center.z) / this.worldBoundsSize.z + 0.5;
 
                 var packA = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);
                 packA = (packA % (Math.PI * 2)) / (Math.PI * 2);
@@ -752,9 +752,9 @@ Object.assign(pc, function () {
                 this.particleTex[i * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels * 3] = rgba3[3];
 
             } else {
-                this.particleTex[i * particleTexChannels] =     randomPosTformed.data[0];
-                this.particleTex[i * particleTexChannels + 1] = randomPosTformed.data[1];
-                this.particleTex[i * particleTexChannels + 2] = randomPosTformed.data[2];
+                this.particleTex[i * particleTexChannels] =     randomPosTformed.x;
+                this.particleTex[i * particleTexChannels + 1] = randomPosTformed.y;
+                this.particleTex[i * particleTexChannels + 2] = randomPosTformed.z;
                 this.particleTex[i * particleTexChannels + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);
 
                 particleRate = pc.math.lerp(this.rate, this.rate2, rX);
@@ -1232,9 +1232,9 @@ Object.assign(pc, function () {
                     var id = Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3]);
 
                     var rndFactor = this.particleTex[id * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
-                    rndFactor3Vec.data[0] = rndFactor;
-                    rndFactor3Vec.data[1] = this.particleTex[id * particleTexChannels + 1 + this.numParticlesPot * 2 * particleTexChannels];
-                    rndFactor3Vec.data[2] = this.particleTex[id * particleTexChannels + 2 + this.numParticlesPot * 2 * particleTexChannels];
+                    rndFactor3Vec.x = rndFactor;
+                    rndFactor3Vec.y = this.particleTex[id * particleTexChannels + 1 + this.numParticlesPot * 2 * particleTexChannels];
+                    rndFactor3Vec.z = this.particleTex[id * particleTexChannels + 2 + this.numParticlesPot * 2 * particleTexChannels];
 
                     var particleRate = this.rate + (this.rate2 - this.rate) * rndFactor;// pc.math.lerp(this.rate, this.rate2, rndFactor);
 
@@ -1290,50 +1290,50 @@ Object.assign(pc, function () {
                         // localVelocityVec.data =  tex1D(this.qLocalVelocity, nlife, 3, localVelocityVec.data);
                         a = this.qLocalVelocity[cf];
                         b = this.qLocalVelocity[cc];
-                        localVelocityVec.data[0] = a + (b - a) * c;
+                        localVelocityVec.x = a + (b - a) * c;
                         a = this.qLocalVelocity[cf + 1];
                         b = this.qLocalVelocity[cc + 1];
-                        localVelocityVec.data[1] = a + (b - a) * c;
+                        localVelocityVec.y = a + (b - a) * c;
                         a = this.qLocalVelocity[cf + 2];
                         b = this.qLocalVelocity[cc + 2];
-                        localVelocityVec.data[2] = a + (b - a) * c;
+                        localVelocityVec.z = a + (b - a) * c;
 
                         // localVelocityVec2.data = tex1D(this.qLocalVelocity2, nlife, 3, localVelocityVec2.data);
                         a = this.qLocalVelocity2[cf];
                         b = this.qLocalVelocity2[cc];
-                        localVelocityVec2.data[0] = a + (b - a) * c;
+                        localVelocityVec2.x = a + (b - a) * c;
                         a = this.qLocalVelocity2[cf + 1];
                         b = this.qLocalVelocity2[cc + 1];
-                        localVelocityVec2.data[1] = a + (b - a) * c;
+                        localVelocityVec2.y = a + (b - a) * c;
                         a = this.qLocalVelocity2[cf + 2];
                         b = this.qLocalVelocity2[cc + 2];
-                        localVelocityVec2.data[2] = a + (b - a) * c;
+                        localVelocityVec2.z = a + (b - a) * c;
 
                         // velocityVec.data =       tex1D(this.qVelocity, nlife, 3, velocityVec.data);
                         a = this.qVelocity[cf];
                         b = this.qVelocity[cc];
-                        velocityVec.data[0] = a + (b - a) * c;
+                        velocityVec.x = a + (b - a) * c;
                         a = this.qVelocity[cf + 1];
                         b = this.qVelocity[cc + 1];
-                        velocityVec.data[1] = a + (b - a) * c;
+                        velocityVec.y = a + (b - a) * c;
                         a = this.qVelocity[cf + 2];
                         b = this.qVelocity[cc + 2];
-                        velocityVec.data[2] = a + (b - a) * c;
+                        velocityVec.z = a + (b - a) * c;
 
                         // velocityVec2.data =      tex1D(this.qVelocity2, nlife, 3, velocityVec2.data);
                         a = this.qVelocity2[cf];
                         b = this.qVelocity2[cc];
-                        velocityVec2.data[0] = a + (b - a) * c;
+                        velocityVec2.x = a + (b - a) * c;
                         a = this.qVelocity2[cf + 1];
                         b = this.qVelocity2[cc + 1];
-                        velocityVec2.data[1] = a + (b - a) * c;
+                        velocityVec2.y = a + (b - a) * c;
                         a = this.qVelocity2[cf + 2];
                         b = this.qVelocity2[cc + 2];
-                        velocityVec2.data[2] = a + (b - a) * c;
+                        velocityVec2.z = a + (b - a) * c;
 
-                        localVelocityVec.data[0] += (localVelocityVec2.data[0] - localVelocityVec.data[0]) * rndFactor3Vec.data[0];
-                        localVelocityVec.data[1] += (localVelocityVec2.data[1] - localVelocityVec.data[1]) * rndFactor3Vec.data[1];
-                        localVelocityVec.data[2] += (localVelocityVec2.data[2] - localVelocityVec.data[2]) * rndFactor3Vec.data[2];
+                        localVelocityVec.x += (localVelocityVec2.x - localVelocityVec.x) * rndFactor3Vec.x;
+                        localVelocityVec.y += (localVelocityVec2.y - localVelocityVec.y) * rndFactor3Vec.y;
+                        localVelocityVec.z += (localVelocityVec2.z - localVelocityVec.z) * rndFactor3Vec.z;
 
                         if (this.initialVelocity > 0) {
                             if (this.emitterShape === pc.EMITTERSHAPE_SPHERE) {
@@ -1344,11 +1344,11 @@ Object.assign(pc, function () {
                             }
                         }
 
-                        velocityVec.data[0] += (velocityVec2.data[0] - velocityVec.data[0]) * rndFactor3Vec.data[0];
-                        velocityVec.data[1] += (velocityVec2.data[1] - velocityVec.data[1]) * rndFactor3Vec.data[1];
-                        velocityVec.data[2] += (velocityVec2.data[2] - velocityVec.data[2]) * rndFactor3Vec.data[2];
+                        velocityVec.x += (velocityVec2.x - velocityVec.x) * rndFactor3Vec.x;
+                        velocityVec.y += (velocityVec2.y - velocityVec.y) * rndFactor3Vec.y;
+                        velocityVec.z += (velocityVec2.z - velocityVec.z) * rndFactor3Vec.z;
 
-                        rotSpeed += (rotSpeed2 - rotSpeed) * rndFactor3Vec.data[1];
+                        rotSpeed += (rotSpeed2 - rotSpeed) * rndFactor3Vec.y;
                         scale = (scale + (scale2 - scale) * ((rndFactor * 10000.0) % 1.0)) * uniformScale;
                         alphaDiv = (alpha2 - alpha) * ((rndFactor * 1000.0) % 1.0);
 
@@ -1358,29 +1358,29 @@ Object.assign(pc, function () {
                         localVelocityVec.add(velocityVec.mul(nonUniformScale));
                         moveDirVec.copy(localVelocityVec);
 
-                        particlePosPrev.data[0] = this.particleTex[id * particleTexChannels];
-                        particlePosPrev.data[1] = this.particleTex[id * particleTexChannels + 1];
-                        particlePosPrev.data[2] = this.particleTex[id * particleTexChannels + 2];
+                        particlePosPrev.x = this.particleTex[id * particleTexChannels];
+                        particlePosPrev.y = this.particleTex[id * particleTexChannels + 1];
+                        particlePosPrev.z = this.particleTex[id * particleTexChannels + 2];
                         particlePos.copy(particlePosPrev).add(localVelocityVec.scale(delta));
                         particleFinalPos.copy(particlePos);
 
-                        this.particleTex[id * particleTexChannels] =      particleFinalPos.data[0];
-                        this.particleTex[id * particleTexChannels + 1] =  particleFinalPos.data[1];
-                        this.particleTex[id * particleTexChannels + 2] =  particleFinalPos.data[2];
+                        this.particleTex[id * particleTexChannels] =      particleFinalPos.x;
+                        this.particleTex[id * particleTexChannels + 1] =  particleFinalPos.y;
+                        this.particleTex[id * particleTexChannels + 2] =  particleFinalPos.z;
                         this.particleTex[id * particleTexChannels + 3] += rotSpeed * delta;
 
                         if (this.wrap && this.wrapBounds) {
                             particleFinalPos.sub(emitterPos);
-                            particleFinalPos.data[0] = glMod(particleFinalPos.data[0], this.wrapBounds.data[0]) - this.wrapBounds.data[0] * 0.5;
-                            particleFinalPos.data[1] = glMod(particleFinalPos.data[1], this.wrapBounds.data[1]) - this.wrapBounds.data[1] * 0.5;
-                            particleFinalPos.data[2] = glMod(particleFinalPos.data[2], this.wrapBounds.data[2]) - this.wrapBounds.data[2] * 0.5;
+                            particleFinalPos.x = glMod(particleFinalPos.x, this.wrapBounds.x) - this.wrapBounds.x * 0.5;
+                            particleFinalPos.y = glMod(particleFinalPos.y, this.wrapBounds.y) - this.wrapBounds.y * 0.5;
+                            particleFinalPos.z = glMod(particleFinalPos.z, this.wrapBounds.z) - this.wrapBounds.z * 0.5;
                             particleFinalPos.add(emitterPos);
                         }
 
                         if (this.sort > 0) {
                             if (this.sort === 1) {
                                 tmpVec3.copy(particleFinalPos).sub(posCam);
-                                this.particleDistance[id] = -(tmpVec3.data[0] * tmpVec3.data[0] + tmpVec3.data[1] * tmpVec3.data[1] + tmpVec3.data[2] * tmpVec3.data[2]);
+                                this.particleDistance[id] = -(tmpVec3.x * tmpVec3.x + tmpVec3.y * tmpVec3.y + tmpVec3.z * tmpVec3.z);
                             } else if (this.sort === 2) {
                                 this.particleDistance[id] = life;
                             } else if (this.sort === 3) {
@@ -1423,19 +1423,19 @@ Object.assign(pc, function () {
                         }
 
                         var w = i * this.numParticleVerts * vertSize + v * vertSize;
-                        data[w] = particleFinalPos.data[0];
-                        data[w + 1] = particleFinalPos.data[1];
-                        data[w + 2] = particleFinalPos.data[2];
+                        data[w] = particleFinalPos.x;
+                        data[w + 1] = particleFinalPos.y;
+                        data[w + 2] = particleFinalPos.z;
                         data[w + 3] = nlife;
                         data[w + 4] = this.alignToMotion ? angle : this.particleTex[id * particleTexChannels + 3];
                         data[w + 5] = scale;
                         data[w + 6] = alphaDiv;
-                        data[w + 7] =   moveDirVec.data[0];
+                        data[w + 7] = moveDirVec.x;
                         data[w + 8] = quadX;
                         data[w + 9] = quadY;
                         data[w + 10] = quadZ;
-                        data[w + 11] = moveDirVec.data[1];
-                        data[w + 12] = moveDirVec.data[2];
+                        data[w + 11] = moveDirVec.y;
+                        data[w + 12] = moveDirVec.z;
                         // 13 is particle id
                     }
                 }

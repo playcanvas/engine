@@ -423,14 +423,14 @@ Object.assign(pc, function () {
                 this._normals[i + 2] = 1;
             }
 
-            this._uvs[0] = this._rect.data[0];
-            this._uvs[1] = this._rect.data[1];
-            this._uvs[2] = this._rect.data[0] + this._rect.data[2];
-            this._uvs[3] = this._rect.data[1];
-            this._uvs[4] = this._rect.data[0] + this._rect.data[2];
-            this._uvs[5] = this._rect.data[1] + this._rect.data[3];
-            this._uvs[6] = this._rect.data[0];
-            this._uvs[7] = this._rect.data[1] + this._rect.data[3];
+            this._uvs[0] = this._rect.x;
+            this._uvs[1] = this._rect.y;
+            this._uvs[2] = this._rect.x + this._rect.z;
+            this._uvs[3] = this._rect.y;
+            this._uvs[4] = this._rect.x + this._rect.z;
+            this._uvs[5] = this._rect.y + this._rect.w;
+            this._uvs[6] = this._rect.x;
+            this._uvs[7] = this._rect.y + this._rect.w;
 
             this._indices[0] = 0;
             this._indices[1] = 1;
@@ -523,8 +523,8 @@ Object.assign(pc, function () {
                 this._positions[11] = 0;
 
                 // offset for pivot
-                var hp = this._element.pivot.data[0];
-                var vp = this._element.pivot.data[1];
+                var hp = this._element.pivot.x;
+                var vp = this._element.pivot.y;
 
                 for (i = 0; i < this._positions.length; i += 3) {
                     this._positions[i] -= hp * w;
@@ -544,14 +544,14 @@ Object.assign(pc, function () {
                     }
                 }
 
-                this._uvs[0] = rect.data[0] / w;
-                this._uvs[1] = rect.data[1] / h;
-                this._uvs[2] = (rect.data[0] + rect.data[2]) / w;
-                this._uvs[3] = rect.data[1] / h;
-                this._uvs[4] = (rect.data[0] + rect.data[2]) / w;
-                this._uvs[5] = (rect.data[1] + rect.data[3]) / h;
-                this._uvs[6] = rect.data[0] / w;
-                this._uvs[7] = (rect.data[1] + rect.data[3]) / h;
+                this._uvs[0] = rect.x / w;
+                this._uvs[1] = rect.y / h;
+                this._uvs[2] = (rect.x + rect.z) / w;
+                this._uvs[3] = rect.y / h;
+                this._uvs[4] = (rect.x + rect.z) / w;
+                this._uvs[5] = (rect.y + rect.w) / h;
+                this._uvs[6] = rect.x / w;
+                this._uvs[7] = (rect.y + rect.w) / h;
 
                 var vb = mesh.vertexBuffer;
                 var it = new pc.VertexIterator(vb);

@@ -46,9 +46,9 @@ Object.assign(pc, function () {
         this._outerConeAngle = 45;
 
         // Cache of light property data in a format more friendly for shader uniforms
-        this._finalColor = new pc.Vec3(0.8, 0.8, 0.8);
-        var c = Math.pow(this._finalColor.data[0], 2.2);
-        this._linearFinalColor = new pc.Vec3(c, c, c);
+        this._finalColor = new Float32Array([0.8, 0.8, 0.8]);
+        var c = Math.pow(this._finalColor[0], 2.2);
+        this._linearFinalColor = new Float32Array([c, c, c]);
 
         this._position = new pc.Vec3(0, 0, 0);
         this._direction = new pc.Vec3(0, 0, 0);
@@ -198,13 +198,17 @@ Object.assign(pc, function () {
 
             // Update final color
             var i = this._intensity;
-            this._finalColor.set(r * i, g * i, b * i);
-            for (var c = 0; c < 3; c++) {
-                if (i >= 1) {
-                    this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c] / i, 2.2) * i;
-                } else {
-                    this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c], 2.2);
-                }
+            this._finalColor[0] = r * i;
+            this._finalColor[1] = g * i;
+            this._finalColor[2] = b * i;
+            if (i >= 1) {
+                this._linearFinalColor[0] = Math.pow(this._finalColor[0] / i, 2.2) * i;
+                this._linearFinalColor[1] = Math.pow(this._finalColor[1] / i, 2.2) * i;
+                this._linearFinalColor[2] = Math.pow(this._finalColor[2] / i, 2.2) * i;
+            } else {
+                this._linearFinalColor[0] = Math.pow(this._finalColor[0], 2.2);
+                this._linearFinalColor[1] = Math.pow(this._finalColor[1], 2.2);
+                this._linearFinalColor[2] = Math.pow(this._finalColor[2], 2.2);
             }
         },
 
@@ -480,13 +484,17 @@ Object.assign(pc, function () {
             var g = c[1];
             var b = c[2];
             var i = this._intensity;
-            this._finalColor.set(r * i, g * i, b * i);
-            for (var j = 0; j < 3; j++) {
-                if (i >= 1) {
-                    this._linearFinalColor.data[j] = Math.pow(this._finalColor.data[j] / i, 2.2) * i;
-                } else {
-                    this._linearFinalColor.data[j] = Math.pow(this._finalColor.data[j], 2.2);
-                }
+            this._finalColor[0] = r * i;
+            this._finalColor[1] = g * i;
+            this._finalColor[2] = b * i;
+            if (i >= 1) {
+                this._linearFinalColor[0] = Math.pow(this._finalColor[0] / i, 2.2) * i;
+                this._linearFinalColor[1] = Math.pow(this._finalColor[1] / i, 2.2) * i;
+                this._linearFinalColor[2] = Math.pow(this._finalColor[2] / i, 2.2) * i;
+            } else {
+                this._linearFinalColor[0] = Math.pow(this._finalColor[0], 2.2);
+                this._linearFinalColor[1] = Math.pow(this._finalColor[1], 2.2);
+                this._linearFinalColor[2] = Math.pow(this._finalColor[2], 2.2);
             }
         }
     });

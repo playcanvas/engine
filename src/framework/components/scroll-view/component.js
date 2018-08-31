@@ -418,13 +418,13 @@ Object.assign(pc, function () {
                     }
                 }
 
-                this._velocity.data[0] *= (1 - this.friction);
-                this._velocity.data[1] *= (1 - this.friction);
+                this._velocity.x *= (1 - this.friction);
+                this._velocity.y *= (1 - this.friction);
 
                 if (Math.abs(this._velocity.x) > 1e-4 || Math.abs(this._velocity.y) > 1e-4) {
                     var position = this._contentReference.entity.getLocalPosition();
-                    position.x += this._velocity.data[0];
-                    position.y += this._velocity.data[1];
+                    position.x += this._velocity.x;
+                    position.y += this._velocity.y;
                     this._contentReference.entity.setLocalPosition(position);
 
                     this._setScrollFromContentPosition(position);

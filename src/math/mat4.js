@@ -346,26 +346,29 @@ Object.assign(pc, (function () {
          * var tv = m.transformPoint(v);
          */
         transformPoint: function (vec, res) {
-            var x, y, z,
-                m = this.data,
-                v = vec.data;
+            var x, y, z, vx, vy, vz,
+                m = this.data;
+
+            vx = vec.x;
+            vy = vec.y;
+            vz = vec.z;
 
             res = (res === undefined) ? new pc.Vec3() : res;
 
             x =
-                v[0] * m[0] +
-                v[1] * m[4] +
-                v[2] * m[8] +
+                vx * m[0] +
+                vy * m[4] +
+                vz * m[8] +
                 m[12];
             y =
-                v[0] * m[1] +
-                v[1] * m[5] +
-                v[2] * m[9] +
+                vx * m[1] +
+                vy * m[5] +
+                vz * m[9] +
                 m[13];
             z =
-                v[0] * m[2] +
-                v[1] * m[6] +
-                v[2] * m[10] +
+                vx * m[2] +
+                vy * m[6] +
+                vz * m[10] +
                 m[14];
 
             return res.set(x, y, z);

@@ -516,8 +516,8 @@ Object.assign(pc, function () {
             this._noResize = false;
 
             // offset for pivot and alignment
-            var hp = this._element.pivot.data[0];
-            var vp = this._element.pivot.data[1];
+            var hp = this._element.pivot.x;
+            var vp = this._element.pivot.y;
             var ha = this._alignment.x;
             var va = this._alignment.y;
 

@@ -1,4 +1,6 @@
 Object.assign(pc, function () {
+    var components = [ 'x', 'y', 'z', 'w' ];
+
     var rawToValue = function (app, args, value, old) {
         var i;
 
@@ -87,7 +89,7 @@ Object.assign(pc, function () {
                     if (!old) old = new pc['Vec' + len]();
 
                     for (i = 0; i < len; i++)
-                        old.data[i] = value[i];
+                        old[components[i]] = value[i];
 
                     return old;
                 }

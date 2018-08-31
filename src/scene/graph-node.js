@@ -783,7 +783,7 @@ Object.assign(pc, function () {
          */
         setLocalEulerAngles: function (x, y, z) {
             if (x instanceof pc.Vec3) {
-                this.localRotation.setFromEulerAngles(x.data[0], x.data[1], x.data[2]);
+                this.localRotation.setFromEulerAngles(x.x, x.y, x.z);
             } else {
                 this.localRotation.setFromEulerAngles(x, y, z);
             }
@@ -1025,7 +1025,7 @@ Object.assign(pc, function () {
 
             return function (x, y, z) {
                 if (x instanceof pc.Vec3) {
-                    this.localRotation.setFromEulerAngles(x.data[0], x.data[1], x.data[2]);
+                    this.localRotation.setFromEulerAngles(x.x, x.y, x.z);
                 } else {
                     this.localRotation.setFromEulerAngles(x, y, z);
                 }
@@ -1477,7 +1477,7 @@ Object.assign(pc, function () {
 
             return function (x, y, z) {
                 if (x instanceof pc.Vec3) {
-                    quaternion.setFromEulerAngles(x.data[0], x.data[1], x.data[2]);
+                    quaternion.setFromEulerAngles(x.x, x.y, x.z);
                 } else {
                     quaternion.setFromEulerAngles(x, y, z);
                 }
@@ -1521,7 +1521,7 @@ Object.assign(pc, function () {
 
             return function (x, y, z) {
                 if (x instanceof pc.Vec3) {
-                    quaternion.setFromEulerAngles(x.data[0], x.data[1], x.data[2]);
+                    quaternion.setFromEulerAngles(x.x, x.y, x.z);
                 } else {
                     quaternion.setFromEulerAngles(x, y, z);
                 }
