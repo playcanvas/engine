@@ -380,6 +380,7 @@ Object.assign(pc, function () {
         },
 
         getImageElementMaterial: function (screenSpace, mask, nineSliced, nineSliceTiled) {
+            /* eslint-disable no-else-return */
             if (screenSpace) {
                 if (mask) {
                     if (nineSliced) {
@@ -484,7 +485,7 @@ Object.assign(pc, function () {
                         }
                         return this.defaultImage9SlicedMaskMaterial;
                     } else if (nineSliceTiled) {
-                        if(!this.defaultImage9TiledMaskMaterial) {
+                        if (!this.defaultImage9TiledMaskMaterial) {
                             this.defaultImage9TiledMaskMaterial = this._createBaseImageMaterial();
                             this.defaultImage9TiledMaskMaterial.name = "defaultImage9TiledMaskMaterial";
                             this.defaultImage9TiledMaskMaterial.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
@@ -546,6 +547,7 @@ Object.assign(pc, function () {
                     }
                 }
             }
+            /* eslint-enable no-else-return */
         },
 
         registerUnicodeConverter: function (func) {
