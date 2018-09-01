@@ -661,13 +661,13 @@ Object.assign(pc, function () {
                 viewProjMatR.mul2(projR, viewR);
 
                 // View Position LR
-                viewPosL.data[0] = viewInvL.data[12];
-                viewPosL.data[1] = viewInvL.data[13];
-                viewPosL.data[2] = viewInvL.data[14];
+                viewPosL.x = viewInvL.data[12];
+                viewPosL.y = viewInvL.data[13];
+                viewPosL.z = viewInvL.data[14];
 
-                viewPosR.data[0] = viewInvR.data[12];
-                viewPosR.data[1] = viewInvR.data[13];
-                viewPosR.data[2] = viewInvR.data[14];
+                viewPosR.x = viewInvR.data[12];
+                viewPosR.y = viewInvR.data[13];
+                viewPosR.z = viewInvR.data[14];
 
                 camera.frustum.update(projMat, viewMat);
             }
