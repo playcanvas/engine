@@ -346,32 +346,20 @@ Object.assign(pc, (function () {
          * var tv = m.transformPoint(v);
          */
         transformPoint: function (vec, res) {
-            var x, y, z, vx, vy, vz,
+            var x, y, z,
                 m = this.data;
 
-            vx = vec.x;
-            vy = vec.y;
-            vz = vec.z;
+            x = vec.x;
+            y = vec.y;
+            z = vec.z;
 
             res = (res === undefined) ? new pc.Vec3() : res;
 
-            x =
-                vx * m[0] +
-                vy * m[4] +
-                vz * m[8] +
-                m[12];
-            y =
-                vx * m[1] +
-                vy * m[5] +
-                vz * m[9] +
-                m[13];
-            z =
-                vx * m[2] +
-                vy * m[6] +
-                vz * m[10] +
-                m[14];
+            res.x = x * m[0] + y * m[4] + z * m[8] + m[12];
+            res.y = x * m[1] + y * m[5] + z * m[9] + m[13];
+            res.z = x * m[2] + y * m[6] + z * m[10] + m[14];
 
-            return res.set(x, y, z);
+            return res;
         },
 
         /**
@@ -392,25 +380,19 @@ Object.assign(pc, (function () {
          */
         transformVector: function (vec, res) {
             var x, y, z,
-                m = this.data,
-                v = vec.data;
+                m = this.data;
+
+            x = vec.x;
+            y = vec.y;
+            z = vec.z;
 
             res = (res === undefined) ? new pc.Vec3() : res;
 
-            x =
-                v[0] * m[0] +
-                v[1] * m[4] +
-                v[2] * m[8];
-            y =
-                v[0] * m[1] +
-                v[1] * m[5] +
-                v[2] * m[9];
-            z =
-                v[0] * m[2] +
-                v[1] * m[6] +
-                v[2] * m[10];
+            res.x = x * m[0] + y * m[4] + z * m[8];
+            res.y = x * m[1] + y * m[5] + z * m[9];
+            res.z = x * m[2] + y * m[6] + z * m[10];
 
-            return res.set(x, y, z);
+            return res;
         },
 
         /**
