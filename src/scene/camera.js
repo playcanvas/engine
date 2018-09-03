@@ -14,7 +14,7 @@ Object.assign(pc, function () {
         this._projection = pc.PROJECTION_PERSPECTIVE;
         this._nearClip = 0.1;
         this._farClip = 10000;
-        this._shaderParams = new pc.Vec4();
+        this._shaderParams = new Float32Array(4);
         this._fov = 45;
         this._orthoHeight = 10;
         this._aspect = 16 / 9;
@@ -84,7 +84,7 @@ Object.assign(pc, function () {
             clone.projection = this._projection;
             clone.nearClip = this._nearClip;
             clone.farClip = this._farClip;
-            clone._shaderParams = this._shaderParams.clone();
+            clone._shaderParams = this._shaderParams.subarray();
             clone.fov = this._fov;
             clone.aspectRatio = this._aspect;
             clone._aspectRatioMode = this._aspectRatioMode;
@@ -217,10 +217,10 @@ Object.assign(pc, function () {
 
                 var n = this._nearClip;
                 var f = this._farClip;
-                this._shaderParams.x = 1 / f;
-                this._shaderParams.y = f;
-                this._shaderParams.z = (1 - f / n) / 2;
-                this._shaderParams.w = (1 + f / n) / 2;
+                this._shaderParams[0] = 1 / f;
+                this._shaderParams[1] = f;
+                this._shaderParams[2] = (1 - f / n) / 2;
+                this._shaderParams[3] = (1 + f / n) / 2;
 
                 this._projMatDirty = false;
             }

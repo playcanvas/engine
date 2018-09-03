@@ -241,7 +241,8 @@ Object.assign(pc, function () {
         setProperty("animSpeed", 1);
         setProperty("animLoop", true);
 
-        this.frameRandom = new pc.Vec3(0, 0, 0);
+        this.frameRandom = new Float32Array(3);
+        this.emitterPos = new Float32Array(3);
 
         // Time-dependent parameters
         setProperty("colorGraph", default1Curve3);
@@ -305,7 +306,7 @@ Object.assign(pc, function () {
         this.lightCubeDir[4] = new pc.Vec3(0, 0, -1);
         this.lightCubeDir[5] = new pc.Vec3(0, 0, 1);
 
-        this.animParams = new pc.Vec4();
+        this.animParams = new Float32Array(4);
 
         this.internalTex0 = null;
         this.internalTex1 = null;
@@ -588,9 +589,9 @@ Object.assign(pc, function () {
             this.vbToSort = new Array(this.numParticles);
             this.particleDistance = new Float32Array(this.numParticles);
 
-            this.frameRandom.x = Math.random();
-            this.frameRandom.y = Math.random();
-            this.frameRandom.z = Math.random();
+            this.frameRandom[0] = Math.random();
+            this.frameRandom[1] = Math.random();
+            this.frameRandom[2] = Math.random();
 
             this.particleTex = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
             var emitterPos = (this.node === null || this.localSpace) ? pc.Vec3.ZERO : this.node.getPosition();
@@ -787,15 +788,15 @@ Object.assign(pc, function () {
                 this.qRotSpeed2[i] *= pc.math.DEG_TO_RAD;
             }
 
-            this.localVelocityUMax = new pc.Vec3(0, 0, 0);
-            this.velocityUMax = new pc.Vec3(0, 0, 0);
-            this.colorUMax =         new pc.Vec3(0, 0, 0);
+            this.localVelocityUMax = new Float32Array([0, 0, 0]);
+            this.velocityUMax = new Float32Array([0, 0, 0]);
+            this.colorUMax = new Float32Array([0, 0, 0]);
             this.rotSpeedUMax = [0];
             this.scaleUMax =    [0];
             this.alphaUMax =    [0];
-            this.qLocalVelocityDiv = divGraphFrom2Curves(this.qLocalVelocity, this.qLocalVelocity2, this.localVelocityUMax.data);
-            this.qVelocityDiv =      divGraphFrom2Curves(this.qVelocity, this.qVelocity2, this.velocityUMax.data);
-            this.qColorDiv =         divGraphFrom2Curves(this.qColor, this.qColor2, this.colorUMax.data);
+            this.qLocalVelocityDiv = divGraphFrom2Curves(this.qLocalVelocity, this.qLocalVelocity2, this.localVelocityUMax);
+            this.qVelocityDiv =      divGraphFrom2Curves(this.qVelocity, this.qVelocity2, this.velocityUMax);
+            this.qColorDiv =         divGraphFrom2Curves(this.qColor, this.qColor2, this.colorUMax);
             this.qRotSpeedDiv =      divGraphFrom2Curves(this.qRotSpeed, this.qRotSpeed2, this.rotSpeedUMax);
             this.qScaleDiv =         divGraphFrom2Curves(this.qScale, this.qScale2, this.scaleUMax);
             this.qAlphaDiv =         divGraphFrom2Curves(this.qAlpha, this.qAlpha2, this.alphaUMax);
@@ -898,7 +899,7 @@ Object.assign(pc, function () {
 
             material.setParameter('stretch', this.stretch);
             if (this._isAnimated()) {
-                material.setParameter('animTexParams', this.animParams.data);
+                material.setParameter('animTexParams', this.animParams);
             }
             material.setParameter('colorMult', this.intensity);
             if (!this.useCpu) {
@@ -918,7 +919,7 @@ Object.assign(pc, function () {
             material.setParameter('alphaDivMult', this.alphaUMax[0]);
             material.setParameter("graphNumSamples", this.precision);
             material.setParameter("graphSampleSize", 1.0 / this.precision);
-            material.setParameter("emitterScale", pc.Vec3.ONE.data);
+            material.setParameter("emitterScale", new Float32Array([1, 1, 1]));
 
             if (this.pack8) {
                 material.setParameter("inBoundsSize", this.worldBoundsSize.data);
@@ -1102,10 +1103,10 @@ Object.assign(pc, function () {
 
             if (this._isAnimated()) {
                 var params = this.animParams;
-                params.x = 1.0 / this.animTilesX;
-                params.y = 1.0 / this.animTilesY;
-                params.z = this.animNumFrames * this.animSpeed;
-                params.w = this.animNumFrames - 1;
+                params[0] = 1.0 / this.animTilesX;
+                params[1] = 1.0 / this.animTilesY;
+                params[2] = this.animNumFrames * this.animSpeed;
+                params[3] = this.animNumFrames - 1;
             }
 
             if (this.scene) {
@@ -1124,10 +1125,14 @@ Object.assign(pc, function () {
             }
 
             var emitterPos;
-            var emitterScale = this.meshInstance.node === null ? pc.Vec3.ONE.data : this.meshInstance.node.localScale.data;
+            var emitterScale = this.meshInstance.node === null ? pc.Vec3.ONE : this.meshInstance.node.localScale;
             this.material.setParameter("emitterScale", emitterScale);
             if (this.localSpace && this.meshInstance.node) {
-                this.material.setParameter("emitterPos", this.meshInstance.node.getPosition().data);
+                emitterPos = this.meshInstance.node.getPosition();
+                this.emitterPos[0] = emitterPos.x;
+                this.emitterPos[1] = emitterPos.y;
+                this.emitterPos[2] = emitterPos.z;
+                this.material.setParameter("emitterPos", this.emitterPos);
             }
 
             if (!this.useCpu) {
@@ -1137,9 +1142,9 @@ Object.assign(pc, function () {
                 device.setDepthTest(false);
                 device.setDepthWrite(false);
 
-                this.frameRandom.x = Math.random();
-                this.frameRandom.y = Math.random();
-                this.frameRandom.z = Math.random();
+                this.frameRandom[0] = Math.random();
+                this.frameRandom[1] = Math.random();
+                this.frameRandom[2] = Math.random();
 
                 this.constantGraphSampleSize.setValue(1.0 / this.precision);
                 this.constantGraphNumSamples.setValue(this.precision);
@@ -1161,7 +1166,7 @@ Object.assign(pc, function () {
                     this.constantMaxVel.setValue(maxVel);
                 }
 
-                emitterPos = (this.meshInstance.node === null || this.localSpace) ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
+                emitterPos = (this.meshInstance.node === null || this.localSpace) ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
                 var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();
                 if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                     mat4ToMat3(spawnMatrix, spawnMatrix3);
@@ -1172,8 +1177,11 @@ Object.assign(pc, function () {
                 this.constantInitialVelocity.setValue(this.initialVelocity);
 
                 mat4ToMat3(emitterMatrix, emitterMatrix3);
-                this.constantEmitterPos.setValue(emitterPos);
-                this.constantFrameRandom.setValue(this.frameRandom.data);
+                this.emitterPos[0] = emitterPos.x;
+                this.emitterPos[1] = emitterPos.y;
+                this.emitterPos[2] = emitterPos.z;
+                this.constantEmitterPos.setValue(this.emitterPos);
+                this.constantFrameRandom.setValue(this.frameRandom);
                 this.constantDelta.setValue(delta);
                 this.constantRate.setValue(this.rate);
                 this.constantRateDiv.setValue(this.rate2 - this.rate);
@@ -1185,8 +1193,8 @@ Object.assign(pc, function () {
                 this.constantEmitterScale.setValue(emitterScale);
                 this.constantEmitterMatrix.setValue(emitterMatrix3.data);
 
-                this.constantLocalVelocityDivMult.setValue(this.localVelocityUMax.data);
-                this.constantVelocityDivMult.setValue(this.velocityUMax.data);
+                this.constantLocalVelocityDivMult.setValue(this.localVelocityUMax);
+                this.constantVelocityDivMult.setValue(this.velocityUMax);
                 this.constantRotSpeedDivMult.setValue(this.rotSpeedUMax[0]);
 
                 var texIN = this.swapTex ? this.particleTexOUT : this.particleTexIN;

@@ -221,3 +221,21 @@ Object.defineProperty(pc.shaderChunks, "transformSkinnedVS", {
         return "#define SKIN\n" + pc.shaderChunks.transformVS;
     }
 });
+
+function defineDataAccessor(numComponents) {
+    var type = 'Vec' + numComponents;
+    var vectorType = pc[type];
+    Object.defineProperty(vectorType.prototype, "data", {
+        get: function () {
+            console.warn(type + '#data is not public API should not be used. Access vector components via their individual properties.');
+            if (!this._data) {
+                this._data = new Float32Array(numComponents);
+            }
+            return this._data;
+        }
+    });
+}
+
+for (var i = 2; i <= 4; i++) {
+    defineDataAccessor(i);
+}

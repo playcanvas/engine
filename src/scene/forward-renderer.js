@@ -419,7 +419,7 @@ Object.assign(pc, function () {
 
         this.depthMapId = scope.resolve('uDepthMap');
         this.screenSizeId = scope.resolve('uScreenSize');
-        this._screenSize = new pc.Vec4();
+        this._screenSize = new Float32Array(4);
 
         this.sourceId = scope.resolve("source");
         this.pixelOffsetId = scope.resolve("pixelOffset");
@@ -2422,12 +2422,11 @@ Object.assign(pc, function () {
             }
 
             // Set up screen size // should be RT size?
-            this._screenSize.x = device.width;
-            this._screenSize.y = device.height;
-            this._screenSize.z = 1.0 / device.width;
-            this._screenSize.w = 1.0 / device.height;
-            this.screenSizeId.setValue(this._screenSize.data);
-            // var halfWidth = device.width*0.5;
+            this._screenSize[0] = device.width;
+            this._screenSize[1] = device.height;
+            this._screenSize[2] = 1 / device.width;
+            this._screenSize[3] = 1 / device.height;
+            this.screenSizeId.setValue(this._screenSize);
         },
 
         renderComposition: function (comp) {

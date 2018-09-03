@@ -1,4 +1,6 @@
 Object.assign(pc, function () {
+    var delta = new pc.Vec3();
+
     /**
      * @constructor
      * @name pc.VrDisplay
@@ -125,7 +127,6 @@ Object.assign(pc, function () {
 
                 var stage = this.display.stageParameters;
                 if (stage) {
-
                     this.sitToStandInv.set(stage.sittingToStandingTransform).invert();
 
                     this.combinedView.set(this._frameData.leftViewMatrix);
@@ -134,7 +135,6 @@ Object.assign(pc, function () {
                     this.combinedView.set(this._frameData.rightViewMatrix);
                     this.rightView.mul2(this.combinedView, this.sitToStandInv);
                 } else {
-
                     this.leftView.set(this._frameData.leftViewMatrix);
                     this.rightView.set(this._frameData.rightViewMatrix);
                 }
@@ -159,50 +159,38 @@ Object.assign(pc, function () {
                 maxFov *= 2.0;
 
                 this.combinedFov = maxFov;
-
-                var aspect = this.rightProj.data[5] / this.rightProj.data[0];
-                this.combinedAspect = aspect;
+                this.combinedAspect = this.rightProj.data[5] / this.rightProj.data[0];
 
                 var view = this.combinedView;
-                view.copy(this.leftView);
-                view.invert();
-                this.leftViewInv.copy(view);
-                var pos = this.combinedPos.data;
-                pos[0] = this.leftPos.data[0] = view.data[12];
-                pos[1] = this.leftPos.data[1] = view.data[13];
-                pos[2] = this.leftPos.data[2] = view.data[14];
-                view.copy(this.rightView);
-                view.invert();
-                this.rightViewInv.copy(view);
-                var deltaX = pos[0] - view.data[12];
-                var deltaY = pos[1] - view.data[13];
-                var deltaZ = pos[2] - view.data[14];
-                var dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
-                this.rightPos.data[0] = view.data[12];
-                this.rightPos.data[1] = view.data[13];
-                this.rightPos.data[2] = view.data[14];
-                pos[0] += view.data[12];
-                pos[1] += view.data[13];
-                pos[2] += view.data[14];
-                pos[0] *= 0.5; // middle pos
-                pos[1] *= 0.5;
-                pos[2] *= 0.5;
+
+                this.leftViewInv.copy(this.leftView);
+                this.leftViewInv.invert();
+                this.leftViewInv.getTranslation(this.leftPos);
+
+                this.rightViewInv.copy(this.rightView);
+                this.rightViewInv.invert();
+                this.rightViewInv.getTranslation(this.rightPos);
+
+                var dist = delta.sub2(this.leftPos, this.rightPos).length();
+                this.combinedPos.add2(this.leftPos, this.rightPos).scale(0.5);
+
                 var b = Math.PI * 0.5;
                 var c = maxFov * 0.5;
                 var a = Math.PI - (b + c);
-                var offset = dist * 0.5 * ( Math.sin(a) );// / Math.sin(b) ); // equals 1
+                var offset = dist * 0.5 * Math.sin(a);// / Math.sin(b) ); // equals 1
                 var fwdX = view.data[8];
                 var fwdY = view.data[9];
                 var fwdZ = view.data[10];
-                view.data[12] = pos[0] + fwdX * offset; // our forward goes backwards so + instead of -
-                view.data[13] = pos[1] + fwdY * offset;
-                view.data[14] = pos[2] + fwdZ * offset;
-                this.combinedViewInv.copy(view);
-                view.invert();
+                view.data[12] = this.combinedPos.x + fwdX * offset; // our forward goes backwards so + instead of -
+                view.data[13] = this.combinedPos.y + fwdY * offset;
+                view.data[14] = this.combinedPos.z + fwdZ * offset;
+
+                this.combinedViewInv.copy(this.combinedView);
+                this.combinedView.invert();
 
                 // Find combined projection matrix
                 this.combinedProj.setPerspective(maxFov * pc.math.RAD_TO_DEG,
-                                                 aspect,
+                                                 this.combinedAspect,
                                                  this.display.depthNear + offset,
                                                  this.display.depthFar + offset,
                                                  true);
