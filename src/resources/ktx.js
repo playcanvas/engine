@@ -41,11 +41,10 @@ Object.assign(pc, function () {
             for (var arrayElement = 0; arrayElement < (header.numberOfArrayElements || 1); arrayElement++) {
                 for (var face = 0; face < header.numberOfFaces; face++) {
                     for (var  zSlice = 0; zSlice < (header.pixelDepth || 1); zSlice++) {
-                        var numberOfDataBytes = (header.pixelHeight || 1) * header.pixelWidth;
-                        var mipData = new Uint8Array(arrayBuffer, offset, numberOfDataBytes);
+                        var mipData = new Uint8Array(arrayBuffer, offset, imageSize);
                         // todo merih.taze: What if multiple faces. Do we put an array or what?
                         levels.push(mipData);
-                        offset += numberOfDataBytes;
+                        offset += imageSize;
                     }
                 }
                 offset += 3 - ((offset + 3) % 4);
@@ -56,7 +55,7 @@ Object.assign(pc, function () {
         this.format = KNOWN_FORMATS[header.glInternalFormat] ? KNOWN_FORMATS[header.glInternalFormat].format : pc.PIXELFORMAT_R8_G8_B8_A8,
         this.width = header.pixelWidth,
         this.height = header.pixelHeight,
-        this.levels = levels
+        this.levels = levels;
 	};
 
     return {

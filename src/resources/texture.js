@@ -174,6 +174,8 @@ Object.assign(pc, function () {
                     cubemap: textureData.cubemap,
                     levels: textureData.levels
                 });
+                
+                texture.upload();
             }
 
             return texture;
