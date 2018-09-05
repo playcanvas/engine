@@ -58,16 +58,15 @@ Object.assign(pc, function () {
     var FCC_PVRTC_4BPP_RGB_1 = makeFourCC('P431');
     var FCC_PVRTC_4BPP_RGBA_1 = makeFourCC('P441');
 
-    var fccToFormat = {
-        FCC_DXT1: pc.PIXELFORMAT_DXT1,
-        FCC_DXT5: pc.PIXELFORMAT_DXT5,
-        FCC_ETC1: pc.PIXELFORMAT_ETC1,
-        FCC_ETC2: pc.PIXELFORMAT_ETC2_RGB,
-        FCC_PVRTC_2BPP_RGB_1: pc.PIXELFORMAT_PVRTC_2BPP_RGB_1,
-        FCC_PVRTC_2BPP_RGBA_1: pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1,
-        FCC_PVRTC_4BPP_RGB_1: pc.PIXELFORMAT_PVRTC_4BPP_RGB_1,
-        FCC_PVRTC_4BPP_RGBA_1: pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1
-    };
+    var fccToFormat = {};
+    fccToFormat[FCC_DXT1] = pc.PIXELFORMAT_DXT1;
+    fccToFormat[FCC_DXT5] = pc.PIXELFORMAT_DXT5;
+    fccToFormat[FCC_ETC1] = pc.PIXELFORMAT_ETC1;
+    fccToFormat[FCC_ETC2] = pc.PIXELFORMAT_ETC2_RGB;
+    fccToFormat[FCC_PVRTC_2BPP_RGB_1] = pc.PIXELFORMAT_PVRTC_2BPP_RGB_1;
+    fccToFormat[FCC_PVRTC_2BPP_RGBA_1] = pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1;
+    fccToFormat[FCC_PVRTC_4BPP_RGB_1] = pc.PIXELFORMAT_PVRTC_4BPP_RGB_1;
+    fccToFormat[FCC_PVRTC_4BPP_RGBA_1] = pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1;
 
 	var DdsParser = function (arrayBuffer) {
         var headerU32 = new Uint32Array(arrayBuffer, 0, 32);

@@ -51,7 +51,7 @@ Object.assign(pc, function () {
             var urlWithoutParams = url.indexOf('?') >= 0 ? url.split('?')[0] : url;
 
             var ext = pc.path.getExtension(urlWithoutParams).toLowerCase();
-            if (ext === '.dds') {
+            if (ext === '.dds' || ext === '.ktx') {
                 var options = {
                     cache: true,
                     responseType: "arraybuffer"
@@ -144,7 +144,7 @@ Object.assign(pc, function () {
                         textureData = new pc.DdsParser(data);
                         break;
                     case '.ktx':
-                        console.warn('KTX container not supported.');
+                        textureData = new pc.KtxParser(data);
                         break;
                     case '.pvr':
                         console.warn('PVR container not supported.');
@@ -172,7 +172,7 @@ Object.assign(pc, function () {
                     height: textureData.height,
                     format: textureData.format,
                     cubemap: textureData.cubemap,
-                    levels: textureData.levels // The pc.Texture constructor needs to be updated to take this property
+                    levels: textureData.levels
                 });
             }
 
