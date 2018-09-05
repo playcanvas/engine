@@ -45,7 +45,7 @@ Object.assign(pc, function () {
             var s = data.scale;
 
             entity.name = data.name;
-            entity._guid = data.resource_id;
+            entity.setGuid(data.resource_id);
             entity.setLocalPosition(p[0], p[1], p[2]);
             entity.setLocalEulerAngles(r[0], r[1], r[2]);
             entity.setLocalScale(s[0], s[1], s[2]);
