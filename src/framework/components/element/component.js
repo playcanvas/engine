@@ -96,6 +96,10 @@ Object.assign(pc, function () {
     var ElementComponent = function ElementComponent(system, entity) {
         pc.Component.call(this, system, entity);
 
+        // set to true by the ElementComponentSystem while
+        // the component is being initialized
+        this._beingInitialized = false;
+
         this._anchor = new pc.Vec4();
         this._localAnchor = new pc.Vec4();
 

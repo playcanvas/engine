@@ -17,6 +17,8 @@ Object.assign(pc, function () {
         this.meshInstance.castShadow = false;
         this.meshInstance.receiveShadow = false;
 
+        this._meshDirty = false;
+
         this.model.meshInstances.push(this.meshInstance);
 
         this._entity.addChild(this.model.graph);
@@ -289,7 +291,9 @@ Object.assign(pc, function () {
         },
 
         _onParentResizeOrPivotChange: function () {
-            if (this._renderable.mesh) this._updateMesh(this._renderable.mesh);
+            if (this._renderable.mesh) {
+                this._updateMesh(this._renderable.mesh);
+            }
         },
 
         _onScreenSpaceChange: function (value) {
@@ -575,6 +579,35 @@ Object.assign(pc, function () {
                 }
 
             }
+
+            this._meshDirty = false;
+        },
+
+        // Gets the mesh from the sprite asset
+        // if the sprite is 9-sliced or the default mesh from the
+        // image element and calls _updateMesh or sets meshDirty to true
+        // if the component is currently being initialized. We need to call
+        // _updateSprite every time something related to the sprite asset changes
+        _updateSprite: function () {
+            var nineSlice = false;
+            var mesh = null;
+
+            // take mesh from sprite
+            if (this._sprite && this._sprite.atlas) {
+                mesh = this._sprite.meshes[this.spriteFrame];
+                nineSlice = this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === pc.SPRITE_RENDERMODE_TILED;
+            }
+
+            // if we use 9 slicing then use that mesh otherwise keep using the default mesh
+            this.mesh = nineSlice ? mesh : this._defaultMesh;
+
+            if (this.mesh) {
+                if (! this._element._beingInitialized) {
+                    this._updateMesh(this.mesh);
+                } else {
+                    this._meshDirty = true;
+                }
+            }
         },
 
         // updates AABB while 9-slicing
@@ -732,17 +765,22 @@ Object.assign(pc, function () {
         },
 
         _onSpriteMeshesChange: function () {
+            // clamp frame
+            if (this._sprite) {
+                this._spriteFrame = pc.math.clamp(this._spriteFrame, 0, this._sprite.frameKeys.length - 1);
+            }
+
             // force update
-            this.spriteFrame = this.spriteFrame;
+            this._updateSprite();
         },
 
         _onSpritePpuChange: function () {
-            // on force update when the sprite is 9-sliced. If it's not
+            // force update when the sprite is 9-sliced. If it's not
             // then its mesh will change when the ppu changes which will
             // be handled by onSpriteMeshesChange
             if (this.sprite.renderMode !== pc.SPRITE_RENDERMODE_SIMPLE && this._pixelsPerUnit === null) {
                 // force update
-                this.spriteFrame = this.spriteFrame;
+                this._updateSprite();
             }
         },
 
@@ -844,11 +882,33 @@ Object.assign(pc, function () {
 
         set: function (value) {
             if (value instanceof pc.Vec4) {
+                if (value.x === this._rect.x &&
+                    value.y === this._rect.y &&
+                    value.z === this._rect.z &&
+                    value.w === this._rect.w
+                ) {
+                    return;
+                }
+
                 this._rect.set(value.x, value.y, value.z, value.w);
             } else {
+                if (value[0] === this._rect.x &&
+                    value[1] === this._rect.y &&
+                    value[2] === this._rect.z &&
+                    value[3] === this._rect.w
+                ) {
+                    return;
+                }
+
                 this._rect.set(value[0], value[1], value[2], value[3]);
             }
-            if (this._renderable.mesh) this._updateMesh(this._renderable.mesh);
+            if (this._renderable.mesh) {
+                if (! this._element._beingInitialized) {
+                    this._updateMesh(this._renderable.mesh);
+                } else {
+                    this._meshDirty = true;
+                }
+            }
         }
     });
 
@@ -1024,6 +1084,8 @@ Object.assign(pc, function () {
             return this._sprite;
         },
         set: function (value) {
+            if (this._sprite === value) return;
+
             if (this._sprite) {
                 this._unbindSprite(this._sprite);
             }
@@ -1044,7 +1106,12 @@ Object.assign(pc, function () {
                 this._renderable.deleteParameter("texture_opacityMap");
             }
 
-            this.spriteFrame = this.spriteFrame; // force update frame
+            // clamp frame
+            if (this._sprite) {
+                this._spriteFrame = pc.math.clamp(this._spriteFrame, 0, this._sprite.frameKeys.length - 1);
+            }
+
+            this._updateSprite();
         }
     });
 
@@ -1053,6 +1120,8 @@ Object.assign(pc, function () {
             return this._spriteFrame;
         },
         set: function (value) {
+            var oldValue = this._spriteFrame;
+
             if (this._sprite) {
                 // clamp frame
                 this._spriteFrame = pc.math.clamp(value, 0, this._sprite.frameKeys.length - 1);
@@ -1060,21 +1129,9 @@ Object.assign(pc, function () {
                 this._spriteFrame = value;
             }
 
-            var nineSlice = false;
-            var mesh = null;
+            if (this._spriteFrame === oldValue) return;
 
-            // take mesh from sprite
-            if (this._sprite && this._sprite.atlas) {
-                mesh = this._sprite.meshes[this.spriteFrame];
-                nineSlice = this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === pc.SPRITE_RENDERMODE_TILED;
-            }
-
-            // if we use 9 slicing then use that mesh otherwise keep using the default mesh
-            this.mesh = nineSlice ? mesh : this._defaultMesh;
-
-            if (this.mesh) {
-                this._updateMesh(this.mesh);
-            }
+            this._updateSprite();
 
             if (this._element) {
                 this._element.fire('set:spriteFrame', value);
@@ -1119,8 +1176,7 @@ Object.assign(pc, function () {
 
             this._pixelsPerUnit = value;
             if (this._sprite && (this._sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
-                // force update
-                this.spriteFrame = this.spriteFrame;
+                this._updateSprite();
             }
 
         }
