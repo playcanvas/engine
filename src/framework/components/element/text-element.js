@@ -37,6 +37,7 @@ Object.assign(pc, function () {
         this._meshInfo = [];
         this._material = null;
 
+        this._aabbDirty = true;
         this._aabb = new pc.BoundingBox();
 
         this._noResize = false; // flag used to disable resizing events
@@ -302,10 +303,6 @@ Object.assign(pc, function () {
             var json = this._font.data;
             var self = this;
 
-            // clear aabb
-            this._aabb.center.set(0, 0, 0);
-            this._aabb.halfExtents.set(0, 0, 0);
-
             this.width = 0;
             this.height = 0;
             this._lineWidths = [];
@@ -568,15 +565,10 @@ Object.assign(pc, function () {
 
                 // force update meshInstance aabb
                 this._meshInfo[i].meshInstance._aabbVer = -1;
-
-                // cache the total aabb
-                if (i === 0) {
-                    this._aabb.copy(this._meshInfo[i].meshInstance.aabb); // set the first time
-                } else {
-                    this._aabb.add(this._meshInfo[i].meshInstance.aabb); // then update
-                }
-
             }
+
+            // flag text element aabb to be updated
+            this._aabbDirty = true;
         },
 
         _onFontAdded: function (asset) {
@@ -990,6 +982,17 @@ Object.assign(pc, function () {
     // private
     Object.defineProperty(TextElement.prototype, "aabb", {
         get: function () {
+            if (this._aabbDirty) {
+                for (var i = 0; i < this._meshInfo.length; i++) {
+                    if (i === 0) {
+                        this._aabb.copy(this._meshInfo[i].meshInstance.aabb);
+                    } else {
+                        this._aabb.add(this._meshInfo[i].meshInstance.aabb);
+                    }
+                }
+
+                this._aabbDirty = false;
+            }
             return this._aabb;
         }
     });
