@@ -881,27 +881,29 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            var x, y, z, w;
             if (value instanceof pc.Vec4) {
-                if (value.x === this._rect.x &&
-                    value.y === this._rect.y &&
-                    value.z === this._rect.z &&
-                    value.w === this._rect.w
-                ) {
-                    return;
-                }
-
-                this._rect.set(value.x, value.y, value.z, value.w);
+                x = value.x;
+                y = value.y;
+                z = value.z;
+                w = value.w;
             } else {
-                if (value[0] === this._rect.x &&
-                    value[1] === this._rect.y &&
-                    value[2] === this._rect.z &&
-                    value[3] === this._rect.w
-                ) {
-                    return;
-                }
-
-                this._rect.set(value[0], value[1], value[2], value[3]);
+                x = value[0];
+                y = value[1];
+                z = value[2];
+                w = value[3];
             }
+
+            if (x === this._rect.x &&
+                y === this._rect.y &&
+                z === this._rect.z &&
+                w === this._rect.w
+            ) {
+                return;
+            }
+
+            this._rect.set(x, y, z, w);
+
             if (this._renderable.mesh) {
                 if (! this._element._beingInitialized) {
                     this._updateMesh(this._renderable.mesh);
