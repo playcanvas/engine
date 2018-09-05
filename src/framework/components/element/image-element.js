@@ -233,8 +233,6 @@ Object.assign(pc, function () {
 
         this._rect = new pc.Vec4(0, 0, 1, 1); // x, y, w, h
 
-        this._color = new pc.Color(1, 1, 1, 1);
-
         this._mask = false; // this image element is a mask
         this._maskRef = 0; // id used in stencil buffer to mask
 
@@ -251,6 +249,11 @@ Object.assign(pc, function () {
 
         this._defaultMesh = this._createMesh();
         this._renderable = new ImageRenderable(this._entity, this._defaultMesh, this._material);
+
+        // set default colors
+        this._color = new pc.Color(1, 1, 1, 1);
+        this._renderable.setParameter('material_emissive', this._color.data3);
+        this._renderable.setParameter('material_opacity', 1);
 
         this._updateAabbFunc = this._updateAabb.bind(this);
 
@@ -809,6 +812,13 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            if (this._color.data[0] === value.data[0] &&
+                this._color.data[1] === value.data[1] &&
+                this._color.data[2] === value.data[2]
+            ) {
+                return;
+            }
+
             this._color.data[0] = value.data[0];
             this._color.data[1] = value.data[1];
             this._color.data[2] = value.data[2];
@@ -827,6 +837,8 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            if (value === this._color.data[3]) return;
+
             this._color.data[3] = value;
 
             this._renderable.setParameter('material_opacity', value);
@@ -859,8 +871,11 @@ Object.assign(pc, function () {
         set: function (value) {
             if (!value) {
                 var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
-                value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
-                value = this._mask ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
+                if (this.mask) {
+                    value = screenSpace ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
+                } else {
+                    value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
+                }
             }
 
             this._material = value;

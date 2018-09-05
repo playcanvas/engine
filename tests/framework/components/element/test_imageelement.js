@@ -228,5 +228,193 @@ describe('pc.ImageElement', function () {
         // ok(!assets.sprite.hasEvent('remove'));
     });
 
-});
+    it('Image element defaults to white color and opacity 1', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image'
+        });
 
+        expect(e.element.color.r).to.equal(1);
+        expect(e.element.color.g).to.equal(1);
+        expect(e.element.color.b).to.equal(1);
+        expect(e.element.opacity).to.equal(1);
+
+        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        expect(emissive[0]).to.equal(1);
+        expect(emissive[1]).to.equal(1);
+        expect(emissive[2]).to.equal(1);
+
+        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        expect(opacity).to.equal(1);
+    });
+
+    it('Image element initializes to color and opacity 1 specified in data', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            color: [0.5, 0.6, 0.7],
+            opacity: 0.1
+        });
+
+        expect(e.element.color.r).to.be.closeTo(0.5, 0.001);
+        expect(e.element.color.g).to.be.closeTo(0.6, 0.001);
+        expect(e.element.color.b).to.be.closeTo(0.7, 0.001);
+
+        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        expect(emissive[0]).to.be.closeTo(0.5, 0.001);
+        expect(emissive[1]).to.be.closeTo(0.6, 0.001);
+        expect(emissive[2]).to.be.closeTo(0.7, 0.001);
+
+        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        expect(opacity).to.be.closeTo(0.1, 0.001);
+    });
+
+    it('Image element color changes', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image'
+        });
+
+        e.element.color = new pc.Color(0, 0, 0);
+
+        expect(e.element.color.r).to.equal(0);
+        expect(e.element.color.g).to.equal(0);
+        expect(e.element.color.b).to.equal(0);
+        expect(e.element.opacity).to.equal(1);
+
+        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        expect(emissive[0]).to.equal(0);
+        expect(emissive[1]).to.equal(0);
+        expect(emissive[2]).to.equal(0);
+
+        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        expect(opacity).to.equal(1);
+    });
+
+    it('Image element opacity changes', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image'
+        });
+
+        e.element.opacity = 0;
+
+        expect(e.element.opacity).to.equal(0);
+
+        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        expect(opacity).to.equal(0);
+    });
+
+    it('Image element reverts back to the previous color, opacity and material if we clear its material', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            color: [0.1, 0.2, 0.3],
+            opacity: 0.4
+        });
+
+        var defaultMaterial = e.element.material;
+        e.element.material = new pc.StandardMaterial();
+        e.element.material = null;
+
+        expect(e.element.material).to.equal(defaultMaterial);
+
+        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        expect(emissive[0]).to.be.closeTo(0.1, 0.001);
+        expect(emissive[1]).to.be.closeTo(0.2, 0.001);
+        expect(emissive[2]).to.be.closeTo(0.3, 0.001);
+
+        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        expect(opacity).to.be.closeTo(0.4, 0.001);
+
+    });
+
+    it('Image element with mask reverts back to the previous color, opacity and material if we clear its material', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            color: [0.1, 0.2, 0.3],
+            opacity: 0.4,
+            mask: true
+        });
+
+        var defaultMaterial = e.element.material;
+        e.element.material = new pc.StandardMaterial();
+        e.element.material = null;
+
+        expect(e.element.material).to.equal(defaultMaterial);
+
+        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        expect(emissive[0]).to.be.closeTo(0.1, 0.001);
+        expect(emissive[1]).to.be.closeTo(0.2, 0.001);
+        expect(emissive[2]).to.be.closeTo(0.3, 0.001);
+
+        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        expect(opacity).to.be.closeTo(0.4, 0.001);
+
+    });
+
+    it('Screenspace Image element reverts back to the previous color, opacity and material if we clear its material', function () {
+        var screen = new pc.Entity();
+        screen.addComponent('screen', {
+            screenSpace: true
+        });
+        app.root.addChild(screen);
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            color: [0.1, 0.2, 0.3],
+            opacity: 0.4
+        });
+        screen.addChild(e);
+
+        var defaultMaterial = e.element.material;
+        e.element.material = new pc.StandardMaterial();
+        e.element.material = null;
+
+        expect(e.element.material).to.equal(defaultMaterial);
+
+        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        expect(emissive[0]).to.be.closeTo(0.1, 0.001);
+        expect(emissive[1]).to.be.closeTo(0.2, 0.001);
+        expect(emissive[2]).to.be.closeTo(0.3, 0.001);
+
+        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        expect(opacity).to.be.closeTo(0.4, 0.001);
+
+    });
+
+    it('Screenspace Image element with mask reverts back to the previous color, opacity and material if we clear its material', function () {
+        var screen = new pc.Entity();
+        screen.addComponent('screen', {
+            screenSpace: true
+        });
+        app.root.addChild(screen);
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            color: [0.1, 0.2, 0.3],
+            opacity: 0.4,
+            mask: true
+        });
+        screen.addChild(e);
+
+        var defaultMaterial = e.element.material;
+        e.element.material = new pc.StandardMaterial();
+        e.element.material = null;
+
+        expect(e.element.material).to.equal(defaultMaterial);
+
+        var emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        expect(emissive[0]).to.be.closeTo(0.1, 0.001);
+        expect(emissive[1]).to.be.closeTo(0.2, 0.001);
+        expect(emissive[2]).to.be.closeTo(0.3, 0.001);
+
+        var opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        expect(opacity).to.be.closeTo(0.4, 0.001);
+
+    });
+
+});

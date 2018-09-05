@@ -257,28 +257,14 @@ Object.assign(pc, function () {
                     }
                 }
                 if (data.color !== undefined) {
-                    if (data.color instanceof pc.Color) {
-                        component.color.set(data.color.data[0], data.color.data[1], data.color.data[2], data.opacity !== undefined ? data.opacity : 1);
-                    } else {
-                        component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
+                    var color = data.color;
+                    if (! (color instanceof pc.Color)) {
+                        color = new pc.Color(data.color[0], data.color[1], data.color[2]);
                     }
-                    // force update
-                    component.color = component.color;
-                } else {
-                    // default to white
-                    // force a value to update meshinstance parameters
-                    var opacity = data.opacity || 1;
-                    component.color.set(1, 1, 1, opacity);
-                    component.color = component.color;
+                    component.color = color;
                 }
 
-                if (data.opacity !== undefined) {
-                    component.opacity = data.opacity;
-                } else {
-                    // default to 1
-                    // force a value to update meshinstance parameters
-                    component.opacity = 1;
-                }
+                if (data.opacity !== undefined) component.opacity = data.opacity;
                 if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
                 if (data.texture) component.texture = data.texture;
                 if (data.spriteAsset !== undefined) component.spriteAsset = data.spriteAsset;
