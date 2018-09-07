@@ -11,10 +11,10 @@ Object.assign(pc, function () {
         0x8C00: pc.PIXELFORMAT_PVRTC_4BPP_RGB_1,
         0x8C01: pc.PIXELFORMAT_PVRTC_2BPP_RGB_1,
         0x8C02: pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1,
-        0x8C03: pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1,
+        0x8C03: pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1
     };
 
-	var KtxParser = function (arrayBuffer) {
+    var KtxParser = function (arrayBuffer) {
         var headerU32 = new Uint32Array(arrayBuffer, 0, 16);
 
         if (IDENTIFIER[0] !== headerU32[0] || IDENTIFIER[1] !== headerU32[1] || IDENTIFIER[2] !== headerU32[2]) {
@@ -37,7 +37,7 @@ Object.assign(pc, function () {
             numberOfArrayElements: headerU32[12],
             numberOfFaces: headerU32[13],
             numberOfMipmapLevels: headerU32[14],
-            bytesOfKeyValueData: headerU32[15],
+            bytesOfKeyValueData: headerU32[15]
         };
 
         if (header.pixelDepth > 1) {
@@ -70,34 +70,34 @@ Object.assign(pc, function () {
             offset += 4;
             // Currently array textures not supported. Keeping this here for referance.
             // for (var arrayElement = 0; arrayElement < (header.numberOfArrayElements || 1); arrayElement++) {
-                var faceSizeInBytes = imageSizeInBytes / (header.numberOfFaces || 1);
-                // Create array for cubemaps
+            var faceSizeInBytes = imageSizeInBytes / (header.numberOfFaces || 1);
+            // Create array for cubemaps
+            if (header.numberOfFaces > 1) {
+                levels.push([]);
+            }
+            for (var face = 0; face < header.numberOfFaces; face++) {
+                // Currently more than 1 pixel depth not supported. Keeping this here for referance.
+                // for (var  zSlice = 0; zSlice < (header.pixelDepth || 1); zSlice++) {
+                var mipData = new Uint8Array(arrayBuffer, offset, faceSizeInBytes);
+                // Handle cubemaps
                 if (header.numberOfFaces > 1) {
-                    levels.push([]);
+                    levels[mipmapLevel].push(mipData);
+                } else {
+                    levels.push(mipData);
                 }
-                for (var face = 0; face < header.numberOfFaces; face++) {
-                    // Currently more than 1 pixel depth not supported. Keeping this here for referance.
-                    // for (var  zSlice = 0; zSlice < (header.pixelDepth || 1); zSlice++) {
-                        var mipData = new Uint8Array(arrayBuffer, offset, faceSizeInBytes);
-                        // Handle cubemaps
-                        if (header.numberOfFaces > 1) {
-                            levels[mipmapLevel].push(mipData)
-                        } else {
-                            levels.push(mipData);
-                        }
-                        offset += faceSizeInBytes;
-                    //}
-                }
-                offset += 3 - ((offset + 3) % 4);
+                offset += faceSizeInBytes;
+            // }
+            }
+            offset += 3 - ((offset + 3) % 4);
             // }
             // offset += 3 - ((offset + 3) % 4);
         }
 
-        this.format = KNOWN_FORMATS[header.glInternalFormat] ? KNOWN_FORMATS[header.glInternalFormat] : pc.PIXELFORMAT_R8_G8_B8_A8,
-        this.width = header.pixelWidth,
-        this.height = header.pixelHeight,
+        this.format = KNOWN_FORMATS[header.glInternalFormat] || pc.PIXELFORMAT_R8_G8_B8_A8;
+        this.width = header.pixelWidth;
+        this.height = header.pixelHeight;
         this.levels = levels;
-	};
+    };
 
     return {
         KtxParser: KtxParser

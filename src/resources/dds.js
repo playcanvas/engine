@@ -35,7 +35,7 @@ Object.assign(pc, function () {
 
     // FourCC construction
     var makeFourCC = function (str) {
-        return str.charCodeAt(0) + 
+        return str.charCodeAt(0) +
                (str.charCodeAt(1) << 8) +
                (str.charCodeAt(2) << 16) +
                (str.charCodeAt(3) << 24);
@@ -66,7 +66,7 @@ Object.assign(pc, function () {
     fccToFormat[FCC_PVRTC_4BPP_RGB_1] = pc.PIXELFORMAT_PVRTC_4BPP_RGB_1;
     fccToFormat[FCC_PVRTC_4BPP_RGBA_1] = pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1;
 
-	var DdsParser = function (arrayBuffer) {
+    var DdsParser = function (arrayBuffer) {
         var headerU32 = new Uint32Array(arrayBuffer, 0, 32);
 
         // Check magic number
@@ -135,7 +135,7 @@ Object.assign(pc, function () {
 
         // Read texture data
         var bpp = header.ddspf.rgbBitCount;
-        var isCubeMap = header.caps2 === DDS_CUBEMAP_ALLFACES
+        var isCubeMap = header.caps2 === DDS_CUBEMAP_ALLFACES;
         var numFaces = isCubeMap ? 6 : 1;
         var numMips = header.flags & DDSD_MIPMAPCOUNT ? header.mipMapCount : 1;
         var levels = [];
@@ -174,11 +174,11 @@ Object.assign(pc, function () {
             }
         }
 
-        this.format = fccToFormat[fcc] || pc.PIXELFORMAT_R8_G8_B8_A8,
-        this.width = header.width,
-        this.height = header.height,
-        this.levels = levels
-	};
+        this.format = fccToFormat[fcc] || pc.PIXELFORMAT_R8_G8_B8_A8;
+        this.width = header.width;
+        this.height = header.height;
+        this.levels = levels;
+    };
 
     return {
         DdsParser: DdsParser
