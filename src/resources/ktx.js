@@ -61,6 +61,13 @@ Object.assign(pc, function () {
             return null;
         }
 
+        if (!KNOWN_FORMATS[header.glInternalFormat]) {
+            // #ifdef DEBUG
+            console.warn("Unknown glInternalFormat: " + header.glInternalFormat);
+            // #endif
+            return null;
+        }
+
         // Byte offset locating the first byte of texture level data
         var offset = (16 * 4) + header.bytesOfKeyValueData;
 
@@ -93,7 +100,7 @@ Object.assign(pc, function () {
             // offset += 3 - ((offset + 3) % 4);
         }
 
-        this.format = KNOWN_FORMATS[header.glInternalFormat] || pc.PIXELFORMAT_R8_G8_B8_A8;
+        this.format = KNOWN_FORMATS[header.glInternalFormat];
         this.width = header.pixelWidth;
         this.height = header.pixelHeight;
         this.levels = levels;
