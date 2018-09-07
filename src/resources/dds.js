@@ -45,24 +45,22 @@ Object.assign(pc, function () {
 
     // Standard
     var FCC_DXT1 = makeFourCC('DXT1');
-    var FCC_DXT3 = makeFourCC('DXT3');
     var FCC_DXT5 = makeFourCC('DXT5');
     var FCC_DX10 = makeFourCC('DX10');
     var FCC_FP32 = 116; // RGBA32f
 
     // Non-standard
     var FCC_ETC1 = makeFourCC('ETC1');
-    var FCC_ETC2 = makeFourCC('ETC2');
     var FCC_PVRTC_2BPP_RGB_1 = makeFourCC('P231');
     var FCC_PVRTC_2BPP_RGBA_1 = makeFourCC('P241');
     var FCC_PVRTC_4BPP_RGB_1 = makeFourCC('P431');
     var FCC_PVRTC_4BPP_RGBA_1 = makeFourCC('P441');
 
     var fccToFormat = {};
+    fccToFormat[FCC_FP32] = pc.PIXELFORMAT_RGBA32F;
     fccToFormat[FCC_DXT1] = pc.PIXELFORMAT_DXT1;
     fccToFormat[FCC_DXT5] = pc.PIXELFORMAT_DXT5;
     fccToFormat[FCC_ETC1] = pc.PIXELFORMAT_ETC1;
-    fccToFormat[FCC_ETC2] = pc.PIXELFORMAT_ETC2_RGB;
     fccToFormat[FCC_PVRTC_2BPP_RGB_1] = pc.PIXELFORMAT_PVRTC_2BPP_RGB_1;
     fccToFormat[FCC_PVRTC_2BPP_RGBA_1] = pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1;
     fccToFormat[FCC_PVRTC_4BPP_RGB_1] = pc.PIXELFORMAT_PVRTC_4BPP_RGB_1;
@@ -87,7 +85,7 @@ Object.assign(pc, function () {
             width: headerU32[4],
             pitchOrLinearSize: headerU32[5],
             depth: headerU32[6],
-            mipMapCount: headerU32[7],
+            mipMapCount: Math.max(headerU32[7], 1),
             // DWORDSs 8 - 18 are reserved
             ddspf: {
                 size: headerU32[19],
@@ -137,19 +135,21 @@ Object.assign(pc, function () {
 
         // Read texture data
         var bpp = header.ddspf.rgbBitCount;
-
-        var numFaces = header.caps2 === DDS_CUBEMAP_ALLFACES ? 6 : 1;
+        var isCubeMap = header.caps2 === DDS_CUBEMAP_ALLFACES
+        var numFaces = isCubeMap ? 6 : 1;
         var numMips = header.flags & DDSD_MIPMAPCOUNT ? header.mipMapCount : 1;
         var levels = [];
 
         for (var face = 0; face < numFaces; face++) {
             var mipWidth = header.width;
             var mipHeight = header.height;
-            levels.push([]);
+            if (isCubeMap) {
+                levels.push([]);
+            }
 
             for (var mip = 0; mip < numMips; mip++) {
                 var mipSize;
-                if ((fcc === FCC_DXT1) || (fcc === FCC_DXT5) || (fcc === FCC_ETC1) || (fcc === FCC_ETC2)) {
+                if ((fcc === FCC_DXT1) || (fcc === FCC_DXT5) || (fcc === FCC_ETC1)) {
                     var bytesPerBlock = (fcc === FCC_DXT5) ? 16 : 8;
                     mipSize = Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * bytesPerBlock;
                 } else if ((fcc === FCC_PVRTC_2BPP_RGB_1 || fcc === FCC_PVRTC_2BPP_RGBA_1)) {
@@ -162,7 +162,11 @@ Object.assign(pc, function () {
                 }
 
                 var mipData = (fcc === FCC_FP32) ? new Float32Array(arrayBuffer, offset, mipSize / 4) : new Uint8Array(arrayBuffer, offset, mipSize);
-                levels[face].push(mipData);
+                if (isCubeMap) {
+                    levels[face].push(mipData);
+                } else {
+                    levels.push(mipData);
+                }
 
                 offset += mipSize;
                 mipWidth = Math.max(mipWidth * 0.5, 1);
@@ -170,7 +174,7 @@ Object.assign(pc, function () {
             }
         }
 
-        this.format = isFcc ? fccToFormat[fcc] : pc.PIXELFORMAT_R8_G8_B8_A8,
+        this.format = fccToFormat[fcc] || pc.PIXELFORMAT_R8_G8_B8_A8,
         this.width = header.width,
         this.height = header.height,
         this.levels = levels

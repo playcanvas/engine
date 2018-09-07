@@ -1,7 +1,16 @@
 Object.assign(pc, function () {
     var IDENTIFIER = [0x58544BAB, 0xBB313120, 0x0A1A0A0D]; // «KTX 11»\r\n\x1A\n
     var KNOWN_FORMATS = {
-        0x83F3 : {format: pc.PIXELFORMAT_DXT5, numberOfBytes: 4}
+        0x83F0: pc.PIXELFORMAT_DXT1,
+        0x83F2: pc.PIXELFORMAT_DXT3,
+        0x83F3: pc.PIXELFORMAT_DXT5,
+        0x8D64: pc.PIXELFORMAT_ETC1,
+        0x9274: pc.PIXELFORMAT_ETC2_RGB,
+        0x9278: pc.PIXELFORMAT_ETC2_RGBA,
+        0x8C00: pc.PIXELFORMAT_PVRTC_4BPP_RGB_1,
+        0x8C01: pc.PIXELFORMAT_PVRTC_2BPP_RGB_1,
+        0x8C02: pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1,
+        0x8C03: pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     };
 
 	var KtxParser = function (arrayBuffer) {
@@ -15,7 +24,7 @@ Object.assign(pc, function () {
         }
 
         var header = {
-            endianness: headerU32[3],
+            endianness: headerU32[3], // todo: Use this information
             glType: headerU32[4],
             glTypeSize: headerU32[5],
             glFormat: headerU32[6],
@@ -30,29 +39,60 @@ Object.assign(pc, function () {
             bytesOfKeyValueData: headerU32[15],
         };
 
+        if (header.pixelDepth > 1) {
+            // #ifdef DEBUG
+            console.warn("More than 1 pixel depth not supported!");
+            // #endif
+            return null;
+        }
+
+        if (header.numberOfArrayElements > 1) {
+            // #ifdef DEBUG
+            console.warn("Array texture not supported!");
+            // #endif
+            return null;
+        }
+
+        if (header.glFormat !== 0) {
+            // #ifdef DEBUG
+            console.warn("We only support compressed formats!");
+            // #endif
+            return null;
+        }
+
         // Byte offset locating the first byte of texture level data
         var offset = (16 * 4) + header.bytesOfKeyValueData;
 
         var levels = [];
-        var numberOfBytes = KNOWN_FORMATS[header.glInternalFormat] ? KNOWN_FORMATS[header.glInternalFormat].numberOfBytes : 4;
         for (var mipmapLevel = 0; mipmapLevel < (header.numberOfMipmapLevels || 1); mipmapLevel++) {
-            var imageSize = new Uint32Array(arrayBuffer.slice(offset, offset + 4))[0];
+            var imageSizeInBytes = new Uint32Array(arrayBuffer.slice(offset, offset + 4))[0];
             offset += 4;
-            for (var arrayElement = 0; arrayElement < (header.numberOfArrayElements || 1); arrayElement++) {
+            // Currently array textures not supported. Keeping this here for referance.
+            // for (var arrayElement = 0; arrayElement < (header.numberOfArrayElements || 1); arrayElement++) {
+                var faceSizeInBytes = imageSizeInBytes / (header.numberOfFaces || 1);
+                // Create array for cubemaps
+                if (header.numberOfFaces > 1) {
+                    levels.push([]);
+                }
                 for (var face = 0; face < header.numberOfFaces; face++) {
-                    for (var  zSlice = 0; zSlice < (header.pixelDepth || 1); zSlice++) {
-                        var mipData = new Uint8Array(arrayBuffer, offset, imageSize);
-                        // todo merih.taze: What if multiple faces. Do we put an array or what?
-                        levels.push(mipData);
-                        offset += imageSize;
-                    }
+                    // Currently more than 1 pixel depth not supported. Keeping this here for referance.
+                    // for (var  zSlice = 0; zSlice < (header.pixelDepth || 1); zSlice++) {
+                        var mipData = new Uint8Array(arrayBuffer, offset, faceSizeInBytes);
+                        // Handle cubemaps
+                        if (header.numberOfFaces > 1) {
+                            levels[mipmapLevel].push(mipData)
+                        } else {
+                            levels.push(mipData);
+                        }
+                        offset += faceSizeInBytes;
+                    //}
                 }
                 offset += 3 - ((offset + 3) % 4);
-            }
-            offset += 3 - ((offset + 3) % 4);
+            // }
+            // offset += 3 - ((offset + 3) % 4);
         }
 
-        this.format = KNOWN_FORMATS[header.glInternalFormat] ? KNOWN_FORMATS[header.glInternalFormat].format : pc.PIXELFORMAT_R8_G8_B8_A8,
+        this.format = KNOWN_FORMATS[header.glInternalFormat] ? KNOWN_FORMATS[header.glInternalFormat] : pc.PIXELFORMAT_R8_G8_B8_A8,
         this.width = header.pixelWidth,
         this.height = header.pixelHeight,
         this.levels = levels;

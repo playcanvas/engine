@@ -1275,7 +1275,7 @@ Object.assign(pc, function () {
                 case pc.PIXELFORMAT_ETC2_RGBA:
                     ext = this.extCompressedTextureETC;
                     texture._glFormat = gl.RGBA;
-                    texture._glInternalFormat = ext.COMPRESSED_RGBA8_ETC2;
+                    texture._glInternalFormat = ext.COMPRESSED_RGBA8_ETC2_EAC;
                     break;
                 case pc.PIXELFORMAT_RGB16F:
                     // definition varies between WebGL1 and 2
