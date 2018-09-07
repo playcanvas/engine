@@ -153,7 +153,7 @@ Object.assign(pc, function () {
 
                 if (!textureData) {
                     // #ifdef DEBUG
-                    console.warn("This DDS pixel format is currently unsupported. Empty texture will be created instead.");
+                    console.warn("This DDS or KTX pixel format is currently unsupported. Empty texture will be created instead.");
                     // #endif
                     return new pc.Texture(this._device, {
                         width: 4,
