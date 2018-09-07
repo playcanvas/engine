@@ -46,9 +46,7 @@ Object.assign(pc, function () {
         this._maskedMaterialSrc = null; // saved material that was assigned before element was masked
 
         this._rtlReorder = false;
-        this._unicodeConverter =false;
-
-        this._enableLocalization = false;
+        this._unicodeConverter = false;
 
         // initialize based on screen
         this._onScreenChange(this._element.screen);
@@ -714,13 +712,6 @@ Object.assign(pc, function () {
 
         set: function (value) {
             var str = value.toString();
-
-            if (this.enableLocalization) {
-                var localizationConverter = this._system.getLocalizationConverter();
-                if(localizationConverter) {
-                    str = localizationConverter(str);
-                }
-            }
 
             if (this.unicodeConverter) {
                 var unicodeConverterFunc = this._system.getUnicodeConverter();
