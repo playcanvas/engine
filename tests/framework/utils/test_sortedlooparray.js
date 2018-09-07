@@ -340,4 +340,57 @@ describe("pc.SortedLoopArray", function () {
         expect(arr.items[1]).to.equal(b);
         expect(arr.items[2]).to.equal(c);
     });
+
+    it('sort() sorts items', function () {
+        var a = {
+            priority: 1
+        };
+        var b = {
+            priority: 2
+        };
+        var c = {
+            priority: 3
+        };
+
+        arr.items = [c, b, a];
+        arr.sort();
+        expect(arr.items.length).to.equal(3);
+        expect(arr.items[0]).to.equal(a);
+        expect(arr.items[1]).to.equal(b);
+        expect(arr.items[2]).to.equal(c);
+    });
+
+    it('sort() updates loopIndex', function () {
+        var a = {
+            priority: 1
+        };
+        var b = {
+            priority: 2
+        };
+        var c = {
+            priority: 3
+        };
+
+        arr.items = [c, b, a];
+        arr.loopIndex = 0;
+        arr.sort();
+        expect(arr.loopIndex).to.equal(2);
+    });
+
+    it('sort() does not update loopIndex if it cannot find element it\'s pointing to', function () {
+        var a = {
+            priority: 1
+        };
+        var b = {
+            priority: 2
+        };
+        var c = {
+            priority: 3
+        };
+
+        arr.items = [c, b, a];
+        arr.loopIndex = -1;
+        arr.sort();
+        expect(arr.loopIndex).to.equal(-1);
+    });
 });

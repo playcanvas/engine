@@ -132,6 +132,8 @@ Object.assign(pc, function () {
                 this._mipmaps = (options.autoMipmap !== undefined) ? options.autoMipmap : this._mipmaps;
             }
 
+            this._levels = options.levels;
+            
             this._cubemap = (options.cubemap !== undefined) ? options.cubemap : this._cubemap;
             this.fixCubemapSeams = (options.fixCubemapSeams !== undefined) ? options.fixCubemapSeams : this.fixCubemapSeams;
 
@@ -165,7 +167,9 @@ Object.assign(pc, function () {
         // Mip levels
         this._invalid = false;
         this._lockedLevel = -1;
-        this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
+        if (!this._levels) {
+            this._levels = this._cubemap ? [[null, null, null, null, null, null]] : [null];
+        }
 
         this.dirtyAll();
 
