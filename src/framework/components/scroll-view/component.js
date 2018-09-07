@@ -493,14 +493,14 @@ Object.assign(pc, function () {
             var scrollValue = this._contentPositionToScrollValue(position);
 
             if (this._isDragging()) {
-                scrollValue = this._applyScrollValueDamping(scrollValue);
+                scrollValue = this._applyScrollValueTension(scrollValue);
             }
 
             this._onSetScroll(scrollValue.x, scrollValue.y, false);
         },
 
         // Create nice tension effect when dragging past the extents of the viewport
-        _applyScrollValueDamping: function (scrollValue) {
+        _applyScrollValueTension: function (scrollValue) {
             var max;
             var overshoot;
             var factor = 1;
