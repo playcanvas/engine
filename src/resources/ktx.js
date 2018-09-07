@@ -1,4 +1,5 @@
 Object.assign(pc, function () {
+    // Defined here: https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
     var IDENTIFIER = [0x58544BAB, 0xBB313120, 0x0A1A0A0D]; // «KTX 11»\r\n\x1A\n
     var KNOWN_FORMATS = {
         0x83F0: pc.PIXELFORMAT_DXT1,
