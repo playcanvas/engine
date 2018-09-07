@@ -508,18 +508,18 @@ Object.assign(pc, function () {
             max = this._getMaxScrollValue(pc.ORIENTATION_HORIZONTAL);
             overshoot = this._toOvershoot(scrollValue.x, pc.ORIENTATION_HORIZONTAL);
             if (overshoot > 0) {
-                scrollValue.x = max + factor*Math.log10(1 + overshoot);
+                scrollValue.x = max + factor * Math.log10(1 + overshoot);
             } else if (overshoot < 0) {
-                scrollValue.x = -factor*Math.log10(1 - overshoot);
+                scrollValue.x = -factor * Math.log10(1 - overshoot);
             }
 
             max = this._getMaxScrollValue(pc.ORIENTATION_VERTICAL);
             overshoot = this._toOvershoot(scrollValue.y, pc.ORIENTATION_VERTICAL);
 
             if (overshoot > 0) {
-                scrollValue.y = max + factor*Math.log10(1 + overshoot);
+                scrollValue.y = max + factor * Math.log10(1 + overshoot);
             } else if (overshoot < 0) {
-                scrollValue.y = -factor*Math.log10(1 - overshoot);
+                scrollValue.y = -factor * Math.log10(1 - overshoot);
             }
 
             return scrollValue;
