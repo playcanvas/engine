@@ -133,7 +133,7 @@ Object.assign(pc, function () {
             }
 
             this._levels = options.levels;
-            
+
             this._cubemap = (options.cubemap !== undefined) ? options.cubemap : this._cubemap;
             this.fixCubemapSeams = (options.fixCubemapSeams !== undefined) ? options.fixCubemapSeams : this.fixCubemapSeams;
 
