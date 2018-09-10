@@ -59,6 +59,9 @@ Object.assign(pc, function () {
         this._scroll = new pc.Vec2();
         this._velocity = new pc.Vec3();
 
+        this._disabledContentInput = false;
+        this._disabledContentInputEntities = [];
+
         this._toggleLifecycleListeners('on', system);
         this._toggleElementListeners('on');
     };
@@ -124,6 +127,7 @@ Object.assign(pc, function () {
 
         _onContentDragEnd: function () {
             this._prevContentDragPosition = null;
+            this._enableContentInput();
         },
 
         _onContentDragMove: function (position) {
@@ -131,6 +135,12 @@ Object.assign(pc, function () {
                 this._wasDragged = true;
                 this._setScrollFromContentPosition(position);
                 this._setVelocityFromContentPositionDelta(position);
+
+                // if we haven't already, when scrolling starts
+                // disable input on all child elements
+                if (!this._disabledContentInput) {
+                    this._disableContentInput();
+                }
             }
         },
 
@@ -543,6 +553,47 @@ Object.assign(pc, function () {
             if (this._contentDragHelper) {
                 this._contentDragHelper.enabled = enabled;
             }
+        },
+
+        // re-enable useInput flag on any descendent that was disabled
+        _enableContentInput: function () {
+            while (this._disabledContentInputEntities.length) {
+                var e = this._disabledContentInputEntities.pop();
+                if (e.element) {
+                    e.element.useInput = true;
+                }
+            }
+
+            this._disabledContentInput = false;
+        },
+
+        // disable useInput flag on all descendents of this contentEntity
+        _disableContentInput: function () {
+            var self = this;
+            var _disableInput = function (e) {
+                if (e.element && e.element.useInput) {
+                    self._disabledContentInputEntities.push(e);
+                    e.element.useInput = false;
+                }
+
+                var children = e.children;
+                var i, l;
+                for (i = 0, l = children.length; i < l; i++) {
+                    _disableInput(children[i]);
+                }
+            };
+
+            var contentEntity = this._contentReference.entity;
+            if (contentEntity) {
+                // disable input recursively for all children of the content entity
+                var children = contentEntity.children;
+                var i, l = children.length;
+                for (i = 0; i < l; i++) {
+                    _disableInput(children[i]);
+                }
+            }
+
+            this._disabledContentInput = true;
         },
 
         onEnable: function () {
