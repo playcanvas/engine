@@ -1427,7 +1427,6 @@ Object.assign(pc, function () {
     _define("autoHeight");
     _define("rtlReorder");
     _define("unicodeConverter");
-
     _define("text");
     _define("texture");
     _define("textureAsset");
