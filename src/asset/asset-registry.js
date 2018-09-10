@@ -221,6 +221,7 @@ Object.assign(pc, function () {
          */
         remove: function (asset) {
             var idx = this._cache[asset.id];
+            var url = asset.file ? asset.file.url : null;
 
             if (idx !== undefined) {
                 // remove from list
@@ -232,6 +233,9 @@ Object.assign(pc, function () {
                 // name cache needs to be completely rebuilt
                 this._names = {};
 
+                // urls cache needs to be completely rebuilt
+                this._urls = [];
+
                 // update id cache and rebuild name cache
                 for (var i = 0, l = this._assets.length; i < l; i++) {
                     var a = this._assets[i];
@@ -241,11 +245,11 @@ Object.assign(pc, function () {
                         this._names[a.name] = [];
                     }
                     this._names[a.name].push(i);
-                }
 
-                var url = asset.file ? asset.file.url : null;
-                if (url)
-                    delete this._urls[url];
+                    if (a.file) {
+                        this._urls[a.file.url] = i;
+                    }
+                }
 
                 // tags cache
                 this._tags.removeItem(asset);
