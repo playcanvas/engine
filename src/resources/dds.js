@@ -139,13 +139,14 @@ Object.assign(pc, function () {
         var numFaces = isCubeMap ? 6 : 1;
         var numMips = header.flags & DDSD_MIPMAPCOUNT ? header.mipMapCount : 1;
         var levels = [];
-
+        if (isCubeMap) {
+            for (var mipCnt = 0; mipCnt < numMips; mipCnt++) {
+                levels.push([]);
+            }
+        }
         for (var face = 0; face < numFaces; face++) {
             var mipWidth = header.width;
             var mipHeight = header.height;
-            if (isCubeMap) {
-                levels.push([]);
-            }
 
             for (var mip = 0; mip < numMips; mip++) {
                 var mipSize;
@@ -156,19 +157,19 @@ Object.assign(pc, function () {
                     mipSize = Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4;
                 } else if ((fcc === FCC_PVRTC_4BPP_RGB_1 || fcc === FCC_PVRTC_4BPP_RGBA_1)) {
                     mipSize = Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2;
-                } else { // f32
-                    // 4 floats per texel, 4 bytes per float
-                    mipSize = mipWidth * mipHeight * 4 * 4;
+                } else { // f32 or uncompressed rgba
+                    // 4 floats per texel
+                    mipSize = mipWidth * mipHeight * 4;
                 }
 
-                var mipData = (fcc === FCC_FP32) ? new Float32Array(arrayBuffer, offset, mipSize / 4) : new Uint8Array(arrayBuffer, offset, mipSize);
+                var mipData = (fcc === FCC_FP32) ? new Float32Array(arrayBuffer, offset, mipSize) : new Uint8Array(arrayBuffer, offset, mipSize);
                 if (isCubeMap) {
-                    levels[face].push(mipData);
+                    levels[mip][face] = mipData;
                 } else {
                     levels.push(mipData);
                 }
 
-                offset += mipSize;
+                offset += (fcc === FCC_FP32) ? mipSize * 4 : mipSize;
                 mipWidth = Math.max(mipWidth * 0.5, 1);
                 mipHeight = Math.max(mipHeight * 0.5, 1);
             }
