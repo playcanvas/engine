@@ -339,4 +339,53 @@ describe("pc.Entity", function () {
 
 
     });
+
+    it("findByGuid() returns same entity", function () {
+        var e = new pc.Entity();
+        expect(e.findByGuid(e.getGuid())).to.equal(e);
+    });
+
+    it("findByGuid() returns direct child entity", function () {
+        var e = new pc.Entity();
+        var c = new pc.Entity();
+        e.addChild(c);
+        expect(e.findByGuid(c.getGuid())).to.equal(c);
+    });
+
+    it("findByGuid() returns child of child entity", function () {
+        var e = new pc.Entity();
+        var c = new pc.Entity();
+        var c2 = new pc.Entity();
+        e.addChild(c);
+        c.addChild(c2);
+        expect(e.findByGuid(c2.getGuid())).to.equal(c2);
+    });
+
+    it("findByGuid() does not return parent", function () {
+        var e = new pc.Entity();
+        var c = new pc.Entity();
+        e.addChild(c);
+        expect(c.findByGuid(e.getGuid())).to.equal(null);
+    });
+
+    it("findByGuid() does not return destroyed entity", function () {
+        var e = new pc.Entity();
+        var c = new pc.Entity();
+        e.addChild(c);
+        c.destroy();
+        expect(e.findByGuid(c.getGuid())).to.equal(null);
+    });
+
+    it("findByGuid() does not return entity that was removed from hierarchy", function () {
+        var e = new pc.Entity();
+        var c = new pc.Entity();
+        e.addChild(c);
+        e.removeChild(c);
+        expect(e.findByGuid(c.getGuid())).to.equal(null);
+    });
+
+    it("findByGuid() does not return entity that does not exist", function () {
+        expect(app.root.findByGuid('missing')).to.equal(null);
+    });
+
 });
