@@ -99,5 +99,45 @@ describe('pc.AssetRegistry', () => {
         expect(assets[1].id).to.equal(asset3.id);
     });
 
+
+    it('will not support two assets with the same id', function () {
+        var asset1 = new pc.Asset("Asset 1", "text", {
+            url: "fake/one/file.txt"
+        });
+        asset1.id = 1;
+
+        var asset2 = new pc.Asset("Asset 2", "text", {
+            url: "fake/one/file.txt"
+        });
+        asset2.id = 1;
+
+        var self = this;
+
+        var addTwoAssets = function () {
+            self.assets.add(asset1);
+            self.assets.add(asset2);
+        };
+
+        expect(addTwoAssets).to.throw();
+    });
+
+    it('will not support two assets with the same URL', function () {
+        var asset1 = new pc.Asset("Asset 1", "text", {
+            url: "fake/one/file.txt"
+        });
+
+        var asset2 = new pc.Asset("Asset 2", "text", {
+            url: "fake/one/file.txt"
+        });
+
+        var self = this;
+
+        var addTwoAssets = function () {
+            self.assets.add(asset1);
+            self.assets.add(asset2);
+        };
+
+        expect(addTwoAssets).to.throw();
+    });
 });
 

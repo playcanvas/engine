@@ -183,16 +183,26 @@ Object.assign(pc, function () {
             var url;
 
             // id cache
+            if (this._cache[asset.id] !== undefined) {
+                throw Error('Asset already in registry with id: ' + asset.id);
+            }
             this._cache[asset.id] = index;
-            if (!this._names[asset.name])
-                this._names[asset.name] = [];
 
-            // name cache
-            this._names[asset.name].push(index);
+            // url cache
             if (asset.file) {
                 url = asset.file.url;
+                if (this._urls[url] !== undefined) {
+                    throw Error("Asset already in registry with url: " + url);
+                }
                 this._urls[url] = index;
             }
+
+            // name cache
+            if (!this._names[asset.name]) {
+                this._names[asset.name] = [];
+            }
+            this._names[asset.name].push(index);
+
             asset.registry = this;
 
             // tags cache
@@ -202,11 +212,13 @@ Object.assign(pc, function () {
 
             this.fire("add", asset);
             this.fire("add:" + asset.id, asset);
-            if (url)
+            if (url) {
                 this.fire("add:url:" + url, asset);
+            }
 
-            if (asset.preload)
+            if (asset.preload) {
                 this.load(asset);
+            }
         },
 
         /**
