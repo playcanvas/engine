@@ -128,6 +128,7 @@ Object.assign(pc, function () {
 
         _onContentDragMove: function (position) {
             if (this._contentReference.entity && this.enabled && this.entity.enabled) {
+                this._wasDragged = true;
                 this._setScrollFromContentPosition(position);
                 this._setVelocityFromContentPositionDelta(position);
             }
@@ -184,7 +185,11 @@ Object.assign(pc, function () {
         _updateAxis: function (scrollValue, axis, orientation) {
             var hasChanged = (scrollValue !== null && Math.abs(scrollValue - this._scroll[axis]) > 1e-5);
 
-            if (hasChanged) {
+            // always update if dragging because drag helper directly updates the entity position
+            // always update if scrollValue === 0 because it will be clamped to 0
+            // if viewport is larger than content and position could be moved by drag helper but
+            // hasChanged will never be true
+            if (hasChanged || this._isDragging() || scrollValue === 0) {
                 this._scroll[axis] = this._determineNewScrollValue(scrollValue, axis, orientation);
                 this._syncContentPosition(orientation);
                 this._syncScrollbarPosition(orientation);
@@ -250,6 +255,7 @@ Object.assign(pc, function () {
                 var offset = this._scroll[axis] * this._getMaxOffset(orientation);
                 var contentPosition = contentEntity.getLocalPosition();
                 contentPosition[axis] = offset * sign;
+
                 contentEntity.setLocalPosition(contentPosition);
 
                 this._prevContentSizes[orientation] = currContentSize;
@@ -303,10 +309,22 @@ Object.assign(pc, function () {
         },
 
         _contentPositionToScrollValue: function (contentPosition) {
-            return _tempScrollValue.set(
-                contentPosition.x / this._getMaxOffset(pc.ORIENTATION_HORIZONTAL),
-                contentPosition.y / -this._getMaxOffset(pc.ORIENTATION_VERTICAL)
-            );
+            var maxOffsetH = this._getMaxOffset(pc.ORIENTATION_HORIZONTAL);
+            var maxOffsetV = this._getMaxOffset(pc.ORIENTATION_VERTICAL);
+
+            if (maxOffsetH === 0) {
+                _tempScrollValue.x = 0;
+            } else {
+                _tempScrollValue.x = contentPosition.x / maxOffsetH;
+            }
+
+            if (maxOffsetV === 0) {
+                _tempScrollValue.y = 0;
+            } else {
+                _tempScrollValue.y = contentPosition.y / -maxOffsetV;
+            }
+
+            return _tempScrollValue;
         },
 
         _getMaxOffset: function (orientation, contentSize) {
@@ -473,7 +491,38 @@ Object.assign(pc, function () {
 
         _setScrollFromContentPosition: function (position) {
             var scrollValue = this._contentPositionToScrollValue(position);
+
+            if (this._isDragging()) {
+                scrollValue = this._applyScrollValueTension(scrollValue);
+            }
+
             this._onSetScroll(scrollValue.x, scrollValue.y, false);
+        },
+
+        // Create nice tension effect when dragging past the extents of the viewport
+        _applyScrollValueTension: function (scrollValue) {
+            var max;
+            var overshoot;
+            var factor = 1;
+
+            max = this._getMaxScrollValue(pc.ORIENTATION_HORIZONTAL);
+            overshoot = this._toOvershoot(scrollValue.x, pc.ORIENTATION_HORIZONTAL);
+            if (overshoot > 0) {
+                scrollValue.x = max + factor * Math.log10(1 + overshoot);
+            } else if (overshoot < 0) {
+                scrollValue.x = -factor * Math.log10(1 - overshoot);
+            }
+
+            max = this._getMaxScrollValue(pc.ORIENTATION_VERTICAL);
+            overshoot = this._toOvershoot(scrollValue.y, pc.ORIENTATION_VERTICAL);
+
+            if (overshoot > 0) {
+                scrollValue.y = max + factor * Math.log10(1 + overshoot);
+            } else if (overshoot < 0) {
+                scrollValue.y = -factor * Math.log10(1 - overshoot);
+            }
+
+            return scrollValue;
         },
 
         _isDragging: function () {
