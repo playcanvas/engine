@@ -990,7 +990,7 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
-            if (this._rtlReorder != value) {
+            if (this._rtlReorder !== value) {
                 this._rtlReorder = value;
                 if (this._font) {
                     this._updateText();
