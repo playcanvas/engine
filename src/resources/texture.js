@@ -268,6 +268,10 @@ Object.assign(pc, function () {
         var etc1 = false;
         var pvrtc2 = false;
         var pvrtc4 = false;
+        var format = null;
+
+        var texture;
+
         if (isFourCc) {
             if (fcc === FCC_DXT1) {
                 format = pc.PIXELFORMAT_DXT1;
