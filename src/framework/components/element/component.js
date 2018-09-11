@@ -609,7 +609,10 @@ Object.assign(pc, function () {
         },
 
         _onScreenRemove: function () {
-            this._updateScreen(null);
+            // if there is a screen and it is not being destroyed
+            if (this.screen && !this.screen._destroying) {
+                this._updateScreen(null);
+            }
         },
 
         // store pixel positions of anchor relative to current parent resolution
@@ -730,7 +733,7 @@ Object.assign(pc, function () {
             }
 
             // if there is a screen, update draw-order
-            if (this.screen) {
+            if (this.screen && this.screen.screen) {
                 this.screen.screen.syncDrawOrder();
             }
         },
