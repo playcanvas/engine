@@ -37,12 +37,16 @@ Object.assign(pc, function () {
         this._meshInfo = [];
         this._material = null;
 
+        this._aabbDirty = true;
         this._aabb = new pc.BoundingBox();
 
         this._noResize = false; // flag used to disable resizing events
 
         this._currentMaterialType = null; // save the material type (screenspace or not) to prevent overwriting
         this._maskedMaterialSrc = null; // saved material that was assigned before element was masked
+
+        this._rtlReorder = false;
+        this._unicodeConverter = false;
 
         // initialize based on screen
         this._onScreenChange(this._element.screen);
@@ -301,10 +305,6 @@ Object.assign(pc, function () {
         _updateMeshes: function (symbols) {
             var json = this._font.data;
             var self = this;
-
-            // clear aabb
-            this._aabb.center.set(0, 0, 0);
-            this._aabb.halfExtents.set(0, 0, 0);
 
             this.width = 0;
             this.height = 0;
@@ -568,15 +568,10 @@ Object.assign(pc, function () {
 
                 // force update meshInstance aabb
                 this._meshInfo[i].meshInstance._aabbVer = -1;
-
-                // cache the total aabb
-                if (i === 0) {
-                    this._aabb.copy(this._meshInfo[i].meshInstance.aabb); // set the first time
-                } else {
-                    this._aabb.add(this._meshInfo[i].meshInstance.aabb); // then update
-                }
-
             }
+
+            // flag text element aabb to be updated
+            this._aabbDirty = true;
         },
 
         _onFontAdded: function (asset) {
@@ -717,8 +712,9 @@ Object.assign(pc, function () {
 
         set: function (value) {
             var str = value.toString();
+
             if (this.unicodeConverter) {
-                var unicodeConverterFunc = this._system.app.systems.element.getUnicodeConverter();
+                var unicodeConverterFunc = this._system.getUnicodeConverter();
                 if (unicodeConverterFunc) {
                     str = unicodeConverterFunc(str);
                 } else {
@@ -987,9 +983,50 @@ Object.assign(pc, function () {
         }
     });
 
+
+    Object.defineProperty(TextElement.prototype, "rtlReorder", {
+        get: function () {
+            return this._rtlReorder;
+        },
+
+        set: function (value) {
+            if (this._rtlReorder !== value) {
+                this._rtlReorder = value;
+                if (this._font) {
+                    this._updateText();
+                }
+            }
+        }
+    });
+
+
+    Object.defineProperty(TextElement.prototype, "unicodeConverter", {
+        get: function () {
+            return this._unicodeConverter;
+        },
+
+        set: function (value) {
+            if (this._unicodeConverter !== value) {
+                this._unicodeConverter = value;
+                this.text = this._text;
+            }
+        }
+    });
+
     // private
     Object.defineProperty(TextElement.prototype, "aabb", {
         get: function () {
+            if (this._aabbDirty) {
+                for (var i = 0; i < this._meshInfo.length; i++) {
+                    if (i === 0) {
+                        this._aabb.copy(this._meshInfo[i].meshInstance.aabb);
+                    } else {
+                        this._aabb.add(this._meshInfo[i].meshInstance.aabb);
+                    }
+                }
+
+                this._aabbDirty = false;
+            }
             return this._aabb;
         }
     });

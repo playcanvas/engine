@@ -196,6 +196,7 @@
 ../src/framework/components/zone/data.js
 ../src/framework/entity.js
 ../src/framework/utils/entity-reference.js
+../src/framework/utils/sorted-loop-array.js
 ../src/resources/loader.js
 ../src/resources/animation.js
 ../src/resources/audio.js
@@ -206,6 +207,8 @@
 ../src/resources/script.js
 ../src/resources/text.js
 ../src/resources/binary.js
+../src/resources/dds.js
+../src/resources/ktx.js
 ../src/resources/texture.js
 ../src/resources/html.js
 ../src/resources/css.js

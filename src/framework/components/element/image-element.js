@@ -328,75 +328,92 @@ Object.assign(pc, function () {
         },
 
         _updateMaterial: function (screenSpace) {
-            if (screenSpace) {
-                if (!this._hasUserMaterial()) {
-                    if (this._mask) {
-                        if (this.sprite) {
-                            if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
-                                this._material = this._system.defaultScreenSpaceImageMask9SlicedMaterial;
-                            } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
-                                this._material = this._system.defaultScreenSpaceImageMask9TiledMaterial;
-                            } else {
-                                this._material = this._system.defaultScreenSpaceImageMaskMaterial;
-                            }
-                        } else {
-                            this._material = this._system.defaultScreenSpaceImageMaskMaterial;
-                        }
-                    } else {
-                        if (this.sprite) {
-                            if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
-                                this._material = this._system.defaultScreenSpaceImage9SlicedMaterial;
-                            } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
-                                this._material = this._system.defaultScreenSpaceImage9TiledMaterial;
-                            } else {
-                                this._material = this._system.defaultScreenSpaceImageMaterial;
-                            }
-                        } else {
-                            this._material = this._system.defaultScreenSpaceImageMaterial;
-                        }
-                    }
+            var mask = !!this._mask;
+            var nineSliced = !!(this.sprite && this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED);
+            var nineTiled = !!(this.sprite && this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED);
 
-                }
-
-                if (this._renderable) this._renderable.setCull(false);
-
-            } else {
-                if (!this._hasUserMaterial()) {
-                    if (this._mask) {
-                        if (this.sprite) {
-                            if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
-                                this._material = this._system.defaultImage9SlicedMaskMaterial;
-                            } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
-                                this._material = this._system.defaultImage9TiledMaskMaterial;
-                            } else {
-                                this._material = this._system.defaultImageMaskMaterial;
-                            }
-                        } else {
-                            this._material = this._system.defaultImageMaskMaterial;
-                        }
-                    } else {
-                        if (this.sprite) {
-                            if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
-                                this._material = this._system.defaultImage9SlicedMaterial;
-                            } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
-                                this._material = this._system.defaultImage9TiledMaterial;
-                            } else {
-                                this._material = this._system.defaultImageMaterial;
-                            }
-                        } else {
-                            this._material = this._system.defaultImageMaterial;
-                        }
-                    }
-                }
-
-                if (this._renderable) this._renderable.setCull(true);
+            if (!this._hasUserMaterial()) {
+                this._material = this._system.getImageElementMaterial(screenSpace, mask, nineSliced, nineTiled);
             }
 
+            // disable culling for screenspace elements
             if (this._renderable) {
+                this._renderable.setCull(!screenSpace);
+
                 this._renderable.setMaterial(this._material);
                 this._renderable.setScreenSpace(screenSpace);
                 this._renderable.setLayer(screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD);
             }
+
+            // if (screenSpace) {
+            //     if (!this._hasUserMaterial()) {
+            //         if (this._mask) {
+            //             if (this.sprite) {
+            //                 if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
+            //                     this._material = this._system.defaultScreenSpaceImageMask9SlicedMaterial;
+            //                 } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
+            //                     this._material = this._system.defaultScreenSpaceImageMask9TiledMaterial;
+            //                 } else {
+            //                     this._material = this._system.defaultScreenSpaceImageMaskMaterial;
+            //                 }
+            //             } else {
+            //                 this._material = this._system.defaultScreenSpaceImageMaskMaterial;
+            //             }
+            //         } else {
+            //             if (this.sprite) {
+            //                 if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
+            //                     this._material = this._system.defaultScreenSpaceImage9SlicedMaterial;
+            //                 } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
+            //                     this._material = this._system.defaultScreenSpaceImage9TiledMaterial;
+            //                 } else {
+            //                     this._material = this._system.defaultScreenSpaceImageMaterial;
+            //                 }
+            //             } else {
+            //                 this._material = this._system.defaultScreenSpaceImageMaterial;
+            //             }
+            //         }
+
+            //     }
+
+            //     if (this._renderable) this._renderable.setCull(false);
+
+            // } else {
+            //     if (!this._hasUserMaterial()) {
+            //         if (this._mask) {
+            //             if (this.sprite) {
+            //                 if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
+            //                     this._material = this._system.defaultImage9SlicedMaskMaterial;
+            //                 } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
+            //                     this._material = this._system.defaultImage9TiledMaskMaterial;
+            //                 } else {
+            //                     this._material = this._system.defaultImageMaskMaterial;
+            //                 }
+            //             } else {
+            //                 this._material = this._system.defaultImageMaskMaterial;
+            //             }
+            //         } else {
+            //             if (this.sprite) {
+            //                 if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
+            //                     this._material = this._system.defaultImage9SlicedMaterial;
+            //                 } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
+            //                     this._material = this._system.defaultImage9TiledMaterial;
+            //                 } else {
+            //                     this._material = this._system.defaultImageMaterial;
+            //                 }
+            //             } else {
+            //                 this._material = this._system.defaultImageMaterial;
+            //             }
+            //         }
+            //     }
+
+            //     if (this._renderable) this._renderable.setCull(true);
+            // }
+
+            // if (this._renderable) {
+            //     this._renderable.setMaterial(this._material);
+            //     this._renderable.setScreenSpace(screenSpace);
+            //     this._renderable.setLayer(screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD);
+            // }
         },
 
         // build a quad for the image
@@ -454,7 +471,7 @@ Object.assign(pc, function () {
             if (this._element.screen) {
                 this._updateMaterial(this._element.screen.screen.screenSpace);
             } else {
-                this._updateMaterial();
+                this._updateMaterial(false);
             }
 
             // force update meshInstance aabb
