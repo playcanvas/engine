@@ -46,8 +46,8 @@ Object.assign(pc, function () {
 
     Object.assign(ScrollViewComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            if (data['dragThreshold'] === undefined) {
-                data['dragThreshold'] = DEFAULT_DRAG_THRESHOLD;
+            if (data.dragThreshold === undefined) {
+                data.dragThreshold = DEFAULT_DRAG_THRESHOLD;
             }
 
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);

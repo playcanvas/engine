@@ -152,8 +152,8 @@ Object.assign(pc, function () {
                     var dx = (position.x - this._dragStartPosition.x);
                     var dy = (position.y - this._dragStartPosition.y);
 
-                    if (Math.abs(dx) > this.dragThreshold
-                        || Math.abs(dy) > this.dragThreshold) {
+                    if (Math.abs(dx) > this.dragThreshold ||
+                        Math.abs(dy) > this.dragThreshold) {
                         this._disableContentInput();
                     }
 
