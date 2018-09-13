@@ -932,9 +932,9 @@ Object.assign(pc, function () {
             material.setParameter("emitterScale", new Float32Array([1, 1, 1]));
 
             if (this.pack8) {
-                this.worldBoundsSizeUniform[0] = this.worldBoundsSize[0];
-                this.worldBoundsSizeUniform[1] = this.worldBoundsSize[1];
-                this.worldBoundsSizeUniform[2] = this.worldBoundsSize[2];
+                this.worldBoundsSizeUniform[0] = this.worldBoundsSize.x;
+                this.worldBoundsSizeUniform[1] = this.worldBoundsSize.y;
+                this.worldBoundsSizeUniform[2] = this.worldBoundsSize.z;
                 material.setParameter("inBoundsSize", this.worldBoundsSizeUniform);
                 this.worldBoundsCenterUniform[0] = this.worldBounds.center.x;
                 this.worldBoundsCenterUniform[1] = this.worldBounds.center.y;
