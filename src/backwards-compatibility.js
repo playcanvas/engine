@@ -222,20 +222,41 @@ Object.defineProperty(pc.shaderChunks, "transformSkinnedVS", {
     }
 });
 
-function defineDataAccessor(numComponents) {
-    var type = 'Vec' + numComponents;
-    var vectorType = pc[type];
-    Object.defineProperty(vectorType.prototype, "data", {
-        get: function () {
-            console.warn(type + '#data is not public API should not be used. Access vector components via their individual properties.');
-            if (!this._data) {
-                this._data = new Float32Array(numComponents);
-            }
-            return this._data;
+Object.defineProperty(pc.Vec2.prototype, "data", {
+    get: function () {
+//        console.warn('pc.Vec2#data is not public API and should not be used. Access vector components via their individual properties.');
+        if (!this._data) {
+            this._data = new Float32Array(2);
         }
-    });
-}
+        this._data[0] = this.x;
+        this._data[1] = this.y;
+        return this._data;
+    }
+});
 
-for (var i = 2; i <= 4; i++) {
-    defineDataAccessor(i);
-}
+Object.defineProperty(pc.Vec3.prototype, "data", {
+    get: function () {
+//        console.warn('pc.Vec3#data is not public API and should not be used. Access vector components via their individual properties.');
+        if (!this._data) {
+            this._data = new Float32Array(3);
+        }
+        this._data[0] = this.x;
+        this._data[1] = this.y;
+        this._data[2] = this.z;
+        return this._data;
+    }
+});
+
+Object.defineProperty(pc.Vec4.prototype, "data", {
+    get: function () {
+//        console.warn('pc.Vec4#data is not public API and should not be used. Access vector components via their individual properties.');
+        if (!this._data) {
+            this._data = new Float32Array(4);
+        }
+        this._data[0] = this.x;
+        this._data[1] = this.y;
+        this._data[2] = this.z;
+        this._data[3] = this.w;
+        return this._data;
+    }
+});
