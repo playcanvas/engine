@@ -48,16 +48,21 @@ Object.assign(pc, function () {
         pc.GraphNode.call(this, name);
 
         if (name instanceof pc.Application) app = name;
-        this._guid = pc.guid.create(); // Globally Unique Identifier
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
         this.c = {}; // Component storage
+
         this._app = app; // store app
         if (!app) {
             this._app = pc.Application.getApplication(); // get the current application
             if (!this._app) {
-                console.error("Couldn't find current application");
+                throw new Error("Couldn't find current application");
             }
         }
+
+        this.setGuid(pc.guid.create()); // Globally Unique Identifier
+
+        // used by component systems to speed up destruction
+        this._destroying = false;
 
         pc.events.attach(this);
     };
@@ -165,7 +170,12 @@ Object.assign(pc, function () {
      * @param {String} guid The GUID to assign to the Entity
      */
     Entity.prototype.setGuid = function (guid) {
+        // remove current guid from entityIndex
+        var index = this._app._entityIndex;
+        delete index[this._guid];
+        // add new guid to entityIndex
         this._guid = guid;
+        index[this._guid] = this;
     };
 
     Entity.prototype._notifyHierarchyStateChanged = function (node, enabled) {
@@ -258,12 +268,11 @@ Object.assign(pc, function () {
     Entity.prototype.findByGuid = function (guid) {
         if (this._guid === guid) return this;
 
-        for (var i = 0; i < this._children.length; i++) {
-            if (this._children[i].findByGuid) {
-                var found = this._children[i].findByGuid(guid);
-                if (found !== null) return found;
-            }
+        var e = this._app._entityIndex[guid];
+        if (e && (e === this || e.isDescendantOf(this))) {
+            return e;
         }
+
         return null;
     };
 
@@ -277,6 +286,8 @@ Object.assign(pc, function () {
      */
     Entity.prototype.destroy = function () {
         var name;
+
+        this._destroying = true;
 
         // Disable all enabled components first
         for (name in this.c) {
@@ -316,6 +327,11 @@ Object.assign(pc, function () {
 
         if (this._callbackActive)
             this._callbackActive = null;
+
+        // remove from entity index
+        delete this._app._entityIndex[this._guid];
+
+        this._destroying = false;
     };
 
     /**

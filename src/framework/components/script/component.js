@@ -13,14 +13,34 @@ Object.assign(pc, function () {
     var ScriptComponent = function ScriptComponent(system, entity) {
         pc.Component.call(this, system, entity);
 
+        // holds all script instances for this component
         this._scripts = [];
+        // holds all script instances with an update method
+        this._updateList = new pc.SortedLoopArray({ sortBy: '__executionOrder' });
+        // holds all script instances with a postUpdate method
+        this._postUpdateList = new pc.SortedLoopArray({ sortBy: '__executionOrder' });
+
         this._scriptsIndex = {};
         this._destroyedScripts = [];
         this._destroyed = false;
         this._scriptsData = null;
         this._oldState = true;
+
+        // override default 'enabled' property of base pc.Component
+        // because this is faster
+        this._enabled = true;
+
+        // whether this component is currently being enabled
         this._beingEnabled = false;
+        // if true then we are currently looping through
+        // script instances. This is used to prevent a scripts array
+        // from being modified while a loop is being executed
         this._isLoopingThroughScripts = false;
+
+        // the order that this component will be updated
+        // by the script system. This is set by the system itself.
+        this._executionOrder = -1;
+
         this.on('set_enabled', this._onSetEnabled, this);
     };
     ScriptComponent.prototype = Object.create(pc.Component.prototype);
@@ -237,6 +257,12 @@ Object.assign(pc, function () {
             this.fire(state ? 'enable' : 'disable');
             this.fire('state', state);
 
+            if (state) {
+                this.system._addComponentToEnabled(this);
+            } else {
+                this.system._removeComponentFromEnabled(this);
+            }
+
             var wasLooping = this._beginLooping();
 
             var script;
@@ -268,14 +294,16 @@ Object.assign(pc, function () {
             var len = this._destroyedScripts.length;
             if (!len) return;
 
-            for (var i = 0; i < len; i++) {
-                var idx = this._scripts.indexOf(this._destroyedScripts[i]);
-                if (idx >= 0) {
-                    this._scripts.splice(idx, 1);
-                }
+            var i;
+            for (i = 0; i < len; i++) {
+                var script = this._destroyedScripts[i];
+                this._removeScriptInstance(script);
             }
 
             this._destroyedScripts.length = 0;
+
+            // update execution order for scripts
+            this._resetExecutionOrder(0, this._scripts.length);
         },
 
         _onInitializeAttributes: function () {
@@ -322,34 +350,110 @@ Object.assign(pc, function () {
         },
 
         _onUpdate: function (dt) {
-            var script, scripts = this._scripts;
+            var self = this;
+            var list = self._updateList;
+            if (! list.length) return;
 
-            var wasLooping = this._beginLooping();
+            var script;
 
-            for (var i = 0, len = scripts.length; i < len; i++) {
-                script = scripts[i];
-                if (script.update && script.enabled)
-                    this._scriptMethod(script, ScriptComponent.scriptMethods.update, dt);
+            var wasLooping = self._beginLooping();
+
+            for (list.loopIndex = 0; list.loopIndex < list.length; list.loopIndex++) {
+                script = list.items[list.loopIndex];
+                if (script.enabled) {
+                    self._scriptMethod(script, ScriptComponent.scriptMethods.update, dt);
+                }
             }
 
-            this._endLooping(wasLooping);
+            self._endLooping(wasLooping);
         },
 
         _onPostUpdate: function (dt) {
-            var i;
-            var len;
+            var self = this;
+            var list = self._postUpdateList;
+            if (! list.length) return;
 
-            var wasLooping = this._beginLooping();
+            var wasLooping = self._beginLooping();
 
-            var script, scripts = this._scripts;
+            var script;
 
-            for (i = 0, len = scripts.length; i < len; i++) {
-                script = scripts[i];
-                if (script.postUpdate && script.enabled)
-                    this._scriptMethod(script, ScriptComponent.scriptMethods.postUpdate, dt);
+            for (list.loopIndex = 0; list.loopIndex < list.length; list.loopIndex++) {
+                script = list.items[list.loopIndex];
+                if (script.enabled) {
+                    self._scriptMethod(script, ScriptComponent.scriptMethods.postUpdate, dt);
+                }
             }
 
-            this._endLooping(wasLooping);
+            self._endLooping(wasLooping);
+        },
+
+        /**
+         * @private
+         * Inserts script instance into the scripts array at the specified index. Also inserts the script
+         * into the update list if it has an update method and the post update list if it has a postUpdate method.
+         * @param {Object} scriptInstance The script instance
+         * @param {Number} index The index where to insert the script at. If -1 then append it at the end.
+         * @param {Number} scriptsLength The length of the scripts array.
+         */
+        _insertScriptInstance: function (scriptInstance, index, scriptsLength) {
+            if (index === -1) {
+                // append script at the end and set execution order
+                this._scripts.push(scriptInstance);
+                scriptInstance.__executionOrder = scriptsLength;
+
+                // append script to the update list if it has an update method
+                if (scriptInstance.update) {
+                    this._updateList.append(scriptInstance);
+                }
+
+                // add script to the postUpdate list if it has a postUpdate method
+                if (scriptInstance.postUpdate) {
+                    this._postUpdateList.append(scriptInstance);
+                }
+            } else {
+                // insert script at index and set execution order
+                this._scripts.splice(index, 0, scriptInstance);
+                scriptInstance.__executionOrder = index;
+
+                // now we also need to update the execution order of all
+                // the script instances that come after this script
+                this._resetExecutionOrder(index + 1, scriptsLength + 1);
+
+                // insert script to the update list if it has an update method
+                // in the right order
+                if (scriptInstance.update) {
+                    this._updateList.insert(scriptInstance);
+                }
+
+                // insert script to the postUpdate list if it has a postUpdate method
+                // in the right order
+                if (scriptInstance.postUpdate) {
+                    this._postUpdateList.insert(scriptInstance);
+                }
+            }
+        },
+
+        _removeScriptInstance: function (scriptInstance) {
+            var idx = this._scripts.indexOf(scriptInstance);
+            if (idx === -1) return idx;
+
+            this._scripts.splice(idx, 1);
+
+            if (scriptInstance.update) {
+                this._updateList.remove(scriptInstance);
+            }
+
+            if (scriptInstance.postUpdate) {
+                this._postUpdateList.remove(scriptInstance);
+            }
+
+            return idx;
+        },
+
+        _resetExecutionOrder: function (startIndex, scriptsLength) {
+            for (var i = startIndex; i < scriptsLength; i++) {
+                this._scripts[i].__executionOrder = i;
+            }
         },
 
         /**
@@ -415,15 +519,12 @@ Object.assign(pc, function () {
                         attributes: args.attributes || null
                     });
 
+                    var len = this._scripts.length;
                     var ind = -1;
-                    if (typeof args.ind === 'number' && args.ind !== -1 && this._scripts.length > args.ind)
+                    if (typeof args.ind === 'number' && args.ind !== -1 && len > args.ind)
                         ind = args.ind;
 
-                    if (ind === -1) {
-                        this._scripts.push(scriptInstance);
-                    } else {
-                        this._scripts.splice(ind, 0, scriptInstance);
-                    }
+                    this._insertScriptInstance(scriptInstance, ind, len);
 
                     this._scriptsIndex[scriptType.__name] = {
                         instance: scriptInstance,
@@ -506,8 +607,10 @@ Object.assign(pc, function () {
                 // if we are not currently looping through our scripts
                 // then it's safe to remove the script
                 if (!this._isLoopingThroughScripts) {
-                    var ind = this._scripts.indexOf(scriptData.instance);
-                    this._scripts.splice(ind, 1);
+                    var ind = this._removeScriptInstance(scriptData.instance);
+                    if (ind >= 0) {
+                        this._resetExecutionOrder(ind, this._scripts.length);
+                    }
                 } else {
                     // otherwise push the script in _destroyedScripts and
                     // remove it from _scripts when the loop is over
@@ -558,6 +661,23 @@ Object.assign(pc, function () {
             this._scripts[ind] = scriptInstance;
             this._scriptsIndex[scriptType.__name].instance = scriptInstance;
             this[scriptType.__name] = scriptInstance;
+
+            // set execution order and make sure we update
+            // our update and postUpdate lists
+            scriptInstance.__executionOrder = ind;
+            if (scriptInstanceOld.update) {
+                this._updateList.remove(scriptInstanceOld);
+            }
+            if (scriptInstanceOld.postUpdate) {
+                this._postUpdateList.remove(scriptInstanceOld);
+            }
+
+            if (scriptInstance.update) {
+                this._updateList.insert(scriptInstance);
+            }
+            if (scriptInstance.postUpdate) {
+                this._postUpdateList.insert(scriptInstance);
+            }
 
             this._scriptMethod(scriptInstance, ScriptComponent.scriptMethods.swap, scriptInstanceOld);
 
@@ -674,7 +794,8 @@ Object.assign(pc, function () {
          * entity.script.move('playerController', 0);
          */
         move: function (name, ind) {
-            if (ind >= this._scripts.length)
+            var len = this._scripts.length;
+            if (ind >= len || ind < 0)
                 return false;
 
             var scriptName = name;
@@ -693,6 +814,11 @@ Object.assign(pc, function () {
             // move script to another position
             this._scripts.splice(ind, 0, this._scripts.splice(indOld, 1)[0]);
 
+            // reset execution order for scripts and re-sort update and postUpdate lists
+            this._resetExecutionOrder(0, len);
+            this._updateList.sort();
+            this._postUpdateList.sort();
+
             this.fire('move', scriptName, scriptData.instance, ind, indOld);
             this.fire('move:' + scriptName, scriptData.instance, ind, indOld);
 
@@ -700,6 +826,16 @@ Object.assign(pc, function () {
         }
     });
 
+    Object.defineProperty(ScriptComponent.prototype, 'enabled', {
+        get: function () {
+            return this._enabled;
+        },
+        set: function (value) {
+            var oldValue = this._enabled;
+            this._enabled = value;
+            this.fire('set', 'enabled', oldValue, value);
+        }
+    });
 
     Object.defineProperty(ScriptComponent.prototype, 'scripts', {
         get: function () {

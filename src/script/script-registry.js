@@ -63,20 +63,29 @@ Object.assign(pc, function () {
             if (!self._scripts.hasOwnProperty(script.__name))
                 return;
 
+
+            // this is a check for a possible error
+            // that might happen if the app has been destroyed before
+            // setTimeout has finished
+            if (! self.app.systems.script) {
+                return;
+            }
+
             var components = self.app.systems.script._components;
             var i, scriptInstance, attributes;
             var scriptInstances = [];
             var scriptInstancesInitialized = [];
 
-            for (i = 0; i < components.length; i++) {
+            for (components.loopIndex = 0; components.loopIndex < components.length; components.loopIndex++) {
+                var component = components.items[components.loopIndex];
                 // check if awaiting for script
-                if (components[i]._scriptsIndex[script.__name] && components[i]._scriptsIndex[script.__name].awaiting) {
-                    if (components[i]._scriptsData && components[i]._scriptsData[script.__name])
-                        attributes = components[i]._scriptsData[script.__name].attributes;
+                if (component._scriptsIndex[script.__name] && component._scriptsIndex[script.__name].awaiting) {
+                    if (component._scriptsData && component._scriptsData[script.__name])
+                        attributes = component._scriptsData[script.__name].attributes;
 
-                    scriptInstance = components[i].create(script.__name, {
+                    scriptInstance = component.create(script.__name, {
                         preloading: true,
-                        ind: components[i]._scriptsIndex[script.__name].ind,
+                        ind: component._scriptsIndex[script.__name].ind,
                         attributes: attributes
                     });
 

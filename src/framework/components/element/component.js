@@ -87,12 +87,18 @@ Object.assign(pc, function () {
      * @property {Number} materialAsset The id of the material asset to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {pc.Material} material The material to use when rendering an image. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {pc.Vec4} rect Specifies which region of the texture to use in order to render an image. Values range from 0 to 1 and indicate u, v, width, height. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
+     * @property {Boolean} rtlReorder Reorder the text for RTL languages using a function registered by <code>app.systems.element.registerUnicodeConverter</code>.
+     * @property {Boolean} unicodeConverter Convert unicode characters using a function registered by <code>app.systems.element.registerUnicodeConverter</code>.
      * @property {Number} batchGroupId Assign element to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var ElementComponent = function ElementComponent(system, entity) {
         pc.Component.call(this, system, entity);
+
+        // set to true by the ElementComponentSystem while
+        // the component is being initialized
+        this._beingInitialized = false;
 
         this._anchor = new pc.Vec4();
         this._localAnchor = new pc.Vec4();
@@ -408,23 +414,31 @@ Object.assign(pc, function () {
             this.system._prerender.length = 0;
         },
 
+        _bindScreen: function (screen) {
+            screen.on('set:resolution', this._onScreenResize, this);
+            screen.on('set:referenceresolution', this._onScreenResize, this);
+            screen.on('set:scaleblend', this._onScreenResize, this);
+            screen.on('set:screenspace', this._onScreenSpaceChange, this);
+            screen.on('remove', this._onScreenRemove, this);
+        },
+
+        _unbindScreen: function (screen) {
+            screen.off('set:resolution', this._onScreenResize, this);
+            screen.off('set:referenceresolution', this._onScreenResize, this);
+            screen.off('set:scaleblend', this._onScreenResize, this);
+            screen.off('set:screenspace', this._onScreenSpaceChange, this);
+            screen.off('remove', this._onScreenRemove, this);
+        },
+
         _updateScreen: function (screen) {
             if (this.screen && this.screen !== screen) {
-                this.screen.screen.off('set:resolution', this._onScreenResize, this);
-                this.screen.screen.off('set:referenceresolution', this._onScreenResize, this);
-                this.screen.screen.off('set:scaleblend', this._onScreenResize, this);
-                this.screen.screen.off('set:screenspace', this._onScreenSpaceChange, this);
-                this.screen.screen.off('remove', this._onScreenRemove, this);
+                this._unbindScreen(this.screen.screen);
             }
 
             var previousScreen = this.screen;
             this.screen = screen;
             if (this.screen) {
-                this.screen.screen.on('set:resolution', this._onScreenResize, this);
-                this.screen.screen.on('set:referenceresolution', this._onScreenResize, this);
-                this.screen.screen.on('set:scaleblend', this._onScreenResize, this);
-                this.screen.screen.on('set:screenspace', this._onScreenSpaceChange, this);
-                this.screen.screen.on('remove', this._onScreenRemove, this);
+                this._bindScreen(this.screen.screen);
             }
 
             this._calculateSize(this._hasSplitAnchorsX, this._hasSplitAnchorsY);
@@ -607,7 +621,10 @@ Object.assign(pc, function () {
         },
 
         _onScreenRemove: function () {
-            this._updateScreen(null);
+            // if there is a screen and it is not being destroyed
+            if (this.screen && !this.screen._destroying) {
+                this._updateScreen(null);
+            }
         },
 
         // store pixel positions of anchor relative to current parent resolution
@@ -728,7 +745,8 @@ Object.assign(pc, function () {
             }
 
             // if there is a screen, update draw-order
-            if (this.screen) {
+            if (this.screen && this.screen.screen) {
+                this._unbindScreen(this.screen.screen);
                 this.screen.screen.syncDrawOrder();
             }
         },
@@ -1423,7 +1441,8 @@ Object.assign(pc, function () {
     _define("alignment");
     _define("autoWidth");
     _define("autoHeight");
-
+    _define("rtlReorder");
+    _define("unicodeConverter");
     _define("text");
     _define("texture");
     _define("textureAsset");

@@ -1,5 +1,6 @@
 describe("pc.TextElement", function () {
     var app;
+    var assets;
     var entity;
     var element;
 
@@ -8,7 +9,7 @@ describe("pc.TextElement", function () {
         buildElement(done);
     });
 
-    var buildElement = function(callback) {
+    var buildElement = function (callback) {
         entity = new pc.Entity("myEntity", app);
         element = app.systems.element.addComponent(entity, { type: pc.ELEMENTTYPE_TEXT });
         element.autoWidth = false;
@@ -20,7 +21,7 @@ describe("pc.TextElement", function () {
             url: "base/examples/assets/Arial/Arial.json"
         });
 
-        fontAsset.ready(function() {
+        fontAsset.ready(function () {
             element.fontAsset = fontAsset;
             callback();
         }.bind(this));
@@ -29,9 +30,13 @@ describe("pc.TextElement", function () {
         app.assets.load(fontAsset);
 
         app.root.addChild(entity);
+
+        assets = {
+            font: fontAsset
+        };
     };
 
-    var assertLineContents = function(expectedLineContents) {
+    var assertLineContents = function (expectedLineContents) {
         expect(element.lines.length).to.equal(expectedLineContents.length);
         expect(element.lines).to.deep.equal(expectedLineContents);
     };
@@ -116,7 +121,7 @@ describe("pc.TextElement", function () {
             "i",
             "j",
             "k",
-            "l",
+            "l"
         ]);
     });
 
@@ -174,5 +179,133 @@ describe("pc.TextElement", function () {
             "hij"
         ]);
     });
-});
 
+    it('AssetRegistry events unbound on destroy for font asset', function () {
+        var e = new pc.Entity();
+
+        e.addComponent('element', {
+            type: 'text',
+            fontAsset: 123456
+        });
+
+        expect(app.assets.hasEvent('add:123456')).to.be.true;
+
+        e.destroy();
+
+        expect(app.assets.hasEvent('add:123456')).to.be.false;
+    });
+
+
+    it('Font assets unbound when reset', function () {
+        expect(!assets.font.hasEvent('add')).to.exist;
+        expect(!assets.font.hasEvent('load')).to.exist;
+        expect(!assets.font.hasEvent('remove')).to.exist;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            fontAsset: assets.font
+        });
+
+        e.element.fontAsset = null;
+
+        expect(!assets.font.hasEvent('add')).to.exist;
+        expect(!assets.font.hasEvent('load')).to.exist;
+        expect(!assets.font.hasEvent('remove')).to.exist;
+    });
+
+    it('Font assets unbound when destroy', function () {
+        expect(!assets.font.hasEvent('add')).to.exist;
+        expect(!assets.font.hasEvent('load')).to.exist;
+        expect(!assets.font.hasEvent('remove')).to.exist;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            fontAsset: assets.font
+        });
+
+        e.destroy();
+
+        expect(!assets.font.hasEvent('add')).to.exist;
+        expect(!assets.font.hasEvent('load')).to.exist;
+        expect(!assets.font.hasEvent('remove')).to.exist;
+    });
+
+    it("defaults to white color and opacity 1", function () {
+        expect(element.color.r).to.equal(1);
+        expect(element.color.g).to.equal(1);
+        expect(element.color.b).to.equal(1);
+        expect(element.opacity).to.equal(1);
+
+        var meshes = element._text._model.meshInstances;
+        for (var i = 0; i < meshes.length; i++) {
+            var color = meshes[i].getParameter('material_emissive').data;
+            expect(color[0]).to.equal(1);
+            expect(color[1]).to.equal(1);
+            expect(color[2]).to.equal(1);
+
+            var opacity = meshes[i].getParameter('material_opacity').data;
+            expect(opacity).to.equal(1);
+        }
+    });
+
+    it("uses color and opacity passed in addComponent data", function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            text: 'test',
+            fontAsset: element.fontAsset,
+            color: [0.1, 0.2, 0.3],
+            opacity: 0.4
+        });
+
+        expect(e.element.color.r).to.be.closeTo(0.1, 0.001);
+        expect(e.element.color.g).to.be.closeTo(0.2, 0.001);
+        expect(e.element.color.b).to.be.closeTo(0.3, 0.001);
+        expect(e.element.opacity).to.be.closeTo(0.4, 0.001);
+
+        var meshes = e.element._text._model.meshInstances;
+        for (var i = 0; i < meshes.length; i++) {
+            var color = meshes[i].getParameter('material_emissive').data;
+            expect(color[0]).to.be.closeTo(0.1, 0.001);
+            expect(color[1]).to.be.closeTo(0.2, 0.001);
+            expect(color[2]).to.be.closeTo(0.3, 0.001);
+
+            var opacity = meshes[i].getParameter('material_opacity').data;
+            expect(opacity).to.be.closeTo(0.4, 0.001);
+        }
+    });
+
+    it("changes color", function () {
+        element.color = new pc.Color(0.1, 0.2, 0.3);
+
+        expect(element.color.r).to.be.closeTo(0.1, 0.001);
+        expect(element.color.g).to.be.closeTo(0.2, 0.001);
+        expect(element.color.b).to.be.closeTo(0.3, 0.001);
+        expect(element.opacity).to.be.closeTo(1, 0.001);
+
+        var meshes = element._text._model.meshInstances;
+        for (var i = 0; i < meshes.length; i++) {
+            var color = meshes[i].getParameter('material_emissive').data;
+            expect(color[0]).to.be.closeTo(0.1, 0.001);
+            expect(color[1]).to.be.closeTo(0.2, 0.001);
+            expect(color[2]).to.be.closeTo(0.3, 0.001);
+
+            var opacity = meshes[i].getParameter('material_opacity').data;
+            expect(opacity).to.be.closeTo(1, 0.001);
+        }
+    });
+
+    it("changes opacity", function () {
+        element.opacity = 0.4;
+        expect(element.opacity).to.be.closeTo(0.4, 0.001);
+
+        var meshes = element._text._model.meshInstances;
+        for (var i = 0; i < meshes.length; i++) {
+            var opacity = meshes[i].getParameter('material_opacity').data;
+            expect(opacity).to.be.closeTo(0.4, 0.001);
+        }
+    });
+
+});

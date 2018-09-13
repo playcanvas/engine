@@ -59,6 +59,10 @@ Object.assign(pc, function () {
         this._scroll = new pc.Vec2();
         this._velocity = new pc.Vec3();
 
+        this._dragStartPosition = new pc.Vec3();
+        this._disabledContentInput = false;
+        this._disabledContentInputEntities = [];
+
         this._toggleLifecycleListeners('on', system);
         this._toggleElementListeners('on');
     };
@@ -109,6 +113,7 @@ Object.assign(pc, function () {
         _onContentElementGain: function () {
             this._destroyDragHelper();
             this._contentDragHelper = new pc.ElementDragHelper(this._contentReference.entity.element);
+            this._contentDragHelper.on('drag:start', this._onContentDragStart, this);
             this._contentDragHelper.on('drag:end', this._onContentDragEnd, this);
             this._contentDragHelper.on('drag:move', this._onContentDragMove, this);
 
@@ -122,14 +127,37 @@ Object.assign(pc, function () {
             this._destroyDragHelper();
         },
 
+        _onContentDragStart: function () {
+            if (this._contentReference.entity && this.enabled && this.entity.enabled) {
+                this._dragStartPosition.copy(this._contentReference.entity.getLocalPosition());
+            }
+        },
+
         _onContentDragEnd: function () {
             this._prevContentDragPosition = null;
+            this._enableContentInput();
         },
 
         _onContentDragMove: function (position) {
             if (this._contentReference.entity && this.enabled && this.entity.enabled) {
+                this._wasDragged = true;
                 this._setScrollFromContentPosition(position);
                 this._setVelocityFromContentPositionDelta(position);
+
+                // if we haven't already, when scrolling starts
+                // disable input on all child elements
+                if (!this._disabledContentInput) {
+
+                    // Disable input events on content after we've moved past a threshold value
+                    var dx = (position.x - this._dragStartPosition.x);
+                    var dy = (position.y - this._dragStartPosition.y);
+
+                    if (Math.abs(dx) > this.dragThreshold ||
+                        Math.abs(dy) > this.dragThreshold) {
+                        this._disableContentInput();
+                    }
+
+                }
             }
         },
 
@@ -184,7 +212,11 @@ Object.assign(pc, function () {
         _updateAxis: function (scrollValue, axis, orientation) {
             var hasChanged = (scrollValue !== null && Math.abs(scrollValue - this._scroll[axis]) > 1e-5);
 
-            if (hasChanged) {
+            // always update if dragging because drag helper directly updates the entity position
+            // always update if scrollValue === 0 because it will be clamped to 0
+            // if viewport is larger than content and position could be moved by drag helper but
+            // hasChanged will never be true
+            if (hasChanged || this._isDragging() || scrollValue === 0) {
                 this._scroll[axis] = this._determineNewScrollValue(scrollValue, axis, orientation);
                 this._syncContentPosition(orientation);
                 this._syncScrollbarPosition(orientation);
@@ -250,6 +282,7 @@ Object.assign(pc, function () {
                 var offset = this._scroll[axis] * this._getMaxOffset(orientation);
                 var contentPosition = contentEntity.getLocalPosition();
                 contentPosition[axis] = offset * sign;
+
                 contentEntity.setLocalPosition(contentPosition);
 
                 this._prevContentSizes[orientation] = currContentSize;
@@ -303,10 +336,22 @@ Object.assign(pc, function () {
         },
 
         _contentPositionToScrollValue: function (contentPosition) {
-            return _tempScrollValue.set(
-                contentPosition.x / this._getMaxOffset(pc.ORIENTATION_HORIZONTAL),
-                contentPosition.y / -this._getMaxOffset(pc.ORIENTATION_VERTICAL)
-            );
+            var maxOffsetH = this._getMaxOffset(pc.ORIENTATION_HORIZONTAL);
+            var maxOffsetV = this._getMaxOffset(pc.ORIENTATION_VERTICAL);
+
+            if (maxOffsetH === 0) {
+                _tempScrollValue.x = 0;
+            } else {
+                _tempScrollValue.x = contentPosition.x / maxOffsetH;
+            }
+
+            if (maxOffsetV === 0) {
+                _tempScrollValue.y = 0;
+            } else {
+                _tempScrollValue.y = contentPosition.y / -maxOffsetV;
+            }
+
+            return _tempScrollValue;
         },
 
         _getMaxOffset: function (orientation, contentSize) {
@@ -473,7 +518,38 @@ Object.assign(pc, function () {
 
         _setScrollFromContentPosition: function (position) {
             var scrollValue = this._contentPositionToScrollValue(position);
+
+            if (this._isDragging()) {
+                scrollValue = this._applyScrollValueTension(scrollValue);
+            }
+
             this._onSetScroll(scrollValue.x, scrollValue.y, false);
+        },
+
+        // Create nice tension effect when dragging past the extents of the viewport
+        _applyScrollValueTension: function (scrollValue) {
+            var max;
+            var overshoot;
+            var factor = 1;
+
+            max = this._getMaxScrollValue(pc.ORIENTATION_HORIZONTAL);
+            overshoot = this._toOvershoot(scrollValue.x, pc.ORIENTATION_HORIZONTAL);
+            if (overshoot > 0) {
+                scrollValue.x = max + factor * Math.log10(1 + overshoot);
+            } else if (overshoot < 0) {
+                scrollValue.x = -factor * Math.log10(1 - overshoot);
+            }
+
+            max = this._getMaxScrollValue(pc.ORIENTATION_VERTICAL);
+            overshoot = this._toOvershoot(scrollValue.y, pc.ORIENTATION_VERTICAL);
+
+            if (overshoot > 0) {
+                scrollValue.y = max + factor * Math.log10(1 + overshoot);
+            } else if (overshoot < 0) {
+                scrollValue.y = -factor * Math.log10(1 - overshoot);
+            }
+
+            return scrollValue;
         },
 
         _isDragging: function () {
@@ -494,6 +570,47 @@ Object.assign(pc, function () {
             if (this._contentDragHelper) {
                 this._contentDragHelper.enabled = enabled;
             }
+        },
+
+        // re-enable useInput flag on any descendent that was disabled
+        _enableContentInput: function () {
+            while (this._disabledContentInputEntities.length) {
+                var e = this._disabledContentInputEntities.pop();
+                if (e.element) {
+                    e.element.useInput = true;
+                }
+            }
+
+            this._disabledContentInput = false;
+        },
+
+        // disable useInput flag on all descendents of this contentEntity
+        _disableContentInput: function () {
+            var self = this;
+            var _disableInput = function (e) {
+                if (e.element && e.element.useInput) {
+                    self._disabledContentInputEntities.push(e);
+                    e.element.useInput = false;
+                }
+
+                var children = e.children;
+                var i, l;
+                for (i = 0, l = children.length; i < l; i++) {
+                    _disableInput(children[i]);
+                }
+            };
+
+            var contentEntity = this._contentReference.entity;
+            if (contentEntity) {
+                // disable input recursively for all children of the content entity
+                var children = contentEntity.children;
+                var i, l = children.length;
+                for (i = 0; i < l; i++) {
+                    _disableInput(children[i]);
+                }
+            }
+
+            this._disabledContentInput = true;
         },
 
         onEnable: function () {
