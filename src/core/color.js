@@ -72,6 +72,24 @@ Object.assign(pc, (function () {
 
         /**
          * @function
+         * @name pc.Color#equals
+         * @description Reports whether two colors are equal.
+         * @param {pc.Color} rhs The color to compare to the specified color.
+         * @returns {Boolean} true if the colors are equal and false otherwise.
+         * @example
+         * var red = new pc.Color(1, 0, 0, 1);
+         * var blue = new pc.Color(0, 0, 1, 1);
+         * console.log("The two colors are " + (red.equals(blue) ? "equal" : "different"));
+         */
+        equals: function (rhs) {
+            var a = this.data,
+                b = rhs.data;
+
+            return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
+        },
+
+        /**
+         * @function
          * @name pc.Color#set
          * @description Assign values to the color components, including alpha
          * @param {Number} r The value for red (0-1)

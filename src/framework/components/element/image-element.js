@@ -826,30 +826,33 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
-            this._color.data[0] = value.data[0];
-            this._color.data[1] = value.data[1];
-            this._color.data[2] = value.data[2];
+            var color = this._color;
+            if (!color.equals(value)) {
+                color.copy(value);
 
-            this._renderable.setParameter('material_emissive', this._color.data3);
+                this._renderable.setParameter('material_emissive', color.data3);
 
-            if (this._element) {
-                this._element.fire('set:color', this._color);
+                if (this._element) {
+                    this._element.fire('set:color', color);
+                }
             }
         }
     });
 
     Object.defineProperty(ImageElement.prototype, "opacity", {
         get: function () {
-            return this._color.data[3];
+            return this._color.a;
         },
 
         set: function (value) {
-            this._color.data[3] = value;
+            if (this._color.a !== value) {
+                this._color.a = value;
 
-            this._renderable.setParameter('material_opacity', value);
+                this._renderable.setParameter('material_opacity', value);
 
-            if (this._element) {
-                this._element.fire('set:opacity', this._color.data[3]);
+                if (this._element) {
+                    this._element.fire('set:opacity', value);
+                }
             }
         }
     });
@@ -860,12 +863,27 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            var rect = this._rect;
+            var x, y, z, w;
             if (value instanceof pc.Vec4) {
-                this._rect.set(value.x, value.y, value.z, value.w);
+                x = value.x;
+                y = value.y;
+                z = value.z;
+                w = value.w;
             } else {
-                this._rect.set(value[0], value[1], value[2], value[3]);
+                x = value[0];
+                y = value[1];
+                z = value[2];
+                w = value[3];
             }
-            if (this._renderable.mesh) this._updateMesh(this._renderable.mesh);
+
+            if (rect.x !== x || rect.y !== y || rect.z !== z || rect.w !== w) {
+                rect.set(x, y, z, w);
+
+                if (this._renderable.mesh) {
+                    this._updateMesh(this._renderable.mesh);
+                }
+            }
         }
     });
 
