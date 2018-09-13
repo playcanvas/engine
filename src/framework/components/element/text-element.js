@@ -738,6 +738,13 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            if (this._color.data[0] === value.data[0] &&
+                this._color.data[1] === value.data[1] &&
+                this._color.data[2] === value.data[2]
+            ) {
+                return;
+            }
+
             this._color.data[0] = value.data[0];
             this._color.data[1] = value.data[1];
             this._color.data[2] = value.data[2];
@@ -757,6 +764,8 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            if (this._color.data[3] === value) return;
+
             this._color.data[3] = value;
 
             if (this._model) {
@@ -1021,9 +1030,13 @@ Object.assign(pc, function () {
     Object.defineProperty(TextElement.prototype, "aabb", {
         get: function () {
             if (this._aabbDirty) {
+                var initialized = false;
                 for (var i = 0; i < this._meshInfo.length; i++) {
-                    if (i === 0) {
+                    if (! this._meshInfo[i].meshInstance) continue;
+
+                    if (! initialized) {
                         this._aabb.copy(this._meshInfo[i].meshInstance.aabb);
+                        initialized = true;
                     } else {
                         this._aabb.add(this._meshInfo[i].meshInstance.aabb);
                     }
