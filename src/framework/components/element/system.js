@@ -64,6 +64,8 @@ Object.assign(pc, function () {
 
     Object.assign(ElementComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
+            component._beingInitialized = true;
+
             if (data.anchor !== undefined) {
                 if (data.anchor instanceof pc.Vec4) {
                     component.anchor.copy(data.anchor);
@@ -152,11 +154,7 @@ Object.assign(pc, function () {
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
                 if (data.rect !== undefined) {
-                    if (data.rect instanceof pc.Vec4) {
-                        component.rect.copy(data.rect);
-                    } else {
-                        component.rect.set(data.rect[0], data.rect[1], data.rect[2], data.rect[3]);
-                    }
+                    component.rect = data.rect;
                 }
                 if (data.color !== undefined) {
                     if (data.color instanceof pc.Color) {
@@ -234,6 +232,12 @@ Object.assign(pc, function () {
             }
 
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+
+            component._beingInitialized = false;
+
+            if (component.type === pc.ELEMENTTYPE_IMAGE && component._image._meshDirty) {
+                component._image._updateMesh(component._image.mesh);
+            }
         },
 
         onRemoveComponent: function (entity, component) {

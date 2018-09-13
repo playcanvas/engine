@@ -1,8 +1,10 @@
 describe('pc.ImageElement', function () {
     var app;
     var assets;
+    var sandbox;
 
     beforeEach(function (done) {
+        sandbox = sinon.createSandbox();
         app = new pc.Application(document.createElement("canvas"));
 
         loadAllAssets(function () {
@@ -11,6 +13,7 @@ describe('pc.ImageElement', function () {
     });
 
     afterEach(function () {
+        sandbox.restore();
         app.destroy();
     });
 
@@ -57,7 +60,7 @@ describe('pc.ImageElement', function () {
         assets = {};
 
         loadAssets(assetsToPreload, function () {
-            assets.textureatlas = assetsToPreload[0]
+            assets.textureatlas = assetsToPreload[0];
 
             loadAssets(assetsToLoad, function () {
                 assets.sprite = assetsToLoad[0];
@@ -65,9 +68,10 @@ describe('pc.ImageElement', function () {
                 assets.material = assetsToLoad[2];
 
                 cb();
-            })
+            });
         });
-    }
+    };
+
 
     it('Add Image Element', function () {
         var e = new pc.Entity();
@@ -284,5 +288,258 @@ describe('pc.ImageElement', function () {
         expect(app.assets.hasEvent('add:123456')).to.equal(false);
     });
 
-});
+    it('Image element calls _updateMesh once when rect changes', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image'
+        });
+        app.root.addChild(e);
 
+        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        e.element.rect = [1, 1, 1, 1];
+        expect(spy.calledOnce).to.equal(true);
+    });
+
+    it('Image element does not call _updateMesh if rect is the same', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image'
+        });
+        app.root.addChild(e);
+
+        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        e.element.rect = [0, 0, 1, 1];
+        e.element.rect = new pc.Vec4(0, 0, 1, 1);
+        expect(spy.notCalled).to.equal(true);
+    });
+
+    it('Image element calls _updateMesh if only rect passed in data', function () {
+        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+
+        var rect = [1, 1, 1, 1];
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            rect: rect
+        });
+        app.root.addChild(e);
+
+        expect(spy.calledTwice).to.equal(true);
+
+        expect(e.element._image._uvs).to.deep.equal([
+            rect[0],
+            rect[1],
+            rect[0] + rect[2],
+            rect[1],
+            rect[0] + rect[2],
+            rect[1] + rect[3],
+            rect[0],
+            rect[1] + rect[3]
+        ]);
+    });
+
+    it('Image element calls _updateMesh once at the start and once at the end when all properties that call it are passed into the data', function () {
+        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+
+        var sprite = new pc.Sprite(app.graphicsDevice, {
+            frameKeys: [1, 2]
+        });
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            rect: [1, 1, 1, 1],
+            spriteFrame: 1,
+            sprite: sprite
+        });
+        app.root.addChild(e);
+
+        expect(spy.calledTwice).to.equal(true);
+
+        expect(e.element.sprite).to.equal(sprite);
+        expect(e.element.spriteFrame).to.equal(1);
+        expect(e.element.rect.x).to.equal(1);
+        expect(e.element.rect.y).to.equal(1);
+        expect(e.element.rect.z).to.equal(1);
+        expect(e.element.rect.w).to.equal(1);
+    });
+
+    it('Image element calls _updateMesh once when sprite changes', function () {
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image'
+        });
+        app.root.addChild(e);
+
+        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        e.element.sprite = new pc.Sprite(app.graphicsDevice, {
+            frameKeys: []
+        });
+        expect(spy.calledOnce).to.equal(true);
+    });
+
+    it('Image element does not call _updateMesh if sprite is the same', function () {
+        var sprite = new pc.Sprite(app.graphicsDevice, {
+            frameKeys: []
+        });
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            sprite: sprite
+        });
+        app.root.addChild(e);
+
+        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        e.element.sprite = sprite;
+        expect(spy.notCalled).to.equal(true);
+    });
+
+    it('Image element calls _updateMesh once when spriteFrame changes', function () {
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteFrame: 1,
+            sprite: new pc.Sprite(app.graphicsDevice, {
+                frameKeys: [1, 2]
+            })
+        });
+        app.root.addChild(e);
+
+        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        e.element.spriteFrame = 0;
+        expect(spy.calledOnce).to.equal(true);
+    });
+
+    it('Image element does not call _updateMesh if spriteFrame is the same', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            sprite: new pc.Sprite(app.graphicsDevice, {
+                frameKeys: [1, 2]
+            }),
+            spriteFrame: 1
+        });
+        app.root.addChild(e);
+
+        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        e.element.spriteFrame = 1;
+        expect(spy.notCalled).to.equal(true);
+    });
+
+    it('Image element spriteFrame clamped to the latest frame available to the sprite asset', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            sprite: new pc.Sprite(app.graphicsDevice, {
+                frameKeys: [1, 2]
+            }),
+            spriteFrame: 2
+        });
+        app.root.addChild(e);
+
+        expect(e.element.spriteFrame).to.equal(1);
+    });
+
+    it('Image element spriteFrame clamped to the latest frame available to the sprite when a different sprite is assigned', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            sprite: new pc.Sprite(app.graphicsDevice, {
+                frameKeys: [1, 2]
+            }),
+            spriteFrame: 1
+        });
+        app.root.addChild(e);
+        expect(e.element.spriteFrame).to.equal(1);
+
+        e.element.sprite = new pc.Sprite(app.graphicsDevice, {
+            frameKeys: [1]
+        });
+        expect(e.element.spriteFrame).to.equal(0);
+    });
+
+    it('Image element spriteFrame clamped to the latest frame available to the sprite when the frame keys of the sprite change', function () {
+        var atlas = new pc.TextureAtlas();
+        atlas.frames = {
+            0: { rect: new pc.Vec4(), pivot: new pc.Vec2() },
+            1: { rect: new pc.Vec4(), pivot: new pc.Vec2() }
+        };
+        atlas.texture = new pc.Texture(app.graphicsDevice);
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            sprite: new pc.Sprite(app.graphicsDevice, {
+                frameKeys: [0, 1],
+                atlas: atlas
+            }),
+            spriteFrame: 1
+        });
+        app.root.addChild(e);
+        expect(e.element.spriteFrame).to.equal(1);
+
+        e.element.sprite.frameKeys = [0];
+        expect(e.element.spriteFrame).to.equal(0);
+    });
+
+    it('Image element calls _updateMesh when its sprite is 9-sliced and the sprite\'s PPU changes', function () {
+        var atlas = new pc.TextureAtlas();
+        atlas.frames = {
+            0: { rect: new pc.Vec4(), pivot: new pc.Vec2(), border: new pc.Vec4() },
+            1: { rect: new pc.Vec4(), pivot: new pc.Vec2(), border: new pc.Vec4() }
+        };
+        atlas.texture = new pc.Texture(app.graphicsDevice);
+
+        var sprite = new pc.Sprite(app.graphicsDevice, {
+            atlas: atlas,
+            frameKeys: [0, 1],
+            pixelsPerUnit: 1,
+            renderMode: pc.SPRITE_RENDERMODE_SLICED
+        });
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            sprite: sprite,
+            spriteFrame: 0
+        });
+        app.root.addChild(e);
+
+        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        sprite.pixelsPerUnit = 2;
+        expect(spy.calledOnce).to.equal(true);
+    });
+
+    it('Image element calls _updateMesh once when its sprite is not 9-sliced and the sprite\'s PPU changes', function () {
+        var atlas = new pc.TextureAtlas();
+        atlas.frames = {
+            0: { rect: new pc.Vec4(), pivot: new pc.Vec2(), border: new pc.Vec4() },
+            1: { rect: new pc.Vec4(), pivot: new pc.Vec2(), border: new pc.Vec4() }
+        };
+        atlas.texture = new pc.Texture(app.graphicsDevice);
+
+        var sprite = new pc.Sprite(app.graphicsDevice, {
+            atlas: atlas,
+            frameKeys: [0, 1],
+            pixelsPerUnit: 1,
+            renderMode: pc.SPRITE_RENDERMODE_SIMPLE
+        });
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            sprite: sprite,
+            spriteFrame: 0
+        });
+        app.root.addChild(e);
+
+        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
+        sprite.pixelsPerUnit = 2;
+        expect(spy.calledOnce).to.equal(true);
+    });
+
+});

@@ -9,7 +9,7 @@ describe("pc.ElementComponent", function() {
         app.destroy();
     });
 
-    it.only('screen component unbound on reset', function () {
+    it('screen component unbound on reset', function () {
         var screen = new pc.Entity();
         screen.addComponent('screen');
         app.root.addChild(screen);
@@ -34,7 +34,7 @@ describe("pc.ElementComponent", function() {
         expect(screen.screen.hasEvent('remove')).to.be.false;
     });
 
-    it.only('screen component unbound on destroy', function () {
+    it('screen component unbound on destroy', function () {
         var screen = new pc.Entity();
         screen.addComponent('screen');
         app.root.addChild(screen);
