@@ -85,6 +85,7 @@ Object.assign(pc, function () {
             var splitHorAnchors = Math.abs(component.anchor.x - component.anchor.z) > 0.001;
             var splitVerAnchors = Math.abs(component.anchor.y - component.anchor.w) > 0.001;
             var _marginChange = false;
+            var color;
 
             if (data.margin !== undefined) {
                 if (data.margin instanceof pc.Vec4) {
@@ -157,28 +158,14 @@ Object.assign(pc, function () {
                     component.rect = data.rect;
                 }
                 if (data.color !== undefined) {
-                    if (data.color instanceof pc.Color) {
-                        component.color.set(data.color.data[0], data.color.data[1], data.color.data[2], data.opacity !== undefined ? data.opacity : 1);
-                    } else {
-                        component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
+                    color = data.color;
+                    if (! (color instanceof pc.Color)) {
+                        color = new pc.Color(data.color[0], data.color[1], data.color[2]);
                     }
-                    // force update
-                    component.color = component.color;
-                } else {
-                    // default to white
-                    // force a value to update meshinstance parameters
-                    var opacity = data.opacity || 1;
-                    component.color.set(1, 1, 1, opacity);
-                    component.color = component.color;
+                    component.color = color;
                 }
 
-                if (data.opacity !== undefined) {
-                    component.opacity = data.opacity;
-                } else {
-                    // default to 1
-                    // force a value to update meshinstance parameters
-                    component.opacity = 1;
-                }
+                if (data.opacity !== undefined) component.opacity = data.opacity;
                 if (data.textureAsset !== undefined) component.textureAsset = data.textureAsset;
                 if (data.texture) component.texture = data.texture;
                 if (data.spriteAsset !== undefined) component.spriteAsset = data.spriteAsset;
@@ -198,7 +185,7 @@ Object.assign(pc, function () {
                 if (data.unicodeConverter !== undefined) component.unicodeConverter = data.unicodeConverter;
                 if (data.text !== undefined) component.text = data.text;
                 if (data.color !== undefined) {
-                    var color = data.color;
+                    color = data.color;
                     if (! (color instanceof pc.Color)) {
                         color = new pc.Color(color[0], color[1], color[2]);
                     }
