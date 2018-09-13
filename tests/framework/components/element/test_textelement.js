@@ -1,4 +1,4 @@
-describe.only("pc.TextElement", function () {
+describe("pc.TextElement", function () {
     var app;
     var assets;
     var entity;
