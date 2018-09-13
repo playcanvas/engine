@@ -4,6 +4,10 @@
  * @description Extended String API
  */
 pc.string = function () {
+    var ASCII_LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
+    var ASCII_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    var ASCII_LETTERS = ASCII_LOWERCASE + ASCII_UPPERCASE;
+
     var HIGH_SURROGATE_BEGIN = 0xD800;
     var HIGH_SURROGATE_END = 0xDBFF;
     var LOW_SURROGATE_BEGIN = 0xDC00;
@@ -82,21 +86,21 @@ pc.string = function () {
          * @description All lowercase letters
          * @type String
          */
-        ASCII_LOWERCASE: "abcdefghijklmnopqrstuvwxyz",
+        ASCII_LOWERCASE: ASCII_LOWERCASE,
 
         /**
          * @name pc.string.ASCII_UPPERCASE
          * @description All uppercase letters
          * @type String
          */
-        ASCII_UPPERCASE: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        ASCII_UPPERCASE: ASCII_UPPERCASE,
 
         /**
          * @name pc.string.ASCII_LETTERS
          * @description All ASCII letters
          * @type String
          */
-        ASCII_LETTERS: this.ASCII_LOWERCASE + this.ASCII_UPPERCASE,
+        ASCII_LETTERS: ASCII_LETTERS,
         /**
          * @function
          * @name pc.string.format

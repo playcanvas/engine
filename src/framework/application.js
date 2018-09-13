@@ -170,6 +170,10 @@ Object.assign(pc, function () {
         this._audioManager = new pc.SoundManager(options);
         this.loader = new pc.ResourceLoader();
 
+        // stores all entities that have been created
+        // for this app by guid
+        this._entityIndex = {};
+
         this.scene = new pc.Scene();
         this.root = new pc.Entity(this);
         this.root._enabledInHierarchy = true;

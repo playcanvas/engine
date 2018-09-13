@@ -45,6 +45,9 @@ Object.assign(pc, function () {
         this._currentMaterialType = null; // save the material type (screenspace or not) to prevent overwriting
         this._maskedMaterialSrc = null; // saved material that was assigned before element was masked
 
+        this._rtlReorder = false;
+        this._unicodeConverter = false;
+
         // initialize based on screen
         this._onScreenChange(this._element.screen);
 
@@ -709,8 +712,9 @@ Object.assign(pc, function () {
 
         set: function (value) {
             var str = value.toString();
+
             if (this.unicodeConverter) {
-                var unicodeConverterFunc = this._system.app.systems.element.getUnicodeConverter();
+                var unicodeConverterFunc = this._system.getUnicodeConverter();
                 if (unicodeConverterFunc) {
                     str = unicodeConverterFunc(str);
                 } else {
@@ -975,6 +979,36 @@ Object.assign(pc, function () {
             // does not have split vertical anchors
             if (value && Math.abs(this._element.anchor.y - this._element.anchor.w) < 0.0001) {
                 this._element.height = this.height;
+            }
+        }
+    });
+
+
+    Object.defineProperty(TextElement.prototype, "rtlReorder", {
+        get: function () {
+            return this._rtlReorder;
+        },
+
+        set: function (value) {
+            if (this._rtlReorder !== value) {
+                this._rtlReorder = value;
+                if (this._font) {
+                    this._updateText();
+                }
+            }
+        }
+    });
+
+
+    Object.defineProperty(TextElement.prototype, "unicodeConverter", {
+        get: function () {
+            return this._unicodeConverter;
+        },
+
+        set: function (value) {
+            if (this._unicodeConverter !== value) {
+                this._unicodeConverter = value;
+                this.text = this._text;
             }
         }
     });
