@@ -85,6 +85,7 @@ Object.assign(pc, function () {
             var splitHorAnchors = Math.abs(component.anchor.x - component.anchor.z) > 0.001;
             var splitVerAnchors = Math.abs(component.anchor.y - component.anchor.w) > 0.001;
             var _marginChange = false;
+            var color;
 
             if (data.margin !== undefined) {
                 if (data.margin instanceof pc.Vec4) {
@@ -157,7 +158,7 @@ Object.assign(pc, function () {
                     component.rect = data.rect;
                 }
                 if (data.color !== undefined) {
-                    var color = data.color;
+                    color = data.color;
                     if (! (color instanceof pc.Color)) {
                         color = new pc.Color(data.color[0], data.color[1], data.color[2]);
                     }
@@ -184,7 +185,7 @@ Object.assign(pc, function () {
                 if (data.unicodeConverter !== undefined) component.unicodeConverter = data.unicodeConverter;
                 if (data.text !== undefined) component.text = data.text;
                 if (data.color !== undefined) {
-                    var color = data.color;
+                    color = data.color;
                     if (! (color instanceof pc.Color)) {
                         color = new pc.Color(color[0], color[1], color[2]);
                     }
