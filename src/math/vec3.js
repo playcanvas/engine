@@ -317,7 +317,7 @@ Object.assign(pc, (function () {
          * console.log("The result of the vector projection is: " + v.toString());
          */
         project: function (rhs) {
-            var a_dot_b = this.x * this.x + this.y * this.y + this.z * this.z;
+            var a_dot_b = this.x * rhs.x + this.y * rhs.y + this.z * rhs.z;
             var b_dot_b = rhs.x * rhs.x + rhs.y * rhs.y + rhs.z * rhs.z;
             var s = a_dot_b / b_dot_b;
             this.x = rhs.x * s;
