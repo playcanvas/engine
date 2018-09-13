@@ -71,6 +71,8 @@ Object.assign(pc, function () {
                 this._model = null;
             }
 
+            this.fontAsset = null;
+
             this._element.off('resize', this._onParentResize, this);
             this._element.off('set:screen', this._onScreenChange, this);
             this._element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
@@ -736,6 +738,13 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            if (this._color.data[0] === value.data[0] &&
+                this._color.data[1] === value.data[1] &&
+                this._color.data[2] === value.data[2]
+            ) {
+                return;
+            }
+
             this._color.data[0] = value.data[0];
             this._color.data[1] = value.data[1];
             this._color.data[2] = value.data[2];
@@ -755,6 +764,8 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            if (this._color.data[3] === value) return;
+
             this._color.data[3] = value;
 
             if (this._model) {
@@ -843,6 +854,8 @@ Object.assign(pc, function () {
 
             if (this._fontAsset !== _id) {
                 if (this._fontAsset) {
+                    assets.off('add:' + this._fontAsset, this._onFontAdded, this);
+
                     var _prev = assets.get(this._fontAsset);
 
                     if (_prev) {
@@ -1017,9 +1030,13 @@ Object.assign(pc, function () {
     Object.defineProperty(TextElement.prototype, "aabb", {
         get: function () {
             if (this._aabbDirty) {
+                var initialized = false;
                 for (var i = 0; i < this._meshInfo.length; i++) {
-                    if (i === 0) {
+                    if (! this._meshInfo[i].meshInstance) continue;
+
+                    if (! initialized) {
                         this._aabb.copy(this._meshInfo[i].meshInstance.aabb);
+                        initialized = true;
                     } else {
                         this._aabb.add(this._meshInfo[i].meshInstance.aabb);
                     }
