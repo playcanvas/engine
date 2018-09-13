@@ -61,6 +61,9 @@ Object.assign(pc, function () {
 
         this.setGuid(pc.guid.create()); // Globally Unique Identifier
 
+        // used by component systems to speed up destruction
+        this._destroying = false;
+
         pc.events.attach(this);
     };
     Entity.prototype = Object.create(pc.GraphNode.prototype);
@@ -284,6 +287,8 @@ Object.assign(pc, function () {
     Entity.prototype.destroy = function () {
         var name;
 
+        this._destroying = true;
+
         // Disable all enabled components first
         for (name in this.c) {
             this.c[name].enabled = false;
@@ -325,6 +330,8 @@ Object.assign(pc, function () {
 
         // remove from entity index
         delete this._app._entityIndex[this._guid];
+
+        this._destroying = false;
     };
 
     /**

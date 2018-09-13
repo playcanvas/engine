@@ -344,76 +344,6 @@ Object.assign(pc, function () {
                 this._renderable.setScreenSpace(screenSpace);
                 this._renderable.setLayer(screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD);
             }
-
-            // if (screenSpace) {
-            //     if (!this._hasUserMaterial()) {
-            //         if (this._mask) {
-            //             if (this.sprite) {
-            //                 if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
-            //                     this._material = this._system.defaultScreenSpaceImageMask9SlicedMaterial;
-            //                 } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
-            //                     this._material = this._system.defaultScreenSpaceImageMask9TiledMaterial;
-            //                 } else {
-            //                     this._material = this._system.defaultScreenSpaceImageMaskMaterial;
-            //                 }
-            //             } else {
-            //                 this._material = this._system.defaultScreenSpaceImageMaskMaterial;
-            //             }
-            //         } else {
-            //             if (this.sprite) {
-            //                 if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
-            //                     this._material = this._system.defaultScreenSpaceImage9SlicedMaterial;
-            //                 } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
-            //                     this._material = this._system.defaultScreenSpaceImage9TiledMaterial;
-            //                 } else {
-            //                     this._material = this._system.defaultScreenSpaceImageMaterial;
-            //                 }
-            //             } else {
-            //                 this._material = this._system.defaultScreenSpaceImageMaterial;
-            //             }
-            //         }
-
-            //     }
-
-            //     if (this._renderable) this._renderable.setCull(false);
-
-            // } else {
-            //     if (!this._hasUserMaterial()) {
-            //         if (this._mask) {
-            //             if (this.sprite) {
-            //                 if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
-            //                     this._material = this._system.defaultImage9SlicedMaskMaterial;
-            //                 } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
-            //                     this._material = this._system.defaultImage9TiledMaskMaterial;
-            //                 } else {
-            //                     this._material = this._system.defaultImageMaskMaterial;
-            //                 }
-            //             } else {
-            //                 this._material = this._system.defaultImageMaskMaterial;
-            //             }
-            //         } else {
-            //             if (this.sprite) {
-            //                 if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED) {
-            //                     this._material = this._system.defaultImage9SlicedMaterial;
-            //                 } else if (this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED) {
-            //                     this._material = this._system.defaultImage9TiledMaterial;
-            //                 } else {
-            //                     this._material = this._system.defaultImageMaterial;
-            //                 }
-            //             } else {
-            //                 this._material = this._system.defaultImageMaterial;
-            //             }
-            //         }
-            //     }
-
-            //     if (this._renderable) this._renderable.setCull(true);
-            // }
-
-            // if (this._renderable) {
-            //     this._renderable.setMaterial(this._material);
-            //     this._renderable.setScreenSpace(screenSpace);
-            //     this._renderable.setLayer(screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD);
-            // }
         },
 
         // build a quad for the image
@@ -468,11 +398,8 @@ Object.assign(pc, function () {
             var h = this._element.calculatedHeight;
 
             // update material
-            if (this._element.screen) {
-                this._updateMaterial(this._element.screen.screen.screenSpace);
-            } else {
-                this._updateMaterial(false);
-            }
+            var screenSpace = this._isScreenSpace();
+            this._updateMaterial(screenSpace);
 
             // force update meshInstance aabb
             if (this._renderable) this._renderable.forceUpdateAabb();
@@ -605,7 +532,7 @@ Object.assign(pc, function () {
         _toggleMask: function () {
             this._element._dirtifyMask();
 
-            var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
+            var screenSpace = this._isScreenSpace();
             this._updateMaterial(screenSpace);
 
             this._renderable.setMask(!!this._mask);
@@ -791,6 +718,14 @@ Object.assign(pc, function () {
         _onSpriteAssetRemove: function (asset) {
         },
 
+        _isScreenSpace: function () {
+            if (this._element.screen && this._element.screen.screen) {
+                return this._element.screen.screen.screenSpace;
+            }
+
+            return false;
+        },
+
         onEnable: function () {
             this._element.addModelToLayers(this._renderable.model);
         },
@@ -875,7 +810,7 @@ Object.assign(pc, function () {
         },
         set: function (value) {
             if (!value) {
-                var screenSpace = this._element.screen ? this._element.screen.screen.screenSpace : false;
+                var screenSpace = this._isScreenSpace();
                 value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
                 value = this._mask ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
             }

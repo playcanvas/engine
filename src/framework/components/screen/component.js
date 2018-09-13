@@ -136,6 +136,13 @@ Object.assign(pc, function () {
         onRemove: function () {
             this.system.app.graphicsDevice.off("resizecanvas", this._onResize, this);
             this.fire('remove');
+
+            // remove all events used by elements
+            this.off('set:resolution');
+            this.off('set:referenceresolution');
+            this.off('set:scaleblend');
+            this.off('set:screenspace');
+            this.off('remove');
         }
     });
 
