@@ -4,8 +4,8 @@ describe('pc.ImageElement', function () {
 
     beforeEach(function (done) {
         app = new pc.Application(document.createElement("canvas"));
-        console.log("before")
-        loadAssets(function () {
+
+        loadAllAssets(function () {
             done();
         });
     });
@@ -14,23 +14,35 @@ describe('pc.ImageElement', function () {
         app.destroy();
     });
 
-    var loadAssets = function (cb) {
+    var loadAssets = function (list, cb) {
         // listen for asset load events and fire cb() when all assets are loaded
         var count = 0;
         app.assets.on('load', function (asset) {
             count++;
-            if (count === assetsToLoad.length) {
+            if (count === list.length) {
                 cb();
             }
         });
 
+        // add and load assets
+        for (var i = 0; i < list.length; i++) {
+            app.assets.add(list[i]);
+            app.assets.load(list[i]);
+        }
+    };
+
+    var loadAllAssets = function (cb) {
         app.assets.prefix = '../../';
+
+        // load atlas first so that sprite is set up with out waiting for next frame
+        var assetsToPreload = [
+            new pc.Asset('red-atlas', 'textureatlas', {
+                url: 'base/tests/test-assets/sprite/red-atlas.json'
+            })
+        ];
 
         // list of assets to load
         var assetsToLoad = [
-            new pc.Asset('red-atlas', 'textureatlas', {
-                url: 'base/tests/test-assets/sprite/red-atlas.json'
-            }),
             new pc.Asset('red-sprite', 'sprite', {
                 url: 'base/tests/test-assets/sprite/red-sprite.json'
             }),
@@ -42,19 +54,19 @@ describe('pc.ImageElement', function () {
             })
         ];
 
-        // add and load assets
-        for (var i = 0; i < assetsToLoad.length; i++) {
-            app.assets.add(assetsToLoad[i]);
-            app.assets.load(assetsToLoad[i]);
-        }
+        assets = {};
 
-        // convenient access to assets by type
-        assets = {
-            textureatlas: assetsToLoad[0],
-            sprite: assetsToLoad[1],
-            texture: assetsToLoad[2],
-            material: assetsToLoad[3]
-        };
+        loadAssets(assetsToPreload, function () {
+            assets.textureatlas = assetsToPreload[0]
+
+            loadAssets(assetsToLoad, function () {
+                assets.sprite = assetsToLoad[0];
+                assets.texture = assetsToLoad[1];
+                assets.material = assetsToLoad[2];
+
+                cb();
+            })
+        });
     }
 
     it('Add Image Element', function () {
@@ -212,10 +224,11 @@ describe('pc.ImageElement', function () {
             spriteAsset: assets.sprite
         });
 
-        // var sprite = e.element.sprite;
-        // ok(!e.element.sprite.hasEvent('add'));
-        // ok(!e.element.sprite.hasEvent('load'));
-        // ok(!e.element.sprite.hasEvent('remove'));
+        var sprite = e.element.sprite;
+        expect(sprite).to.be.not.null;
+        expect(sprite.hasEvent('set:meshes')).to.be.true;
+        expect(sprite.hasEvent('set:pixelsPerUnit')).to.be.true;
+        expect(sprite.hasEvent('set:atlas')).to.be.true;
 
         expect(atlas.resource.hasEvent('set:texture')).to.equal(true);
 
@@ -223,9 +236,52 @@ describe('pc.ImageElement', function () {
 
         expect(atlas.resource.hasEvent('set:texture')).to.equal(false);
 
-        // ok(!assets.sprite.hasEvent('add'));
-        // ok(!assets.sprite.hasEvent('load'));
-        // ok(!assets.sprite.hasEvent('remove'));
+        expect(sprite.hasEvent('set:meshes')).to.be.false;
+        expect(sprite.hasEvent('set:pixelsPerUnit')).to.be.false;
+        expect(sprite.hasEvent('set:atlas')).to.be.false;
+    });
+
+
+    it('AssetRegistry events unbound on destroy for texture asset', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            textureAsset: 123456
+        });
+
+        expect(app.assets.hasEvent('add:123456')).to.equal(true);
+
+        e.destroy();
+
+        expect(app.assets.hasEvent('add:123456')).to.equal(false);
+    });
+
+    it('AssetRegistry events unbound on destroy for sprite asset', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: 123456
+        });
+
+        expect(app.assets.hasEvent('add:123456')).to.equal(true);
+
+        e.destroy();
+
+        expect(app.assets.hasEvent('add:123456')).to.equal(false);
+    });
+
+    it('AssetRegistry events unbound on destroy for material asset', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            materialAsset: 123456
+        });
+
+        expect(app.assets.hasEvent('add:123456')).to.equal(true);
+
+        e.destroy();
+
+        expect(app.assets.hasEvent('add:123456')).to.equal(false);
     });
 
 });
