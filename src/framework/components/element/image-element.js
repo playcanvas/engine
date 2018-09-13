@@ -847,6 +847,7 @@ Object.assign(pc, function () {
 
             if (this._materialAsset !== _id) {
                 if (this._materialAsset) {
+                    assets.off('add:' + this._materialAsset, this._onMaterialAdded, this);
                     var _prev = assets.get(this._materialAsset);
                     if (_prev) {
                         _prev.off("load", this._onMaterialLoad, this);
@@ -907,6 +908,7 @@ Object.assign(pc, function () {
 
             if (this._textureAsset !== _id) {
                 if (this._textureAsset) {
+                    assets.off('add:' + this._textureAsset, this._onTextureAdded, this);
                     var _prev = assets.get(this._textureAsset);
                     if (_prev) {
                         _prev.off("load", this._onTextureLoad, this);
@@ -945,6 +947,7 @@ Object.assign(pc, function () {
 
             if (this._spriteAsset !== _id) {
                 if (this._spriteAsset) {
+                    assets.off('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
                     var _prev = assets.get(this._spriteAsset);
                     if (_prev) {
                         this._unbindSpriteAsset(_prev);

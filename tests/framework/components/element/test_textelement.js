@@ -1,5 +1,6 @@
 describe("pc.TextElement", function () {
     var app;
+    var assets;
     var entity;
     var element;
 
@@ -29,6 +30,10 @@ describe("pc.TextElement", function () {
         app.assets.load(fontAsset);
 
         app.root.addChild(entity);
+
+        assets = {
+            font: fontAsset
+        };
     };
 
     var assertLineContents = function(expectedLineContents) {
@@ -173,6 +178,58 @@ describe("pc.TextElement", function () {
             "fg",
             "hij"
         ]);
+    });
+
+    it('AssetRegistry events unbound on destroy for font asset', function () {
+        var e = new pc.Entity();
+
+        e.addComponent('element', {
+            type: 'text',
+            fontAsset: 123456
+        });
+
+        expect(app.assets.hasEvent('add:123456')).to.be.true;
+
+        e.destroy();
+
+        expect(app.assets.hasEvent('add:123456')).to.be.false;
+    });
+
+
+    it('Font assets unbound when reset', function () {
+        expect(!assets.font.hasEvent('add')).to.exist;
+        expect(!assets.font.hasEvent('load')).to.exist;
+        expect(!assets.font.hasEvent('remove')).to.exist;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            fontAsset: assets.font
+        });
+
+        e.element.fontAsset = null;
+
+        expect(!assets.font.hasEvent('add')).to.exist;
+        expect(!assets.font.hasEvent('load')).to.exist;
+        expect(!assets.font.hasEvent('remove')).to.exist;
+    });
+
+    it('Font assets unbound when destroy', function () {
+        expect(!assets.font.hasEvent('add')).to.exist;
+        expect(!assets.font.hasEvent('load')).to.exist;
+        expect(!assets.font.hasEvent('remove')).to.exist;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            fontAsset: assets.font
+        });
+
+        e.destroy();
+
+        expect(!assets.font.hasEvent('add')).to.exist;
+        expect(!assets.font.hasEvent('load')).to.exist;
+        expect(!assets.font.hasEvent('remove')).to.exist;
     });
 });
 

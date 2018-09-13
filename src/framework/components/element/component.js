@@ -410,23 +410,31 @@ Object.assign(pc, function () {
             this.system._prerender.length = 0;
         },
 
+        _bindScreen: function (screen) {
+            screen.on('set:resolution', this._onScreenResize, this);
+            screen.on('set:referenceresolution', this._onScreenResize, this);
+            screen.on('set:scaleblend', this._onScreenResize, this);
+            screen.on('set:screenspace', this._onScreenSpaceChange, this);
+            screen.on('remove', this._onScreenRemove, this);
+        },
+
+        _unbindScreen: function (screen) {
+            screen.off('set:resolution', this._onScreenResize, this);
+            screen.off('set:referenceresolution', this._onScreenResize, this);
+            screen.off('set:scaleblend', this._onScreenResize, this);
+            screen.off('set:screenspace', this._onScreenSpaceChange, this);
+            screen.off('remove', this._onScreenRemove, this);
+        },
+
         _updateScreen: function (screen) {
             if (this.screen && this.screen !== screen) {
-                this.screen.screen.off('set:resolution', this._onScreenResize, this);
-                this.screen.screen.off('set:referenceresolution', this._onScreenResize, this);
-                this.screen.screen.off('set:scaleblend', this._onScreenResize, this);
-                this.screen.screen.off('set:screenspace', this._onScreenSpaceChange, this);
-                this.screen.screen.off('remove', this._onScreenRemove, this);
+                this._unbindScreen(this.screen.screen);
             }
 
             var previousScreen = this.screen;
             this.screen = screen;
             if (this.screen) {
-                this.screen.screen.on('set:resolution', this._onScreenResize, this);
-                this.screen.screen.on('set:referenceresolution', this._onScreenResize, this);
-                this.screen.screen.on('set:scaleblend', this._onScreenResize, this);
-                this.screen.screen.on('set:screenspace', this._onScreenSpaceChange, this);
-                this.screen.screen.on('remove', this._onScreenRemove, this);
+                this._bindScreen(this.screen.screen);
             }
 
             this._calculateSize(this._hasSplitAnchorsX, this._hasSplitAnchorsY);
@@ -734,6 +742,7 @@ Object.assign(pc, function () {
 
             // if there is a screen, update draw-order
             if (this.screen && this.screen.screen) {
+                this._unbindScreen(this.screen.screen);
                 this.screen.screen.syncDrawOrder();
             }
         },
