@@ -720,7 +720,7 @@ Object.assign(pc, function () {
 
         _isScreenSpace: function () {
             if (this._element.screen && this._element.screen.screen) {
-                return this._element.screen.screen.screenSpace
+                return this._element.screen.screen.screenSpace;
             }
 
             return false;
