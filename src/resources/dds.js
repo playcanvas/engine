@@ -1,5 +1,7 @@
 Object.assign(pc, function () {
 
+    /* eslint-disable no-unused-vars */
+
     // Defined here:
     // https://docs.microsoft.com/en-us/windows/desktop/direct3ddds/dds-header
     var DDSD_CAPS = 0x1;            // Required in every .dds file.
@@ -32,6 +34,8 @@ Object.assign(pc, function () {
     var DDPF_RGB = 0x40;
     var DDPF_YUV = 0x200;
     var DDPF_LUMINANCE = 0x20000;
+
+    /* eslint-enable no-unused-vars */
 
     // FourCC construction
     var makeFourCC = function (str) {
@@ -118,23 +122,23 @@ Object.assign(pc, function () {
         // If the ddspf.flags property is set to DDPF_FOURCC and ddspf.fourCc is set to
         // "DX10" an additional DDS_HEADER_DXT10 structure will be present.
         // https://docs.microsoft.com/en-us/windows/desktop/direct3ddds/dds-header-dxt10
-        var header10;
+        // var header10; // not used
         var isFcc = header.ddspf.flags & DDPF_FOURCC;
         var fcc = header.ddspf.fourCc;
         if (isFcc && (fcc === FCC_DX10)) {
             headerU32 = new Uint32Array(arrayBuffer, 128, 5);
-            header10 = {
-                dxgiFormat: headerU32[0],
-                resourceDimension: headerU32[1],
-                miscFlag: headerU32[2],
-                arraySize: headerU32[3],
-                miscFlags2: headerU32[4]
-            };
+            // header10 = {
+            //     dxgiFormat: headerU32[0],
+            //     resourceDimension: headerU32[1],
+            //     miscFlag: headerU32[2],
+            //     arraySize: headerU32[3],
+            //     miscFlags2: headerU32[4]
+            // };
             offset += 20;
         }
 
         // Read texture data
-        var bpp = header.ddspf.rgbBitCount;
+        // var bpp = header.ddspf.rgbBitCount; // not used
         var isCubeMap = header.caps2 === DDS_CUBEMAP_ALLFACES;
         var numFaces = isCubeMap ? 6 : 1;
         var numMips = header.flags & DDSD_MIPMAPCOUNT ? header.mipMapCount : 1;
@@ -179,6 +183,7 @@ Object.assign(pc, function () {
         this.width = header.width;
         this.height = header.height;
         this.levels = levels;
+        this.cubemap = isCubeMap;
     };
 
     return {
