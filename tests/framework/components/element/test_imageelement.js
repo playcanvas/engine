@@ -1,4 +1,4 @@
-describe.only('pc.ImageElement', function () {
+describe('pc.ImageElement', function () {
     var app;
     var assets;
     var sandbox;
