@@ -71,6 +71,8 @@ Object.assign(pc, function () {
                 this._model = null;
             }
 
+            this.fontAsset = null;
+
             this._element.off('resize', this._onParentResize, this);
             this._element.off('set:screen', this._onScreenChange, this);
             this._element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
@@ -852,6 +854,8 @@ Object.assign(pc, function () {
 
             if (this._fontAsset !== _id) {
                 if (this._fontAsset) {
+                    assets.off('add:' + this._fontAsset, this._onFontAdded, this);
+
                     var _prev = assets.get(this._fontAsset);
 
                     if (_prev) {

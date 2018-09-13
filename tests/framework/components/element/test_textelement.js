@@ -1,5 +1,6 @@
-describe("pc.TextElement", function () {
+describe.only("pc.TextElement", function () {
     var app;
+    var assets;
     var entity;
     var element;
 
@@ -8,7 +9,7 @@ describe("pc.TextElement", function () {
         buildElement(done);
     });
 
-    var buildElement = function(callback) {
+    var buildElement = function (callback) {
         entity = new pc.Entity("myEntity", app);
         element = app.systems.element.addComponent(entity, { type: pc.ELEMENTTYPE_TEXT });
         element.autoWidth = false;
@@ -20,7 +21,7 @@ describe("pc.TextElement", function () {
             url: "base/examples/assets/Arial/Arial.json"
         });
 
-        fontAsset.ready(function() {
+        fontAsset.ready(function () {
             element.fontAsset = fontAsset;
             callback();
         }.bind(this));
@@ -29,9 +30,13 @@ describe("pc.TextElement", function () {
         app.assets.load(fontAsset);
 
         app.root.addChild(entity);
+
+        assets = {
+            font: fontAsset
+        };
     };
 
-    var assertLineContents = function(expectedLineContents) {
+    var assertLineContents = function (expectedLineContents) {
         expect(element.lines.length).to.equal(expectedLineContents.length);
         expect(element.lines).to.deep.equal(expectedLineContents);
     };
@@ -116,7 +121,7 @@ describe("pc.TextElement", function () {
             "i",
             "j",
             "k",
-            "l",
+            "l"
         ]);
     });
 
@@ -173,6 +178,58 @@ describe("pc.TextElement", function () {
             "fg",
             "hij"
         ]);
+    });
+
+    it('AssetRegistry events unbound on destroy for font asset', function () {
+        var e = new pc.Entity();
+
+        e.addComponent('element', {
+            type: 'text',
+            fontAsset: 123456
+        });
+
+        expect(app.assets.hasEvent('add:123456')).to.be.true;
+
+        e.destroy();
+
+        expect(app.assets.hasEvent('add:123456')).to.be.false;
+    });
+
+
+    it('Font assets unbound when reset', function () {
+        expect(!assets.font.hasEvent('add')).to.exist;
+        expect(!assets.font.hasEvent('load')).to.exist;
+        expect(!assets.font.hasEvent('remove')).to.exist;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            fontAsset: assets.font
+        });
+
+        e.element.fontAsset = null;
+
+        expect(!assets.font.hasEvent('add')).to.exist;
+        expect(!assets.font.hasEvent('load')).to.exist;
+        expect(!assets.font.hasEvent('remove')).to.exist;
+    });
+
+    it('Font assets unbound when destroy', function () {
+        expect(!assets.font.hasEvent('add')).to.exist;
+        expect(!assets.font.hasEvent('load')).to.exist;
+        expect(!assets.font.hasEvent('remove')).to.exist;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            fontAsset: assets.font
+        });
+
+        e.destroy();
+
+        expect(!assets.font.hasEvent('add')).to.exist;
+        expect(!assets.font.hasEvent('load')).to.exist;
+        expect(!assets.font.hasEvent('remove')).to.exist;
     });
 
     it("defaults to white color and opacity 1", function () {
