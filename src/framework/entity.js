@@ -63,8 +63,6 @@ Object.assign(pc, function () {
 
         // used by component systems to speed up destruction
         this._destroying = false;
-        // used for debugging
-        this._destroyed = false;
 
         pc.events.attach(this);
     };
@@ -333,7 +331,7 @@ Object.assign(pc, function () {
         // remove from entity index
         delete this._app._entityIndex[this._guid];
 
-        this._destroyed = true;
+        this._destroying = false;
     };
 
     /**
