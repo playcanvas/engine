@@ -41,10 +41,6 @@ Object.assign(pc, function () {
         this.normalMatrix = new pc.Mat3();
         this._dirtyNormal = true;
 
-        this._right = new pc.Vec3();
-        this._up = new pc.Vec3();
-        this._forward = new pc.Vec3();
-
         this._parent = null;
         this._children = [];
         this._graphDepth = 0;
@@ -63,6 +59,9 @@ Object.assign(pc, function () {
      */
     Object.defineProperty(GraphNode.prototype, 'right', {
         get: function () {
+            if (!this._right) {
+                this._right = new pc.Vec3();
+            }
             return this.getWorldTransform().getX(this._right).normalize();
         }
     });
@@ -75,6 +74,9 @@ Object.assign(pc, function () {
      */
     Object.defineProperty(GraphNode.prototype, 'up', {
         get: function () {
+            if (!this._up) {
+                this._up = new pc.Vec3();
+            }
             return this.getWorldTransform().getY(this._up).normalize();
         }
     });
@@ -87,6 +89,9 @@ Object.assign(pc, function () {
      */
     Object.defineProperty(GraphNode.prototype, 'forward', {
         get: function () {
+            if (!this._forward) {
+                this._forward = new pc.Vec3();
+            }
             return this.getWorldTransform().getZ(this._forward).normalize().scale(-1);
         }
     });

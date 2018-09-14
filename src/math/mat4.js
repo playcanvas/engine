@@ -1,8 +1,6 @@
 Object.assign(pc, (function () {
     'use strict';
 
-    var typeNumber = 'number';
-
     /**
      * @constructor
      * @name pc.Mat4
@@ -25,34 +23,22 @@ Object.assign(pc, (function () {
      * @param {Number} [v14] The value in row 2, column 3.
      * @param {Number} [v15] The value in row 3, column 3.
      */
-    var Mat4 = function (v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15) {
-        if (v0 && v0.length === 16) {
-            this.data = new Float32Array(v0);
-            return;
+    var Mat4 = function () {
+        var data;
+        if (arguments.length === 0) {
+            // Create an identity matrix. Note that a new Float32Array has all elements set
+            // to zero by default, so we only need to set the relevant elements to one.
+            data = new Float32Array(16);
+            data[0] = data[5] = data[10] = data[15] = 1;
+        } else if (arguments.length === 1) {
+            data = new Float32Array(arguments[0]);
+        } else { // 16 values should have been passed
+            data = new Float32Array(16);
+            for (var i = 0; i < 16; i++) {
+                data[i] = arguments[i];
+            }
         }
-
-        this.data = new Float32Array(16);
-
-        if (typeof v0 === typeNumber) {
-            this.data[0] = v0;
-            this.data[1] = v1;
-            this.data[2] = v2;
-            this.data[3] = v3;
-            this.data[4] = v4;
-            this.data[5] = v5;
-            this.data[6] = v6;
-            this.data[7] = v7;
-            this.data[8] = v8;
-            this.data[9] = v9;
-            this.data[10] = v10;
-            this.data[11] = v11;
-            this.data[12] = v12;
-            this.data[13] = v13;
-            this.data[14] = v14;
-            this.data[15] = v15;
-        } else {
-            this.setIdentity();
-        }
+        this.data = data;
     };
 
     Object.assign(Mat4.prototype, {
@@ -67,7 +53,7 @@ Object.assign(pc, (function () {
          * @example
          * var m = new pc.Mat4();
          *
-         * m.add2(pc.Mat4.INDENTITY, pc.Mat4.ONE);
+         * m.add2(pc.Mat4.IDENTITY, pc.Mat4.ONE);
          *
          * console.log("The result of the addition is: " a.toString());
          */
