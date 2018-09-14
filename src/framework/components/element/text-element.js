@@ -228,7 +228,7 @@ Object.assign(pc, function () {
                     mi.screenSpace = screenSpace;
                     this._setTextureParams(mi, this._font.textures[i]);
                     mi.setParameter("material_emissive", this._color.data3);
-                    mi.setParameter("material_opacity", this._color.data[3]);
+                    mi.setParameter("material_opacity", this._color.a);
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
                     mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
@@ -738,22 +738,23 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            var r = value.r;
+            var g = value.g;
+            var b = value.b;
+
             // #ifdef DEBUG
             if (this._color === value) {
                 console.warn("Setting element.color to itself will have no effect");
             }
             // #endif
 
-            if (this._color.data[0] === value.data[0] &&
-                this._color.data[1] === value.data[1] &&
-                this._color.data[2] === value.data[2]
-            ) {
+            if (this._color.r === r && this._color.g === g && this._color.b === b) {
                 return;
             }
 
-            this._color.data[0] = value.data[0];
-            this._color.data[1] = value.data[1];
-            this._color.data[2] = value.data[2];
+            this._color.r = r;
+            this._color.g = g;
+            this._color.b = b;
 
             if (this._model) {
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
@@ -766,13 +767,13 @@ Object.assign(pc, function () {
 
     Object.defineProperty(TextElement.prototype, "opacity", {
         get: function () {
-            return this._color.data[3];
+            return this._color.a;
         },
 
         set: function (value) {
-            if (this._color.data[3] === value) return;
+            if (this._color.a === value) return;
 
-            this._color.data[3] = value;
+            this._color.a = value;
 
             if (this._model) {
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {

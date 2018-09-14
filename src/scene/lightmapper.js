@@ -360,14 +360,12 @@ Object.assign(pc, function () {
 
             // Store scene values
             var origFog = scene.fog;
-            var origAmbientR = scene.ambientLight.data[0];
-            var origAmbientG = scene.ambientLight.data[1];
-            var origAmbientB = scene.ambientLight.data[2];
+            var origAmbientR = scene.ambientLight.r;
+            var origAmbientG = scene.ambientLight.g;
+            var origAmbientB = scene.ambientLight.b;
 
             scene.fog = pc.FOG_NONE;
-            scene.ambientLight.data[0] = 0;
-            scene.ambientLight.data[1] = 0;
-            scene.ambientLight.data[2] = 0;
+            scene.ambientLight.set(0, 0, 0);
 
             // Create pseudo-camera
             if (!lmCamera) {
@@ -775,9 +773,7 @@ Object.assign(pc, function () {
 
             // Roll back scene stuff
             scene.fog = origFog;
-            scene.ambientLight.data[0] = origAmbientR;
-            scene.ambientLight.data[1] = origAmbientG;
-            scene.ambientLight.data[2] = origAmbientB;
+            scene.ambientLight.set(origAmbientR, origAmbientG, origAmbientB);
 
             // Revert static preprocessing
             if (revertStatic) {

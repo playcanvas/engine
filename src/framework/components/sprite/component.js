@@ -236,7 +236,7 @@ Object.assign(pc, function () {
 
                 // set overrides on mesh instance
                 this._meshInstance.setParameter(PARAM_EMISSIVE, this._color.data3);
-                this._meshInstance.setParameter(PARAM_OPACITY, this._color.data[3]);
+                this._meshInstance.setParameter(PARAM_OPACITY, this._color.a);
 
                 // now that we created the mesh instance, add the model to the scene
                 if (this.enabled && this.entity.enabled) {
@@ -614,9 +614,9 @@ Object.assign(pc, function () {
             return this._color;
         },
         set: function (value) {
-            this._color.data[0] = value.data[0];
-            this._color.data[1] = value.data[1];
-            this._color.data[2] = value.data[2];
+            this._color.r = value.r;
+            this._color.g = value.g;
+            this._color.b = value.b;
 
             if (this._meshInstance) {
                 this._meshInstance.setParameter(PARAM_EMISSIVE, this._color.data3);
@@ -626,10 +626,10 @@ Object.assign(pc, function () {
 
     Object.defineProperty(SpriteComponent.prototype, "opacity", {
         get: function () {
-            return this._color.data[3];
+            return this._color.a;
         },
         set: function (value) {
-            this._color.data[3] = value;
+            this._color.a = value;
             if (this._meshInstance) {
                 this._meshInstance.setParameter(PARAM_OPACITY, value);
             }

@@ -706,9 +706,9 @@ Object.assign(pc, function () {
             var i;
             this.mainLight = -1;
 
-            this.ambientColor[0] = scene.ambientLight.data[0];
-            this.ambientColor[1] = scene.ambientLight.data[1];
-            this.ambientColor[2] = scene.ambientLight.data[2];
+            this.ambientColor[0] = scene.ambientLight.r;
+            this.ambientColor[1] = scene.ambientLight.g;
+            this.ambientColor[2] = scene.ambientLight.b;
             if (scene.gammaCorrection) {
                 for (i = 0; i < 3; i++) {
                     this.ambientColor[i] = Math.pow(this.ambientColor[i], 2.2);
@@ -2404,9 +2404,9 @@ Object.assign(pc, function () {
 
             // Set up the fog
             if (scene.fog !== pc.FOG_NONE) {
-                this.fogColor[0] = scene.fogColor.data[0];
-                this.fogColor[1] = scene.fogColor.data[1];
-                this.fogColor[2] = scene.fogColor.data[2];
+                this.fogColor[0] = scene.fogColor.r;
+                this.fogColor[1] = scene.fogColor.g;
+                this.fogColor[2] = scene.fogColor.b;
                 if (scene.gammaCorrection) {
                     for (i = 0; i < 3; i++) {
                         this.fogColor[i] = Math.pow(this.fogColor[i], 2.2);

@@ -407,8 +407,8 @@ Object.assign(pc, function () {
             },
             set: function (value) {
                 var oldVal = this[priv];
-                var wasBw = (oldVal.data[0] === 0 && oldVal.data[1] === 0 && oldVal.data[2] === 0) || (oldVal.data[0] === 1 && oldVal.data[1] === 1 && oldVal.data[2] === 1);
-                var isBw = (value.data[0] === 0 && value.data[1] === 0 && value.data[2] === 0) || (value.data[0] === 1 && value.data[1] === 1 && value.data[2] === 1);
+                var wasBw = (oldVal.r === 0 && oldVal.g === 0 && oldVal.b === 0) || (oldVal.r === 1 && oldVal.g === 1 && oldVal.b === 1);
+                var isBw = (value.r === 0 && value.g === 0 && value.b === 0) || (value.r === 1 && value.g === 1 && value.b === 1);
                 if (wasBw ^ isBw) this.dirtyShader = true;
                 this.dirtyColor = true;
                 this[priv] = value;
@@ -1005,16 +1005,16 @@ Object.assign(pc, function () {
                 }
             }
 
-            var diffuseTint = ((this.diffuse.data[0] !== 1 || this.diffuse.data[1] !== 1 || this.diffuse.data[2] !== 1) &&
+            var diffuseTint = ((this.diffuse.r !== 1 || this.diffuse.g !== 1 || this.diffuse.b !== 1) &&
                                 (this.diffuseTint || (!this.diffuseMap && !this.diffuseVertexColor))) ? 3 : 0;
 
             var specularTint = false;
             var useSpecular = (this.useMetalness ? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap) || (!!this.dpAtlas);
-            useSpecular = useSpecular || (this.useMetalness ? true : !(this.specular.data[0] === 0 && this.specular.data[1] === 0 && this.specular.data[2] === 0));
+            useSpecular = useSpecular || (this.useMetalness ? true : !(this.specular.r === 0 && this.specular.g === 0 && this.specular.b === 0));
 
             if (useSpecular) {
                 if ((this.specularTint || (!this.specularMap && !this.specularVertexColor)) && !this.useMetalness) {
-                    specularTint = this.specular.data[0] !== 1 || this.specular.data[1] !== 1 || this.specular.data[2] !== 1;
+                    specularTint = this.specular.r !== 1 || this.specular.g !== 1 || this.specular.b !== 1;
                 }
             }
 
@@ -1038,7 +1038,7 @@ Object.assign(pc, function () {
 
             var emissiveTint = this.emissiveMap ? 0 : 3;
             if (!emissiveTint) {
-                emissiveTint = (this.emissive.data[0] !== 1 || this.emissive.data[1] !== 1 || this.emissive.data[2] !== 1 || this.emissiveIntensity !== 1) && this.emissiveTint;
+                emissiveTint = (this.emissive.r !== 1 || this.emissive.g !== 1 || this.emissive.b !== 1 || this.emissiveIntensity !== 1) && this.emissiveTint;
                 emissiveTint = emissiveTint ? 3 : (this.emissiveIntensity !== 1 ? 1 : 0);
             }
 

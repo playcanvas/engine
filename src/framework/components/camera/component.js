@@ -230,10 +230,10 @@ Object.assign(pc, function () {
         },
 
         onSetClearColor: function (name, oldValue, newValue) {
-            this.data.camera.clearColor[0] = newValue.data[0];
-            this.data.camera.clearColor[1] = newValue.data[1];
-            this.data.camera.clearColor[2] = newValue.data[2];
-            this.data.camera.clearColor[3] = newValue.data[3];
+            this.data.camera.clearColor[0] = newValue.r;
+            this.data.camera.clearColor[1] = newValue.g;
+            this.data.camera.clearColor[2] = newValue.b;
+            this.data.camera.clearColor[3] = newValue.a;
         },
 
         onSetFov: function (name, oldValue, newValue) {

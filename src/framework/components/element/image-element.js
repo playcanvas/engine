@@ -802,21 +802,23 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            var r = value.r;
+            var g = value.g;
+            var b = value.b;
+
             // #ifdef DEBUG
             if (this._color === value) {
                 console.warn("Setting element.color to itself will have no effect");
             }
             // #endif
-            if (this._color.data[0] === value.data[0] &&
-                this._color.data[1] === value.data[1] &&
-                this._color.data[2] === value.data[2]
-            ) {
+
+            if (this._color.r === r && this._color.g === g && this._color.b === b) {
                 return;
             }
 
-            this._color.data[0] = value.data[0];
-            this._color.data[1] = value.data[1];
-            this._color.data[2] = value.data[2];
+            this._color.r = r;
+            this._color.g = g;
+            this._color.b = b;
 
             this._renderable.setParameter('material_emissive', this._color.data3);
 
@@ -828,18 +830,18 @@ Object.assign(pc, function () {
 
     Object.defineProperty(ImageElement.prototype, "opacity", {
         get: function () {
-            return this._color.data[3];
+            return this._color.a;
         },
 
         set: function (value) {
-            if (value === this._color.data[3]) return;
+            if (value === this._color.a) return;
 
-            this._color.data[3] = value;
+            this._color.a = value;
 
             this._renderable.setParameter('material_opacity', value);
 
             if (this._element) {
-                this._element.fire('set:opacity', this._color.data[3]);
+                this._element.fire('set:opacity', value);
             }
         }
     });
@@ -914,7 +916,7 @@ Object.assign(pc, function () {
                 } else {
                     // otherwise if we are back to the defaults reset the color and opacity
                     this._renderable.setParameter('material_emissive', this._color.data3);
-                    this._renderable.setParameter('material_opacity', this._color.data[3]);
+                    this._renderable.setParameter('material_opacity', this._color.a);
                 }
             }
         }
@@ -972,7 +974,7 @@ Object.assign(pc, function () {
                 this._renderable.setParameter("texture_emissiveMap", this._texture);
                 this._renderable.setParameter("texture_opacityMap", this._texture);
                 this._renderable.setParameter("material_emissive", this._color.data3);
-                this._renderable.setParameter("material_opacity", this._color.data[3]);
+                this._renderable.setParameter("material_opacity", this._color.a);
             } else {
                 // clear texture params
                 this._renderable.deleteParameter("texture_emissiveMap");
