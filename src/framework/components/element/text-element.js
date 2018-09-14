@@ -738,6 +738,12 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            // #ifdef DEBUG
+            if (this._color === value) {
+                console.warn("Setting element.color to itself will have no effect");
+            }
+            // #endif
+
             if (this._color.data[0] === value.data[0] &&
                 this._color.data[1] === value.data[1] &&
                 this._color.data[2] === value.data[2]
