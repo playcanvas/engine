@@ -298,7 +298,7 @@ describe("pc.Quat", function () {
         // 90° turn around X axis
         q = new pc.Quat(Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
         q.getEulerAngles(e);
-        equal(e.x, 90);
+        close(e.x, 90, 0.0001);
         equal(e.y, 0);
         equal(e.z, 0);
 
