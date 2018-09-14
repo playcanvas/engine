@@ -852,7 +852,7 @@ Object.assign(pc, function () {
         set: function (value) {
             // #ifdef DEBUG
             if (this._rect === value) {
-                console.warn('Setting element.rect to itself will have no effect')
+                console.warn('Setting element.rect to itself will have no effect');
             }
             // #endif
 
