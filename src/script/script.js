@@ -1,5 +1,5 @@
 Object.assign(pc, function () {
-    var components = [ 'x', 'y', 'z', 'w' ];
+    var components = ['x', 'y', 'z', 'w'];
 
     var rawToValue = function (app, args, value, old) {
         var i;
