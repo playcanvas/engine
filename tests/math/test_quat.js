@@ -314,12 +314,12 @@ describe("pc.Quat", function () {
         q.getEulerAngles(e);
         equal(e.x, 0);
         equal(e.y, 0);
-        equal(e.z, 90);
+        close(e.z, 90, 0.0001);
 
         // -90° turn around X axis
         q = new pc.Quat(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
         q.getEulerAngles(e);
-        equal(e.x, -90);
+        close(e.x, -90, 0.0001);
         equal(e.y, 0);
         equal(e.z, 0);
 
@@ -335,7 +335,7 @@ describe("pc.Quat", function () {
         q.getEulerAngles(e);
         equal(e.x, 0);
         equal(e.y, 0);
-        equal(e.z, -90);
+        close(e.z, -90, 0.0001);
     });
 
     it("slerp: identical input quaternions", function () {
