@@ -349,7 +349,7 @@ Object.assign(pc, function () {
             var constantPixelOffset = device.scope.resolve("pixelOffset");
             var constantBakeDir = device.scope.resolve("bakeDir");
 
-            var pixelOffset = new pc.Vec2();
+            var pixelOffset = new Float32Array(2);
 
             var drawCalls = activeComp._meshInstances;
 
@@ -701,8 +701,9 @@ Object.assign(pc, function () {
 
                     // Dilate
                     var numDilates2x = 4; // 8 dilates
-                    pixelOffset.set(1 / lm.width, 1 / lm.height);
-                    constantPixelOffset.setValue(pixelOffset.data);
+                    pixelOffset[0] = 1 / lm.width;
+                    pixelOffset[1] = 1 / lm.height;
+                    constantPixelOffset.setValue(pixelOffset);
                     for (i = 0; i < numDilates2x; i++) {
                         constantTexSource.setValue(lm);
                         pc.drawQuadWithShader(device, targTmp, dilateShader);

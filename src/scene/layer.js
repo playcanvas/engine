@@ -676,8 +676,8 @@ Object.assign(pc, function () {
         var visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
 
         if (sortMode === pc.SORTMODE_CUSTOM) {
-            sortPos = cameraNode.getPosition().data;
-            sortDir = cameraNode.forward.data;
+            sortPos = cameraNode.getPosition();
+            sortDir = cameraNode.forward;
             if (this.customCalculateSortValues) {
                 this.customCalculateSortValues(visible.list, visible.length, sortPos, sortDir);
             }
