@@ -893,12 +893,14 @@ Object.assign(pc, function () {
             for (i = 0; i < _propsColor.length; i++) {
                 var clr = this["_" + _propsColor[i]];
                 var arr = this[_propsColor[i] + "Uniform"];
-                for (c = 0; c < 3; c++ ) {
-                    if (gammaCorrection) {
-                        arr[c] = Math.pow(clr.data[c], 2.2);
-                    } else {
-                        arr[c] = clr.data[c];
-                    }
+                if (gammaCorrection) {
+                    arr[0] = Math.pow(clr.r, 2.2);
+                    arr[1] = Math.pow(clr.g, 2.2);
+                    arr[2] = Math.pow(clr.b, 2.2);
+                } else {
+                    arr[0] = clr.r;
+                    arr[1] = clr.g;
+                    arr[2] = clr.b;
                 }
             }
             for (c = 0; c < 3; c++) {

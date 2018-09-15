@@ -260,3 +260,30 @@ Object.defineProperty(pc.Vec4.prototype, "data", {
         return this._data;
     }
 });
+
+Object.defineProperty(pc.Color.prototype, "data", {
+    get: function () {
+        console.warn('pc.Color#data is not public API and should not be used. Access color components via their individual properties.');
+        if (!this._data) {
+            this._data = new Float32Array(4);
+        }
+        this._data[0] = this.r;
+        this._data[1] = this.g;
+        this._data[2] = this.b;
+        this._data[3] = this.a;
+        return this._data;
+    }
+});
+
+Object.defineProperty(pc.Color.prototype, "data3", {
+    get: function () {
+        console.warn('pc.Color#data3 is not public API and should not be used. Access color components via their individual properties.');
+        if (!this._data3) {
+            this._data3 = new Float32Array(3);
+        }
+        this._data3[0] = this.r;
+        this._data3[1] = this.g;
+        this._data3[2] = this.b;
+        return this._data3;
+    }
+});

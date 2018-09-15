@@ -182,6 +182,31 @@ Object.assign(pc, function () {
             }
         },
 
+        _updateFinalColor: function () {
+            var color = this._color;
+            var r = color.r;
+            var g = color.g;
+            var b = color.b;
+
+            var i = this._intensity;
+
+            var finalColor = this._finalColor;
+            var linearFinalColor = this._linearFinalColor;
+
+            finalColor[0] = r * i;
+            finalColor[1] = g * i;
+            finalColor[2] = b * i;
+            if (i >= 1) {
+                linearFinalColor[0] = Math.pow(r, 2.2) * i;
+                linearFinalColor[1] = Math.pow(g, 2.2) * i;
+                linearFinalColor[2] = Math.pow(b, 2.2) * i;
+            } else {
+                linearFinalColor[0] = Math.pow(finalColor[0], 2.2);
+                linearFinalColor[1] = Math.pow(finalColor[1], 2.2);
+                linearFinalColor[2] = Math.pow(finalColor[2], 2.2);
+            }
+        },
+
         setColor: function () {
             var r, g, b;
             if (arguments.length === 1) {
@@ -196,20 +221,7 @@ Object.assign(pc, function () {
 
             this._color.set(r, g, b);
 
-            // Update final color
-            var i = this._intensity;
-            this._finalColor[0] = r * i;
-            this._finalColor[1] = g * i;
-            this._finalColor[2] = b * i;
-            if (i >= 1) {
-                this._linearFinalColor[0] = Math.pow(this._finalColor[0] / i, 2.2) * i;
-                this._linearFinalColor[1] = Math.pow(this._finalColor[1] / i, 2.2) * i;
-                this._linearFinalColor[2] = Math.pow(this._finalColor[2] / i, 2.2) * i;
-            } else {
-                this._linearFinalColor[0] = Math.pow(this._finalColor[0], 2.2);
-                this._linearFinalColor[1] = Math.pow(this._finalColor[1], 2.2);
-                this._linearFinalColor[2] = Math.pow(this._finalColor[2], 2.2);
-            }
+            this._updateFinalColor();
         },
 
         _destroyShadowMap: function () {
@@ -473,28 +485,9 @@ Object.assign(pc, function () {
             return this._intensity;
         },
         set: function (value) {
-            if (this._intensity === value)
-                return;
-
-            this._intensity = value;
-
-            // Update final color
-            var c = this._color.data;
-            var r = c[0];
-            var g = c[1];
-            var b = c[2];
-            var i = this._intensity;
-            this._finalColor[0] = r * i;
-            this._finalColor[1] = g * i;
-            this._finalColor[2] = b * i;
-            if (i >= 1) {
-                this._linearFinalColor[0] = Math.pow(this._finalColor[0] / i, 2.2) * i;
-                this._linearFinalColor[1] = Math.pow(this._finalColor[1] / i, 2.2) * i;
-                this._linearFinalColor[2] = Math.pow(this._finalColor[2] / i, 2.2) * i;
-            } else {
-                this._linearFinalColor[0] = Math.pow(this._finalColor[0], 2.2);
-                this._linearFinalColor[1] = Math.pow(this._finalColor[1], 2.2);
-                this._linearFinalColor[2] = Math.pow(this._finalColor[2], 2.2);
+            if (this._intensity !== value) {
+                this._intensity = value;
+                this._updateFinalColor();
             }
         }
     });

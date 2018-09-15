@@ -186,8 +186,8 @@ Object.assign(pc, function () {
         this._clearDepthBuffer = options.clearDepthBuffer === undefined ? false : options.clearDepthBuffer;
         this._clearStencilBuffer = options.clearStencilBuffer === undefined ? false : options.clearStencilBuffer;
         this._clearOptions = {
-            color: this._clearColor.data,
-            depth: 1.0,
+            color: [this._clearColor.r, this._clearColor.g, this._clearColor.b, this._clearColor.a],
+            depth: 1,
             stencil: 0,
             flags: (this._clearColorBuffer ? pc.CLEARFLAG_COLOR : 0) | (this._clearDepthBuffer ? pc.CLEARFLAG_DEPTH : 0) | (this._clearStencilBuffer ? pc.CLEARFLAG_STENCIL : 0)
         };

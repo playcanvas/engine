@@ -55,7 +55,14 @@
 
         // Move the camera 10m along the z-axis
         camera.translate(0, 0, 10);
-
+/*
+        var entities = [];
+        var start = performance.now();
+        while (performance.now() - start < 1000) {
+            entities.push(new pc.Color());
+        }
+        console.log(entities.length);
+*/
         // Set an update function on the app's update event
         var angle = 0;
         app.on("update", function (dt) {
