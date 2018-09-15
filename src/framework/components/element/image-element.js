@@ -246,8 +246,11 @@ Object.assign(pc, function () {
 
         // 9-slicing
         this._outerScale = new pc.Vec2();
+        this._outerScaleUniform = new Float32Array(2);
         this._innerOffset = new pc.Vec4();
+        this._innerOffsetUniform = new Float32Array(4);
         this._atlasRect = new pc.Vec4();
+        this._atlasRectUniform = new Float32Array(4);
 
         this._defaultMesh = this._createMesh();
         this._renderable = new ImageRenderable(this._entity, this._defaultMesh, this._material);
@@ -452,9 +455,19 @@ Object.assign(pc, function () {
 
                 // set scale
                 if (this._renderable) {
-                    this._renderable.setParameter('innerOffset', this._innerOffset.data);
-                    this._renderable.setParameter('atlasRect', this._atlasRect.data);
-                    this._renderable.setParameter('outerScale', this._outerScale.data);
+                    this._innerOffsetUniform[0] = this._innerOffset.x;
+                    this._innerOffsetUniform[1] = this._innerOffset.y;
+                    this._innerOffsetUniform[2] = this._innerOffset.z;
+                    this._innerOffsetUniform[3] = this._innerOffset.w;
+                    this._renderable.setParameter('innerOffset', this._innerOffsetUniform);
+                    this._atlasRectUniform[0] = this._atlasRect.x;
+                    this._atlasRectUniform[1] = this._atlasRect.y;
+                    this._atlasRectUniform[2] = this._atlasRect.z;
+                    this._atlasRectUniform[3] = this._atlasRect.w;
+                    this._renderable.setParameter('atlasRect', this._atlasRectUniform);
+                    this._outerScaleUniform[0] = this._outerScale.x;
+                    this._outerScaleUniform[1] = this._outerScale.y;
+                    this._renderable.setParameter('outerScale', this._outerScaleUniform);
                     this._renderable.setAabbFunc(this._updateAabbFunc);
 
                     this._renderable.node.setLocalScale(scaleX, scaleY, 1);
