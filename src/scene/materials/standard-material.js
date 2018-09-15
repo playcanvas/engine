@@ -742,6 +742,10 @@ Object.assign(pc, function () {
             if (this[mname]) {
                 this._setParameter("texture_" + mname, this[mname]);
                 var tname = mname + "Transform";
+                var uname = mname + "TransformUniform";
+                if (!this[tname]) {
+                    this[uname] = new Float32Array(4);
+                }
                 this[tname] = this._updateMapTransform(
                     this[tname],
                     this[mname + "Tiling"],
@@ -749,7 +753,11 @@ Object.assign(pc, function () {
                 );
 
                 if (this[tname]) {
-                    this._setParameter('texture_' + tname, this[tname].data);
+                    this[uname][0] = this[tname].x;
+                    this[uname][1] = this[tname].y;
+                    this[uname][2] = this[tname].z;
+                    this[uname][3] = this[tname].w;
+                    this._setParameter('texture_' + tname, this[uname]);
                 }
             }
         },
@@ -916,11 +924,21 @@ Object.assign(pc, function () {
             var i, j, same;
             for (i = 0; i < this._mapXForms[uv].length; i++) {
                 same = true;
-                for ( j = 0; j < xform.data.length; j++) {
-                    if (this._mapXForms[uv][i][j] != xform.data[j]) {
-                        same = false;
-                        break;
-                    }
+                if (this._mapXForms[uv][i][0] != xform.x) {
+                    same = false;
+                    break;
+                }
+                if (this._mapXForms[uv][i][1] != xform.y) {
+                    same = false;
+                    break;
+                }
+                if (this._mapXForms[uv][i][2] != xform.z) {
+                    same = false;
+                    break;
+                }
+                if (this._mapXForms[uv][i][3] != xform.w) {
+                    same = false;
+                    break;
                 }
                 if (same) {
                     return i + 1;
@@ -928,9 +946,12 @@ Object.assign(pc, function () {
             }
             var newID = this._mapXForms[uv].length;
             this._mapXForms[uv][newID] = [];
-            for (j = 0; j < xform.data.length; j++) {
-                this._mapXForms[uv][newID][j] = xform.data[j];
-            }
+
+            this._mapXForms[uv][newID][0] = xform.x;
+            this._mapXForms[uv][newID][1] = xform.y;
+            this._mapXForms[uv][newID][2] = xform.z;
+            this._mapXForms[uv][newID][3] = xform.w;
+
             return newID + 1;
         },
 
