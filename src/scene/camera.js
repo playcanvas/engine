@@ -84,7 +84,7 @@ Object.assign(pc, function () {
             clone.projection = this._projection;
             clone.nearClip = this._nearClip;
             clone.farClip = this._farClip;
-            clone._shaderParams = this._shaderParams.subarray();
+            clone._shaderParams = this._shaderParams.slice();
             clone.fov = this._fov;
             clone.aspectRatio = this._aspect;
             clone._aspectRatioMode = this._aspectRatioMode;
