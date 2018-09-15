@@ -123,18 +123,9 @@ Object.assign(pc, (function () {
          * console.log("The result of the cross product is: " + back.toString());
          */
         cross: function (lhs, rhs) {
-            var ax, ay, az, bx, by, bz;
-
-            ax = lhs.x;
-            ay = lhs.y;
-            az = lhs.z;
-            bx = rhs.x;
-            by = rhs.y;
-            bz = rhs.z;
-
-            this.x = ay * bz - by * az;
-            this.y = az * bx - bz * ax;
-            this.z = ax * by - bx * ay;
+            this.x = lhs.y * rhs.z - rhs.y * lhs.z;
+            this.y = lhs.z * rhs.x - rhs.z * lhs.x;
+            this.z = lhs.x * rhs.y - rhs.x * lhs.y;
 
             return this;
         },
