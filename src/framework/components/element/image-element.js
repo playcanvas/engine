@@ -254,7 +254,8 @@ Object.assign(pc, function () {
 
         // set default colors
         this._color = new pc.Color(1, 1, 1, 1);
-        this._renderable.setParameter('material_emissive', this._color.data3);
+        this._colorUniform = new Float32Array([1, 1, 1]);
+        this._renderable.setParameter('material_emissive', this._colorUniform);
         this._renderable.setParameter('material_opacity', 1);
 
         this._updateAabbFunc = this._updateAabb.bind(this);
@@ -820,7 +821,10 @@ Object.assign(pc, function () {
             this._color.g = g;
             this._color.b = b;
 
-            this._renderable.setParameter('material_emissive', this._color.data3);
+            this._colorUniform[0] = r;
+            this._colorUniform[1] = g;
+            this._colorUniform[2] = b;
+            this._renderable.setParameter('material_emissive', this._colorUniform);
 
             if (this._element) {
                 this._element.fire('set:color', this._color);
@@ -915,7 +919,10 @@ Object.assign(pc, function () {
                     this._renderable.deleteParameter('material_emissive');
                 } else {
                     // otherwise if we are back to the defaults reset the color and opacity
-                    this._renderable.setParameter('material_emissive', this._color.data3);
+                    this._colorUniform[0] = this._color.r;
+                    this._colorUniform[1] = this._color.g;
+                    this._colorUniform[2] = this._color.b;
+                    this._renderable.setParameter('material_emissive', this._colorUniform);
                     this._renderable.setParameter('material_opacity', this._color.a);
                 }
             }
@@ -973,7 +980,10 @@ Object.assign(pc, function () {
                 // default texture just uses emissive and opacity maps
                 this._renderable.setParameter("texture_emissiveMap", this._texture);
                 this._renderable.setParameter("texture_opacityMap", this._texture);
-                this._renderable.setParameter("material_emissive", this._color.data3);
+                this._colorUniform[0] = this._color.r;
+                this._colorUniform[1] = this._color.g;
+                this._colorUniform[2] = this._color.b;
+                this._renderable.setParameter("material_emissive", this._colorUniform);
                 this._renderable.setParameter("material_opacity", this._color.a);
             } else {
                 // clear texture params

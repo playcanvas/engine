@@ -12,6 +12,7 @@ Object.assign(pc, function () {
         this._font = null;
 
         this._color = new pc.Color(1, 1, 1, 1);
+        this._colorUniform = new Float32Array(3);
 
         this._spacing = 1;
         this._fontSize = 32;
@@ -227,7 +228,10 @@ Object.assign(pc, function () {
                     }
                     mi.screenSpace = screenSpace;
                     this._setTextureParams(mi, this._font.textures[i]);
-                    mi.setParameter("material_emissive", this._color.data3);
+                    this._colorUniform[0] = this._color.r;
+                    this._colorUniform[1] = this._color.g;
+                    this._colorUniform[2] = this._color.b;
+                    mi.setParameter("material_emissive", this._colorUniform);
                     mi.setParameter("material_opacity", this._color.a);
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
@@ -757,9 +761,13 @@ Object.assign(pc, function () {
             this._color.b = b;
 
             if (this._model) {
+                this._colorUniform[0] = this._color.r;
+                this._colorUniform[1] = this._color.g;
+                this._colorUniform[2] = this._color.b;
+
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
-                    mi.setParameter('material_emissive', this._color.data3);
+                    mi.setParameter('material_emissive', this._colorUniform);
                 }
             }
         }

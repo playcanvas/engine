@@ -59,6 +59,7 @@ Object.assign(pc, function () {
         this._type = pc.SPRITETYPE_SIMPLE;
         this._material = system.defaultMaterial;
         this._color = new pc.Color(1, 1, 1, 1);
+        this._colorUniform = new Float32Array(3);
         this._speed = 1;
         this._flipX = false;
         this._flipY = false;
@@ -235,7 +236,10 @@ Object.assign(pc, function () {
                 this._model.meshInstances.push(this._meshInstance);
 
                 // set overrides on mesh instance
-                this._meshInstance.setParameter(PARAM_EMISSIVE, this._color.data3);
+                this._colorUniform[0] = this._color.r;
+                this._colorUniform[1] = this._color.g;
+                this._colorUniform[2] = this._color.b;
+                this._meshInstance.setParameter(PARAM_EMISSIVE, this._colorUniform);
                 this._meshInstance.setParameter(PARAM_OPACITY, this._color.a);
 
                 // now that we created the mesh instance, add the model to the scene
@@ -619,7 +623,10 @@ Object.assign(pc, function () {
             this._color.b = value.b;
 
             if (this._meshInstance) {
-                this._meshInstance.setParameter(PARAM_EMISSIVE, this._color.data3);
+                this._colorUniform[0] = this._color.r;
+                this._colorUniform[1] = this._color.g;
+                this._colorUniform[2] = this._color.b;
+                this._meshInstance.setParameter(PARAM_EMISSIVE, this._colorUniform);
             }
         }
     });
