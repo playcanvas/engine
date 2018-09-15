@@ -798,9 +798,9 @@ Object.assign(pc, function () {
                 this.qRotSpeed2[i] *= pc.math.DEG_TO_RAD;
             }
 
-            this.localVelocityUMax = new Float32Array([0, 0, 0]);
-            this.velocityUMax = new Float32Array([0, 0, 0]);
-            this.colorUMax = new Float32Array([0, 0, 0]);
+            this.localVelocityUMax = new Float32Array(3);
+            this.velocityUMax = new Float32Array(3);
+            this.colorUMax = new Float32Array(3);
             this.rotSpeedUMax = [0];
             this.scaleUMax =    [0];
             this.alphaUMax =    [0];
