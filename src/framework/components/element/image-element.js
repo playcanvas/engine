@@ -243,6 +243,7 @@ Object.assign(pc, function () {
         this._innerOffset = new pc.Vec4();
         this._atlasRect = new pc.Vec4();
         this._sizeAndPivot = new Float32Array(4);
+        this._uvShiftAndScale = new Float32Array(4);
 
         this._defaultMesh = this._element.system.imageMesh;
 
@@ -368,6 +369,11 @@ Object.assign(pc, function () {
                 this._sizeAndPivot[2] = this._element.pivot.x;
                 this._sizeAndPivot[3] = this._element.pivot.y;
                 this._renderable.setParameter('sizeAndPivot', this._sizeAndPivot);
+                this._uvShiftAndScale[0] = this._rect.x;
+                this._uvShiftAndScale[1] = this._rect.y;
+                this._uvShiftAndScale[2] = this._rect.z;
+                this._uvShiftAndScale[3] = this._rect.w;
+                this._renderable.setParameter('uvShiftAndScale', this._uvShiftAndScale);
             }
 
             return;
@@ -421,27 +427,6 @@ Object.assign(pc, function () {
                     this._renderable.node.setLocalPosition((0.5 - this._element.pivot.x) * w, (0.5 - this._element.pivot.y) * h, 0);
                 }
             } else {
-                this._positions[0] = 0;
-                this._positions[1] = 0;
-                this._positions[2] = 0;
-                this._positions[3] = w;
-                this._positions[4] = 0;
-                this._positions[5] = 0;
-                this._positions[6] = w;
-                this._positions[7] = h;
-                this._positions[8] = 0;
-                this._positions[9] = 0;
-                this._positions[10] = h;
-                this._positions[11] = 0;
-
-                // offset for pivot
-                var hp = this._element.pivot.data[0];
-                var vp = this._element.pivot.data[1];
-
-                for (i = 0; i < this._positions.length; i += 3) {
-                    this._positions[i] -= hp * w;
-                    this._positions[i + 1] -= vp * h;
-                }
 
                 w = 1;
                 h = 1;
@@ -465,19 +450,7 @@ Object.assign(pc, function () {
                 this._uvs[6] = rect.data[0] / w;
                 this._uvs[7] = (rect.data[1] + rect.data[3]) / h;
 
-                var vb = mesh.vertexBuffer;
-                var it = new pc.VertexIterator(vb);
-                var numVertices = 4;
-                for (i = 0; i < numVertices; i++) {
-                    it.element[pc.SEMANTIC_POSITION].set(this._positions[i * 3 + 0], this._positions[i * 3 + 1], this._positions[i * 3 + 2]);
-                    it.element[pc.SEMANTIC_NORMAL].set(this._normals[i * 3 + 0], this._normals[i * 3 + 1], this._normals[i * 3 + 2]);
-                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i * 2 + 0], this._uvs[i * 2 + 1]);
-
-                    it.next();
-                }
-                it.end();
-
-                mesh.aabb.compute(this._positions);
+                // Update AABB...
 
                 if (this._renderable) {
                     this._renderable.node.setLocalScale(1, 1, 1);

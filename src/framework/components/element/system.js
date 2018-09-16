@@ -457,14 +457,20 @@ Object.assign(pc, function () {
                                 '    posW.zw = vec2(0.0, 1.0);',
                                 '    dPositionW = posW.xyz;',
                                 '',
-                                '    vec4 screenPos = posW;',
-                                '',
-                                '    return screenPos;',
+                                '    return posW;',
                                 '}',
                                 '',
                                 'vec3 getWorldPosition() {',
                                 '    return dPositionW;',
                                 '}'
+                            ].join('\n');
+                            this.defaultScreenSpaceImageMaterial.chunks.uv0VS = [
+                                'uniform vec4 uvShiftAndScale;',
+                                '',
+                                'vec2 getUv0() {',
+                                '    return vertex_texCoord0 * uvShiftAndScale.zw + uvShiftAndScale.xy;',
+                                '}',
+                                ''
                             ].join('\n');
                             this.defaultScreenSpaceImageMaterial.update();
 
