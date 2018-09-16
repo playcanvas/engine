@@ -238,19 +238,19 @@ Object.assign(pc, function () {
         this._mask = false; // this image element is a mask
         this._maskRef = 0; // id used in stencil buffer to mask
 
-        // private
-        this._positions = [];
-        this._normals = [];
-        this._uvs = [];
-        this._indices = [];
-
         // 9-slicing
         this._outerScale = new pc.Vec2();
         this._innerOffset = new pc.Vec4();
         this._atlasRect = new pc.Vec4();
+        this._sizeAndPivot = new Float32Array(4);
 
-        this._defaultMesh = this._createMesh();
+        this._defaultMesh = this._element.system.imageMesh;
+
+        var screenSpace = this._isScreenSpace();
+        this._updateMaterial(screenSpace);
+
         this._renderable = new ImageRenderable(this._entity, this._defaultMesh, this._material);
+        this._updateMesh(this._defaultMesh);
 
         // set default colors
         this._color = new pc.Color(1, 1, 1, 1);
@@ -353,63 +353,24 @@ Object.assign(pc, function () {
             }
         },
 
-        // build a quad for the image
-        _createMesh: function () {
-            var w = this._element.calculatedWidth;
-            var h = this._element.calculatedHeight;
-
-            this._positions[0] = 0;
-            this._positions[1] = 0;
-            this._positions[2] = 0;
-            this._positions[3] = w;
-            this._positions[4] = 0;
-            this._positions[5] = 0;
-            this._positions[6] = w;
-            this._positions[7] = h;
-            this._positions[8] = 0;
-            this._positions[9] = 0;
-            this._positions[10] = h;
-            this._positions[11] = 0;
-
-            for (var i = 0; i < 12; i += 3) {
-                this._normals[i] = 0;
-                this._normals[i + 1] = 0;
-                this._normals[i + 2] = 1;
-            }
-
-            this._uvs[0] = this._rect.data[0];
-            this._uvs[1] = this._rect.data[1];
-            this._uvs[2] = this._rect.data[0] + this._rect.data[2];
-            this._uvs[3] = this._rect.data[1];
-            this._uvs[4] = this._rect.data[0] + this._rect.data[2];
-            this._uvs[5] = this._rect.data[1] + this._rect.data[3];
-            this._uvs[6] = this._rect.data[0];
-            this._uvs[7] = this._rect.data[1] + this._rect.data[3];
-
-            this._indices[0] = 0;
-            this._indices[1] = 1;
-            this._indices[2] = 3;
-            this._indices[3] = 2;
-            this._indices[4] = 3;
-            this._indices[5] = 1;
-
-            var mesh = pc.createMesh(this._system.app.graphicsDevice, this._positions, { uvs: this._uvs, normals: this._normals, indices: this._indices });
-            this._updateMesh(mesh);
-
-            return mesh;
-        },
-
         _updateMesh: function (mesh) {
             var i;
-            var w = this._element.calculatedWidth;
-            var h = this._element.calculatedHeight;
 
             // update material
             var screenSpace = this._isScreenSpace();
             this._updateMaterial(screenSpace);
 
             // force update meshInstance aabb
-            if (this._renderable) this._renderable.forceUpdateAabb();
+            if (this._renderable) {
+                this._renderable.forceUpdateAabb();
+                this._sizeAndPivot[0] = this._element.calculatedWidth;
+                this._sizeAndPivot[1] = this._element.calculatedHeight;
+                this._sizeAndPivot[2] = this._element.pivot.x;
+                this._sizeAndPivot[3] = this._element.pivot.y;
+                this._renderable.setParameter('sizeAndPivot', this._sizeAndPivot);
+            }
+
+            return;
 
             if (this.sprite && (this.sprite.renderMode === pc.SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === pc.SPRITE_RENDERMODE_TILED)) {
 

@@ -22,17 +22,6 @@ Object.assign(pc, function () {
         this._unicodeConverter = null;
         this._rtlReorder = null;
 
-        // default texture - make white so we can tint it with emissive color
-        this._defaultTexture = new pc.Texture(app.graphicsDevice, { width: 1, height: 1, format: pc.PIXELFORMAT_R8_G8_B8_A8 });
-        var pixels = this._defaultTexture.lock();
-        var pixelData = new Uint8Array(4);
-        pixelData[0] = 255.0;
-        pixelData[1] = 255.0;
-        pixelData[2] = 255.0;
-        pixelData[3] = 255.0;
-        pixels.set(pixelData);
-        this._defaultTexture.unlock();
-
         // image element materials created on demand by getImageElementMaterial()
         this.defaultImageMaterial = null;
         this.defaultImage9SlicedMaterial = null;
@@ -276,7 +265,7 @@ Object.assign(pc, function () {
                     if (!this.defaultScreenSpaceTextMaterial) {
                         this.defaultScreenSpaceTextMaterial = new pc.StandardMaterial();
                         this.defaultScreenSpaceTextMaterial.name = "defaultScreenSpaceTextMaterial";
-                        this.defaultScreenSpaceTextMaterial.msdfMap = this._defaultTexture;
+                        this.defaultScreenSpaceTextMaterial.msdfMap = this.defaultTexture;
                         this.defaultScreenSpaceTextMaterial.useLighting = false;
                         this.defaultScreenSpaceTextMaterial.useGammaTonemap = false;
                         this.defaultScreenSpaceTextMaterial.useFog = false;
@@ -295,10 +284,10 @@ Object.assign(pc, function () {
                     this.defaultScreenSpaceBitmapTextMaterial = new pc.StandardMaterial();
                     this.defaultScreenSpaceBitmapTextMaterial.name = "defaultScreenSpaceBitmapTextMaterial";
                     this.defaultScreenSpaceBitmapTextMaterial.emissive.set(0.5, 0.5, 0.5); // set to non-(1,1,1) so that tint is actually applied
-                    this.defaultScreenSpaceBitmapTextMaterial.emissiveMap = this._defaultTexture;
+                    this.defaultScreenSpaceBitmapTextMaterial.emissiveMap = this.defaultTexture;
                     this.defaultScreenSpaceBitmapTextMaterial.emissiveTint = true;
                     this.defaultScreenSpaceBitmapTextMaterial.opacity = 0.5;
-                    this.defaultScreenSpaceBitmapTextMaterial.opacityMap = this._defaultTexture;
+                    this.defaultScreenSpaceBitmapTextMaterial.opacityMap = this.defaultTexture;
                     this.defaultScreenSpaceBitmapTextMaterial.opacityMapChannel = 'a';
                     this.defaultScreenSpaceBitmapTextMaterial.useLighting = false;
                     this.defaultScreenSpaceBitmapTextMaterial.useGammaTonemap = false;
@@ -317,7 +306,7 @@ Object.assign(pc, function () {
                 if (!this.defaultTextMaterial) {
                     this.defaultTextMaterial = new pc.StandardMaterial();
                     this.defaultTextMaterial.name = "defaultTextMaterial";
-                    this.defaultTextMaterial.msdfMap = this._defaultTexture;
+                    this.defaultTextMaterial.msdfMap = this.defaultTexture;
                     this.defaultTextMaterial.useLighting = false;
                     this.defaultTextMaterial.useGammaTonemap = false;
                     this.defaultTextMaterial.useFog = false;
@@ -336,9 +325,9 @@ Object.assign(pc, function () {
                 this.defaultBitmapTextMaterial.name = "defaultBitmapTextMaterial";
                 this.defaultBitmapTextMaterial.emissive.set(0.5, 0.5, 0.5);  // set to non-(1,1,1) so that tint is actually applied
                 this.defaultBitmapTextMaterial.emissiveTint = true;
-                this.defaultBitmapTextMaterial.emissiveMap = this._defaultTexture;
+                this.defaultBitmapTextMaterial.emissiveMap = this.defaultTexture;
                 this.defaultBitmapTextMaterial.opacity = 0.5;
-                this.defaultBitmapTextMaterial.opacityMap = this._defaultTexture;
+                this.defaultBitmapTextMaterial.opacityMap = this.defaultTexture;
                 this.defaultBitmapTextMaterial.opacityMapChannel = 'a';
                 this.defaultBitmapTextMaterial.useLighting = false;
                 this.defaultBitmapTextMaterial.useGammaTonemap = false;
@@ -359,9 +348,9 @@ Object.assign(pc, function () {
 
             material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
             material.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
-            material.emissiveMap = this._defaultTexture;
+            material.emissiveMap = this.defaultTexture;
             material.emissiveTint = true;
-            material.opacityMap = this._defaultTexture;
+            material.opacityMap = this.defaultTexture;
             material.opacityMapChannel = "a";
             material.opacityTint = true;
             material.opacity = 0; // use non-1 opacity to compile shader correctly
@@ -456,6 +445,27 @@ Object.assign(pc, function () {
                             this.defaultScreenSpaceImageMaterial = this._createBaseImageMaterial();
                             this.defaultScreenSpaceImageMaterial.name = "defaultScreenSpaceImageMaterial";
                             this.defaultScreenSpaceImageMaterial.depthTest = false;
+                            this.defaultScreenSpaceImageMaterial.chunks.transformVS = [
+                                'uniform vec4 sizeAndPivot;',
+                                '',
+                                'vec4 getPosition() {',
+                                '    vec3 localPos = vertex_position;',
+                                '    localPos.xy *= sizeAndPivot.xy;',
+                                '    localPos.xy -= sizeAndPivot.xy * sizeAndPivot.zw;',
+                                '',
+                                '    vec4 posW = matrix_model * vec4(localPos, 1.0);',
+                                '    posW.zw = vec2(0.0, 1.0);',
+                                '    dPositionW = posW.xyz;',
+                                '',
+                                '    vec4 screenPos = posW;',
+                                '',
+                                '    return screenPos;',
+                                '}',
+                                '',
+                                'vec3 getWorldPosition() {',
+                                '    return dPositionW;',
+                                '}'
+                            ].join('\n');
                             this.defaultScreenSpaceImageMaterial.update();
 
                             this.defaultImageMaterials.push(this.defaultScreenSpaceImageMaterial);
@@ -535,6 +545,26 @@ Object.assign(pc, function () {
                         if (!this.defaultImageMaterial) {
                             this.defaultImageMaterial = this._createBaseImageMaterial();
                             this.defaultImageMaterial.name = "defaultImageMaterial";
+                            this.defaultImageMaterial.chunks.transformVS = [
+                                'uniform vec4 sizeAndPivot;',
+                                '',
+                                'vec4 getPosition() {',
+                                '    vec3 localPos = vertex_position;',
+                                '    localPos.xy *= sizeAndPivot.xy;',
+                                '    localPos.xy -= sizeAndPivot.xy * sizeAndPivot.zw;',
+                                '',
+                                '    vec4 posW = matrix_model * vec4(localPos, 1.0);',
+                                '    dPositionW = posW.xyz;',
+                                '',
+                                '    vec4 screenPos = matrix_viewProjection * posW;',
+                                '',
+                                '    return screenPos;',
+                                '}',
+                                '',
+                                'vec3 getWorldPosition() {',
+                                '    return dPositionW;',
+                                '}'
+                            ].join('\n');
                             this.defaultImageMaterial.update();
 
                             this.defaultImageMaterials.push(this.defaultImageMaterial);
@@ -562,6 +592,68 @@ Object.assign(pc, function () {
             return this._rtlReorder;
         }
     });
+
+    Object.defineProperty(ElementComponentSystem.prototype, 'defaultTexture', {
+        get: function () {
+            if (!this._defaultTexture) {
+                // default texture - make white so we can tint it with emissive color
+                this._defaultTexture = new pc.Texture(this.app.graphicsDevice, {
+                    width: 1,
+                    height: 1,
+                    format: pc.PIXELFORMAT_R8_G8_B8_A8
+                });
+                var pixels = this._defaultTexture.lock();
+                pixels[0] = pixels[1] = pixels[2] = pixels[3] = 255;
+                this._defaultTexture.unlock();
+            }
+            return this._defaultTexture;
+        }
+    });
+
+    Object.defineProperty(ElementComponentSystem.prototype, 'imageMesh', {
+        get: function () {
+            if (!this._imageMesh) {
+                var numVertices = 4;
+                var vertexData = new Float32Array([
+                    0, 0, 0, // Pos
+                    0, 0, 1, // Normal
+                    0, 0,    // UV
+
+                    1, 0, 0, // Pos
+                    0, 0, 1, // Normal
+                    1, 0,    // UV
+
+                    1, 1, 0, // Pos
+                    0, 0, 1, // Normal
+                    1, 1,    // UV
+
+                    0, 1, 0, // Pos
+                    0, 0, 1, // Normal
+                    0, 1     // UV
+                ]);
+
+                var device = this.app.graphicsDevice;
+                var vertexDesc = [
+                    { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 },
+                    { semantic: pc.SEMANTIC_NORMAL, components: 3, type: pc.TYPE_FLOAT32 },
+                    { semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.TYPE_FLOAT32 }
+                ];
+                var vertexFormat = new pc.VertexFormat(device, vertexDesc);
+                var vertexBuffer = new pc.VertexBuffer(device, vertexFormat, numVertices, pc.BUFFER_STATIC, vertexData);
+
+                var mesh = new pc.Mesh();
+                mesh.vertexBuffer = vertexBuffer;
+                mesh.primitive[0].type = pc.PRIMITIVE_TRIFAN;
+                mesh.primitive[0].base = 0;
+                mesh.primitive[0].count = numVertices;
+                mesh.primitive[0].indexed = false;
+
+                this._imageMesh = mesh;
+            }
+            return this._imageMesh;
+        }
+    });
+
 
     return {
         ElementComponentSystem: ElementComponentSystem
