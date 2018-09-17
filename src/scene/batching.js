@@ -288,9 +288,9 @@ Object.assign(pc, function () {
 
                     valid = true;
                 } else if (node.element._image) {
-                    groupMeshInstances[node.element.batchGroupId].push(node.element._image._model.meshInstances[0]);
+                    groupMeshInstances[node.element.batchGroupId].push(node.element._image._renderable.model.meshInstances[0]);
 
-                    node.element.removeModelFromLayers(node.element._image._model);
+                    node.element.removeModelFromLayers(node.element._image._renderable.model);
 
                     valid = true;
                 }
