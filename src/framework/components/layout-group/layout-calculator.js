@@ -77,8 +77,8 @@ Object.assign(pc, function () {
             allElements = allElements.filter(shouldIncludeInLayout);
             options = layoutOptions;
 
-            availableSpace.x = options.containerSize.x - options.padding.data[0] - options.padding.data[2];
-            availableSpace.y = options.containerSize.y - options.padding.data[1] - options.padding.data[3];
+            availableSpace.x = options.containerSize.x - options.padding.x - options.padding.z;
+            availableSpace.y = options.containerSize.y - options.padding.y - options.padding.w;
 
             resetAnchors(allElements);
 
