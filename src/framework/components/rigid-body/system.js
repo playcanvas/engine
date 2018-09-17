@@ -196,9 +196,10 @@ Object.assign(pc, function () {
 
             // duplicate the input data because we are modifying it
             var data = {};
-            properties.forEach(function (prop) {
-                data[prop] = _data[prop];
-            });
+            for (var i = 0, len = properties.length; i < len; i++) {
+                var property = properties[i];
+                data[property] = _data[property];
+            }
 
             // backwards compatibility
             if (_data.bodyType) {
