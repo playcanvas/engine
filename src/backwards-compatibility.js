@@ -224,7 +224,9 @@ Object.defineProperty(pc.shaderChunks, "transformSkinnedVS", {
 
 Object.defineProperty(pc.Vec2.prototype, "data", {
     get: function () {
+        // #ifdef DEBUG
         console.warn('pc.Vec2#data is not public API and should not be used. Access vector components via their individual properties.');
+        // #endif
         if (!this._data) {
             this._data = new Float32Array(2);
         }
@@ -236,7 +238,9 @@ Object.defineProperty(pc.Vec2.prototype, "data", {
 
 Object.defineProperty(pc.Vec3.prototype, "data", {
     get: function () {
+        // #ifdef DEBUG
         console.warn('pc.Vec3#data is not public API and should not be used. Access vector components via their individual properties.');
+        // #endif
         if (!this._data) {
             this._data = new Float32Array(3);
         }
@@ -249,7 +253,9 @@ Object.defineProperty(pc.Vec3.prototype, "data", {
 
 Object.defineProperty(pc.Vec4.prototype, "data", {
     get: function () {
+        // #ifdef DEBUG
         console.warn('pc.Vec4#data is not public API and should not be used. Access vector components via their individual properties.');
+        // #endif
         if (!this._data) {
             this._data = new Float32Array(4);
         }
@@ -263,7 +269,9 @@ Object.defineProperty(pc.Vec4.prototype, "data", {
 
 Object.defineProperty(pc.Color.prototype, "data", {
     get: function () {
+        // #ifdef DEBUG
         console.warn('pc.Color#data is not public API and should not be used. Access color components via their individual properties.');
+        // #endif
         if (!this._data) {
             this._data = new Float32Array(4);
         }
@@ -277,7 +285,9 @@ Object.defineProperty(pc.Color.prototype, "data", {
 
 Object.defineProperty(pc.Color.prototype, "data3", {
     get: function () {
+        // #ifdef DEBUG
         console.warn('pc.Color#data3 is not public API and should not be used. Access color components via their individual properties.');
+        // #endif
         if (!this._data3) {
             this._data3 = new Float32Array(3);
         }
