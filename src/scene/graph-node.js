@@ -41,6 +41,10 @@ Object.assign(pc, function () {
         this.normalMatrix = new pc.Mat3();
         this._dirtyNormal = true;
 
+        this._right = null;
+        this._up = null;
+        this._forward = null;
+
         this._parent = null;
         this._children = [];
         this._graphDepth = 0;
