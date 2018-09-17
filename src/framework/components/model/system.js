@@ -56,6 +56,7 @@ Object.assign(pc, function () {
 
     Object.assign(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
+            // order matters here
             properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping', 'layers', 'isStatic', 'batchGroupId'];
 
             // copy data into new structure
