@@ -927,6 +927,7 @@ Object.assign(pc, function () {
         meshInstance.layer = batch.origMeshInstances[0].layer;
         meshInstance._staticLightList = batch.origMeshInstances[0]._staticLightList;
         meshInstance._shaderDefs = batch.origMeshInstances[0]._shaderDefs;
+        meshInstance.drawOrder = batch.origMeshInstances[0].drawOrder
 
         if (dynamic) {
             // Create skinInstance
