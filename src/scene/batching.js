@@ -281,7 +281,7 @@ Object.assign(pc, function () {
                 arr = groupMeshInstances[node.element.batchGroupId];
                 if (!arr) arr = groupMeshInstances[node.element.batchGroupId] = [];
                 var valid = false;
-                if (node.element._text) {
+                if (node.element._text && node.element._text._model.meshInstances.length > 0) {
                     groupMeshInstances[node.element.batchGroupId].push(node.element._text._model.meshInstances[0]);
 
                     node.element.removeModelFromLayers(node.element._text._model);
