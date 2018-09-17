@@ -41,9 +41,9 @@ Object.assign(pc, function () {
         this.normalMatrix = new pc.Mat3();
         this._dirtyNormal = true;
 
-        this._right = new pc.Vec3();
-        this._up = new pc.Vec3();
-        this._forward = new pc.Vec3();
+        this._right = null;
+        this._up = null;
+        this._forward = null;
 
         this._parent = null;
         this._children = [];
@@ -63,6 +63,9 @@ Object.assign(pc, function () {
      */
     Object.defineProperty(GraphNode.prototype, 'right', {
         get: function () {
+            if (!this._right) {
+                this._right = new pc.Vec3();
+            }
             return this.getWorldTransform().getX(this._right).normalize();
         }
     });
@@ -75,6 +78,9 @@ Object.assign(pc, function () {
      */
     Object.defineProperty(GraphNode.prototype, 'up', {
         get: function () {
+            if (!this._up) {
+                this._up = new pc.Vec3();
+            }
             return this.getWorldTransform().getY(this._up).normalize();
         }
     });
@@ -87,6 +93,9 @@ Object.assign(pc, function () {
      */
     Object.defineProperty(GraphNode.prototype, 'forward', {
         get: function () {
+            if (!this._forward) {
+                this._forward = new pc.Vec3();
+            }
             return this.getWorldTransform().getZ(this._forward).normalize().scale(-1);
         }
     });
@@ -783,7 +792,7 @@ Object.assign(pc, function () {
          */
         setLocalEulerAngles: function (x, y, z) {
             if (x instanceof pc.Vec3) {
-                this.localRotation.setFromEulerAngles(x.data[0], x.data[1], x.data[2]);
+                this.localRotation.setFromEulerAngles(x.x, x.y, x.z);
             } else {
                 this.localRotation.setFromEulerAngles(x, y, z);
             }
@@ -1025,7 +1034,7 @@ Object.assign(pc, function () {
 
             return function (x, y, z) {
                 if (x instanceof pc.Vec3) {
-                    this.localRotation.setFromEulerAngles(x.data[0], x.data[1], x.data[2]);
+                    this.localRotation.setFromEulerAngles(x.x, x.y, x.z);
                 } else {
                     this.localRotation.setFromEulerAngles(x, y, z);
                 }
@@ -1477,7 +1486,7 @@ Object.assign(pc, function () {
 
             return function (x, y, z) {
                 if (x instanceof pc.Vec3) {
-                    quaternion.setFromEulerAngles(x.data[0], x.data[1], x.data[2]);
+                    quaternion.setFromEulerAngles(x.x, x.y, x.z);
                 } else {
                     quaternion.setFromEulerAngles(x, y, z);
                 }
@@ -1521,7 +1530,7 @@ Object.assign(pc, function () {
 
             return function (x, y, z) {
                 if (x instanceof pc.Vec3) {
-                    quaternion.setFromEulerAngles(x.data[0], x.data[1], x.data[2]);
+                    quaternion.setFromEulerAngles(x.x, x.y, x.z);
                 } else {
                     quaternion.setFromEulerAngles(x, y, z);
                 }

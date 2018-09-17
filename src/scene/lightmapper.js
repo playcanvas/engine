@@ -349,7 +349,7 @@ Object.assign(pc, function () {
             var constantPixelOffset = device.scope.resolve("pixelOffset");
             var constantBakeDir = device.scope.resolve("bakeDir");
 
-            var pixelOffset = new pc.Vec2();
+            var pixelOffset = new Float32Array(2);
 
             var drawCalls = activeComp._meshInstances;
 
@@ -360,14 +360,12 @@ Object.assign(pc, function () {
 
             // Store scene values
             var origFog = scene.fog;
-            var origAmbientR = scene.ambientLight.data[0];
-            var origAmbientG = scene.ambientLight.data[1];
-            var origAmbientB = scene.ambientLight.data[2];
+            var origAmbientR = scene.ambientLight.r;
+            var origAmbientG = scene.ambientLight.g;
+            var origAmbientB = scene.ambientLight.b;
 
             scene.fog = pc.FOG_NONE;
-            scene.ambientLight.data[0] = 0;
-            scene.ambientLight.data[1] = 0;
-            scene.ambientLight.data[2] = 0;
+            scene.ambientLight.set(0, 0, 0);
 
             // Create pseudo-camera
             if (!lmCamera) {
@@ -703,8 +701,9 @@ Object.assign(pc, function () {
 
                     // Dilate
                     var numDilates2x = 4; // 8 dilates
-                    pixelOffset.set(1 / lm.width, 1 / lm.height);
-                    constantPixelOffset.setValue(pixelOffset.data);
+                    pixelOffset[0] = 1 / lm.width;
+                    pixelOffset[1] = 1 / lm.height;
+                    constantPixelOffset.setValue(pixelOffset);
                     for (i = 0; i < numDilates2x; i++) {
                         constantTexSource.setValue(lm);
                         pc.drawQuadWithShader(device, targTmp, dilateShader);
@@ -775,9 +774,7 @@ Object.assign(pc, function () {
 
             // Roll back scene stuff
             scene.fog = origFog;
-            scene.ambientLight.data[0] = origAmbientR;
-            scene.ambientLight.data[1] = origAmbientG;
-            scene.ambientLight.data[2] = origAmbientB;
+            scene.ambientLight.set(origAmbientR, origAmbientG, origAmbientB);
 
             // Revert static preprocessing
             if (revertStatic) {
