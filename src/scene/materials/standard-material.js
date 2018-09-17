@@ -266,6 +266,7 @@ Object.assign(pc, function () {
         var privMapTiling = privMap + "Tiling";
         var privMapOffset = privMap + "Offset";
         var mapTransform = privMap.substring(1) + "Transform";
+        var mapTransformUniform = mapTransform + "Uniform";
         var privMapUv = privMap + "Uv";
         var privMapChannel = privMap + "Channel";
         var privMapVertexColor = "_" + name + "VertexColor";
@@ -275,6 +276,7 @@ Object.assign(pc, function () {
         obj[privMapTiling] = new pc.Vec2(1, 1);
         obj[privMapOffset] = new pc.Vec2(0, 0);
         obj[mapTransform] = null;
+        obj[mapTransformUniform] = null;
         obj[privMapUv] = uv;
         if (channels > 0) {
             var channel = defChannel ? defChannel : (channels > 1 ? "rgb" : "g");
