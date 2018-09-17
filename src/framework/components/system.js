@@ -137,20 +137,20 @@ Object.assign(pc, function () {
             data = data || {};
 
             // initialize
-            properties.forEach(function (descriptor) {
-                var name;
-                var type;
+            for (var i = 0, len = properties.length; i < len; i++) {
+                var descriptor = properties[i];
+                var name, type, value;
 
                 // If the descriptor is an object, it will have `name` and `type` members
                 if (typeof descriptor === 'object') {
                     name = descriptor.name;
                     type = descriptor.type;
-                // Otherwise, the descriptor is just the property name
                 } else {
+                    // Otherwise, the descriptor is just the property name
                     name = descriptor;
                 }
 
-                var value = data[name];
+                value = data[name];
 
                 if (value !== undefined) {
                     // If we know the intended type of the value, convert the raw data
@@ -163,8 +163,7 @@ Object.assign(pc, function () {
                 } else {
                     component[name] = component.data[name];
                 }
-
-            }, this);
+            }
 
             // after component is initialized call onEnable
             if (component.enabled && component.entity.enabled) {

@@ -96,9 +96,10 @@ Object.assign(pc, function () {
 
             // duplicate data because we're modifying the data
             var data = {};
-            properties.forEach(function (prop) {
-                data[prop] = _data[prop];
-            });
+            for (var i = 0, len = properties.length; i < len; i++) {
+                var property = properties[i];
+                data[property] = _data[property];
+            }
 
             if (data.layers && pc.type(data.layers) === 'array') {
                 data.layers = data.layers.slice(0);
