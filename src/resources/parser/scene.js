@@ -69,21 +69,23 @@ Object.assign(pc, function () {
         },
 
         _openComponentData: function (entity, entities) {
-            // Create Components in order
-            var systems = this._app.systems.list();
-            var i, len = systems.length;
-            var edata = entities[entity._guid];
+            // Create components in order
+            var systemsList = this._app.systems.list;
+
+            var i, len = systemsList.length;
+            var entityData = entities[entity._guid];
             for (i = 0; i < len; i++) {
-                var componentData = edata.components[systems[i].id];
+                var system = systemsList[i];
+                var componentData = entityData.components[system.name];
                 if (componentData) {
-                    this._app.systems[systems[i].id].addComponent(entity, componentData);
+                    system.addComponent(entity, componentData);
                 }
             }
 
             // Open all children and add them to the node
-            var length = edata.children.length;
+            len = entityData.children.length;
             var children = entity._children;
-            for (i = 0; i < length; i++) {
+            for (i = 0; i < len; i++) {
                 children[i] = this._openComponentData(children[i], entities);
             }
 
