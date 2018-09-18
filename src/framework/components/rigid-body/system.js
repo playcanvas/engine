@@ -146,7 +146,6 @@ Object.assign(pc, function () {
 
         this.id = 'rigidbody';
         this.description = "Adds the entity to the scene's physical simulation.";
-        app.systems.add(this.id, this);
         this._stats = app.stats.frame;
 
         this.ComponentType = pc.RigidBodyComponent;

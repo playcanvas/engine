@@ -3,8 +3,7 @@ describe("pc.Entity", function () {
 
     beforeEach(function () {
         app = new pc.Application(document.createElement("canvas"));
-
-        new pc.DummyComponentSystem(app);
+        app.systems.add(new pc.DummyComponentSystem(app));
     });
 
     afterEach(function () {
