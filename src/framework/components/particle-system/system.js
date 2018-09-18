@@ -66,7 +66,6 @@ Object.assign(pc, function () {
 
         this.id = 'particlesystem';
         this.description = "Updates and renders particle system in the scene.";
-        app.systems.add(this);
 
         this.ComponentType = pc.ParticleSystemComponent;
         this.DataType = pc.ParticleSystemComponentData;

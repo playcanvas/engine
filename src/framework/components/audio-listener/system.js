@@ -15,7 +15,6 @@ Object.assign(pc, function () {
 
         this.id = "audiolistener";
         this.description = "Specifies the location of the listener for 3D audio playback.";
-        app.systems.add(this);
 
         this.ComponentType = pc.AudioListenerComponent;
         this.DataType = pc.AudioListenerComponentData;

@@ -30,7 +30,6 @@ Object.assign(pc, function () {
 
         this.id = 'button';
         this.app = app;
-        app.systems.add(this);
 
         this.ComponentType = pc.ButtonComponent;
         this.DataType = pc.ButtonComponentData;

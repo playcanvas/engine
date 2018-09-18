@@ -16,7 +16,6 @@ Object.assign(pc, function () {
 
         this.id = 'sprite';
         this.app = app;
-        app.systems.add(this);
 
         this.ComponentType = pc.SpriteComponent;
         this.DataType = pc.SpriteComponentData;

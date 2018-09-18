@@ -30,7 +30,6 @@ Object.assign(pc, function () {
 
         this.id = 'scrollview';
         this.app = app;
-        app.systems.add(this);
 
         this.ComponentType = pc.ScrollViewComponent;
         this.DataType = pc.ScrollViewComponentData;

@@ -31,7 +31,6 @@ Object.assign(pc, function () {
 
         this.id = 'model';
         this.description = "Renders a 3D model at the location of the Entity.";
-        app.systems.add(this);
 
         this.ComponentType = pc.ModelComponent;
         this.DataType = pc.ModelComponentData;

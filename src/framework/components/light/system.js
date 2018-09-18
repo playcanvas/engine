@@ -18,7 +18,6 @@ Object.assign(pc, function () {
 
         this.id = 'light';
         this.description = "Enables the Entity to emit light.";
-        app.systems.add(this);
 
         this.ComponentType = pc.LightComponent;
         this.DataType = pc.LightComponentData;

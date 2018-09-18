@@ -31,8 +31,6 @@ Object.assign(pc, function () {
         this.id = 'animation';
         this.description = "Specifies the animation assets that can run on the model specified by the Entity's model Component.";
 
-        app.systems.add(this);
-
         this.ComponentType = pc.AnimationComponent;
         this.DataType = pc.AnimationComponentData;
 

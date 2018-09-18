@@ -13,7 +13,6 @@ Object.assign(pc, function () {
 
         this.id = 'element';
         this.app = app;
-        app.systems.add(this);
 
         this.ComponentType = pc.ElementComponent;
         this.DataType = pc.ElementComponentData;

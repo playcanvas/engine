@@ -385,7 +385,6 @@ Object.assign(pc, function () {
 
         this.id = "collision";
         this.description = "Specifies a collision volume.";
-        app.systems.add(this);
 
         this.ComponentType = pc.CollisionComponent;
         this.DataType = pc.CollisionComponentData;
