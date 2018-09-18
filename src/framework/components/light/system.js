@@ -28,13 +28,13 @@ Object.assign(pc, function () {
 
     Object.assign(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data) {
+            var properties = pc._lightProps;
+
             // duplicate because we're modifying the data
             var data = {};
-            var _props = pc._lightProps;
-            var name;
-            for (var i = 0; i < _props.length; i++) {
-                name = _props[i];
-                data[name] = _data[name];
+            for (var i = 0, len = properties.length; i < len; i++) {
+                var property = properties[i];
+                data[property] = _data[property];
             }
 
             if (!data.type)
@@ -66,7 +66,7 @@ Object.assign(pc, function () {
             light._scene = this.app.scene;
             component.data.light = light;
 
-            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _props);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         removeComponent: function (entity) {

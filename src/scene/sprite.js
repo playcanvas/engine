@@ -114,8 +114,8 @@ Object.assign(pc, function () {
         var texWidth = this._atlas.texture.width;
         var texHeight = this._atlas.texture.height;
 
-        var w = rect.data[2] / this._pixelsPerUnit;
-        var h = rect.data[3] / this._pixelsPerUnit;
+        var w = rect.z / this._pixelsPerUnit;
+        var h = rect.w / this._pixelsPerUnit;
         var hp = frame.pivot.x;
         var vp = frame.pivot.y;
 
@@ -129,10 +129,10 @@ Object.assign(pc, function () {
 
         // uvs based on frame rect
         // uvs
-        var lu = rect.data[0] / texWidth;
-        var bv = rect.data[1] / texHeight;
-        var ru = (rect.data[0] + rect.data[2]) / texWidth;
-        var tv = (rect.data[1] + rect.data[3]) / texHeight;
+        var lu = rect.x / texWidth;
+        var bv = rect.y / texHeight;
+        var ru = (rect.x + rect.z) / texWidth;
+        var tv = (rect.y + rect.w) / texHeight;
 
         var uvs = [
             lu, bv,

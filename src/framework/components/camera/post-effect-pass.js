@@ -4,6 +4,7 @@ Object.assign(pc, function () {
     var _constInput = null;
     var _constScreenSize;
     var _constScreenSizeValue = new pc.Vec4();
+    var _constScreenSizeValueUniform = new Float32Array(4);
     var _postEffectChain = [];
     var _backbufferRtUsed = false;
     var _backbufferRt2Used = false;
@@ -181,7 +182,11 @@ Object.assign(pc, function () {
                     _constScreenSizeValue.z = 1.0 / device.width;
                     _constScreenSizeValue.w = 1.0 / device.height;
                 }
-                _constScreenSize.setValue(_constScreenSizeValue.data);
+                _constScreenSizeValueUniform[0] = _constScreenSizeValue.x;
+                _constScreenSizeValueUniform[1] = _constScreenSizeValue.y;
+                _constScreenSizeValueUniform[2] = _constScreenSizeValue.z;
+                _constScreenSizeValueUniform[3] = _constScreenSizeValue.w;
+                _constScreenSize.setValue(_constScreenSizeValue);
 
                 if (this._postEffectCombined && this._postEffectCombined < 0) {
                     if (self.setup) self.setup(device, self, _constScreenSizeValue, null, this.renderTarget);

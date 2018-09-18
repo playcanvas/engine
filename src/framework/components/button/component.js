@@ -418,8 +418,9 @@ Object.assign(pc, function () {
             elapsedProportion = pc.math.clamp(elapsedProportion, 0, 1);
 
             if (Math.abs(elapsedProportion - 1) > 1e-5) {
-                this._tweenInfo.lerpVec.lerp(this._tweenInfo.from, this._tweenInfo.to, elapsedProportion);
-                this._applyTintImmediately(new pc.Color(this._tweenInfo.lerpVec.data));
+                var lerpVec = this._tweenInfo.lerpVec;
+                lerpVec.lerp(this._tweenInfo.from, this._tweenInfo.to, elapsedProportion);
+                this._applyTintImmediately(new pc.Color(lerpVec.x, lerpVec.y, lerpVec.z, lerpVec.w));
             } else {
                 this._applyTintImmediately(this._tweenInfo.to);
                 this._cancelTween();

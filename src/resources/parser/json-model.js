@@ -531,19 +531,6 @@ Object.assign(pc, function () {
             for (i = 0; i < modelData.vertices.length; i++) {
                 var vertexData = modelData.vertices[i];
 
-                // Check to see if we need to generate tangents
-                if (!vertexData.tangent && vertexData.position && vertexData.normal && vertexData.texCoord0) {
-                    var indices = [];
-                    for (j = 0; j < modelData.meshes.length; j++) {
-                        if (modelData.meshes[j].vertices === i) {
-                            indices = indices.concat(modelData.meshes[j].indices);
-                        }
-                    }
-                    // Calculate main tangents
-                    var tangents = pc.calculateTangents(vertexData.position.data, vertexData.normal.data, vertexData.texCoord0.data, indices);
-                    vertexData.tangent = { type: "float32", components: 4, data: tangents };
-                }
-
                 var formatDesc = [];
                 for (attributeName in vertexData) {
                     attribute = vertexData[attributeName];

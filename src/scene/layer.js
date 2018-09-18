@@ -186,8 +186,8 @@ Object.assign(pc, function () {
         this._clearDepthBuffer = options.clearDepthBuffer === undefined ? false : options.clearDepthBuffer;
         this._clearStencilBuffer = options.clearStencilBuffer === undefined ? false : options.clearStencilBuffer;
         this._clearOptions = {
-            color: this._clearColor.data,
-            depth: 1.0,
+            color: [this._clearColor.r, this._clearColor.g, this._clearColor.b, this._clearColor.a],
+            depth: 1,
             stencil: 0,
             flags: (this._clearColorBuffer ? pc.CLEARFLAG_COLOR : 0) | (this._clearDepthBuffer ? pc.CLEARFLAG_DEPTH : 0) | (this._clearStencilBuffer ? pc.CLEARFLAG_STENCIL : 0)
         };
@@ -660,11 +660,11 @@ Object.assign(pc, function () {
             drawCall = drawCalls[i];
             if (drawCall.command) continue;
             if (drawCall.layer <= pc.scene.LAYER_FX) continue; // Only alpha sort mesh instances in the main world (backwards comp)
-            meshPos = drawCall.aabb.center.data;
-            tempx = meshPos[0] - camPos[0];
-            tempy = meshPos[1] - camPos[1];
-            tempz = meshPos[2] - camPos[2];
-            drawCall.zdist = tempx * camFwd[0] + tempy * camFwd[1] + tempz * camFwd[2];
+            meshPos = drawCall.aabb.center;
+            tempx = meshPos.x - camPos.x;
+            tempy = meshPos.y - camPos.y;
+            tempz = meshPos.z - camPos.z;
+            drawCall.zdist = tempx * camFwd.x + tempy * camFwd.y + tempz * camFwd.z;
         }
     };
 
@@ -676,8 +676,8 @@ Object.assign(pc, function () {
         var visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
 
         if (sortMode === pc.SORTMODE_CUSTOM) {
-            sortPos = cameraNode.getPosition().data;
-            sortDir = cameraNode.forward.data;
+            sortPos = cameraNode.getPosition();
+            sortDir = cameraNode.forward;
             if (this.customCalculateSortValues) {
                 this.customCalculateSortValues(visible.list, visible.length, sortPos, sortDir);
             }
@@ -691,8 +691,8 @@ Object.assign(pc, function () {
             }
         } else {
             if (sortMode === pc.SORTMODE_BACK2FRONT || sortMode === pc.SORTMODE_FRONT2BACK) {
-                sortPos = cameraNode.getPosition().data;
-                sortDir = cameraNode.forward.data;
+                sortPos = cameraNode.getPosition();
+                sortDir = cameraNode.forward;
                 this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
             }
 

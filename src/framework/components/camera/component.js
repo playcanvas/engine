@@ -230,10 +230,11 @@ Object.assign(pc, function () {
         },
 
         onSetClearColor: function (name, oldValue, newValue) {
-            this.data.camera.clearColor[0] = newValue.data[0];
-            this.data.camera.clearColor[1] = newValue.data[1];
-            this.data.camera.clearColor[2] = newValue.data[2];
-            this.data.camera.clearColor[3] = newValue.data[3];
+            var clearColor = this.data.camera.clearColor;
+            clearColor[0] = newValue.r;
+            clearColor[1] = newValue.g;
+            clearColor[2] = newValue.b;
+            clearColor[3] = newValue.a;
         },
 
         onSetFov: function (name, oldValue, newValue) {
@@ -365,11 +366,11 @@ Object.assign(pc, function () {
         },
 
         onSetRect: function (name, oldValue, newValue) {
-            this.data.camera.setRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
+            this.data.camera.setRect(newValue.x, newValue.y, newValue.z, newValue.w);
         },
 
         onSetScissorRect: function (name, oldValue, newValue) {
-            this.data.camera.setScissorRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
+            this.data.camera.setScissorRect(newValue.x, newValue.y, newValue.z, newValue.w);
         },
 
         onEnable: function () {

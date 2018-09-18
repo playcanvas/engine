@@ -96,6 +96,10 @@ Object.assign(pc, function () {
     var ElementComponent = function ElementComponent(system, entity) {
         pc.Component.call(this, system, entity);
 
+        // set to true by the ElementComponentSystem while
+        // the component is being initialized
+        this._beingInitialized = false;
+
         this._anchor = new pc.Vec4();
         this._localAnchor = new pc.Vec4();
 
@@ -215,12 +219,12 @@ Object.assign(pc, function () {
 
             // update margin
             var element = this.element;
-            var p = this.localPosition.data;
-            var pvt = element._pivot.data;
-            element._margin.data[0] = p[0] - element._calculatedWidth * pvt[0];
-            element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._calculatedWidth - element._margin.data[0];
-            element._margin.data[1] = p[1] - element._calculatedHeight * pvt[1];
-            element._margin.data[3] = (element._localAnchor.data[3] - element._localAnchor.data[1]) - element._calculatedHeight - element._margin.data[1];
+            var p = this.localPosition;
+            var pvt = element._pivot;
+            element._margin.x = p.x - element._calculatedWidth * pvt.x;
+            element._margin.z = (element._localAnchor.z - element._localAnchor.x) - element._calculatedWidth - element._margin.x;
+            element._margin.y = p.y - element._calculatedHeight * pvt.y;
+            element._margin.w = (element._localAnchor.w - element._localAnchor.y) - element._calculatedHeight - element._margin.y;
 
             if (!this._dirtyLocal)
                 this._dirtify(true);
@@ -270,12 +274,12 @@ Object.assign(pc, function () {
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
                 // update margin
-                var p = this.localPosition.data;
-                var pvt = element._pivot.data;
-                element._margin.data[0] = p[0] - element._calculatedWidth * pvt[0];
-                element._margin.data[2] = (element._localAnchor.data[2] - element._localAnchor.data[0]) - element._calculatedWidth - element._margin.data[0];
-                element._margin.data[1] = p[1] - element._calculatedHeight * pvt[1];
-                element._margin.data[3] = (element._localAnchor.data[3] - element._localAnchor.data[1]) - element._calculatedHeight - element._margin.data[1];
+                var p = this.localPosition;
+                var pvt = element._pivot;
+                element._margin.x = p.x - element._calculatedWidth * pvt.x;
+                element._margin.z = (element._localAnchor.z - element._localAnchor.x) - element._calculatedWidth - element._margin.x;
+                element._margin.y = p.y - element._calculatedHeight * pvt.y;
+                element._margin.w = (element._localAnchor.w - element._localAnchor.y) - element._calculatedHeight - element._margin.y;
 
                 this._dirtyLocal = false;
             }
@@ -410,23 +414,31 @@ Object.assign(pc, function () {
             this.system._prerender.length = 0;
         },
 
+        _bindScreen: function (screen) {
+            screen.on('set:resolution', this._onScreenResize, this);
+            screen.on('set:referenceresolution', this._onScreenResize, this);
+            screen.on('set:scaleblend', this._onScreenResize, this);
+            screen.on('set:screenspace', this._onScreenSpaceChange, this);
+            screen.on('remove', this._onScreenRemove, this);
+        },
+
+        _unbindScreen: function (screen) {
+            screen.off('set:resolution', this._onScreenResize, this);
+            screen.off('set:referenceresolution', this._onScreenResize, this);
+            screen.off('set:scaleblend', this._onScreenResize, this);
+            screen.off('set:screenspace', this._onScreenSpaceChange, this);
+            screen.off('remove', this._onScreenRemove, this);
+        },
+
         _updateScreen: function (screen) {
             if (this.screen && this.screen !== screen) {
-                this.screen.screen.off('set:resolution', this._onScreenResize, this);
-                this.screen.screen.off('set:referenceresolution', this._onScreenResize, this);
-                this.screen.screen.off('set:scaleblend', this._onScreenResize, this);
-                this.screen.screen.off('set:screenspace', this._onScreenSpaceChange, this);
-                this.screen.screen.off('remove', this._onScreenRemove, this);
+                this._unbindScreen(this.screen.screen);
             }
 
             var previousScreen = this.screen;
             this.screen = screen;
             if (this.screen) {
-                this.screen.screen.on('set:resolution', this._onScreenResize, this);
-                this.screen.screen.on('set:referenceresolution', this._onScreenResize, this);
-                this.screen.screen.on('set:scaleblend', this._onScreenResize, this);
-                this.screen.screen.on('set:screenspace', this._onScreenSpaceChange, this);
-                this.screen.screen.on('remove', this._onScreenRemove, this);
+                this._bindScreen(this.screen.screen);
             }
 
             this._calculateSize(this._hasSplitAnchorsX, this._hasSplitAnchorsY);
@@ -609,7 +621,10 @@ Object.assign(pc, function () {
         },
 
         _onScreenRemove: function () {
-            this._updateScreen(null);
+            // if there is a screen and it is not being destroyed
+            if (this.screen && !this.screen._destroying) {
+                this._updateScreen(null);
+            }
         },
 
         // store pixel positions of anchor relative to current parent resolution
@@ -730,7 +745,8 @@ Object.assign(pc, function () {
             }
 
             // if there is a screen, update draw-order
-            if (this.screen) {
+            if (this.screen && this.screen.screen) {
+                this._unbindScreen(this.screen.screen);
                 this.screen.screen.syncDrawOrder();
             }
         },
@@ -761,8 +777,8 @@ Object.assign(pc, function () {
             }
 
             var p = this.entity.getLocalPosition();
-            p.x = this._margin.data[0] + this._calculatedWidth * this._pivot.data[0];
-            p.y = this._margin.data[1] + this._calculatedHeight * this._pivot.data[1];
+            p.x = this._margin.x + this._calculatedWidth * this._pivot.x;
+            p.y = this._margin.y + this._calculatedHeight * this._pivot.y;
 
             this.entity.setLocalPosition(p);
 
@@ -791,10 +807,10 @@ Object.assign(pc, function () {
             this._calculatedWidth = value;
 
             if (updateMargins) {
-                var p = this.entity.getLocalPosition().data;
-                var pvt = this._pivot.data;
-                this._margin.data[0] = p[0] - this._calculatedWidth * pvt[0];
-                this._margin.data[2] = (this._localAnchor.data[2] - this._localAnchor.data[0]) - this._calculatedWidth - this._margin.data[0];
+                var p = this.entity.getLocalPosition();
+                var pvt = this._pivot;
+                this._margin.x = p.x - this._calculatedWidth * pvt.x;
+                this._margin.z = (this._localAnchor.z - this._localAnchor.x) - this._calculatedWidth - this._margin.x;
             }
 
             this._flagChildrenAsDirty();
@@ -812,10 +828,10 @@ Object.assign(pc, function () {
             this._calculatedHeight = value;
 
             if (updateMargins) {
-                var p = this.entity.getLocalPosition().data;
-                var pvt = this._pivot.data;
-                this._margin.data[1] = p[1] - this._calculatedHeight * pvt[1];
-                this._margin.data[3] = (this._localAnchor.data[3] - this._localAnchor.data[1]) - this._calculatedHeight - this._margin.data[1];
+                var p = this.entity.getLocalPosition();
+                var pvt = this._pivot;
+                this._margin.y = p.y - this._calculatedHeight * pvt.y;
+                this._margin.w = (this._localAnchor.w - this._localAnchor.y) - this._calculatedHeight - this._margin.y;
             }
 
             this._flagChildrenAsDirty();
@@ -961,25 +977,25 @@ Object.assign(pc, function () {
 
     Object.defineProperty(ElementComponent.prototype, "_absLeft", {
         get: function () {
-            return this._localAnchor.data[0] + this._margin.data[0];
+            return this._localAnchor.x + this._margin.x;
         }
     });
 
     Object.defineProperty(ElementComponent.prototype, "_absRight", {
         get: function () {
-            return this._localAnchor.data[2] - this._margin.data[2];
+            return this._localAnchor.z - this._margin.z;
         }
     });
 
     Object.defineProperty(ElementComponent.prototype, "_absTop", {
         get: function () {
-            return this._localAnchor.data[3] - this._margin.data[3];
+            return this._localAnchor.w - this._margin.w;
         }
     });
 
     Object.defineProperty(ElementComponent.prototype, "_absBottom", {
         get: function () {
-            return this._localAnchor.data[1] + this._margin.data[1];
+            return this._localAnchor.y + this._margin.y;
         }
     });
 
@@ -997,71 +1013,71 @@ Object.assign(pc, function () {
 
     Object.defineProperty(ElementComponent.prototype, "left", {
         get: function () {
-            return this._margin.data[0];
+            return this._margin.x;
         },
 
         set: function (value) {
-            this._margin.data[0] = value;
+            this._margin.x = value;
             var p = this.entity.getLocalPosition();
             var wr = this._absRight;
-            var wl = this._localAnchor.data[0] + value;
+            var wl = this._localAnchor.x + value;
             this._setWidth(wr - wl);
 
-            p.x = value + this._calculatedWidth * this._pivot.data[0];
+            p.x = value + this._calculatedWidth * this._pivot.x;
             this.entity.setLocalPosition(p);
         }
     });
 
     Object.defineProperty(ElementComponent.prototype, "right", {
         get: function () {
-            return this._margin.data[2];
+            return this._margin.z;
         },
 
         set: function (value) {
-            this._margin.data[2] = value;
+            this._margin.z = value;
 
             // update width
             var p = this.entity.getLocalPosition();
             var wl = this._absLeft;
-            var wr = this._localAnchor.data[2] - value;
+            var wr = this._localAnchor.z - value;
             this._setWidth(wr - wl);
 
             // update position
-            p.x = (this._localAnchor.data[2] - this._localAnchor.data[0]) - value - (this._calculatedWidth * (1 - this._pivot.data[0]));
+            p.x = (this._localAnchor.z - this._localAnchor.x) - value - (this._calculatedWidth * (1 - this._pivot.x));
             this.entity.setLocalPosition(p);
         }
     });
 
     Object.defineProperty(ElementComponent.prototype, "top", {
         get: function () {
-            return this._margin.data[3];
+            return this._margin.w;
         },
 
         set: function (value) {
-            this._margin.data[3] = value;
+            this._margin.w = value;
             var p = this.entity.getLocalPosition();
             var wb = this._absBottom;
-            var wt = this._localAnchor.data[3] - value;
+            var wt = this._localAnchor.w - value;
             this._setHeight(wt - wb);
 
-            p.y = (this._localAnchor.data[3] - this._localAnchor.data[1]) - value - this._calculatedHeight * (1 - this._pivot.data[1]);
+            p.y = (this._localAnchor.w - this._localAnchor.y) - value - this._calculatedHeight * (1 - this._pivot.y);
             this.entity.setLocalPosition(p);
         }
     });
 
     Object.defineProperty(ElementComponent.prototype, "bottom", {
         get: function () {
-            return this._margin.data[1];
+            return this._margin.y;
         },
 
         set: function (value) {
-            this._margin.data[1] = value;
+            this._margin.y = value;
             var p = this.entity.getLocalPosition();
             var wt = this._absTop;
-            var wb = this._localAnchor.data[1] + value;
+            var wb = this._localAnchor.y + value;
             this._setHeight(wt - wb);
 
-            p.y = value + this._calculatedHeight * this._pivot.data[1];
+            p.y = value + this._calculatedHeight * this._pivot.y;
             this.entity.setLocalPosition(p);
         }
     });
@@ -1133,15 +1149,15 @@ Object.assign(pc, function () {
                 this._pivot.set(value[0], value[1]);
             }
 
-            var mx = this._margin.data[0] + this._margin.data[2];
+            var mx = this._margin.x + this._margin.z;
             var dx = this._pivot.x - prevX;
-            this._margin.data[0] += mx * dx;
-            this._margin.data[2] -= mx * dx;
+            this._margin.x += mx * dx;
+            this._margin.z -= mx * dx;
 
-            var my = this._margin.data[1] + this._margin.data[3];
+            var my = this._margin.y + this._margin.w;
             var dy = this._pivot.y - prevY;
-            this._margin.data[1] += my * dy;
-            this._margin.data[3] -= my * dy;
+            this._margin.y += my * dy;
+            this._margin.w -= my * dy;
 
             this._anchorDirty = true;
             this._cornersDirty = true;
@@ -1183,13 +1199,13 @@ Object.assign(pc, function () {
 
     Object.defineProperty(ElementComponent.prototype, "_hasSplitAnchorsX", {
         get: function () {
-            return Math.abs(this._anchor.data[0] - this._anchor.data[2]) > 0.001;
+            return Math.abs(this._anchor.x - this._anchor.z) > 0.001;
         }
     });
 
     Object.defineProperty(ElementComponent.prototype, "_hasSplitAnchorsY", {
         get: function () {
-            return Math.abs(this._anchor.data[1] - this._anchor.data[3]) > 0.001;
+            return Math.abs(this._anchor.y - this._anchor.w) > 0.001;
         }
     });
 
