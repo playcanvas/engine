@@ -30,7 +30,6 @@ Object.assign(pc, function () {
 
         this.id = "audiosource";
         this.description = "Specifies audio assets that can be played at the position of the Entity.";
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.AudioSourceComponent;
         this.DataType = pc.AudioSourceComponentData;

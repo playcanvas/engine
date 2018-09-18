@@ -21,7 +21,6 @@ Object.assign(pc, function () {
 
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ScriptLegacyComponent;
         this.DataType = pc.ScriptLegacyComponentData;
