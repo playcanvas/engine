@@ -27,7 +27,7 @@ Object.assign(pc, function () {
 
         this.id = 'script';
         this.app = app;
-        app.systems.add(this.id, this);
+        app.systems.add(this);
 
         this.ComponentType = pc.ScriptComponent;
         this.DataType = pc.ScriptComponentData;

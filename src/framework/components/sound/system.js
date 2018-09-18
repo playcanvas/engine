@@ -29,7 +29,7 @@ Object.assign(pc, function () {
 
         this.id = "sound";
         this.description = "Allows an Entity to play sounds";
-        app.systems.add(this.id, this);
+        app.systems.add(this);
 
         this.ComponentType = pc.SoundComponent;
         this.DataType = pc.SoundComponentData;

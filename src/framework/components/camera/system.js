@@ -43,7 +43,7 @@ Object.assign(pc, function () {
 
         this.id = 'camera';
         this.description = "Renders the scene from the location of the Entity.";
-        app.systems.add(this.id, this);
+        app.systems.add(this);
 
         this.ComponentType = pc.CameraComponent;
         this.DataType = pc.CameraComponentData;

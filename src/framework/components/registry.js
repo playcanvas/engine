@@ -15,37 +15,38 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.ComponentSystemRegistry#add
-         * @description Add a new Component type
-         * @param {Object} name The name of the Component
+         * @description Add a component system to the registry.
          * @param {Object} system The {pc.ComponentSystem} instance
          */
-        add: function (name, system) {
-            if (this[name]) {
-                throw new Error(pc.string.format("ComponentSystem name '{0}' already registered or not allowed", name));
+        add: function (system) {
+            var id = system.id;
+            if (this[id]) {
+                throw new Error(pc.string.format("ComponentSystem name '{0}' already registered or not allowed", id));
             }
 
-            this[name] = system;
-            system.name = name;
+            this[id] = system;
 
             // Update the component system array
             this.list.push(system);
         },
+
         /**
          * @private
          * @function
          * @name pc.ComponentSystemRegistry#remove
-         * @description Remove a Component type
-         * @param {Object} name The name of the Component remove
+         * @description Remove a component system from the registry.
+         * @param {Object} system The {pc.ComponentSystem} instance
          */
-        remove: function (name) {
-            if (!this[name]) {
-                throw new Error(pc.string.format("No ComponentSystem named '{0}' registered", name));
+        remove: function (system) {
+            var id = system.id;
+            if (!this[id]) {
+                throw new Error(pc.string.format("No ComponentSystem named '{0}' registered", id));
             }
 
-            delete this[name];
+            delete this[id];
 
             // Update the component system array
-            var index = this.list.indexOf(this[name]);
+            var index = this.list.indexOf(this[id]);
             if (index !== -1) {
                 this.list.splice(index, 1);
             }

@@ -14,7 +14,7 @@ Object.assign(pc, function () {
 
         this.id = 'layoutchild';
         this.app = app;
-        app.systems.add(this.id, this);
+        app.systems.add(this);
 
         this.ComponentType = pc.LayoutChildComponent;
         this.DataType = pc.LayoutChildComponentData;

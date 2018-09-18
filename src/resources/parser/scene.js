@@ -76,7 +76,7 @@ Object.assign(pc, function () {
             var entityData = entities[entity._guid];
             for (i = 0; i < len; i++) {
                 var system = systemsList[i];
-                var componentData = entityData.components[system.name];
+                var componentData = entityData.components[system.id];
                 if (componentData) {
                     system.addComponent(entity, componentData);
                 }
