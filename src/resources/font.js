@@ -36,8 +36,8 @@ Object.assign(pc, function () {
                 // load json data then load texture of same name
                 pc.http.get(url, function (err, response) {
                     // update asset data
-                    var data = upgradeDataSchema(response);
                     if (!err) {
+                        var data = upgradeDataSchema(response);
                         self._loadTextures(url.replace('.json', '.png'), data, function (err, textures) {
                             if (err) return callback(err);
 
