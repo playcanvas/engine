@@ -440,7 +440,6 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            pc.Component.prototype.onEnable.call(this);
             this.light.enabled = true;
 
             this.system.app.scene.on("set:layers", this.onLayersChanged, this);
@@ -458,7 +457,6 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            pc.Component.prototype.onDisable.call(this);
             this.light.enabled = false;
 
             this.system.app.scene.off("set:layers", this.onLayersChanged, this);

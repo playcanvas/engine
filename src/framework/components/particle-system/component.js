@@ -601,13 +601,9 @@ Object.assign(pc, function () {
             if (this.enabled && this.entity.enabled && data.depthSoftening) {
                 this._requestDepth();
             }
-
-            pc.Component.prototype.onEnable.call(this);
         },
 
         onDisable: function () {
-            pc.Component.prototype.onDisable.call(this);
-
             this.system.app.scene.off("set:layers", this.onLayersChanged, this);
             if (this.system.app.scene.layers) {
                 this.system.app.scene.layers.off("add", this.onLayerAdded, this);
