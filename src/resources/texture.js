@@ -292,7 +292,7 @@ Object.assign(pc, function () {
             } else if (data instanceof ArrayBuffer) { // Container format
                 var LEGACY = true;
 
-                if (LEGACY) {
+                if (LEGACY && ext === '.dds') {
                     texture = _legacyDdsLoader(url, data, this._device);
                 } else {
                     var textureData;
@@ -333,6 +333,7 @@ Object.assign(pc, function () {
                         levels: textureData.levels
                     });
 
+                    texture.name = url;
                     texture.upload();
                 }
 

@@ -59,6 +59,7 @@ Object.assign(pc, function () {
         this._type = pc.SPRITETYPE_SIMPLE;
         this._material = system.defaultMaterial;
         this._color = new pc.Color(1, 1, 1, 1);
+        this._colorUniform = new Float32Array(3);
         this._speed = 1;
         this._flipX = false;
         this._flipY = false;
@@ -108,12 +109,13 @@ Object.assign(pc, function () {
 
     Object.assign(SpriteComponent.prototype, {
         onEnable: function () {
-            pc.Component.prototype.onEnable.call(this);
+            var app = this.system.app;
+            var scene = app.scene;
 
-            this.system.app.scene.on("set:layers", this._onLayersChanged, this);
-            if (this.system.app.scene.layers) {
-                this.system.app.scene.layers.on("add", this._onLayerAdded, this);
-                this.system.app.scene.layers.on("remove", this._onLayerRemoved, this);
+            scene.on("set:layers", this._onLayersChanged, this);
+            if (scene.layers) {
+                scene.layers.on("add", this._onLayerAdded, this);
+                scene.layers.on("remove", this._onLayerRemoved, this);
             }
 
             this._showModel();
@@ -122,19 +124,20 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            pc.Component.prototype.onDisable.call(this);
+            var app = this.system.app;
+            var scene = app.scene;
 
-            this.system.app.scene.off("set:layers", this._onLayersChanged, this);
-            if (this.system.app.scene.layers) {
-                this.system.app.scene.layers.off("add", this._onLayerAdded, this);
-                this.system.app.scene.layers.off("remove", this._onLayerRemoved, this);
+            scene.off("set:layers", this._onLayersChanged, this);
+            if (scene.layers) {
+                scene.layers.off("add", this._onLayerAdded, this);
+                scene.layers.off("remove", this._onLayerRemoved, this);
             }
 
             this.stop();
             this._hideModel();
 
             if (this._batchGroupId >= 0) {
-                this.system.app.batcher.markGroupDirty(this.batchGroupId);
+                app.batcher.markGroupDirty(this.batchGroupId);
             }
         },
 
@@ -235,8 +238,11 @@ Object.assign(pc, function () {
                 this._model.meshInstances.push(this._meshInstance);
 
                 // set overrides on mesh instance
-                this._meshInstance.setParameter(PARAM_EMISSIVE, this._color.data3);
-                this._meshInstance.setParameter(PARAM_OPACITY, this._color.data[3]);
+                this._colorUniform[0] = this._color.r;
+                this._colorUniform[1] = this._color.g;
+                this._colorUniform[2] = this._color.b;
+                this._meshInstance.setParameter(PARAM_EMISSIVE, this._colorUniform);
+                this._meshInstance.setParameter(PARAM_OPACITY, this._color.a);
 
                 // now that we created the mesh instance, add the model to the scene
                 if (this.enabled && this.entity.enabled) {
@@ -614,22 +620,25 @@ Object.assign(pc, function () {
             return this._color;
         },
         set: function (value) {
-            this._color.data[0] = value.data[0];
-            this._color.data[1] = value.data[1];
-            this._color.data[2] = value.data[2];
+            this._color.r = value.r;
+            this._color.g = value.g;
+            this._color.b = value.b;
 
             if (this._meshInstance) {
-                this._meshInstance.setParameter(PARAM_EMISSIVE, this._color.data3);
+                this._colorUniform[0] = this._color.r;
+                this._colorUniform[1] = this._color.g;
+                this._colorUniform[2] = this._color.b;
+                this._meshInstance.setParameter(PARAM_EMISSIVE, this._colorUniform);
             }
         }
     });
 
     Object.defineProperty(SpriteComponent.prototype, "opacity", {
         get: function () {
-            return this._color.data[3];
+            return this._color.a;
         },
         set: function (value) {
-            this._color.data[3] = value;
+            this._color.a = value;
             if (this._meshInstance) {
                 this._meshInstance.setParameter(PARAM_OPACITY, value);
             }

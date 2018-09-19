@@ -161,9 +161,13 @@ Object.assign(pc, function () {
                     mipSize = Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4;
                 } else if ((fcc === FCC_PVRTC_4BPP_RGB_1 || fcc === FCC_PVRTC_4BPP_RGBA_1)) {
                     mipSize = Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2;
-                } else { // f32 or uncompressed rgba
+                } else if (header.ddspf.rgbBitCount === 32) {
+                    // f32 or uncompressed rgba
                     // 4 floats per texel
                     mipSize = mipWidth * mipHeight * 4;
+                } else {
+                    // Unsupported format
+                    return null;
                 }
 
                 var mipData = (fcc === FCC_FP32) ? new Float32Array(arrayBuffer, offset, mipSize) : new Uint8Array(arrayBuffer, offset, mipSize);

@@ -686,7 +686,6 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            pc.Component.prototype.onEnable.call(this);
             if (!this.body) {
                 this.createBody();
             }
@@ -695,7 +694,6 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            pc.Component.prototype.onDisable.call(this);
             this.disableSimulation();
         },
 

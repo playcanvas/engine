@@ -7,8 +7,7 @@ describe("pc.EntityReference", function () {
 
     beforeEach(function () {
         app = new pc.Application(document.createElement("canvas"));
-
-        new pc.DummyComponentSystem(app);
+        app.systems.add(new pc.DummyComponentSystem(app));
 
         testEntity = new pc.Entity("testEntity", app);
         testComponent = testEntity.addComponent("dummy", {});

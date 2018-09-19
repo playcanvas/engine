@@ -167,26 +167,26 @@ Object.assign(pc, function () {
                 view.copy(this.leftView);
                 view.invert();
                 this.leftViewInv.copy(view);
-                var pos = this.combinedPos.data;
-                pos[0] = this.leftPos.data[0] = view.data[12];
-                pos[1] = this.leftPos.data[1] = view.data[13];
-                pos[2] = this.leftPos.data[2] = view.data[14];
+                var pos = this.combinedPos;
+                pos.x = this.leftPos.x = view.data[12];
+                pos.y = this.leftPos.y = view.data[13];
+                pos.z = this.leftPos.z = view.data[14];
                 view.copy(this.rightView);
                 view.invert();
                 this.rightViewInv.copy(view);
-                var deltaX = pos[0] - view.data[12];
-                var deltaY = pos[1] - view.data[13];
-                var deltaZ = pos[2] - view.data[14];
+                var deltaX = pos.x - view.data[12];
+                var deltaY = pos.y - view.data[13];
+                var deltaZ = pos.z - view.data[14];
                 var dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
-                this.rightPos.data[0] = view.data[12];
-                this.rightPos.data[1] = view.data[13];
-                this.rightPos.data[2] = view.data[14];
-                pos[0] += view.data[12];
-                pos[1] += view.data[13];
-                pos[2] += view.data[14];
-                pos[0] *= 0.5; // middle pos
-                pos[1] *= 0.5;
-                pos[2] *= 0.5;
+                this.rightPos.x = view.data[12];
+                this.rightPos.y = view.data[13];
+                this.rightPos.z = view.data[14];
+                pos.x += view.data[12];
+                pos.y += view.data[13];
+                pos.z += view.data[14];
+                pos.x *= 0.5; // middle pos
+                pos.y *= 0.5;
+                pos.z *= 0.5;
                 var b = Math.PI * 0.5;
                 var c = maxFov * 0.5;
                 var a = Math.PI - (b + c);
@@ -194,9 +194,9 @@ Object.assign(pc, function () {
                 var fwdX = view.data[8];
                 var fwdY = view.data[9];
                 var fwdZ = view.data[10];
-                view.data[12] = pos[0] + fwdX * offset; // our forward goes backwards so + instead of -
-                view.data[13] = pos[1] + fwdY * offset;
-                view.data[14] = pos[2] + fwdZ * offset;
+                view.data[12] = pos.x + fwdX * offset; // our forward goes backwards so + instead of -
+                view.data[13] = pos.y + fwdY * offset;
+                view.data[14] = pos.z + fwdZ * offset;
                 this.combinedViewInv.copy(view);
                 view.invert();
 

@@ -66,7 +66,6 @@ Object.assign(pc, function () {
 
         this.id = 'particlesystem';
         this.description = "Updates and renders particle system in the scene.";
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ParticleSystemComponent;
         this.DataType = pc.ParticleSystemComponentData;
@@ -206,17 +205,17 @@ Object.assign(pc, function () {
                                 }
                                 lightCube = layer._lightCube;
                                 for (i = 0; i < 6; i++) {
-                                    lightCube[i * 3] = this.app.scene.ambientLight.data[0];
-                                    lightCube[i * 3 + 1] = this.app.scene.ambientLight.data[1];
-                                    lightCube[i * 3 + 2] = this.app.scene.ambientLight.data[2];
+                                    lightCube[i * 3] = this.app.scene.ambientLight.r;
+                                    lightCube[i * 3 + 1] = this.app.scene.ambientLight.g;
+                                    lightCube[i * 3 + 2] = this.app.scene.ambientLight.b;
                                 }
                                 var dirs = layer._sortedLights[pc.LIGHTTYPE_DIRECTIONAL];
                                 for (j = 0; j < dirs.length; j++) {
                                     for (c = 0; c < 6; c++) {
                                         var weight = Math.max(emitter.lightCubeDir[c].dot(dirs[j]._direction), 0) * dirs[j]._intensity;
-                                        lightCube[c * 3] += dirs[j]._color.data[0] * weight;
-                                        lightCube[c * 3 + 1] += dirs[j]._color.data[1] * weight;
-                                        lightCube[c * 3 + 2] += dirs[j]._color.data[2] * weight;
+                                        lightCube[c * 3] += dirs[j]._color.r * weight;
+                                        lightCube[c * 3 + 1] += dirs[j]._color.g * weight;
+                                        lightCube[c * 3 + 2] += dirs[j]._color.b * weight;
                                     }
                                 }
                             }

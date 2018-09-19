@@ -246,15 +246,19 @@ Object.assign(pc, function () {
 
         // 9-slicing
         this._outerScale = new pc.Vec2();
+        this._outerScaleUniform = new Float32Array(2);
         this._innerOffset = new pc.Vec4();
+        this._innerOffsetUniform = new Float32Array(4);
         this._atlasRect = new pc.Vec4();
+        this._atlasRectUniform = new Float32Array(4);
 
         this._defaultMesh = this._createMesh();
         this._renderable = new ImageRenderable(this._entity, this._defaultMesh, this._material);
 
         // set default colors
         this._color = new pc.Color(1, 1, 1, 1);
-        this._renderable.setParameter('material_emissive', this._color.data3);
+        this._colorUniform = new Float32Array([1, 1, 1]);
+        this._renderable.setParameter('material_emissive', this._colorUniform);
         this._renderable.setParameter('material_opacity', 1);
 
         this._updateAabbFunc = this._updateAabb.bind(this);
@@ -377,14 +381,14 @@ Object.assign(pc, function () {
                 this._normals[i + 2] = 1;
             }
 
-            this._uvs[0] = this._rect.data[0];
-            this._uvs[1] = this._rect.data[1];
-            this._uvs[2] = this._rect.data[0] + this._rect.data[2];
-            this._uvs[3] = this._rect.data[1];
-            this._uvs[4] = this._rect.data[0] + this._rect.data[2];
-            this._uvs[5] = this._rect.data[1] + this._rect.data[3];
-            this._uvs[6] = this._rect.data[0];
-            this._uvs[7] = this._rect.data[1] + this._rect.data[3];
+            this._uvs[0] = this._rect.x;
+            this._uvs[1] = this._rect.y;
+            this._uvs[2] = this._rect.x + this._rect.z;
+            this._uvs[3] = this._rect.y;
+            this._uvs[4] = this._rect.x + this._rect.z;
+            this._uvs[5] = this._rect.y + this._rect.w;
+            this._uvs[6] = this._rect.x;
+            this._uvs[7] = this._rect.y + this._rect.w;
 
             this._indices[0] = 0;
             this._indices[1] = 1;
@@ -451,9 +455,19 @@ Object.assign(pc, function () {
 
                 // set scale
                 if (this._renderable) {
-                    this._renderable.setParameter('innerOffset', this._innerOffset.data);
-                    this._renderable.setParameter('atlasRect', this._atlasRect.data);
-                    this._renderable.setParameter('outerScale', this._outerScale.data);
+                    this._innerOffsetUniform[0] = this._innerOffset.x;
+                    this._innerOffsetUniform[1] = this._innerOffset.y;
+                    this._innerOffsetUniform[2] = this._innerOffset.z;
+                    this._innerOffsetUniform[3] = this._innerOffset.w;
+                    this._renderable.setParameter('innerOffset', this._innerOffsetUniform);
+                    this._atlasRectUniform[0] = this._atlasRect.x;
+                    this._atlasRectUniform[1] = this._atlasRect.y;
+                    this._atlasRectUniform[2] = this._atlasRect.z;
+                    this._atlasRectUniform[3] = this._atlasRect.w;
+                    this._renderable.setParameter('atlasRect', this._atlasRectUniform);
+                    this._outerScaleUniform[0] = this._outerScale.x;
+                    this._outerScaleUniform[1] = this._outerScale.y;
+                    this._renderable.setParameter('outerScale', this._outerScaleUniform);
                     this._renderable.setAabbFunc(this._updateAabbFunc);
 
                     this._renderable.node.setLocalScale(scaleX, scaleY, 1);
@@ -474,8 +488,8 @@ Object.assign(pc, function () {
                 this._positions[11] = 0;
 
                 // offset for pivot
-                var hp = this._element.pivot.data[0];
-                var vp = this._element.pivot.data[1];
+                var hp = this._element.pivot.x;
+                var vp = this._element.pivot.y;
 
                 for (i = 0; i < this._positions.length; i += 3) {
                     this._positions[i] -= hp * w;
@@ -495,14 +509,14 @@ Object.assign(pc, function () {
                     }
                 }
 
-                this._uvs[0] = rect.data[0] / w;
-                this._uvs[1] = rect.data[1] / h;
-                this._uvs[2] = (rect.data[0] + rect.data[2]) / w;
-                this._uvs[3] = rect.data[1] / h;
-                this._uvs[4] = (rect.data[0] + rect.data[2]) / w;
-                this._uvs[5] = (rect.data[1] + rect.data[3]) / h;
-                this._uvs[6] = rect.data[0] / w;
-                this._uvs[7] = (rect.data[1] + rect.data[3]) / h;
+                this._uvs[0] = rect.x / w;
+                this._uvs[1] = rect.y / h;
+                this._uvs[2] = (rect.x + rect.z) / w;
+                this._uvs[3] = rect.y / h;
+                this._uvs[4] = (rect.x + rect.z) / w;
+                this._uvs[5] = (rect.y + rect.w) / h;
+                this._uvs[6] = rect.x / w;
+                this._uvs[7] = (rect.y + rect.w) / h;
 
                 var vb = mesh.vertexBuffer;
                 var it = new pc.VertexIterator(vb);
@@ -802,23 +816,28 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            var r = value.r;
+            var g = value.g;
+            var b = value.b;
+
             // #ifdef DEBUG
             if (this._color === value) {
                 console.warn("Setting element.color to itself will have no effect");
             }
             // #endif
-            if (this._color.data[0] === value.data[0] &&
-                this._color.data[1] === value.data[1] &&
-                this._color.data[2] === value.data[2]
-            ) {
+
+            if (this._color.r === r && this._color.g === g && this._color.b === b) {
                 return;
             }
 
-            this._color.data[0] = value.data[0];
-            this._color.data[1] = value.data[1];
-            this._color.data[2] = value.data[2];
+            this._color.r = r;
+            this._color.g = g;
+            this._color.b = b;
 
-            this._renderable.setParameter('material_emissive', this._color.data3);
+            this._colorUniform[0] = r;
+            this._colorUniform[1] = g;
+            this._colorUniform[2] = b;
+            this._renderable.setParameter('material_emissive', this._colorUniform);
 
             if (this._element) {
                 this._element.fire('set:color', this._color);
@@ -828,18 +847,18 @@ Object.assign(pc, function () {
 
     Object.defineProperty(ImageElement.prototype, "opacity", {
         get: function () {
-            return this._color.data[3];
+            return this._color.a;
         },
 
         set: function (value) {
-            if (value === this._color.data[3]) return;
+            if (value === this._color.a) return;
 
-            this._color.data[3] = value;
+            this._color.a = value;
 
             this._renderable.setParameter('material_opacity', value);
 
             if (this._element) {
-                this._element.fire('set:opacity', this._color.data[3]);
+                this._element.fire('set:opacity', value);
             }
         }
     });
@@ -913,8 +932,11 @@ Object.assign(pc, function () {
                     this._renderable.deleteParameter('material_emissive');
                 } else {
                     // otherwise if we are back to the defaults reset the color and opacity
-                    this._renderable.setParameter('material_emissive', this._color.data3);
-                    this._renderable.setParameter('material_opacity', this._color.data[3]);
+                    this._colorUniform[0] = this._color.r;
+                    this._colorUniform[1] = this._color.g;
+                    this._colorUniform[2] = this._color.b;
+                    this._renderable.setParameter('material_emissive', this._colorUniform);
+                    this._renderable.setParameter('material_opacity', this._color.a);
                 }
             }
         }
@@ -971,8 +993,11 @@ Object.assign(pc, function () {
                 // default texture just uses emissive and opacity maps
                 this._renderable.setParameter("texture_emissiveMap", this._texture);
                 this._renderable.setParameter("texture_opacityMap", this._texture);
-                this._renderable.setParameter("material_emissive", this._color.data3);
-                this._renderable.setParameter("material_opacity", this._color.data[3]);
+                this._colorUniform[0] = this._color.r;
+                this._colorUniform[1] = this._color.g;
+                this._colorUniform[2] = this._color.b;
+                this._renderable.setParameter("material_emissive", this._colorUniform);
+                this._renderable.setParameter("material_opacity", this._color.a);
             } else {
                 // clear texture params
                 this._renderable.deleteParameter("texture_emissiveMap");

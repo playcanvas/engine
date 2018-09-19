@@ -21,7 +21,7 @@ Object.assign(pc, function () {
     var shadowMapCache = [{}, {}, {}, {}, {}]; // must be a size of numShadowModes
 
     var directionalShadowEpsilon = 0.01;
-    var pixelOffset = new pc.Vec2();
+    var pixelOffset = new Float32Array(2);
     var blurScissorRect = { x: 1, y: 1, z: 0, w: 0 };
 
     var shadowCamView = new pc.Mat4();
@@ -372,6 +372,7 @@ Object.assign(pc, function () {
         this.viewId3 = scope.resolve('matrix_view3');
         this.viewInvId = scope.resolve('matrix_viewInverse');
         this.viewProjId = scope.resolve('matrix_viewProjection');
+        this.viewPos = new Float32Array(3);
         this.viewPosId = scope.resolve('view_position');
         this.nearClipId = scope.resolve('camera_near');
         this.farClipId = scope.resolve('camera_far');
@@ -396,14 +397,17 @@ Object.assign(pc, function () {
         this.exposureId = scope.resolve("exposure");
         this.skyboxIntensityId = scope.resolve("skyboxIntensity");
         this.lightColorId = [];
+        this.lightDir = [];
         this.lightDirId = [];
         this.lightShadowMapId = [];
         this.lightShadowMatrixId = [];
         this.lightShadowParamsId = [];
         this.lightShadowMatrixVsId = [];
         this.lightShadowParamsVsId = [];
+        this.lightDirVs = [];
         this.lightDirVsId = [];
         this.lightRadiusId = [];
+        this.lightPos = [];
         this.lightPosId = [];
         this.lightInAngleId = [];
         this.lightOutAngleId = [];
@@ -415,7 +419,7 @@ Object.assign(pc, function () {
 
         this.depthMapId = scope.resolve('uDepthMap');
         this.screenSizeId = scope.resolve('uScreenSize');
-        this._screenSize = new pc.Vec4();
+        this._screenSize = new Float32Array(4);
 
         this.sourceId = scope.resolve("source");
         this.pixelOffsetId = scope.resolve("pixelOffset");
@@ -594,7 +598,11 @@ Object.assign(pc, function () {
                 this.viewProjId.setValue(viewProjMat.data);
 
                 // View Position (world space)
-                this.viewPosId.setValue(camera._node.getPosition().data);
+                var cameraPos = camera._node.getPosition();
+                this.viewPos[0] = cameraPos.x;
+                this.viewPos[1] = cameraPos.y;
+                this.viewPos[2] = cameraPos.z;
+                this.viewPosId.setValue(this.viewPos);
 
                 camera.frustum.update(projMat, viewMat);
             } else {
@@ -653,13 +661,13 @@ Object.assign(pc, function () {
                 viewProjMatR.mul2(projR, viewR);
 
                 // View Position LR
-                viewPosL.data[0] = viewInvL.data[12];
-                viewPosL.data[1] = viewInvL.data[13];
-                viewPosL.data[2] = viewInvL.data[14];
+                viewPosL.x = viewInvL.data[12];
+                viewPosL.y = viewInvL.data[13];
+                viewPosL.z = viewInvL.data[14];
 
-                viewPosR.data[0] = viewInvR.data[12];
-                viewPosR.data[1] = viewInvR.data[13];
-                viewPosR.data[2] = viewInvR.data[14];
+                viewPosR.x = viewInvR.data[12];
+                viewPosR.y = viewInvR.data[13];
+                viewPosR.z = viewInvR.data[14];
 
                 camera.frustum.update(projMat, viewMat);
             }
@@ -667,7 +675,7 @@ Object.assign(pc, function () {
             // Near and far clip values
             this.nearClipId.setValue(camera._nearClip);
             this.farClipId.setValue(camera._farClip);
-            this.cameraParamsId.setValue(camera._shaderParams.data);
+            this.cameraParamsId.setValue(camera._shaderParams);
 
             var device = this.device;
             device.setRenderTarget(target);
@@ -698,9 +706,9 @@ Object.assign(pc, function () {
             var i;
             this.mainLight = -1;
 
-            this.ambientColor[0] = scene.ambientLight.data[0];
-            this.ambientColor[1] = scene.ambientLight.data[1];
-            this.ambientColor[2] = scene.ambientLight.data[2];
+            this.ambientColor[0] = scene.ambientLight.r;
+            this.ambientColor[1] = scene.ambientLight.g;
+            this.ambientColor[2] = scene.ambientLight.b;
             if (scene.gammaCorrection) {
                 for (i = 0; i < 3; i++) {
                     this.ambientColor[i] = Math.pow(this.ambientColor[i], 2.2);
@@ -714,14 +722,17 @@ Object.assign(pc, function () {
         _resolveLight: function (scope, i) {
             var light = "light" + i;
             this.lightColorId[i] = scope.resolve(light + "_color");
+            this.lightDir[i] = new Float32Array(3);
             this.lightDirId[i] = scope.resolve(light + "_direction");
             this.lightShadowMapId[i] = scope.resolve(light + "_shadowMap");
             this.lightShadowMatrixId[i] = scope.resolve(light + "_shadowMatrix");
             this.lightShadowParamsId[i] = scope.resolve(light + "_shadowParams");
             this.lightShadowMatrixVsId[i] = scope.resolve(light + "_shadowMatrixVS");
             this.lightShadowParamsVsId[i] = scope.resolve(light + "_shadowParamsVS");
+            this.lightDirVs[i] = new Float32Array(3);
             this.lightDirVsId[i] = scope.resolve(light + "_directionVS");
             this.lightRadiusId[i] = scope.resolve(light + "_radius");
+            this.lightPos[i] = new Float32Array(3);
             this.lightPosId[i] = scope.resolve(light + "_position");
             this.lightInAngleId[i] = scope.resolve(light + "_innerConeAngle");
             this.lightOutAngleId[i] = scope.resolve(light + "_outerConeAngle");
@@ -751,11 +762,15 @@ Object.assign(pc, function () {
                     this._resolveLight(scope, cnt);
                 }
 
-                this.lightColorId[cnt].setValue(scene.gammaCorrection ? directional._linearFinalColor.data : directional._finalColor.data);
+                this.lightColorId[cnt].setValue(scene.gammaCorrection ? directional._linearFinalColor : directional._finalColor);
 
                 // Directionals shine down the negative Y axis
                 wtm.getY(directional._direction).scale(-1);
-                this.lightDirId[cnt].setValue(directional._direction.normalize().data);
+                directional._direction.normalize();
+                this.lightDir[cnt][0] = directional._direction.x;
+                this.lightDir[cnt][1] = directional._direction.y;
+                this.lightDir[cnt][2] = directional._direction.z;
+                this.lightDirId[cnt].setValue(this.lightDir[cnt]);
 
                 if (directional.castShadows) {
                     var shadowMap = directional._isPcf && this.device.webgl2 ?
@@ -785,7 +800,11 @@ Object.assign(pc, function () {
                     if (this.mainLight < 0) {
                         this.lightShadowMatrixVsId[cnt].setValue(directional._shadowMatrix.data);
                         this.lightShadowParamsVsId[cnt].setValue(params);
-                        this.lightDirVsId[cnt].setValue(directional._direction.normalize().data);
+                        directional._direction.normalize();
+                        this.lightDirVs[cnt][0] = directional._direction.x;
+                        this.lightDirVs[cnt][1] = directional._direction.y;
+                        this.lightDirVs[cnt][2] = directional._direction.z;
+                        this.lightDirVsId[cnt].setValue(this.lightDirVs[cnt]);
                         this.mainLight = i;
                     }
                 }
@@ -802,9 +821,12 @@ Object.assign(pc, function () {
             }
 
             this.lightRadiusId[cnt].setValue(point.attenuationEnd);
-            this.lightColorId[cnt].setValue(scene.gammaCorrection ? point._linearFinalColor.data : point._finalColor.data);
+            this.lightColorId[cnt].setValue(scene.gammaCorrection ? point._linearFinalColor : point._finalColor);
             wtm.getTranslation(point._position);
-            this.lightPosId[cnt].setValue(point._position.data);
+            this.lightPos[cnt][0] = point._position.x;
+            this.lightPos[cnt][1] = point._position.y;
+            this.lightPos[cnt][2] = point._position.z;
+            this.lightPosId[cnt].setValue(this.lightPos[cnt]);
 
             if (point.castShadows) {
                 var shadowMap = point._shadowCamera.renderTarget.colorBuffer;
@@ -834,12 +856,19 @@ Object.assign(pc, function () {
             this.lightInAngleId[cnt].setValue(spot._innerConeAngleCos);
             this.lightOutAngleId[cnt].setValue(spot._outerConeAngleCos);
             this.lightRadiusId[cnt].setValue(spot.attenuationEnd);
-            this.lightColorId[cnt].setValue(scene.gammaCorrection ? spot._linearFinalColor.data : spot._finalColor.data);
+            this.lightColorId[cnt].setValue(scene.gammaCorrection ? spot._linearFinalColor : spot._finalColor);
             wtm.getTranslation(spot._position);
-            this.lightPosId[cnt].setValue(spot._position.data);
+            this.lightPos[cnt][0] = spot._position.x;
+            this.lightPos[cnt][1] = spot._position.y;
+            this.lightPos[cnt][2] = spot._position.z;
+            this.lightPosId[cnt].setValue(this.lightPos[cnt]);
             // Spots shine down the negative Y axis
             wtm.getY(spot._direction).scale(-1);
-            this.lightDirId[cnt].setValue(spot._direction.normalize().data);
+            spot._direction.normalize();
+            this.lightDir[cnt][0] = spot._direction.x;
+            this.lightDir[cnt][1] = spot._direction.y;
+            this.lightDir[cnt][2] = spot._direction.z;
+            this.lightDirId[cnt].setValue(this.lightDir[cnt]);
 
             if (spot.castShadows) {
                 var bias;
@@ -1202,7 +1231,7 @@ Object.assign(pc, function () {
                 }
 
                 if (light.shadowUpdateMode !== pc.SHADOWUPDATE_NONE && light.visibleThisFrame) {
-
+                    var cameraPos;
                     shadowCam = this.getShadowCamera(device, light);
                     shadowCamNode = shadowCam._node;
                     pass = 0;
@@ -1217,11 +1246,19 @@ Object.assign(pc, function () {
                         pass = cameraPass;
 
                     } else if (type === pc.LIGHTTYPE_SPOT) {
-                        this.viewPosId.setValue(shadowCamNode.getPosition().data);
+                        cameraPos = shadowCamNode.getPosition();
+                        this.viewPos[0] = cameraPos.x;
+                        this.viewPos[1] = cameraPos.y;
+                        this.viewPos[2] = cameraPos.z;
+                        this.viewPosId.setValue(this.viewPos);
                         this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
 
                     } else if (type === pc.LIGHTTYPE_POINT) {
-                        this.viewPosId.setValue(shadowCamNode.getPosition().data);
+                        cameraPos = shadowCamNode.getPosition();
+                        this.viewPos[0] = cameraPos.x;
+                        this.viewPos[1] = cameraPos.y;
+                        this.viewPos[2] = cameraPos.z;
+                        this.viewPosId.setValue(this.viewPos);
                         this.shadowMapLightRadiusId.setValue(light.attenuationEnd);
                         passes = 6;
 
@@ -1377,17 +1414,17 @@ Object.assign(pc, function () {
 
                             // Blur horizontal
                             this.sourceId.setValue(origShadowMap.colorBuffer);
-                            pixelOffset.x = 1.0 / light._shadowResolution;
-                            pixelOffset.y = 0.0;
-                            this.pixelOffsetId.setValue(pixelOffset.data);
+                            pixelOffset[0] = 1 / light._shadowResolution;
+                            pixelOffset[1] = 0;
+                            this.pixelOffsetId.setValue(pixelOffset);
                             if (blurMode === pc.BLUR_GAUSSIAN) this.weightId.setValue(this.blurVsmWeights[filterSize]);
                             pc.drawQuadWithShader(device, tempRt, blurShader, null, blurScissorRect);
 
                             // Blur vertical
                             this.sourceId.setValue(tempRt.colorBuffer);
-                            pixelOffset.y = pixelOffset.x;
-                            pixelOffset.x = 0.0;
-                            this.pixelOffsetId.setValue(pixelOffset.data);
+                            pixelOffset[1] = pixelOffset[0];
+                            pixelOffset[0] = 0;
+                            this.pixelOffsetId.setValue(pixelOffset);
                             pc.drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect);
                         }
                     }
@@ -1611,7 +1648,10 @@ Object.assign(pc, function () {
                         this.viewId.setValue(viewL.data);
                         this.viewId3.setValue(viewMat3L.data);
                         this.viewProjId.setValue(viewProjMatL.data);
-                        this.viewPosId.setValue(viewPosL.data);
+                        this.viewPos[0] = viewPosL.x;
+                        this.viewPos[1] = viewPosL.y;
+                        this.viewPos[2] = viewPosL.z;
+                        this.viewPosId.setValue(this.viewPos);
                         i += this.drawInstance(device, drawCall, mesh, style, true);
                         this._forwardDrawCalls++;
 
@@ -1622,7 +1662,10 @@ Object.assign(pc, function () {
                         this.viewId.setValue(viewR.data);
                         this.viewId3.setValue(viewMat3R.data);
                         this.viewProjId.setValue(viewProjMatR.data);
-                        this.viewPosId.setValue(viewPosR.data);
+                        this.viewPos[0] = viewPosR.x;
+                        this.viewPos[1] = viewPosR.y;
+                        this.viewPos[2] = viewPosR.z;
+                        this.viewPosId.setValue(this.viewPos);
                         i += this.drawInstance2(device, drawCall, mesh, style);
                         this._forwardDrawCalls++;
                     } else {
@@ -2314,10 +2357,10 @@ Object.assign(pc, function () {
             if (!settings) {
                 settings = light._visibleCameraSettings[pass] = {};
             }
-            var lpos = shadowCamNode.getPosition().data;
-            settings.x = lpos[0];
-            settings.y = lpos[1];
-            settings.z = lpos[2];
+            var lpos = shadowCamNode.getPosition();
+            settings.x = lpos.x;
+            settings.y = lpos.y;
+            settings.z = lpos.z;
             settings.orthoHeight = shadowCam.orthoHeight;
             settings.farClip = shadowCam.farClip;
         },
@@ -2361,9 +2404,9 @@ Object.assign(pc, function () {
 
             // Set up the fog
             if (scene.fog !== pc.FOG_NONE) {
-                this.fogColor[0] = scene.fogColor.data[0];
-                this.fogColor[1] = scene.fogColor.data[1];
-                this.fogColor[2] = scene.fogColor.data[2];
+                this.fogColor[0] = scene.fogColor.r;
+                this.fogColor[1] = scene.fogColor.g;
+                this.fogColor[2] = scene.fogColor.b;
                 if (scene.gammaCorrection) {
                     for (i = 0; i < 3; i++) {
                         this.fogColor[i] = Math.pow(this.fogColor[i], 2.2);
@@ -2379,12 +2422,11 @@ Object.assign(pc, function () {
             }
 
             // Set up screen size // should be RT size?
-            this._screenSize.x = device.width;
-            this._screenSize.y = device.height;
-            this._screenSize.z = 1.0 / device.width;
-            this._screenSize.w = 1.0 / device.height;
-            this.screenSizeId.setValue(this._screenSize.data);
-            // var halfWidth = device.width*0.5;
+            this._screenSize[0] = device.width;
+            this._screenSize[1] = device.height;
+            this._screenSize[2] = 1 / device.width;
+            this._screenSize[3] = 1 / device.height;
+            this.screenSizeId.setValue(this._screenSize);
         },
 
         renderComposition: function (comp) {
