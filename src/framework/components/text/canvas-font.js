@@ -300,6 +300,15 @@ Object.assign(pc, function () {
         } else if (code >= 0x1f000 && code <= 0x1F9FF) {
             // "emoji" misc. images and emoticon range of unicode
             return 0.8;
+        } else if (code >= 0x2600 && code <= 0x26FF) {
+            // 'miscelaneous symbols'
+            return 0.8;
+        } else if (code >= 0x2700 && code <= 0x27BF) {
+            // 'dingbats'
+            return 0.8;
+        } else if (code === 0x27A1 || (code >= 0x2B00 && code <= 0x2B0F)) {
+            // arrows
+            return 0.8;
         }
 
         return 1.0;
