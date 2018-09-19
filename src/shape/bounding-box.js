@@ -103,26 +103,38 @@ Object.assign(pc, function () {
         },
 
         _intersectsRay: function (ray, point) {
-            var tMin = tmpVecA.copy(this.getMin()).sub(ray.origin).data;
-            var tMax = tmpVecB.copy(this.getMax()).sub(ray.origin).data;
-            var dir = ray.direction.data;
+            var tMin = tmpVecA.copy(this.getMin()).sub(ray.origin);
+            var tMax = tmpVecB.copy(this.getMax()).sub(ray.origin);
+            var dir = ray.direction;
 
             // Ensure that we are not dividing it by zero
-            for (var i = 0; i < 3; i++) {
-                if (dir[i] === 0) {
-                    tMin[i] = tMin[i] < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
-                    tMax[i] = tMax[i] < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
-                } else {
-                    tMin[i] /= dir[i];
-                    tMax[i] /= dir[i];
-                }
+            if (dir.x === 0) {
+                tMin.x = tMin.x < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+                tMax.x = tMax.x < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+            } else {
+                tMin.x /= dir.x;
+                tMax.x /= dir.x;
+            }
+            if (dir.y === 0) {
+                tMin.y = tMin.y < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+                tMax.y = tMax.y < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+            } else {
+                tMin.y /= dir.y;
+                tMax.y /= dir.y;
+            }
+            if (dir.z === 0) {
+                tMin.z = tMin.z < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+                tMax.z = tMax.z < 0 ? -Number.MAX_VALUE : Number.MAX_VALUE;
+            } else {
+                tMin.z /= dir.z;
+                tMax.z /= dir.z;
             }
 
-            var realMin = tmpVecC.set(Math.min(tMin[0], tMax[0]), Math.min(tMin[1], tMax[1]), Math.min(tMin[2], tMax[2])).data;
-            var realMax = tmpVecD.set(Math.max(tMin[0], tMax[0]), Math.max(tMin[1], tMax[1]), Math.max(tMin[2], tMax[2])).data;
+            var realMin = tmpVecC.set(Math.min(tMin.x, tMax.x), Math.min(tMin.y, tMax.y), Math.min(tMin.z, tMax.z));
+            var realMax = tmpVecD.set(Math.max(tMin.x, tMax.x), Math.max(tMin.y, tMax.y), Math.max(tMin.z, tMax.z));
 
-            var minMax = Math.min(Math.min(realMax[0], realMax[1]), realMax[2]);
-            var maxMin = Math.max(Math.max(realMin[0], realMin[1]), realMin[2]);
+            var minMax = Math.min(Math.min(realMax.x, realMax.y), realMax.z);
+            var maxMin = Math.max(Math.max(realMin.x, realMin.y), realMin.z);
 
             var intersects = minMax >= maxMin && maxMin >= 0;
 
