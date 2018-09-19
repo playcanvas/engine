@@ -668,10 +668,10 @@ Object.assign(pc, function () {
                 _paddingRight.copy(element.entity.right);
                 _paddingLeft.copy(_paddingRight).scale(-1);
 
-                _paddingTop.scale(hitPadding.data[3] * scaleY);
-                _paddingBottom.scale(hitPadding.data[1] * scaleY);
-                _paddingRight.scale(hitPadding.data[2] * scaleX);
-                _paddingLeft.scale(hitPadding.data[0] * scaleX);
+                _paddingTop.scale(hitPadding.w * scaleY);
+                _paddingBottom.scale(hitPadding.y * scaleY);
+                _paddingRight.scale(hitPadding.z * scaleX);
+                _paddingLeft.scale(hitPadding.x * scaleX);
 
                 _cornerBottomLeft.copy(hitCorners[0]).add(_paddingBottom).add(_paddingLeft);
                 _cornerBottomRight.copy(hitCorners[1]).add(_paddingBottom).add(_paddingRight);
@@ -699,6 +699,12 @@ Object.assign(pc, function () {
         },
 
         _checkElement2d: function (x, y, element, camera) {
+            // ensure click is contained by any mask first
+            if (element.maskedBy) {
+                var result = this._checkElement2d(x, y, element.maskedBy.element, camera);
+                if (!result) return false;
+            }
+
             var sw = this.app.graphicsDevice.width;
             var sh = this.app.graphicsDevice.height;
 
@@ -738,6 +744,12 @@ Object.assign(pc, function () {
         },
 
         _checkElement3d: function (x, y, element, camera) {
+            // ensure click is contained by any mask first
+            if (element.maskedBy) {
+                var result = this._checkElement3d(x, y, element.maskedBy.element, camera);
+                if (!result) return false;
+            }
+
             var sw = this._target.clientWidth;
             var sh = this._target.clientHeight;
 

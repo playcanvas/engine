@@ -132,12 +132,14 @@ Object.assign(pc, function () {
         },
 
         _determineInputPosition: function (event) {
+            var devicePixelRatio = this._app.graphicsDevice.maxPixelRatio;
+
             if (typeof event.x !== 'undefined' && typeof event.y !== 'undefined') {
-                _inputScreenPosition.x = event.x;
-                _inputScreenPosition.y = event.y;
+                _inputScreenPosition.x = event.x * devicePixelRatio;
+                _inputScreenPosition.y = event.y * devicePixelRatio;
             } else if (event.changedTouches) {
-                _inputScreenPosition.x = event.changedTouches[0].x;
-                _inputScreenPosition.y = event.changedTouches[0].y;
+                _inputScreenPosition.x = event.changedTouches[0].x * devicePixelRatio;
+                _inputScreenPosition.y = event.changedTouches[0].y * devicePixelRatio;
             } else {
                 console.warn('Could not determine position from input event');
             }
@@ -172,9 +174,9 @@ Object.assign(pc, function () {
                 }
             }
 
-            dragScale.data[0] = 1 / dragScale.data[0];
-            dragScale.data[1] = 1 / dragScale.data[1];
-            dragScale.data[2] = 1 / dragScale.data[2];
+            dragScale.x = 1 / dragScale.x;
+            dragScale.y = 1 / dragScale.y;
+            dragScale.z = 1 / dragScale.z;
         },
 
         _onMove: function (event) {

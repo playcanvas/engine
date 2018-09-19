@@ -1,8 +1,6 @@
 Object.assign(pc, (function () {
     'use strict';
 
-    var typeNumber = 'number';
-
     /**
      * @constructor
      * @name pc.Mat3
@@ -18,27 +16,22 @@ Object.assign(pc, (function () {
      * @param {Number} [v7] The value in row 1, column 2.
      * @param {Number} [v8] The value in row 2, column 2.
      */
-    var Mat3 = function (v0, v1, v2, v3, v4, v5, v6, v7, v8) {
-        if (v0 && v0.length === 9) {
-            this.data = new Float32Array(v0);
-            return;
+    var Mat3 = function () {
+        var data;
+        if (arguments.length === 0) {
+            // Create an identity matrix. Note that a new Float32Array has all elements set
+            // to zero by default, so we only need to set the relevant elements to one.
+            data = new Float32Array(9);
+            data[0] = data[4] = data[8] = 1;
+        } else if (arguments.length === 1) {
+            data = new Float32Array(arguments[0]);
+        } else { // 9 values should have been passed
+            data = new Float32Array(9);
+            for (var i = 0; i < 9; i++) {
+                data[i] = arguments[i];
+            }
         }
-
-        this.data = new Float32Array(9);
-
-        if (typeof v0 === typeNumber) {
-            this.data[0] = v0;
-            this.data[1] = v1;
-            this.data[2] = v2;
-            this.data[3] = v3;
-            this.data[4] = v4;
-            this.data[5] = v5;
-            this.data[6] = v6;
-            this.data[7] = v7;
-            this.data[8] = v8;
-        } else {
-            this.setIdentity();
-        }
+        this.data = data;
     };
 
     Object.assign(Mat3.prototype, {

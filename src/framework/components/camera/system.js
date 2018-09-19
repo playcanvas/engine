@@ -43,7 +43,6 @@ Object.assign(pc, function () {
 
         this.id = 'camera';
         this.description = "Renders the scene from the location of the Entity.";
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.CameraComponent;
         this.DataType = pc.CameraComponentData;
@@ -96,9 +95,10 @@ Object.assign(pc, function () {
 
             // duplicate data because we're modifying the data
             var data = {};
-            properties.forEach(function (prop) {
-                data[prop] = _data[prop];
-            });
+            for (var i = 0, len = properties.length; i < len; i++) {
+                var property = properties[i];
+                data[property] = _data[property];
+            }
 
             if (data.layers && pc.type(data.layers) === 'array') {
                 data.layers = data.layers.slice(0);

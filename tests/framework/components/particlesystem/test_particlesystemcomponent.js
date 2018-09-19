@@ -1,75 +1,70 @@
-QUnit.module("pc.ParticleSystemComponent", {
-    setup: function () {
-        this.app = new pc.Application(document.createElement('canvas'));
-    },
+describe("pc.ParticleSystemComponent", function () {
+    beforeEach(function () {
+        app = new pc.Application(document.createElement('canvas'));
+    });
 
-    teardown: function () {
-        this.app.destroy();
-    },
+    afterEach(function () {
+        app.destroy();
+    });
 
-    loadAsset: function (name, url, type, callback) {
+    var loadAsset = function (name, url, type, callback) {
         var asset = new pc.Asset(name, type, {
             url: url
         });
 
-        this.app.assets.add(asset);
+        app.assets.add(asset);
 
-        this.app.assets.once("load", callback, this);
+        app.assets.once("load", callback, this);
 
-        this.app.assets.load(asset);
-    }
-});
+        app.assets.load(asset);
+    };
 
-test("Add particlesystem", function () {
-    var e = new pc.Entity();
+    it("Add particlesystem", function () {
+        var e = new pc.Entity();
 
-    e.addComponent("particlesystem");
+        e.addComponent("particlesystem");
 
-    ok(e.particlesystem);
-});
-
-test("Remove particlesystem", function () {
-    var e = new pc.Entity();
-
-    e.addComponent("particlesystem");
-    e.removeComponent("particlesystem");
-
-    ok(!e.particlesystem);
-});
-
-test("colorMapAsset removes events", function () {
-    var e = new pc.Entity();
-
-    stop();
-
-    this.loadAsset('RedPng', 'base/tests/test-assets/sprite/red-atlas.png', 'texture', function (asset) {
-        start();
-
-        e.addComponent('particlesystem', {
-            colorMapAsset: asset.id
-        });
-
-        e.removeComponent('particlesystem');
-
-        equal(asset.hasEvent('remove'), false);
+        expect(e.particlesystem).to.exist;
     });
-});
 
-// TODO Skipped because box.json doesn't exist in the repo
-test("meshAsset removes events", function () {
-    var e = new pc.Entity();
+    it("Remove particlesystem", function () {
+        var e = new pc.Entity();
 
-    stop();
+        e.addComponent("particlesystem");
+        e.removeComponent("particlesystem");
 
-    this.loadAsset('Box', 'base/tests/test-assets/box/box.json', 'model', function (asset) {
-        start();
-
-        e.addComponent('particlesystem', {
-            mesh: asset.id
-        });
-
-        e.removeComponent('particlesystem');
-
-        equal(asset.hasEvent('remove'), false);
+        expect(e.particlesystem).to.not.exist;
     });
+
+    it("colorMapAsset removes events", function (done) {
+        var e = new pc.Entity();
+
+        loadAsset('RedPng', 'base/tests/test-assets/sprite/red-atlas.png', 'texture', function (asset) {
+            e.addComponent('particlesystem', {
+                colorMapAsset: asset.id
+            });
+
+            e.removeComponent('particlesystem');
+
+            expect(asset.hasEvent('remove')).to.equal(false);
+            done();
+        });
+    });
+
+    it("meshAsset removes events", function (done) {
+        var e = new pc.Entity();
+
+        loadAsset('Box', 'base/tests/test-assets/box/box.json', 'model', function (asset) {
+            e.addComponent('particlesystem', {
+                mesh: asset.id
+            });
+
+            e.removeComponent('particlesystem');
+
+            expect(asset.hasEvent('remove')).to.equal(false);
+            done();
+        });
+    });
+
 });
+

@@ -245,44 +245,15 @@ Object.assign(pc, function () {
     var StandardMaterial = function () {
         pc.Material.call(this);
 
+        // storage for texture and cubemap asset references
+        this._assetReferences = {};
+        this._validator = null;
+
         this.reset();
         this.update();
     };
     StandardMaterial.prototype = Object.create(pc.Material.prototype);
     StandardMaterial.prototype.constructor = StandardMaterial;
-
-    var _createTexture = function (param) {
-        return (param.data instanceof pc.Texture) ? param.data : null;
-    };
-
-    var _createCubemap = function (param) {
-        return (param.data instanceof pc.Texture) ? param.data : null;
-    };
-
-    var _createVec2 = function (param) {
-        return new pc.Vec2(param.data[0], param.data[1]);
-    };
-
-    var _createBoundingBox = function (param) {
-        var center, halfExtents;
-
-        if (param.data && param.data.center) {
-            center = new pc.Vec3(param.data.center[0], param.data.center[1], param.data.center[2]);
-        } else {
-            center = new pc.Vec3(0, 0, 0);
-        }
-
-        if (param.data && param.data.halfExtents) {
-            halfExtents = new pc.Vec3(param.data.halfExtents[0], param.data.halfExtents[1], param.data.halfExtents[2]);
-        } else {
-            halfExtents = new pc.Vec3(0.5, 0.5, 0.5);
-        }
-        return new pc.BoundingBox(center, halfExtents);
-    };
-
-    var _createRgb = function (param) {
-        return new pc.Color(param.data[0], param.data[1], param.data[2]);
-    };
 
     var _propsSerial = [];
     var _propsSerialDefaultVal = [];
@@ -295,6 +266,7 @@ Object.assign(pc, function () {
         var privMapTiling = privMap + "Tiling";
         var privMapOffset = privMap + "Offset";
         var mapTransform = privMap.substring(1) + "Transform";
+        var mapTransformUniform = mapTransform + "Uniform";
         var privMapUv = privMap + "Uv";
         var privMapChannel = privMap + "Channel";
         var privMapVertexColor = "_" + name + "VertexColor";
@@ -304,6 +276,7 @@ Object.assign(pc, function () {
         obj[privMapTiling] = new pc.Vec2(1, 1);
         obj[privMapOffset] = new pc.Vec2(0, 0);
         obj[mapTransform] = null;
+        obj[mapTransformUniform] = null;
         obj[privMapUv] = uv;
         if (channels > 0) {
             var channel = defChannel ? defChannel : (channels > 1 ? "rgb" : "g");
@@ -436,8 +409,8 @@ Object.assign(pc, function () {
             },
             set: function (value) {
                 var oldVal = this[priv];
-                var wasBw = (oldVal.data[0] === 0 && oldVal.data[1] === 0 && oldVal.data[2] === 0) || (oldVal.data[0] === 1 && oldVal.data[1] === 1 && oldVal.data[2] === 1);
-                var isBw = (value.data[0] === 0 && value.data[1] === 0 && value.data[2] === 0) || (value.data[0] === 1 && value.data[1] === 1 && value.data[2] === 1);
+                var wasBw = (oldVal.r === 0 && oldVal.g === 0 && oldVal.b === 0) || (oldVal.r === 1 && oldVal.g === 1 && oldVal.b === 1);
+                var isBw = (value.r === 0 && value.g === 0 && value.b === 0) || (value.r === 1 && value.g === 1 && value.b === 1);
                 if (wasBw ^ isBw) this.dirtyShader = true;
                 this.dirtyColor = true;
                 this[priv] = value;
@@ -649,40 +622,72 @@ Object.assign(pc, function () {
 
         /**
          * @private
-         * @name pc.PhoneMaterial#init
+         * @function
+         * @name  pc.StandardMaterial#initialize
+         * @description  Initialize material properties from the material data block e.g. loading from server
+         * @param  {Object} data The data block that is used to initialize
+         */
+        initialize: function (data) {
+            this.reset();
+
+            // usual flow is that data is validated in resource loader
+            // but if not, validate here.
+            if (!data.validated) {
+                if (!this._validator) {
+                    this._validator = new pc.StandardMaterialValidator();
+                }
+                this._validator.validate(data);
+            }
+
+            if (data.chunks) {
+                this.chunks.copy(data.chunks);
+            }
+
+            // initialize material values from the input data
+            for (var key in data) {
+                var type = pc.StandardMaterial.PARAMETER_TYPES[key];
+                var value = data[key];
+
+                if (type === 'vec2') {
+                    this[key] = new pc.Vec2(value[0], value[1]);
+                } else if (type === 'rgb') {
+                    this[key] = new pc.Color(value[0], value[1], value[2]);
+                } else if (type === 'texture') {
+                    if (value instanceof pc.Texture) {
+                        this[key] = value;
+                    } else {
+                        this[key] = null;
+                    }
+                } else if (type === 'cubemap') {
+                    if (value instanceof pc.Texture) {
+                        this[key] = value;
+                    } else {
+                        this[key] = null;
+                    }
+                } else if (type === 'boundingbox') {
+                    var center = new pc.Vec3(value.center[0], value.center[1], value.center[2]);
+                    var halfExtents = new pc.Vec3(value.halfExtents[0], value.halfExtents[1], value.halfExtents[2]);
+                    this[key] = new pc.BoundingBox(center, halfExtents);
+                } else {
+                    // number, boolean and enum types don't require type creation
+                    this[key] = data[key];
+                }
+
+            }
+
+            this.update();
+        },
+
+        /**
+         * @private
+         * @name pc.StandardMaterial#init
          * @description Update material data from a data block, as found on a material Asset.
          * @param {Object} data JSON material data.
          * Note, init() expects texture parameters to contain a {@link pc.Texture} not a resource id.
          */
         init: function (data) {
-            this.reset();
-
-            // Initialise material from data
-            this.name = data.name;
-
-            if (data.chunks)
-                this.chunks.copy(data.chunks);
-
-            for (var i = 0; i < data.parameters.length; i++) {
-                var param = data.parameters[i];
-                if (param.type === "vec3") {
-                    this[param.name] = _createRgb(param);
-                } else if (param.type === "vec2") {
-                    this[param.name] = _createVec2(param);
-                } else if (param.type === "texture") {
-                    this[param.name] = _createTexture(param);
-                } else if (param.type === "cubemap") {
-                    this[param.name] = _createCubemap(param);
-                } else if (param.name === "bumpMapFactor") { // Unfortunately, names don't match for bumpiness
-                    this.bumpiness = param.data;
-                } else if (param.type === 'boundingbox') {
-                    this[param.name] = _createBoundingBox(param);
-                } else {
-                    this[param.name] = param.data;
-                }
-            }
-
-            this.update();
+            console.warn('StandardMaterial.init is deprecated. Use StandardMaterial.initialize instead');
+            this.initialize(data);
         },
 
         _updateMapTransform: function (transform, tiling, offset) {
@@ -739,6 +744,10 @@ Object.assign(pc, function () {
             if (this[mname]) {
                 this._setParameter("texture_" + mname, this[mname]);
                 var tname = mname + "Transform";
+                var uname = mname + "TransformUniform";
+                if (!this[tname]) {
+                    this[uname] = new Float32Array(4);
+                }
                 this[tname] = this._updateMapTransform(
                     this[tname],
                     this[mname + "Tiling"],
@@ -746,7 +755,11 @@ Object.assign(pc, function () {
                 );
 
                 if (this[tname]) {
-                    this._setParameter('texture_' + tname, this[tname].data);
+                    this[uname][0] = this[tname].x;
+                    this[uname][1] = this[tname].y;
+                    this[uname][2] = this[tname].z;
+                    this[uname][3] = this[tname].w;
+                    this._setParameter('texture_' + tname, this[uname]);
                 }
             }
         },
@@ -890,12 +903,14 @@ Object.assign(pc, function () {
             for (i = 0; i < _propsColor.length; i++) {
                 var clr = this["_" + _propsColor[i]];
                 var arr = this[_propsColor[i] + "Uniform"];
-                for (c = 0; c < 3; c++ ) {
-                    if (gammaCorrection) {
-                        arr[c] = Math.pow(clr.data[c], 2.2);
-                    } else {
-                        arr[c] = clr.data[c];
-                    }
+                if (gammaCorrection) {
+                    arr[0] = Math.pow(clr.r, 2.2);
+                    arr[1] = Math.pow(clr.g, 2.2);
+                    arr[2] = Math.pow(clr.b, 2.2);
+                } else {
+                    arr[0] = clr.r;
+                    arr[1] = clr.g;
+                    arr[2] = clr.b;
                 }
             }
             for (c = 0; c < 3; c++) {
@@ -911,11 +926,21 @@ Object.assign(pc, function () {
             var i, j, same;
             for (i = 0; i < this._mapXForms[uv].length; i++) {
                 same = true;
-                for ( j = 0; j < xform.data.length; j++) {
-                    if (this._mapXForms[uv][i][j] != xform.data[j]) {
-                        same = false;
-                        break;
-                    }
+                if (this._mapXForms[uv][i][0] != xform.x) {
+                    same = false;
+                    break;
+                }
+                if (this._mapXForms[uv][i][1] != xform.y) {
+                    same = false;
+                    break;
+                }
+                if (this._mapXForms[uv][i][2] != xform.z) {
+                    same = false;
+                    break;
+                }
+                if (this._mapXForms[uv][i][3] != xform.w) {
+                    same = false;
+                    break;
                 }
                 if (same) {
                     return i + 1;
@@ -923,9 +948,12 @@ Object.assign(pc, function () {
             }
             var newID = this._mapXForms[uv].length;
             this._mapXForms[uv][newID] = [];
-            for (j = 0; j < xform.data.length; j++) {
-                this._mapXForms[uv][newID][j] = xform.data[j];
-            }
+
+            this._mapXForms[uv][newID][0] = xform.x;
+            this._mapXForms[uv][newID][1] = xform.y;
+            this._mapXForms[uv][newID][2] = xform.z;
+            this._mapXForms[uv][newID][3] = xform.w;
+
             return newID + 1;
         },
 
@@ -1002,16 +1030,16 @@ Object.assign(pc, function () {
                 }
             }
 
-            var diffuseTint = ((this.diffuse.data[0] !== 1 || this.diffuse.data[1] !== 1 || this.diffuse.data[2] !== 1) &&
+            var diffuseTint = ((this.diffuse.r !== 1 || this.diffuse.g !== 1 || this.diffuse.b !== 1) &&
                                 (this.diffuseTint || (!this.diffuseMap && !this.diffuseVertexColor))) ? 3 : 0;
 
             var specularTint = false;
             var useSpecular = (this.useMetalness ? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap) || (!!this.dpAtlas);
-            useSpecular = useSpecular || (this.useMetalness ? true : !(this.specular.data[0] === 0 && this.specular.data[1] === 0 && this.specular.data[2] === 0));
+            useSpecular = useSpecular || (this.useMetalness ? true : !(this.specular.r === 0 && this.specular.g === 0 && this.specular.b === 0));
 
             if (useSpecular) {
                 if ((this.specularTint || (!this.specularMap && !this.specularVertexColor)) && !this.useMetalness) {
-                    specularTint = this.specular.data[0] !== 1 || this.specular.data[1] !== 1 || this.specular.data[2] !== 1;
+                    specularTint = this.specular.r !== 1 || this.specular.g !== 1 || this.specular.b !== 1;
                 }
             }
 
@@ -1035,7 +1063,7 @@ Object.assign(pc, function () {
 
             var emissiveTint = this.emissiveMap ? 0 : 3;
             if (!emissiveTint) {
-                emissiveTint = (this.emissive.data[0] !== 1 || this.emissive.data[1] !== 1 || this.emissive.data[2] !== 1 || this.emissiveIntensity !== 1) && this.emissiveTint;
+                emissiveTint = (this.emissive.r !== 1 || this.emissive.g !== 1 || this.emissive.b !== 1 || this.emissiveIntensity !== 1) && this.emissiveTint;
                 emissiveTint = emissiveTint ? 3 : (this.emissiveIntensity !== 1 ? 1 : 0);
             }
 

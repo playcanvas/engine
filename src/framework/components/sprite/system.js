@@ -16,7 +16,6 @@ Object.assign(pc, function () {
 
         this.id = 'sprite';
         this.app = app;
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.SpriteComponent;
         this.DataType = pc.SpriteComponentData;
@@ -90,7 +89,7 @@ Object.assign(pc, function () {
 
             if (data.color !== undefined) {
                 if (data.color instanceof pc.Color) {
-                    component.color.set(data.color.data[0], data.color.data[1], data.color.data[2], data.opacity !== undefined ? data.opacity : 1);
+                    component.color.set(data.color.r, data.color.g, data.color.b, data.opacity !== undefined ? data.opacity : 1);
                 } else {
                     component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
                 }

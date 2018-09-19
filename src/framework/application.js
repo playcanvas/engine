@@ -152,6 +152,10 @@ Object.assign(pc, function () {
         this.autoRender = true;
         this.renderNextFrame = false;
 
+        // enable if you want entity type script attributes
+        // to not be re-mapped when an entity is cloned
+        this.useLegacyScriptAttributeCloning = false;
+
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
         this._resolutionMode = pc.RESOLUTION_FIXED;
@@ -162,9 +166,12 @@ Object.assign(pc, function () {
 
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
-        this.systems = new pc.ComponentSystemRegistry();
         this._audioManager = new pc.SoundManager(options);
         this.loader = new pc.ResourceLoader();
+
+        // stores all entities that have been created
+        // for this app by guid
+        this._entityIndex = {};
 
         this.scene = new pc.Scene();
         this.root = new pc.Entity(this);
@@ -456,30 +463,31 @@ Object.assign(pc, function () {
         this.loader.addHandler("textureatlas", new pc.TextureAtlasHandler(this.loader));
         this.loader.addHandler("sprite", new pc.SpriteHandler(this.assets, this.graphicsDevice));
 
-        new pc.RigidBodyComponentSystem(this);
-        new pc.CollisionComponentSystem(this);
-        new pc.AnimationComponentSystem(this);
-        new pc.ModelComponentSystem(this);
-        new pc.CameraComponentSystem(this);
-        new pc.LightComponentSystem(this);
+        this.systems = new pc.ComponentSystemRegistry();
+        this.systems.add(new pc.RigidBodyComponentSystem(this));
+        this.systems.add(new pc.CollisionComponentSystem(this));
+        this.systems.add(new pc.AnimationComponentSystem(this));
+        this.systems.add(new pc.ModelComponentSystem(this));
+        this.systems.add(new pc.CameraComponentSystem(this));
+        this.systems.add(new pc.LightComponentSystem(this));
         if (pc.script.legacy) {
-            new pc.ScriptLegacyComponentSystem(this);
+            this.systems.add(new pc.ScriptLegacyComponentSystem(this));
         } else {
-            new pc.ScriptComponentSystem(this);
+            this.systems.add(new pc.ScriptComponentSystem(this));
         }
-        new pc.AudioSourceComponentSystem(this, this._audioManager);
-        new pc.SoundComponentSystem(this, this._audioManager);
-        new pc.AudioListenerComponentSystem(this, this._audioManager);
-        new pc.ParticleSystemComponentSystem(this);
-        new pc.ScreenComponentSystem(this);
-        new pc.ElementComponentSystem(this);
-        new pc.ButtonComponentSystem(this);
-        new pc.ScrollViewComponentSystem(this);
-        new pc.ScrollbarComponentSystem(this);
-        new pc.SpriteComponentSystem(this);
-        new pc.LayoutGroupComponentSystem(this);
-        new pc.LayoutChildComponentSystem(this);
-        new pc.ZoneComponentSystem(this);
+        this.systems.add(new pc.AudioSourceComponentSystem(this, this._audioManager));
+        this.systems.add(new pc.SoundComponentSystem(this, this._audioManager));
+        this.systems.add(new pc.AudioListenerComponentSystem(this, this._audioManager));
+        this.systems.add(new pc.ParticleSystemComponentSystem(this));
+        this.systems.add(new pc.ScreenComponentSystem(this));
+        this.systems.add(new pc.ElementComponentSystem(this));
+        this.systems.add(new pc.ButtonComponentSystem(this));
+        this.systems.add(new pc.ScrollViewComponentSystem(this));
+        this.systems.add(new pc.ScrollbarComponentSystem(this));
+        this.systems.add(new pc.SpriteComponentSystem(this));
+        this.systems.add(new pc.LayoutGroupComponentSystem(this));
+        this.systems.add(new pc.LayoutChildComponentSystem(this));
+        this.systems.add(new pc.ZoneComponentSystem(this));
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 

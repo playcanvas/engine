@@ -639,6 +639,7 @@ Object.assign(pc, function () {
             this.extTextureFloatLinear = getExtension("OES_texture_float_linear");
             this.extTextureFilterAnisotropic = getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
             this.extCompressedTextureETC1 = getExtension('WEBGL_compressed_texture_etc1');
+            this.extCompressedTextureETC = getExtension('WEBGL_compressed_texture_etc');
             this.extCompressedTexturePVRTC = getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
             this.extCompressedTextureS3TC = getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
         },
@@ -1164,7 +1165,8 @@ Object.assign(pc, function () {
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
                 if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && colorBuffer._pot) {
-                    this.bindTexture(this.maxCombinedTextures - 1, colorBuffer._glTarget, colorBuffer._glTexture);
+                    this.activeTexture(this.maxCombinedTextures - 1);
+                    this.bindTexture(colorBuffer);
                     gl.generateMipmap(colorBuffer._glTarget);
                 }
 
@@ -1264,6 +1266,16 @@ Object.assign(pc, function () {
                     ext = this.extCompressedTexturePVRTC;
                     texture._glFormat = gl.RGBA;
                     texture._glInternalFormat = ext.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
+                    break;
+                case pc.PIXELFORMAT_ETC2_RGB:
+                    ext = this.extCompressedTextureETC;
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = ext.COMPRESSED_RGB8_ETC2;
+                    break;
+                case pc.PIXELFORMAT_ETC2_RGBA:
+                    ext = this.extCompressedTextureETC;
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = ext.COMPRESSED_RGBA8_ETC2_EAC;
                     break;
                 case pc.PIXELFORMAT_RGB16F:
                     // definition varies between WebGL1 and 2

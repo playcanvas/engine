@@ -31,7 +31,6 @@ Object.assign(pc, function () {
 
         this.id = 'model';
         this.description = "Renders a 3D model at the location of the Entity.";
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ModelComponent;
         this.DataType = pc.ModelComponentData;
@@ -56,16 +55,14 @@ Object.assign(pc, function () {
 
     Object.assign(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
-
             // order matters here
             properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping', 'layers', 'isStatic', 'batchGroupId'];
 
             // copy data into new structure
             var data = {};
-            var name;
-            for (var i = 0; i < properties.length; i++) {
-                name = properties[i];
-                data[name] = _data[name];
+            for (var i = 0, len = properties.length; i < len; i++) {
+                var property = properties[i];
+                data[property] = _data[property];
             }
 
             data.material = this.defaultMaterial;

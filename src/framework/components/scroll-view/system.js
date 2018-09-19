@@ -6,6 +6,7 @@ Object.assign(pc, function () {
         { name: 'scrollMode', type: 'number' },
         { name: 'bounceAmount', type: 'number' },
         { name: 'friction', type: 'number' },
+        { name: 'dragThreshold', type: 'number' },
         { name: 'horizontalScrollbarVisibility', type: 'number' },
         { name: 'verticalScrollbarVisibility', type: 'number' },
         { name: 'viewportEntity', type: 'entity' },
@@ -13,6 +14,8 @@ Object.assign(pc, function () {
         { name: 'horizontalScrollbarEntity', type: 'entity' },
         { name: 'verticalScrollbarEntity', type: 'entity' }
     ];
+
+    var DEFAULT_DRAG_THRESHOLD = 10;
 
     /**
      * @private
@@ -27,7 +30,6 @@ Object.assign(pc, function () {
 
         this.id = 'scrollview';
         this.app = app;
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ScrollViewComponent;
         this.DataType = pc.ScrollViewComponentData;
@@ -43,6 +45,10 @@ Object.assign(pc, function () {
 
     Object.assign(ScrollViewComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
+            if (data.dragThreshold === undefined) {
+                data.dragThreshold = DEFAULT_DRAG_THRESHOLD;
+            }
+
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
         },
 

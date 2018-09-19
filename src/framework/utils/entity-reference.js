@@ -282,7 +282,7 @@ Object.assign(pc, function () {
         },
 
         _onComponentAdd: function (entity, component) {
-            var componentName = component.system.name;
+            var componentName = component.system.id;
 
             if (entity === this._entity) {
                 this._callGainOrLoseListener(componentName, this._gainListeners);
@@ -291,7 +291,7 @@ Object.assign(pc, function () {
         },
 
         _onComponentRemove: function (entity, component) {
-            var componentName = component.system.name;
+            var componentName = component.system.id;
 
             if (entity === this._entity) {
                 this._callGainOrLoseListener(componentName, this._loseListeners);

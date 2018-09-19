@@ -46,9 +46,9 @@ Object.assign(pc, function () {
         this._outerConeAngle = 45;
 
         // Cache of light property data in a format more friendly for shader uniforms
-        this._finalColor = new pc.Vec3(0.8, 0.8, 0.8);
-        var c = Math.pow(this._finalColor.data[0], 2.2);
-        this._linearFinalColor = new pc.Vec3(c, c, c);
+        this._finalColor = new Float32Array([0.8, 0.8, 0.8]);
+        var c = Math.pow(this._finalColor[0], 2.2);
+        this._linearFinalColor = new Float32Array([c, c, c]);
 
         this._position = new pc.Vec3(0, 0, 0);
         this._direction = new pc.Vec3(0, 0, 0);
@@ -182,6 +182,31 @@ Object.assign(pc, function () {
             }
         },
 
+        _updateFinalColor: function () {
+            var color = this._color;
+            var r = color.r;
+            var g = color.g;
+            var b = color.b;
+
+            var i = this._intensity;
+
+            var finalColor = this._finalColor;
+            var linearFinalColor = this._linearFinalColor;
+
+            finalColor[0] = r * i;
+            finalColor[1] = g * i;
+            finalColor[2] = b * i;
+            if (i >= 1) {
+                linearFinalColor[0] = Math.pow(r, 2.2) * i;
+                linearFinalColor[1] = Math.pow(g, 2.2) * i;
+                linearFinalColor[2] = Math.pow(b, 2.2) * i;
+            } else {
+                linearFinalColor[0] = Math.pow(finalColor[0], 2.2);
+                linearFinalColor[1] = Math.pow(finalColor[1], 2.2);
+                linearFinalColor[2] = Math.pow(finalColor[2], 2.2);
+            }
+        },
+
         setColor: function () {
             var r, g, b;
             if (arguments.length === 1) {
@@ -196,16 +221,7 @@ Object.assign(pc, function () {
 
             this._color.set(r, g, b);
 
-            // Update final color
-            var i = this._intensity;
-            this._finalColor.set(r * i, g * i, b * i);
-            for (var c = 0; c < 3; c++) {
-                if (i >= 1) {
-                    this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c] / i, 2.2) * i;
-                } else {
-                    this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c], 2.2);
-                }
-            }
+            this._updateFinalColor();
         },
 
         _destroyShadowMap: function () {
@@ -469,24 +485,9 @@ Object.assign(pc, function () {
             return this._intensity;
         },
         set: function (value) {
-            if (this._intensity === value)
-                return;
-
-            this._intensity = value;
-
-            // Update final color
-            var c = this._color.data;
-            var r = c[0];
-            var g = c[1];
-            var b = c[2];
-            var i = this._intensity;
-            this._finalColor.set(r * i, g * i, b * i);
-            for (var j = 0; j < 3; j++) {
-                if (i >= 1) {
-                    this._linearFinalColor.data[j] = Math.pow(this._finalColor.data[j] / i, 2.2) * i;
-                } else {
-                    this._linearFinalColor.data[j] = Math.pow(this._finalColor.data[j], 2.2);
-                }
+            if (this._intensity !== value) {
+                this._intensity = value;
+                this._updateFinalColor();
             }
         }
     });

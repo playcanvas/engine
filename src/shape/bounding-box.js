@@ -29,14 +29,14 @@ Object.assign(pc, function () {
          * @param {pc.BoundingBox} other Bounding box to add.
          */
         add: function (other) {
-            var tc = this.center.data;
-            var tcx = tc[0];
-            var tcy = tc[1];
-            var tcz = tc[2];
-            var th = this.halfExtents.data;
-            var thx = th[0];
-            var thy = th[1];
-            var thz = th[2];
+            var tc = this.center;
+            var tcx = tc.x;
+            var tcy = tc.y;
+            var tcz = tc.z;
+            var th = this.halfExtents;
+            var thx = th.x;
+            var thy = th.y;
+            var thz = th.z;
             var tminx = tcx - thx;
             var tmaxx = tcx + thx;
             var tminy = tcy - thy;
@@ -44,14 +44,14 @@ Object.assign(pc, function () {
             var tminz = tcz - thz;
             var tmaxz = tcz + thz;
 
-            var oc = other.center.data;
-            var ocx = oc[0];
-            var ocy = oc[1];
-            var ocz = oc[2];
-            var oh = other.halfExtents.data;
-            var ohx = oh[0];
-            var ohy = oh[1];
-            var ohz = oh[2];
+            var oc = other.center;
+            var ocx = oc.x;
+            var ocy = oc.y;
+            var ocz = oc.z;
+            var oh = other.halfExtents;
+            var ohx = oh.x;
+            var ohy = oh.y;
+            var ohz = oh.z;
             var ominx = ocx - ohx;
             var omaxx = ocx + ohx;
             var ominy = ocy - ohy;
@@ -66,12 +66,12 @@ Object.assign(pc, function () {
             if (ominz < tminz) tminz = ominz;
             if (omaxz > tmaxz) tmaxz = omaxz;
 
-            tc[0] = (tminx + tmaxx) * 0.5;
-            tc[1] = (tminy + tmaxy) * 0.5;
-            tc[2] = (tminz + tmaxz) * 0.5;
-            th[0] = (tmaxx - tminx) * 0.5;
-            th[1] = (tmaxy - tminy) * 0.5;
-            th[2] = (tmaxz - tminz) * 0.5;
+            tc.x = (tminx + tmaxx) * 0.5;
+            tc.y = (tminy + tmaxy) * 0.5;
+            tc.z = (tminz + tmaxz) * 0.5;
+            th.x = (tmaxx - tminx) * 0.5;
+            th.y = (tmaxy - tminy) * 0.5;
+            th.z = (tmaxz - tminz) * 0.5;
         },
 
         copy: function (src) {
@@ -223,9 +223,10 @@ Object.assign(pc, function () {
             var max = this.getMax();
             var i;
 
-            for (i = 0; i < 3; ++i) {
-                if (point.data[i] < min.data[i] || point.data[i] > max.data[i])
-                    return false;
+            if (point.x < min.x || point.x > max.x ||
+                point.y < min.y || point.y > max.y ||
+                point.z < min.z || point.z > max.z) {
+                return false;
             }
 
             return true;
@@ -242,8 +243,8 @@ Object.assign(pc, function () {
         setFromTransformedAabb: function (aabb, m) {
             var bc = this.center;
             var br = this.halfExtents;
-            var ac = aabb.center.data;
-            var ar = aabb.halfExtents.data;
+            var ac = aabb.center;
+            var ar = aabb.halfExtents;
 
             m = m.data;
             var mx0 = m[0];
@@ -267,15 +268,15 @@ Object.assign(pc, function () {
             var mz2a = Math.abs(mz2);
 
             bc.set(
-                m[12] + mx0 * ac[0] + mx1 * ac[1] + mx2 * ac[2],
-                m[13] + my0 * ac[0] + my1 * ac[1] + my2 * ac[2],
-                m[14] + mz0 * ac[0] + mz1 * ac[1] + mz2 * ac[2]
+                m[12] + mx0 * ac.x + mx1 * ac.y + mx2 * ac.z,
+                m[13] + my0 * ac.x + my1 * ac.y + my2 * ac.z,
+                m[14] + mz0 * ac.x + mz1 * ac.y + mz2 * ac.z
             );
 
             br.set(
-                mx0a * ar[0] + mx1a * ar[1] + mx2a * ar[2],
-                my0a * ar[0] + my1a * ar[1] + my2a * ar[2],
-                mz0a * ar[0] + mz1a * ar[1] + mz2a * ar[2]
+                mx0a * ar.x + mx1a * ar.y + mx2a * ar.z,
+                my0a * ar.x + my1a * ar.y + my2a * ar.z,
+                mz0a * ar.x + mz1a * ar.y + mz2a * ar.z
             );
         },
 
@@ -320,12 +321,13 @@ Object.assign(pc, function () {
             var boxMax = this.getMax();
 
             var sq = 0;
+            var axis = ['x', 'y', 'z'];
 
             for (var i = 0; i < 3; ++i) {
                 var out = 0;
-                var pn = sphere.center.data[i];
-                var bMin = boxMin.data[i];
-                var bMax = boxMax.data[i];
+                var pn = sphere.center[axis[i]];
+                var bMin = boxMin[axis[i]];
+                var bMax = boxMax[axis[i]];
                 var val = 0;
 
                 if (pn < bMin) {

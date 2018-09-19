@@ -15,7 +15,6 @@ Object.assign(pc, function () {
 
         this.id = 'zone';
         this.app = app;
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ZoneComponent;
         this.DataType = pc.ZoneComponentData;

@@ -48,16 +48,21 @@ Object.assign(pc, function () {
         pc.GraphNode.call(this, name);
 
         if (name instanceof pc.Application) app = name;
-        this._guid = pc.guid.create(); // Globally Unique Identifier
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
         this.c = {}; // Component storage
+
         this._app = app; // store app
         if (!app) {
             this._app = pc.Application.getApplication(); // get the current application
             if (!this._app) {
-                console.error("Couldn't find current application");
+                throw new Error("Couldn't find current application");
             }
         }
+
+        this.setGuid(pc.guid.create()); // Globally Unique Identifier
+
+        // used by component systems to speed up destruction
+        this._destroying = false;
 
         pc.events.attach(this);
     };
@@ -165,7 +170,12 @@ Object.assign(pc, function () {
      * @param {String} guid The GUID to assign to the Entity
      */
     Entity.prototype.setGuid = function (guid) {
+        // remove current guid from entityIndex
+        var index = this._app._entityIndex;
+        delete index[this._guid];
+        // add new guid to entityIndex
         this._guid = guid;
+        index[this._guid] = this;
     };
 
     Entity.prototype._notifyHierarchyStateChanged = function (node, enabled) {
@@ -258,12 +268,11 @@ Object.assign(pc, function () {
     Entity.prototype.findByGuid = function (guid) {
         if (this._guid === guid) return this;
 
-        for (var i = 0; i < this._children.length; i++) {
-            if (this._children[i].findByGuid) {
-                var found = this._children[i].findByGuid(guid);
-                if (found !== null) return found;
-            }
+        var e = this._app._entityIndex[guid];
+        if (e && (e === this || e.isDescendantOf(this))) {
+            return e;
         }
+
         return null;
     };
 
@@ -277,6 +286,8 @@ Object.assign(pc, function () {
      */
     Entity.prototype.destroy = function () {
         var name;
+
+        this._destroying = true;
 
         // Disable all enabled components first
         for (name in this.c) {
@@ -316,6 +327,11 @@ Object.assign(pc, function () {
 
         if (this._callbackActive)
             this._callbackActive = null;
+
+        // remove from entity index
+        delete this._app._entityIndex[this._guid];
+
+        this._destroying = false;
     };
 
     /**
@@ -331,7 +347,7 @@ Object.assign(pc, function () {
     Entity.prototype.clone = function () {
         var duplicatedIdsMap = {};
         var c = this._cloneRecursively(duplicatedIdsMap);
-        duplicatedIdsMap[this.getGuid()] = c.getGuid();
+        duplicatedIdsMap[this.getGuid()] = c;
 
         resolveDuplicatedEntityReferenceProperties(this, this, c, duplicatedIdsMap);
 
@@ -354,7 +370,7 @@ Object.assign(pc, function () {
             if (oldChild instanceof pc.Entity) {
                 var newChild = oldChild._cloneRecursively(duplicatedIdsMap);
                 c.addChild(newChild);
-                duplicatedIdsMap[oldChild.getGuid()] = newChild.getGuid();
+                duplicatedIdsMap[oldChild.getGuid()] = newChild;
             }
         }
 
@@ -371,22 +387,24 @@ Object.assign(pc, function () {
     // within the new structure, and update the references accordingly. This
     // function implements that requirement.
     function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, newEntity, duplicatedIdsMap) {
-        // TODO Would be nice to also make this work for entity script attributes
+        var i, len;
 
         if (oldEntity instanceof pc.Entity) {
             var components = oldEntity.c;
 
-            Object.keys(components).forEach(function (componentName) {
+            // Handle component properties
+            for (var componentName in components) {
                 var component = components[componentName];
                 var entityProperties = component.system.getPropertiesOfType('entity');
 
-                entityProperties.forEach(function (propertyDescriptor) {
+                for (i = 0, len = entityProperties.length; i < len; i++) {
+                    var propertyDescriptor = entityProperties[i];
                     var propertyName = propertyDescriptor.name;
                     var oldEntityReferenceId = component[propertyName];
                     var entityIsWithinOldSubtree = !!oldSubtreeRoot.findByGuid(oldEntityReferenceId);
 
                     if (entityIsWithinOldSubtree) {
-                        var newEntityReferenceId = duplicatedIdsMap[oldEntityReferenceId];
+                        var newEntityReferenceId = duplicatedIdsMap[oldEntityReferenceId].getGuid();
 
                         if (newEntityReferenceId) {
                             newEntity.c[componentName][propertyName] = newEntityReferenceId;
@@ -394,8 +412,13 @@ Object.assign(pc, function () {
                             console.warn('Could not find corresponding entity id when resolving duplicated entity references');
                         }
                     }
-                });
-            });
+                }
+            }
+
+            // Handle entity script attributes
+            if (components.script && ! newEntity._app.useLegacyScriptAttributeCloning) {
+                newEntity.script.resolveDuplicatedEntityReferenceProperties(components.script, duplicatedIdsMap);
+            }
 
             // Recurse into children. Note that we continue to pass in the same `oldSubtreeRoot`,
             // in order to correctly handle cases where a child has an entity reference
@@ -407,9 +430,10 @@ Object.assign(pc, function () {
             var _new = newEntity.children.filter(function (e) {
                 return (e instanceof pc.Entity);
             });
-            _old.forEach(function (oldChild, index) {
-                resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldChild, _new[index], duplicatedIdsMap);
-            });
+
+            for (i = 0, len = _old.length; i < len; i++) {
+                resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, _old[i], _new[i], duplicatedIdsMap);
+            }
         }
     }
 

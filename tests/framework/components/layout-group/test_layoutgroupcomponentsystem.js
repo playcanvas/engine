@@ -1,102 +1,107 @@
-module("pc.ComponentSystem", {
-    setup: function () {
-        this.app = new pc.Application(document.createElement("canvas"));
-        this.system = this.app.systems.layoutgroup;
+describe("pc.LayoutGroupComponentSystem", function () {
+    var app;
+    var system;
+    var entity0, entity0_0, entity0_0_0;
 
-        this.entity0 = this.buildLayoutGroupEntity();
-        this.entity0_0 = this.buildLayoutGroupEntity();
-        this.entity0_0_0 = this.buildLayoutGroupEntity();
+    beforeEach(function () {
+        app = new pc.Application(document.createElement("canvas"));
+        system = app.systems.layoutgroup;
 
-        this.app.root.addChild(this.entity0);
-        this.entity0.addChild(this.entity0_0);
-        this.entity0_0.addChild(this.entity0_0_0);
+        entity0 = buildLayoutGroupEntity();
+        entity0_0 = buildLayoutGroupEntity();
+        entity0_0_0 = buildLayoutGroupEntity();
 
-        this.postUpdate();
+        app.root.addChild(entity0);
+        entity0.addChild(entity0_0);
+        entity0_0.addChild(entity0_0_0);
 
-        sinon.spy(this.entity0.layoutgroup, 'reflow');
-        sinon.spy(this.entity0_0.layoutgroup, 'reflow');
-        sinon.spy(this.entity0_0_0.layoutgroup, 'reflow');
-    },
+        postUpdate();
 
-    buildLayoutGroupEntity: function () {
-        var entity = new pc.Entity("myEntity", this.app);
+        sinon.spy(entity0.layoutgroup, 'reflow');
+        sinon.spy(entity0_0.layoutgroup, 'reflow');
+        sinon.spy(entity0_0_0.layoutgroup, 'reflow');
+    });
 
-        this.app.systems.element.addComponent(entity, { type: pc.ELEMENTTYPE_GROUP });
-        this.app.systems.layoutgroup.addComponent(entity);
+    afterEach(function () {
+        sinon.restore();
+        app.destroy();
+    });
+
+    var buildLayoutGroupEntity = function () {
+        var entity = new pc.Entity("myEntity", app);
+
+        app.systems.element.addComponent(entity, { type: pc.ELEMENTTYPE_GROUP });
+        app.systems.layoutgroup.addComponent(entity);
 
         return entity;
-    },
+    };
 
-    postUpdate: function () {
+    var postUpdate = function () {
         pc.ComponentSystem.postUpdate();
-    },
+    };
 
-    teardown: function () {
-        sinon.restore();
-        this.app.destroy();
-    }
+    it("reflows in ascending order of graph depth", function () {
+        system.scheduleReflow(entity0_0.layoutgroup);
+        system.scheduleReflow(entity0.layoutgroup);
+        system.scheduleReflow(entity0_0_0.layoutgroup);
+
+        postUpdate();
+
+        expect(entity0.layoutgroup.reflow.callCount).to.equal(1);
+        expect(entity0_0.layoutgroup.reflow.callCount).to.equal(1);
+        expect(entity0_0_0.layoutgroup.reflow.callCount).to.equal(1);
+
+        expect(entity0.layoutgroup.reflow.calledBefore(entity0_0.layoutgroup.reflow)).to.be.true;
+        expect(entity0_0.layoutgroup.reflow.calledBefore(entity0_0_0.layoutgroup.reflow)).to.be.true;
+    });
+
+    it("reflows additional groups that are pushed during the reflow", function () {
+        system.scheduleReflow(entity0.layoutgroup);
+
+        var done = false;
+
+        entity0.layoutgroup.reflow.restore();
+        sinon.stub(entity0.layoutgroup, 'reflow').callsFake(function () {
+            if (!done) {
+                done = true;
+                system.scheduleReflow(entity0_0_0.layoutgroup);
+                system.scheduleReflow(entity0_0.layoutgroup);
+            }
+        }.bind(this));
+
+        postUpdate();
+
+        expect(entity0.layoutgroup.reflow.callCount).to.equal(1);
+        expect(entity0_0.layoutgroup.reflow.callCount).to.equal(1);
+        expect(entity0_0_0.layoutgroup.reflow.callCount).to.equal(1);
+
+        expect(entity0.layoutgroup.reflow.calledBefore(entity0_0.layoutgroup.reflow)).to.be.true;
+        expect(entity0_0.layoutgroup.reflow.calledBefore(entity0_0_0.layoutgroup.reflow)).to.be.true;
+    });
+
+    it("does not allow the same group to be pushed to the queue twice", function () {
+        system.scheduleReflow(entity0.layoutgroup);
+        system.scheduleReflow(entity0.layoutgroup);
+
+        postUpdate();
+
+        expect(entity0.layoutgroup.reflow.callCount).to.equal(1);
+    });
+
+    it("bails if the maximum iteration count is reached", function () {
+        sinon.stub(console, 'warn');
+
+        system.scheduleReflow(entity0.layoutgroup);
+
+        entity0.layoutgroup.reflow.restore();
+        sinon.stub(entity0.layoutgroup, 'reflow').callsFake(function () {
+            system.scheduleReflow(entity0.layoutgroup);
+        }.bind(this));
+
+        postUpdate();
+
+        expect(entity0.layoutgroup.reflow.callCount).to.equal(100);
+        expect(console.warn.getCall(0).args[0]).to.equal('Max reflow iterations limit reached, bailing.');
+    });
 });
 
-test("reflows in ascending order of graph depth", function () {
-    this.system.scheduleReflow(this.entity0_0.layoutgroup);
-    this.system.scheduleReflow(this.entity0.layoutgroup);
-    this.system.scheduleReflow(this.entity0_0_0.layoutgroup);
-
-    this.postUpdate();
-
-    strictEqual(this.entity0.layoutgroup.reflow.callCount, 1);
-    strictEqual(this.entity0_0.layoutgroup.reflow.callCount, 1);
-    strictEqual(this.entity0_0_0.layoutgroup.reflow.callCount, 1);
-
-    ok(this.entity0.layoutgroup.reflow.calledBefore(this.entity0_0.layoutgroup.reflow));
-    ok(this.entity0_0.layoutgroup.reflow.calledBefore(this.entity0_0_0.layoutgroup.reflow));
-});
-
-test("reflows additional groups that are pushed during the reflow", function () {
-    this.system.scheduleReflow(this.entity0.layoutgroup);
-
-    var done = false;
-
-    this.entity0.layoutgroup.reflow.restore();
-    sinon.stub(this.entity0.layoutgroup, 'reflow').callsFake(function () {
-        if (!done) {
-            done = true;
-            this.system.scheduleReflow(this.entity0_0_0.layoutgroup);
-            this.system.scheduleReflow(this.entity0_0.layoutgroup);
-        }
-    }.bind(this));
-
-    this.postUpdate();
-
-    strictEqual(this.entity0.layoutgroup.reflow.callCount, 1);
-    strictEqual(this.entity0_0.layoutgroup.reflow.callCount, 1);
-    strictEqual(this.entity0_0_0.layoutgroup.reflow.callCount, 1);
-
-    ok(this.entity0.layoutgroup.reflow.calledBefore(this.entity0_0.layoutgroup.reflow));
-    ok(this.entity0_0.layoutgroup.reflow.calledBefore(this.entity0_0_0.layoutgroup.reflow));
-});
-
-test("does not allow the same group to be pushed to the queue twice", function () {
-    this.system.scheduleReflow(this.entity0.layoutgroup);
-    this.system.scheduleReflow(this.entity0.layoutgroup);
-
-    this.postUpdate();
-
-    strictEqual(this.entity0.layoutgroup.reflow.callCount, 1);
-});
-
-test("bails if the maximum iteration count is reached", function () {
-    sinon.stub(console, 'warn');
-
-    this.system.scheduleReflow(this.entity0.layoutgroup);
-
-    this.entity0.layoutgroup.reflow.restore();
-    sinon.stub(this.entity0.layoutgroup, 'reflow').callsFake(function () {
-        this.system.scheduleReflow(this.entity0.layoutgroup);
-    }.bind(this));
-
-    this.postUpdate();
-
-    strictEqual(this.entity0.layoutgroup.reflow.callCount, 100);
-    strictEqual(console.warn.getCall(0).args[0], 'Max reflow iterations limit reached, bailing.');
-});

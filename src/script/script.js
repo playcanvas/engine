@@ -1,4 +1,6 @@
 Object.assign(pc, function () {
+    var components = ['x', 'y', 'z', 'w'];
+
     var rawToValue = function (app, args, value, old) {
         var i;
 
@@ -56,8 +58,10 @@ Object.assign(pc, function () {
                     }
                     if (!old) old = new pc.Color();
 
-                    for (i = 0; i < 4; i++)
-                        old.data[i] = (i === 4 && value.length === 3) ? 1 : value[i];
+                    old.r = value[0];
+                    old.g = value[1];
+                    old.b = value[2];
+                    old.a = (value.length === 3) ? 1 : value[3];
 
                     return old;
                 } else if (typeof value === 'string' && /#([0-9abcdef]{2}){3,4}/i.test(value)) {
@@ -87,7 +91,7 @@ Object.assign(pc, function () {
                     if (!old) old = new pc['Vec' + len]();
 
                     for (i = 0; i < len; i++)
-                        old.data[i] = value[i];
+                        old[components[i]] = value[i];
 
                     return old;
                 }
@@ -339,6 +343,11 @@ Object.assign(pc, function () {
             this.__attributes = { };
             this.__attributesRaw = args.attributes || null;
             this.__scriptType = script;
+
+            // the order in the script component that the
+            // methods of this script instance will run relative to
+            // other script instances in the component
+            this.__executionOrder = -1;
         };
 
         /**
@@ -579,7 +588,7 @@ Object.assign(pc, function () {
     // reserved script attribute names
     createScript.reservedAttributes = [
         'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
-        '__attributes', '__attributesRaw', '__scriptType',
+        '__attributes', '__attributesRaw', '__scriptType', '__executionOrder',
         '_callbacks', 'has', 'on', 'off', 'fire', 'once', 'hasEvent'
     ];
     var reservedAttributes = { };

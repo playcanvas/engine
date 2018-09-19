@@ -25,6 +25,8 @@ Object.assign(pc, function () {
         pc.Material.call(this);
 
         this.color = new pc.Color(1, 1, 1, 1);
+        this.colorUniform = new Float32Array(4);
+
         this.colorMap = null;
         this.vertexColors = false;
 
@@ -57,7 +59,11 @@ Object.assign(pc, function () {
         update: function () {
             this.clearParameters();
 
-            this.setParameter('uColor', this.color.data);
+            this.colorUniform[0] = this.color.r;
+            this.colorUniform[1] = this.color.g;
+            this.colorUniform[2] = this.color.b;
+            this.colorUniform[3] = this.color.a;
+            this.setParameter('uColor', this.colorUniform);
             if (this.colorMap) {
                 this.setParameter('texture_diffuseMap', this.colorMap);
             }

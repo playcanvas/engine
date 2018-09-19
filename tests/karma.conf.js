@@ -22,10 +22,8 @@ module.exports = function (config) {
         // list of files / patterns to load in the browser
         files: sourceFiles.concat([
             // libraries
-            'tests/qunit/qunit.js',
-            'tests/qunit/qunit-close-enough.js',
-            'tests/qunit/adapter.js',
             'node_modules/sinon/pkg/sinon.js',
+            'node_modules/chai/chai.js',
 
             // test environment setup
             'tests/setup.js',
@@ -51,12 +49,12 @@ module.exports = function (config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: [],
+        frameworks: ['mocha'],
 
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['progress'],
+        reporters: ['dots'],
 
         // web server port
         port: 9876,
@@ -67,6 +65,8 @@ module.exports = function (config) {
         // level of logging
         // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
         logLevel: config.LOG_INFO,
+
+        browserConsoleLogOptions: config.LOG_WARN,
 
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: true,
