@@ -675,7 +675,7 @@ Object.assign(pc, function () {
             // Near and far clip values
             this.nearClipId.setValue(camera._nearClip);
             this.farClipId.setValue(camera._farClip);
-            this.cameraParamsId.setValue(camera._shaderParams.data);
+            this.cameraParamsId.setValue(camera._shaderParams);
 
             var device = this.device;
             device.setRenderTarget(target);
