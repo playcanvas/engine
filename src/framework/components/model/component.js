@@ -717,12 +717,13 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            pc.Component.prototype.onEnable.call(this);
+            var app = this.system.app;
+            var scene = app.scene;
 
-            this.system.app.scene.on("set:layers", this.onLayersChanged, this);
-            if (this.system.app.scene.layers) {
-                this.system.app.scene.layers.on("add", this.onLayerAdded, this);
-                this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+            scene.on("set:layers", this.onLayersChanged, this);
+            if (scene.layers) {
+                scene.layers.on("add", this.onLayerAdded, this);
+                scene.layers.on("remove", this.onLayerRemoved, this);
             }
 
             var asset;
@@ -736,7 +737,7 @@ Object.assign(pc, function () {
                 if (!asset)
                     return;
 
-                asset = this.system.app.assets.get(asset);
+                asset = app.assets.get(asset);
                 if (asset)
                     this._onModelAsset(asset);
             }
@@ -745,7 +746,7 @@ Object.assign(pc, function () {
             if (this._dirtyMaterialAsset) {
                 var materialAsset = this.data.materialAsset;
                 if (materialAsset) {
-                    materialAsset = this.system.app.assets.get(materialAsset);
+                    materialAsset = app.assets.get(materialAsset);
                     if (materialAsset && !materialAsset.resource) {
                         this._onMaterialAssetLoad(materialAsset);
                     }
@@ -760,7 +761,7 @@ Object.assign(pc, function () {
                         if (mapping[index]) {
                             asset = this._getAssetByIdOrPath(mapping[index]);
                             if (asset && !asset.resource) {
-                                this.system.app.assets.load(asset);
+                                app.assets.load(asset);
                             }
                         }
                     }
@@ -769,16 +770,17 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            pc.Component.prototype.onDisable.call(this);
+            var app = this.system.app;
+            var scene = app.scene;
 
-            this.system.app.scene.off("set:layers", this.onLayersChanged, this);
-            if (this.system.app.scene.layers) {
-                this.system.app.scene.layers.off("add", this.onLayerAdded, this);
-                this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            scene.off("set:layers", this.onLayersChanged, this);
+            if (scene.layers) {
+                scene.layers.off("add", this.onLayerAdded, this);
+                scene.layers.off("remove", this.onLayerRemoved, this);
             }
 
             if (this.batchGroupId >= 0) {
-                this.system.app.batcher.markGroupDirty(this.batchGroupId);
+                app.batcher.markGroupDirty(this.batchGroupId);
             }
 
             var model = this.data.model;
