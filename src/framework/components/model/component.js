@@ -197,8 +197,8 @@ Object.assign(pc, function () {
                 this._area = null;
 
                 if (newValue === 'asset') {
-                    if (this.data.asset !== null) {
-                        this._setModelAsset(this.data.asset);
+                    if (data.asset !== null) {
+                        this._setModelAsset(data.asset);
                     } else {
                         this.model = null;
                     }
@@ -288,13 +288,15 @@ Object.assign(pc, function () {
         },
 
         onSetAsset: function (name, oldValue, newValue) {
+            var data = this.data;
             var id = null;
-            if (this.data.type === 'asset') {
+
+            if (data.type === 'asset') {
                 if (newValue !== null) {
                     id = newValue;
 
                     if (newValue instanceof pc.Asset) {
-                        this.data.asset = newValue.id;
+                        data.asset = newValue.id;
                         id = newValue.id;
                     }
                 } else {
@@ -303,7 +305,7 @@ Object.assign(pc, function () {
             }
 
             if (id === null)
-                this.data.asset = null;
+                data.asset = null;
 
             this._setModelAsset(id);
         },
@@ -342,9 +344,10 @@ Object.assign(pc, function () {
         },
 
         onSetLightmapped: function (name, oldValue, newValue) {
+            var data = this.data;
             var i, m, mask;
-            if (this.data.model) {
-                var rcv = this.data.model.meshInstances;
+            if (data.model) {
+                var rcv = data.model.meshInstances;
                 if (newValue) {
                     for (i = 0; i < rcv.length; i++) {
                         m = rcv[i];
@@ -369,9 +372,10 @@ Object.assign(pc, function () {
         },
 
         onSetIsStatic: function (name, oldValue, newValue) {
+            var data = this.data;
             var i, m;
-            if (this.data.model) {
-                var rcv = this.data.model.meshInstances;
+            if (data.model) {
+                var rcv = data.model.meshInstances;
                 for (i = 0; i < rcv.length; i++) {
                     m = rcv[i];
                     m.isStatic = newValue;
@@ -438,15 +442,15 @@ Object.assign(pc, function () {
             }
 
             if (newValue) {
-                var componentData = this.data;
+                var data = this.data;
                 var meshInstances = newValue.meshInstances;
                 for (var i = 0; i < meshInstances.length; i++) {
-                    meshInstances[i].castShadow = componentData.castShadows;
-                    meshInstances[i].receiveShadow = componentData.receiveShadows;
+                    meshInstances[i].castShadow = data.castShadows;
+                    meshInstances[i].receiveShadow = data.receiveShadows;
                 }
 
-                this.lightmapped = componentData.lightmapped; // update meshInstances
-                this.isStatic = componentData.isStatic;
+                this.lightmapped = data.lightmapped; // update meshInstances
+                this.isStatic = data.isStatic;
 
                 this.entity.addChild(newValue.graph);
 
@@ -463,8 +467,8 @@ Object.assign(pc, function () {
 
                 // trigger event handler to load mapping
                 // for new model
-                if (this.data.type === 'asset') {
-                    this.mapping = this.data.mapping;
+                if (data.type === 'asset') {
+                    this.mapping = data.mapping;
                 } else {
                     this._unsetMaterialEvents();
                 }
@@ -527,9 +531,10 @@ Object.assign(pc, function () {
             var self = this;
 
             // unsubscribe
-            if (this.data.materialAsset !== id) {
-                if (this.data.materialAsset)
-                    this._onMaterialAssetRemove(this.data.materialAsset);
+            var data = this.data;
+            if (data.materialAsset !== id) {
+                if (data.materialAsset)
+                    this._onMaterialAssetRemove(data.materialAsset);
 
                 if (id) {
                     assets.on('load:' + id, this._onMaterialAssetLoad, this);
@@ -551,8 +556,8 @@ Object.assign(pc, function () {
                 self._dirtyMaterialAsset = false;
             }
 
-            var valueOld = this.data.materialAsset;
-            this.data.materialAsset = id;
+            var valueOld = data.materialAsset;
+            data.materialAsset = id;
             this.fire('set', 'materialAsset', valueOld, id);
         },
 
@@ -562,10 +567,13 @@ Object.assign(pc, function () {
 
         onSetMaterial: function (name, oldValue, newValue) {
             if (newValue !== oldValue) {
-                this.data.material = newValue;
-                if (this.data.model && this.data.type !== 'asset') {
-                    var meshInstances = this.data.model.meshInstances;
-                    for (var i = 0; i < meshInstances.length; i++) {
+                var data = this.data;
+                data.material = newValue;
+
+                var model = data.model;
+                if (model && data.type !== 'asset') {
+                    var meshInstances = model.meshInstances;
+                    for (var i = 0, len = meshInstances.length; i < len; i++) {
                         meshInstances[i].material = newValue;
                     }
                 }
@@ -573,7 +581,8 @@ Object.assign(pc, function () {
         },
 
         onSetMapping: function (name, oldValue, newValue) {
-            if (this.data.type !== 'asset' || !this.data.model)
+            var data = this.data;
+            if (data.type !== 'asset' || !data.model)
                 return;
 
             // unsubscribe from old events
@@ -582,7 +591,7 @@ Object.assign(pc, function () {
             if (!newValue)
                 newValue = {};
 
-            var meshInstances = this.data.model.meshInstances;
+            var meshInstances = data.model.meshInstances;
             var modelAsset = this.asset ? this.system.app.assets.get(this.asset) : null;
             var assetMapping = modelAsset ? modelAsset.data.mapping : null;
 
@@ -706,10 +715,11 @@ Object.assign(pc, function () {
 
         onSetReceiveShadows: function (name, oldValue, newValue) {
             if (newValue !== undefined) {
-                var componentData = this.data;
-                if (componentData.model) {
-                    var meshInstances = componentData.model.meshInstances;
-                    for (var i = 0; i < meshInstances.length; i++) {
+                var data = this.data;
+                var model = data.model;
+                if (model) {
+                    var meshInstances = model.meshInstances;
+                    for (var i = 0, len = meshInstances.length; i < len; i++) {
                         meshInstances[i].receiveShadow = newValue;
                     }
                 }
@@ -726,13 +736,14 @@ Object.assign(pc, function () {
             }
 
             var asset;
-            var model = this.data.model;
-            var isAsset = this.data.type === 'asset';
+            var data = this.data;
+            var model = data.model;
+            var isAsset = data.type === 'asset';
 
             if (model) {
                 this.addModelToLayers();
             } else if (isAsset && this._dirtyModelAsset) {
-                asset = this.data.asset;
+                asset = data.asset;
                 if (!asset)
                     return;
 
@@ -743,7 +754,7 @@ Object.assign(pc, function () {
 
             // load materialAsset if necessary
             if (this._dirtyMaterialAsset) {
-                var materialAsset = this.data.materialAsset;
+                var materialAsset = data.materialAsset;
                 if (materialAsset) {
                     materialAsset = this.system.app.assets.get(materialAsset);
                     if (materialAsset && !materialAsset.resource) {
@@ -754,7 +765,7 @@ Object.assign(pc, function () {
 
             // load mapping materials if necessary
             if (isAsset) {
-                var mapping = this.data.mapping;
+                var mapping = data.mapping;
                 if (mapping) {
                     for (var index in mapping) {
                         if (mapping[index]) {
