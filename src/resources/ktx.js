@@ -72,6 +72,7 @@ Object.assign(pc, function () {
         var offset = (16 * 4) + header.bytesOfKeyValueData;
 
         var levels = [];
+        var isCubeMap = false;
         for (var mipmapLevel = 0; mipmapLevel < (header.numberOfMipmapLevels || 1); mipmapLevel++) {
             var imageSizeInBytes = new Uint32Array(arrayBuffer.slice(offset, offset + 4))[0];
             offset += 4;
@@ -80,6 +81,7 @@ Object.assign(pc, function () {
             var faceSizeInBytes = imageSizeInBytes / (header.numberOfFaces || 1);
             // Create array for cubemaps
             if (header.numberOfFaces > 1) {
+                isCubeMap = true;
                 levels.push([]);
             }
             for (var face = 0; face < header.numberOfFaces; face++) {
@@ -104,6 +106,7 @@ Object.assign(pc, function () {
         this.width = header.pixelWidth;
         this.height = header.pixelHeight;
         this.levels = levels;
+        this.cubemap = isCubeMap;
     };
 
     return {
