@@ -25,12 +25,10 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            pc.Component.prototype.onEnable.call(this);
             this.setCurrentListener();
         },
 
         onDisable: function () {
-            pc.Component.prototype.onDisable.call(this);
             if (this.system.current === this.entity) {
                 this.system.current = null;
             }

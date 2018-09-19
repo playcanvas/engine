@@ -186,7 +186,6 @@ Object.assign(pc, function () {
 
     Object.assign(ScriptComponent.prototype, {
         onEnable: function () {
-            pc.Component.prototype.onEnable.call(this);
             this._beingEnabled = true;
             this._checkState();
 
@@ -198,7 +197,6 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            pc.Component.prototype.onDisable.call(this);
             this._checkState();
         },
 
