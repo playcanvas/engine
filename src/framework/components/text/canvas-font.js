@@ -94,12 +94,14 @@ Object.assign(pc, function () {
     CanvasFont.prototype.updateTextures = function (text) {
         var _chars = this._normalizeCharsSet(text);
         var newCharsSet = [];
+
         for (var i = 0; i < _chars.length; i++) {
             var char = _chars[i];
             if (!this.data.chars[char]) {
                 newCharsSet.push(char);
             }
         }
+
         if (newCharsSet.length > 0) {
             this._renderAtlas(this.chars.concat(newCharsSet));
         }
@@ -129,19 +131,33 @@ Object.assign(pc, function () {
         this.fontWeight = null;
     };
 
+    CanvasFont.prototype._getAndClearContext = function (canvas, clearColor) {
+        var w = canvas.width;
+        var h = canvas.height;
+
+        var ctx = canvas.getContext('2d', {
+            alpha: true
+        });
+
+        ctx.clearRect(0, 0, w, h);  // clear to black first to remove everything as clear color is transparent
+        ctx.fillStyle = clearColor;
+        ctx.fillRect(0, 0, w, h);   // clear to color
+
+        return ctx;
+    };
+
     CanvasFont.prototype._renderAtlas = function (charsArray) {
         this.chars = charsArray;
 
         var numTextures = 1;
+
         var canvas = this.textures[numTextures - 1].getSource();
-        var ctx = canvas.getContext('2d', {
-            alpha: true
-        });
-        var w = ctx.canvas.width;
-        var h = ctx.canvas.height;
+        var w = canvas.width;
+        var h = canvas.height;
 
         // fill color
         var color = this.color.toString(false);
+
 
         // generate a "transparent" color for the background
         // browsers seem to optimize away all color data if alpha=0
@@ -155,9 +171,8 @@ Object.assign(pc, function () {
         var TEXT_ALIGN = 'center';
         var TEXT_BASELINE = 'bottom';
 
-        // Clear the context
-        ctx.fillStyle = transparent;
-        ctx.fillRect(0, 0, w, h);
+        var ctx = this._getAndClearContext(canvas, transparent);
+
         ctx.font = this.fontWeight + ' ' + this.fontSize.toString() + 'px "' + this.fontName + '"';
         ctx.textAlign = TEXT_ALIGN;
         ctx.textBaseline = TEXT_BASELINE;
@@ -208,12 +223,9 @@ Object.assign(pc, function () {
                         canvas = document.createElement('canvas');
                         canvas.height = h;
                         canvas.width = w;
-                        ctx = canvas.getContext('2d', {
-                            alpha: true
-                        });
-                        // Clear the context
-                        ctx.fillStyle = transparent;
-                        ctx.fillRect(0, 0, w, h);
+
+                        ctx = this._getAndClearContext(canvas, transparent);
+
                         var texture = new pc.Texture(this.app.graphicsDevice, {
                             format: pc.PIXELFORMAT_R8_G8_B8_A8,
                             autoMipmap: true
@@ -226,11 +238,7 @@ Object.assign(pc, function () {
                         this.textures.push(texture);
                     } else {
                         canvas = this.textures[numTextures - 1].getSource();
-                        ctx = canvas.getContext('2d', {
-                            alpha: true
-                        });
-                        ctx.fillStyle = transparent;
-                        ctx.fillRect(0, 0, w, h);
+                        ctx = this._getAndClearContext(canvas, transparent);
                     }
                 }
             }
@@ -291,7 +299,7 @@ Object.assign(pc, function () {
             return 0.875;
         } else if (code >= 0x1f000 && code <= 0x1F9FF) {
             // "emoji" misc. images and emoticon range of unicode
-            return 0.875;
+            return 0.8;
         }
 
         return 1.0;
