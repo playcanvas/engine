@@ -21,7 +21,7 @@ Object.assign(pc, function () {
     var shadowMapCache = [{}, {}, {}, {}, {}]; // must be a size of numShadowModes
 
     var directionalShadowEpsilon = 0.01;
-    var pixelOffset = new pc.Vec2();
+    var pixelOffset = new Float32Array(2);
     var blurScissorRect = { x: 1, y: 1, z: 0, w: 0 };
 
     var shadowCamView = new pc.Mat4();
@@ -675,7 +675,7 @@ Object.assign(pc, function () {
             // Near and far clip values
             this.nearClipId.setValue(camera._nearClip);
             this.farClipId.setValue(camera._farClip);
-            this.cameraParamsId.setValue(camera._shaderParams.data);
+            this.cameraParamsId.setValue(camera._shaderParams);
 
             var device = this.device;
             device.setRenderTarget(target);
@@ -1414,17 +1414,17 @@ Object.assign(pc, function () {
 
                             // Blur horizontal
                             this.sourceId.setValue(origShadowMap.colorBuffer);
-                            pixelOffset.x = 1.0 / light._shadowResolution;
-                            pixelOffset.y = 0.0;
-                            this.pixelOffsetId.setValue(pixelOffset.data);
+                            pixelOffset[0] = 1 / light._shadowResolution;
+                            pixelOffset[1] = 0;
+                            this.pixelOffsetId.setValue(pixelOffset);
                             if (blurMode === pc.BLUR_GAUSSIAN) this.weightId.setValue(this.blurVsmWeights[filterSize]);
                             pc.drawQuadWithShader(device, tempRt, blurShader, null, blurScissorRect);
 
                             // Blur vertical
                             this.sourceId.setValue(tempRt.colorBuffer);
-                            pixelOffset.y = pixelOffset.x;
-                            pixelOffset.x = 0.0;
-                            this.pixelOffsetId.setValue(pixelOffset.data);
+                            pixelOffset[1] = pixelOffset[0];
+                            pixelOffset[0] = 0;
+                            this.pixelOffsetId.setValue(pixelOffset);
                             pc.drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect);
                         }
                     }
