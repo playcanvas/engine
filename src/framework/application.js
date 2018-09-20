@@ -154,7 +154,7 @@ Object.assign(pc, function () {
 
         // enable if you want entity type script attributes
         // to not be re-mapped when an entity is cloned
-        this.useLegacyScriptAttributeCloning = false;
+        this.useLegacyScriptAttributeCloning = pc.script.legacy;
 
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
