@@ -1579,9 +1579,7 @@ Object.assign(pc, function () {
                 return;
             }
 
-            // #ifdef PROFILER
             app._fillFrameStats(now, dt, ms);
-            // #endif
 
             app.update(dt);
 
