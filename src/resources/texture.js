@@ -290,7 +290,7 @@ Object.assign(pc, function () {
                 });
                 texture.setSource(img);
             } else if (data instanceof ArrayBuffer) { // Container format
-                var LEGACY = true;
+                var LEGACY = false;
 
                 if (LEGACY) {
                     texture = _legacyDdsLoader(url, data, this._device);
