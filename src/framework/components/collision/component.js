@@ -202,8 +202,6 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            pc.Component.prototype.onEnable.call(this);
-
             if (this.data.type === 'mesh' && this.data.asset && this.data.initialized) {
                 var asset = this.system.app.assets.get(this.data.asset);
                 // recreate the collision shape if the model asset is not loaded
@@ -224,8 +222,6 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            pc.Component.prototype.onDisable.call(this);
-
             if (this.entity.trigger) {
                 this.entity.trigger.disable();
             } else if (this.entity.rigidbody) {

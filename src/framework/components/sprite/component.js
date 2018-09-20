@@ -109,12 +109,13 @@ Object.assign(pc, function () {
 
     Object.assign(SpriteComponent.prototype, {
         onEnable: function () {
-            pc.Component.prototype.onEnable.call(this);
+            var app = this.system.app;
+            var scene = app.scene;
 
-            this.system.app.scene.on("set:layers", this._onLayersChanged, this);
-            if (this.system.app.scene.layers) {
-                this.system.app.scene.layers.on("add", this._onLayerAdded, this);
-                this.system.app.scene.layers.on("remove", this._onLayerRemoved, this);
+            scene.on("set:layers", this._onLayersChanged, this);
+            if (scene.layers) {
+                scene.layers.on("add", this._onLayerAdded, this);
+                scene.layers.on("remove", this._onLayerRemoved, this);
             }
 
             this._showModel();
@@ -123,19 +124,20 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            pc.Component.prototype.onDisable.call(this);
+            var app = this.system.app;
+            var scene = app.scene;
 
-            this.system.app.scene.off("set:layers", this._onLayersChanged, this);
-            if (this.system.app.scene.layers) {
-                this.system.app.scene.layers.off("add", this._onLayerAdded, this);
-                this.system.app.scene.layers.off("remove", this._onLayerRemoved, this);
+            scene.off("set:layers", this._onLayersChanged, this);
+            if (scene.layers) {
+                scene.layers.off("add", this._onLayerAdded, this);
+                scene.layers.off("remove", this._onLayerRemoved, this);
             }
 
             this.stop();
             this._hideModel();
 
             if (this._batchGroupId >= 0) {
-                this.system.app.batcher.markGroupDirty(this.batchGroupId);
+                app.batcher.markGroupDirty(this.batchGroupId);
             }
         },
 

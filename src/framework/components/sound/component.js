@@ -171,8 +171,6 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            pc.Component.prototype.onEnable.call(this);
-
             // do not run if running in Editor
             if (this.system._inTools) {
                 return;
@@ -198,8 +196,6 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            pc.Component.prototype.onDisable.call(this);
-
             var slots = this.data.slots;
             var playingBeforeDisable = {};
             for (var key in slots) {

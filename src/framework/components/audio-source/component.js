@@ -255,8 +255,6 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            pc.Component.prototype.onEnable.call(this);
-
             // load assets that haven't been loaded yet
             var assets = this.data.assets;
             if (assets) {
@@ -283,7 +281,6 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
-            pc.Component.prototype.onDisable.call(this);
             this.pause();
         },
 

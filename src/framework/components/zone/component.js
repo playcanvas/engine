@@ -72,12 +72,10 @@ Object.assign(pc, function () {
 
     Object.assign(ZoneComponent.prototype, {
         onEnable: function () {
-            pc.Component.prototype.onEnable.call(this);
             this._checkState();
         },
 
         onDisable: function () {
-            pc.Component.prototype.onDisable.call(this);
             this._checkState();
         },
 
