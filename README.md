@@ -45,7 +45,7 @@ The PlayCanvas Engine is a fully featured game engine.
 * **Resource Loading**
     * Simple and powerful resource loading
     * Streaming of individual assets
-    * Asset Variants - loads compressed textures (DXT, PVR, ETC1) based on platform support
+    * Asset Variants - loads compressed textures (DXT, PVR, ETC1, ETC2) based on platform support
 * **Entity / Component System**
     * Built-in components: model, sound, animation, camera, collision, light, rigidbody, script, particlesystem
 * **Scripting system**
