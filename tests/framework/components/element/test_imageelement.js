@@ -227,6 +227,7 @@ describe('pc.ImageElement', function () {
             type: 'image',
             spriteAsset: assets.sprite
         });
+        app.root.addChild(e);
 
         var sprite = e.element.sprite;
         expect(sprite).to.be.not.null;

@@ -589,6 +589,8 @@ Object.assign(pc, function () {
         },
 
         _bindFont: function (asset) {
+            if (!this._entity.enabled) return; // don't bind until enabled
+
             asset.on("load", this._onFontLoad, this);
             asset.on("change", this._onFontChange, this);
             asset.on("remove", this._onFontRemove, this);
@@ -689,6 +691,13 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
+            if (this._fontAsset) {
+                var asset = this._system.app.assets.get(this._fontAsset);
+                if (asset) {
+                    this._bindFont(asset);
+                }
+            }
+
             if (this._model) {
                 this._element.addModelToLayers(this._model);
             }
