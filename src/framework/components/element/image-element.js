@@ -600,6 +600,8 @@ Object.assign(pc, function () {
         },
 
         _bindMaterialAsset: function (asset) {
+            if (!this._entity.enabled) return; // don't bind until element is enabled
+
             asset.on("load", this._onMaterialLoad, this);
             asset.on("change", this._onMaterialChange, this);
             asset.on("remove", this._onMaterialRemove, this);
@@ -633,6 +635,8 @@ Object.assign(pc, function () {
         },
 
         _bindTextureAsset: function (asset) {
+            if (!this._entity.enabled) return; // don't bind until element is enabled
+
             asset.on("load", this._onTextureLoad, this);
             asset.on("change", this._onTextureChange, this);
             asset.on("remove", this._onTextureRemove, this);
@@ -672,6 +676,8 @@ Object.assign(pc, function () {
 
         // Hook up event handlers on sprite asset
         _bindSpriteAsset: function (asset) {
+            if (!this._entity.enabled) return; // don't bind until element is enabled
+
             asset.on("load", this._onSpriteAssetLoad, this);
             asset.on("change", this._onSpriteAssetChange, this);
             asset.on("remove", this._onSpriteAssetRemove, this);
@@ -782,6 +788,26 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
+            var asset;
+            if (this._materialAsset) {
+                asset = this._system.app.assets.get(this._materialAsset);
+                if (asset) {
+                    this._bindMaterialAsset(asset);
+                }
+            }
+            if (this._textureAsset) {
+                asset = this._system.app.assets.get(this._textureAsset);
+                if (asset) {
+                    this._bindTextureAsset(asset);
+                }
+            }
+            if (this._spriteAsset) {
+                asset = this._system.app.assets.get(this._spriteAsset);
+                if (asset) {
+                    this._bindSpriteAsset(asset);
+                }
+            }
+
             this._element.addModelToLayers(this._renderable.model);
         },
 
