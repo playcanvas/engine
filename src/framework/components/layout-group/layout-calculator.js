@@ -105,10 +105,10 @@ Object.assign(pc, function () {
         function resetAnchors(allElements) {
             for (var i = 0; i < allElements.length; ++i) {
                 var element = allElements[i];
-                var anchor = element.anchor.data;
+                var anchor = element.anchor;
 
-                if (anchor[0] !== 0 || anchor[1] !== 0 || anchor[2] !== 0 || anchor[3] !== 0) {
-                    element.anchor = [0, 0, 0, 0];
+                if (anchor.x !== 0 || anchor.y !== 0 || anchor.z !== 0 || anchor.w !== 0) {
+                    element.anchor = pc.Vec4.ZERO;
                 }
             }
         }
