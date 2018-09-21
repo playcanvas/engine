@@ -308,4 +308,49 @@ describe("pc.TextElement", function () {
         }
     });
 
+
+    it("cloned text component is complete", function () {
+        var e = new pc.Entity();
+
+        e.addComponent('element', {
+            type: 'text',
+            text: 'test',
+            fontAsset: assets.font
+        });
+
+        var clone = e.clone();
+
+
+        expect(e.element.fontAsset).to.be.ok;
+
+        expect(clone.text).to.equal(e.text);
+        expect(clone.fontAsset).to.equal(e.fontAsset);
+        expect(clone.font).to.equal(e.font);
+        expect(clone.color).to.deep.equal(e.color);
+        expect(clone.spacing).to.equal(e.spacing);
+        expect(clone.fontSize).to.equal(e.fontSize);
+        expect(clone.lineHeight).to.equal(e.lineHeight);
+        expect(clone.alignment).to.equal(e.alignment);
+        expect(clone.wrapLine).to.equal(e.wrapLines);
+        expect(clone.autoWidth).to.equal(e.autoWidth);
+        expect(clone.autoHeight).to.equal(e.autoHeight);
+    });
+
+    it("clears font asset when font is assigned directly", function () {
+        var e = new pc.Entity();
+
+        e.addComponent('element', {
+            type: 'text',
+            text: '',
+            fontAsset: assets.font
+        });
+
+        var font = new pc.CanvasFont(app);
+        font.createTextures(' ');
+
+        e.element.font = font;
+
+        expect(e.element.font).to.equal(font);
+        expect(e.element.fontAsset).to.equal(null);
+    });
 });

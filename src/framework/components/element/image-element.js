@@ -790,7 +790,7 @@ Object.assign(pc, function () {
         onEnable: function () {
             var asset;
             if (this._materialAsset) {
-                asset = this._system.app.assets.get(this._materialAsset)
+                asset = this._system.app.assets.get(this._materialAsset);
                 if (asset) {
                     this._bindMaterialAsset(asset);
                 }
