@@ -3,6 +3,7 @@ describe("pc.TextElement", function () {
     var assets;
     var entity;
     var element;
+    var fontAsset;
 
     beforeEach(function (done) {
         app = new pc.Application(document.createElement("canvas"));
@@ -16,15 +17,16 @@ describe("pc.TextElement", function () {
         element.wrapLines = true;
         element.width = 200;
 
-
-        var fontAsset = new pc.Asset("Arial", "font", {
+        fontAsset = new pc.Asset("Arial", "font", {
             url: "base/examples/assets/Arial/Arial.json"
         });
 
         fontAsset.ready(function () {
-            element.fontAsset = fontAsset;
-            callback();
-        }.bind(this));
+            // use timeout to prevent tests running inside ready() callback (so events are cleared on asset)
+            setTimeout(function () {
+                callback();
+            })
+        });
 
         app.assets.add(fontAsset);
         app.assets.load(fontAsset);
@@ -42,21 +44,29 @@ describe("pc.TextElement", function () {
     };
 
     afterEach(function () {
+        fontAsset.unload();
+        fontAsset = null;
         app.destroy();
     });
 
     it("does not break onto multiple lines if the text is short enough", function () {
+        element.fontAsset = fontAsset;
+
         element.text = "abcde fghij";
         assertLineContents(["abcde fghij"]);
     });
 
     it("does not break onto multiple lines if the autoWidth is set to true", function () {
+        element.fontAsset = fontAsset;
+
         element.autoWidth = true;
         element.text = "abcde fghij klmno pqrst uvwxyz";
         assertLineContents(["abcde fghij klmno pqrst uvwxyz"]);
     });
 
     it("updates line wrapping once autoWidth becomes false and a width is set", function () {
+        element.fontAsset = fontAsset;
+
         element.autoWidth = true;
         element.text = "abcde fghij klmno pqrst uvwxyz";
         expect(element.lines.length).to.equal(1);
@@ -66,12 +76,16 @@ describe("pc.TextElement", function () {
     });
 
     it("does not break onto multiple lines if the wrapLines is set to false", function () {
+        element.fontAsset = fontAsset;
+
         element.wrapLines = false;
         element.text = "abcde fghij klmno pqrst uvwxyz";
         assertLineContents(["abcde fghij klmno pqrst uvwxyz"]);
     });
 
     it("updates line wrapping once wrapLines becomes true", function () {
+        element.fontAsset = fontAsset;
+
         element.wrapLines = false;
         element.text = "abcde fghij klmno pqrst uvwxyz";
         expect(element.lines.length).to.equal(1);
@@ -80,6 +94,8 @@ describe("pc.TextElement", function () {
     });
 
     it("breaks onto multiple lines if individual lines are too long", function () {
+        element.fontAsset = fontAsset;
+
         element.text = "abcde fghij klmno pqrst uvwxyz";
         assertLineContents([
             "abcde fghij ",
@@ -89,6 +105,8 @@ describe("pc.TextElement", function () {
     });
 
     it("breaks individual words if they are too long to fit onto a line by themselves (single word case)", function () {
+        element.fontAsset = fontAsset;
+
         element.text = "abcdefghijklmnopqrstuvwxyz";
         assertLineContents([
             "abcdefghijklm",
@@ -98,6 +116,8 @@ describe("pc.TextElement", function () {
     });
 
     it("breaks individual words if they are too long to fit onto a line by themselves (multi word case)", function () {
+        element.fontAsset = fontAsset;
+
         element.text = "abcdefgh ijklmnopqrstuvwxyz";
         assertLineContents([
             "abcdefgh ",
@@ -107,6 +127,8 @@ describe("pc.TextElement", function () {
     });
 
     it("breaks individual characters onto separate lines if the width is really constrained", function () {
+        element.fontAsset = fontAsset;
+
         element.width = 1;
         element.text = "abcdef ghijkl";
         assertLineContents([
@@ -126,6 +148,8 @@ describe("pc.TextElement", function () {
     });
 
     it("does not include whitespace at the end of a line in width calculations", function () {
+        element.fontAsset = fontAsset;
+
         element.text = "abcdefgh        i";
         assertLineContents([
             "abcdefgh        ",
@@ -134,6 +158,8 @@ describe("pc.TextElement", function () {
     });
 
     it("breaks words on hypens", function () {
+        element.fontAsset = fontAsset;
+
         element.text = "abcde fghij-klm nopqr stuvwxyz";
         assertLineContents([
             "abcde fghij-",
@@ -143,6 +169,8 @@ describe("pc.TextElement", function () {
     });
 
     it("keeps hyphenated word segments together when wrapping them", function () {
+        element.fontAsset = fontAsset;
+
         element.width = 150;
         element.text = "abcde fghij-klm nopqr stuvwxyz";
         assertLineContents([
@@ -154,6 +182,8 @@ describe("pc.TextElement", function () {
     });
 
     it("splits lines on \\n", function () {
+        element.fontAsset = fontAsset;
+
         element.text = "abcde\nfghij";
         assertLineContents([
             "abcde",
@@ -162,6 +192,8 @@ describe("pc.TextElement", function () {
     });
 
     it("splits lines on \\r", function () {
+        element.fontAsset = fontAsset;
+
         element.text = "abcde\rfghij";
         assertLineContents([
             "abcde",
@@ -170,6 +202,8 @@ describe("pc.TextElement", function () {
     });
 
     it("splits lines on multiple \\n", function () {
+        element.fontAsset = fontAsset;
+
         element.text = "abcde\n\n\nfg\nhij";
         assertLineContents([
             "abcde",
@@ -197,9 +231,10 @@ describe("pc.TextElement", function () {
 
 
     it('Font assets unbound when reset', function () {
-        expect(!assets.font.hasEvent('add')).to.exist;
-        expect(!assets.font.hasEvent('load')).to.exist;
-        expect(!assets.font.hasEvent('remove')).to.exist;
+        expect(assets.font.hasEvent('add')).to.be.false;
+        expect(assets.font.hasEvent('change')).to.be.false;
+        expect(assets.font.hasEvent('load')).to.be.false;
+        expect(assets.font.hasEvent('remove')).to.be.false;
 
         var e = new pc.Entity();
         e.addComponent('element', {
@@ -209,15 +244,17 @@ describe("pc.TextElement", function () {
 
         e.element.fontAsset = null;
 
-        expect(!assets.font.hasEvent('add')).to.exist;
-        expect(!assets.font.hasEvent('load')).to.exist;
-        expect(!assets.font.hasEvent('remove')).to.exist;
+        expect(assets.font.hasEvent('add')).to.be.false;
+        expect(assets.font.hasEvent('change')).to.be.false;
+        expect(assets.font.hasEvent('load')).to.be.false;
+        expect(assets.font.hasEvent('remove')).to.be.false;
     });
 
     it('Font assets unbound when destroy', function () {
-        expect(!assets.font.hasEvent('add')).to.exist;
-        expect(!assets.font.hasEvent('load')).to.exist;
-        expect(!assets.font.hasEvent('remove')).to.exist;
+        expect(assets.font.hasEvent('add')).to.be.false;
+        expect(assets.font.hasEvent('change')).to.be.false;
+        expect(assets.font.hasEvent('load')).to.be.false;
+        expect(assets.font.hasEvent('remove')).to.be.false;
 
         var e = new pc.Entity();
         e.addComponent('element', {
@@ -227,9 +264,34 @@ describe("pc.TextElement", function () {
 
         e.destroy();
 
-        expect(!assets.font.hasEvent('add')).to.exist;
-        expect(!assets.font.hasEvent('load')).to.exist;
-        expect(!assets.font.hasEvent('remove')).to.exist;
+        expect(assets.font.hasEvent('add')).to.be.false;
+        expect(assets.font.hasEvent('change')).to.be.false;
+        expect(assets.font.hasEvent('load')).to.be.false;
+        expect(assets.font.hasEvent('remove')).to.be.false;
+    });
+
+    it('Font assets to be bound once when enabled late', function () {
+        expect(assets.font.hasEvent('add')).to.be.false;
+        expect(assets.font.hasEvent('change')).to.be.false;
+        expect(assets.font.hasEvent('load')).to.be.false;
+        expect(assets.font.hasEvent('remove')).to.be.false;
+
+        var e = new pc.Entity();
+        e.enabled = false;
+        e.addComponent('element', {
+            type: 'text',
+            fontAsset: assets.font
+        });
+        app.root.addChild(e);
+
+        e.enabled = true;
+
+        e.element.fontAsset = null;
+
+        expect(assets.font.hasEvent('add')).to.be.false;
+        expect(assets.font.hasEvent('change')).to.be.false;
+        expect(assets.font.hasEvent('load')).to.be.false;
+        expect(assets.font.hasEvent('remove')).to.be.false;
     });
 
     it("defaults to white color and opacity 1", function () {
