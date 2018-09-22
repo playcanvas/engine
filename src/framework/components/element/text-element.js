@@ -604,8 +604,8 @@ Object.assign(pc, function () {
 
         _unbindFont: function (asset) {
             asset.off("load", this._onFontLoad, this);
-            asset.off("change", this._onFontLoad, this);
-            asset.off("remove", this._onFontLoad, this);
+            asset.off("change", this._onFontChange, this);
+            asset.off("remove", this._onFontRemove, this);
         },
 
         _onFontLoad: function (asset) {
@@ -699,7 +699,8 @@ Object.assign(pc, function () {
         onEnable: function () {
             if (this._fontAsset) {
                 var asset = this._system.app.assets.get(this._fontAsset);
-                if (asset) {
+                if (asset && asset.resource !== this._font) {
+                    this._unbindFont(asset);
                     this._bindFont(asset);
                 }
             }
@@ -924,7 +925,7 @@ Object.assign(pc, function () {
                 var asset = this._system.app.assets.get(this._fontAsset);
                 // if we're setting a font directly which doesn't match the asset
                 // then clear the asset
-                if (asset.id === this._fontAsset) {
+                if (asset.resource !== this._font) {
                     this._unbindFont(asset);
                     this._fontAsset = null;
                 }

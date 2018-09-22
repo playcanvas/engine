@@ -136,10 +136,12 @@ Object.assign(pc, function () {
         initializeComponentData: function (component, data, properties) {
             data = data || {};
 
+            var descriptor;
+            var name, type, value;
+
             // initialize
             for (var i = 0, len = properties.length; i < len; i++) {
-                var descriptor = properties[i];
-                var name, type, value;
+                descriptor = properties[i];
 
                 // If the descriptor is an object, it will have `name` and `type` members
                 if (typeof descriptor === 'object') {
@@ -148,6 +150,7 @@ Object.assign(pc, function () {
                 } else {
                     // Otherwise, the descriptor is just the property name
                     name = descriptor;
+                    type = undefined;
                 }
 
                 value = data[name];

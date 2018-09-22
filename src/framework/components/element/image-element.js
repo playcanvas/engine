@@ -791,19 +791,19 @@ Object.assign(pc, function () {
             var asset;
             if (this._materialAsset) {
                 asset = this._system.app.assets.get(this._materialAsset);
-                if (asset) {
+                if (asset && asset.resource !== this._material) {
                     this._bindMaterialAsset(asset);
                 }
             }
             if (this._textureAsset) {
                 asset = this._system.app.assets.get(this._textureAsset);
-                if (asset) {
+                if (asset && asset.resource !== this._texture) {
                     this._bindTextureAsset(asset);
                 }
             }
             if (this._spriteAsset) {
                 asset = this._system.app.assets.get(this._spriteAsset);
-                if (asset) {
+                if (asset && asset.resource !== this._sprite) {
                     this._bindSpriteAsset(asset);
                 }
             }
@@ -939,6 +939,8 @@ Object.assign(pc, function () {
             return this._material;
         },
         set: function (value) {
+            if (this._material === value) return;
+
             if (!value) {
                 var screenSpace = this._isScreenSpace();
                 if (this.mask) {
@@ -1013,9 +1015,17 @@ Object.assign(pc, function () {
             return this._texture;
         },
         set: function (value) {
+            if (this._texture === value) return;
+
             this._texture = value;
 
             if (value) {
+
+                // clear sprite asset if texture is set
+                if (this._spriteAsset) {
+                    this.spriteAsset = null;
+                }
+
                 // default texture just uses emissive and opacity maps
                 this._renderable.setParameter("texture_emissiveMap", this._texture);
                 this._renderable.setParameter("texture_opacityMap", this._texture);
@@ -1128,6 +1138,11 @@ Object.assign(pc, function () {
 
             if (this._sprite) {
                 this._bindSprite(this._sprite);
+
+                // clear texture if sprite is being set
+                if (this._textureAsset) {
+                    this.textureAsset = null;
+                }
             }
 
             if (this._sprite && this._sprite.atlas && this._sprite.atlas.texture) {
