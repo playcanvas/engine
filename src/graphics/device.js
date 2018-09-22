@@ -772,6 +772,11 @@ Object.assign(pc, function () {
             gl.enable(gl.SCISSOR_TEST);
 
             gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+
+            this.unpackFlipY = false;
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+            this.unpackPremultiplyAlpha = false;
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
         },
 
@@ -1414,6 +1419,28 @@ Object.assign(pc, function () {
             }
         },
 
+        setUnpackFlipY: function (flipY) {
+            if (this.unpackFlipY !== flipY) {
+                this.unpackFlipY = flipY;
+
+                // Note: the WebGL spec states that UNPACK_FLIP_Y_WEBGL only affects
+                // texImage2D and texSubImage2D, not compressedTexImage2D
+                var gl = this.gl;
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+            }
+        },
+
+        setUnpackPremultiplyAlpha: function (premultiplyAlpha) {
+            if (this.unpackPremultiplyAlpha !== premultiplyAlpha) {
+                this.unpackPremultiplyAlpha = premultiplyAlpha;
+
+                // Note: the WebGL spec states that UNPACK_PREMULTIPLY_ALPHA_WEBGL only affects
+                // texImage2D and texSubImage2D, not compressedTexImage2D
+                var gl = this.gl;
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiplyAlpha);
+            }
+        },
+
         uploadTexture: function (texture) {
             var gl = this.gl;
 
@@ -1447,8 +1474,6 @@ Object.assign(pc, function () {
                     // ----- CUBEMAP -----
                     var face;
 
-                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-
                     if ((mipObject[0] instanceof HTMLCanvasElement) || (mipObject[0] instanceof HTMLImageElement) || (mipObject[0] instanceof HTMLVideoElement)) {
                         // Upload the image, canvas or video
                         for (face = 0; face < 6; face++) {
@@ -1467,6 +1492,8 @@ Object.assign(pc, function () {
                                 }
                             }
 
+                            this.setUnpackFlipY(false);
+                            this.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                             gl.texImage2D(
                                 gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                 mipLevel,
@@ -1495,6 +1522,8 @@ Object.assign(pc, function () {
                                     texData
                                 );
                             } else {
+                                this.setUnpackFlipY(false);
+                                this.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                                 gl.texImage2D(
                                     gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                     mipLevel,
@@ -1513,7 +1542,6 @@ Object.assign(pc, function () {
                     // ----- 3D -----
                     // Image/canvas/video not supported (yet?)
                     // Upload the byte array
-                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                     resMult = 1 / Math.pow(2, mipLevel);
                     if (texture._compressed) {
                         gl.compressedTexImage3D(gl.TEXTURE_3D,
@@ -1525,6 +1553,8 @@ Object.assign(pc, function () {
                                                 0,
                                                 mipObject);
                     } else {
+                        this.setUnpackFlipY(false);
+                        this.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                         gl.texImage3D(gl.TEXTURE_3D,
                                       mipLevel,
                                       texture._glInternalFormat,
@@ -1551,7 +1581,8 @@ Object.assign(pc, function () {
                         }
 
                         // Upload the image, canvas or video
-                        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, texture._flipY);
+                        this.setUnpackFlipY(texture._flipY);
+                        this.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                         gl.texImage2D(
                             gl.TEXTURE_2D,
                             mipLevel,
@@ -1562,7 +1593,6 @@ Object.assign(pc, function () {
                         );
                     } else {
                         // Upload the byte array
-                        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                         resMult = 1 / Math.pow(2, mipLevel);
                         if (texture._compressed) {
                             gl.compressedTexImage2D(
@@ -1575,6 +1605,8 @@ Object.assign(pc, function () {
                                 mipObject
                             );
                         } else {
+                            this.setUnpackFlipY(texture._flipY);
+                            this.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                             gl.texImage2D(
                                 gl.TEXTURE_2D,
                                 mipLevel,
