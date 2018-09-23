@@ -186,7 +186,7 @@ Object.assign(pc, function () {
                 _constScreenSizeValueUniform[1] = _constScreenSizeValue.y;
                 _constScreenSizeValueUniform[2] = _constScreenSizeValue.z;
                 _constScreenSizeValueUniform[3] = _constScreenSizeValue.w;
-                _constScreenSize.setValue(_constScreenSizeValue);
+                _constScreenSize.setValue(_constScreenSizeValueUniform);
 
                 if (this._postEffectCombined && this._postEffectCombined < 0) {
                     if (self.setup) self.setup(device, self, _constScreenSizeValue, null, this.renderTarget);

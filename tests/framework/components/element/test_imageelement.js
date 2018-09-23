@@ -146,6 +146,8 @@ describe('pc.ImageElement', function () {
 
         assets.texture.once('load', function () {
             expect(!e.element).to.exist;
+
+            pc.ImageElement.prototype._onTextureLoad = _onTextureLoad;
             done();
         });
     });
@@ -177,47 +179,149 @@ describe('pc.ImageElement', function () {
         app.assets.load(assets.material);
         assets.material.once('load', function () {
             expect(!e.element).to.exist;
+            pc.ImageElement.prototype._onMaterialLoad = _onMaterialLoad;
             done();
         });
     });
 
-
-    it('Sprites assets unbound on destroy', function () {
-        expect(!assets.sprite.hasEvent('add')).to.exist;
-        expect(!assets.sprite.hasEvent('load')).to.exist;
-        expect(!assets.sprite.hasEvent('remove')).to.exist;
+    it('Texture asset unbound on destroy', function () {
+        expect(assets.texture.hasEvent('change')).to.be.false;
+        expect(assets.texture.hasEvent('load')).to.be.false;
+        expect(assets.texture.hasEvent('remove')).to.be.false;
 
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
-            spriteAsset: assets.sprite
+            textureAsset: assets.texture
         });
+        app.root.addChild(e);
+
+        expect(assets.texture.hasEvent('change')).to.be.true;
+        expect(assets.texture.hasEvent('load')).to.be.true;
+        expect(assets.texture.hasEvent('remove')).to.be.true;
 
         e.destroy();
 
-        expect(!assets.sprite.hasEvent('add')).to.exist;
-        expect(!assets.sprite.hasEvent('load')).to.exist;
-        expect(!assets.sprite.hasEvent('remove')).to.exist;
+        expect(assets.texture.hasEvent('change')).to.be.false;
+        expect(assets.texture.hasEvent('load')).to.be.false;
+        expect(assets.texture.hasEvent('remove')).to.be.false;
     });
 
-    it('Sprites assets unbound when reset', function () {
-        expect(!assets.sprite.hasEvent('add')).to.exist;
-        expect(!assets.sprite.hasEvent('load')).to.exist;
-        expect(!assets.sprite.hasEvent('remove')).to.exist;
+    it('Texture asset unbound on reset', function () {
+        expect(assets.texture.hasEvent('change')).to.be.false;
+        expect(assets.texture.hasEvent('load')).to.be.false;
+        expect(assets.texture.hasEvent('remove')).to.be.false;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            textureAsset: assets.texture
+        });
+        app.root.addChild(e);
+
+        expect(assets.texture.hasEvent('change')).to.be.true;
+        expect(assets.texture.hasEvent('load')).to.be.true;
+        expect(assets.texture.hasEvent('remove')).to.be.true;
+
+        e.element.textureAsset = null;
+
+        expect(assets.texture.hasEvent('change')).to.be.false;
+        expect(assets.texture.hasEvent('load')).to.be.false;
+        expect(assets.texture.hasEvent('remove')).to.be.false;
+    });
+
+    it('Texture asset unbound when sprite assigned', function () {
+        expect(assets.texture.hasEvent('change')).to.be.false;
+        expect(assets.texture.hasEvent('load')).to.be.false;
+        expect(assets.texture.hasEvent('remove')).to.be.false;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            textureAsset: assets.texture
+        });
+        app.root.addChild(e);
+
+        expect(assets.texture.hasEvent('change')).to.be.true;
+        expect(assets.texture.hasEvent('load')).to.be.true;
+        expect(assets.texture.hasEvent('remove')).to.be.true;
+
+        e.element.sprite = assets.sprite.resource;
+
+        expect(assets.texture.hasEvent('change')).to.be.false;
+        expect(assets.texture.hasEvent('load')).to.be.false;
+        expect(assets.texture.hasEvent('remove')).to.be.false;
+    });
+
+    it.only('Sprites assets unbound on destroy', function () {
+        // expect(assets.sprite.hasEvent('change')).to.be.false;
+        expect(assets.sprite.hasEvent('load')).to.be.false;
+        expect(assets.sprite.hasEvent('remove')).to.be.false;
 
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
             spriteAsset: assets.sprite
         });
+        app.root.addChild(e);
+
+        // expect(assets.sprite.hasEvent('change')).to.be.true;
+        expect(assets.sprite.hasEvent('load')).to.be.true;
+        expect(assets.sprite.hasEvent('remove')).to.be.true;
+
+        e.destroy();
+
+        // expect(assets.sprite.hasEvent('change')).to.be.false;
+        expect(assets.sprite.hasEvent('load')).to.be.false;
+        expect(assets.sprite.hasEvent('remove')).to.be.false;
+    });
+
+    it('Sprites assets unbound when reset', function () {
+        // expect(assets.sprite.hasEvent('change')).to.be.false;
+        expect(assets.sprite.hasEvent('load')).to.be.false;
+        expect(assets.sprite.hasEvent('remove')).to.be.false;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: assets.sprite
+        });
+        app.root.addChild(e);
+
+        // expect(assets.sprite.hasEvent('change')).to.be.true;
+        expect(assets.sprite.hasEvent('load')).to.be.true;
+        expect(assets.sprite.hasEvent('remove')).to.be.true;
 
         e.element.spriteAsset = null;
 
-        expect(!assets.sprite.hasEvent('add')).to.exist;
-        expect(!assets.sprite.hasEvent('load')).to.exist;
-        expect(!assets.sprite.hasEvent('remove')).to.exist;
+        // expect(assets.sprite.hasEvent('change')).to.be.false;
+        expect(assets.sprite.hasEvent('load')).to.be.false;
+        expect(assets.sprite.hasEvent('remove')).to.be.false;
     });
 
+
+    it('Sprites assets unbound when texture set', function () {
+        // expect(assets.sprite.hasEvent('change')).to.be.false;
+        expect(assets.sprite.hasEvent('load')).to.be.false;
+        expect(assets.sprite.hasEvent('remove')).to.be.false;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: assets.sprite
+        });
+        app.root.addChild(e);
+
+        // expect(assets.sprite.hasEvent('change')).to.be.true;
+        expect(assets.sprite.hasEvent('load')).to.be.true;
+        expect(assets.sprite.hasEvent('remove')).to.be.true;
+
+        e.element.texture = assets.texture.resource;
+
+        // expect(assets.sprite.hasEvent('change')).to.be.false;
+        expect(assets.sprite.hasEvent('load')).to.be.false;
+        expect(assets.sprite.hasEvent('remove')).to.be.false;
+    });
 
     it('Sprite resource unbound on destroy', function () {
         var atlas = assets.textureatlas;
