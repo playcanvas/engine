@@ -1335,6 +1335,11 @@ Object.assign(pc, function () {
                             this.setSkinning(device, meshInstance, material);
 
                             if (material.chunks) {
+                                if (material.dirty) {
+                                    material.updateUniforms();
+                                    material.dirty = false;
+                                }
+
                                 // Uniforms I (shadow): material
                                 parameters = material.parameters;
                                 for (paramName in parameters) {
@@ -1532,6 +1537,11 @@ Object.assign(pc, function () {
                         // #else
                         device.setShader(drawCall._shader[pass]);
                         // #endif
+
+                        if (material.dirty) {
+                            material.updateUniforms();
+                            material.dirty = false;
+                        }
 
                         // Uniforms I: material
                         parameters = material.parameters;

@@ -628,8 +628,6 @@ Object.assign(pc, function () {
          * @param  {Object} data The data block that is used to initialize
          */
         initialize: function (data) {
-            this.reset();
-
             // usual flow is that data is validated in resource loader
             // but if not, validate here.
             if (!data.validated) {
@@ -772,7 +770,7 @@ Object.assign(pc, function () {
             return null;
         },
 
-        update: function () {
+        updateUniforms: function () {
             var uniform;
             this._clearParameters();
 

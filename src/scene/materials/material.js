@@ -97,6 +97,8 @@ Object.assign(pc, function () {
         this._shaderVersion = 0;
         this._scene = null;
         this._dirtyBlend = false;
+
+        this.dirty = true;
     };
 
     Object.defineProperty(Material.prototype, 'shader', {
@@ -301,8 +303,20 @@ Object.assign(pc, function () {
         }
     };
 
+    Material.prototype.updateUniforms = function () {
+    },
+
     Material.prototype.updateShader = function (device, scene, objDefs) {
         // For vanilla materials, the shader can only be set by the user
+    };
+
+    /**
+     * @function
+     * @name pc.Material#update
+     * @description Applies any changes made to the material's properties.
+     */
+    Material.prototype.update = function () {
+        this.dirty = true;
     };
 
     // Parameter management
@@ -402,15 +416,6 @@ Object.assign(pc, function () {
             var parameter = this.parameters[paramName];
             parameter.scopeId.setValue(parameter.data);
         }
-    };
-
-    /**
-     * @function
-     * @name pc.Material#update
-     * @description Applies any changes made to the material's properties.
-     */
-    Material.prototype.update = function () {
-        throw Error("Not Implemented in base class");
     };
 
     /**
