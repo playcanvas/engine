@@ -28,9 +28,6 @@ Object.assign(pc, function () {
             return clone;
         },
 
-        updateUniforms: function () {
-        },
-
         updateShader: function (device) {
             var options = {
                 skin: !!this.meshInstances[0].skinInstance
