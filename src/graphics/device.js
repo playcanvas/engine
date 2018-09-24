@@ -642,6 +642,7 @@ Object.assign(pc, function () {
             this.extCompressedTextureETC = getExtension('WEBGL_compressed_texture_etc');
             this.extCompressedTexturePVRTC = getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
             this.extCompressedTextureS3TC = getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
+            this.extParallelShaderCompile = getExtension('KHR_parallel_shader_compile');
         },
 
         initializeCapabilities: function () {
