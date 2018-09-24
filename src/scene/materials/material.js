@@ -365,7 +365,6 @@ Object.assign(pc, function () {
      * @param {Number} [passFlags] Mask describing which passes the material should be included in.
      */
     Material.prototype.setParameter = function (name, data, passFlags) {
-
         if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
 
         if (data === undefined && typeof name === 'object') {
