@@ -58,9 +58,9 @@ Object.assign(pc, function () {
     var Material = function Material() {
         this.name = "Untitled";
         this.id = id++;
+
         this._shader = null;
         this.variants = {};
-
         this.parameters = {};
 
         // Render states
@@ -246,16 +246,7 @@ Object.assign(pc, function () {
 
     Material.prototype._cloneInternal = function (clone) {
         clone.name = this.name;
-        clone.id = id++;
-        clone.variants = { }; // ?
         clone.shader = this.shader;
-        clone.parameters = { };
-
-        // and need copy parameters of that shader
-        for (var parameterName in this.parameters) {
-            if (this.parameters.hasOwnProperty(parameterName))
-                clone.parameters[parameterName] = { scopeId: null, data: this.parameters[parameterName].data, passFlags: this.parameters[parameterName].passFlags };
-        }
 
         // Render states
         clone.alphaTest = this.alphaTest;
@@ -290,8 +281,6 @@ Object.assign(pc, function () {
         clone.greenWrite = this.greenWrite;
         clone.blueWrite = this.blueWrite;
         clone.alphaWrite = this.alphaWrite;
-
-        clone.meshInstances = [];
     };
 
     Material.prototype.clone = function () {
