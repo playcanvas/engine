@@ -1605,7 +1605,7 @@ Object.assign(pc, function () {
                                 mipObject
                             );
                         } else {
-                            this.setUnpackFlipY(texture._flipY);
+                            this.setUnpackFlipY(false);
                             this.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                             gl.texImage2D(
                                 gl.TEXTURE_2D,
