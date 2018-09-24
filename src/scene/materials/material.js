@@ -304,7 +304,7 @@ Object.assign(pc, function () {
     };
 
     Material.prototype.updateUniforms = function () {
-    },
+    };
 
     Material.prototype.updateShader = function (device, scene, objDefs) {
         // For vanilla materials, the shader can only be set by the user
