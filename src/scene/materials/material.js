@@ -58,9 +58,9 @@ Object.assign(pc, function () {
     var Material = function Material() {
         this.name = "Untitled";
         this.id = id++;
+
         this._shader = null;
         this.variants = {};
-
         this.parameters = {};
 
         // Render states
@@ -97,6 +97,8 @@ Object.assign(pc, function () {
         this._shaderVersion = 0;
         this._scene = null;
         this._dirtyBlend = false;
+
+        this.dirty = true;
     };
 
     Object.defineProperty(Material.prototype, 'shader', {
@@ -104,7 +106,11 @@ Object.assign(pc, function () {
             return this._shader;
         },
         set: function (shader) {
-            this.setShader(shader);
+            if (this._shader) {
+                this._shader._refCount--;
+            }
+            this._shader = shader;
+            if (shader) shader._refCount++;
         }
     });
 
@@ -240,16 +246,7 @@ Object.assign(pc, function () {
 
     Material.prototype._cloneInternal = function (clone) {
         clone.name = this.name;
-        clone.id = id++;
-        clone.variants = { }; // ?
         clone.shader = this.shader;
-        clone.parameters = { };
-
-        // and need copy parameters of that shader
-        for (var parameterName in this.parameters) {
-            if (this.parameters.hasOwnProperty(parameterName))
-                clone.parameters[parameterName] = { scopeId: null, data: this.parameters[parameterName].data, passFlags: this.parameters[parameterName].passFlags };
-        }
 
         // Render states
         clone.alphaTest = this.alphaTest;
@@ -284,8 +281,6 @@ Object.assign(pc, function () {
         clone.greenWrite = this.greenWrite;
         clone.blueWrite = this.blueWrite;
         clone.alphaWrite = this.alphaWrite;
-
-        clone.meshInstances = [];
     };
 
     Material.prototype.clone = function () {
@@ -301,8 +296,20 @@ Object.assign(pc, function () {
         }
     };
 
+    Material.prototype.updateUniforms = function () {
+    };
+
     Material.prototype.updateShader = function (device, scene, objDefs) {
         // For vanilla materials, the shader can only be set by the user
+    };
+
+    /**
+     * @function
+     * @name pc.Material#update
+     * @description Applies any changes made to the material's properties.
+     */
+    Material.prototype.update = function () {
+        this.dirty = true;
     };
 
     // Parameter management
@@ -351,7 +358,6 @@ Object.assign(pc, function () {
      * @param {Number} [passFlags] Mask describing which passes the material should be included in.
      */
     Material.prototype.setParameter = function (name, data, passFlags) {
-
         if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
 
         if (data === undefined && typeof name === 'object') {
@@ -405,78 +411,6 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @function
-     * @name pc.Material#update
-     * @description Applies any changes made to the material's properties.
-     */
-    Material.prototype.update = function () {
-        throw Error("Not Implemented in base class");
-    };
-
-    /**
-     * @function
-     * @description Initializes the material with the properties in the specified data.
-     * @name pc.Material#init
-     * @param {Object} data The initial data for the material.
-     */
-    Material.prototype.init = function (data) {
-        throw Error("Not Implemented in base class");
-    };
-
-    // DEPRECATED
-    /**
-     * @private
-     * @function
-     * @name pc.Material#getName
-     * @description Returns the string name of the specified material. This name is not
-     * necessarily unique. Material names set by an artist within the modelling application
-     * should be preserved in the PlayCanvas runtime.
-     * @returns {String} The name of the material.
-     */
-    Material.prototype.getName = function () {
-        return this.name;
-    };
-
-    /**
-     * @private
-     * @function
-     * @name pc.Material#setName
-     * @description Sets the string name of the specified material. This name does not
-     * have to be unique.
-     * @param {String} name The name of the material.
-     */
-    Material.prototype.setName = function (name) {
-        this.name = name;
-    };
-
-    /**
-     * @private
-     * @function
-     * @name pc.Material#getShader
-     * @description Retrieves the shader assigned to the specified material.
-     * @returns {pc.Shader} The shader assigned to the material.
-     */
-    Material.prototype.getShader = function () {
-        return this.shader;
-    };
-
-    /**
-     * @private
-     * @function
-     * @name pc.Material#setShader
-     * @description Assigns a shader to the specified material.
-     * @param {pc.Shader} shader The shader to assign to the material.
-     */
-    Material.prototype.setShader = function (shader) {
-        if (this._shader) {
-            this._shader._refCount--;
-        }
-        this._shader = shader;
-        if (shader) shader._refCount++;
-    };
-
-    /**
-     * @private
      * @function
      * @name pc.Material#destroy
      * @description Removes this material from the scene and possibly frees up memory from its shaders (if there are no other materials using it).
