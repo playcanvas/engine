@@ -565,8 +565,6 @@ Object.assign(pc, function () {
     Object.assign(StandardMaterial.prototype, {
 
         reset: function () {
-            this.blendType = pc.BLEND_NONE;
-
             var i;
             for (i = 0; i < _propsSerial.length; i++) {
                 var defVal = _propsSerialDefaultVal[i];
@@ -595,7 +593,6 @@ Object.assign(pc, function () {
          */
         clone: function () {
             var clone = new pc.StandardMaterial();
-
             pc.Material.prototype._cloneInternal.call(this, clone);
 
             var pname;
@@ -613,9 +610,6 @@ Object.assign(pc, function () {
                     }
                 }
             }
-
-            if (!clone.shader)
-                clone.update();
 
             return clone;
         },
