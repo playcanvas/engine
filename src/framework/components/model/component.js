@@ -37,30 +37,57 @@ Object.assign(pc, function () {
     var ModelComponent = function ModelComponent(system, entity)   {
         pc.Component.call(this, system, entity);
 
-        this.on("set_type", this.onSetType, this);
-        this.on("set_asset", this.onSetAsset, this);
-        this.on("set_castShadows", this.onSetCastShadows, this);
-        this.on("set_receiveShadows", this.onSetReceiveShadows, this);
-        this.on("set_castShadowsLightmap", this.onSetCastShadowsLightmap, this);
-        this.on("set_lightmapped", this.onSetLightmapped, this);
-        this.on("set_lightmapSizeMultiplier", this.onSetLightmapSizeMultiplier, this);
-        this.on("set_isStatic", this.onSetIsStatic, this);
-        this.on("set_model", this.onSetModel, this);
-        this.on("set_material", this.onSetMaterial, this);
-        this.on("set_mapping", this.onSetMapping, this);
-        this.on("set_layers", this.onSetLayers, this);
-        this.on("set_batchGroupId", this.onSetBatchGroupId, this);
+        // this.on("set_type", this.onSetType, this);
+        // this.on("set_asset", this.onSetAsset, this);
+        // this.on("set_castShadows", this.onSetCastShadows, this);
+        // this.on("set_receiveShadows", this.onSetReceiveShadows, this);
+        // this.on("set_castShadowsLightmap", this.onSetCastShadowsLightmap, this);
+        // this.on("set_lightmapped", this.onSetLightmapped, this);
+        // this.on("set_lightmapSizeMultiplier", this.onSetLightmapSizeMultiplier, this);
+        // this.on("set_isStatic", this.onSetIsStatic, this);
+        // this.on("set_model", this.onSetModel, this);
+        // this.on("set_material", this.onSetMaterial, this);
+        // this.on("set_mapping", this.onSetMapping, this);
+        // this.on("set_layers", this.onSetLayers, this);
+        // this.on("set_batchGroupId", this.onSetBatchGroupId, this);
 
-        // override materialAsset property to return a pc.Asset instead
-        Object.defineProperty(this, 'materialAsset', {
-            set: this.setMaterialAsset.bind(this),
-            get: this.getMaterialAsset.bind(this)
-        });
+        // // override materialAsset property to return a pc.Asset instead
+        // Object.defineProperty(this, 'materialAsset', {
+        //     set: this.setMaterialAsset.bind(this),
+        //     get: this.getMaterialAsset.bind(this)
+        // });
+
+
+        // this.enabled = true;
+        this._type = 'asset';
+
+        // model asset
+        this._asset = null;
+        this._model = null;
+
+        this._mapping = null;
+
+        this._castShadows = true;
+        this._receiveShadows = true;
+
+        this._materialAsset = null;
+        this._material = null;
+
+        this._castShadowsLightmap = true;
+        this._lightmapped = false;
+        this._lightmapSizeMultiplier = 1;
+        this._isStatic = false;
+
+        this._layers = [pc.LAYERID_WORLD]; // assign to the default world layer
+        this._batchGroupId = -1;
+
+        this._area = null;
 
         this._assetOld = 0;
         this._materialEvents = null;
         this._dirtyModelAsset = false;
         this._dirtyMaterialAsset = false;
+
         this._clonedModel = false;
 
         // #ifdef DEBUG
@@ -77,17 +104,12 @@ Object.assign(pc, function () {
             this.enabled = visible;
         },
 
-        _onAssetLoad: function (asset) {
-            if (asset.resource) {
-                this._onModelLoaded(asset.resource.clone());
-                this._clonedModel = true;
-            }
-        },
-
         addModelToLayers: function () {
             var layer;
+            var layers = this.system.app.scene.layers;
+
             for (var i = 0; i < this.layers.length; i++) {
-                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                layer = layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.addMeshInstances(this.meshInstances);
             }
@@ -95,18 +117,27 @@ Object.assign(pc, function () {
 
         removeModelFromLayers: function (model) {
             var layer;
+            var layers = this.system.app.scene.layers;
+
             for (var i = 0; i < this.layers.length; i++) {
-                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                layer = layers.getLayerById(this.layers[i]);
                 if (!layer) continue;
                 layer.removeMeshInstances(model.meshInstances);
             }
         },
 
-        _onAssetUnload: function (asset) {
-            if (!this.model) return;
-            this.removeModelFromLayers(this.model);
-            this.model = null;
-        },
+        // _onAssetLoad: function (asset) {
+        //     if (asset.resource) {
+        //         this._onModelLoaded(asset.resource.clone());
+        //         this._clonedModel = true;
+        //     }
+        // },
+
+        // _onAssetUnload: function (asset) {
+        //     if (!this.model) return;
+        //     this.removeModelFromLayers(this.model);
+        //     this.model = null;
+        // },
 
         _onAssetChange: function (asset, attribute, newValue, oldValue) {
             // reset mapping
@@ -178,226 +209,227 @@ Object.assign(pc, function () {
             }
         },
 
+        // _onModelLoaded: function (model) {
+        //     if (this.data.type === 'asset') {
+        //         this.model = model;
+        //     }
+        // },
+
         remove: function () {
             this._onModelAsset(null);
         },
 
-        _onModelLoaded: function (model) {
-            if (this.data.type === 'asset') {
-                this.model = model;
-            }
-        },
 
-        onSetType: function (name, oldValue, newValue) {
-            var data = this.data;
+        // onSetType: function (name, oldValue, newValue) {
+        //     var data = this.data;
 
-            if (newValue) {
-                var mesh = null;
+        //     if (newValue) {
+        //         var mesh = null;
 
-                this._area = null;
+        //         this._area = null;
 
-                if (newValue === 'asset') {
-                    if (data.asset !== null) {
-                        this._setModelAsset(data.asset);
-                    } else {
-                        this.model = null;
-                    }
-                } else {
-                    var system = this.system;
-                    var gd = system.app.graphicsDevice;
+        //         if (newValue === 'asset') {
+        //             if (data.asset !== null) {
+        //                 this._setModelAsset(data.asset);
+        //             } else {
+        //                 this.model = null;
+        //             }
+        //         } else {
+        //             var system = this.system;
+        //             var gd = system.app.graphicsDevice;
 
-                    switch (newValue) {
-                        case 'box':
-                            if (!system.box) {
-                                system.box = pc.createBox(gd, {
-                                    halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
-                                });
-                            }
-                            mesh = system.box;
-                            this._area = { x: 2, y: 2, z: 2, uv: (2.0 / 3) };
-                            break;
-                        case 'capsule':
-                            if (!system.capsule) {
-                                system.capsule = pc.createCapsule(gd, {
-                                    radius: 0.5,
-                                    height: 2
-                                });
-                            }
-                            mesh = system.capsule;
-                            this._area = { x: (Math.PI * 2), y: Math.PI, z: (Math.PI * 2), uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
-                            break;
-                        case 'cone':
-                            if (!system.cone) {
-                                system.cone = pc.createCone(gd, {
-                                    baseRadius: 0.5,
-                                    peakRadius: 0,
-                                    height: 1
-                                });
-                            }
-                            mesh = system.cone;
-                            this._area = { x: 2.54, y: 2.54, z: 2.54, uv: (1.0 / 3 + (1.0 / 3) / 3) };
-                            break;
-                        case 'cylinder':
-                            if (!system.cylinder) {
-                                system.cylinder = pc.createCylinder(gd, {
-                                    radius: 0.5,
-                                    height: 1
-                                });
-                            }
-                            mesh = system.cylinder;
-                            this._area = { x: Math.PI, y: (0.79 * 2), z: Math.PI, uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
-                            break;
-                        case 'plane':
-                            if (!system.plane) {
-                                system.plane = pc.createPlane(gd, {
-                                    halfExtents: new pc.Vec2(0.5, 0.5),
-                                    widthSegments: 1,
-                                    lengthSegments: 1
-                                });
-                            }
-                            mesh = system.plane;
-                            this._area = { x: 0, y: 1, z: 0, uv: 1 };
-                            break;
-                        case 'sphere':
-                            if (!system.sphere) {
-                                system.sphere = pc.createSphere(gd, {
-                                    radius: 0.5
-                                });
-                            }
-                            mesh = system.sphere;
-                            this._area = { x: Math.PI, y: Math.PI, z: Math.PI, uv: 1 };
-                            break;
-                        default:
-                            throw new Error("Invalid model type: " + newValue);
-                    }
+        //             switch (newValue) {
+        //                 case 'box':
+        //                     if (!system.box) {
+        //                         system.box = pc.createBox(gd, {
+        //                             halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
+        //                         });
+        //                     }
+        //                     mesh = system.box;
+        //                     this._area = { x: 2, y: 2, z: 2, uv: (2.0 / 3) };
+        //                     break;
+        //                 case 'capsule':
+        //                     if (!system.capsule) {
+        //                         system.capsule = pc.createCapsule(gd, {
+        //                             radius: 0.5,
+        //                             height: 2
+        //                         });
+        //                     }
+        //                     mesh = system.capsule;
+        //                     this._area = { x: (Math.PI * 2), y: Math.PI, z: (Math.PI * 2), uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
+        //                     break;
+        //                 case 'cone':
+        //                     if (!system.cone) {
+        //                         system.cone = pc.createCone(gd, {
+        //                             baseRadius: 0.5,
+        //                             peakRadius: 0,
+        //                             height: 1
+        //                         });
+        //                     }
+        //                     mesh = system.cone;
+        //                     this._area = { x: 2.54, y: 2.54, z: 2.54, uv: (1.0 / 3 + (1.0 / 3) / 3) };
+        //                     break;
+        //                 case 'cylinder':
+        //                     if (!system.cylinder) {
+        //                         system.cylinder = pc.createCylinder(gd, {
+        //                             radius: 0.5,
+        //                             height: 1
+        //                         });
+        //                     }
+        //                     mesh = system.cylinder;
+        //                     this._area = { x: Math.PI, y: (0.79 * 2), z: Math.PI, uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
+        //                     break;
+        //                 case 'plane':
+        //                     if (!system.plane) {
+        //                         system.plane = pc.createPlane(gd, {
+        //                             halfExtents: new pc.Vec2(0.5, 0.5),
+        //                             widthSegments: 1,
+        //                             lengthSegments: 1
+        //                         });
+        //                     }
+        //                     mesh = system.plane;
+        //                     this._area = { x: 0, y: 1, z: 0, uv: 1 };
+        //                     break;
+        //                 case 'sphere':
+        //                     if (!system.sphere) {
+        //                         system.sphere = pc.createSphere(gd, {
+        //                             radius: 0.5
+        //                         });
+        //                     }
+        //                     mesh = system.sphere;
+        //                     this._area = { x: Math.PI, y: Math.PI, z: Math.PI, uv: 1 };
+        //                     break;
+        //                 default:
+        //                     throw new Error("Invalid model type: " + newValue);
+        //             }
 
-                    var node = new pc.GraphNode();
+        //             var node = new pc.GraphNode();
 
-                    var model = new pc.Model();
-                    model.graph = node;
+        //             var model = new pc.Model();
+        //             model.graph = node;
 
-                    model.meshInstances = [new pc.MeshInstance(node, mesh, data.material)];
+        //             model.meshInstances = [new pc.MeshInstance(node, mesh, data.material)];
 
-                    if (system._inTools)
-                        model.generateWireframe();
+        //             if (system._inTools)
+        //                 model.generateWireframe();
 
-                    this.model = model;
-                    this.asset = null;
-                }
-            }
-        },
+        //             this.model = model;
+        //             this.asset = null;
+        //         }
+        //     }
+        // },
 
-        onSetAsset: function (name, oldValue, newValue) {
-            var data = this.data;
-            var id = null;
+        // onSetAsset: function (name, oldValue, newValue) {
+        //     var data = this.data;
+        //     var id = null;
 
-            if (data.type === 'asset') {
-                if (newValue !== null) {
-                    id = newValue;
+        //     if (data.type === 'asset') {
+        //         if (newValue !== null) {
+        //             id = newValue;
 
-                    if (newValue instanceof pc.Asset) {
-                        data.asset = newValue.id;
-                        id = newValue.id;
-                    }
-                } else {
-                    this.model = null;
-                }
-            }
+        //             if (newValue instanceof pc.Asset) {
+        //                 data.asset = newValue.id;
+        //                 id = newValue.id;
+        //             }
+        //         } else {
+        //             this.model = null;
+        //         }
+        //     }
 
-            if (id === null)
-                data.asset = null;
+        //     if (id === null)
+        //         data.asset = null;
 
-            this._setModelAsset(id);
-        },
+        //     this._setModelAsset(id);
+        // },
 
-        onSetCastShadows: function (name, oldValue, newValue) {
-            var layer;
-            var i;
-            var model = this.data.model;
-            if (model) {
-                var layers = this.layers;
-                var scene = this.system.app.scene;
-                if (oldValue && !newValue) {
-                    for (i = 0; i < layers.length; i++) {
-                        layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
-                        if (!layer) continue;
-                        layer.removeShadowCasters(model.meshInstances);
-                    }
-                }
+        // onSetCastShadows: function (name, oldValue, newValue) {
+        //     var layer;
+        //     var i;
+        //     var model = this.data.model;
+        //     if (model) {
+        //         var layers = this.layers;
+        //         var scene = this.system.app.scene;
+        //         if (oldValue && !newValue) {
+        //             for (i = 0; i < layers.length; i++) {
+        //                 layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+        //                 if (!layer) continue;
+        //                 layer.removeShadowCasters(model.meshInstances);
+        //             }
+        //         }
 
-                var meshInstances = model.meshInstances;
-                for (i = 0; i < meshInstances.length; i++) {
-                    meshInstances[i].castShadow = newValue;
-                }
+        //         var meshInstances = model.meshInstances;
+        //         for (i = 0; i < meshInstances.length; i++) {
+        //             meshInstances[i].castShadow = newValue;
+        //         }
 
-                if (!oldValue && newValue) {
-                    for (i = 0; i < layers.length; i++) {
-                        layer = scene.layers.getLayerById(layers[i]);
-                        if (!layer) continue;
-                        layer.addShadowCasters(model.meshInstances);
-                    }
-                }
-            }
-        },
+        //         if (!oldValue && newValue) {
+        //             for (i = 0; i < layers.length; i++) {
+        //                 layer = scene.layers.getLayerById(layers[i]);
+        //                 if (!layer) continue;
+        //                 layer.addShadowCasters(model.meshInstances);
+        //             }
+        //         }
+        //     }
+        // },
 
-        onSetCastShadowsLightmap: function (name, oldValue, newValue) {
-        },
+        // onSetCastShadowsLightmap: function (name, oldValue, newValue) {
+        // },
 
-        onSetLightmapped: function (name, oldValue, newValue) {
-            var data = this.data;
-            var i, m, mask;
-            if (data.model) {
-                var rcv = data.model.meshInstances;
-                if (newValue) {
-                    for (i = 0; i < rcv.length; i++) {
-                        m = rcv[i];
-                        mask = m.mask;
-                        m.mask = (mask | pc.MASK_BAKED) & ~(pc.MASK_DYNAMIC | pc.MASK_LIGHTMAP);
-                    }
-                } else {
-                    for (i = 0; i < rcv.length; i++) {
-                        m = rcv[i];
-                        m.deleteParameter("texture_lightMap");
-                        m.deleteParameter("texture_dirLightMap");
-                        m._shaderDefs &= ~pc.SHADERDEF_LM;
-                        mask = m.mask;
-                        m.mask = (mask | pc.MASK_DYNAMIC) & ~(pc.MASK_BAKED | pc.MASK_LIGHTMAP);
-                    }
-                }
-            }
-        },
+        // onSetLightmapped: function (name, oldValue, newValue) {
+        //     var data = this.data;
+        //     var i, m, mask;
+        //     if (data.model) {
+        //         var rcv = data.model.meshInstances;
+        //         if (newValue) {
+        //             for (i = 0; i < rcv.length; i++) {
+        //                 m = rcv[i];
+        //                 mask = m.mask;
+        //                 m.mask = (mask | pc.MASK_BAKED) & ~(pc.MASK_DYNAMIC | pc.MASK_LIGHTMAP);
+        //             }
+        //         } else {
+        //             for (i = 0; i < rcv.length; i++) {
+        //                 m = rcv[i];
+        //                 m.deleteParameter("texture_lightMap");
+        //                 m.deleteParameter("texture_dirLightMap");
+        //                 m._shaderDefs &= ~pc.SHADERDEF_LM;
+        //                 mask = m.mask;
+        //                 m.mask = (mask | pc.MASK_DYNAMIC) & ~(pc.MASK_BAKED | pc.MASK_LIGHTMAP);
+        //             }
+        //         }
+        //     }
+        // },
 
-        onSetLightmapSizeMultiplier: function (name, oldValue, newValue) {
-            this.data.lightmapSizeMultiplier = newValue;
-        },
+        // onSetLightmapSizeMultiplier: function (name, oldValue, newValue) {
+        //     this.data.lightmapSizeMultiplier = newValue;
+        // },
 
-        onSetIsStatic: function (name, oldValue, newValue) {
-            var data = this.data;
-            var i, m;
-            if (data.model) {
-                var rcv = data.model.meshInstances;
-                for (i = 0; i < rcv.length; i++) {
-                    m = rcv[i];
-                    m.isStatic = newValue;
-                }
-            }
-        },
+        // onSetIsStatic: function (name, oldValue, newValue) {
+        //     var data = this.data;
+        //     var i, m;
+        //     if (data.model) {
+        //         var rcv = data.model.meshInstances;
+        //         for (i = 0; i < rcv.length; i++) {
+        //             m = rcv[i];
+        //             m.isStatic = newValue;
+        //         }
+        //     }
+        // },
 
-        onSetLayers: function (name, oldValue, newValue) {
-            if (!this.meshInstances) return;
-            var i, layer;
-            for (i = 0; i < oldValue.length; i++) {
-                layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
-                if (!layer) continue;
-                layer.removeMeshInstances(this.meshInstances);
-            }
-            if (!this.enabled || !this.entity.enabled) return;
-            for (i = 0; i < newValue.length; i++) {
-                layer = this.system.app.scene.layers.getLayerById(newValue[i]);
-                if (!layer) continue;
-                layer.addMeshInstances(this.meshInstances);
-            }
-        },
+        // onSetLayers: function (name, oldValue, newValue) {
+        //     if (!this.meshInstances) return;
+        //     var i, layer;
+        //     for (i = 0; i < oldValue.length; i++) {
+        //         layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
+        //         if (!layer) continue;
+        //         layer.removeMeshInstances(this.meshInstances);
+        //     }
+        //     if (!this.enabled || !this.entity.enabled) return;
+        //     for (i = 0; i < newValue.length; i++) {
+        //         layer = this.system.app.scene.layers.getLayerById(newValue[i]);
+        //         if (!layer) continue;
+        //         layer.addMeshInstances(this.meshInstances);
+        //     }
+        // },
 
         onLayersChanged: function (oldComp, newComp) {
             this.addModelToLayers();
@@ -419,166 +451,166 @@ Object.assign(pc, function () {
             layer.removeMeshInstances(this.meshInstances);
         },
 
-        onSetBatchGroupId: function (name, oldValue, newValue) {
-            if (oldValue >= 0) this.system.app.batcher.markGroupDirty(oldValue);
-            if (newValue >= 0) this.system.app.batcher.markGroupDirty(newValue);
+        // onSetBatchGroupId: function (name, oldValue, newValue) {
+        //     if (oldValue >= 0) this.system.app.batcher.markGroupDirty(oldValue);
+        //     if (newValue >= 0) this.system.app.batcher.markGroupDirty(newValue);
 
-            if (newValue < 0 && oldValue >= 0 && this.enabled && this.entity.enabled) {
-                // re-add model to scene, in case it was removed by batching
-                this.addModelToLayers();
-            }
-        },
+        //     if (newValue < 0 && oldValue >= 0 && this.enabled && this.entity.enabled) {
+        //         // re-add model to scene, in case it was removed by batching
+        //         this.addModelToLayers();
+        //     }
+        // },
 
-        onSetModel: function (name, oldValue, newValue) {
-            if (oldValue) {
-                this.removeModelFromLayers(oldValue);
-                this.entity.removeChild(oldValue.getGraph());
-                delete oldValue._entity;
+        // onSetModel: function (name, oldValue, newValue) {
+        //     if (oldValue) {
+        //         this.removeModelFromLayers(oldValue);
+        //         this.entity.removeChild(oldValue.getGraph());
+        //         delete oldValue._entity;
 
-                if (this._clonedModel) {
-                    oldValue.destroy();
-                    this._clonedModel = false;
-                }
-            }
+        //         if (this._clonedModel) {
+        //             oldValue.destroy();
+        //             this._clonedModel = false;
+        //         }
+        //     }
 
-            if (newValue) {
-                var data = this.data;
-                var meshInstances = newValue.meshInstances;
-                for (var i = 0; i < meshInstances.length; i++) {
-                    meshInstances[i].castShadow = data.castShadows;
-                    meshInstances[i].receiveShadow = data.receiveShadows;
-                }
+        //     if (newValue) {
+        //         var data = this.data;
+        //         var meshInstances = newValue.meshInstances;
+        //         for (var i = 0; i < meshInstances.length; i++) {
+        //             meshInstances[i].castShadow = data.castShadows;
+        //             meshInstances[i].receiveShadow = data.receiveShadows;
+        //         }
 
-                this.lightmapped = data.lightmapped; // update meshInstances
-                this.isStatic = data.isStatic;
+        //         this.lightmapped = data.lightmapped; // update meshInstances
+        //         this.isStatic = data.isStatic;
 
-                this.entity.addChild(newValue.graph);
+        //         this.entity.addChild(newValue.graph);
 
-                if (this.enabled && this.entity.enabled) {
-                    this.addModelToLayers();
-                }
+        //         if (this.enabled && this.entity.enabled) {
+        //             this.addModelToLayers();
+        //         }
 
-                // Store the entity that owns this model
-                newValue._entity = this.entity;
+        //         // Store the entity that owns this model
+        //         newValue._entity = this.entity;
 
-                // Update any animation component
-                if (this.entity.animation)
-                    this.entity.animation.setModel(newValue);
+        //         // Update any animation component
+        //         if (this.entity.animation)
+        //             this.entity.animation.setModel(newValue);
 
-                // trigger event handler to load mapping
-                // for new model
-                if (data.type === 'asset') {
-                    this.mapping = data.mapping;
-                } else {
-                    this._unsetMaterialEvents();
-                }
-            } else {
-                this._unsetMaterialEvents();
-            }
-        },
+        //         // trigger event handler to load mapping
+        //         // for new model
+        //         if (data.type === 'asset') {
+        //             this.mapping = data.mapping;
+        //         } else {
+        //             this._unsetMaterialEvents();
+        //         }
+        //     } else {
+        //         this._unsetMaterialEvents();
+        //     }
+        // },
 
-        _onMaterialAssetRemove: function (asset) {
-            var assets = this.system.app.assets;
-            var id = isNaN(asset) ? asset.id : asset;
+        // _onMaterialAssetRemove: function (asset) {
+        //     var assets = this.system.app.assets;
+        //     var id = isNaN(asset) ? asset.id : asset;
 
-            if (asset && isNaN(asset) && asset.resource === this.material)
-                this.material = pc.ModelHandler.DEFAULT_MATERIAL;
+        //     if (asset && isNaN(asset) && asset.resource === this.material)
+        //         this.material = pc.ModelHandler.DEFAULT_MATERIAL;
 
-            assets.off('add:' + id, this._onMaterialAssetAdd, this);
-            assets.off('load:' + id, this._onMaterialAssetLoad, this);
-            assets.off('unload:' + id, this._onMaterialAssetUnload, this);
-            assets.off('remove:' + id, this._onMaterialAssetRemove, this);
-        },
+        //     assets.off('add:' + id, this._onMaterialAssetAdd, this);
+        //     assets.off('load:' + id, this._onMaterialAssetLoad, this);
+        //     assets.off('unload:' + id, this._onMaterialAssetUnload, this);
+        //     assets.off('remove:' + id, this._onMaterialAssetRemove, this);
+        // },
 
-        _onMaterialAssetAdd: function (asset) {
-            var assets = this.system.app.assets;
+        // _onMaterialAssetAdd: function (asset) {
+        //     var assets = this.system.app.assets;
 
-            if (asset.resource) {
-                this.material = asset.resource;
-                this._dirtyMaterialAsset = false;
-            } else if (this.enabled && this.entity.enabled) {
-                this._dirtyMaterialAsset = false;
-                assets.load(asset);
-            }
-        },
+        //     if (asset.resource) {
+        //         this.material = asset.resource;
+        //         this._dirtyMaterialAsset = false;
+        //     } else if (this.enabled && this.entity.enabled) {
+        //         this._dirtyMaterialAsset = false;
+        //         assets.load(asset);
+        //     }
+        // },
 
-        _onMaterialAssetLoad: function (asset) {
-            var assets = this.system.app.assets;
+        // _onMaterialAssetLoad: function (asset) {
+        //     var assets = this.system.app.assets;
 
-            if (asset.resource) {
-                this.material = asset.resource;
-                this._dirtyMaterialAsset = false;
-            } else if (this.enabled && this.entity.enabled) {
-                this._dirtyMaterialAsset = false;
-                assets.load(asset);
-            }
-        },
+        //     if (asset.resource) {
+        //         this.material = asset.resource;
+        //         this._dirtyMaterialAsset = false;
+        //     } else if (this.enabled && this.entity.enabled) {
+        //         this._dirtyMaterialAsset = false;
+        //         assets.load(asset);
+        //     }
+        // },
 
-        _onMaterialAssetUnload: function (asset) {
-            if (asset && isNaN(asset) && asset.resource === this.material) {
-                this.material = pc.ModelHandler.DEFAULT_MATERIAL;
-            }
-        },
+        // _onMaterialAssetUnload: function (asset) {
+        //     if (asset && isNaN(asset) && asset.resource === this.material) {
+        //         this.material = pc.ModelHandler.DEFAULT_MATERIAL;
+        //     }
+        // },
 
-        setMaterialAsset: function (value) {
-            this._dirtyMaterialAsset = true;
+        // setMaterialAsset: function (value) {
+        //     this._dirtyMaterialAsset = true;
 
-            // if the type of the value is not a number assume it is an pc.Asset
-            var id = typeof value === 'number' || !value ? value : value.id;
+        //     // if the type of the value is not a number assume it is an pc.Asset
+        //     var id = typeof value === 'number' || !value ? value : value.id;
 
-            // var material;
-            var assets = this.system.app.assets;
-            var self = this;
+        //     // var material;
+        //     var assets = this.system.app.assets;
+        //     var self = this;
 
-            // unsubscribe
-            var data = this.data;
-            if (data.materialAsset !== id) {
-                if (data.materialAsset)
-                    this._onMaterialAssetRemove(data.materialAsset);
+        //     // unsubscribe
+        //     var data = this.data;
+        //     if (data.materialAsset !== id) {
+        //         if (data.materialAsset)
+        //             this._onMaterialAssetRemove(data.materialAsset);
 
-                if (id) {
-                    assets.on('load:' + id, this._onMaterialAssetLoad, this);
-                    assets.on('unload:' + id, this._onMaterialAssetUnload, this);
-                    assets.on('remove:' + id, this._onMaterialAssetRemove, this);
-                }
-            }
+        //         if (id) {
+        //             assets.on('load:' + id, this._onMaterialAssetLoad, this);
+        //             assets.on('unload:' + id, this._onMaterialAssetUnload, this);
+        //             assets.on('remove:' + id, this._onMaterialAssetRemove, this);
+        //         }
+        //     }
 
-            // try to load the material asset
-            if (id !== undefined && id !== null) {
-                var asset = assets.get(id);
-                if (asset)
-                    this._onMaterialAssetLoad(asset);
+        //     // try to load the material asset
+        //     if (id !== undefined && id !== null) {
+        //         var asset = assets.get(id);
+        //         if (asset)
+        //             this._onMaterialAssetLoad(asset);
 
-                // subscribe for adds
-                assets.once('add:' + id, this._onMaterialAssetAdd, this);
-            } else if (id === null) {
-                self.material = pc.ModelHandler.DEFAULT_MATERIAL;
-                self._dirtyMaterialAsset = false;
-            }
+        //         // subscribe for adds
+        //         assets.once('add:' + id, this._onMaterialAssetAdd, this);
+        //     } else if (id === null) {
+        //         self.material = pc.ModelHandler.DEFAULT_MATERIAL;
+        //         self._dirtyMaterialAsset = false;
+        //     }
 
-            var valueOld = data.materialAsset;
-            data.materialAsset = id;
-            this.fire('set', 'materialAsset', valueOld, id);
-        },
+        //     var valueOld = data.materialAsset;
+        //     data.materialAsset = id;
+        //     this.fire('set', 'materialAsset', valueOld, id);
+        // },
 
         getMaterialAsset: function () {
-            return this.system.app.assets.get(this.data.materialAsset);
+            return this.system.app.assets.get(this._materialAsset);
         },
 
-        onSetMaterial: function (name, oldValue, newValue) {
-            if (newValue !== oldValue) {
-                var data = this.data;
-                data.material = newValue;
+        // onSetMaterial: function (name, oldValue, newValue) {
+        //     if (newValue !== oldValue) {
+        //         var data = this.data;
+        //         data.material = newValue;
 
-                var model = data.model;
-                if (model && data.type !== 'asset') {
-                    var meshInstances = model.meshInstances;
-                    for (var i = 0, len = meshInstances.length; i < len; i++) {
-                        meshInstances[i].material = newValue;
-                    }
-                }
-            }
-        },
+        //         var model = data.model;
+        //         if (model && data.type !== 'asset') {
+        //             var meshInstances = model.meshInstances;
+        //             for (var i = 0, len = meshInstances.length; i < len; i++) {
+        //                 meshInstances[i].material = newValue;
+        //             }
+        //         }
+        //     }
+        // },
 
         onSetMapping: function (name, oldValue, newValue) {
             var data = this.data;
@@ -713,18 +745,18 @@ Object.assign(pc, function () {
             }
         },
 
-        onSetReceiveShadows: function (name, oldValue, newValue) {
-            if (newValue !== undefined) {
-                var data = this.data;
-                var model = data.model;
-                if (model) {
-                    var meshInstances = model.meshInstances;
-                    for (var i = 0, len = meshInstances.length; i < len; i++) {
-                        meshInstances[i].receiveShadow = newValue;
-                    }
-                }
-            }
-        },
+        // onSetReceiveShadows: function (name, oldValue, newValue) {
+        //     if (newValue !== undefined) {
+        //         var data = this.data;
+        //         var model = data.model;
+        //         if (model) {
+        //             var meshInstances = model.meshInstances;
+        //             for (var i = 0, len = meshInstances.length; i < len; i++) {
+        //                 meshInstances[i].receiveShadow = newValue;
+        //             }
+        //         }
+        //     }
+        // },
 
         onEnable: function () {
             var app = this.system.app;
@@ -850,6 +882,79 @@ Object.assign(pc, function () {
                     instances[i].visible = true;
                 }
             }
+        },
+
+        // NEW
+
+        _bindMaterialAsset: function (asset) {
+            if (!this.entity.enabled) return;
+
+            asset.on('load', this._onMaterialAssetLoad, this);
+            asset.on('unload', this._onMaterialAssetUnload, this);
+            asset.on('remove', this._onMaterialAssetRemove, this);
+
+            if (asset.resource) {
+                this._onMaterialAssetLoad(asset);
+            } else {
+                this._system.app.assets.load(asset);
+            }
+        },
+
+        _unbindMaterialAsset: function (asset) {
+            asset.off('load', this._onMaterialAssetLoad, this);
+            asset.off('unload', this._onMaterialAssetUnload, this);
+            asset.off('remove', this._onMaterialAssetRemove, this);
+        },
+
+        _onMaterialAssetAdd: function (asset) {
+            this._system.app.assets.off('add:' + asset.id, this._onMaterialAssetAdd, this);
+            if (this._materialAsset === asset.id) {
+                this._bindMaterialAsset(asset);
+            }
+        },
+
+        _onMaterialAssetLoad: function (asset) {
+            this.material = asset.resource;
+        },
+
+        _onMaterialAssetUnload: function (asset) {
+            this.material = pc.ModelHandler.DEFAULT_MATERIAL;
+        },
+
+        _onMaterialAssetRemove: function (asset) {
+            this._onMaterialAssetUnload(asset);
+        },
+
+        _bindModelAsset: function (asset) {
+            if (!this._entity.enabled) return;
+
+            asset.on('load', this._onModelAssetLoad, this);
+            asset.on('unload', this._onModelAssetUnload, this);
+            asset.on('change', this._onModelAssetChange, this);
+            asset.on('remove', this._onModelAssetRemove, this);
+
+            if (asset.resource) {
+                this._onModelAssetLoad(asset);
+            } else {
+                this.app.assets.load(asset);
+            }
+        },
+
+        _unbindModelAsset: function (asset) {
+            asset.off('load', this._onModelAssetLoad, this);
+            asset.off('unload', this._onModelAssetUnload, this);
+            asset.off('change', this._onModelAssetChange, this);
+            asset.off('remove', this._onModelAssetRemove, this);
+        },
+
+        _onModelAssetLoad: function (asset) {
+            this.model = asset.resource.clone();
+            this._clonedModel = true;
+        },
+
+        _onModelAssetUnload: function (asset) {
+            this.model = null;
+            this._clonedModel = false;
         }
 
     });
@@ -866,6 +971,487 @@ Object.assign(pc, function () {
                 return;
 
             this.model.meshInstances = value;
+        }
+    });
+
+    Object.defineProperty(ModelComponent.prototype, 'type', {
+        get: function () {
+            return this._type;
+        },
+
+        set: function (value) {
+            if (newValue) {
+                var mesh = null;
+
+                this._area = null;
+
+                if (newValue === 'asset') {
+                    if (this._asset !== null) {
+                        this._setModelAsset(this._asset);
+                    } else {
+                        this.model = null;
+                    }
+                } else {
+                    var system = this.system;
+                    var gd = system.app.graphicsDevice;
+
+                    switch (newValue) {
+                        case 'box':
+                            if (!system.box) {
+                                system.box = pc.createBox(gd, {
+                                    halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
+                                });
+                            }
+                            mesh = system.box;
+                            this._area = { x: 2, y: 2, z: 2, uv: (2.0 / 3) };
+                            break;
+                        case 'capsule':
+                            if (!system.capsule) {
+                                system.capsule = pc.createCapsule(gd, {
+                                    radius: 0.5,
+                                    height: 2
+                                });
+                            }
+                            mesh = system.capsule;
+                            this._area = { x: (Math.PI * 2), y: Math.PI, z: (Math.PI * 2), uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
+                            break;
+                        case 'cone':
+                            if (!system.cone) {
+                                system.cone = pc.createCone(gd, {
+                                    baseRadius: 0.5,
+                                    peakRadius: 0,
+                                    height: 1
+                                });
+                            }
+                            mesh = system.cone;
+                            this._area = { x: 2.54, y: 2.54, z: 2.54, uv: (1.0 / 3 + (1.0 / 3) / 3) };
+                            break;
+                        case 'cylinder':
+                            if (!system.cylinder) {
+                                system.cylinder = pc.createCylinder(gd, {
+                                    radius: 0.5,
+                                    height: 1
+                                });
+                            }
+                            mesh = system.cylinder;
+                            this._area = { x: Math.PI, y: (0.79 * 2), z: Math.PI, uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
+                            break;
+                        case 'plane':
+                            if (!system.plane) {
+                                system.plane = pc.createPlane(gd, {
+                                    halfExtents: new pc.Vec2(0.5, 0.5),
+                                    widthSegments: 1,
+                                    lengthSegments: 1
+                                });
+                            }
+                            mesh = system.plane;
+                            this._area = { x: 0, y: 1, z: 0, uv: 1 };
+                            break;
+                        case 'sphere':
+                            if (!system.sphere) {
+                                system.sphere = pc.createSphere(gd, {
+                                    radius: 0.5
+                                });
+                            }
+                            mesh = system.sphere;
+                            this._area = { x: Math.PI, y: Math.PI, z: Math.PI, uv: 1 };
+                            break;
+                        default:
+                            throw new Error("Invalid model type: " + newValue);
+                    }
+
+                    var node = new pc.GraphNode();
+
+                    var model = new pc.Model();
+                    model.graph = node;
+
+                    model.meshInstances = [new pc.MeshInstance(node, mesh, this._material)];
+
+                    if (system._inTools)
+                        model.generateWireframe();
+
+                    this._model = model;
+                    this._asset = null;
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(ModelComponent.prototype, 'asset', {
+        get: function () {
+            return this._asset;
+        },
+
+        set: function (value) {
+            var assets = this._system.app.assets;
+            var _id = value;
+
+            if (value instanceof pc.Asset) {
+                _id = value.id;
+            }
+
+            if (this._asset !== _id) {
+                if (this._asset) {
+                    // remove previous asset
+                    assets.off('add:' + this._asset, this._onModelAssetAdded, this);
+                    var _prev = assets.get(this._asset);
+                    if (_prev) {
+                        this._unbindModelAsset(_prev);
+                    }
+                }
+
+                this._asset = _id;
+
+                if (this._asset) {
+                    var asset = assets.get(this._asset);
+                    if (!asset) {
+                        this.model = null;
+                        assets.on('add:' + this._asset, this._onModelAssetAdded, this);
+                    } else {
+                        this._bindModelAsset(asset);
+                    }
+                } else {
+                    this.model = null;
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(ModelComponent.prototype, 'model', {
+        get: function () {
+            return this._model;
+        },
+
+        set: function (value) {
+            if (this._model === value) {
+                return;
+            }
+
+            if (this._model) {
+                this.removeModelFromLayers(this._model);
+                this.entity.removeChild(this._model.getGraph());
+                delete this._model._entity;
+
+                if (this._clonedModel) {
+                    this._model.destroy();
+                    this._clonedModel = false;
+                }
+            }
+
+            this._model = value;
+
+            if (this._model) {
+                var meshInstances = this._model.meshInstances;
+
+                for (var i = 0; i < meshInstances.length; i++) {
+                    meshInstances[i].castShadow = this._castShadows;
+                    meshInstances[i].receiveShadow = this._receiveShadows;
+                }
+
+                this.lightmapped = this._lightmapped; // update meshInstances
+                this.isStatic = this._isStatic;
+
+                this.entity.addChild(this._model.graph);
+
+                if (this.enabled && this.entity.enabled) {
+                    this.addModelToLayers();
+                }
+
+                // Store the entity that owns this model
+                this._model._entity = this.entity;
+
+                // Update any animation component
+                if (this.entity.animation)
+                    this.entity.animation.setModel(this._model);
+
+                // trigger event handler to load mapping
+                // for new model
+                if (this.type === 'asset') {
+                    this.mapping = this._mapping;
+                } else {
+                    this._unsetMaterialEvents();
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(ModelComponent.prototype, "lightmapped", {
+        get: function () {
+            return this._lightmapped;
+        },
+        set: function (value) {
+            if (value === this._lightmapped) return;
+
+            var i, m, mask;
+
+            this._lightmapped = value;
+
+            if (this._model) {
+                var rcv = this._model.meshInstances;
+                if (value) {
+                    for (i = 0; i < rcv.length; i++) {
+                        m = rcv[i];
+                        mask = m.mask;
+                        m.mask = (mask | pc.MASK_BAKED) & ~(pc.MASK_DYNAMIC | pc.MASK_LIGHTMAP);
+                    }
+                } else {
+                    for (i = 0; i < rcv.length; i++) {
+                        m = rcv[i];
+                        m.deleteParameter("texture_lightMap");
+                        m.deleteParameter("texture_dirLightMap");
+                        m._shaderDefs &= ~pc.SHADERDEF_LM;
+                        mask = m.mask;
+                        m.mask = (mask | pc.MASK_DYNAMIC) & ~(pc.MASK_BAKED | pc.MASK_LIGHTMAP);
+                    }
+                }
+            }
+        }
+    });
+
+
+    Object.defineProperty(ModelComponent.prototype, "castShadows", {
+        get: function () {
+            return this._castShadows;
+        },
+
+        set: function (value) {
+            if (this._castShadows === value) return;
+
+            var layer;
+            var i;
+            var model = this._model;
+
+            if (model) {
+                var layers = this.layers;
+                var scene = this.system.app.scene;
+                if (this._castShadows && !value) {
+                    for (i = 0; i < layers.length; i++) {
+                        layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                        if (!layer) continue;
+                        layer.removeShadowCasters(model.meshInstances);
+                    }
+                }
+
+                var meshInstances = model.meshInstances;
+                for (i = 0; i < meshInstances.length; i++) {
+                    meshInstances[i].castShadow = value;
+                }
+
+                if (!this._castShadows && value) {
+                    for (i = 0; i < layers.length; i++) {
+                        layer = scene.layers.getLayerById(layers[i]);
+                        if (!layer) continue;
+                        layer.addShadowCasters(model.meshInstances);
+                    }
+                }
+            }
+
+            this._castShadows = value;
+        }
+    });
+
+    Object.defineProperty(Model.prototype, 'receiveShadows', {
+        get: function () {
+            return this._receiveShadows;
+        },
+
+        set: function (value) {
+            if (this._receiveShadows === value) return;
+
+            if (this._model) {
+                var meshInstances = this._model.meshInstances;
+                for (var i = 0, len = meshInstances.length; i < len; i++) {
+                    meshInstances[i].receiveShadow = value;
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(ModelComponent.prototype, "castShadowsLightmap", {
+        get: function () {
+            return this._castShadowsLightmap;
+        },
+
+        set: function (value) {
+            this._castShadowsLightmap = value;
+        }
+    });
+
+    Object.defineProperty(ModelComponent.prototype, "lightmapSizeMultiplier", {
+        get: function () {
+            return this._lightmapSizeMultiplier;
+        },
+
+        set: function (value) {
+            this._lightmapSizeMultiplier = value;
+        }
+    });
+
+
+    Object.defineProperty(ModelComponent.prototype, "isStatic", {
+        get: function () {
+            return this._isStatic;
+        },
+
+        set: function (value) {
+            if (this._isStatic === value) return;
+
+            var i, m;
+            if (this._model) {
+                var rcv = this._model.meshInstances;
+                for (i = 0; i < rcv.length; i++) {
+                    m = rcv[i];
+                    m.isStatic = value;
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(ModelComponent.prototype, "layers", {
+        get: function () {
+            return this._layers;
+        },
+
+        set: function (value) {
+            if (!this.meshInstances) return;
+
+            var i, layer;
+            var layers = this.system.app.scene.layers;
+
+            // remove all meshinstances from old layers
+            for (i = 0; i < this._layers.length; i++) {
+                layer = layers.getLayerById(this._layers[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances(this.meshInstances);
+            }
+
+            if (!this.enabled || !this.entity.enabled) return;
+
+            this._layers = value;
+
+            // add all mesh instances to new layers
+            for (i = 0; i < this._layers.length; i++) {
+                layer = layers.getLayerById(this._layers[i]);
+                if (!layer) continue;
+                layer.addMeshInstances(this.meshInstances);
+            }
+        }
+    });
+
+    Object.defineProperty(ModelComponent.prototype, "batchGroupId", {
+        get: function () {
+            return this._batchGroupId;
+        },
+
+        set: function (value) {
+            if (this._batchGroupId === value) return;
+
+            var batcher = this.system.app.batcher;
+            if (this._batchGroupId >= 0) batcher.markGroupDirty(this._batchGroupId);
+            if (value >= 0) batcher.markGroupDirty(value);
+
+            if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
+                // re-add model to scene, in case it was removed by batching
+                this.addModelToLayers();
+            }
+        }
+    });
+
+    Object.defineProperty(ModelComponent.prototype, "materialAsset", {
+        get: function () {
+            return this._materialAsset;
+        },
+
+        set: function (value) {
+            var _id = value;
+            if (value instanceof pc.Asset) {
+                _id = value.id;
+            }
+
+            var assets = this.system.app.assets;
+
+            if (_id !== this._materialAsset) {
+                if (this._materialAsset) {
+                    assets.off('add:' + this._materialAsset, this._onMaterialAdded, this);
+                    var _prev = assets.get(this._materialAsset);
+                    if (_prev) {
+                        this._unbindMaterialAsset(_prev);
+                    }
+                }
+
+                this._materialAsset = _id;
+
+                if (this._materialAsset) {
+                    var asset = assets.get(this._materialAsset);
+                    if (!asset) {
+                        this.material = pc.MaterialHandler.DEFAULT_MATERIAL;
+                        assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
+                    } else {
+                        this._bindMaterialAsset(asset);
+                    }
+                } else {
+                    this.material = pc.MaterialHandler.DEFAULT_MATERIAL;
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(ModelComponent.prototype, "material", {
+        get: function () {
+            return this._material;
+        },
+
+        set: function (value) {
+            if (this._material !== value) {
+                this._material = value;
+
+                var model = this._model;
+                if (model && this._type !== 'asset') {
+                    var meshInstances = model.meshInstances;
+                    for (var i = 0, len = meshInstances.length; i < len; i++) {
+                        meshInstances[i].material = value;
+                    }
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(ModelComponent.prototype, "mapping", {
+        get: function () {
+            return this._mapping;
+        },
+
+        set: function (value) {
+            if (this._type !== 'asset' || !this._model)
+                return;
+
+            // unsubscribe from old events
+            this._unsetMaterialEvents();
+
+            // can't have a null mapping
+            if (!value)
+                value = {};
+
+            var meshInstances = this._model.meshInstances;
+            var modelAsset = this.asset ? this.system.app.assets.get(this.asset) : null;
+            var assetMapping = modelAsset ? modelAsset.data.mapping : null;
+
+            for (var i = 0, len = meshInstances.length; i < len; i++) {
+                if (newValue[i] !== undefined) {
+                    if (newValue[i]) {
+                        this._loadAndSetMeshInstanceMaterial(newValue[i], meshInstances[i], i);
+                    } else {
+                        meshInstances[i].material = pc.ModelHandler.DEFAULT_MATERIAL;
+                    }
+                } else if (assetMapping) {
+                    if (assetMapping[i] && (assetMapping[i].material || assetMapping[i].path)) {
+                        var idOrPath = assetMapping[i].material || assetMapping[i].path;
+                        this._loadAndSetMeshInstanceMaterial(idOrPath, meshInstances[i], i);
+                    } else {
+                        meshInstances[i].material = pc.ModelHandler.DEFAULT_MATERIAL;
+                    }
+                }
+            }
         }
     });
 

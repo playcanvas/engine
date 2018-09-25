@@ -253,7 +253,7 @@ describe('pc.ImageElement', function () {
         expect(assets.texture.hasEvent('remove')).to.be.false;
     });
 
-    it.only('Sprites assets unbound on destroy', function () {
+    it('Sprites assets unbound on destroy', function () {
         // expect(assets.sprite.hasEvent('change')).to.be.false;
         expect(assets.sprite.hasEvent('load')).to.be.false;
         expect(assets.sprite.hasEvent('remove')).to.be.false;
