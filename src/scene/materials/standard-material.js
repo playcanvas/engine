@@ -669,18 +669,6 @@ Object.assign(pc, function () {
             this.update();
         },
 
-        /**
-         * @private
-         * @name pc.StandardMaterial#init
-         * @description Update material data from a data block, as found on a material Asset.
-         * @param {Object} data JSON material data.
-         * Note, init() expects texture parameters to contain a {@link pc.Texture} not a resource id.
-         */
-        init: function (data) {
-            console.warn('StandardMaterial.init is deprecated. Use StandardMaterial.initialize instead');
-            this.initialize(data);
-        },
-
         _updateMapTransform: function (transform, tiling, offset) {
             transform = transform || new pc.Vec4();
             transform.set(tiling.x, tiling.y, offset.x, offset.y);
