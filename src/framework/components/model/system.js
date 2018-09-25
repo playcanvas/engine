@@ -1,20 +1,6 @@
 Object.assign(pc, function () {
     var _schema = [
-        'enabled',
-        'type',
-        'asset',
-        'materialAsset',
-        'castShadows',
-        'receiveShadows',
-        'castShadowsLightmap',
-        'lightmapped',
-        'lightmapSizeMultiplier',
-        'isStatic',
-        'material',
-        'model',
-        'layers',
-        'batchGroupId',
-        'mapping'
+        'enabled'
     ];
 
     /**

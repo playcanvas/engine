@@ -43,7 +43,7 @@ describe("pc.ModelComponent", function () {
 
         loadAssetList(assetlist, function () {
             assets.model = assetlist[0];
-            // assets.material = assetlist[1];
+            assets.material = assetlist[1];
             cb();
         });
     };
@@ -80,7 +80,86 @@ describe("pc.ModelComponent", function () {
         expect(e.model.model).to.not.be.null;
     });
 
-    it.only('', function () {
+    it('ModelAsset unbinds on destroy', function () {
+        var e = new pc.Entity();
+        app.root.addChild(e);
+        e.addComponent('model', {
+            asset: assets.model
+        });
 
+        expect(assets.model.hasEvent('load')).to.be.true;
+        expect(assets.model.hasEvent('unload')).to.be.true;
+        expect(assets.model.hasEvent('change')).to.be.true;
+        expect(assets.model.hasEvent('remove')).to.be.true;
+
+        e.destroy();
+
+        expect(assets.model.hasEvent('load')).to.be.false;
+        expect(assets.model.hasEvent('remove')).to.be.false;
+        expect(assets.model.hasEvent('change')).to.be.false;
+        expect(assets.model.hasEvent('unload')).to.be.false;
     });
+
+    it('ModelAsset unbinds on reset', function () {
+        var e = new pc.Entity();
+        app.root.addChild(e);
+        e.addComponent('model', {
+            asset: assets.model
+        });
+
+        expect(assets.model.hasEvent('load')).to.be.true;
+        expect(assets.model.hasEvent('unload')).to.be.true;
+        expect(assets.model.hasEvent('change')).to.be.true;
+        expect(assets.model.hasEvent('remove')).to.be.true;
+
+        e.model.asset = null;
+
+        expect(assets.model.hasEvent('load')).to.be.false;
+        expect(assets.model.hasEvent('remove')).to.be.false;
+        expect(assets.model.hasEvent('change')).to.be.false;
+        expect(assets.model.hasEvent('unload')).to.be.false;
+    });
+
+    it('Material Asset unbinds on destroy', function () {
+        var e = new pc.Entity();
+        app.root.addChild(e);
+        e.addComponent('model', {
+            type: "box",
+            materialAsset: assets.material
+        });
+
+        expect(assets.material.hasEvent('load')).to.be.true;
+        expect(assets.material.hasEvent('unload')).to.be.true;
+        expect(assets.material.hasEvent('change')).to.be.true;
+        expect(assets.material.hasEvent('remove')).to.be.true;
+
+        e.destroy();
+
+        expect(assets.material.hasEvent('load')).to.be.false;
+        expect(assets.material._callbacks.unload.length).to.equal(1);
+        expect(assets.material.hasEvent('change')).to.be.false;
+        expect(assets.material.hasEvent('remove')).to.be.false;
+    });
+
+    it('Material Asset unbinds on reset', function () {
+        var e = new pc.Entity();
+        app.root.addChild(e);
+        e.addComponent('model', {
+            type: "box",
+            materialAsset: assets.material
+        });
+
+        expect(assets.material.hasEvent('load')).to.be.true;
+        expect(assets.material.hasEvent('unload')).to.be.true;
+        expect(assets.material.hasEvent('change')).to.be.true;
+        expect(assets.material.hasEvent('remove')).to.be.true;
+
+        e.model.materialAsset = null
+
+        expect(assets.material.hasEvent('load')).to.be.false;
+        expect(assets.material.hasEvent('remove')).to.be.false;
+        expect(assets.material.hasEvent('change')).to.be.false;
+        expect(assets.material._callbacks.unload.length).to.equal(1);
+    });
+
 });
