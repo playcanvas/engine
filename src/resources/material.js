@@ -164,7 +164,7 @@ Object.assign(pc, function () {
 
         _onCubemapLoad: function (parameterName, materialAsset, cubemapAsset) {
             this._assignCubemap(parameterName, materialAsset, cubemapAsset.resources);
-            materialAsset.resource.initialize(materialAsset.data);
+            this._parser.initialize(materialAsset.resource, materialAsset.data);
         },
 
         _onCubemapAdd: function (parameterName, materialAsset, cubemapAsset) {
@@ -291,7 +291,7 @@ Object.assign(pc, function () {
             }
 
             // call to re-initialize material after all textures assigned
-            material.initialize(data);
+            this._parser.initialize(material, data);
         }
     });
 
