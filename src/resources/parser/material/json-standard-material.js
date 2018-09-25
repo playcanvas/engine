@@ -31,10 +31,10 @@ Object.assign(pc, function () {
         // usual flow is that data is validated in resource loader
         // but if not, validate here.
         if (!data.validated) {
-            if (!material._validator) {
-                material._validator = new pc.StandardMaterialValidator();
+            if (!this._validator) {
+                this._validator = new pc.StandardMaterialValidator();
             }
-            material._validator.validate(data);
+            this._validator.validate(data);
         }
 
         if (data.chunks) {
