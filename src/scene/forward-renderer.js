@@ -1334,6 +1334,11 @@ Object.assign(pc, function () {
                             this.setBaseConstants(device, material);
                             this.setSkinning(device, meshInstance, material);
 
+                            if (material.dirty) {
+                                material.updateUniforms();
+                                material.dirty = false;
+                            }
+
                             if (material.chunks) {
                                 // Uniforms I (shadow): material
                                 parameters = material.parameters;
@@ -1509,6 +1514,12 @@ Object.assign(pc, function () {
 
                     if (material !== prevMaterial) {
                         this._materialSwitches++;
+
+                        if (material.dirty) {
+                            material.updateUniforms();
+                            material.dirty = false;
+                        }
+
                         if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
                             if (!drawCall.isStatic) {
                                 variantKey = pass + "_" + objDefs + "_" + lightHash;

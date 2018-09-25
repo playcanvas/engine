@@ -29,8 +29,6 @@ Object.assign(pc, function () {
 
         this.colorMap = null;
         this.vertexColors = false;
-
-        this.update();
     };
     BasicMaterial.prototype = Object.create(pc.Material.prototype);
     BasicMaterial.prototype.constructor = BasicMaterial;
@@ -52,11 +50,10 @@ Object.assign(pc, function () {
             clone.colorMap = this.colorMap;
             clone.vertexColors = this.vertexColors;
 
-            clone.update();
             return clone;
         },
 
-        update: function () {
+        updateUniforms: function () {
             this.clearParameters();
 
             this.colorUniform[0] = this.color.r;

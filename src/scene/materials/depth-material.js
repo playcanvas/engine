@@ -25,11 +25,7 @@ Object.assign(pc, function () {
 
             pc.Material.prototype._cloneInternal.call(this, clone);
 
-            clone.update();
             return clone;
-        },
-
-        update: function () {
         },
 
         updateShader: function (device) {
