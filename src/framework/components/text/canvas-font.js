@@ -150,9 +150,9 @@ Object.assign(pc, function () {
         var str;
 
         if (alpha) {
-            str = pc.string.format('rgba({0}, {1}, {2}, {3})', Math.round(255 * color.r), Math.round(255 * color.g), Math.round(255 * color.b), color.a);
+            str = "rgba(" + Math.round(255 * color.r) + ", " + Math.round(255 * color.b) + ", " + Math.round(255 * color.g) + ", " + color.a + ")";
         } else {
-            str = pc.string.format('rgb({0}, {1}, {2})', Math.round(255 * color.r), Math.round(255 * color.g), Math.round(255 * color.b));
+            str = "rgb(" + Math.round(255 * color.r) + ", " + Math.round(255 * color.b) + ", " + Math.round(255 * color.g) + ")";
         }
 
         return str;
