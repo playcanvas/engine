@@ -250,7 +250,6 @@ Object.assign(pc, function () {
         this._validator = null;
 
         this.reset();
-        this.update();
     };
     StandardMaterial.prototype = Object.create(pc.Material.prototype);
     StandardMaterial.prototype.constructor = StandardMaterial;
