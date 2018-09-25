@@ -146,6 +146,18 @@ Object.assign(pc, function () {
         return ctx;
     };
 
+    CanvasFont.prototype._colorToRgbString = function (color, alpha) {
+        var str;
+
+        if (alpha) {
+            str = pc.string.format('rgba({0}, {1}, {2}, {3})', Math.round(255 * color.r), Math.round(255 * color.g), Math.round(255 * color.b), color.a);
+        } else {
+            str = pc.string.format('rgb({0}, {1}, {2})', Math.round(255 * color.r), Math.round(255 * color.g), Math.round(255 * color.b));
+        }
+
+        return str;
+    };
+
     CanvasFont.prototype._renderAtlas = function (charsArray) {
         this.chars = charsArray;
 
@@ -156,8 +168,7 @@ Object.assign(pc, function () {
         var h = canvas.height;
 
         // fill color
-        var color = this.color.toString(false);
-
+        var color = this._colorToRgbString(this.color, false);
 
         // generate a "transparent" color for the background
         // browsers seem to optimize away all color data if alpha=0
@@ -165,7 +176,7 @@ Object.assign(pc, function () {
         // might be able to
         var a = this.color.a;
         this.color.a = 1 / 255;
-        var transparent = this.color.toString(true);
+        var transparent = this._colorToRgbString(this.color, true);
         this.color.a = a;
 
         var TEXT_ALIGN = 'center';
