@@ -148,11 +148,14 @@ Object.assign(pc, function () {
 
     CanvasFont.prototype._colorToRgbString = function (color, alpha) {
         var str;
+        var r = Math.round(255 * color.r);
+        var g = Math.round(255 * color.g);
+        var b = Math.round(255 * color.b);
 
         if (alpha) {
-            str = "rgba(" + Math.round(255 * color.r) + ", " + Math.round(255 * color.b) + ", " + Math.round(255 * color.g) + ", " + color.a + ")";
+            str = "rgba(" + r + ", " + g + ", " + b + ", " + color.a + ")";
         } else {
-            str = "rgb(" + Math.round(255 * color.r) + ", " + Math.round(255 * color.b) + ", " + Math.round(255 * color.g) + ")";
+            str = "rgb(" + r + ", " + g + ", " + b + ")";
         }
 
         return str;
