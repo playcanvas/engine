@@ -613,62 +613,6 @@ Object.assign(pc, function () {
             return clone;
         },
 
-        /**
-         * @private
-         * @function
-         * @name  pc.StandardMaterial#initialize
-         * @description  Initialize material properties from the material data block e.g. loading from server
-         * @param  {Object} data The data block that is used to initialize
-         */
-        initialize: function (data) {
-            // usual flow is that data is validated in resource loader
-            // but if not, validate here.
-            if (!data.validated) {
-                if (!this._validator) {
-                    this._validator = new pc.StandardMaterialValidator();
-                }
-                this._validator.validate(data);
-            }
-
-            if (data.chunks) {
-                this.chunks.copy(data.chunks);
-            }
-
-            // initialize material values from the input data
-            for (var key in data) {
-                var type = pc.StandardMaterial.PARAMETER_TYPES[key];
-                var value = data[key];
-
-                if (type === 'vec2') {
-                    this[key] = new pc.Vec2(value[0], value[1]);
-                } else if (type === 'rgb') {
-                    this[key] = new pc.Color(value[0], value[1], value[2]);
-                } else if (type === 'texture') {
-                    if (value instanceof pc.Texture) {
-                        this[key] = value;
-                    } else {
-                        this[key] = null;
-                    }
-                } else if (type === 'cubemap') {
-                    if (value instanceof pc.Texture) {
-                        this[key] = value;
-                    } else {
-                        this[key] = null;
-                    }
-                } else if (type === 'boundingbox') {
-                    var center = new pc.Vec3(value.center[0], value.center[1], value.center[2]);
-                    var halfExtents = new pc.Vec3(value.halfExtents[0], value.halfExtents[1], value.halfExtents[2]);
-                    this[key] = new pc.BoundingBox(center, halfExtents);
-                } else {
-                    // number, boolean and enum types don't require type creation
-                    this[key] = data[key];
-                }
-
-            }
-
-            this.update();
-        },
-
         _updateMapTransform: function (transform, tiling, offset) {
             transform = transform || new pc.Vec4();
             transform.set(tiling.x, tiling.y, offset.x, offset.y);
