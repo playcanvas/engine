@@ -50,7 +50,7 @@ Object.assign(pc, function () {
         this._receiveShadows = true;
 
         this._materialAsset = null;
-        this._material = null;
+        this._material = system.defaultMaterial;
 
         this._castShadowsLightmap = true;
         this._lightmapped = false;
@@ -106,7 +106,8 @@ Object.assign(pc, function () {
         },
 
         remove: function () {
-            this._onModelAsset(null);
+            this.asset = null;
+            this.materialAsset = null;
         },
 
         onLayersChanged: function (oldComp, newComp) {
@@ -402,7 +403,7 @@ Object.assign(pc, function () {
             if (asset.resource) {
                 this._onModelAssetLoad(asset);
             } else {
-                this.app.assets.load(asset);
+                this.system.app.assets.load(asset);
             }
         },
 
@@ -432,7 +433,7 @@ Object.assign(pc, function () {
 
     });
 
-    Object.defineProperty(ModelComponent.prototype, 'meshInstances', {
+    Object.defineProperty(ModelComponent.prototype, "meshInstances", {
         get: function () {
             if (!this.model)
                 return null;
@@ -447,7 +448,7 @@ Object.assign(pc, function () {
         }
     });
 
-    Object.defineProperty(ModelComponent.prototype, 'type', {
+    Object.defineProperty(ModelComponent.prototype, "type", {
         get: function () {
             return this._type;
         },
@@ -459,9 +460,11 @@ Object.assign(pc, function () {
 
             this._area = null;
 
+            this._type = value;
+
             if (value === 'asset') {
                 if (this._asset !== null) {
-                    this._setModelAsset(this._asset);
+                    this._bindModelAsset(this._asset);
                 } else {
                     this.model = null;
                 }
@@ -544,7 +547,7 @@ Object.assign(pc, function () {
                 if (system._inTools)
                     model.generateWireframe();
 
-                this._model = model;
+                this.model = model;
                 this._asset = null;
             }
         }
@@ -731,6 +734,8 @@ Object.assign(pc, function () {
         set: function (value) {
             if (this._receiveShadows === value) return;
 
+            this._receiveShadows = value;
+
             if (this._model) {
                 var meshInstances = this._model.meshInstances;
                 for (var i = 0, len = meshInstances.length; i < len; i++) {
@@ -768,6 +773,8 @@ Object.assign(pc, function () {
 
         set: function (value) {
             if (this._isStatic === value) return;
+
+            this._isStatic = value;
 
             var i, m;
             if (this._model) {
@@ -818,6 +825,8 @@ Object.assign(pc, function () {
 
         set: function (value) {
             if (this._batchGroupId === value) return;
+
+            this._batchGroupId = value;
 
             var batcher = this.system.app.batcher;
             if (this._batchGroupId >= 0) batcher.markGroupDirty(this._batchGroupId);
@@ -895,7 +904,7 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
-            if (this._type !== 'asset' || !this._model)
+            if (this._type !== 'asset')
                 return;
 
             // unsubscribe from old events
@@ -904,6 +913,10 @@ Object.assign(pc, function () {
             // can't have a null mapping
             if (!value)
                 value = {};
+
+            this._mapping = value;
+
+            if (!this._model) return;
 
             var meshInstances = this._model.meshInstances;
             var modelAsset = this.asset ? this.system.app.assets.get(this.asset) : null;
