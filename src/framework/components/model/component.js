@@ -50,7 +50,7 @@ Object.assign(pc, function () {
         this._receiveShadows = true;
 
         this._materialAsset = null;
-        this._material = system.defaultMaterial;
+        this._material = pc.ModelHandler.DEFAULT_MATERIAL;
 
         this._castShadowsLightmap = true;
         this._lightmapped = false;
@@ -87,8 +87,8 @@ Object.assign(pc, function () {
             var layer;
             var layers = this.system.app.scene.layers;
 
-            for (var i = 0; i < this.layers.length; i++) {
-                layer = layers.getLayerById(this.layers[i]);
+            for (var i = 0; i < this._layers.length; i++) {
+                layer = layers.getLayerById(this._layers[i]);
                 if (!layer) continue;
                 layer.addMeshInstances(this.meshInstances);
             }
@@ -98,14 +98,14 @@ Object.assign(pc, function () {
             var layer;
             var layers = this.system.app.scene.layers;
 
-            for (var i = 0; i < this.layers.length; i++) {
-                layer = layers.getLayerById(this.layers[i]);
+            for (var i = 0; i < this._layers.length; i++) {
+                layer = layers.getLayerById(this._layers[i]);
                 if (!layer) continue;
                 layer.removeMeshInstances(model.meshInstances);
             }
         },
 
-        remove: function () {
+        onRemove: function () {
             this.asset = null;
             this.materialAsset = null;
         },
@@ -349,8 +349,6 @@ Object.assign(pc, function () {
         // NEW
 
         _bindMaterialAsset: function (asset) {
-            if (!this.entity.enabled) return;
-
             asset.on('load', this._onMaterialAssetLoad, this);
             asset.on('unload', this._onMaterialAssetUnload, this);
             asset.on('remove', this._onMaterialAssetRemove, this);
@@ -359,6 +357,8 @@ Object.assign(pc, function () {
             if (asset.resource) {
                 this._onMaterialAssetLoad(asset);
             } else {
+                // don't trigger an asset load unless the component is enabled
+                if (!this.enabled || !this.entity.enabled) return;
                 this.system.app.assets.load(asset);
             }
         },
@@ -393,8 +393,6 @@ Object.assign(pc, function () {
         },
 
         _bindModelAsset: function (asset) {
-            if (!this.entity.enabled) return;
-
             asset.on('load', this._onModelAssetLoad, this);
             asset.on('unload', this._onModelAssetUnload, this);
             asset.on('change', this._onModelAssetChange, this);
@@ -403,6 +401,8 @@ Object.assign(pc, function () {
             if (asset.resource) {
                 this._onModelAssetLoad(asset);
             } else {
+                // don't trigger an asset load unless the component is enabled
+                if (!this.enabled || !this.entity.enabled) return;
                 this.system.app.assets.load(asset);
             }
         },
@@ -414,6 +414,13 @@ Object.assign(pc, function () {
             asset.off('remove', this._onModelAssetRemove, this);
         },
 
+        _onModelAssetAdded: function (asset) {
+            this.system.app.assets.off('add:' + asset.id, this._onModelAssetAdd, this);
+            if (asset.id === this._asset) {
+                this._bindModelAsset(asset);
+            }
+        },
+
         _onModelAssetLoad: function (asset) {
             this.model = asset.resource.clone();
             this._clonedModel = true;
@@ -423,8 +430,10 @@ Object.assign(pc, function () {
             this.model = null;
         },
 
-        _onModelAssetChange: function (asset) {
-
+        _onModelAssetChange: function (asset, attr, _new, _old) {
+            if (attr === 'data') {
+                this.mapping = this._mapping;
+            }
         },
 
         _onModelAssetRemove: function (asset) {
@@ -553,7 +562,7 @@ Object.assign(pc, function () {
         }
     });
 
-    Object.defineProperty(ModelComponent.prototype, 'asset', {
+    Object.defineProperty(ModelComponent.prototype, "asset", {
         get: function () {
             return this._asset;
         },
@@ -622,10 +631,11 @@ Object.assign(pc, function () {
                 for (var i = 0; i < meshInstances.length; i++) {
                     meshInstances[i].castShadow = this._castShadows;
                     meshInstances[i].receiveShadow = this._receiveShadows;
+                    meshInstances[i].isStatic = this._isStatic;
                 }
 
                 this.lightmapped = this._lightmapped; // update meshInstances
-                this.isStatic = this._isStatic;
+                // this.isStatic = this._isStatic;
 
                 this.entity.addChild(this._model.graph);
 
@@ -805,9 +815,14 @@ Object.assign(pc, function () {
                 layer.removeMeshInstances(this.meshInstances);
             }
 
-            if (!this.enabled || !this.entity.enabled) return;
+            // set the layer list
+            this._layers.length = 0;
+            for (i = 0; i < value.length; i++) {
+                this._layers[0] = value[0];
+            }
 
-            this._layers = value;
+            // don't add into layers until we're enabled
+            if (!this.enabled || !this.entity.enabled) return;
 
             // add all mesh instances to new layers
             for (i = 0; i < this._layers.length; i++) {
@@ -866,13 +881,13 @@ Object.assign(pc, function () {
                 if (this._materialAsset) {
                     var asset = assets.get(this._materialAsset);
                     if (!asset) {
-                        this.material = pc.MaterialHandler.DEFAULT_MATERIAL;
+                        this.material = pc.ModelHandler.DEFAULT_MATERIAL;
                         assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
                     } else {
                         this._bindMaterialAsset(asset);
                     }
                 } else {
-                    this.material = pc.MaterialHandler.DEFAULT_MATERIAL;
+                    this.material = pc.ModelHandler.DEFAULT_MATERIAL;
                 }
             }
         }

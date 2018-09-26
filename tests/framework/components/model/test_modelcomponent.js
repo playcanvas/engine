@@ -63,7 +63,7 @@ describe("pc.ModelComponent", function () {
         expect(e.model.isStatic).to.equal(false);
         expect(e.model.model).to.equal(null);
         // expect(e.model.material).to.equal(app.systems.model.defaultMaterial);
-        expect(e.model.mapping).to.equal(null);
+        expect(e.model.mapping).to.be.empty;
         expect(e.model.layers).to.contain(pc.LAYERID_WORLD);
         expect(e.model.batchGroupId).to.equal(-1);
 
@@ -74,10 +74,64 @@ describe("pc.ModelComponent", function () {
         e.addComponent('model', {
             asset: assets.model
         });
+        app.root.addChild(e);
 
         expect(e.model.asset).to.not.be.null;
-        expect(e.model.asset).to.equal(assets.model);
+        expect(e.model.asset).to.equal(assets.model.id);
         expect(e.model.model).to.not.be.null;
+    });
+
+    it('Default cloned model component is identical', function () {
+        var e = new pc.Entity();
+        e.addComponent('model', {
+            asset: assets.model
+        });
+        app.root.addChild(e);
+
+        var c = e.clone();
+        app.root.addChild(c);
+
+        expect(c.model.asset).to.equal(assets.model.id);
+        expect(c.model.model).to.not.be.null;
+        expect(c.model.type).to.equal(e.model.type);
+        expect(c.model.castShadows).to.equal(e.model.castShadows);
+        expect(c.model.receiveShadows).to.equal(e.model.receiveShadows);
+        expect(c.model.castShadowsLightmap).to.equal(e.model.castShadowsLightmap);
+        expect(c.model.lightmapped).to.equal(e.model.lightmapped);
+        expect(c.model.lightmapSizeMultiplier).to.equal(e.model.lightmapSizeMultiplier);
+        expect(c.model.isStatic).to.equal(e.model.isStatic);
+        expect(c.model.batchGroupId).to.equal(e.model.batchGroupId);
+        expect(c.model.layers).to.deep.equal(e.model.layers);
+    });
+
+
+    it('Cloned model component with flags set has correct meshinstance flags', function () {
+        var e = new pc.Entity();
+        e.addComponent('model', {
+            asset: assets.model,
+            lightmapped: true,
+            receiveShadows: true,
+            castShadows: true,
+            isStatic: true
+        });
+        app.root.addChild(e);
+
+        var c = e.clone();
+        app.root.addChild(c);
+
+        var srcMi = e.model.meshInstances;
+        var dstMi = c.model.meshInstances;
+
+        for (var i = 0; i< srcMi.length; i++) {
+            expect(srcMi[i].mask).to.equal(dstMi[i].mask);
+            expect(srcMi[i].layer).to.equal(dstMi[i].layer);
+            expect(srcMi[i].receiveShadow).to.equal(dstMi[i].receiveShadow);
+            expect(srcMi[i].castShadow).to.equal(dstMi[i].castShadow);
+            expect(srcMi[i].isStatic).to.equal(dstMi[i].isStatic);
+            expect(srcMi[i].material.id).to.exist;
+            expect(srcMi[i].material.id).to.equal(dstMi[i].material.id);
+        }
+
     });
 
     it('ModelAsset unbinds on destroy', function () {

@@ -57,9 +57,6 @@ Object.assign(pc, function () {
                             'batchGroupId'
                         ];
 
-
-            // _data.material = this.defaultMaterial;
-
             if (_data.batchGroupId === null || _data.batchGroupId === undefined) {
                 _data.batchGroupId = -1;
             }
@@ -75,39 +72,9 @@ Object.assign(pc, function () {
                 }
             }
 
-            // copy data into new structure
-            // var data = {};
-            // for (var i = 0, len = properties.length; i < len; i++) {
-            //     var property = properties[i];
-            //     data[property] = _data[property];
-            // }
-
-            // data.material = this.defaultMaterial;
-
-            // if (data.batchGroupId === null || data.batchGroupId === undefined) {
-            //     data.batchGroupId = -1;
-            // }
-
-            // // duplicate layer list
-            // if (data.layers && pc.type(data.layers) === 'array') {
-            //     data.layers = data.layers.slice(0);
-            // }
-
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, _data, ['enabled']);
 
 
-        },
-
-        removeComponent: function (entity) {
-            var data = entity.model.data;
-            entity.model.asset = null;
-            if (data.type !== 'asset' && data.model) {
-                entity.model.removeModelFromLayers(entity.model.model);
-                entity.removeChild(data.model.getGraph());
-                data.model = null;
-            }
-
-            pc.ComponentSystem.prototype.removeComponent.call(this, entity);
         },
 
         cloneComponent: function (entity, clone) {
@@ -155,22 +122,23 @@ Object.assign(pc, function () {
             if (!data.materialAsset)
                 component.material = material;
 
-            if (entity.model.model) {
-                var meshInstances = entity.model.model.meshInstances;
-                var meshInstancesClone = component.model.meshInstances;
-                for (var i = 0; i < meshInstances.length; i++) {
-                    meshInstancesClone[i].mask = meshInstances[i].mask;
-                    meshInstancesClone[i].material = meshInstances[i].material;
-                    meshInstancesClone[i].layer = meshInstances[i].layer;
-                    meshInstancesClone[i].receiveShadow = meshInstances[i].receiveShadow;
-                }
-            }
+            // DWE - I don't think we need to do this
+            //       meshInstance properties should all be set in the component
+            //       when the pc.Model is assigned to the "model" property
+            // if (entity.model.model) {
+            //     var meshInstances = entity.model.model.meshInstances;
+            //     var meshInstancesClone = component.model.meshInstances;
+            //     for (var i = 0; i < meshInstances.length; i++) {
+            //         meshInstancesClone[i].mask = meshInstances[i].mask;
+            //         meshInstancesClone[i].material = meshInstances[i].material;
+            //         meshInstancesClone[i].layer = meshInstances[i].layer;
+            //         meshInstancesClone[i].receiveShadow = meshInstances[i].receiveShadow;
+            //     }
+            // }
         },
 
         onRemove: function (entity, component) {
-            // Unhook any material asset events
-            entity.model.materialAsset = null;
-            component.remove();
+            component.onRemove();
         }
     });
 
