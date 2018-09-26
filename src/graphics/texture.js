@@ -51,6 +51,8 @@ Object.assign(pc, function () {
      * @param {Boolean} options.flipY Specifies whether the texture should be flipped in the Y-direction. Only affects textures
      * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures or textures set from raw
      * pixel data. Defaults to true.
+     * @param {Boolean} options.premultiplyAlpha If true, the alpha channel of the texture (if present) is multiplied into the color
+     * channels. Defaults to false.
      * @param {Boolean} options.compareOnRead When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      * Defaults to false.
@@ -101,6 +103,7 @@ Object.assign(pc, function () {
         this._volume = false;
         this.fixCubemapSeams = false;
         this._flipY = true;
+        this._premultiplyAlpha = false;
 
         this._mipmaps = true;
 
@@ -147,6 +150,7 @@ Object.assign(pc, function () {
             this._compareFunc = (options._compareFunc !== undefined) ? options._compareFunc : this._compareFunc;
 
             this._flipY = (options.flipY !== undefined) ? options.flipY : this._flipY;
+            this._premultiplyAlpha = (options.premultiplyAlpha !== undefined) ? options.premultiplyAlpha : this._premultiplyAlpha;
 
             if (graphicsDevice.webgl2) {
                 this._depth = (options.depth !== undefined) ? options.depth : this._depth;
@@ -568,6 +572,18 @@ Object.assign(pc, function () {
         set: function (flipY) {
             if (this._flipY !== flipY) {
                 this._flipY = flipY;
+                this._needsUpload = true;
+            }
+        }
+    });
+
+    Object.defineProperty(Texture.prototype, 'premultiplyAlpha', {
+        get: function () {
+            return this._premultiplyAlpha;
+        },
+        set: function (premultiplyAlpha) {
+            if (this._premultiplyAlpha !== premultiplyAlpha) {
+                this._premultiplyAlpha = premultiplyAlpha;
                 this._needsUpload = true;
             }
         }

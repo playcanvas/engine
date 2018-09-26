@@ -250,7 +250,6 @@ Object.assign(pc, function () {
         this._validator = null;
 
         this.reset();
-        this.update();
     };
     StandardMaterial.prototype = Object.create(pc.Material.prototype);
     StandardMaterial.prototype.constructor = StandardMaterial;
@@ -565,8 +564,6 @@ Object.assign(pc, function () {
     Object.assign(StandardMaterial.prototype, {
 
         reset: function () {
-            this.blendType = pc.BLEND_NONE;
-
             var i;
             for (i = 0; i < _propsSerial.length; i++) {
                 var defVal = _propsSerialDefaultVal[i];
@@ -595,7 +592,6 @@ Object.assign(pc, function () {
          */
         clone: function () {
             var clone = new pc.StandardMaterial();
-
             pc.Material.prototype._cloneInternal.call(this, clone);
 
             var pname;
@@ -614,80 +610,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (!clone.shader)
-                clone.update();
-
             return clone;
-        },
-
-        /**
-         * @private
-         * @function
-         * @name  pc.StandardMaterial#initialize
-         * @description  Initialize material properties from the material data block e.g. loading from server
-         * @param  {Object} data The data block that is used to initialize
-         */
-        initialize: function (data) {
-            this.reset();
-
-            // usual flow is that data is validated in resource loader
-            // but if not, validate here.
-            if (!data.validated) {
-                if (!this._validator) {
-                    this._validator = new pc.StandardMaterialValidator();
-                }
-                this._validator.validate(data);
-            }
-
-            if (data.chunks) {
-                this.chunks.copy(data.chunks);
-            }
-
-            // initialize material values from the input data
-            for (var key in data) {
-                var type = pc.StandardMaterial.PARAMETER_TYPES[key];
-                var value = data[key];
-
-                if (type === 'vec2') {
-                    this[key] = new pc.Vec2(value[0], value[1]);
-                } else if (type === 'rgb') {
-                    this[key] = new pc.Color(value[0], value[1], value[2]);
-                } else if (type === 'texture') {
-                    if (value instanceof pc.Texture) {
-                        this[key] = value;
-                    } else {
-                        this[key] = null;
-                    }
-                } else if (type === 'cubemap') {
-                    if (value instanceof pc.Texture) {
-                        this[key] = value;
-                    } else {
-                        this[key] = null;
-                    }
-                } else if (type === 'boundingbox') {
-                    var center = new pc.Vec3(value.center[0], value.center[1], value.center[2]);
-                    var halfExtents = new pc.Vec3(value.halfExtents[0], value.halfExtents[1], value.halfExtents[2]);
-                    this[key] = new pc.BoundingBox(center, halfExtents);
-                } else {
-                    // number, boolean and enum types don't require type creation
-                    this[key] = data[key];
-                }
-
-            }
-
-            this.update();
-        },
-
-        /**
-         * @private
-         * @name pc.StandardMaterial#init
-         * @description Update material data from a data block, as found on a material Asset.
-         * @param {Object} data JSON material data.
-         * Note, init() expects texture parameters to contain a {@link pc.Texture} not a resource id.
-         */
-        init: function (data) {
-            console.warn('StandardMaterial.init is deprecated. Use StandardMaterial.initialize instead');
-            this.initialize(data);
         },
 
         _updateMapTransform: function (transform, tiling, offset) {
@@ -772,7 +695,7 @@ Object.assign(pc, function () {
             return null;
         },
 
-        update: function () {
+        updateUniforms: function () {
             var uniform;
             this._clearParameters();
 
