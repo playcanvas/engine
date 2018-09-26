@@ -635,7 +635,6 @@ Object.assign(pc, function () {
                 }
 
                 this.lightmapped = this._lightmapped; // update meshInstances
-                // this.isStatic = this._isStatic;
 
                 this.entity.addChild(this._model.graph);
 
