@@ -158,6 +158,7 @@ Object.assign(pc, function () {
      * Can be used in {@link pc.LayerComposition#getLayerById}.
      */
     var Layer = function (options) {
+        options = options || {};
 
         if (options.id !== undefined) {
             this.id = options.id;
