@@ -122,20 +122,6 @@ Object.assign(pc, function () {
 
             if (!data.materialAsset)
                 component.material = material;
-
-            // DWE - I don't think we need to do this
-            //       meshInstance properties should all be set in the component
-            //       when the pc.Model is assigned to the "model" property
-            // if (entity.model.model) {
-            //     var meshInstances = entity.model.model.meshInstances;
-            //     var meshInstancesClone = component.model.meshInstances;
-            //     for (var i = 0; i < meshInstances.length; i++) {
-            //         meshInstancesClone[i].mask = meshInstances[i].mask;
-            //         meshInstancesClone[i].material = meshInstances[i].material;
-            //         meshInstancesClone[i].layer = meshInstances[i].layer;
-            //         meshInstancesClone[i].receiveShadow = meshInstances[i].receiveShadow;
-            //     }
-            // }
         },
 
         onRemove: function (entity, component) {
