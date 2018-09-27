@@ -190,43 +190,31 @@ Object.assign(pc, function () {
             return pc.path.join(dirUrl, path);
         },
 
-        _loadAndSetMeshInstanceMaterial: function (idOrPath, meshInstance, index) {
-            var self = this;
+        _loadAndSetMeshInstanceMaterial: function (materialAsset, meshInstance, index) {
             var assets = this.system.app.assets;
 
-            // get asset by id or url
-            var asset = this._getAssetByIdOrPath(idOrPath);
-            if (!asset)
+            if (!materialAsset)
                 return;
 
-            var handleMaterial = function (asset) {
-                if (asset.resource) {
-                    meshInstance.material = asset.resource;
+            if (materialAsset) {
+                if (materialAsset.resource) {
+                    meshInstance.material = materialAsset.resource;
 
-                    self._setMaterialEvent(index, 'remove', asset.id, function () {
+                    this._setMaterialEvent(index, 'remove', materialAsset.id, function () {
                         meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
                     });
                 } else {
-                    self._setMaterialEvent(index, 'load', asset.id, function (asset) {
+                    this._setMaterialEvent(index, 'load', materialAsset.id, function (asset) {
                         meshInstance.material = asset.resource;
 
-                        self._setMaterialEvent(index, 'remove', asset.id, function () {
+                        this._setMaterialEvent(index, 'remove', materialAsset.id, function () {
                             meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
                         });
                     });
 
-                    if (self.enabled && self.entity.enabled)
-                        assets.load(asset);
+                    if (this.enabled && this.entity.enabled)
+                        assets.load(materialAsset);
                 }
-            };
-
-            if (asset) {
-                handleMaterial(asset);
-            } else {
-                meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
-
-                var isPath = isNaN(parseInt(idOrPath, 10));
-                self._setMaterialEvent(index, isPath ? 'add:url' : 'add', idOrPath, handleMaterial);
             }
         },
 
@@ -393,6 +381,8 @@ Object.assign(pc, function () {
         },
 
         _bindModelAsset: function (asset) {
+            this._unbindModelAsset(asset);
+
             asset.on('load', this._onModelAssetLoad, this);
             asset.on('unload', this._onModelAssetUnload, this);
             asset.on('change', this._onModelAssetChange, this);
@@ -403,6 +393,7 @@ Object.assign(pc, function () {
             } else {
                 // don't trigger an asset load unless the component is enabled
                 if (!this.enabled || !this.entity.enabled) return;
+
                 this.system.app.assets.load(asset);
             }
         },
@@ -444,16 +435,16 @@ Object.assign(pc, function () {
 
     Object.defineProperty(ModelComponent.prototype, "meshInstances", {
         get: function () {
-            if (!this.model)
+            if (!this._model)
                 return null;
 
-            return this.model.meshInstances;
+            return this._model.meshInstances;
         },
         set: function (value) {
-            if (!this.model)
+            if (!this._model)
                 return;
 
-            this.model.meshInstances = value;
+            this._model.meshInstances = value;
         }
     });
 
@@ -802,16 +793,16 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
-            if (!this.meshInstances) return;
-
             var i, layer;
             var layers = this.system.app.scene.layers;
 
-            // remove all meshinstances from old layers
-            for (i = 0; i < this._layers.length; i++) {
-                layer = layers.getLayerById(this._layers[i]);
-                if (!layer) continue;
-                layer.removeMeshInstances(this.meshInstances);
+            if (this.meshInstances) {
+                // remove all meshinstances from old layers
+                for (i = 0; i < this._layers.length; i++) {
+                    layer = layers.getLayerById(this._layers[i]);
+                    if (!layer) continue;
+                    layer.removeMeshInstances(this.meshInstances);
+                }
             }
 
             // set the layer list
@@ -821,7 +812,7 @@ Object.assign(pc, function () {
             }
 
             // don't add into layers until we're enabled
-            if (!this.enabled || !this.entity.enabled) return;
+            if (!this.enabled || !this.entity.enabled || !this.meshInstances) return;
 
             // add all mesh instances to new layers
             for (i = 0; i < this._layers.length; i++) {
@@ -935,18 +926,27 @@ Object.assign(pc, function () {
             var meshInstances = this._model.meshInstances;
             var modelAsset = this.asset ? this.system.app.assets.get(this.asset) : null;
             var assetMapping = modelAsset ? modelAsset.data.mapping : null;
+            var asset = null;
 
             for (var i = 0, len = meshInstances.length; i < len; i++) {
                 if (value[i] !== undefined) {
                     if (value[i]) {
-                        this._loadAndSetMeshInstanceMaterial(value[i], meshInstances[i], i);
+                        asset = this.system.app.assets.get(value[i]);
+                        this._loadAndSetMeshInstanceMaterial(asset, meshInstances[i], i);
                     } else {
                         meshInstances[i].material = pc.ModelHandler.DEFAULT_MATERIAL;
                     }
                 } else if (assetMapping) {
                     if (assetMapping[i] && (assetMapping[i].material || assetMapping[i].path)) {
-                        var idOrPath = assetMapping[i].material || assetMapping[i].path;
-                        this._loadAndSetMeshInstanceMaterial(idOrPath, meshInstances[i], i);
+                        if (assetMapping[i].material !== undefined) {
+                            asset = this.system.app.assets.get(assetMapping[i].material);
+                        } else if (assetMapping[i].path !== undefined) {
+                            var url = this._getMaterialAssetUrl(assetMapping[i].path);
+                            if (url) {
+                                asset = this.system.app.assets.getByUrl(url);
+                            }
+                        }
+                        this._loadAndSetMeshInstanceMaterial(asset, meshInstances[i], i);
                     } else {
                         meshInstances[i].material = pc.ModelHandler.DEFAULT_MATERIAL;
                     }

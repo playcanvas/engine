@@ -216,4 +216,53 @@ describe("pc.ModelComponent", function () {
         expect(assets.material._callbacks.unload.length).to.equal(1);
     });
 
+    it("Materials applied when loading asynchronously", function (done) {
+        var boxAsset = new pc.Asset("Box", "model", {
+            url: "base/tests/test-assets/box/box.json"
+        }, {
+            "mapping": [
+                {
+                    "path": "1/Box Material.json"
+                }
+            ],
+            "area": 0
+        });
+
+        var materialAsset = new pc.Asset("Box Material", "material",  {
+            url: "base/tests/test-assets/box/1/Box Material.json"
+        });
+
+        app.assets.add(boxAsset);
+        app.assets.add(materialAsset);
+
+        app.assets.load(boxAsset);
+
+        boxAsset.on("load", function () {
+            var e = new pc.Entity();
+            e.addComponent('model', {
+                asset: boxAsset
+            });
+            app.root.addChild(e);
+
+            expect(app.assets.hasEvent('load:'+materialAsset.id)).to.be.true;
+
+            done();
+        });
+    });
+
+    it("Layers are initialized before model is set", function () {
+        var e = new pc.Entity();
+        e.addComponent("model", {
+            layers: [pc.LAYERID_UI]
+        });
+
+        expect(e.model.model).to.be.null;
+        expect(e.model.layers[0]).to.equal(pc.LAYERID_UI);
+
+        e.model.asset = assets.model;
+
+        expect(e.model.layers[0]).to.equal(pc.LAYERID_UI);
+        expect(e.model.model).to.not.be.null;
+
+    });
 });
