@@ -42,20 +42,21 @@ Object.assign(pc, function () {
     Object.assign(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
             // order matters here
-            properties = [  'material',
-                            'materialAsset',
-                            'asset',
-                            'castShadows',
-                            'receiveShadows',
-                            'castShadowsLightmap',
-                            'lightmapped',
-                            'lightmapSizeMultiplier',
-                            'type',
-                            'mapping',
-                            'layers',
-                            'isStatic',
-                            'batchGroupId'
-                        ];
+            properties = [
+                'material',
+                'materialAsset',
+                'asset',
+                'castShadows',
+                'receiveShadows',
+                'castShadowsLightmap',
+                'lightmapped',
+                'lightmapSizeMultiplier',
+                'type',
+                'mapping',
+                'layers',
+                'isStatic',
+                'batchGroupId'
+            ];
 
             if (_data.batchGroupId === null || _data.batchGroupId === undefined) {
                 _data.batchGroupId = -1;
