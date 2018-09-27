@@ -897,7 +897,7 @@ Object.assign(pc, function () {
                     animTexLoop: this.emitter.animLoop,
                     pack8: this.emitter.pack8
                 });
-                this.setShader(shader);
+                this.shader = shader;
             };
             this.material.updateShader();
         },
