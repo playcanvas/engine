@@ -253,7 +253,7 @@ describe('pc.ImageElement', function () {
         expect(assets.texture.hasEvent('remove')).to.be.false;
     });
 
-    it.only('Sprites assets unbound on destroy', function () {
+    it('Sprites assets unbound on destroy', function () {
         // expect(assets.sprite.hasEvent('change')).to.be.false;
         expect(assets.sprite.hasEvent('load')).to.be.false;
         expect(assets.sprite.hasEvent('remove')).to.be.false;
@@ -836,4 +836,44 @@ describe('pc.ImageElement', function () {
 
     });
 
+    it.only('TextureAtlas asset events are unbound if sprite is changed while loading', function (done) {
+
+        app.assets.list().forEach(function (asset) {
+            asset.unload();
+        });
+
+
+        var spriteAsset = new pc.Asset('red-sprite', 'sprite', {
+            url: 'base/tests/test-assets/sprite/red-sprite.json'
+        });
+        var textureAtlasAsset = new pc.Asset('red-texture', 'texture', {
+            url: 'base/tests/test-assets/sprite/red-atlas.json'
+        });
+
+        app.assets.add(spriteAsset);
+        app.assets.add(textureAtlasAsset);
+
+        expect(app.assets.hasEvent('load:' + textureAtlasAsset.id)).to.be.false;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: spriteAsset.id
+        });
+        app.root.addChild(e);
+
+        spriteAsset.once("load", function () {
+            expect(app.assets.hasEvent('load:' + textureAtlasAsset.id)).to.be.true;
+
+            e.element.spriteAsset = null;
+
+            // check that no event listeners come from this image element
+            app.assets._callbacks['load:' + textureAtlasAsset.id].forEach(function (callback) {
+                expect(callback.scope).to.not.equal(e.element._image);
+            });
+
+            done();
+        })
+
+    })
 });
