@@ -376,28 +376,32 @@ Object.assign(pc, function () {
                 parts = header.split(";");
                 contentType = parts[0].trim();
             }
-            // Check the content type to see if we want to parse it
-            if (contentType === this.ContentType.JSON || url.split('?')[0].endsWith(".json")) {
-                // It's a JSON response
-                response = JSON.parse(xhr.responseText);
-            } else if (this._isBinaryContentType(contentType)) {
-                response = xhr.response;
-            } else {
-                if (xhr.responseType === Http.ResponseType.ARRAY_BUFFER) {
-                    logWARNING(pc.string.format('responseType: {0} being served with Content-Type: {1}', Http.ResponseType.ARRAY_BUFFER, contentType));
+            try {
+                // Check the content type to see if we want to parse it
+                if (contentType === this.ContentType.JSON || url.split('?')[0].endsWith(".json")) {
+                    // It's a JSON response
+                    response = JSON.parse(xhr.responseText);
+                } else if (this._isBinaryContentType(contentType)) {
                     response = xhr.response;
                 } else {
-                    if (xhr.responseType === Http.ResponseType.DOCUMENT || contentType === this.ContentType.XML) {
-                        // It's an XML response
-                        response = xhr.responseXML;
+                    if (xhr.responseType === Http.ResponseType.ARRAY_BUFFER || xhr.responseType === Http.ResponseType.BLOB) {
+                        logWARNING(pc.string.format('responseType: {0} being served with Content-Type: {1}', xhr.responseType, contentType));
+                        response = xhr.response;
                     } else {
-                        // It's raw data
-                        response = xhr.responseText;
+                        if (xhr.responseType === Http.ResponseType.DOCUMENT || contentType === this.ContentType.XML) {
+                            // It's an XML response
+                            response = xhr.responseXML;
+                        } else {
+                            // It's raw data
+                            response = xhr.responseText;
+                        }
                     }
                 }
-            }
 
-            options.callback(null, response);
+                options.callback(null, response);
+            } catch (err) {
+                options.callback(err);
+            }
         },
 
         _onError: function (method, url, options, xhr) {
