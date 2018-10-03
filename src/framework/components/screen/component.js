@@ -27,12 +27,14 @@ Object.assign(pc, function () {
      * @property {Number} scaleBlend A value between 0 and 1 that is used when scaleMode is equal to {@link pc.SCALEMODE_BLEND}. Scales the ScreenComponent with width as a reference (when value is 0), the height as a reference (when value is 1) or anything in between.
      * @property {pc.Vec2} resolution The width and height of the ScreenComponent. When screenSpace is true the resolution will always be equal to {@link pc.GraphicsDevice#width} x {@link pc.GraphicsDevice#height}.
      * @property {pc.Vec2} referenceResolution The resolution that the ScreenComponent is designed for. This is only taken into account when screenSpace is true and scaleMode is {@link pc.SCALEMODE_BLEND}. If the actual resolution is different then the ScreenComponent will be scaled according to the scaleBlend value.
-     */
+     * @property {pc.Vec2} blendedResolution The final resolution of the screen. This is only taken into account when screenSpace is true and scaleMode is {@link pc.SCALEMODE_BLEND}.   
+	 */
     var ScreenComponent = function ScreenComponent(system, entity) {
         pc.Component.call(this, system, entity);
 
         this._resolution = new pc.Vec2(640, 320);
         this._referenceResolution = new pc.Vec2(640, 320);
+        this._blendedResolution = new pc.Vec2(640, 320);
         this._scaleMode = pc.SCALEMODE_NONE;
         this.scale = 1;
         this._scaleBlend = 0.5;
@@ -123,7 +125,10 @@ Object.assign(pc, function () {
             // the combined scale is 1 for an even blend
             var lx = Math.log2(resolution.x / referenceResolution.x);
             var ly = Math.log2(resolution.y / referenceResolution.y);
-            return Math.pow(2, (lx * (1 - this._scaleBlend) + ly * this._scaleBlend));
+            var scale = Math.pow(2, (lx * (1 - this._scaleBlend) + ly * this._scaleBlend));
+			// The output resolution is assigned here as _blendedResolution
+            this._blendedResolution.set(resolution.x / scale, resolution.y / scale);
+            return scale;
         },
 
         _onResize: function (width, height) {
@@ -187,6 +192,20 @@ Object.assign(pc, function () {
             return this._referenceResolution;
 
         }
+    });
+	
+    /**
+    * @readonly
+    * @description Queries the screen's blended resolution. Used for placing worldToScreen positions at the correct place in screen
+    */
+    Object.defineProperty(ScreenComponent.prototype, "blendedResolution", {
+	    get: function () {
+		    if (this._scaleMode === pc.SCALEMODE_NONE) {
+			    return this._resolution;
+		    }
+		    return this._blendedResolution;
+
+	    }
     });
 
     Object.defineProperty(ScreenComponent.prototype, "screenSpace", {
