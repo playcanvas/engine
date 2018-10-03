@@ -346,35 +346,34 @@ Object.assign(pc, function () {
      */
     Entity.prototype.clone = function () {
         var duplicatedIdsMap = {};
-        var c = this._cloneRecursively(duplicatedIdsMap);
-        duplicatedIdsMap[this.getGuid()] = c;
+        var clone = this._cloneRecursively(duplicatedIdsMap);
+        duplicatedIdsMap[this.getGuid()] = clone;
 
-        resolveDuplicatedEntityReferenceProperties(this, this, c, duplicatedIdsMap);
+        resolveDuplicatedEntityReferenceProperties(this, this, clone, duplicatedIdsMap);
 
-        return c;
+        return clone;
     };
 
     Entity.prototype._cloneRecursively = function (duplicatedIdsMap) {
-        var type;
-        var c = new pc.Entity(this._app);
-        pc.GraphNode.prototype._cloneInternal.call(this, c);
-
-        for (type in this.c) {
-            var component = this.c[type];
-            component.system.cloneComponent(this, c);
-        }
+        var clone = new pc.Entity(this._app);
+        pc.GraphNode.prototype._cloneInternal.call(this, clone);
 
         var i;
         for (i = 0; i < this._children.length; i++) {
             var oldChild = this._children[i];
             if (oldChild instanceof pc.Entity) {
                 var newChild = oldChild._cloneRecursively(duplicatedIdsMap);
-                c.addChild(newChild);
+                clone.addChild(newChild);
                 duplicatedIdsMap[oldChild.getGuid()] = newChild;
             }
         }
 
-        return c;
+        for (var type in this.c) {
+            var component = this.c[type];
+            component.system.cloneComponent(this, clone);
+        }
+
+        return clone;
     };
 
     // When an entity that has properties that contain references to other
