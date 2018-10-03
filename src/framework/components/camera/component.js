@@ -206,11 +206,19 @@ Object.assign(pc, function () {
          * @description Convert a point from 3D world space to 2D screen space.
          * @param {pc.Vec3} worldCoord The world space coordinate.
          * @param {pc.Vec3} [screenCoord] 3D vector to receive screen coordinate result.
+         * @param {pc.Vec2} screenResolution The resolution of the screen to convert the point to. If unspecified, the client resolution is assumed.
          * @returns {pc.Vec3} The screen space coordinate.
          */
-        worldToScreen: function (worldCoord, screenCoord) {
-            var device = this.system.app.graphicsDevice;
-            return this.data.camera.worldToScreen(worldCoord, device.clientRect.width, device.clientRect.height, screenCoord);
+        worldToScreen: function (worldCoord, screenCoord, screenResolution) {
+	        if (screenResolution === undefined) {
+		        var cw = this.system.app.graphicsDevice.clientRect.width;
+		        var ch = this.system.app.graphicsDevice.clientRect.height;
+            }
+            else {
+	            var cw = screenResolution.x;
+	            var ch = screenResolution.y;
+            }
+	        return this.data.camera.worldToScreen(worldCoord, cw, ch, screenCoord);
         },
 
         onSetAspectRatioMode: function (name, oldValue, newValue) {
