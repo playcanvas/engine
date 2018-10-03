@@ -876,7 +876,7 @@ describe('pc.ImageElement', function () {
         });
     });
 
-    it.only('Cloning image element with texture works', function () {
+    it('Cloning image element with texture works', function () {
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
@@ -889,7 +889,7 @@ describe('pc.ImageElement', function () {
         expect(copy.element.texture).to.equal(e.element.texture);
     });
 
-    it.only('Setting texture on image element clears texture asset', function () {
+    it('Setting texture on image element clears texture asset', function () {
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
@@ -904,7 +904,7 @@ describe('pc.ImageElement', function () {
         expect(e.element.texture).to.be.equal(texture);
     });
 
-    it.only('Setting texture on image element clears sprite asset', function () {
+    it('Setting texture on image element clears sprite asset', function () {
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
@@ -923,7 +923,7 @@ describe('pc.ImageElement', function () {
         expect(e.element.texture).to.be.equal(texture);
     });
 
-    it.only('Setting texture on image element then cloning works', function () {
+    it('Setting texture on image element then cloning works', function () {
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
@@ -943,7 +943,7 @@ describe('pc.ImageElement', function () {
         expect(copy.element.texture).to.equal(e.element.texture);
     });
 
-    it.only('Cloning image element with sprite works', function () {
+    it('Cloning image element with sprite works', function () {
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
@@ -956,7 +956,7 @@ describe('pc.ImageElement', function () {
         expect(copy.element.sprite).to.equal(e.element.sprite);
     });
 
-    it.only('Setting sprite on image element clears sprite asset', function () {
+    it('Setting sprite on image element clears sprite asset', function () {
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
@@ -973,7 +973,7 @@ describe('pc.ImageElement', function () {
         expect(e.element.sprite).to.be.equal(sprite);
     });
 
-    it.only('Setting sprite on image element clears texture asset', function () {
+    it('Setting sprite on image element clears texture asset', function () {
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
@@ -994,7 +994,7 @@ describe('pc.ImageElement', function () {
         expect(e.element.sprite).to.be.equal(sprite);
     });
 
-    it.only('Setting sprite on image element then cloning works', function () {
+    it('Setting sprite on image element then cloning works', function () {
         var e = new pc.Entity();
         e.addComponent('element', {
             type: 'image',
