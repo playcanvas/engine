@@ -353,7 +353,7 @@ Object.assign(pc, function () {
 
                 this._renderable.setMaterial(this._material);
                 this._renderable.setScreenSpace(screenSpace);
-                this._renderable.setLayer(screenSpace ? pc.scene.LAYER_HUD : pc.scene.LAYER_WORLD);
+                this._renderable.setLayer(screenSpace ? pc.LAYER_HUD : pc.LAYER_WORLD);
             }
         },
 

@@ -16,7 +16,7 @@ Object.assign(pc, (function () {
 
         size = Math.max(size, 8) * dpMult;
 
-        var tex = new pc.gfx.Texture(device, {
+        var tex = new pc.Texture(device, {
             rgbm: rgbmSource,
             format: format,
             width: size * 2,
@@ -62,7 +62,7 @@ Object.assign(pc, (function () {
         var constantTexSource = device.scope.resolve("source");
         var constantParams = device.scope.resolve("params");
 
-        var tex = new pc.gfx.Texture(device, {
+        var tex = new pc.Texture(device, {
             rgbm: sixCubemaps[0].rgbm,
             format: sixCubemaps[0].format,
             width: size,
