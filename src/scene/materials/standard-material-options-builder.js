@@ -246,7 +246,6 @@ Object.assign(pc, function () {
         return options;
     };
 
-
     StandardMaterialOptionsBuilder.prototype._collectLights = function (lType, lights, lightsFiltered, mask, staticLightList) {
         var light;
         var i;
