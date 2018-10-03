@@ -187,7 +187,7 @@ Object.assign(pc, function () {
 
         var ctx = this._getAndClearContext(canvas, transparent);
 
-        ctx.font = this.fontWeight + ' ' + this.fontSize.toString() + 'px "' + this.fontName + '"';
+        ctx.font = this.fontWeight + ' ' + this.fontSize.toString() + 'px ' + this.fontName;
         ctx.textAlign = TEXT_ALIGN;
         ctx.textBaseline = TEXT_BASELINE;
 
@@ -207,7 +207,7 @@ Object.assign(pc, function () {
             var code = pc.string.getCodePoint(symbols[i]);
 
             var fs = this._getCharScale(code) * this.fontSize;
-            ctx.font = this.fontWeight + ' ' + fs.toString() + 'px "' + this.fontName + '"';
+            ctx.font = this.fontWeight + ' ' + fs.toString() + 'px ' + this.fontName;
             ctx.textAlign = TEXT_ALIGN;
             ctx.textBaseline = TEXT_BASELINE;
 
