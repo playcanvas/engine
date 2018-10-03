@@ -846,7 +846,7 @@ Object.assign(pc, function () {
             if (!xform) return 0;
             if (!this._mapXForms[uv]) this._mapXForms[uv] = [];
 
-            var i, j, same;
+            var i, same;
             for (i = 0; i < this._mapXForms[uv].length; i++) {
                 same = true;
                 if (this._mapXForms[uv][i][0] != xform.x) {
@@ -886,8 +886,6 @@ Object.assign(pc, function () {
                 this._colorProcessed = true;
                 this._processColor();
             }
-
-            this._mapXForms = [];
 
             var useTexCubeLod = device.useTexCubeLod;
             var useDp = !device.extTextureLod; // no basic extension? likely slow device, force dp
@@ -952,6 +950,12 @@ Object.assign(pc, function () {
                     console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
                 }
             }
+
+            if (!this.shaderOptBuilder)
+                this.shaderOptBuilder = new pc.StandardMaterialOptionsBuilder();
+            var optBuild = this.shaderOptBuilder.update(device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+
+            // TODO: delete start
 
             var diffuseTint = ((this.diffuse.r !== 1 || this.diffuse.g !== 1 || this.diffuse.b !== 1) &&
                                 (this.diffuseTint || (!this.diffuseMap && !this.diffuseVertexColor))) ? 3 : 0;
@@ -1095,6 +1099,8 @@ Object.assign(pc, function () {
                 hasVcolor = (objDefs & pc.SHADERDEF_VCOLOR) !== 0;
             }
 
+            this._mapXForms = [];
+
             var isOpacity;
             for (var p in pc._matTex2D) {
                 isOpacity = p === "opacity";
@@ -1150,6 +1156,47 @@ Object.assign(pc, function () {
                     options.noShadow = false;
                 }
             }
+
+            // TODO: delete end
+
+            var deepEqual = function (val1, val2) {
+                if (val1 === val2) {
+                    return true;
+                } else if (typeof val1 === 'object' && typeof val2 === 'object') {
+                    if (Object.keys(val1).length != Object.keys(val2).length) {
+                        console.log("PROP #: ", Object.keys(val1).length, Object.keys(val2).length);
+                        console.log(Object.keys(val1).filter(function (elem1) {
+                            return !Object.keys(val2).find(function (elem2) {
+                                return elem1 === elem2;
+                            });
+                        }), Object.keys(val2).filter(function (elem1) {
+                            return !Object.keys(val1).find(function (elem2) {
+                                return elem1 === elem2;
+                            });
+                        }));
+                        return false;
+                    }
+                    var keys = Object.keys(val1);
+                    for (var k = 0; k < keys.length; k++) {
+                        if (!deepEqual(val1[keys[k]], val2[keys[k]])) {
+                            console.log("PROP ", keys[k], ": ", val1[keys[k]], val2[keys[k]]);
+                            return false;
+                        }
+                    }
+                    return true;
+                } else if (typeof val1 === 'string' && typeof val2 === 'string') {
+                    return val1 == val2;
+                }
+                console.log("PROP: ", val1, val2);
+                return false;
+            };
+
+            if (!deepEqual(optBuild, options)) {
+                console.log("NEW OPTIONS", optBuild);
+                console.log("OLD OPTIONS", options);
+            }
+
+            options = optBuild;
 
             if (this.onUpdateShader) {
                 options = this.onUpdateShader(options);
