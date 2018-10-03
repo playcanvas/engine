@@ -25,7 +25,7 @@ Object.assign(pc, function () {
         var i;
         if (node.model && node.model.model && node.model.enabled) {
             if (allNodes) allNodes.push(node);
-            if (node.model.data.lightmapped) {
+            if (node.model.lightmapped) {
                 if (nodes) {
                     var hasUv1 = true;
                     var meshInstances = node.model.model.meshInstances;
@@ -409,8 +409,8 @@ Object.assign(pc, function () {
             var meshes;
             for (node = 0; node < allNodes.length; node++) {
                 origCastShadows[node] = allNodes[node].model.castShadows;
-                allNodes[node].model.castShadows = allNodes[node].model.data.castShadowsLightmap;
-                if (allNodes[node].model.data.castShadowsLightmap) {
+                allNodes[node].model.castShadows = allNodes[node].model.castShadowsLightmap;
+                if (allNodes[node].model.castShadowsLightmap) {
                     meshes = allNodes[node].model.meshInstances;
                     for (i = 0; i < meshes.length; i++) {
                         meshes[i].visibleThisFrame = true;

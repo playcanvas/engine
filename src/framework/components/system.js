@@ -47,15 +47,6 @@ Object.assign(pc, function () {
     ComponentSystem.prototype = {
         /**
          * @private
-         * @name pc.ComponentSystem#store
-         * @description The store where all {@link pc.ComponentData} objects are kept
-         */
-        get store() {
-            return this.dataStore;
-        },
-
-        /**
-         * @private
          * @function
          * @name pc.ComponentSystem#addComponent
          * @description Create new {@link pc.Component} and {@link pc.ComponentData} instances and attach them to the entity
@@ -236,6 +227,17 @@ Object.assign(pc, function () {
         ComponentSystem.off('fixedUpdate');
         ComponentSystem.off('postUpdate');
     };
+
+    /**
+     * @private
+     * @name pc.ComponentSystem#store
+     * @description The store where all {@link pc.ComponentData} objects are kept
+     */
+    Object.defineProperty(ComponentSystem.prototype, 'store', {
+        get: function () {
+            return this.dataStore;
+        }
+    });
 
     return {
         ComponentSystem: ComponentSystem
