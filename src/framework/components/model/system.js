@@ -1,20 +1,6 @@
 Object.assign(pc, function () {
     var _schema = [
-        'enabled',
-        'type',
-        'asset',
-        'materialAsset',
-        'castShadows',
-        'receiveShadows',
-        'castShadowsLightmap',
-        'lightmapped',
-        'lightmapSizeMultiplier',
-        'isStatic',
-        'material',
-        'model',
-        'layers',
-        'batchGroupId',
-        'mapping'
+        'enabled'
     ];
 
     /**
@@ -56,39 +42,40 @@ Object.assign(pc, function () {
     Object.assign(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, _data, properties) {
             // order matters here
-            properties = ['enabled', 'material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'castShadowsLightmap', 'lightmapped', 'lightmapSizeMultiplier', 'type', 'mapping', 'layers', 'isStatic', 'batchGroupId'];
+            properties = [
+                'material',
+                'materialAsset',
+                'asset',
+                'castShadows',
+                'receiveShadows',
+                'castShadowsLightmap',
+                'lightmapped',
+                'lightmapSizeMultiplier',
+                'type',
+                'mapping',
+                'layers',
+                'isStatic',
+                'batchGroupId'
+            ];
 
-            // copy data into new structure
-            var data = {};
-            for (var i = 0, len = properties.length; i < len; i++) {
-                var property = properties[i];
-                data[property] = _data[property];
-            }
-
-            data.material = this.defaultMaterial;
-
-            if (data.batchGroupId === null || data.batchGroupId === undefined) {
-                data.batchGroupId = -1;
+            if (_data.batchGroupId === null || _data.batchGroupId === undefined) {
+                _data.batchGroupId = -1;
             }
 
             // duplicate layer list
-            if (data.layers && pc.type(data.layers) === 'array') {
-                data.layers = data.layers.slice(0);
+            if (_data.layers && _data.layers.length) {
+                _data.layers = _data.layers.slice(0);
             }
 
-            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
-        },
-
-        removeComponent: function (entity) {
-            var data = entity.model.data;
-            entity.model.asset = null;
-            if (data.type !== 'asset' && data.model) {
-                entity.model.removeModelFromLayers(entity.model.model);
-                entity.removeChild(data.model.getGraph());
-                data.model = null;
+            for (var i = 0; i < properties.length; i++) {
+                if (_data.hasOwnProperty(properties[i])) {
+                    component[properties[i]] = _data[properties[i]];
+                }
             }
 
-            pc.ComponentSystem.prototype.removeComponent.call(this, entity);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, _data, ['enabled']);
+
+
         },
 
         cloneComponent: function (entity, clone) {
@@ -135,23 +122,10 @@ Object.assign(pc, function () {
 
             if (!data.materialAsset)
                 component.material = material;
-
-            if (entity.model.model) {
-                var meshInstances = entity.model.model.meshInstances;
-                var meshInstancesClone = component.model.meshInstances;
-                for (var i = 0; i < meshInstances.length; i++) {
-                    meshInstancesClone[i].mask = meshInstances[i].mask;
-                    meshInstancesClone[i].material = meshInstances[i].material;
-                    meshInstancesClone[i].layer = meshInstances[i].layer;
-                    meshInstancesClone[i].receiveShadow = meshInstances[i].receiveShadow;
-                }
-            }
         },
 
         onRemove: function (entity, component) {
-            // Unhook any material asset events
-            entity.model.materialAsset = null;
-            component.remove();
+            component.onRemove();
         }
     });
 
