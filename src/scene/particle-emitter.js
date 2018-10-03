@@ -676,6 +676,7 @@ Object.assign(pc, function () {
             this.regenShader();
             this.resetMaterial();
 
+            var wasVisible = this.meshInstance ? this.meshInstance.visible : true;
             this.meshInstance = new pc.MeshInstance(this.node, mesh, this.material);
             this.meshInstance.pick = false;
             this.meshInstance.updateKey(); // shouldn't be here?
@@ -683,6 +684,7 @@ Object.assign(pc, function () {
             this.meshInstance._noDepthDrawGl1 = true;
             this.meshInstance.aabb = this.worldBounds;
             this.meshInstance._updateAabb = false;
+            this.meshInstance.visible = wasVisible;
 
             this._initializeTextures();
 
