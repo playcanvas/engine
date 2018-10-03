@@ -56,7 +56,7 @@ Object.assign(pc, (function () {
         if ((rgbFormat || isImg) && cpuSync) {
             // WebGL can't read non-RGBA pixels
             format = pc.PIXELFORMAT_R8_G8_B8_A8;
-            nextCubemap = new pc.gfx.Texture(device, {
+            nextCubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: rgbmSource,
                 format: format,
@@ -88,7 +88,7 @@ Object.assign(pc, (function () {
             for (i = 0; i < steps; i++) {
                 size = sourceCubemap.width * 0.5;
                 var sampleGloss = method === 0 ? 1 : Math.pow(2, Math.round(Math.log2(gloss[0]) + (steps - i) * 2));
-                nextCubemap = new pc.gfx.Texture(device, {
+                nextCubemap = new pc.Texture(device, {
                     cubemap: true,
                     rgbm: rgbmSource,
                     format: format,
@@ -120,7 +120,7 @@ Object.assign(pc, (function () {
 
         var sourceCubemapRgbm = null;
         if (!rgbmSource && options.filteredFixedRgbm) {
-            nextCubemap = new pc.gfx.Texture(device, {
+            nextCubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: true,
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
@@ -152,7 +152,7 @@ Object.assign(pc, (function () {
         for (i = 0; i < numMips; i++) {
             for (pass = startPass; pass < cmapsList.length; pass++) {
                 if (cmapsList[pass] != null) {
-                    cmapsList[pass][i] = new pc.gfx.Texture(device, {
+                    cmapsList[pass][i] = new pc.Texture(device, {
                         cubemap: true,
                         rgbm: pass < 2 ? rgbmSource : true,
                         format: pass < 2 ? format : pc.PIXELFORMAT_R8_G8_B8_A8,
@@ -212,7 +212,7 @@ Object.assign(pc, (function () {
                 options.filteredFixed[4],
                 options.filteredFixed[5]
             ];
-            cubemap = new pc.gfx.Texture(device, {
+            cubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: rgbmSource,
                 fixCubemapSeams: true,
@@ -240,7 +240,7 @@ Object.assign(pc, (function () {
                 options.filteredFixedRgbm[4],
                 options.filteredFixedRgbm[5]
             ];
-            cubemap = new pc.gfx.Texture(device, {
+            cubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: true,
                 fixCubemapSeams: true,
