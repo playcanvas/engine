@@ -836,7 +836,7 @@ describe('pc.ImageElement', function () {
 
     });
 
-    it.only('TextureAtlas asset events are unbound if sprite is changed while loading', function (done) {
+    it('TextureAtlas asset events are unbound if sprite is changed while loading', function (done) {
 
         app.assets.list().forEach(function (asset) {
             asset.unload();
@@ -873,7 +873,146 @@ describe('pc.ImageElement', function () {
             });
 
             done();
-        })
+        });
+    });
 
-    })
+    it('Cloning image element with texture works', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            textureAsset: assets.texture.id
+        });
+
+        var copy = e.clone();
+
+        expect(copy.element.textureAsset).to.equal(assets.texture.id);
+        expect(copy.element.texture).to.equal(e.element.texture);
+    });
+
+    it('Setting texture on image element clears texture asset', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            textureAsset: assets.texture.id
+        });
+
+        var texture = new pc.Texture();
+
+        e.element.texture = texture;
+
+        expect(e.element.textureAsset).to.be.null;
+        expect(e.element.texture).to.be.equal(texture);
+    });
+
+    it('Setting texture on image element clears sprite asset', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: assets.sprite.id
+        });
+
+        expect(e.element.spriteAsset).to.be.not.null;
+        // expect(e.element.sprite).to.be.not.null;
+
+        var texture = new pc.Texture();
+
+        e.element.texture = texture;
+
+        expect(e.element.spriteAsset).to.be.null;
+        expect(e.element.sprite).to.be.null;
+        expect(e.element.texture).to.be.equal(texture);
+    });
+
+    it('Setting texture on image element then cloning works', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            textureAsset: assets.texture.id
+        });
+
+        var texture = new pc.Texture();
+
+        e.element.texture = texture;
+
+        var copy = e.clone();
+
+        expect(e.element.textureAsset).to.be.null;
+        expect(e.element.texture).to.equal(texture);
+
+        expect(copy.element.textureAsset).to.be.null;
+        expect(copy.element.texture).to.equal(e.element.texture);
+    });
+
+    it('Cloning image element with sprite works', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: assets.sprite.id
+        });
+
+        var copy = e.clone();
+
+        expect(copy.element.spriteAsset).to.equal(assets.sprite.id);
+        expect(copy.element.sprite).to.equal(e.element.sprite);
+    });
+
+    it('Setting sprite on image element clears sprite asset', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: assets.sprite
+        });
+
+        var sprite = new pc.Sprite(app.graphicsDevice, {
+            frameKeys: []
+        });
+
+        e.element.sprite = sprite;
+
+        expect(e.element.spriteAsset).to.be.null;
+        expect(e.element.sprite).to.be.equal(sprite);
+    });
+
+    it('Setting sprite on image element clears texture asset', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            textureAsset: assets.texture
+        });
+
+        expect(e.element.textureAsset).to.be.not.null;
+        // expect(e.element.texture).to.be.not.null;
+
+        var sprite = new pc.Sprite(app.graphicsDevice, {
+            frameKeys: []
+        });
+
+        e.element.sprite = sprite;
+
+        expect(e.element.textureAsset).to.be.null;
+        expect(e.element.texture).to.be.null;
+        expect(e.element.sprite).to.be.equal(sprite);
+    });
+
+    it('Setting sprite on image element then cloning works', function () {
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: assets.sprite
+        });
+
+        var sprite = new pc.Sprite(app.graphicsDevice, {
+            frameKeys: []
+        });
+
+        e.element.sprite = sprite;
+
+        var copy = e.clone();
+
+        expect(e.element.spriteAsset).to.be.null;
+        expect(e.element.sprite).to.equal(e.element.sprite);
+
+        expect(copy.element.spriteAsset).to.be.null;
+        expect(copy.element.sprite).to.equal(e.element.sprite);
+    });
 });

@@ -1023,6 +1023,13 @@ Object.assign(pc, function () {
         set: function (value) {
             if (this._texture === value) return;
 
+            if (this._textureAsset) {
+                var textureAsset = this._system.app.assets.get(this._textureAsset);
+                if (textureAsset && textureAsset.resource !== value) {
+                    this.textureAsset = null;
+                }
+            }
+
             this._texture = value;
 
             if (value) {
@@ -1138,6 +1145,13 @@ Object.assign(pc, function () {
 
             if (this._sprite) {
                 this._unbindSprite(this._sprite);
+            }
+
+            if (this._spriteAsset) {
+                var spriteAsset = this._system.app.assets.get(this._spriteAsset);
+                if (spriteAsset && spriteAsset.resource !== value) {
+                    this.spriteAsset = null;
+                }
             }
 
             this._sprite = value;
