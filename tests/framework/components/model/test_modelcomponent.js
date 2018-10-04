@@ -134,6 +134,38 @@ describe("pc.ModelComponent", function () {
 
     });
 
+
+
+    it.only('Cloned model component with flags set directly on mesh instance is identical', function () {
+        var e = new pc.Entity();
+        e.addComponent('model', {
+            asset: assets.model
+        });
+        app.root.addChild(e);
+
+        e.model.model.meshInstances[0].receiveShadow = true;
+        e.model.model.meshInstances[0].castShadow = true;
+        e.model.model.meshInstances[0].mask = 16;
+        e.model.model.meshInstances[0].layer = 16;
+
+        // // TODO: these don't get copied,
+        // e.model.model.meshInstances[0].isStatic = true;
+        // e.model.model.meshInstances[0].screenSpace = true;
+
+        var c = e.clone();
+        app.root.addChild(c);
+
+        var srcMi = e.model.meshInstances;
+        var dstMi = c.model.meshInstances;
+
+        for (var i = 0; i< srcMi.length; i++) {
+            expect(srcMi[i].receiveShadow).to.equal(dstMi[i].receiveShadow);
+            expect(srcMi[i].castShadow).to.equal(dstMi[i].castShadow);
+            expect(srcMi[i].mask).to.equal(dstMi[i].mask);
+            expect(srcMi[i].layer).to.equal(dstMi[i].layer);
+        }
+    });
+
     it('ModelAsset unbinds on destroy', function () {
         var e = new pc.Entity();
         app.root.addChild(e);
