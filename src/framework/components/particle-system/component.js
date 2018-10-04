@@ -712,6 +712,7 @@ Object.assign(pc, function () {
             var data = this.data;
             if (data.model) {
                 this.entity.removeChild(data.model.getGraph());
+                data.model.destroy();
                 data.model = null;
             }
 

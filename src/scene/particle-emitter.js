@@ -562,7 +562,11 @@ Object.assign(pc, function () {
             gd.forceCpuParticles ||
             !gd.extTextureFloat; // no float texture extension
 
-            this.vertexBuffer = undefined; // force regen VB
+            // force new vertex buffer
+            if (this.vertexBuffer) {
+                this.vertexBuffer.destroy();
+                this.vertexBuffer = undefined;
+            }
 
             this.pack8 = (this.pack8 || !gd.textureFloatRenderable) && !this.useCpu;
 
@@ -1543,6 +1547,10 @@ Object.assign(pc, function () {
             this.shaderParticleUpdateRespawn = null;
             this.shaderParticleUpdateNoRespawn = null;
             this.shaderParticleUpdateOnStop = null;
+
+            if (this.vertexBuffer) {
+                this.vertexBuffer.destroy();
+            }
         }
     });
 
