@@ -122,6 +122,18 @@ Object.assign(pc, function () {
 
             if (!data.materialAsset)
                 component.material = material;
+
+            // TODO: we should copy all relevant meshinstance properties here
+            if (entity.model.model) {
+                var meshInstances = entity.model.model.meshInstances;
+                var meshInstancesClone = component.model.meshInstances;
+                for (var i = 0; i < meshInstances.length; i++) {
+                    meshInstancesClone[i].mask = meshInstances[i].mask;
+                    meshInstancesClone[i].material = meshInstances[i].material;
+                    meshInstancesClone[i].layer = meshInstances[i].layer;
+                    meshInstancesClone[i].receiveShadow = meshInstances[i].receiveShadow;
+                }
+            }
         },
 
         onRemove: function (entity, component) {
