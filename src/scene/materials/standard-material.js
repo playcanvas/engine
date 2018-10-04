@@ -249,6 +249,8 @@ Object.assign(pc, function () {
         this._assetReferences = {};
         this._validator = null;
 
+        this.shaderOptBuilder = new pc.StandardMaterialOptionsBuilder();
+
         this.reset();
     };
     StandardMaterial.prototype = Object.create(pc.Material.prototype);
@@ -886,8 +888,6 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (!this.shaderOptBuilder)
-                this.shaderOptBuilder = new pc.StandardMaterialOptionsBuilder();
             var options = this.shaderOptBuilder.update(device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
 
             if (this.onUpdateShader) {

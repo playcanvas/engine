@@ -1,5 +1,6 @@
 Object.assign(pc, function () {
     var StandardMaterialOptionsBuilder = function () {
+        this._mapXForms = null;
     };
 
     StandardMaterialOptionsBuilder.prototype.update = function (device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128) {
@@ -19,6 +20,7 @@ Object.assign(pc, function () {
             options.useInstancing = (objDefs & pc.SHADERDEF_INSTANCING) !== 0;
         }
 
+        // Minimal options for Depth and Shadow passes
         var minimalOptions = pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK;
 
         if (minimalOptions) {
