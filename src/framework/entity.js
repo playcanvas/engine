@@ -358,6 +358,11 @@ Object.assign(pc, function () {
         var clone = new pc.Entity(this._app);
         pc.GraphNode.prototype._cloneInternal.call(this, clone);
 
+        for (var type in this.c) {
+            var component = this.c[type];
+            component.system.cloneComponent(this, clone);
+        }
+
         var i;
         for (i = 0; i < this._children.length; i++) {
             var oldChild = this._children[i];
@@ -366,11 +371,6 @@ Object.assign(pc, function () {
                 clone.addChild(newChild);
                 duplicatedIdsMap[oldChild.getGuid()] = newChild;
             }
-        }
-
-        for (var type in this.c) {
-            var component = this.c[type];
-            component.system.cloneComponent(this, clone);
         }
 
         return clone;
