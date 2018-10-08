@@ -2881,6 +2881,8 @@ Object.assign(pc, function () {
             if (this.webgl2 && this.feedback) {
                 this.gl.deleteTransformFeedback(this.feedback);
             }
+
+            this.clearShaderCache();
         }
     });
 
