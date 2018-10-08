@@ -1813,7 +1813,7 @@ Object.assign(pc, function () {
             }
         },
 
-        setBuffers: function () {
+        setBuffers: function (numInstances) {
             var gl = this.gl;
             var attribute, element, vertexBuffer, vbOffset, bufferId, locationId;
             var attributes = this.shader.attributes;
@@ -1920,7 +1920,7 @@ Object.assign(pc, function () {
                 this.attributesInvalidated = true;
             }
 
-            this.setBuffers();
+            this.setBuffers(numInstances);
 
             // Commit the shader program variables
             var textureUnit = 0;
