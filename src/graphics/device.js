@@ -646,7 +646,7 @@ Object.assign(pc, function () {
                 this.extVertexArrayObject = getExtension("OES_vertex_array_object");
                 if (this.extVertexArrayObject) {
                     // Install the WebGL 2 VAO API for WebGL 1.0
-                    var ext = this.extVertexArrayObject;
+                    ext = this.extVertexArrayObject;
                     gl.createVertexArray = ext.createVertexArrayOES.bind(ext);
                     gl.deleteVertexArray = ext.deleteVertexArrayOES.bind(ext);
                     gl.isVertexArray = ext.isVertexArrayOES.bind(ext);

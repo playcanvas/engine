@@ -852,7 +852,7 @@ Object.assign(pc, function () {
             if (!xform) return 0;
             if (!this._mapXForms[uv]) this._mapXForms[uv] = [];
 
-            var i, j, same;
+            var i, same;
             for (i = 0; i < this._mapXForms[uv].length; i++) {
                 same = true;
                 if (this._mapXForms[uv][i][0] != xform.x) {
