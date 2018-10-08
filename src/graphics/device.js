@@ -1910,7 +1910,7 @@ Object.assign(pc, function () {
 
             var i, j, len; // Loop counting
             var sampler, samplerValue, texture, numTextures; // Samplers
-            var uniform, scopeId, uniformVersion, programVersion, locationId; // Uniforms
+            var uniform, scopeId, uniformVersion, programVersion; // Uniforms
             var shader = this.shader;
             var samplers = shader.samplers;
             var uniforms = shader.uniforms;
@@ -2022,10 +2022,10 @@ Object.assign(pc, function () {
                 gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
             }
 
-            //#ifdef PROFILER
+            // #ifdef PROFILER
             this._drawCallsPerFrame++;
             this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
-            //#endif
+            // #endif
         },
 
         /**
