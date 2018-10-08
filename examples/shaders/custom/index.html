@@ -109,12 +109,12 @@
 
             material = new pc.Material();
 
-            material.setShader(this.shader);
+            material.shader = this.shader;
             material.setParameter('uTime', 0);
             material.setParameter('uDiffuseMap', diffuseMap);
 
-            model.meshInstances.forEach(function (mesh) {
-                mesh.material = material;
+            model.meshInstances.forEach(function (meshInstance) {
+                meshInstance.material = material;
             });
 
             app.on("update", function (dt) {

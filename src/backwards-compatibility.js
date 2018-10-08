@@ -297,3 +297,31 @@ Object.defineProperty(pc.Color.prototype, "data3", {
         return this._data3;
     }
 });
+
+pc.Material.prototype.getName = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Material#getName is deprecated. Get the pc.Material#name property instead.');
+    // #endif
+    return this.name;
+};
+
+pc.Material.prototype.setName = function (name) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Material#getName is deprecated. Set the pc.Material#name property instead.');
+    // #endif
+    this.name = name;
+};
+
+pc.Material.prototype.getShader = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Material#getShader is deprecated. Get the pc.Material#shader property instead.');
+    // #endif
+    return this.shader;
+};
+
+pc.Material.prototype.setShader = function (shader) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Material#setShader is deprecated. Set the pc.Material#shader property instead.');
+    // #endif
+    this.shader = shader;
+};

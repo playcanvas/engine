@@ -158,6 +158,7 @@ Object.assign(pc, function () {
      * Can be used in {@link pc.LayerComposition#getLayerById}.
      */
     var Layer = function (options) {
+        options = options || {};
 
         if (options.id !== undefined) {
             this.id = options.id;
@@ -659,7 +660,7 @@ Object.assign(pc, function () {
         for (i = 0; i < drawCallsCount; i++) {
             drawCall = drawCalls[i];
             if (drawCall.command) continue;
-            if (drawCall.layer <= pc.scene.LAYER_FX) continue; // Only alpha sort mesh instances in the main world (backwards comp)
+            if (drawCall.layer <= pc.LAYER_FX) continue; // Only alpha sort mesh instances in the main world (backwards comp)
             meshPos = drawCall.aabb.center;
             tempx = meshPos.x - camPos.x;
             tempy = meshPos.y - camPos.y;

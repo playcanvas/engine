@@ -241,9 +241,9 @@ Object.assign(pc, function () {
         setProperty("animSpeed", 1);
         setProperty("animLoop", true);
 
-        this.frameRandomUniform = new Float32Array([0, 0, 0]);
-        this.emitterPosUniform = new Float32Array([0, 0, 0]);
-        this.wrapBoundsUniform = new Float32Array([0, 0, 0]);
+        this.frameRandomUniform = new Float32Array(3);
+        this.emitterPosUniform = new Float32Array(3);
+        this.wrapBoundsUniform = new Float32Array(3);
         this.emitterScaleUniform = new Float32Array([1, 1, 1]);
 
         // Time-dependent parameters
@@ -330,15 +330,13 @@ Object.assign(pc, function () {
         this.worldBoundsNoTrail = new pc.BoundingBox();
         this.worldBoundsTrail = [new pc.BoundingBox(), new pc.BoundingBox()];
         this.worldBounds = new pc.BoundingBox();
-        this.worldBoundsCenterUniform = new Float32Array(3);
+        this.inBoundsCenterUniform = new Float32Array(3);
 
         this.worldBoundsSize = new pc.Vec3();
-        this.worldBoundsSizeUniform = new Float32Array(3);
+        this.inBoundsSizeUniform = new Float32Array(3);
 
         this.prevWorldBoundsSize = new pc.Vec3();
-        this.prevWorldBoundsSizeUniform = new Float32Array(3);
         this.prevWorldBoundsCenter = new pc.Vec3();
-        this.prevWorldBoundsCenterUniform = new Float32Array(3);
         this.worldBoundsMul = new pc.Vec3();
         this.worldBoundsMulUniform = new Float32Array(3);
         this.worldBoundsAdd = new pc.Vec3();
@@ -564,7 +562,11 @@ Object.assign(pc, function () {
             gd.forceCpuParticles ||
             !gd.extTextureFloat; // no float texture extension
 
-            this.vertexBuffer = undefined; // force regen VB
+            // force new vertex buffer
+            if (this.vertexBuffer) {
+                this.vertexBuffer.destroy();
+                this.vertexBuffer = undefined;
+            }
 
             this.pack8 = (this.pack8 || !gd.textureFloatRenderable) && !this.useCpu;
 
@@ -678,6 +680,7 @@ Object.assign(pc, function () {
             this.regenShader();
             this.resetMaterial();
 
+            var wasVisible = this.meshInstance ? this.meshInstance.visible : true;
             this.meshInstance = new pc.MeshInstance(this.node, mesh, this.material);
             this.meshInstance.pick = false;
             this.meshInstance.updateKey(); // shouldn't be here?
@@ -685,6 +688,7 @@ Object.assign(pc, function () {
             this.meshInstance._noDepthDrawGl1 = true;
             this.meshInstance.aabb = this.worldBounds;
             this.meshInstance._updateAabb = false;
+            this.meshInstance.visible = wasVisible;
 
             this._initializeTextures();
 
@@ -899,7 +903,7 @@ Object.assign(pc, function () {
                     animTexLoop: this.emitter.animLoop,
                     pack8: this.emitter.pack8
                 });
-                this.setShader(shader);
+                this.shader = shader;
             };
             this.material.updateShader();
         },
@@ -932,14 +936,14 @@ Object.assign(pc, function () {
             material.setParameter("emitterScale", new Float32Array([1, 1, 1]));
 
             if (this.pack8) {
-                this.worldBoundsSizeUniform[0] = this.worldBoundsSize.x;
-                this.worldBoundsSizeUniform[1] = this.worldBoundsSize.y;
-                this.worldBoundsSizeUniform[2] = this.worldBoundsSize.z;
-                material.setParameter("inBoundsSize", this.worldBoundsSizeUniform);
-                this.worldBoundsCenterUniform[0] = this.worldBounds.center.x;
-                this.worldBoundsCenterUniform[1] = this.worldBounds.center.y;
-                this.worldBoundsCenterUniform[2] = this.worldBounds.center.z;
-                material.setParameter("inBoundsCenter", this.worldBoundsCenterUniform);
+                this.inBoundsSizeUniform[0] = this.worldBoundsSize.x;
+                this.inBoundsSizeUniform[1] = this.worldBoundsSize.y;
+                this.inBoundsSizeUniform[2] = this.worldBoundsSize.z;
+                material.setParameter("inBoundsSize", this.inBoundsSizeUniform);
+                this.inBoundsCenterUniform[0] = this.worldBounds.center.x;
+                this.inBoundsCenterUniform[1] = this.worldBounds.center.y;
+                this.inBoundsCenterUniform[2] = this.worldBounds.center.z;
+                material.setParameter("inBoundsCenter", this.inBoundsCenterUniform);
                 material.setParameter("maxVel", this.maxVel);
             }
 
@@ -1185,14 +1189,14 @@ Object.assign(pc, function () {
                     this.worldBoundsAddUniform[1] = this.worldBoundsAdd.y;
                     this.worldBoundsAddUniform[2] = this.worldBoundsAdd.z;
                     this.constantOutBoundsAdd.setValue(this.worldBoundsAddUniform);
-                    this.prevWorldBoundsSizeUniform[0] = this.prevWorldBoundsSize.x;
-                    this.prevWorldBoundsSizeUniform[1] = this.prevWorldBoundsSize.y;
-                    this.prevWorldBoundsSizeUniform[2] = this.prevWorldBoundsSize.z;
-                    this.constantInBoundsSize.setValue(this.prevWorldBoundsSizeUniform);
-                    this.prevWorldBoundsCenterUniform[0] = this.prevWorldBoundsCenter.x;
-                    this.prevWorldBoundsCenterUniform[1] = this.prevWorldBoundsCenter.y;
-                    this.prevWorldBoundsCenterUniform[2] = this.prevWorldBoundsCenter.z;
-                    this.constantInBoundsCenter.setValue(this.prevWorldBoundsCenterUniform);
+                    this.inBoundsSizeUniform[0] = this.prevWorldBoundsSize.x;
+                    this.inBoundsSizeUniform[1] = this.prevWorldBoundsSize.y;
+                    this.inBoundsSizeUniform[2] = this.prevWorldBoundsSize.z;
+                    this.constantInBoundsSize.setValue(this.inBoundsSizeUniform);
+                    this.inBoundsCenterUniform[0] = this.prevWorldBoundsCenter.x;
+                    this.inBoundsCenterUniform[1] = this.prevWorldBoundsCenter.y;
+                    this.inBoundsCenterUniform[2] = this.prevWorldBoundsCenter.z;
+                    this.constantInBoundsCenter.setValue(this.inBoundsCenterUniform);
 
                     var maxVel = this.maxVel * Math.max(Math.max(emitterScale.x, emitterScale.y), emitterScale.z);
                     maxVel = Math.max(maxVel, 1);
@@ -1543,6 +1547,10 @@ Object.assign(pc, function () {
             this.shaderParticleUpdateRespawn = null;
             this.shaderParticleUpdateNoRespawn = null;
             this.shaderParticleUpdateOnStop = null;
+
+            if (this.vertexBuffer) {
+                this.vertexBuffer.destroy();
+            }
         }
     });
 

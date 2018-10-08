@@ -589,6 +589,8 @@ Object.assign(pc, function () {
         },
 
         _bindFont: function (asset) {
+            if (!this._entity.enabled) return; // don't bind until enabled
+
             asset.on("load", this._onFontLoad, this);
             asset.on("change", this._onFontChange, this);
             asset.on("remove", this._onFontRemove, this);
@@ -598,6 +600,12 @@ Object.assign(pc, function () {
             } else {
                 this._system.app.assets.load(asset);
             }
+        },
+
+        _unbindFont: function (asset) {
+            asset.off("load", this._onFontLoad, this);
+            asset.off("change", this._onFontChange, this);
+            asset.off("remove", this._onFontRemove, this);
         },
 
         _onFontLoad: function (asset) {
@@ -689,6 +697,14 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
+            if (this._fontAsset) {
+                var asset = this._system.app.assets.get(this._fontAsset);
+                if (asset && asset.resource !== this._font) {
+                    this._unbindFont(asset);
+                    this._bindFont(asset);
+                }
+            }
+
             if (this._model) {
                 this._element.addModelToLayers(this._model);
             }
@@ -855,7 +871,7 @@ Object.assign(pc, function () {
     });
 
     Object.defineProperty(TextElement.prototype, "fontAsset", {
-        get function() {
+        get: function () {
             return this._fontAsset;
         },
 
@@ -870,13 +886,9 @@ Object.assign(pc, function () {
             if (this._fontAsset !== _id) {
                 if (this._fontAsset) {
                     assets.off('add:' + this._fontAsset, this._onFontAdded, this);
-
                     var _prev = assets.get(this._fontAsset);
-
                     if (_prev) {
-                        _prev.off("load", this._onFontLoad, this);
-                        _prev.off("change", this._onFontChange, this);
-                        _prev.off("remove", this._onFontRemove, this);
+                        this._unbindFont(_prev);
                     }
                 }
 
@@ -908,6 +920,16 @@ Object.assign(pc, function () {
 
             this._font = value;
             if (!value) return;
+
+            if (this._fontAsset) {
+                var asset = this._system.app.assets.get(this._fontAsset);
+                // if we're setting a font directly which doesn't match the asset
+                // then clear the asset
+                if (asset.resource !== this._font) {
+                    this._unbindFont(asset);
+                    this._fontAsset = null;
+                }
+            }
 
             // if font type has changed we may need to get change material
             if (value.type !== previousFontType) {

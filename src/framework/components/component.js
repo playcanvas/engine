@@ -51,17 +51,6 @@ Object.assign(pc, function () {
     };
 
     Component.prototype = {
-        /**
-         * @private
-         * @property {pc.ComponentData} data Access the {@link pc.ComponentData} directly.
-         * Usually you should access the data properties via the individual properties as
-         * modifying this data directly will not fire 'set' events.
-         */
-        get data() {
-            var record = this.system.store[this.entity._guid];
-            return record ? record.data : null;
-        },
-
         buildAccessors: function (schema) {
             Component._buildAccessors(this, schema);
         },
@@ -84,6 +73,19 @@ Object.assign(pc, function () {
 
         onPostStateChange: function () { }
     };
+
+    /**
+     * @private
+     * @property {pc.ComponentData} data Access the {@link pc.ComponentData} directly.
+     * Usually you should access the data properties via the individual properties as
+     * modifying this data directly will not fire 'set' events.
+     */
+    Object.defineProperty(Component.prototype, "data", {
+        get: function () {
+            var record = this.system.store[this.entity._guid];
+            return record ? record.data : null;
+        }
+    });
 
     return {
         Component: Component
