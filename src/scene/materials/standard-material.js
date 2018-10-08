@@ -406,13 +406,13 @@ Object.assign(pc, function () {
                 this.dirtyShader = true;
                 return this[priv];
             },
-            set: function (value) {
-                var oldVal = this[priv];
-                var wasBw = (oldVal.r === 0 && oldVal.g === 0 && oldVal.b === 0) || (oldVal.r === 1 && oldVal.g === 1 && oldVal.b === 1);
-                var isBw = (value.r === 0 && value.g === 0 && value.b === 0) || (value.r === 1 && value.g === 1 && value.b === 1);
-                if (wasBw ^ isBw) this.dirtyShader = true;
+            set: function (newValue) {
+                var oldValue = this[priv];
+                var wasRound = (oldValue.r === 0 && oldValue.g === 0 && oldValue.b === 0) || (oldValue.r === 1 && oldValue.g === 1 && oldValue.b === 1);
+                var isRound = (newValue.r === 0 && newValue.g === 0 && newValue.b === 0) || (newValue.r === 1 && newValue.g === 1 && newValue.b === 1);
+                if (wasRound ^ isRound) this.dirtyShader = true;
                 this.dirtyColor = true;
-                this[priv] = value;
+                this[priv] = newValue;
             }
         });
         _propsSerial.push(name);
@@ -442,13 +442,13 @@ Object.assign(pc, function () {
                 get: function () {
                     return this[pmult];
                 },
-                set: function (value) {
-                    var oldVal = this[pmult];
-                    var wasBw = oldVal === 0 || oldVal === 1;
-                    var isBw = value === 0 || value === 1;
-                    if (wasBw ^ isBw) this.dirtyShader = true;
+                set: function (newValue) {
+                    var oldValue = this[pmult];
+                    var wasRound = oldValue === 0 || oldValue === 1;
+                    var isRound = newValue === 0 || newValue === 1;
+                    if (wasRound ^ isRound) this.dirtyShader = true;
                     this.dirtyColor = true;
-                    this[pmult] = value;
+                    this[pmult] = newValue;
                 }
             });
             _propsSerial.push(mult);
@@ -479,12 +479,18 @@ Object.assign(pc, function () {
             get: function () {
                 return this[priv];
             },
-            set: function (value) {
-                var oldVal = this[priv];
-                var wasBw = oldVal === 0 || oldVal === 1;
-                var isBw = value === 0 || value === 1;
-                if (wasBw ^ isBw) this.dirtyShader = true;
-                this[priv] = value;
+            set: function (newValue) {
+                var oldValue = this[priv];
+                if (oldValue === newValue) return;
+                this[priv] = newValue;
+
+                // This is not always optimal and will sometimes trigger redundant shader
+                // recompilation. However, no number property on a standard material
+                // triggers a shader recompile if the previous and current values both
+                // have a fractional part.
+                var wasRound = oldValue === 0 || oldValue === 1;
+                var isRound = newValue === 0 || newValue === 1;
+                if (wasRound || isRound) this.dirtyShader = true;
             }
         });
         _propsSerial.push(name);
