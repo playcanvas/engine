@@ -1815,7 +1815,7 @@ Object.assign(pc, function () {
 
         setBuffers: function () {
             var gl = this.gl;
-            var attribute, element, vertexBuffer, vbOffset, bufferId;
+            var attribute, element, vertexBuffer, vbOffset, bufferId, locationId;
             var attributes = this.shader.attributes;
 
             // Commit the vertex buffer inputs
