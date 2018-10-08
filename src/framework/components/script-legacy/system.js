@@ -72,7 +72,7 @@ Object.assign(pc, function () {
 
         cloneComponent: function (entity, clone) {
             // overridden to make sure urls list is duplicated
-            var src = this.dataStore[entity._guid];
+            var src = this.store[entity._guid];
             var data = {
                 runInTools: src.data.runInTools,
                 scripts: [],
