@@ -136,7 +136,7 @@ describe("pc.ModelComponent", function () {
 
 
 
-    it.only('Cloned model component with flags set directly on mesh instance is identical', function () {
+    it('Cloned model component with flags set directly on mesh instance is identical', function () {
         var e = new pc.Entity();
         e.addComponent('model', {
             asset: assets.model
