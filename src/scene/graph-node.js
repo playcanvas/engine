@@ -1319,17 +1319,26 @@ Object.assign(pc, function () {
          * @description Updates the world transformation matrices at this node and all of its descendants.
          */
         syncHierarchy: function () {
-            if (!this._enabled)
-                return;
+            var stack = [];
 
-            if (this._dirtyLocal || this._dirtyWorld)
-                this._sync();
+            return function () {
+                var i, len, node, children;
+                stack.push(this);
+                while (stack.length > 0) {
+                    node = stack.pop();
 
-            var children = this._children;
-            for (var i = 0, len = children.length; i < len; i++) {
-                children[i].syncHierarchy();
-            }
-        },
+                    if (node._enabled) {
+                        if (node._dirtyLocal || node._dirtyWorld)
+                            node._sync();
+
+                        children = node._children;
+                        for (i = 0, len = children.length; i < len; i++) {
+                            stack.push(children[i]);
+                        }
+                    }
+                }
+            };
+        }(),
 
         /**
          * @function
