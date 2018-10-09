@@ -82,7 +82,7 @@ Object.assign(pc, function () {
      */
     Object.defineProperty(Component.prototype, "data", {
         get: function () {
-            var record = this.system.store[this.entity._guid];
+            var record = this.system.store[this.entity.getGuid()];
             return record ? record.data : null;
         }
     });
