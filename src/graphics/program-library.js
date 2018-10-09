@@ -38,8 +38,24 @@ Object.assign(pc, function () {
         var key = generator.generateKey(gd, options); // TODO: gd is never used in generateKey(), remove?
         var shader = this._cache[key];
         if (!shader) {
+            // console.log("Shader cache miss:", name, key);
+            var lights;
+            if (options.lights) {
+                lights = options.lights;
+                options.lights = lights.map(function (l) {
+                    var lcopy = l.clone ? l.clone() : l;
+                    lcopy.key = l.key;
+                    return lcopy;
+                });
+            }
+            // console.log("{ \"name\":\"", name, "\", \"options\": ", JSON.stringify(options), " },");
+            if (options.lights)
+                options.lights = lights;
+
             var shaderDefinition = generator.createShaderDefinition(gd, options);
-            shader = this._cache[key] = new pc.Shader(gd, shaderDefinition);
+            shader = this._cache[key] = new pc.Shader(gd, shaderDefinition, true);
+        } else {
+            // console.log("Shader cache hit:", name, key);
         }
         return shader;
     };
@@ -67,6 +83,16 @@ Object.assign(pc, function () {
                 }
             }
         }
+    };
+
+    ProgramLibrary.prototype.warmUp = function () {
+        console.log("prebuilding cache...", pc.OptionsPrecache);
+        var shaders = [];
+        for (var i = 0; i < pc.OptionsPrecache.length; i++) {
+            console.log(i);
+            shaders.push(this.getProgram(pc.OptionsPrecache[i].name, pc.OptionsPrecache[i].options));
+        }
+        console.log("... done!");
     };
 
     return {

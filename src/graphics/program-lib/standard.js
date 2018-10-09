@@ -138,10 +138,15 @@ pc.programlib.standard = {
         transformUv1: { n: "transformVS", f: _oldChunkTransformUv1 }
     },
 
+    propLablesGlobal: ["lights"],
+    propValuesGlobal: [],
+    keysGlobal: [],
+
     generateKey: function (device, options) {
         var prop, props = [];
         var key = "standard";
         var light;
+        var matPropValues = {};
         for (prop in options) {
             if (options.hasOwnProperty(prop)) {
                 if (prop === "chunks") {
@@ -156,18 +161,50 @@ pc.programlib.standard = {
             }
         }
         props.sort();
-        for (prop in props) {
-            if (props.hasOwnProperty(prop)) {
-                key += props[prop] + options[props[prop]];
+
+        var i = 0;
+        function findProp(arr, prop) {
+            return arr.some(function (e) {
+                return prop === e;
+            });
+        }
+        for (i = 0; i < props.length; i++) {
+            if (!findProp(this.propLablesGlobal, props[i]))
+                this.propLablesGlobal.push(props[i]);
+            matPropValues[props[i]] = options[props[i]];
+
+            key += props[i] + options[props[i]];
+        }
+        this.propLablesGlobal.sort();
+
+        if (options.lights) {
+            matPropValues.lights = "";
+            for (i = 0; i < options.lights.length; i++) {
+                light = options.lights[i];
+                key += light.key;
+                matPropValues.lights += light.key;
             }
         }
 
-        if (options.lights) {
-            for (var i = 0; i < options.lights.length; i++) {
-                light = options.lights[i];
-                key += light.key;
+        var hashKey = pc.hashCode(key);
+        if (!this.keysGlobal.some(function (k) {
+            return k === hashKey;
+        })) {
+            this.keysGlobal.push(hashKey);
+            this.propValuesGlobal.push(matPropValues);
+        }
+
+        var out = Array(this.propValuesGlobal.length + 1);
+        for (i = 0; i < out.length; ++i) out[i] = "";
+
+        for (i = 0; i < this.propLablesGlobal.length; i++) {
+            out[0] += this.propLablesGlobal[i] + ",";
+            for (var m = 0; m < this.propValuesGlobal.length; m++) {
+                out[m + 1] += this.propValuesGlobal[m][this.propLablesGlobal[i]] + ",";
             }
         }
+        console.log("SHADERS CSV");
+        for (i = 0; i < out.length; ++i) console.log(out[i]);
 
         return pc.hashCode(key);
     },

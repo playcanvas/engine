@@ -48,6 +48,7 @@ Object.assign(pc, function () {
      * @param {String} definition.vshader Vertex shader source (GLSL code).
      * @param {String} definition.fshader Fragment shader source (GLSL code).
      * @param {Boolean} definition.useTransformFeedback Specifies that this shader outputs post-VS data to a buffer
+     * @param {Object} precache Triggers imediate link.
      * @example
      * // Create a shader that renders primitives with a solid red color
      * var shaderDefinition = {
@@ -74,24 +75,25 @@ Object.assign(pc, function () {
      *
      * shader = new pc.Shader(graphicsDevice, shaderDefinition);
      */
-    var Shader = function (graphicsDevice, definition) {
+    var Shader = function (graphicsDevice, definition, precache) {
         this.device = graphicsDevice;
         this.definition = definition;
 
         // Used for shader variants (see pc.Material)
         this._refCount = 0;
 
-        this.compile();
+        this.compile(precache);
 
         this.device.shaders.push(this);
     };
 
     Object.assign(Shader.prototype, {
-        compile: function () {
+        compile: function (link) {
             this.ready = false;
+            this._linkInProgress = false;
 
-            // #ifdef PROFILER
             var startTime = pc.now();
+            // #ifdef PROFILER
             this.device.fire('shader:compile:start', {
                 timestamp: startTime,
                 target: this
@@ -111,8 +113,16 @@ Object.assign(pc, function () {
                 this.device._shaderStats.materialShaders++;
             }
 
-            // #ifdef PROFILER
             var endTime = pc.now();
+            console.log('Shader COMPILE ', endTime - startTime);
+
+            if (link) {
+                console.log("PRE-LINK");
+                this._startLink();
+            }
+
+            this.compileToLinkTime = pc.now();
+            // #ifdef PROFILER
             this.device.fire('shader:compile:end', {
                 timestamp: endTime,
                 target: this
@@ -121,17 +131,8 @@ Object.assign(pc, function () {
             // #endif
         },
 
-        link: function () {
+        _startLink: function () {
             var gl = this.device.gl;
-            var retValue = true;
-
-            // #ifdef PROFILER
-            var startTime = pc.now();
-            this.device.fire('shader:link:start', {
-                timestamp: startTime,
-                target: this
-            });
-            // #endif
 
             if (this.device.webgl2 && this.definition.useTransformFeedback) {
                 // Collect all "out_" attributes and use them for output
@@ -146,6 +147,24 @@ Object.assign(pc, function () {
             }
 
             gl.linkProgram(this.program);
+            this._linkInProgress = true;
+        },
+
+        link: function () {
+            var gl = this.device.gl;
+            var retValue = true;
+
+            var startTime = pc.now();
+            console.log('Shader COMPILE to LINK ', startTime - this.compileToLinkTime);
+
+            // #ifdef PROFILER
+            this.device.fire('shader:link:start', {
+                timestamp: startTime,
+                target: this
+            });
+            // #endif
+
+            if (!this._linkInProgress) this._startLink();
 
             // Check for errors
 
@@ -164,6 +183,9 @@ Object.assign(pc, function () {
                 logERROR("Failed to link shader program. Error: " + gl.getProgramInfoLog(this.program));
                 retValue = false;
             }
+
+            var endTime = pc.now();
+            console.log('Shader LINK ', endTime - startTime);
 
             gl.deleteShader(this.vshader);
             gl.deleteShader(this.fshader);
@@ -231,7 +253,6 @@ Object.assign(pc, function () {
             this.ready = true;
 
             // #ifdef PROFILER
-            var endTime = pc.now();
             this.device.fire('shader:link:end', {
                 timestamp: endTime,
                 target: this
