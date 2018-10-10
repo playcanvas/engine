@@ -1275,7 +1275,7 @@ Object.assign(pc, (function () {
      */
     Object.defineProperty(Mat4, 'ZERO', {
         get: (function () {
-            var zero = new Mat4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            var zero = new Mat4().set([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
             return function () {
                 return zero;
             };
