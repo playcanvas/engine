@@ -24,20 +24,10 @@ Object.assign(pc, (function () {
      * @param {Number} [v15] The value in row 3, column 3.
      */
     var Mat4 = function () {
-        var data;
-        if (arguments.length === 0) {
-            // Create an identity matrix. Note that a new Float32Array has all elements set
-            // to zero by default, so we only need to set the relevant elements to one.
-            data = new Float32Array(16);
-            data[0] = data[5] = data[10] = data[15] = 1;
-        } else if (arguments.length === 1) {
-            data = new Float32Array(arguments[0]);
-        } else { // 16 values should have been passed
-            data = new Float32Array(16);
-            for (var i = 0; i < 16; i++) {
-                data[i] = arguments[i];
-            }
-        }
+        var data = new Float32Array(16);
+        // Create an identity matrix. Note that a new Float32Array has all elements set
+        // to zero by default, so we only need to set the relevant elements to one.
+        data[0] = data[5] = data[10] = data[15] = 1;
         this.data = data;
     };
 
