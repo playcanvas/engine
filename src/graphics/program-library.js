@@ -48,7 +48,7 @@ Object.assign(pc, function () {
                     return lcopy;
                 });
             }
-            // console.log("{ \"name\":\"", name, "\", \"options\": ", JSON.stringify(options), " },");
+            console.log("{ \"name\":\"" + name + "\", \"options\": ", JSON.stringify(options), " },");
             if (options.lights)
                 options.lights = lights;
 
