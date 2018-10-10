@@ -82,7 +82,10 @@ Object.assign(pc, (function () {
     }
 
     function destroyPostEffectQuad() {
-        _postEffectQuadVB = null;
+        if (_postEffectQuadVB) {
+            _postEffectQuadVB.destroy();
+            _postEffectQuadVB = null;
+        }
     }
 
     return {
