@@ -14,11 +14,9 @@ Object.assign(pc, function () {
             forceUv1: stdMat.forceUv1
         };
 
-        if (objDefs) {
-            options.screenSpace = (objDefs & pc.SHADERDEF_SCREENSPACE) !== 0;
-            options.skin = (objDefs & pc.SHADERDEF_SKIN) !== 0;
-            options.useInstancing = (objDefs & pc.SHADERDEF_INSTANCING) !== 0;
-        }
+        options.screenSpace = objDefs && (objDefs & pc.SHADERDEF_SCREENSPACE) !== 0;
+        options.skin = objDefs && (objDefs & pc.SHADERDEF_SKIN) !== 0;
+        options.useInstancing = objDefs && (objDefs & pc.SHADERDEF_INSTANCING) !== 0;
 
         // Minimal options for Depth and Shadow passes
         var minimalOptions = pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK;

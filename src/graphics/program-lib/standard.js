@@ -138,7 +138,7 @@ pc.programlib.standard = {
         transformUv1: { n: "transformVS", f: _oldChunkTransformUv1 }
     },
 
-    propLablesGlobal: ["lights"],
+    propLablesGlobal: ["lights", "chunks"],
     propValuesGlobal: [],
     keysGlobal: [],
 
@@ -169,9 +169,13 @@ pc.programlib.standard = {
             });
         }
         for (i = 0; i < props.length; i++) {
-            if (!findProp(this.propLablesGlobal, props[i]))
-                this.propLablesGlobal.push(props[i]);
-            matPropValues[props[i]] = options[props[i]];
+            if (options[props[i]]) {
+                if (!findProp(this.propLablesGlobal, props[i]))
+                    this.propLablesGlobal.push(props[i]);
+                matPropValues[props[i]] = options[props[i]];
+            } else {
+                matPropValues.chunks = (matPropValues.chunks || "") + pc.hashCode(props[i]);
+            }
 
             key += props[i] + options[props[i]];
         }
@@ -192,19 +196,20 @@ pc.programlib.standard = {
         })) {
             this.keysGlobal.push(hashKey);
             this.propValuesGlobal.push(matPropValues);
-        }
 
-        var out = Array(this.propValuesGlobal.length + 1);
-        for (i = 0; i < out.length; ++i) out[i] = "";
+            var out = Array(this.propValuesGlobal.length + 1);
+            for (i = 0; i < out.length; ++i) out[i] = "";
 
-        for (i = 0; i < this.propLablesGlobal.length; i++) {
-            out[0] += this.propLablesGlobal[i] + ",";
-            for (var m = 0; m < this.propValuesGlobal.length; m++) {
-                out[m + 1] += this.propValuesGlobal[m][this.propLablesGlobal[i]] + ",";
+            for (i = 0; i < this.propLablesGlobal.length; i++) {
+                out[0] += this.propLablesGlobal[i] + ",";
+                for (var m = 0; m < this.propValuesGlobal.length; m++) {
+                    out[m + 1] += this.propValuesGlobal[m][this.propLablesGlobal[i]] + ",";
+                }
             }
+
+            console.log("SHADERS CSV");
+            for (i = 0; i < out.length; ++i) console.log(out[i]);
         }
-        console.log("SHADERS CSV");
-        for (i = 0; i < out.length; ++i) console.log(out[i]);
 
         return pc.hashCode(key);
     },
