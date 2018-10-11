@@ -156,7 +156,7 @@ pc.programlib.standard = {
                         }
                     }
                 } else {
-                    if (options[prop]) props.push(prop);
+                    if (options[prop] !== undefined) props.push(prop);
                 }
             }
         }
@@ -169,7 +169,7 @@ pc.programlib.standard = {
             });
         }
         for (i = 0; i < props.length; i++) {
-            if (options[props[i]]) {
+            if (options[props[i]] !== undefined) {
                 if (!findProp(this.propLablesGlobal, props[i]))
                     this.propLablesGlobal.push(props[i]);
                 matPropValues[props[i]] = options[props[i]];
