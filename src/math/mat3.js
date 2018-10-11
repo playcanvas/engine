@@ -67,7 +67,7 @@ Object.assign(pc, (function () {
          * @param {Array} src An array[9] to be copied.
          * @returns {pc.Mat3} Self for chaining
          * @example
-         * var src = [0, 1, 2, 3, 4, 5, ,6, 7, 8];
+         * var src = [0, 1, 2, 3, 4, 5, 6, 7, 8];
          * var dst = new pc.Mat3();
          * dst.copy(src);
          */
