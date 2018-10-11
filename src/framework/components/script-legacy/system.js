@@ -72,7 +72,7 @@ Object.assign(pc, function () {
 
         cloneComponent: function (entity, clone) {
             // overridden to make sure urls list is duplicated
-            var src = this.dataStore[entity._guid];
+            var src = this.store[entity.getGuid()];
             var data = {
                 runInTools: src.data.runInTools,
                 scripts: [],
@@ -277,7 +277,7 @@ Object.assign(pc, function () {
             if (entity.script) {
                 entity.script.data._instances = entity.script.data._instances || {};
                 if (entity.script.data._instances[name]) {
-                    throw Error(pc.string.format("Script name collision '{0}'. Scripts from '{1}' and '{2}' {{3}}", name, url, entity.script.data._instances[name].url, entity._guid));
+                    throw Error(pc.string.format("Script name collision '{0}'. Scripts from '{1}' and '{2}' {{3}}", name, url, entity.script.data._instances[name].url, entity.getGuid()));
                 }
                 entity.script.data._instances[name] = {
                     url: url,

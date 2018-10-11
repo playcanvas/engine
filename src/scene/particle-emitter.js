@@ -562,7 +562,11 @@ Object.assign(pc, function () {
             gd.forceCpuParticles ||
             !gd.extTextureFloat; // no float texture extension
 
-            this.vertexBuffer = undefined; // force regen VB
+            // force new vertex buffer
+            if (this.vertexBuffer) {
+                this.vertexBuffer.destroy();
+                this.vertexBuffer = undefined;
+            }
 
             this.pack8 = (this.pack8 || !gd.textureFloatRenderable) && !this.useCpu;
 
@@ -676,6 +680,7 @@ Object.assign(pc, function () {
             this.regenShader();
             this.resetMaterial();
 
+            var wasVisible = this.meshInstance ? this.meshInstance.visible : true;
             this.meshInstance = new pc.MeshInstance(this.node, mesh, this.material);
             this.meshInstance.pick = false;
             this.meshInstance.updateKey(); // shouldn't be here?
@@ -683,6 +688,7 @@ Object.assign(pc, function () {
             this.meshInstance._noDepthDrawGl1 = true;
             this.meshInstance.aabb = this.worldBounds;
             this.meshInstance._updateAabb = false;
+            this.meshInstance.visible = wasVisible;
 
             this._initializeTextures();
 
@@ -897,7 +903,7 @@ Object.assign(pc, function () {
                     animTexLoop: this.emitter.animLoop,
                     pack8: this.emitter.pack8
                 });
-                this.setShader(shader);
+                this.shader = shader;
             };
             this.material.updateShader();
         },
@@ -1541,6 +1547,10 @@ Object.assign(pc, function () {
             this.shaderParticleUpdateRespawn = null;
             this.shaderParticleUpdateNoRespawn = null;
             this.shaderParticleUpdateOnStop = null;
+
+            if (this.vertexBuffer) {
+                this.vertexBuffer.destroy();
+            }
         }
     });
 

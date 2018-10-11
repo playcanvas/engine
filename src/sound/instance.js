@@ -448,7 +448,7 @@ Object.assign(pc, function () {
              * @description Sets the current time taking into account the time the instance started playing, the current pitch and the current time offset.
              */
             _updateCurrentTime: function () {
-                this._currentTime = capTime((this._manager.context.currentTime - this._startedAt) * this.pitch + this._currentOffset, this.duration);
+                this._currentTime = capTime((this._manager.context.currentTime - this._startedAt) * this._pitch + this._currentOffset, this.duration);
             },
 
             /**
@@ -458,7 +458,7 @@ Object.assign(pc, function () {
              * @description Handle the manager's 'destroy' event.
              */
             _onManagerDestroy: function () {
-                if (this.source && this.isPlaying) {
+                if (this.source && this._state === STATE_PLAYING) {
                     this.source.stop(0);
                     this.source = null;
                 }
@@ -520,7 +520,7 @@ Object.assign(pc, function () {
             set: function (value) {
                 this._sound = value;
 
-                if (!this.isStopped) {
+                if (this._state !== STATE_STOPPED) {
                     this.stop();
                 } else {
                     this._createSource();
@@ -538,13 +538,13 @@ Object.assign(pc, function () {
 
                 // if the sound is paused return the currentTime calculated when
                 // pause() was called
-                if (this.isPaused) {
+                if (this._state === STATE_PAUSED) {
                     return this._currentTime;
                 }
 
-                // if the sound is paused or we don't have a source
+                // if the sound is stopped or we don't have a source
                 // return 0
-                if (this.isStopped || !this.source) {
+                if (this._state === STATE_STOPPED || !this.source) {
                     return 0;
                 }
 
@@ -555,7 +555,7 @@ Object.assign(pc, function () {
             set: function (value) {
                 if (value < 0) return;
 
-                if (this.isPlaying) {
+                if (this._state === STATE_PLAYING) {
                     // stop first which will set _startOffset to null
                     this.stop();
 
@@ -839,7 +839,7 @@ Object.assign(pc, function () {
                     return this._startOffset;
                 }
 
-                if (this.isStopped || !this.source) {
+                if (this._state === STATE_STOPPED || !this.source) {
                     return 0;
                 }
 
@@ -925,7 +925,7 @@ Object.assign(pc, function () {
          * @description Handle the manager's 'suspend' event.
          */
         _onManagerSuspend: function () {
-            if (this.isPlaying && !this._suspended) {
+            if (this._state === STATE_PLAYING && !this._suspended) {
                 this._suspended = true;
                 this.pause();
             }
@@ -954,7 +954,7 @@ Object.assign(pc, function () {
             this._startTime = Math.max(0, Number(value) || 0);
 
             // restart
-            var isPlaying = this.isPlaying;
+            var isPlaying = this._state === STATE_PLAYING;
             this.stop();
             if (isPlaying) {
                 this.play();
@@ -976,7 +976,7 @@ Object.assign(pc, function () {
             this._duration = Math.max(0, Number(value) || 0);
 
             // restart
-            var isPlaying = this.isPlaying;
+            var isPlaying = this._state === STATE_PLAYING;
             this.stop();
             if (isPlaying) {
                 this.play();
