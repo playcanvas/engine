@@ -91,7 +91,7 @@ Object.assign(pc, function () {
 
         // Called when the collision is cloned to another entity
         clone: function (entity, clone) {
-            var src = this.system.store[entity._guid];
+            var src = this.system.store[entity.getGuid()];
 
             var data = {
                 enabled: src.data.enabled,

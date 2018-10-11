@@ -66,7 +66,7 @@ Object.assign(pc, function () {
 
             data = data || {};
 
-            this.store[entity._guid] = {
+            this.store[entity.getGuid()] = {
                 entity: entity,
                 data: componentData
             };
@@ -92,10 +92,10 @@ Object.assign(pc, function () {
          * // entity.model === undefined
          */
         removeComponent: function (entity) {
-            var record = this.store[entity._guid];
+            var record = this.store[entity.getGuid()];
             var component = entity.c[this.id];
             this.fire('beforeremove', entity, component);
-            delete this.store[entity._guid];
+            delete this.store[entity.getGuid()];
             delete entity[this.id];
             delete entity.c[this.id];
             this.fire('remove', entity, record.data);
@@ -112,7 +112,7 @@ Object.assign(pc, function () {
          */
         cloneComponent: function (entity, clone) {
             // default clone is just to add a new component with existing data
-            var src = this.store[entity._guid];
+            var src = this.store[entity.getGuid()];
             return this.addComponent(clone, src.data);
         },
 
