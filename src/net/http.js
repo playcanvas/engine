@@ -384,8 +384,10 @@ Object.assign(pc, function () {
                 } else if (this._isBinaryContentType(contentType)) {
                     response = xhr.response;
                 } else {
-                    if (xhr.responseType === Http.ResponseType.ARRAY_BUFFER || xhr.responseType === Http.ResponseType.BLOB) {
+                    if (xhr.responseType === Http.ResponseType.ARRAY_BUFFER) {
                         logWARNING(pc.string.format('responseType: {0} being served with Content-Type: {1}', xhr.responseType, contentType));
+                        response = xhr.response;
+                    } else if (xhr.responseType === Http.ResponseType.BLOB) {
                         response = xhr.response;
                     } else {
                         if (xhr.responseType === Http.ResponseType.DOCUMENT || contentType === this.ContentType.XML) {
