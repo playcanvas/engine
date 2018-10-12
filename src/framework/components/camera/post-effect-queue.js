@@ -30,6 +30,11 @@ Object.assign(pc, function () {
         };
 
         camera.on('set_rect', this.onCameraRectChanged, this);
+
+        this._origOverrideClear = false;
+        this._origClearColorBuffer = false;
+        this._origDepthColorBuffer = false;
+        this._origStencilColorBuffer = false;
     }
 
     Object.assign(PostEffectQueue.prototype, {
@@ -138,6 +143,12 @@ Object.assign(pc, function () {
                 for (i = start; i >= 0; i--) {
                     if (layerList[i].id === pc.LAYERID_UI) {
                         start = i - 1;
+
+                        this._origOverrideClear = layerList[i].overrideClear;
+                        this._origClearColorBuffer = layerList[i].clearColorBuffer;
+                        this._origDepthColorBuffer = layerList[i].clearDepthBuffer;
+                        this._origStencilColorBuffer = layerList[i].clearStencilBuffer;
+
                         layerList[i].overrideClear = true;
                         layerList[i].clearColorBuffer = false;
                         layerList[i].clearDepthBuffer = this.camera.clearDepthBuffer;
@@ -321,6 +332,28 @@ Object.assign(pc, function () {
                 if (i >= 0) {
                     this.layer._commandList.splice(i, 1);
                 }
+
+                // Reset the UI layer to its original state
+                var layerList = this.app.scene.layers.layerList;
+                var start = layerList.length - 1;
+                for (i = 0; i <= layerList.length; i++) {
+                    if (layerList[i].id === pc.LAYERID_UI) {
+                        start = i - 1;
+                        layerList[i].overrideClear = this._origOverrideClear;
+                        layerList[i].clearColorBuffer = this._origClearColorBuffer;
+                        layerList[i].clearDepthBuffer = this._origDepthColorBuffer;
+                        layerList[i].clearStencilBuffer = this._origStencilColorBuffer;
+                        break;
+                    }
+                }
+                for (i = start; i >= 0; i--) {
+                    if (layerList[i].cameras.indexOf(this.camera) >= 0) {
+                        layerList[i].renderTarget = undefined;
+                    }
+                }
+
+                this.app.scene.layers.removeOpaque(this.layer);
+                this.layer = null;
             }
         },
 
