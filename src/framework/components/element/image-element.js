@@ -812,14 +812,6 @@ Object.assign(pc, function () {
             }
         },
 
-        // _isScreenSpace: function () {
-        //     if (this._element.screen && this._element.screen.screen) {
-        //         return this._element.screen.screen.screenSpace;
-        //     }
-
-        //     return false;
-        // },
-
         onEnable: function () {
             var asset;
             if (this._materialAsset) {
