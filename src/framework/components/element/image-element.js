@@ -711,7 +711,7 @@ Object.assign(pc, function () {
         // When sprite asset is loaded make sure the texture atlas asset is loaded too
         // If so then set the sprite, otherwise wait for the atlas to be loaded first
         _onSpriteAssetLoad: function (asset) {
-            if (!asset.resource) {
+            if (!asset || !asset.resource) {
                 this.sprite = null;
             } else {
                 if (!asset.resource.atlas) {
@@ -751,23 +751,6 @@ Object.assign(pc, function () {
             sprite.off('set:atlas', this._onAtlasTextureChange, this);
             if (sprite.atlas) {
                 sprite.atlas.off('set:texture', this._onAtlasTextureChange, this);
-            }
-        },
-
-        // When sprite asset is loaded make sure the texture atlas asset is loaded too
-        // If so then set the sprite, otherwise wait for the atlas to be loaded first
-        _onSpriteAssetLoad: function (asset) {
-            if (!asset || !asset.resource) {
-                this.sprite = null;
-            } else {
-                if (!asset.resource.atlas) {
-                    var atlasAssetId = asset.data.textureAtlasAsset;
-                    var assets = this._system.app.assets;
-                    assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
-                    assets.once('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
-                } else {
-                    this.sprite = asset.resource;
-                }
             }
         },
 
