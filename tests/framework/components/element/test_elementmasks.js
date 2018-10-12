@@ -357,6 +357,104 @@ describe("pc.Element: Masks", function () {
         expect(c2.element.maskedBy.name).to.equal(m1.name);
     });
 
+    it("ImageElement outside a mask is culled", function () {
+        var screen = new pc.Entity();
+        screen.addComponent('screen', {
+            screenSpace: true
+        });
+        app.root.addChild(screen);
+
+        var mask = new pc.Entity();
+        mask.addComponent('element', {
+            type: 'image',
+            width: 100,
+            height: 100,
+            pivot: [0.5,0.5],
+            mask: true
+        });
+        screen.addChild(mask);
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            width: 50,
+            height: 50,
+            anchor: [0.5,0.5,0.5,0.5],
+            pivot: [0.5,0.5],
+        });
+        mask.addChild(e);
+
+        var camera = new pc.Entity();
+        camera.addComponent('camera');
+        app.root.addChild(camera);
+
+        // move just out of parent
+        e.translateLocal(76, 0, 0);
+
+        // update transform
+        app.update(0.1);
+        app.render();
+        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+
+        // move just into parent
+        e.translateLocal(-2, 0, 0);
+
+        // update transform
+        app.update(0.1);
+        app.render();
+        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+
+    });
+
+    it("TextElement outside a mask is culled", function () {
+        var screen = new pc.Entity();
+        screen.addComponent('screen', {
+            screenSpace: true
+        });
+        app.root.addChild(screen);
+
+        var mask = new pc.Entity();
+        mask.addComponent('element', {
+            type: 'image',
+            width: 100,
+            height: 100,
+            pivot: [0.5,0.5],
+            mask: true
+        });
+        screen.addChild(mask);
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            width: 50,
+            height: 50,
+            anchor: [0.5,0.5,0.5,0.5],
+            pivot: [0.5,0.5],
+        });
+        mask.addChild(e);
+
+        var camera = new pc.Entity();
+        camera.addComponent('camera');
+        app.root.addChild(camera);
+
+        // move just out of parent
+        e.translateLocal(76, 0, 0);
+
+        // update transform
+        app.update(0.1);
+        app.render();
+        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+
+        // move just into parent
+        e.translateLocal(-2, 0, 0);
+
+        // update transform
+        app.update(0.1);
+        app.render();
+        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+
+    });
+
 
 });
 

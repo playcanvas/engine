@@ -506,6 +506,11 @@ Object.assign(pc, function () {
         _isVisible: function (camera, meshInstance) {
             if (!meshInstance.visible) return false;
 
+            // custom visibility method on MeshInstance
+            if (meshInstance.isCulled) {
+                return meshInstance.isCulled(camera);
+            }
+
             meshPos = meshInstance.aabb.center;
             if (meshInstance._aabb._radiusVer !== meshInstance._aabbVer) {
                 meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length();
