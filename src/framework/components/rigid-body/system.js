@@ -357,7 +357,7 @@ Object.assign(pc, function () {
          */
         _storeCollision: function (entity, other) {
             var isNewCollision = false;
-            var guid = entity._guid;
+            var guid = entity.getGuid();
 
             collisions[guid] = collisions[guid] || { others: [], entity: entity };
 
