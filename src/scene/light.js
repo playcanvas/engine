@@ -37,7 +37,9 @@ Object.assign(pc, function () {
         this._cookieFalloff = true;
         this._cookieChannel = "rgb";
         this._cookieTransform = null; // 2d rotation/scale matrix (spot only)
+        this._cookieTransformUniform = new Float32Array(4);
         this._cookieOffset = null; // 2d position offset (spot only)
+        this._cookieOffsetUniform = new Float32Array(2);
         this._cookieTransformSet = false;
         this._cookieOffsetSet = false;
 
