@@ -123,9 +123,17 @@ Object.assign(pc, (function () {
          * console.log("The result of the cross product is: " + back.toString());
          */
         cross: function (lhs, rhs) {
-            this.x = lhs.y * rhs.z - rhs.y * lhs.z;
-            this.y = lhs.z * rhs.x - rhs.z * lhs.x;
-            this.z = lhs.x * rhs.y - rhs.x * lhs.y;
+            // Create temporary variables in case lhs or rhs are 'this'
+            var lx = lhs.x;
+            var ly = lhs.y;
+            var lz = lhs.z;
+            var rx = rhs.x;
+            var ry = rhs.y;
+            var rz = rhs.z;
+
+            this.x = ly * rz - ry * lz;
+            this.y = lz * rx - rz * lx;
+            this.z = lx * ry - rx * ly;
 
             return this;
         },
