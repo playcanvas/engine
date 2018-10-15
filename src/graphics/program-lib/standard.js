@@ -177,7 +177,8 @@ pc.programlib.standard = {
                 matPropValues.chunks = (matPropValues.chunks || "") + pc.hashCode(props[i]);
             }
 
-            key += props[i] + options[props[i]];
+            if (props[i] !== "name")
+                key += props[i] + options[props[i]];
         }
         this.propLablesGlobal.sort();
 
@@ -201,14 +202,45 @@ pc.programlib.standard = {
             for (i = 0; i < out.length; ++i) out[i] = "";
 
             for (i = 0; i < this.propLablesGlobal.length; i++) {
-                out[0] += this.propLablesGlobal[i] + ",";
-                for (var m = 0; m < this.propValuesGlobal.length; m++) {
-                    out[m + 1] += this.propValuesGlobal[m][this.propLablesGlobal[i]] + ",";
+                var ip = this.propLablesGlobal[i];
+                var first = this.propValuesGlobal[0][ip];
+                var m;
+                for (m = 1; m < this.propValuesGlobal.length; m++) {
+                    if (this.propValuesGlobal[m][ip] !== first)
+                        break;
+                }
+                if (m >= this.propValuesGlobal.length)
+                    continue;
+
+                out[0] += ip + ",";
+                for (m = 0; m < this.propValuesGlobal.length; m++) {
+                    out[m + 1] += this.propValuesGlobal[m][ip] + ",";
                 }
             }
 
             console.log("SHADERS CSV");
             for (i = 0; i < out.length; ++i) console.log(out[i]);
+
+            console.log("SHADER MATCHES");
+            var match = function (m1, m2, keys) {
+                var diff = 0;
+                for (var k = 0; k < keys.length; k++) {
+                    if (keys[k] === "name") continue;
+                    if (m1[keys[k]] !== m2[keys[k]]) diff++;
+                }
+                return diff;
+            };
+
+            var i1, i2;
+            for (i1 = 0; i1 < this.propValuesGlobal.length; i1++) {
+                var line = "";
+                for (i2 = i1 + 1; i2 < this.propValuesGlobal.length; i2++) {
+                    var d = match(this.propValuesGlobal[i1], this.propValuesGlobal[i2], this.propLablesGlobal);
+                    line += d <= 2 ? (this.propValuesGlobal[i2].name || i2) + "," : "";
+                }
+                if (line !== "")
+                    console.log("MATCH " + (this.propValuesGlobal[i1].name || i1) + ":", line);
+            }
         }
 
         return pc.hashCode(key);

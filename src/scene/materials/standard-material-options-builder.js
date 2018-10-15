@@ -8,8 +8,8 @@ Object.assign(pc, function () {
         var options = {
             pass: pass,
             alphaTest: stdMat.alphaTest > 0,
-            forceFragmentPrecision: stdMat.forceFragmentPrecision,
-            chunks: stdMat.chunks,
+            forceFragmentPrecision: stdMat.forceFragmentPrecision || "",
+            chunks: stdMat.chunks || "",
             blendType: stdMat.blendType,
             forceUv1: stdMat.forceUv1
         };
@@ -38,10 +38,7 @@ Object.assign(pc, function () {
                 options.toneMap = pc.TONEMAP_LINEAR;
             }
 
-            if (objDefs) {
-                if (stdMat.normalMap)
-                    options.hasTangents = (objDefs & pc.SHADERDEF_TANGENTS) !== 0;
-            }
+            options.hasTangents = objDefs && stdMat.normalMap && ((objDefs & pc.SHADERDEF_TANGENTS) !== 0);
 
             var optionsLight = this._generateLightOptions(stdMat, objDefs, sortedLights, staticLightList);
             Object.assign(options, optionsLight);
@@ -56,6 +53,7 @@ Object.assign(pc, function () {
             hasVcolor = (objDefs & pc.SHADERDEF_VCOLOR) !== 0;
         }
 
+        options.vertexColors = false;
         this._mapXForms = [];
         for (var p in pc._matTex2D) {
             var texOpt = this._generateTexOptions(stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions);
@@ -127,7 +125,7 @@ Object.assign(pc, function () {
             msdf: !!stdMat.msdfMap,
             twoSidedLighting: stdMat.twoSidedLighting,
             pixelSnap: stdMat.pixelSnap,
-            nineSlicedMode: stdMat.nineSlicedMode,
+            nineSlicedMode: stdMat.nineSlicedMode || 0,
             aoMapUv: stdMat.aoUvSet // backwards component
         };
         return options;
@@ -164,16 +162,22 @@ Object.assign(pc, function () {
             hdrAmbient: hdrAmbient,
             rgbmReflection: rgbmReflection,
             hdrReflection: hdrReflection,
-            useRgbm: rgbmReflection || rgbmAmbient || (stdMat.emissiveMap ? stdMat.emissiveMap.rgbm : 0) || (stdMat.lightMap ? stdMat.lightMap.rgbm : 0),
+            useRgbm: rgbmReflection || rgbmAmbient || (stdMat.emissiveMap ? stdMat.emissiveMap.rgbm : false) || (stdMat.lightMap ? stdMat.lightMap.rgbm : false),
             fixSeams: prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false),
             prefilteredCubemap: !!prefilteredCubeMap128,
-            skyboxIntensity: (prefilteredCubeMap128 === globalSky128 && prefilteredCubeMap128) && (scene.skyboxIntensity !== 1)
+            skyboxIntensity: (prefilteredCubeMap128 && globalSky128 && prefilteredCubeMap128 === globalSky128) && (scene.skyboxIntensity !== 1)
         };
         return options;
     };
 
     StandardMaterialOptionsBuilder.prototype._generateLightOptions = function (stdMat, objDefs, sortedLights, staticLightList) {
-        var options = {};
+        var options = {
+            lightMap: false,
+            lightMapChannel: "",
+            lightMapUv: 0,
+            lightMapTransform: 0,
+            dirLightMap: false
+        };
         if (objDefs) {
             options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
 
@@ -211,32 +215,40 @@ Object.assign(pc, function () {
     };
 
     StandardMaterialOptionsBuilder.prototype._generateTexOptions = function (stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions) {
+        var mname = p + "Map";
+        var vname = p + "VertexColor";
+        var vcname = p + "VertexColorChannel";
+        var cname = mname + "Channel";
+        var tname = mname + "Transform";
+        var uname = mname + "Uv";
+
         var options = {};
+
+        options[mname] = false;
+        options[vname] = false;
+        options[vcname] = "";
+        options[tname] = -1;
+        options[cname] = "";
+        options[uname] = -1;
+
         var isOpacity = p === "opacity";
         if (isOpacity && stdMat.blendType === pc.BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage)
-            return;
+            return options;
 
         if (!minimalOptions || isOpacity) {
-            var cname;
-            var mname = p + "Map";
-            var vname = p + "VertexColor";
             if (p !== "height" && stdMat[vname]) {
                 if (hasVcolor) {
-                    cname = p + "VertexColorChannel";
                     options[vname] = stdMat[vname];
-                    options[cname] = stdMat[cname];
+                    options[vcname] = stdMat[vcname];
                     options.vertexColors = true;
                 }
             }
             if (stdMat[mname]) {
-                var uname = mname + "Uv";
                 var allow = true;
                 if (stdMat[uname] === 0 && !hasUv0) allow = false;
                 if (stdMat[uname] === 1 && !hasUv1) allow = false;
                 if (allow) {
                     options[mname] = !!stdMat[mname];
-                    var tname = mname + "Transform";
-                    cname = mname + "Channel";
                     options[tname] = this._getMapTransformID(stdMat[tname], stdMat[uname]);
                     options[cname] = stdMat[cname];
                     options[uname] = stdMat[uname];

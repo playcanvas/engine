@@ -896,6 +896,8 @@ Object.assign(pc, function () {
 
             var options = this.shaderOptBuilder.update(device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
 
+            options.name = this.name;
+
             if (this.onUpdateShader) {
                 options = this.onUpdateShader(options);
             }
