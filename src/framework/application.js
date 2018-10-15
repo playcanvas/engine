@@ -511,6 +511,33 @@ Object.assign(pc, function () {
 
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
+
+        var allEntities = [];
+
+        for (var iGN = 0; iGN < 2000; iGN++) {
+            var e = new pc.Entity("Entity" + iGN, this);
+            this.root.addChild(e);
+            allEntities.push(e);
+            for (var jGN = 0; jGN < 20; jGN++) {
+                var e2 = new pc.Entity("Entity" + iGN + "_" + jGN, this);
+                e.addChild(e2);
+                allEntities.push(e2);
+            }
+        }
+        var t0 = performance.now();
+
+        for (var i = 0; i < allEntities.length; i++) {
+            if ((i % 10) === 0) allEntities[i]._dirtify();
+            else allEntities[i]._dirtify(true);
+        }
+
+        // for (var i = 0; i < allEntities.length; i++) {
+        //     if ((i % 10) === 0) allEntities[i]._dirtifyWorld();
+        //     else allEntities[i]._dirtifyLocal();
+        // }
+
+        var t1 = performance.now();
+        console.log("Call to _dirtify took " + (t1 - t0) + " milliseconds.");
     };
 
     Application._currentApplication = null;
