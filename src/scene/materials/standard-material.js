@@ -894,15 +894,24 @@ Object.assign(pc, function () {
                 }
             }
 
-            var options = this.shaderOptBuilder.update(device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+            var library = device.getProgramLibrary();
+            // Minimal options for Depth and Shadow passes
+            var minimalOptions = pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK;
 
+            var options = minimalOptions ? library.optionsContextMin : library.optionsContext;
+
+            if (minimalOptions)
+                this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+            else
+                this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+
+            // TODO: debug code - remove
             options.name = this.name;
 
             if (this.onUpdateShader) {
                 options = this.onUpdateShader(options);
             }
 
-            var library = device.getProgramLibrary();
             this.shader = library.getProgram('standard', options);
 
             if (!objDefs) {

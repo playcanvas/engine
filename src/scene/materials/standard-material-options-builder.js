@@ -3,47 +3,53 @@ Object.assign(pc, function () {
         this._mapXForms = null;
     };
 
+    // TODO: legacy - use updateRef insted, remove
     StandardMaterialOptionsBuilder.prototype.update = function (device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128) {
+        var options = {};
+        // Minimal options for Depth and Shadow passes
+        var minimalOptions = pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK;
+        if (minimalOptions)
+            this.updateMinRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+        else
+            this.updateRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+        return options;
+    };
 
-        var options = {
-            pass: pass,
-            alphaTest: stdMat.alphaTest > 0,
-            forceFragmentPrecision: stdMat.forceFragmentPrecision || "",
-            chunks: stdMat.chunks || "",
-            blendType: stdMat.blendType,
-            forceUv1: stdMat.forceUv1
-        };
+    // Minimal options for Depth and Shadow passes
+    StandardMaterialOptionsBuilder.prototype.updateMinRef = function (options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128) {
+        this._updateSharedOptions(options, stdMat, objDefs, pass);
+        this._updateMinOptions(options, stdMat);
+        this._updateUVOptions(options, stdMat, objDefs, true);
+    };
+
+    StandardMaterialOptionsBuilder.prototype.updateRef = function (options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128) {
+        this._updateSharedOptions(options, stdMat, objDefs, pass);
+        options.useTexCubeLod = device.useTexCubeLod;
+        this._updateEnvOptions(options, stdMat, scene, prefilteredCubeMap128);
+        this._updateMaterialOptions(options, stdMat);
+        if (pass === pc.SHADER_FORWARDHDR) {
+            if (options.gamma) options.gamma = pc.GAMMA_SRGBHDR;
+            options.toneMap = pc.TONEMAP_LINEAR;
+        }
+        options.hasTangents = objDefs && stdMat.normalMap && ((objDefs & pc.SHADERDEF_TANGENTS) !== 0);
+        this._updateLightOptions(options, stdMat, objDefs, sortedLights, staticLightList);
+        this._updateUVOptions(options, stdMat, objDefs, false);
+    };
+
+    StandardMaterialOptionsBuilder.prototype._updateSharedOptions = function (options, stdMat, objDefs, pass) {
+        options.pass = pass;
+        options.alphaTest = stdMat.alphaTest > 0;
+        options.forceFragmentPrecision = stdMat.forceFragmentPrecision || "";
+        options.chunks = stdMat.chunks || "";
+        options.blendType = stdMat.blendType;
+        options.forceUv1 = stdMat.forceUv1;
 
         options.screenSpace = objDefs && (objDefs & pc.SHADERDEF_SCREENSPACE) !== 0;
         options.skin = objDefs && (objDefs & pc.SHADERDEF_SKIN) !== 0;
         options.useInstancing = objDefs && (objDefs & pc.SHADERDEF_INSTANCING) !== 0;
+    };
 
-        // Minimal options for Depth and Shadow passes
-        var minimalOptions = pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK;
-
-        if (minimalOptions) {
-            var optionsMin = this._generateMinOptions(stdMat);
-            Object.assign(options, optionsMin);
-        } else {
-            options.useTexCubeLod = device.useTexCubeLod;
-
-            var envOptions = this._generateEnvOptions(stdMat, scene, prefilteredCubeMap128);
-            Object.assign(options, envOptions);
-
-            var optionsMat = this._generateMaterialOptions(stdMat);
-            Object.assign(options, optionsMat);
-
-            if (pass === pc.SHADER_FORWARDHDR) {
-                if (options.gamma) options.gamma = pc.GAMMA_SRGBHDR;
-                options.toneMap = pc.TONEMAP_LINEAR;
-            }
-
-            options.hasTangents = objDefs && stdMat.normalMap && ((objDefs & pc.SHADERDEF_TANGENTS) !== 0);
-
-            var optionsLight = this._generateLightOptions(stdMat, objDefs, sortedLights, staticLightList);
-            Object.assign(options, optionsLight);
-        }
-
+    StandardMaterialOptionsBuilder.prototype._updateUVOptions = function (options, stdMat, objDefs, minimalOptions) {
         var hasUv0 = false;
         var hasUv1 = false;
         var hasVcolor = false;
@@ -56,23 +62,17 @@ Object.assign(pc, function () {
         options.vertexColors = false;
         this._mapXForms = [];
         for (var p in pc._matTex2D) {
-            var texOpt = this._generateTexOptions(stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions);
-            Object.assign(options, texOpt);
+            this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions);
         }
         this._mapXForms = null;
-
-        return options;
     };
 
-    StandardMaterialOptionsBuilder.prototype._generateMinOptions = function (stdMat) {
-        var options = {
-            opacityTint: stdMat.opacity !== 1 && stdMat.blendType !== pc.BLEND_NONE,
-            lights: []
-        };
-        return options;
+    StandardMaterialOptionsBuilder.prototype._updateMinOptions = function (options, stdMat) {
+        options.opacityTint = stdMat.opacity !== 1 && stdMat.blendType !== pc.BLEND_NONE;
+        options.lights = [];
     };
 
-    StandardMaterialOptionsBuilder.prototype._generateMaterialOptions = function (stdMat) {
+    StandardMaterialOptionsBuilder.prototype._updateMaterialOptions = function (options, stdMat) {
         var diffuseTint = ((stdMat.diffuse.r !== 1 || stdMat.diffuse.g !== 1 || stdMat.diffuse.b !== 1) &&
             (stdMat.diffuseTint || (!stdMat.diffuseMap && !stdMat.diffuseVertexColor))) ? 3 : 0;
 
@@ -91,47 +91,45 @@ Object.assign(pc, function () {
             emissiveTint = (stdMat.emissive.r !== 1 || stdMat.emissive.g !== 1 || stdMat.emissive.b !== 1 || stdMat.emissiveIntensity !== 1) && stdMat.emissiveTint;
             emissiveTint = emissiveTint ? 3 : (stdMat.emissiveIntensity !== 1 ? 1 : 0);
         }
-        var options = {
-            opacityTint: (stdMat.opacity !== 1 && stdMat.blendType !== pc.BLEND_NONE) ? 1 : 0,
-            blendMapsWithColors: true,
-            ambientTint: stdMat.ambientTint,
-            diffuseTint: diffuseTint,
-            specularTint: specularTint ? 3 : 0,
-            metalnessTint: (stdMat.useMetalness && stdMat.metalness < 1) ? 1 : 0,
-            glossTint: 1,
-            emissiveTint: emissiveTint,
-            alphaToCoverage: stdMat.alphaToCoverage,
-            needsNormalFloat: stdMat.normalizeNormalMap,
-            sphereMap: !!stdMat.sphereMap,
-            cubeMap: !!stdMat.cubeMap,
-            dpAtlas: !!stdMat.dpAtlas,
-            ambientSH: !!stdMat.ambientSH,
-            useSpecular: useSpecular,
-            emissiveFormat: stdMat.emissiveMap ? (stdMat.emissiveMap.rgbm ? 1 : (stdMat.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null,
-            lightMapFormat: stdMat.lightMap ? (stdMat.lightMap.rgbm ? 1 : (stdMat.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null,
-            specularAntialias: stdMat.specularAntialias,
-            conserveEnergy: stdMat.conserveEnergy,
-            occludeSpecular: stdMat.occludeSpecular,
-            occludeSpecularFloat: (stdMat.occludeSpecularIntensity !== 1.0),
-            occludeDirect: stdMat.occludeDirect,
-            shadingModel: stdMat.shadingModel,
-            fresnelModel: stdMat.fresnelModel,
-            packedNormal: stdMat.normalMap ? (stdMat.normalMap.format === pc.PIXELFORMAT_DXT5) : false,
-            fastTbn: stdMat.fastTbn,
-            cubeMapProjection: stdMat.cubeMapProjection,
-            customFragmentShader: stdMat.customFragmentShader,
-            refraction: !!stdMat.refraction,
-            useMetalness: stdMat.useMetalness,
-            msdf: !!stdMat.msdfMap,
-            twoSidedLighting: stdMat.twoSidedLighting,
-            pixelSnap: stdMat.pixelSnap,
-            nineSlicedMode: stdMat.nineSlicedMode || 0,
-            aoMapUv: stdMat.aoUvSet // backwards component
-        };
-        return options;
+
+        options.opacityTint = (stdMat.opacity !== 1 && stdMat.blendType !== pc.BLEND_NONE) ? 1 : 0;
+        options.blendMapsWithColors = true;
+        options.ambientTint = stdMat.ambientTint;
+        options.diffuseTint = diffuseTint;
+        options.specularTint = specularTint ? 3 : 0;
+        options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1) ? 1 : 0;
+        options.glossTint = 1;
+        options.emissiveTint = emissiveTint;
+        options.alphaToCoverage = stdMat.alphaToCoverage;
+        options.needsNormalFloat = stdMat.normalizeNormalMap;
+        options.sphereMap = !!stdMat.sphereMap;
+        options.cubeMap = !!stdMat.cubeMap;
+        options.dpAtlas = !!stdMat.dpAtlas;
+        options.ambientSH = !!stdMat.ambientSH;
+        options.useSpecular = useSpecular;
+        options.emissiveFormat = stdMat.emissiveMap ? (stdMat.emissiveMap.rgbm ? 1 : (stdMat.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
+        options.lightMapFormat = stdMat.lightMap ? (stdMat.lightMap.rgbm ? 1 : (stdMat.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
+        options.specularAntialias = stdMat.specularAntialias;
+        options.conserveEnergy = stdMat.conserveEnergy;
+        options.occludeSpecular = stdMat.occludeSpecular;
+        options.occludeSpecularFloat = (stdMat.occludeSpecularIntensity !== 1.0);
+        options.occludeDirect = stdMat.occludeDirect;
+        options.shadingModel = stdMat.shadingModel;
+        options.fresnelModel = stdMat.fresnelModel;
+        options.packedNormal = stdMat.normalMap ? (stdMat.normalMap.format === pc.PIXELFORMAT_DXT5) : false;
+        options.fastTbn = stdMat.fastTbn;
+        options.cubeMapProjection = stdMat.cubeMapProjection;
+        options.customFragmentShader = stdMat.customFragmentShader;
+        options.refraction = !!stdMat.refraction;
+        options.useMetalness = stdMat.useMetalness;
+        options.msdf = !!stdMat.msdfMap;
+        options.twoSidedLighting = stdMat.twoSidedLighting;
+        options.pixelSnap = stdMat.pixelSnap;
+        options.nineSlicedMode = stdMat.nineSlicedMode || 0;
+        options.aoMapUv = stdMat.aoUvSet; // backwards componen
     };
 
-    StandardMaterialOptionsBuilder.prototype._generateEnvOptions = function (stdMat, scene, prefilteredCubeMap128) {
+    StandardMaterialOptionsBuilder.prototype._updateEnvOptions = function (options, stdMat, scene, prefilteredCubeMap128) {
         var rgbmAmbient = (prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm : false) ||
             (stdMat.cubeMap ? stdMat.cubeMap.rgbm : false) ||
             (stdMat.dpAtlas ? stdMat.dpAtlas.rgbm : false);
@@ -154,30 +152,26 @@ Object.assign(pc, function () {
         if (stdMat.useSkybox)
             globalSky128 = scene._skyboxPrefiltered[0];
 
-        var options = {
-            fog: stdMat.useFog ? scene.fog : "none",
-            gamma: stdMat.useGammaTonemap ? scene.gammaCorrection : pc.GAMMA_NONE,
-            toneMap: stdMat.useGammaTonemap ? scene.toneMapping : -1,
-            rgbmAmbient: rgbmAmbient,
-            hdrAmbient: hdrAmbient,
-            rgbmReflection: rgbmReflection,
-            hdrReflection: hdrReflection,
-            useRgbm: rgbmReflection || rgbmAmbient || (stdMat.emissiveMap ? stdMat.emissiveMap.rgbm : false) || (stdMat.lightMap ? stdMat.lightMap.rgbm : false),
-            fixSeams: prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false),
-            prefilteredCubemap: !!prefilteredCubeMap128,
-            skyboxIntensity: (prefilteredCubeMap128 && globalSky128 && prefilteredCubeMap128 === globalSky128) && (scene.skyboxIntensity !== 1)
-        };
-        return options;
+        options.fog = stdMat.useFog ? scene.fog : "none";
+        options.gamma = stdMat.useGammaTonemap ? scene.gammaCorrection : pc.GAMMA_NONE;
+        options.toneMap = stdMat.useGammaTonemap ? scene.toneMapping : -1;
+        options.rgbmAmbient = rgbmAmbient;
+        options.hdrAmbient = hdrAmbient;
+        options.rgbmReflection = rgbmReflection;
+        options.hdrReflection = hdrReflection;
+        options.useRgbm = rgbmReflection || rgbmAmbient || (stdMat.emissiveMap ? stdMat.emissiveMap.rgbm : false) || (stdMat.lightMap ? stdMat.lightMap.rgbm : false);
+        options.fixSeams = prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : (stdMat.cubeMap ? stdMat.cubeMap.fixCubemapSeams : false);
+        options.prefilteredCubemap = !!prefilteredCubeMap128;
+        options.skyboxIntensity = (prefilteredCubeMap128 && globalSky128 && prefilteredCubeMap128 === globalSky128) && (scene.skyboxIntensity !== 1);
     };
 
-    StandardMaterialOptionsBuilder.prototype._generateLightOptions = function (stdMat, objDefs, sortedLights, staticLightList) {
-        var options = {
-            lightMap: false,
-            lightMapChannel: "",
-            lightMapUv: 0,
-            lightMapTransform: 0,
-            dirLightMap: false
-        };
+    StandardMaterialOptionsBuilder.prototype._updateLightOptions = function (options, stdMat, objDefs, sortedLights, staticLightList) {
+        options.lightMap = false;
+        options.lightMapChannel = "";
+        options.lightMapUv = 0;
+        options.lightMapTransform = 0;
+        options.dirLightMap = false;
+
         if (objDefs) {
             options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
 
@@ -211,18 +205,15 @@ Object.assign(pc, function () {
         if (options.lights.length === 0) {
             options.noShadow = false;
         }
-        return options;
     };
 
-    StandardMaterialOptionsBuilder.prototype._generateTexOptions = function (stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions) {
+    StandardMaterialOptionsBuilder.prototype._updateTexOptions = function (options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions) {
         var mname = p + "Map";
         var vname = p + "VertexColor";
         var vcname = p + "VertexColorChannel";
         var cname = mname + "Channel";
         var tname = mname + "Transform";
         var uname = mname + "Uv";
-
-        var options = {};
 
         options[mname] = false;
         options[vname] = false;
@@ -255,7 +246,6 @@ Object.assign(pc, function () {
                 }
             }
         }
-        return options;
     };
 
     StandardMaterialOptionsBuilder.prototype._collectLights = function (lType, lights, lightsFiltered, mask, staticLightList) {
