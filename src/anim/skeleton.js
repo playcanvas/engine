@@ -342,8 +342,7 @@ Object.assign(pc, function () {
                     transform.localRotation.copy(interpKey._quat);
                     transform.localScale.copy(interpKey._scale);
 
-                    if (!transform._dirtyLocal)
-                        transform._dirtify(true);
+                    transform._dirtifyLocal();
 
                     interpKey._written = false;
                 }

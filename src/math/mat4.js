@@ -5,39 +5,13 @@ Object.assign(pc, (function () {
      * @constructor
      * @name pc.Mat4
      * @classdesc A 4x4 matrix.
-     * @description Creates a new Mat4 object.
-     * @param {Number} [v0] The value in row 0, column 0. If v0 is an array of length 16, the array will be used to populate all components.
-     * @param {Number} [v1] The value in row 1, column 0.
-     * @param {Number} [v2] The value in row 2, column 0.
-     * @param {Number} [v3] The value in row 3, column 0.
-     * @param {Number} [v4] The value in row 0, column 1.
-     * @param {Number} [v5] The value in row 1, column 1.
-     * @param {Number} [v6] The value in row 2, column 1.
-     * @param {Number} [v7] The value in row 3, column 1.
-     * @param {Number} [v8] The value in row 0, column 2.
-     * @param {Number} [v9] The value in row 1, column 2.
-     * @param {Number} [v10] The value in row 2, column 2.
-     * @param {Number} [v11] The value in row 3, column 2.
-     * @param {Number} [v12] The value in row 0, column 3.
-     * @param {Number} [v13] The value in row 1, column 3.
-     * @param {Number} [v14] The value in row 2, column 3.
-     * @param {Number} [v15] The value in row 3, column 3.
+     * @description Creates a new identity Mat4 object.
      */
     var Mat4 = function () {
-        var data;
-        if (arguments.length === 0) {
-            // Create an identity matrix. Note that a new Float32Array has all elements set
-            // to zero by default, so we only need to set the relevant elements to one.
-            data = new Float32Array(16);
-            data[0] = data[5] = data[10] = data[15] = 1;
-        } else if (arguments.length === 1) {
-            data = new Float32Array(arguments[0]);
-        } else { // 16 values should have been passed
-            data = new Float32Array(16);
-            for (var i = 0; i < 16; i++) {
-                data[i] = arguments[i];
-            }
-        }
+        var data = new Float32Array(16);
+        // Create an identity matrix. Note that a new Float32Array has all elements set
+        // to zero by default, so we only need to set the relevant elements to one.
+        data[0] = data[5] = data[10] = data[15] = 1;
         this.data = data;
     };
 
@@ -1285,7 +1259,7 @@ Object.assign(pc, (function () {
      */
     Object.defineProperty(Mat4, 'ZERO', {
         get: (function () {
-            var zero = new Mat4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            var zero = new Mat4().set([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
             return function () {
                 return zero;
             };

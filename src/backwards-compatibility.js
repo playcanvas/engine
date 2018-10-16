@@ -325,3 +325,13 @@ pc.Material.prototype.setShader = function (shader) {
     // #endif
     this.shader = shader;
 };
+
+pc.GraphNode.prototype._dirtify = function (local) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.GraphNode#_dirtify is deprecated. Use the pc.GraphNode#_dirtifyLocal or _dirtifyWorld respectively instead.');
+    // #endif
+    if (local)
+        this._dirtifyLocal();
+    else
+        this._dirtifyWorld();
+};

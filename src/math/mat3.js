@@ -5,32 +5,14 @@ Object.assign(pc, (function () {
      * @constructor
      * @name pc.Mat3
      * @classdesc A 3x3 matrix.
-     * @description Creates a new Mat3 object.
-     * @param {Number} [v0] The value in row 0, column 0. If v0 is an array of length 9, the array will be used to populate all components.
-     * @param {Number} [v1] The value in row 1, column 0.
-     * @param {Number} [v2] The value in row 2, column 0.
-     * @param {Number} [v3] The value in row 0, column 1.
-     * @param {Number} [v4] The value in row 1, column 1.
-     * @param {Number} [v5] The value in row 2, column 1.
-     * @param {Number} [v6] The value in row 0, column 2.
-     * @param {Number} [v7] The value in row 1, column 2.
-     * @param {Number} [v8] The value in row 2, column 2.
+     * @description Creates a new identity Mat3 object.
      */
     var Mat3 = function () {
         var data;
-        if (arguments.length === 0) {
-            // Create an identity matrix. Note that a new Float32Array has all elements set
-            // to zero by default, so we only need to set the relevant elements to one.
-            data = new Float32Array(9);
-            data[0] = data[4] = data[8] = 1;
-        } else if (arguments.length === 1) {
-            data = new Float32Array(arguments[0]);
-        } else { // 9 values should have been passed
-            data = new Float32Array(9);
-            for (var i = 0; i < 9; i++) {
-                data[i] = arguments[i];
-            }
-        }
+        // Create an identity matrix. Note that a new Float32Array has all elements set
+        // to zero by default, so we only need to set the relevant elements to one.
+        data = new Float32Array(9);
+        data[0] = data[4] = data[8] = 1;
         this.data = data;
     };
 
@@ -63,6 +45,33 @@ Object.assign(pc, (function () {
          */
         copy: function (rhs) {
             var src = rhs.data;
+            var dst = this.data;
+
+            dst[0] = src[0];
+            dst[1] = src[1];
+            dst[2] = src[2];
+            dst[3] = src[3];
+            dst[4] = src[4];
+            dst[5] = src[5];
+            dst[6] = src[6];
+            dst[7] = src[7];
+            dst[8] = src[8];
+
+            return this;
+        },
+
+        /**
+         * @function
+         * @name pc.Mat3#set
+         * @description Copies the contents of a source array[9] to a destination 3x3 matrix.
+         * @param {Array} src An array[9] to be copied.
+         * @returns {pc.Mat3} Self for chaining
+         * @example
+         * var src = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+         * var dst = new pc.Mat3();
+         * dst.copy(src);
+         */
+        set: function (src) {
             var dst = this.data;
 
             dst[0] = src[0];
@@ -222,7 +231,7 @@ Object.assign(pc, (function () {
      */
     Object.defineProperty(Mat3, 'ZERO', {
         get: function () {
-            var zero = new Mat3(0, 0, 0, 0, 0, 0, 0, 0, 0);
+            var zero = new Mat3().set([0, 0, 0, 0, 0, 0, 0, 0, 0]);
             return function () {
                 return zero;
             };
