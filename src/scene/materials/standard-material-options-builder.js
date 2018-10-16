@@ -170,6 +170,7 @@ Object.assign(pc, function () {
         options.lightMapChannel = "";
         options.lightMapUv = 0;
         options.lightMapTransform = 0;
+        options.lightMapWithoutAmbient = false;
         options.dirLightMap = false;
 
         if (objDefs) {
@@ -215,12 +216,15 @@ Object.assign(pc, function () {
         var tname = mname + "Transform";
         var uname = mname + "Uv";
 
-        options[mname] = false;
+        // Avoid overriding previous lightMap properties
+        if (p !== "light") {
+            options[mname] = false;
+            options[cname] = "";
+            options[tname] = 0;
+            options[uname] = 0;
+        }
         options[vname] = false;
         options[vcname] = "";
-        options[tname] = -1;
-        options[cname] = "";
-        options[uname] = -1;
 
         var isOpacity = p === "opacity";
         if (isOpacity && stdMat.blendType === pc.BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage)
