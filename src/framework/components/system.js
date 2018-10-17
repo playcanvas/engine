@@ -7,7 +7,9 @@ Object.assign(pc, function () {
      */
     var ComponentSystem = function (app) {
         this.app = app;
-        this.dataStore = {};
+
+        // The store where all pc.ComponentData objects are kept
+        this.store = {};
         this.schema = [];
 
         pc.events.attach(this);
@@ -47,15 +49,6 @@ Object.assign(pc, function () {
     ComponentSystem.prototype = {
         /**
          * @private
-         * @name pc.ComponentSystem#store
-         * @description The store where all {@link pc.ComponentData} objects are kept
-         */
-        get store() {
-            return this.dataStore;
-        },
-
-        /**
-         * @private
          * @function
          * @name pc.ComponentSystem#addComponent
          * @description Create new {@link pc.Component} and {@link pc.ComponentData} instances and attach them to the entity
@@ -73,7 +66,7 @@ Object.assign(pc, function () {
 
             data = data || {};
 
-            this.dataStore[entity._guid] = {
+            this.store[entity.getGuid()] = {
                 entity: entity,
                 data: componentData
             };
@@ -99,10 +92,10 @@ Object.assign(pc, function () {
          * // entity.model === undefined
          */
         removeComponent: function (entity) {
-            var record = this.dataStore[entity._guid];
+            var record = this.store[entity.getGuid()];
             var component = entity.c[this.id];
             this.fire('beforeremove', entity, component);
-            delete this.dataStore[entity._guid];
+            delete this.store[entity.getGuid()];
             delete entity[this.id];
             delete entity.c[this.id];
             this.fire('remove', entity, record.data);
@@ -119,7 +112,7 @@ Object.assign(pc, function () {
          */
         cloneComponent: function (entity, clone) {
             // default clone is just to add a new component with existing data
-            var src = this.dataStore[entity._guid];
+            var src = this.store[entity.getGuid()];
             return this.addComponent(clone, src.data);
         },
 

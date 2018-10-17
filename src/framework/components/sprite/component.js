@@ -71,8 +71,11 @@ Object.assign(pc, function () {
 
         // 9-slicing
         this._outerScale = new pc.Vec2(1, 1);
+        this._outerScaleUniform = new Float32Array(2);
         this._innerOffset = new pc.Vec4();
+        this._innerOffsetUniform = new Float32Array(4);
         this._atlasRect = new pc.Vec4();
+        this._atlasRectUniform = new Float32Array(4);
 
         // batch groups
         this._batchGroupId = -1;
@@ -303,8 +306,16 @@ Object.assign(pc, function () {
                 }
 
                 // set inner offset and atlas rect on mesh instance
-                this._meshInstance.setParameter(PARAM_INNER_OFFSET, this._innerOffset.data);
-                this._meshInstance.setParameter(PARAM_ATLAS_RECT, this._atlasRect.data);
+                this._innerOffsetUniform[0] = this._innerOffset.x;
+                this._innerOffsetUniform[1] = this._innerOffset.y;
+                this._innerOffsetUniform[2] = this._innerOffset.z;
+                this._innerOffsetUniform[3] = this._innerOffset.w;
+                this._meshInstance.setParameter(PARAM_INNER_OFFSET, this._innerOffsetUniform);
+                this._atlasRectUniform[0] = this._atlasRect.x;
+                this._atlasRectUniform[1] = this._atlasRect.y;
+                this._atlasRectUniform[2] = this._atlasRect.z;
+                this._atlasRectUniform[3] = this._atlasRect.w;
+                this._meshInstance.setParameter(PARAM_ATLAS_RECT, this._atlasRectUniform);
             } else {
                 this._meshInstance._updateAabbFunc = null;
             }
@@ -359,7 +370,9 @@ Object.assign(pc, function () {
                 // update outer scale
                 if (this._meshInstance) {
                     // use outerScale in ALL passes (depth, picker, etc) so the shape is correct
-                    this._meshInstance.setParameter(PARAM_OUTER_SCALE, this._outerScale.data, 0xFFFFFFFF);
+                    this._outerScaleUniform[0] = this._outerScale.x;
+                    this._outerScaleUniform[1] = this._outerScale.y;
+                    this._meshInstance.setParameter(PARAM_OUTER_SCALE, this._outerScaleUniform, 0xFFFFFFFF);
                 }
             }
 

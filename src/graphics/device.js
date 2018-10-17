@@ -178,6 +178,7 @@ Object.assign(pc, function () {
         this.autoInstancingMaxObjects = 16384;
         this.attributesInvalidated = true;
         this.boundBuffer = null;
+        this.boundElementBuffer = null;
         this.instancedAttribs = { };
         this.enabledAttributes = { };
         this.transformFeedbackBuffer = null;
@@ -599,6 +600,7 @@ Object.assign(pc, function () {
 
         initializeExtensions: function () {
             var gl = this.gl;
+            var ext;
 
             var supportedExtensions = gl.getSupportedExtensions();
             var getExtension = function () {
@@ -621,17 +623,35 @@ Object.assign(pc, function () {
                 this.extTextureHalfFloatLinear = true;
                 this.extTextureLod = true;
                 this.extUintElement = true;
+                this.extVertexArrayObject = true;
                 this.extColorBufferFloat = getExtension('EXT_color_buffer_float');
             } else {
                 this.extBlendMinmax = getExtension("EXT_blend_minmax");
                 this.extDrawBuffers = getExtension('EXT_draw_buffers');
                 this.extInstancing = getExtension("ANGLE_instanced_arrays");
+                if (this.extInstancing) {
+                    // Install the WebGL 2 Instancing API for WebGL 1.0
+                    ext = this.extInstancing;
+                    gl.drawArraysInstanced = ext.drawArraysInstancedANGLE.bind(ext);
+                    gl.drawElementsInstanced = ext.drawElementsInstancedANGLE.bind(ext);
+                    gl.vertexAttribDivisor = ext.vertexAttribDivisorANGLE.bind(ext);
+                }
+
                 this.extStandardDerivatives = getExtension("OES_standard_derivatives");
                 this.extTextureFloat = getExtension("OES_texture_float");
                 this.extTextureHalfFloat = getExtension("OES_texture_half_float");
                 this.extTextureHalfFloatLinear = getExtension("OES_texture_half_float_linear");
                 this.extTextureLod = getExtension('EXT_shader_texture_lod');
                 this.extUintElement = getExtension("OES_element_index_uint");
+                this.extVertexArrayObject = getExtension("OES_vertex_array_object");
+                if (this.extVertexArrayObject) {
+                    // Install the WebGL 2 VAO API for WebGL 1.0
+                    ext = this.extVertexArrayObject;
+                    gl.createVertexArray = ext.createVertexArrayOES.bind(ext);
+                    gl.deleteVertexArray = ext.deleteVertexArrayOES.bind(ext);
+                    gl.isVertexArray = ext.isVertexArrayOES.bind(ext);
+                    gl.bindVertexArray = ext.bindVertexArrayOES.bind(ext);
+                }
                 this.extColorBufferFloat = null;
             }
 
@@ -799,6 +819,7 @@ Object.assign(pc, function () {
                 this.buffers[i].unlock();
             }
             this.boundBuffer = null;
+            this.boundElementBuffer = null;
             this.indexBuffer = null;
             this.attributesInvalidated = true;
             this.enabledAttributes = {};
@@ -1017,7 +1038,7 @@ Object.assign(pc, function () {
             var gl = this.gl;
 
             this.boundBuffer = null;
-            this.indexBuffer = null;
+            this.boundElementBuffer = null;
 
             // Set the render target
             var target = this.renderTarget;
@@ -1792,55 +1813,14 @@ Object.assign(pc, function () {
             }
         },
 
-        /**
-         * @function
-         * @name pc.GraphicsDevice#draw
-         * @description Submits a graphical primitive to the hardware for immediate rendering.
-         * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
-         * @param {Number} primitive.type The type of primitive to render. Can be:
-         * <ul>
-         *     <li>pc.PRIMITIVE_POINTS</li>
-         *     <li>pc.PRIMITIVE_LINES</li>
-         *     <li>pc.PRIMITIVE_LINELOOP</li>
-         *     <li>pc.PRIMITIVE_LINESTRIP</li>
-         *     <li>pc.PRIMITIVE_TRIANGLES</li>
-         *     <li>pc.PRIMITIVE_TRISTRIP</li>
-         *     <li>pc.PRIMITIVE_TRIFAN</li>
-         * </ul>
-         * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
-         * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
-         * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
-         * @param {Number} [numInstances=1] The number of instances to render when using ANGLE_instanced_arrays. Defaults to 1.
-         * @example
-         * // Render a single, unindexed triangle
-         * device.draw({
-         *     type: pc.PRIMITIVE_TRIANGLES,
-         *     base: 0,
-         *     count: 3,
-         *     indexed: false
-         * )};
-         */
-        draw: function (primitive, numInstances) {
+        setBuffers: function (numInstances) {
             var gl = this.gl;
-
-            var i, j, len; // Loop counting
-            var sampler, samplerValue, texture, numTextures; // Samplers
-            var uniform, scopeId, uniformVersion, programVersion, locationId; // Uniforms
-            var shader = this.shader;
-            var samplers = shader.samplers;
-            var uniforms = shader.uniforms;
-
-            if (numInstances > 1) {
-                this.boundBuffer = null;
-                this.attributesInvalidated = true;
-            }
+            var attribute, element, vertexBuffer, vbOffset, bufferId, locationId;
+            var attributes = this.shader.attributes;
 
             // Commit the vertex buffer inputs
             if (this.attributesInvalidated) {
-                var attribute, element, vertexBuffer, vbOffset, bufferId;
-                var attributes = shader.attributes;
-
-                for (i = 0, len = attributes.length; i < len; i++) {
+                for (var i = 0, len = attributes.length; i < len; i++) {
                     attribute = attributes[i];
 
                     // Retrieve vertex element for this shader attribute
@@ -1876,11 +1856,11 @@ Object.assign(pc, function () {
 
                         if (element.stream === 1 && numInstances > 1) {
                             if (!this.instancedAttribs[locationId]) {
-                                this.extInstancing.vertexAttribDivisorANGLE(locationId, 1);
+                                gl.vertexAttribDivisor(locationId, 1);
                                 this.instancedAttribs[locationId] = true;
                             }
                         } else if (this.instancedAttribs[locationId]) {
-                            this.extInstancing.vertexAttribDivisorANGLE(locationId, 0);
+                            gl.vertexAttribDivisor(locationId, 0);
                             this.instancedAttribs[locationId] = false;
                         }
                     }
@@ -1888,6 +1868,59 @@ Object.assign(pc, function () {
 
                 this.attributesInvalidated = false;
             }
+
+            // Set the active index buffer object
+            bufferId = this.indexBuffer ? this.indexBuffer.bufferId : null;
+            if (this.boundElementBuffer !== bufferId) {
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufferId);
+                this.boundElementBuffer = bufferId;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.GraphicsDevice#draw
+         * @description Submits a graphical primitive to the hardware for immediate rendering.
+         * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
+         * @param {Number} primitive.type The type of primitive to render. Can be:
+         * <ul>
+         *     <li>pc.PRIMITIVE_POINTS</li>
+         *     <li>pc.PRIMITIVE_LINES</li>
+         *     <li>pc.PRIMITIVE_LINELOOP</li>
+         *     <li>pc.PRIMITIVE_LINESTRIP</li>
+         *     <li>pc.PRIMITIVE_TRIANGLES</li>
+         *     <li>pc.PRIMITIVE_TRISTRIP</li>
+         *     <li>pc.PRIMITIVE_TRIFAN</li>
+         * </ul>
+         * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
+         * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
+         * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
+         * @param {Number} [numInstances=1] The number of instances to render when using ANGLE_instanced_arrays. Defaults to 1.
+         * @example
+         * // Render a single, unindexed triangle
+         * device.draw({
+         *     type: pc.PRIMITIVE_TRIANGLES,
+         *     base: 0,
+         *     count: 3,
+         *     indexed: false
+         * )};
+         */
+        draw: function (primitive, numInstances) {
+            var gl = this.gl;
+
+            var i, j, len; // Loop counting
+            var sampler, samplerValue, texture, numTextures; // Samplers
+            var uniform, scopeId, uniformVersion, programVersion; // Uniforms
+            var shader = this.shader;
+            var samplers = shader.samplers;
+            var uniforms = shader.uniforms;
+
+            if (numInstances > 1) {
+                this.boundBuffer = null;
+                this.attributesInvalidated = true;
+            }
+
+            this.setBuffers(numInstances);
 
             // Commit the shader program variables
             var textureUnit = 0;
@@ -1954,50 +1987,32 @@ Object.assign(pc, function () {
                 }
             }
 
-            this._drawCallsPerFrame++;
-            this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
-
             if (this.webgl2 && this.transformFeedbackBuffer) {
                 // Enable TF, start writing to out buffer
                 gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedbackBuffer.bufferId);
                 gl.beginTransformFeedback(gl.POINTS);
             }
 
+            var mode = this.glPrimitive[primitive.type];
+            var count = primitive.count;
+
             if (primitive.indexed) {
+                var indexBuffer = this.indexBuffer;
+                var format = indexBuffer.glFormat;
+                var offset = primitive.base * indexBuffer.bytesPerIndex;
+
                 if (numInstances > 1) {
-                    this.extInstancing.drawElementsInstancedANGLE(
-                        this.glPrimitive[primitive.type],
-                        primitive.count,
-                        this.indexBuffer.glFormat,
-                        primitive.base * 2,
-                        numInstances
-                    );
-                    this.boundBuffer = null;
-                    this.attributesInvalidated = true;
+                    gl.drawElementsInstanced(mode, count, format, offset, numInstances);
                 } else {
-                    gl.drawElements(
-                        this.glPrimitive[primitive.type],
-                        primitive.count,
-                        this.indexBuffer.glFormat,
-                        primitive.base * this.indexBuffer.bytesPerIndex
-                    );
+                    gl.drawElements(mode, count, format, offset);
                 }
             } else {
+                var first = primitive.base;
+
                 if (numInstances > 1) {
-                    this.extInstancing.drawArraysInstancedANGLE(
-                        this.glPrimitive[primitive.type],
-                        primitive.base,
-                        primitive.count,
-                        numInstances
-                    );
-                    this.boundBuffer = null;
-                    this.attributesInvalidated = true;
+                    gl.drawArraysInstanced(mode, first, count, numInstances);
                 } else {
-                    gl.drawArrays(
-                        this.glPrimitive[primitive.type],
-                        primitive.base,
-                        primitive.count
-                    );
+                    gl.drawArrays(mode, first, count);
                 }
             }
 
@@ -2006,6 +2021,11 @@ Object.assign(pc, function () {
                 gl.endTransformFeedback();
                 gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
             }
+
+            // #ifdef PROFILER
+            this._drawCallsPerFrame++;
+            this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+            // #endif
         },
 
         /**
@@ -2730,13 +2750,7 @@ Object.assign(pc, function () {
          */
         setIndexBuffer: function (indexBuffer) {
             // Store the index buffer
-            if (this.indexBuffer !== indexBuffer) {
-                this.indexBuffer = indexBuffer;
-
-                // Set the active index buffer object
-                var gl = this.gl;
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer ? indexBuffer.bufferId : null);
-            }
+            this.indexBuffer = indexBuffer;
         },
 
         /**
@@ -2881,6 +2895,8 @@ Object.assign(pc, function () {
             if (this.webgl2 && this.feedback) {
                 this.gl.deleteTransformFeedback(this.feedback);
             }
+
+            this.clearShaderCache();
         }
     });
 

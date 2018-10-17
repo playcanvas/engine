@@ -233,7 +233,6 @@ Object.assign(pc, function () {
         containsPoint: function (point) {
             var min = this.getMin();
             var max = this.getMax();
-            var i;
 
             if (point.x < min.x || point.x > max.x ||
                 point.y < min.y || point.y > max.y ||

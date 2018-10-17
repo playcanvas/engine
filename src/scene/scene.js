@@ -680,14 +680,16 @@ Object.assign(pc, function () {
             var scene = this;
             material.updateShader = function (dev, sc, defs, staticLightList, pass) {
                 var library = device.getProgramLibrary();
-                var shader = library.getProgram('skybox', { rgbm: scene._skyboxCubeMap.rgbm,
+                var shader = library.getProgram('skybox', {
+                    rgbm: scene._skyboxCubeMap.rgbm,
                     hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format === pc.PIXELFORMAT_RGBA32F),
                     useIntensity: scene.skyboxIntensity !== 1,
                     mip: scene._skyboxCubeMap.fixCubemapSeams ? scene.skyboxMip : 0,
                     fixSeams: scene._skyboxCubeMap.fixCubemapSeams,
                     gamma: (pass === pc.SHADER_FORWARDHDR ? (scene.gammaCorrection ? pc.GAMMA_SRGBHDR : pc.GAMMA_NONE) : scene.gammaCorrection),
-                    toneMapping: (pass === pc.SHADER_FORWARDHDR ? pc.TONEMAP_LINEAR : scene.toneMapping) });
-                this.setShader(shader);
+                    toneMapping: (pass === pc.SHADER_FORWARDHDR ? pc.TONEMAP_LINEAR : scene.toneMapping)
+                });
+                this.shader = shader;
             };
 
             material.updateShader();

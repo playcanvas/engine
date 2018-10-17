@@ -1534,9 +1534,9 @@ Object.assign(pc, function () {
             this.systems = [];
             this.context = null;
 
-            this.graphicsDevice.clearShaderCache();
+            pc.destroyPostEffectQuad();
+
             this.graphicsDevice.destroy();
-            this.graphicsDevice.destroyed = true;
             this.graphicsDevice = null;
 
             this.renderer = null;
@@ -1551,8 +1551,6 @@ Object.assign(pc, function () {
 
             // remove default particle texture
             pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
-
-            pc.destroyPostEffectQuad();
         }
     });
 
