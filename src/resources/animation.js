@@ -6,9 +6,16 @@ Object.assign(pc, function () {
 
     Object.assign(AnimationHandler.prototype, {
         load: function (url, callback) {
-            pc.http.get(url, function (err, response) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
+            pc.http.get(url.load, function (err, response) {
                 if (err) {
-                    callback(pc.string.format("Error loading animation resource: {0} [{1}]", url, err));
+                    callback(pc.string.format("Error loading animation resource: {0} [{1}]", url.original, err));
                 } else {
                     callback(null, response);
                 }

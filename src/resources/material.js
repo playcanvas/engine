@@ -26,8 +26,15 @@ Object.assign(pc, function () {
 
     Object.assign(MaterialHandler.prototype, {
         load: function (url, callback) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             // Loading from URL (engine-only)
-            pc.http.get(url, function (err, response) {
+            pc.http.get(url.load, function (err, response) {
                 if (!err) {
                     if (callback) {
                         response._engine = true;
@@ -35,7 +42,7 @@ Object.assign(pc, function () {
                     }
                 } else {
                     if (callback) {
-                        callback(pc.string.format("Error loading material: {0} [{1}]", url, err));
+                        callback(pc.string.format("Error loading material: {0} [{1}]", url.original, err));
                     }
                 }
             });

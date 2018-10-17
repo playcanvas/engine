@@ -46,23 +46,30 @@ Object.assign(pc, function () {
         },
 
         load: function (url, callback) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             var success = function (resource) {
                 callback(null, new pc.Sound(resource));
             };
 
             var error = function (msg) {
-                msg = msg || 'Error loading audio url: ' + url;
+                msg = msg || 'Error loading audio url: ' + url.original;
                 console.warn(msg);
                 callback(msg);
             };
 
             if (this._createSound) {
-                if (!this._isSupported(url)) {
-                    error(pc.string.format('Audio format for {0} not supported', url));
+                if (!this._isSupported(url.original)) {
+                    error(pc.string.format('Audio format for {0} not supported', url.original));
                     return;
                 }
 
-                this._createSound(url, success, error);
+                this._createSound(url.load, success, error);
             } else {
                 error(null);
             }

@@ -20,9 +20,16 @@ Object.assign(pc, function () {
 
     Object.assign(SpriteHandler.prototype, {
         load: function (url, callback) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             // if given a json file (probably engine-only use case)
-            if (pc.path.getExtension(url) === '.json') {
-                pc.http.get(url, function (err, response) {
+            if (pc.path.getExtension(url.original) === '.json') {
+                pc.http.get(url.load, function (err, response) {
                     if (!err) {
                         callback(null, response);
                     } else {

@@ -29,14 +29,21 @@ Object.assign(pc, function () {
          * successfully loaded.
          */
         load: function (url, callback) {
-            pc.http.get(url, function (err, response) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
+            pc.http.get(url.load, function (err, response) {
                 if (!callback)
                     return;
 
                 if (!err) {
                     callback(null, response);
                 } else {
-                    callback(pc.string.format("Error loading model: {0} [{1}]", url, err));
+                    callback(pc.string.format("Error loading model: {0} [{1}]", url.original, err));
                 }
             });
         },

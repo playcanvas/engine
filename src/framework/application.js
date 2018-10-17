@@ -167,7 +167,8 @@ Object.assign(pc, function () {
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this._audioManager = new pc.SoundManager(options);
-        this.loader = new pc.ResourceLoader();
+        this.bundles = new pc.BundleLoader();
+        this.loader = new pc.ResourceLoader(this.bundles);
 
         // stores all entities that have been created
         // for this app by guid
@@ -551,11 +552,13 @@ Object.assign(pc, function () {
                 }
 
                 var props = response.application_properties;
+                var bundles = response.bundles;
                 var scenes = response.scenes;
                 var assets = response.assets;
 
                 self._parseApplicationProperties(props, function (err) {
                     self._onVrChange(props.vr);
+                    self._parseBundles(bundles);
                     self._parseScenes(scenes);
                     self._parseAssets(assets);
                     if (!err) {
@@ -853,6 +856,15 @@ Object.assign(pc, function () {
                 }
             } else {
                 callback(null);
+            }
+        },
+
+        // insert bundles into bundle registry
+        _parseBundles: function (bundles) {
+            if (!bundles) return;
+
+            for (var i = 0; i < bundles.length; i++) {
+                this.bundles.add(bundles[i].name, bundles[i].url, bundles[i].assetUrls);
             }
         },
 

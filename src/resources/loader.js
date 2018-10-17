@@ -4,13 +4,15 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ResourceLoader
+     * @param {String} bundleLoader Bundle loader.
      * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
      * multiple requests. Add ResourceHandlers to handle different types of resources.
      */
-    var ResourceLoader = function () {
+    var ResourceLoader = function (bundleLoader) {
         this._handlers = {};
         this._requests = {};
         this._cache = {};
+        this._bundleLoader = bundleLoader;
     };
 
     Object.assign(ResourceLoader.prototype, {
@@ -73,24 +75,36 @@ Object.assign(pc, function () {
             } else {
                 // new request
                 this._requests[key] = [callback];
-                handler.load(url, function (err, data, extra) {
-                    // make sure key exists because loader
-                    // might have been destroyed by now
-                    if (!this._requests[key])
-                        return;
 
-                    var i, len = this._requests[key].length;
-                    if (!err) {
-                        var resource = handler.open(url, data, asset);
-                        this._cache[key] = resource;
-                        for (i = 0; i < len; i++)
-                            this._requests[key][i](null, resource, extra);
-                    } else {
-                        for (i = 0; i < len; i++)
-                            this._requests[key][i](err);
-                    }
-                    delete this._requests[key];
-                }.bind(this), asset);
+                var handleLoad = function (urlObj) {
+                    handler.load(urlObj, function (err, data, extra) {
+                        // make sure key exists because loader
+                        // might have been destroyed by now
+                        if (!this._requests[key])
+                            return;
+
+                        var i, len = this._requests[key].length;
+                        if (!err) {
+                            var resource = handler.open(urlObj.original, data, asset);
+                            this._cache[key] = resource;
+                            for (i = 0; i < len; i++)
+                                this._requests[key][i](null, resource, extra);
+                        } else {
+                            for (i = 0; i < len; i++)
+                                this._requests[key][i](err);
+                        }
+                        delete this._requests[key];
+                    }.bind(this));
+                }.bind(this);
+
+                if (this._bundleLoader.hasAsset(url)) {
+                    this._bundleLoader.loadAsset(url, function (assetUrlFromBundle) {
+                        handleLoad({ load: assetUrlFromBundle, original: url });
+                    });
+                } else {
+                    handleLoad({ load: url, original: url });
+                }
+
             }
         },
 
