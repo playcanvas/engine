@@ -174,6 +174,7 @@ Object.assign(pc, function () {
         this._entityIndex = {};
 
         this.scene = new pc.Scene();
+        this.syncQueue = new pc.PriorityQueue();
         this.root = new pc.Entity(this);
         this.root._enabledInHierarchy = true;
         this._enableList = [];
@@ -514,30 +515,42 @@ Object.assign(pc, function () {
 
         var allEntities = [];
 
-        for (var iGN = 0; iGN < 2000; iGN++) {
+        for (var iGN = 0; iGN < 200; iGN++) {
             var e = new pc.Entity("Entity" + iGN, this);
             this.root.addChild(e);
             allEntities.push(e);
-            for (var jGN = 0; jGN < 20; jGN++) {
+            for (var jGN = 0; jGN < 10; jGN++) {
                 var e2 = new pc.Entity("Entity" + iGN + "_" + jGN, this);
                 e.addChild(e2);
                 allEntities.push(e2);
             }
         }
+
+        this.root.syncHierarchy();
+        this.syncQueue._values = [];
+        this.syncQueue._index = [];
+
         var t0 = performance.now();
 
-        for (var i = 0; i < allEntities.length; i++) {
-            if ((i % 10) === 0) allEntities[i]._dirtify();
-            else allEntities[i]._dirtify(true);
+        for (var iter = 0; iter < 100; iter++) {
+
+            for (var i = 0; i < 200; i++) {
+                if ((i % 5) === 0) allEntities[Math.floor(Math.random() * allEntities.length)]._dirtifyWorld();
+                else allEntities[Math.floor(Math.random() * allEntities.length)]._dirtifyLocal();
+            }
+
+            for (var t = this.syncQueue._values.length - 1; t > 0; t--)
+                this.syncQueue._values[t].syncHierarchy();
+
+            this.syncQueue._values = [];
+            this.syncQueue._index = [];
+
+            //this.root.syncHierarchy();
+
         }
-
-        // for (var i = 0; i < allEntities.length; i++) {
-        //     if ((i % 10) === 0) allEntities[i]._dirtifyWorld();
-        //     else allEntities[i]._dirtifyLocal();
-        // }
-
+        
         var t1 = performance.now();
-        console.log("Call to _dirtify took " + (t1 - t0) + " milliseconds.");
+        console.log("Call to syncHierarchy took " + (t1 - t0) + " milliseconds.");
     };
 
     Application._currentApplication = null;

@@ -6,6 +6,39 @@ Object.assign(pc, function () {
     var scaleCompensateScale = new pc.Vec3();
     var scaleCompensateScaleForParent = new pc.Vec3();
 
+    var PriorityQueue = function () {
+        this._index = [];
+        this._values = [];
+    };
+
+    PriorityQueue.prototype.Pull = function () {
+        var l = this._index.length;
+        if (l) {
+            var a = { v: this._values[l - 1], p: this._index[l - 1] };
+            this._values.splice(l - 1, 1);
+            this._index.splice(l - 1, 1);
+            return a;
+        } else return { v: null, p: 0 };
+    };
+
+    PriorityQueue.prototype.PushBack = function (p, v) {
+        this._values.push(v);
+        this._index.push(p);
+    };
+
+    PriorityQueue.prototype.Push = function (p, v) {
+        var bs = function (index, s, e, k) {
+            if (s === e) return s;
+            var m = Math.floor((s + e) / 2);
+            if (index[m] < k) return bs(index, s, m, k);
+            else if (index[m] > k) return bs(index, m + 1, e, k);
+            else return m;
+        };
+        var i = bs(this._index, 0, this._index.length, p);
+        this._values.splice(i, 0, v);
+        this._index.splice(i, 0, p);
+    };
+
     /**
      * @constructor
      * @name pc.GraphNode
@@ -907,15 +940,28 @@ Object.assign(pc, function () {
         },
 
         _dirtifyWorld: function () {
+            if (!this._dirtyWorld)
+                this._queueSync(this, 0);
+            this._dirtifyWorldChild();
+        },
+
+        _dirtifyWorldChild: function () {
             if (!this._dirtyWorld) {
                 this._dirtyWorld = true;
                 for (var i = 0; i < this._children.length; i++) {
                     if (!this._children[i]._dirtyWorld)
-                        this._children[i]._dirtifyWorld();
+                        this._children[i]._dirtifyWorldChild();
                 }
             }
             this._dirtyNormal = true;
             this._aabbVer++;
+        },
+
+        _queueSync: function (node, depth) {
+            if (this._parent)
+                this._parent._queueSync(node, depth + 1);
+            else
+                this._app.syncQueue.PushBack(depth, node);
         },
 
         /**
@@ -1529,6 +1575,7 @@ Object.assign(pc, function () {
     });
 
     return {
-        GraphNode: GraphNode
+        GraphNode: GraphNode,
+        PriorityQueue: PriorityQueue
     };
 }());
