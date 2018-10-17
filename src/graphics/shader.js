@@ -92,8 +92,8 @@ Object.assign(pc, function () {
             this.ready = false;
             this._linkInProgress = false;
 
-            var startTime = pc.now();
             // #ifdef PROFILER
+            var startTime = pc.now();
             this.device.fire('shader:compile:start', {
                 timestamp: startTime,
                 target: this
@@ -117,10 +117,9 @@ Object.assign(pc, function () {
                 this._startLink();
             }
 
-            var endTime = pc.now();
-
             this.compileToLinkTime = pc.now();
             // #ifdef PROFILER
+            var endTime = pc.now();
             this.device.fire('shader:compile:end', {
                 timestamp: endTime,
                 target: this
@@ -152,9 +151,8 @@ Object.assign(pc, function () {
             var gl = this.device.gl;
             var retValue = true;
 
-            var startTime = pc.now();
-
             // #ifdef PROFILER
+            var startTime = pc.now();
             this.device.fire('shader:link:start', {
                 timestamp: startTime,
                 target: this
@@ -180,8 +178,6 @@ Object.assign(pc, function () {
                 logERROR("Failed to link shader program. Error: " + gl.getProgramInfoLog(this.program));
                 retValue = false;
             }
-
-            var endTime = pc.now();
 
             gl.deleteShader(this.vshader);
             gl.deleteShader(this.fshader);
@@ -249,6 +245,7 @@ Object.assign(pc, function () {
             this.ready = true;
 
             // #ifdef PROFILER
+            var endTime = pc.now();
             this.device.fire('shader:link:end', {
                 timestamp: endTime,
                 target: this

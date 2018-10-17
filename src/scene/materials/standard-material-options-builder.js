@@ -3,18 +3,6 @@ Object.assign(pc, function () {
         this._mapXForms = null;
     };
 
-    // TODO: legacy - use updateRef insted, remove
-    StandardMaterialOptionsBuilder.prototype.update = function (device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128) {
-        var options = {};
-        // Minimal options for Depth and Shadow passes
-        var minimalOptions = pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK;
-        if (minimalOptions)
-            this.updateMinRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
-        else
-            this.updateRef(options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
-        return options;
-    };
-
     // Minimal options for Depth and Shadow passes
     StandardMaterialOptionsBuilder.prototype.updateMinRef = function (options, device, scene, stdMat, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128) {
         this._updateSharedOptions(options, stdMat, objDefs, pass);
