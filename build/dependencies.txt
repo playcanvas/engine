@@ -60,7 +60,6 @@
 ../src/graphics/program-lib/particle.js
 ../src/graphics/program-lib/standard.js
 ../src/graphics/program-lib/skybox.js
-../src/graphics/program-lib/options-precache.js
 ../src/graphics/post-effect.js
 ../src/scene/scene.js
 ../src/scene/forward-renderer.js
