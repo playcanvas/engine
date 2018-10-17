@@ -73,7 +73,7 @@ Object.assign(pc, function () {
             var systemsList = this._app.systems.list;
 
             var i, len = systemsList.length;
-            var entityData = entities[entity._guid];
+            var entityData = entities[entity.getGuid()];
             for (i = 0; i < len; i++) {
                 var system = systemsList[i];
                 var componentData = entityData.components[system.id];

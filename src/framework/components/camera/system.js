@@ -173,7 +173,7 @@ Object.assign(pc, function () {
                         if (cam._node) {
                             cam._node.localTransform.copy(vrDisplay.combinedViewInv);
                             cam._node._dirtyLocal = false;
-                            cam._node._dirtify();
+                            cam._node._dirtifyWorld();
                         }
                     }
                 }

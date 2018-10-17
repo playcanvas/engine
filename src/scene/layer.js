@@ -601,7 +601,7 @@ Object.assign(pc, function () {
             this.cameras.sort(sortCameras);
             var str = "";
             for (var i = 0; i < this.cameras.length; i++) {
-                str += this.cameras[i].entity._guid;
+                str += this.cameras[i].entity.getGuid();
             }
             this._cameraHash = pc.hashCode(str);
         } else {

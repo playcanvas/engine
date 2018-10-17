@@ -59,7 +59,7 @@ Object.assign(pc, function () {
             }
         }
 
-        this.setGuid(pc.guid.create()); // Globally Unique Identifier
+        this._guid = null;
 
         // used by component systems to speed up destruction
         this._destroying = false;
@@ -157,6 +157,12 @@ Object.assign(pc, function () {
      * @returns {String} The GUID of the Entity
      */
     Entity.prototype.getGuid = function () {
+        // if the guid hasn't been set yet then set it now
+        // before returning it
+        if (! this._guid) {
+            this.setGuid(pc.guid.create());
+        }
+
         return this._guid;
     };
 
@@ -172,7 +178,10 @@ Object.assign(pc, function () {
     Entity.prototype.setGuid = function (guid) {
         // remove current guid from entityIndex
         var index = this._app._entityIndex;
-        delete index[this._guid];
+        if (this._guid) {
+            delete index[this._guid];
+        }
+
         // add new guid to entityIndex
         this._guid = guid;
         index[this._guid] = this;
@@ -329,7 +338,9 @@ Object.assign(pc, function () {
             this._callbackActive = null;
 
         // remove from entity index
-        delete this._app._entityIndex[this._guid];
+        if (this._guid) {
+            delete this._app._entityIndex[this._guid];
+        }
 
         this._destroying = false;
     };
