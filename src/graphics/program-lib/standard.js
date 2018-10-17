@@ -158,6 +158,10 @@ pc.programlib.standard = {
         props.sort();
 
         var i = 0;
+        for (i = 0; i < props.length; i++) {
+            key += props[i] + options[props[i]];
+        }
+
         if (options.lights) {
             for (i = 0; i < options.lights.length; i++) {
                 light = options.lights[i];
