@@ -138,15 +138,10 @@ pc.programlib.standard = {
         transformUv1: { n: "transformVS", f: _oldChunkTransformUv1 }
     },
 
-    propLablesGlobal: ["lights", "chunks"],
-    propValuesGlobal: [],
-    keysGlobal: [],
-
     generateKey: function (device, options) {
         var prop, props = [];
         var key = "standard";
         var light;
-        var matPropValues = {};
         for (prop in options) {
             if (options.hasOwnProperty(prop)) {
                 if (prop === "chunks") {
@@ -163,83 +158,10 @@ pc.programlib.standard = {
         props.sort();
 
         var i = 0;
-        function findProp(arr, prop) {
-            return arr.some(function (e) {
-                return prop === e;
-            });
-        }
-        for (i = 0; i < props.length; i++) {
-            if (options[props[i]] !== undefined) {
-                if (!findProp(this.propLablesGlobal, props[i]))
-                    this.propLablesGlobal.push(props[i]);
-                matPropValues[props[i]] = options[props[i]];
-            } else {
-                matPropValues.chunks = (matPropValues.chunks || "") + pc.hashCode(props[i]);
-            }
-
-            if (props[i] !== "name")
-                key += props[i] + options[props[i]];
-        }
-        this.propLablesGlobal.sort();
-
         if (options.lights) {
-            matPropValues.lights = "";
             for (i = 0; i < options.lights.length; i++) {
                 light = options.lights[i];
                 key += light.key;
-                matPropValues.lights += light.key;
-            }
-        }
-
-        var hashKey = pc.hashCode(key);
-        if (!this.keysGlobal.some(function (k) {
-            return k === hashKey;
-        })) {
-            this.keysGlobal.push(hashKey);
-            this.propValuesGlobal.push(matPropValues);
-
-            var out = Array(this.propValuesGlobal.length + 1);
-            for (i = 0; i < out.length; ++i) out[i] = "";
-
-            for (i = 0; i < this.propLablesGlobal.length; i++) {
-                var ip = this.propLablesGlobal[i];
-                var first = this.propValuesGlobal[0][ip];
-                var m;
-                for (m = 1; m < this.propValuesGlobal.length; m++) {
-                    if (this.propValuesGlobal[m][ip] !== first)
-                        break;
-                }
-                if (m >= this.propValuesGlobal.length)
-                    continue;
-
-                out[0] += ip + ",";
-                for (m = 0; m < this.propValuesGlobal.length; m++) {
-                    out[m + 1] += this.propValuesGlobal[m][ip] + ",";
-                }
-            }
-
-            console.log("SHADERS CSV");
-            for (i = 0; i < out.length; ++i) console.log(out[i]);
-
-            console.log("SHADER MATCHES");
-            var match = function (m1, m2, keys) {
-                var diff = 0;
-                for (var k = 0; k < keys.length; k++) {
-                    if (keys[k] === "name") continue;
-                    if (m1[keys[k]] !== m2[keys[k]]) diff++;
-                }
-                return diff;
-            };
-
-            var i1, i2;
-            for (i1 = 0; i1 < this.propValuesGlobal.length; i1++) {
-                var line = "";
-                for (i2 = i1 + 1; i2 < this.propValuesGlobal.length; i2++) {
-                    var d = match(this.propValuesGlobal[i1], this.propValuesGlobal[i2], this.propLablesGlobal);
-                    line += d <= 2 ? (this.propValuesGlobal[i2].name || i2) + "," : "";
-                }
-                if (line !== "")
-                    console.log("MATCH " + (this.propValuesGlobal[i1].name || i1) + ":", line);
             }
         }
 

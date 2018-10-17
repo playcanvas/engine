@@ -113,13 +113,11 @@ Object.assign(pc, function () {
                 this.device._shaderStats.materialShaders++;
             }
 
-            var endTime = pc.now();
-            console.log('Shader COMPILE ', endTime - startTime);
-
             if (link) {
-                console.log("PRE-LINK");
                 this._startLink();
             }
+
+            var endTime = pc.now();
 
             this.compileToLinkTime = pc.now();
             // #ifdef PROFILER
@@ -155,7 +153,6 @@ Object.assign(pc, function () {
             var retValue = true;
 
             var startTime = pc.now();
-            console.log('Shader COMPILE to LINK ', startTime - this.compileToLinkTime);
 
             // #ifdef PROFILER
             this.device.fire('shader:link:start', {
@@ -185,7 +182,6 @@ Object.assign(pc, function () {
             }
 
             var endTime = pc.now();
-            console.log('Shader LINK ', endTime - startTime);
 
             gl.deleteShader(this.vshader);
             gl.deleteShader(this.fshader);

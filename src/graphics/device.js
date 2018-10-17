@@ -560,8 +560,6 @@ Object.assign(pc, function () {
         }
 
         this.textureFloatHighPrecision = testTextureFloatHighPrecision(this);
-
-        this.programLib.warmUp();
     };
 
     Object.assign(GraphicsDevice.prototype, {
