@@ -936,12 +936,14 @@ Object.assign(pc, function () {
             if (!this._dirtyLocal) {
                 this._dirtyLocal = true;
                 this._dirtifyWorld();
+            } else {
+                this._queueSync(this, 0);
             }
         },
 
         _dirtifyWorld: function () {
-            if (!this._dirtyWorld)
-                this._queueSync(this, 0);
+            //if (!this._dirtyWorld)
+            this._queueSync(this, 0);
             this._dirtifyWorldChild();
         },
 
@@ -949,8 +951,7 @@ Object.assign(pc, function () {
             if (!this._dirtyWorld) {
                 this._dirtyWorld = true;
                 for (var i = 0; i < this._children.length; i++) {
-                    if (!this._children[i]._dirtyWorld)
-                        this._children[i]._dirtifyWorldChild();
+                    this._children[i]._dirtifyWorldChild();
                 }
             }
             this._dirtyNormal = true;
@@ -961,7 +962,7 @@ Object.assign(pc, function () {
             if (this._parent)
                 this._parent._queueSync(node, depth + 1);
             else
-                this._app.syncQueue.PushBack(depth, node);
+                pc.syncQueue.Push(depth, node);
         },
 
         /**

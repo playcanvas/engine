@@ -174,7 +174,7 @@ Object.assign(pc, function () {
         this._entityIndex = {};
 
         this.scene = new pc.Scene();
-        this.syncQueue = new pc.PriorityQueue();
+        pc.syncQueue = new pc.PriorityQueue();
         this.root = new pc.Entity(this);
         this.root._enabledInHierarchy = true;
         this._enableList = [];
@@ -513,44 +513,53 @@ Object.assign(pc, function () {
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
 
-        var allEntities = [];
+        // this.root.syncHierarchy();
+        // var allEntities = [];
 
-        for (var iGN = 0; iGN < 200; iGN++) {
-            var e = new pc.Entity("Entity" + iGN, this);
-            this.root.addChild(e);
-            allEntities.push(e);
-            for (var jGN = 0; jGN < 10; jGN++) {
-                var e2 = new pc.Entity("Entity" + iGN + "_" + jGN, this);
-                e.addChild(e2);
-                allEntities.push(e2);
-            }
-        }
+        // for (var iGN = 0; iGN < 200; iGN++) {
+        //     var e = new pc.Entity("Entity" + iGN, this);
+        //     this.root.addChild(e);
+        //     allEntities.push(e);
+        //     for (var jGN = 0; jGN < 10; jGN++) {
+        //         var e2 = new pc.Entity("Entity" + iGN + "_" + jGN, this);
+        //         e.addChild(e2);
+        //         allEntities.push(e2);
+        //     }
+        // }
 
-        this.root.syncHierarchy();
-        this.syncQueue._values = [];
-        this.syncQueue._index = [];
+        // this.root.syncHierarchy();
+        // pc.syncQueue._values = [];
+        // pc.syncQueue._index = [];
 
-        var t0 = performance.now();
+        // var t0 = performance.now();
 
-        for (var iter = 0; iter < 100; iter++) {
+        // for (var iter = 0; iter < 100; iter++) {
 
-            for (var i = 0; i < 200; i++) {
-                if ((i % 5) === 0) allEntities[Math.floor(Math.random() * allEntities.length)]._dirtifyWorld();
-                else allEntities[Math.floor(Math.random() * allEntities.length)]._dirtifyLocal();
-            }
+        // for (var i = 0; i < 200; i++) {
+        //     if ((i % 5) === 0) allEntities[Math.floor(Math.random() * allEntities.length)]._dirtifyWorld();
+        //     else allEntities[Math.floor(Math.random() * allEntities.length)]._dirtifyLocal();
+        // }
 
-            for (var t = this.syncQueue._values.length - 1; t > 0; t--)
-                this.syncQueue._values[t].syncHierarchy();
+        // var countNested = function (n) {
+        //     var acc = n._children.length;
+        //     for (var i = 0; i < n._children.length; i++) acc += countNested(n._children[i]);
+        //     return acc;
+        // };
 
-            this.syncQueue._values = [];
-            this.syncQueue._index = [];
+        // console.log(pc.syncQueue._values.length, 'of', countNested(this.root));
 
-            //this.root.syncHierarchy();
+        // for (var t = pc.syncQueue._values.length - 1; t > 0; t--)
+        //     pc.syncQueue._values[t].syncHierarchy();
 
-        }
-        
-        var t1 = performance.now();
-        console.log("Call to syncHierarchy took " + (t1 - t0) + " milliseconds.");
+        // pc.syncQueue._values = [];
+        // pc.syncQueue._index = [];
+
+            // this.root.syncHierarchy();
+
+        // }
+
+        // var t1 = performance.now();
+        // console.log("Call to syncHierarchy took " + (t1 - t0) + " milliseconds.");
     };
 
     Application._currentApplication = null;
@@ -1065,7 +1074,24 @@ Object.assign(pc, function () {
             // #endif
 
             this.fire("prerender");
-            this.root.syncHierarchy();
+
+            var countNested = function (n) {
+                var acc = n._children.length;
+                for (var i = 0; i < n._children.length; i++) acc += countNested(n._children[i]);
+                return acc;
+            };
+            var acc = pc.syncQueue._values.reduce(function (a, x) { return a + countNested(x); }, 0);
+            for (var t = pc.syncQueue._values.length - 1; t > 0; t--) {
+                pc.syncQueue._values[t].syncHierarchy();
+            }
+            console.log('Sync hierarchy', pc.syncQueue._values.length + '/' + acc, 'of',  countNested(this.root));
+
+            pc.syncQueue._values = [];
+            pc.syncQueue._index = [];
+
+            // this.root.syncHierarchy();
+
+
             this.batcher.updateAll();
             pc._skipRenderCounter = 0;
             this.renderer.renderComposition(this.scene.layers);
