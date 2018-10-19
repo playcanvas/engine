@@ -928,7 +928,7 @@ describe('pc.ImageElement', function () {
         expect(e.element.isCulled(camera.camera.camera)).to.be.false;
     });
 
-    it('Offscreen rotated element is culled', function () {
+    xit('Offscreen rotated element is culled', function () {
         var canvasWidth = app.graphicsDevice.width;
         var canvasHeight = app.graphicsDevice.height;
 
