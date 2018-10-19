@@ -71,7 +71,7 @@ Object.assign(pc, function () {
             // this is a check for a possible error
             // that might happen if the app has been destroyed before
             // setTimeout has finished
-            if (! self.app.systems.script) {
+            if (!self.app || !self.app.systems || !self.app.systems.script) {
                 return;
             }
 
