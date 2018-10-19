@@ -66,7 +66,7 @@ module.exports = function (config) {
         // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
         logLevel: config.LOG_INFO,
 
-        // browserConsoleLogOptions: config.LOG_WARN,
+        browserConsoleLogOptions: config.LOG_WARN,
 
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: true,

@@ -480,7 +480,7 @@ Object.assign(pc, function () {
     Scene.prototype.destroy = function () {
         this.root = null;
         this.off();
-    }
+    };
 
     Object.defineProperty(Scene.prototype, 'fog', {
         get: function () {

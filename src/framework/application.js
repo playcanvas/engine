@@ -1452,6 +1452,8 @@ Object.assign(pc, function () {
          * @description Destroys application and removes all event listeners.
          */
         destroy: function () {
+            var i, l;
+
             Application._applications[this.graphicsDevice.canvas.id] = null;
 
             if (Application._currentApplication === this) {
@@ -1507,7 +1509,6 @@ Object.assign(pc, function () {
             }
 
             var systems = this.systems.list;
-            var i, l;
             for (i = 0, l = systems.length; i < l; i++) {
                 systems[i].destroy();
             }
@@ -1516,7 +1517,7 @@ Object.assign(pc, function () {
 
             // destroy all texture resources
             var assets = this.assets.list();
-            for (var i = 0; i < assets.length; i++) {
+            for (i = 0; i < assets.length; i++) {
                 assets[i].unload();
             }
 

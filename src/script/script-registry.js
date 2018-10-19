@@ -18,8 +18,7 @@ Object.assign(pc, function () {
     ScriptRegistry.prototype.destroy = function () {
         this.app = null;
         this.off();
-    }
-
+    };
 
     /**
      * @function
