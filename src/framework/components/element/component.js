@@ -205,8 +205,7 @@ Object.assign(pc, function () {
                 invParentWtm.copy(this.element._screenToWorld).invert();
                 invParentWtm.transformPoint(position, this.localPosition);
 
-                if (!this._dirtyLocal)
-                    this._dirtify(true);
+                this._dirtifyLocal();
             };
         }(),
 
@@ -226,8 +225,7 @@ Object.assign(pc, function () {
             element._margin.y = p.y - element._calculatedHeight * pvt.y;
             element._margin.w = (element._localAnchor.w - element._localAnchor.y) - element._calculatedHeight - element._margin.y;
 
-            if (!this._dirtyLocal)
-                this._dirtify(true);
+            this._dirtifyLocal();
         },
 
         // this method overwrites GraphNode#sync and so operates in scope of the Entity.
@@ -357,7 +355,7 @@ Object.assign(pc, function () {
 
             var result = this._parseUpToScreen();
 
-            this.entity._dirtify();
+            this.entity._dirtifyWorld();
 
             this._updateScreen(result.screen);
 
@@ -1243,8 +1241,7 @@ Object.assign(pc, function () {
 
             this._anchorDirty = true;
 
-            if (!this.entity._dirtyLocal)
-                this.entity._dirtify(true);
+            this.entity._dirtifyLocal();
 
             this.fire('set:anchor', this._anchor);
         }

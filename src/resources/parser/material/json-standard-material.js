@@ -53,12 +53,18 @@ Object.assign(pc, function () {
             } else if (type === 'texture') {
                 if (value instanceof pc.Texture) {
                     material[key] = value;
+                } else if (material[key] instanceof pc.Texture && typeof(value) === 'number' && value > 0) {
+                    // material already has a texture assigned, but data contains a valid asset id (which means the asset isn't yet loaded)
+                    // leave current texture (probably a placeholder) until the asset is loaded
                 } else {
                     material[key] = null;
                 }
             } else if (type === 'cubemap') {
                 if (value instanceof pc.Texture) {
                     material[key] = value;
+                } else if (material[key] instanceof pc.Texture && typeof(value) === 'number' && value > 0) {
+                    // material already has a texture assigned, but data contains a valid asset id (which means the asset isn't yet loaded)
+                    // leave current texture (probably a placeholder) until the asset is loaded
                 } else {
                     material[key] = null;
                 }

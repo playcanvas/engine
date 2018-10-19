@@ -161,8 +161,7 @@ Object.assign(pc, function () {
 
             this._calcProjectionMatrix();
 
-            if (!this.entity._dirtyLocal)
-                this.entity._dirtify(true);
+            this.entity._dirtifyLocal();
 
             this.fire("set:resolution", this._resolution);
         },
@@ -177,8 +176,7 @@ Object.assign(pc, function () {
             this._updateScale();
             this._calcProjectionMatrix();
 
-            if (!this.entity._dirtyLocal)
-                this.entity._dirtify(true);
+            this.entity._dirtifyLocal();
 
             this.fire("set:referenceresolution", this._resolution);
         },
@@ -199,8 +197,7 @@ Object.assign(pc, function () {
             }
             this.resolution = this._resolution; // force update either way
 
-            if (!this.entity._dirtyLocal)
-                this.entity._dirtify(true);
+            this.entity._dirtifyLocal();
 
             this.fire('set:screenspace', this._screenSpace);
         },
@@ -236,8 +233,7 @@ Object.assign(pc, function () {
             this._updateScale();
             this._calcProjectionMatrix();
 
-            if (!this.entity._dirtyLocal)
-                this.entity._dirtify(true);
+            this.entity._dirtifyLocal();
 
             this.fire("set:scaleblend", this._scaleBlend);
         },

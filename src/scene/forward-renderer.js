@@ -363,8 +363,6 @@ Object.assign(pc, function () {
         var library = device.getProgramLibrary();
         this.library = library;
 
-        this.frontToBack = false;
-
         // Uniforms
         var scope = device.scope;
         this.projId = scope.resolve('matrix_projection');
@@ -921,8 +919,14 @@ Object.assign(pc, function () {
                 this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
                 this.lightCookieIntId[cnt].setValue(spot.cookieIntensity);
                 if (spot._cookieTransform) {
-                    this.lightCookieMatrixId[cnt].setValue(spot._cookieTransform.data);
-                    this.lightCookieOffsetId[cnt].setValue(spot._cookieOffset.data);
+                    spot._cookieTransformUniform[0] = spot._cookieTransform.x;
+                    spot._cookieTransformUniform[1] = spot._cookieTransform.y;
+                    spot._cookieTransformUniform[2] = spot._cookieTransform.z;
+                    spot._cookieTransformUniform[3] = spot._cookieTransform.w;
+                    this.lightCookieMatrixId[cnt].setValue(spot._cookieTransformUniform);
+                    spot._cookieOffsetUniform[0] = spot._cookieOffset.x;
+                    spot._cookieOffsetUniform[1] = spot._cookieOffset.y;
+                    this.lightCookieOffsetId[cnt].setValue(spot._cookieOffsetUniform);
                 }
             }
         },
@@ -1908,15 +1912,15 @@ Object.assign(pc, function () {
 
                         invMatrix.copy(drawCall.node.worldTransform).invert();
                         localLightBounds.setFromTransformedAabb(lightAabb[j], invMatrix);
-                        minv = localLightBounds.getMin().data;
-                        maxv = localLightBounds.getMax().data;
+                        minv = localLightBounds.getMin();
+                        maxv = localLightBounds.getMax();
                         bit = 1 << s;
 
                         for (k = 0; k < numTris; k++) {
                             index = k * 6;
-                            if ((triBounds[index] <= maxv[0]) && (triBounds[index + 3] >= minv[0]) &&
-                                (triBounds[index + 1] <= maxv[1]) && (triBounds[index + 4] >= minv[1]) &&
-                                (triBounds[index + 2] <= maxv[2]) && (triBounds[index + 5] >= minv[2])) {
+                            if ((triBounds[index] <= maxv.x) && (triBounds[index + 3] >= minv.x) &&
+                                (triBounds[index + 1] <= maxv.y) && (triBounds[index + 4] >= minv.y) &&
+                                (triBounds[index + 2] <= maxv.z) && (triBounds[index + 5] >= minv.z)) {
 
                                 // triLightComb[k] += j + "_";  // uncomment to remove 32 lights limit
                                 triLightComb[k] |= bit; // comment to remove 32 lights limit
