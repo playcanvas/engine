@@ -17,6 +17,7 @@ describe("pc.TextElement", function () {
         fontAsset.unload();
         fontAsset = null;
         app.destroy();
+        app = null;
         canvas = null;
     });
 

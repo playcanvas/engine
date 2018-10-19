@@ -477,6 +477,11 @@ Object.assign(pc, function () {
         pc.events.attach(this);
     };
 
+    Scene.prototype.destroy = function () {
+        this.root = null;
+        this.off();
+    }
+
     Object.defineProperty(Scene.prototype, 'fog', {
         get: function () {
             return this._fog;

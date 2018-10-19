@@ -9,6 +9,7 @@ describe("pc.Element: Masks", function () {
 
     afterEach(function () {
         app.destroy();
+        app = null;
         canvas = null;
     });
 

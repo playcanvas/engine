@@ -15,6 +15,11 @@ Object.assign(pc, function () {
         this._list = [];
     };
 
+    ScriptRegistry.prototype.destroy = function () {
+        this.app = null;
+        this.off();
+    }
+
 
     /**
      * @function

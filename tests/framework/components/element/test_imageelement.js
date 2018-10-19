@@ -17,6 +17,7 @@ describe('pc.ImageElement', function () {
     afterEach(function () {
         sandbox.restore();
         app.destroy();
+        app = null;
         canvas = null;
     });
 
