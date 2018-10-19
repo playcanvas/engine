@@ -2,10 +2,12 @@ describe('pc.ImageElement', function () {
     var app;
     var assets;
     var sandbox;
+    var canvas;
 
     beforeEach(function (done) {
+        canvas = document.createElement("canvas");
         sandbox = sinon.createSandbox();
-        app = new pc.Application(document.createElement("canvas"));
+        app = new pc.Application(canvas);
 
         loadAllAssets(function () {
             done();
@@ -15,6 +17,7 @@ describe('pc.ImageElement', function () {
     afterEach(function () {
         sandbox.restore();
         app.destroy();
+        canvas = null;
     });
 
     var loadAssets = function (list, cb) {
