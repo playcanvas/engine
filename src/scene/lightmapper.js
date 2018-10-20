@@ -104,6 +104,13 @@ Object.assign(pc, function () {
     };
 
     Object.assign(Lightmapper.prototype, {
+        destroy: function () {
+            this.device = null;
+            this.root = null;
+            this.scene = null;
+            this.renderer = null;
+            this.assets = null;
+        },
 
         calculateLightmapSize: function (node) {
             var data, parent;

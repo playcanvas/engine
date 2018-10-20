@@ -1452,6 +1452,8 @@ Object.assign(pc, function () {
          * @description Destroys application and removes all event listeners.
          */
         destroy: function () {
+            var i, l;
+
             Application._applications[this.graphicsDevice.canvas.id] = null;
 
             if (Application._currentApplication === this) {
@@ -1506,21 +1508,50 @@ Object.assign(pc, function () {
                 this.controller = null;
             }
 
+            var systems = this.systems.list;
+            for (i = 0, l = systems.length; i < l; i++) {
+                systems[i].destroy();
+            }
+
             pc.ComponentSystem.destroy();
 
             // destroy all texture resources
             var assets = this.assets.list();
-            for (var i = 0; i < assets.length; i++) {
+            for (i = 0; i < assets.length; i++) {
                 assets[i].unload();
             }
 
             this.loader.destroy();
             this.loader = null;
 
+            this.scene.destroy();
             this.scene = null;
 
             this.systems = [];
             this.context = null;
+
+            // script registry
+            this.scripts.destroy();
+            this.scripts = null;
+
+            this._sceneRegistry.destroy();
+            this._sceneRegistry = null;
+
+            this.lightmapper.destroy();
+            this.lightmapper = null;
+
+            this.batcher.destroyManager();
+            this.batcher = null;
+
+            this._entityIndex = {};
+            this._visibilityChangeHandler = null;
+
+            this.defaultLayerDepth.onPreRenderOpaque = null;
+            this.defaultLayerDepth.onPostRenderOpaque = null;
+            this.defaultLayerDepth.onDisable = null;
+            this.defaultLayerDepth.onEnable = null;
+            this.defaultLayerDepth = null;
+            this.defaultLayerWorld = null;
 
             pc.destroyPostEffectQuad();
 
@@ -1529,6 +1560,8 @@ Object.assign(pc, function () {
 
             this.renderer = null;
             this.tick = null;
+
+            this.off(); // remove all events
 
             if (this._audioManager) {
                 this._audioManager.destroy();
