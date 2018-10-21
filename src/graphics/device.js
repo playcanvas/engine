@@ -561,7 +561,7 @@ Object.assign(pc, function () {
 
         this.textureFloatHighPrecision = testTextureFloatHighPrecision(this);
 
-        this.initializeCanvasGrabTexture();
+        this.initializeGrabPassTexture();
     };
 
     Object.assign(GraphicsDevice.prototype, {
@@ -855,28 +855,27 @@ Object.assign(pc, function () {
             this.transformFeedbackBuffer = null;
         },
 
-        initializeCanvasGrabTexture: function () {
-            if (this.canvasGrabTexture) return;
+        initializeGrabPassTexture: function () {
+            if (this.grabPassTexture) return;
 
-            var canvasGrabTexture = new pc.Texture(this, {
+            var grabPassTexture = new pc.Texture(this, {
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
                 autoMipmap: false
             });
 
-            canvasGrabTexture.minFilter = pc.FILTER_LINEAR;
-            canvasGrabTexture.magFilter = pc.FILTER_LINEAR;
-            canvasGrabTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-            canvasGrabTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+            grabPassTexture.minFilter = pc.FILTER_LINEAR;
+            grabPassTexture.magFilter = pc.FILTER_LINEAR;
+            grabPassTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            grabPassTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
-            canvasGrabTexture.name = 'canvasGrabTexture';
-            canvasGrabTexture.setSource(this.canvas);
+            grabPassTexture.name = 'texture_grabPass';
+            grabPassTexture.setSource(this.canvas);
 
-            var canvasGrabTextureId = this.canvasGrabTextureId;
-            if (!canvasGrabTextureId) canvasGrabTextureId = this.scope.resolve('canvasGrabTexture');
-            canvasGrabTextureId.setValue(canvasGrabTexture);
+            var grabPassTextureId = this.scope.resolve(grabPassTexture.name);
+            grabPassTextureId.setValue(grabPassTexture);
 
-            this.canvasGrabTextureId = canvasGrabTextureId;
-            this.canvasGrabTexture = canvasGrabTexture;
+            this.grabPassTextureId = grabPassTextureId;
+            this.grabPassTexture = grabPassTexture;
         },
 
         updateClientRect: function () {
@@ -1828,7 +1827,7 @@ Object.assign(pc, function () {
                 if (texture._needsUpload || texture._needsMipmapsUpload) {
                     this.uploadTexture(texture);
 
-                    if (texture !== this.canvasGrabTexture) {
+                    if (texture !== this.grabPassTexture) {
                         texture._needsUpload = false;
                         texture._needsMipmapsUpload = false;
                     }
