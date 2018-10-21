@@ -64,6 +64,11 @@ Object.assign(pc, function () {
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
+        destroy: function () {
+            this.off();
+            this.app.graphicsDevice.off("resizecanvas", this._onResize, this);
+        },
+
         _onUpdate: function (dt) {
             var components = this.store;
 

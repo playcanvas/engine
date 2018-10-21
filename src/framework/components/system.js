@@ -186,6 +186,10 @@ Object.assign(pc, function () {
             });
 
             return matchingProperties;
+        },
+
+        destroy: function () {
+            this.off();
         }
     };
 

@@ -27,6 +27,10 @@ Object.assign(pc, function () {
         this._urlIndex = {};
     };
 
+    SceneRegistry.prototype.destroy = function () {
+        this._app = null;
+    };
+
     /**
      * @private
      * @function

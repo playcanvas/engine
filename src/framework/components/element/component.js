@@ -883,6 +883,61 @@ Object.assign(pc, function () {
             var mo = this._maskOffset;
             this._maskOffset -= 0.001;
             return mo;
+        },
+
+        isCulled: function (camera) {
+            var clipL, clipR, clipT, clipB;
+
+            if (this.maskedBy) {
+                var corners = this.maskedBy.element.screenCorners;
+
+                clipL = Math.min(Math.min(corners[0].x, corners[1].x), Math.min(corners[2].x, corners[3].x));
+                clipR = Math.max(Math.max(corners[0].x, corners[1].x), Math.max(corners[2].x, corners[3].x));
+                clipB = Math.min(Math.min(corners[0].y, corners[1].y), Math.min(corners[2].y, corners[3].y));
+                clipT = Math.max(Math.max(corners[0].y, corners[1].y), Math.max(corners[2].y, corners[3].y));
+            } else {
+                var sw = this.system.app.graphicsDevice.width;
+                var sh = this.system.app.graphicsDevice.height;
+
+                var cameraWidth = camera._rect.width * sw;
+                var cameraHeight = camera._rect.height * sh;
+                clipL = camera._rect.x * sw;
+                clipR = clipL + cameraWidth;
+                clipT = (1 - camera._rect.y) * sh;
+                clipB = clipT - cameraHeight;
+            }
+
+            var hitCorners = this.screenCorners;
+
+            var left = Math.min(Math.min(hitCorners[0].x, hitCorners[1].x), Math.min(hitCorners[2].x, hitCorners[3].x));
+            var right = Math.max(Math.max(hitCorners[0].x, hitCorners[1].x), Math.max(hitCorners[2].x, hitCorners[3].x));
+            var bottom = Math.min(Math.min(hitCorners[0].y, hitCorners[1].y), Math.min(hitCorners[2].y, hitCorners[3].y));
+            var top = Math.max(Math.max(hitCorners[0].y, hitCorners[1].y), Math.max(hitCorners[2].y, hitCorners[3].y));
+
+            if (right < clipL ||
+                left > clipR ||
+                bottom > clipT ||
+                top < clipB) {
+                return false;
+            }
+
+            return true;
+        },
+
+        _isScreenSpace: function () {
+            if (this.screen && this.screen.screen) {
+                return this.screen.screen.screenSpace;
+            }
+
+            return false;
+        },
+
+        _isScreenCulled: function () {
+            if (this.screen && this.screen.screen) {
+                return this.screen.screen.cull;
+            }
+
+            return false;
         }
     });
 
@@ -935,11 +990,12 @@ Object.assign(pc, function () {
             this._layers = value;
 
             if (!this.enabled || !this.entity.enabled || !this._addedModels.length) return;
+
             for (i = 0; i < this._layers.length; i++) {
                 layer = this.system.app.scene.layers.getLayerById(this._layers[i]);
                 if (layer) {
                     for (j = 0; j < this._addedModels.length; j++) {
-                        layer.removeMeshInstances(this._addedModels[j].meshInstances);
+                        layer.addMeshInstances(this._addedModels[j].meshInstances);
                     }
                 }
             }

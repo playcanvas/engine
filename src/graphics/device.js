@@ -2925,6 +2925,9 @@ Object.assign(pc, function () {
             }
 
             this.clearShaderCache();
+
+            this.canvas = null;
+            this.gl = null;
         }
     });
 
