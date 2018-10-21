@@ -1,9 +1,9 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @component
+     * @constructor
      * @name pc.CollisionComponent
-     * @description Create a new CollisionComponent
-     * @class A collision volume. use this in conjunction with a {@link pc.RigidBodyComponent} to make a collision volume that can be simulated using the physics engine.
+     * @classdesc A collision volume. Use this in conjunction with a {@link pc.RigidBodyComponent} to make a collision volume that can be simulated using the physics engine.
      * <p>If the {@link pc.Entity} does not have a {@link pc.RigidBodyComponent} then this collision volume will act as a trigger volume. When an entity with a dynamic
      * or kinematic body enters or leaves an entity with a trigger volume, both entities will receive trigger events.
      * <p>The following table shows all the events that can be fired between two Entities:
@@ -47,13 +47,14 @@ pc.extend(pc, function () {
      *   </tr>
      * </table>
      * </p>
+     * @description Create a new CollisionComponent
      * @param {pc.CollisionComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @property {String} type The type of the collision volume. Defaults to 'box'. Can be one of the following:
      * <ul>
      * <li><strong>box</strong>: A box-shaped collision volume.</li>
      * <li><strong>sphere</strong>: A sphere-shaped collision volume.</li>
-     * <li><strong>capsulse</strong>: A capsule-shaped collision volume.</li>
+     * <li><strong>capsule</strong>: A capsule-shaped collision volume.</li>
      * <li><strong>cylinder</strong>: A cylinder-shaped collision volume.</li>
      * <li><strong>mesh</strong>: A collision volume that uses a model asset as its shape.</li>
      * </ul>
@@ -65,45 +66,9 @@ pc.extend(pc, function () {
      * @property {pc.Model} model The model that is added to the scene graph for the mesh collision volume.
      * @extends pc.Component
      */
+    var CollisionComponent = function CollisionComponent(system, entity) {
+        pc.Component.call(this, system, entity);
 
-    // Events Documentation
-    /**
-     * @event
-     * @name pc.CollisionComponent#contact
-     * @description The 'contact' event is fired when a contact occurs between two rigid bodies
-     * @param {pc.ContactResult} result Details of the contact between the two rigid bodies.
-    */
-
-    /**
-     * @event
-     * @name pc.CollisionComponent#collisionstart
-     * @description The 'collisionstart' event is fired when two rigid bodies start touching.
-     * @param {pc.ContactResult} result Details of the contact between the two Entities.
-    */
-
-    /**
-     * @event
-     * @name pc.CollisionComponent#collisionend
-     * @description The 'collisionend' event is fired two rigid-bodies stop touching.
-     * @param {pc.Entity} other The {@link pc.Entity} that stopped touching this collision volume.
-    */
-
-    /**
-     * @event
-     * @name pc.CollisionComponent#triggerenter
-     * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
-     * a {@link pc.RigidBodyComponent} attached.
-     * @param {pc.Entity} other The {@link pc.Entity} that entered this collision volume.
-    */
-
-    /**
-     * @event
-     * @name pc.CollisionComponent#triggerleave
-     * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
-     * a {@link pc.RigidBodyComponent} attached.
-     * @param {pc.Entity} other The {@link pc.Entity} that exited this collision volume.
-    */
-    var CollisionComponent = function CollisionComponent (system, entity) {
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         this.on('set_radius', this.onSetRadius, this);
@@ -112,9 +77,48 @@ pc.extend(pc, function () {
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_model", this.onSetModel, this);
     };
-    CollisionComponent = pc.inherits(CollisionComponent, pc.Component);
+    CollisionComponent.prototype = Object.create(pc.Component.prototype);
+    CollisionComponent.prototype.constructor = CollisionComponent;
 
-    pc.extend(CollisionComponent.prototype, {
+    // Events Documentation
+    /**
+     * @event
+     * @name pc.CollisionComponent#contact
+     * @description The 'contact' event is fired when a contact occurs between two rigid bodies
+     * @param {pc.ContactResult} result Details of the contact between the two rigid bodies.
+     */
+
+    /**
+     * @event
+     * @name pc.CollisionComponent#collisionstart
+     * @description The 'collisionstart' event is fired when two rigid bodies start touching.
+     * @param {pc.ContactResult} result Details of the contact between the two Entities.
+     */
+
+    /**
+     * @event
+     * @name pc.CollisionComponent#collisionend
+     * @description The 'collisionend' event is fired two rigid-bodies stop touching.
+     * @param {pc.Entity} other The {@link pc.Entity} that stopped touching this collision volume.
+     */
+
+    /**
+     * @event
+     * @name pc.CollisionComponent#triggerenter
+     * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
+     * a {@link pc.RigidBodyComponent} attached.
+     * @param {pc.Entity} other The {@link pc.Entity} that entered this collision volume.
+     */
+
+    /**
+     * @event
+     * @name pc.CollisionComponent#triggerleave
+     * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
+     * a {@link pc.RigidBodyComponent} attached.
+     * @param {pc.Entity} other The {@link pc.Entity} that exited this collision volume.
+     */
+
+    Object.assign(CollisionComponent.prototype, {
 
         onSetType: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
@@ -147,7 +151,6 @@ pc.extend(pc, function () {
         },
 
         onSetAsset: function (name, oldValue, newValue) {
-            var self = this;
             var asset;
             var assets = this.system.app.assets;
 
@@ -173,7 +176,7 @@ pc.extend(pc, function () {
             }
 
             if (this.data.initialized && this.data.type === 'mesh') {
-                if (! newValue) {
+                if (!newValue) {
                     // if asset is null set model to null
                     // so that it's going to be removed from the simulation
                     this.data.model = null;
@@ -199,8 +202,6 @@ pc.extend(pc, function () {
         },
 
         onEnable: function () {
-            CollisionComponent._super.onEnable.call(this);
-
             if (this.data.type === 'mesh' && this.data.asset && this.data.initialized) {
                 var asset = this.system.app.assets.get(this.data.asset);
                 // recreate the collision shape if the model asset is not loaded
@@ -221,8 +222,6 @@ pc.extend(pc, function () {
         },
 
         onDisable: function () {
-            CollisionComponent._super.onDisable.call(this);
-
             if (this.entity.trigger) {
                 this.entity.trigger.disable();
             } else if (this.entity.rigidbody) {

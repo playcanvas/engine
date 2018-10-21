@@ -1,14 +1,17 @@
-//--------------- POST EFFECT DEFINITION------------------------//
-pc.extend(pc, function () {
+// --------------- POST EFFECT DEFINITION --------------- //
+Object.assign(pc, function () {
 
     /**
+     * @constructor
      * @name pc.LuminosityEffect
-     * @class Outputs the luminosity of the input render target.
-     * @constructor Creates new instance of the post effect.
+     * @classdesc Outputs the luminosity of the input render target.
+     * @description Creates new instance of the post effect.
      * @extends pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      */
     var LuminosityEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.SEMANTIC_POSITION
@@ -32,18 +35,19 @@ pc.extend(pc, function () {
                 "varying vec2 vUv0;",
                 "",
                 "void main() {",
-                    "vec4 texel = texture2D(uColorBuffer, vUv0);",
-                    "vec3 luma = vec3(0.299, 0.587, 0.114);",
-                    "float v = dot(texel.xyz, luma);",
-                    "gl_FragColor = vec4(v, v, v, texel.w);",
+                "    vec4 texel = texture2D(uColorBuffer, vUv0);",
+                "    vec3 luma = vec3(0.299, 0.587, 0.114);",
+                "    float v = dot(texel.xyz, luma);",
+                "    gl_FragColor = vec4(v, v, v, texel.w);",
                 "}"
             ].join("\n")
         });
     };
 
-    LuminosityEffect = pc.inherits(LuminosityEffect, pc.PostEffect);
+    LuminosityEffect.prototype = Object.create(pc.PostEffect.prototype);
+    LuminosityEffect.prototype.constructor = LuminosityEffect;
 
-    LuminosityEffect.prototype = pc.extend(LuminosityEffect.prototype, {
+    Object.assign(LuminosityEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -58,12 +62,11 @@ pc.extend(pc, function () {
     };
 }());
 
-
-//--------------- SCRIPT DEFINITION------------------------//
+// ----------------- SCRIPT DEFINITION ------------------ //
 var Luminosity = pc.createScript('luminosity');
 
 // initialize code called once per entity
-Luminosity.prototype.initialize = function() {
+Luminosity.prototype.initialize = function () {
     this.effect = new pc.LuminosityEffect(this.app.graphicsDevice);
 
     var queue = this.entity.camera.postEffects;

@@ -1,14 +1,16 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
+     * @constructor
      * @name pc.Skin
-     * @class A skin contains data about the bones in a hierarchy that drive a skinned mesh animation.
+     * @classdesc A skin contains data about the bones in a hierarchy that drive a skinned mesh animation.
      * Specifically, the skin stores the bone name and inverse bind matrix and for each bone.
      * Inverse bind matrices are instrumental in the mathematics of vertex skinning.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this skin.
      * @param {pc.Mat4[]} ibp The array of inverse bind matrices.
      * @param {String[]} boneNames The array of bone names for the bones referenced by this skin.
-     * @author Will Eastcott
      */
+
+    var _invMatrix = new pc.Mat4();
 
     var Skin = function (graphicsDevice, ibp, boneNames) {
         // Constant between clones
@@ -18,16 +20,15 @@ pc.extend(pc, function () {
     };
 
     /**
+     * @constructor
      * @name pc.SkinInstance
-     * @class A skin instance is responsible for generating the matrix palette that is used to
+     * @classdesc A skin instance is responsible for generating the matrix palette that is used to
      * skin vertices from object space to world space.
      * @param {pc.Skin} skin The skin that will provide the inverse bind pose matrices to
      * generate the final matrix palette.
-     * @author Will Eastcott
      */
-    var SkinInstance = function (skin, node) {
+    var SkinInstance = function (skin) {
         this.skin = skin;
-        this.rootNode = node;
         this._dirty = true;
 
         // Unique per clone
@@ -37,7 +38,7 @@ pc.extend(pc, function () {
 
         var device = skin.device;
         if (device.supportsBoneTextures) {
-            // Caculate a square texture dimension to hold bone matrices
+            // Calculate a square texture dimension to hold bone matrices
             // where a matrix takes up 4 texels:
             //   RGBA (Row 1), RGBA (Row 2), RGBA (Row 3), RGBA (Row 4)
             // So:
@@ -45,7 +46,7 @@ pc.extend(pc, function () {
             //   16x16 holds: 256 / 4  = Up to 64 bones
             //   32x32 holds: 1024 / 4 = Up to 256 bones
             //   64x64 holds: 4096 / 4 = Up to 1024 bones
-            // Let's assume for now noone will create a hierarchy of more
+            // Let's assume for now no one will create a hierarchy of more
             // than 1024 bones!
             var size;
             if (numBones > 256)
@@ -57,35 +58,32 @@ pc.extend(pc, function () {
             else
                 size = 8;
 
-            this.matrixPalette = new Float32Array(size * size * 4);
             this.boneTexture = new pc.Texture(device, {
                 width: size,
                 height: size,
                 format: pc.PIXELFORMAT_RGBA32F,
-                autoMipmap: false
+                mipmaps: false,
+                minFilter: pc.FILTER_NEAREST,
+                magFilter: pc.FILTER_NEAREST
             });
-            this.boneTexture.minFilter = pc.FILTER_NEAREST;
-            this.boneTexture.magFilter = pc.FILTER_NEAREST;
             this.matrixPalette = this.boneTexture.lock();
         } else {
             this.matrixPalette = new Float32Array(numBones * 16);
         }
         this.matrices = [];
-        for(var i=0; i<numBones; i++) {
+        for (var i = 0; i < numBones; i++) {
             this.matrices[i] = new pc.Mat4();
         }
     };
 
-    SkinInstance.prototype = {
+    Object.assign(SkinInstance.prototype, {
 
-        updateMatrices: function () {
+        updateMatrices: function (rootNode) {
 
-            var pos = this.rootNode.getPosition();
+            _invMatrix.copy(rootNode.getWorldTransform()).invert();
             for (var i = this.bones.length - 1; i >= 0; i--) {
-                this.matrices[i].mul2(this.bones[i].getWorldTransform(), this.skin.inverseBindPose[i]);
-                this.matrices[i].data[12] -= pos.x;
-                this.matrices[i].data[13] -= pos.y;
-                this.matrices[i].data[14] -= pos.z;
+                this.matrices[i].mul2(_invMatrix, this.bones[i].getWorldTransform()); // world space -> rootNode space
+                this.matrices[i].mul2(this.matrices[i], this.skin.inverseBindPose[i]); // rootNode space -> bind space
             }
         },
 
@@ -123,7 +121,7 @@ pc.extend(pc, function () {
                 this.boneTexture.unlock();
             }
         }
-    };
+    });
 
     return {
         Skin: Skin,

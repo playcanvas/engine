@@ -1,4 +1,4 @@
-pc.extend(pc, {
+Object.assign(pc, {
     // types
     BODYTYPE_STATIC: 'static',
     BODYTYPE_DYNAMIC: 'dynamic',

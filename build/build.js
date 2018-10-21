@@ -40,22 +40,6 @@ var DEFAULT_OUTPUT = "output/playcanvas-latest.js";
 var DEFAULT_TEMP = "_tmp";
 var SRC_DIR = "../";
 
-var DEFAULT_PACKAGE = {
-    "author": "PlayCanvas <support@playcanvas.com>",
-    "description": "PlayCanvas WebGL Engine.",
-    "engines": {
-        "node": ">= 0.6.12"
-    },
-    "files": [
-        "build/output/playcanvas-latest.js"
-    ],
-    "homepage": "https://playcanvas.com",
-    "main": "build/output/playcanvas-latest.js",
-    "name": "playcanvas",
-    "repository": "https://github.com/playcanvas/engine",
-    "version": ""
-};
-
 var COMPILER_LEVEL = [
     'WHITESPACE_ONLY',
     'SIMPLE',
@@ -124,7 +108,7 @@ var getVersion = function (callback) {
 var loadDependencies = function (fullpath, callback) {
     fs.readFile(fullpath, function (err, data) {
         if (err) callback(err);
-        callback(data.toString().trim().split(os.EOL))
+        callback(data.toString().trim().split(new RegExp("[\\r\\n]+", 'g')));
     });
 };
 
@@ -144,7 +128,7 @@ var concatentateShaders = function (callback) {
             if (ext) {
                 var fullpath = dir + file;
 
-                var content = replaceAll(fs.readFileSync(fullpath).toString(), os.EOL, "\\n");
+                var content = replaceAll(fs.readFileSync(fullpath).toString(), "[\\r\\n]+", "\\n");
                 var name = file.split(".")[0] + ext;
                 var data = util.format('pc.shaderChunks.%s = "%s";\n', name, content);
                 fs.writeSync(fd, data);
@@ -175,7 +159,7 @@ var preprocess = function (dependencies) {
 
         var pp = new Preprocessor(buffer.toString());
         var src = pp.process({
-            PROFILER: profiler,
+            PROFILER: profiler || debug,
             DEBUG: debug
         });
 
@@ -212,13 +196,6 @@ var insertVersions = function (filepath, callback) {
     });
 };
 
-// write package.json needed for a nodejs package
-var packageJson = function (version) {
-    var json = DEFAULT_PACKAGE;
-    json.version = version;
-    fs.writeFileSync("package.json", JSON.stringify(json, null, 4));
-};
-
 // remove temporary files
 var cleanup = function () {
     if (directoryExists(tempPath)) {
@@ -241,6 +218,7 @@ var run = function () {
               compilation_level: compilerLevel,
               language_in: "ECMASCRIPT5",
               js_output_file: outputPath,
+              output_wrapper_file: "./umd-wrapper.js",
               manage_closure_dependencies: true,
               jscomp_off: [
                   "nonStandardJsDocs",  // docs warnings
@@ -275,7 +253,6 @@ var run = function () {
                             process.exit();
                         }
 
-                        packageJson(version);
                         cleanup();
 
                         // done

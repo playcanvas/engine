@@ -1,21 +1,22 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var Channel;
 
     if (pc.AudioManager.hasAudioContext()) {
         /**
-        * @private
-        * @name pc.Channel
-        * @class A channel is created when the pc.AudioManager begins playback of a pc.Sound. Usually created internally by
-        * pc.AudioManager#playSound or pc.AudioManager#playSound3d. Developers usually won't have to create Channels manually.
-        * @param {pc.AudioManager} manager The AudioManager instance
-        * @param {pc.Sound} sound The sound to playback
-        * @param {Object} options
-        * @param {Number} [options.volume=1] The playback volume, between 0 and 1.
-        * @param {Number} [options.pitch=1] The relative pitch, default of 1, plays at normal pitch.
-        * @param {Boolean} [options.loop=false] Whether the sound should loop when it reaches the end or not.
-        */
+         * @private
+         * @constructor
+         * @name pc.Channel
+         * @classdesc A channel is created when the pc.AudioManager begins playback of a pc.Sound. Usually created internally by
+         * pc.AudioManager#playSound or pc.AudioManager#playSound3d. Developers usually won't have to create Channels manually.
+         * @param {pc.AudioManager} manager The AudioManager instance
+         * @param {pc.Sound} sound The sound to playback
+         * @param {Object} [options] Optional options object.
+         * @param {Number} [options.volume=1] The playback volume, between 0 and 1.
+         * @param {Number} [options.pitch=1] The relative pitch, default of 1, plays at normal pitch.
+         * @param {Boolean} [options.loop=false] Whether the sound should loop when it reaches the end or not.
+         */
         Channel = function (manager, sound, options) {
             options = options || {};
             this.volume = (options.volume === undefined) ? 1 : options.volume;
@@ -37,7 +38,7 @@ pc.extend(pc, function () {
             this.gain = context.createGain();
         };
 
-        Channel.prototype = {
+        Object.assign(Channel.prototype, {
             /**
              * @private
              * @function
@@ -138,6 +139,7 @@ pc.extend(pc, function () {
              * @function
              * @name pc.Channel#setLoop
              * @description Enable/disable the loop property to make the sound restart from the beginning when it reaches the end.
+             * @param {Boolean} loop true to loop the sound, false otherwise.
              */
             setLoop: function (loop) {
                 this.loop = loop;
@@ -151,6 +153,7 @@ pc.extend(pc, function () {
              * @function
              * @name pc.Channel#setVolume
              * @description Set the volume of playback between 0 and 1.
+             * @param {Number} volume The volume of the sound. Will be clamped between 0 and 1.
              */
             setVolume: function (volume) {
                 volume = pc.math.clamp(volume, 0, 1);
@@ -172,12 +175,7 @@ pc.extend(pc, function () {
             },
 
             getDuration: function () {
-                if (this.source) {
-                    return this.source.buffer.duration;
-                }
-                else {
-                    return 0;
-                }
+                return this.source ? this.source.buffer.duration : 0;
             },
 
             _createSource: function () {
@@ -197,7 +195,7 @@ pc.extend(pc, function () {
                     }
                 }
             }
-        };
+        });
     } else if (pc.AudioManager.hasAudio()) {
         Channel = function (manager, sound, options) {
             this.volume = options.volume || 1;
@@ -217,7 +215,7 @@ pc.extend(pc, function () {
             }
         };
 
-        Channel.prototype = {
+        Object.assign(Channel.prototype, {
             play: function () {
                 if (this.source) {
                     this.paused = false;
@@ -284,33 +282,26 @@ pc.extend(pc, function () {
             },
 
             getDuration: function () {
-                if (this.source) {
-                    var d = this.source.duration;
-                    if (d === d) {
-                        // Not NaN
-                        return d;
-                    }
-                }
-
-                return 0;
+                return this.source && !isNaN(this.source.duration) ? this.source.duration : 0;
             },
 
             isPlaying: function () {
                 return !this.source.paused;
             }
-        };
+        });
     } else {
         Channel = function () {
         };
     }
 
     // Add functions which don't depend on source type
-    pc.extend(Channel.prototype, {
+    Object.assign(Channel.prototype, {
         /**
          * @private
          * @function
          * @name pc.Channel#getVolume
          * @description Get the current value for the volume. Between 0 and 1.
+         * @returns {Number} The volume of the channel.
          */
         getVolume: function () {
             return this.volume;
@@ -321,6 +312,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Channel#getLoop
          * @description Get the current looping state of the Channel
+         * @returns {Boolean} The loop property for the channel.
          */
         getLoop: function () {
             return this.loop;
@@ -331,6 +323,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Channel#getPitch
          * @description Get the current pitch of the Channel
+         * @returns {Number} The pitch of the channel.
          */
         getPitch: function () {
             return this.pitch;

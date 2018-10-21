@@ -114,6 +114,19 @@
         BLENDEQUATION_REVERSE_SUBTRACT: 2,
 
         /**
+         * @enum pc.BLENDEQUATION
+         * @name pc.BLENDEQUATION_MIN
+         * @description Use the smallest value. Check app.graphicsDevice.extBlendMinmax for support.
+         */
+        BLENDEQUATION_MIN: 3,
+        /**
+         * @enum pc.BLENDEQUATION
+         * @name pc.BLENDEQUATION_MAX
+         * @description Use the largest value. Check app.graphicsDevice.extBlendMinmax for support.
+         */
+        BLENDEQUATION_MAX: 4,
+
+        /**
          * @enum pc.BUFFER
          * @name pc.BUFFER_STATIC
          * @description The data store contents will be modified once and used many times.
@@ -131,6 +144,12 @@
          * @description The data store contents will be modified once and used at most a few times.
          */
         BUFFER_STREAM: 2,
+        /**
+         * @enum pc.BUFFER
+         * @name pc.BUFFER_GPUDYNAMIC
+         * @description The data store contents will be modified repeatedly on the GPU and used many times. Optimal for transform feedback usage (WebGL2 only).
+         */
+        BUFFER_GPUDYNAMIC: 3,
 
         /**
          * @enum pc.CLEARFLAG
@@ -215,47 +234,47 @@
         CULLFACE_FRONTANDBACK: 3,
 
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_INT8
+         * @enum pc.TYPE
+         * @name pc.TYPE_INT8
          * @description Signed byte vertex element type.
          */
-        ELEMENTTYPE_INT8: 0,
+        TYPE_INT8: 0,
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_UINT8
+         * @enum pc.TYPE
+         * @name pc.TYPE_UINT8
          * @description Unsigned byte vertex element type.
          */
-        ELEMENTTYPE_UINT8: 1,
+        TYPE_UINT8: 1,
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_INT16
+         * @enum pc.TYPE
+         * @name pc.TYPE_INT16
          * @description Signed short vertex element type.
          */
-        ELEMENTTYPE_INT16: 2,
+        TYPE_INT16: 2,
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_UINT16
+         * @enum pc.TYPE
+         * @name pc.TYPE_UINT16
          * @description Unsigned short vertex element type.
          */
-        ELEMENTTYPE_UINT16: 3,
+        TYPE_UINT16: 3,
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_INT32
+         * @enum pc.TYPE
+         * @name pc.TYPE_INT32
          * @description Signed integer vertex element type.
          */
-        ELEMENTTYPE_INT32: 4,
+        TYPE_INT32: 4,
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_UINT32
+         * @enum pc.TYPE
+         * @name pc.TYPE_UINT32
          * @description Unsigned integer vertex element type.
          */
-        ELEMENTTYPE_UINT32: 5,
+        TYPE_UINT32: 5,
         /**
-         * @enum pc.ELEMENTTYPE
-         * @name pc.ELEMENTTYPE_FLOAT32
+         * @enum pc.TYPE
+         * @name pc.TYPE_FLOAT32
          * @description Floating point vertex element type.
          */
-        ELEMENTTYPE_FLOAT32: 6,
+        TYPE_FLOAT32: 6,
 
         /**
          * @enum pc.FILTER
@@ -413,11 +432,56 @@
          */
         PIXELFORMAT_RGBA32F: 14,
 
-        PIXELFORMAT_ETC1: 15,
-        PIXELFORMAT_PVRTC_2BPP_RGB_1: 16,
-        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 17,
-        PIXELFORMAT_PVRTC_4BPP_RGB_1: 18,
-        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 19,
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_R32F
+         * @description 32-bit floating point single channel format (WebGL2 only).
+         */
+        PIXELFORMAT_R32F: 15,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_DEPTH
+         * @description A readable depth buffer format
+         */
+        PIXELFORMAT_DEPTH: 16,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_DEPTHSTENCIL
+         * @description A readable depth/stencil buffer format (WebGL2 only).
+         */
+        PIXELFORMAT_DEPTHSTENCIL: 17,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_111110F
+         * @description A floating-point color-only format with 11 bits for red and green channels, and 10 bits for the blue channel (WebGL2 only).
+         */
+        PIXELFORMAT_111110F: 18,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_SRGB
+         * @description Color-only sRGB format (WebGL2 only).
+         */
+        PIXELFORMAT_SRGB: 19,
+
+        /**
+         * @enum pc.PIXELFORMAT
+         * @name pc.PIXELFORMAT_SRGBA
+         * @description Color sRGB format with additional alpha channel (WebGL2 only).
+         */
+        PIXELFORMAT_SRGBA: 20,
+
+        PIXELFORMAT_ETC1: 21,
+        PIXELFORMAT_ETC2_RGB: 22,
+        PIXELFORMAT_ETC2_RGBA: 23,
+        PIXELFORMAT_PVRTC_2BPP_RGB_1: 24,
+        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 25,
+        PIXELFORMAT_PVRTC_4BPP_RGB_1: 26,
+        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 27,
+        // only add compressed formats next
 
         /**
          * @enum pc.PRIMITIVE
@@ -667,6 +731,11 @@
          */
         TEXTURELOCK_WRITE: 2,
 
+        TEXHINT_NONE: 0,
+        TEXHINT_SHADOWMAP: 1,
+        TEXHINT_ASSET: 2,
+        TEXHINT_LIGHTMAP: 3,
+
         UNIFORMTYPE_BOOL: 0,
         UNIFORMTYPE_INT: 1,
         UNIFORMTYPE_FLOAT: 2,
@@ -684,12 +753,15 @@
         UNIFORMTYPE_MAT4: 14,
         UNIFORMTYPE_TEXTURE2D: 15,
         UNIFORMTYPE_TEXTURECUBE: 16,
-        UNIFORMTYPE_FLOATARRAY: 17
+        UNIFORMTYPE_FLOATARRAY: 17,
+        UNIFORMTYPE_TEXTURE2D_SHADOW: 18,
+        UNIFORMTYPE_TEXTURECUBE_SHADOW: 19,
+        UNIFORMTYPE_TEXTURE3D: 20
     };
 
-    pc.extend(pc, enums);
+    Object.assign(pc, enums);
 
     // For backwards compatibility
     pc.gfx = {};
-    pc.extend(pc.gfx, enums);
+    Object.assign(pc.gfx, enums);
 }());

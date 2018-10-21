@@ -1,9 +1,10 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
+     * @constructor
      * @name pc.IndexBuffer
-     * @class An index buffer is the mechanism via which the application specifies primitive
+     * @classdesc An index buffer is the mechanism via which the application specifies primitive
      * index data to the graphics hardware.
      * @description Creates a new index buffer.
      * @example
@@ -14,23 +15,16 @@ pc.extend(pc, function () {
      * @param {Number} format The type of each index to be stored in the index buffer (see pc.INDEXFORMAT_*).
      * @param {Number} numIndices The number of indices to be stored in the index buffer.
      * @param {Number} [usage] The usage type of the vertex buffer (see pc.BUFFER_*).
+     * @param {ArrayBuffer} [initialData] Initial data.
      */
-    var IndexBuffer = function (graphicsDevice, format, numIndices, usage) {
-        // Initialize optional parameters
+    var IndexBuffer = function (graphicsDevice, format, numIndices, usage, initialData) {
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
         this.usage = usage || pc.BUFFER_STATIC;
-
-        // Store the index format
         this.format = format;
-
-        // Store the number of indices
         this.numIndices = numIndices;
-
-        // Create the WebGL buffer
         this.device = graphicsDevice;
 
         var gl = this.device.gl;
-        this.bufferId = gl.createBuffer();
 
         // Allocate the storage
         var bytesPerIndex;
@@ -46,22 +40,42 @@ pc.extend(pc, function () {
         }
         this.bytesPerIndex = bytesPerIndex;
 
-        var numBytes = this.numIndices * bytesPerIndex;
-        this.storage = new ArrayBuffer(numBytes);
+        this.numBytes = this.numIndices * bytesPerIndex;
 
-        graphicsDevice._vram.ib += numBytes;
+        if (initialData) {
+            this.setData(initialData);
+        } else {
+            this.storage = new ArrayBuffer(this.numBytes);
+        }
+
+        graphicsDevice._vram.ib += this.numBytes;
+
+        this.device.buffers.push(this);
     };
 
-    IndexBuffer.prototype = {
+    Object.assign(IndexBuffer.prototype, {
         /**
          * @function
          * @name pc.IndexBuffer#destroy
          * @description Frees resources associated with this index buffer.
          */
         destroy: function () {
-            var gl = this.device.gl;
-            gl.deleteBuffer(this.bufferId);
-            this.device._vram.ib -= this.storage.byteLength;
+            var device = this.device;
+            var idx = device.buffers.indexOf(this);
+            if (idx !== -1) {
+                device.buffers.splice(idx, 1);
+            }
+
+            if (this.bufferId) {
+                var gl = this.device.gl;
+                gl.deleteBuffer(this.bufferId);
+                this.device._vram.ib -= this.storage.byteLength;
+                this.bufferId = null;
+
+                if (this.device.indexBuffer === this) {
+                    this.device.indexBuffer = null;
+                }
+            }
         },
 
         /**
@@ -104,6 +118,11 @@ pc.extend(pc, function () {
         unlock: function () {
             // Upload the new index data
             var gl = this.device.gl;
+
+            if (!this.bufferId) {
+                this.bufferId = gl.createBuffer();
+            }
+
             var glUsage;
             switch (this.usage) {
                 case pc.BUFFER_STATIC:
@@ -115,12 +134,29 @@ pc.extend(pc, function () {
                 case pc.BUFFER_STREAM:
                     glUsage = gl.STREAM_DRAW;
                     break;
+                case pc.BUFFER_GPUDYNAMIC:
+                    if (this.device.webgl2) {
+                        glUsage = gl.DYNAMIC_COPY;
+                    } else {
+                        glUsage = gl.STATIC_DRAW;
+                    }
+                    break;
             }
 
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferId);
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.storage, glUsage);
+        },
+
+        setData: function (data) {
+            if (data.byteLength !== this.numBytes) {
+                console.error("IndexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
+                return false;
+            }
+            this.storage = data;
+            this.unlock();
+            return true;
         }
-    };
+    });
 
     return {
         IndexBuffer: IndexBuffer

@@ -1,53 +1,60 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
+    var _schema = [
+        'enabled',
+        'assets',
+        'speed',
+        'loop',
+        'activate',
+        'animations',
+        'skeleton',
+        'model',
+        'prevAnim',
+        'currAnim',
+        'fromSkel',
+        'toSkel',
+        'blending',
+        'blendTimeRemaining',
+        'playing'
+    ];
+
     /**
+     * @constructor
      * @name pc.AnimationComponentSystem
+     * @classdesc The AnimationComponentSystem manages creating and deleting AnimationComponents
      * @description Create an AnimationComponentSystem
-     * @class The AnimationComponentSystem manages creating and deleting AnimationComponents
-     * @param {pc.Application} app The Application for the current application
+     * @param {pc.Application} app The application managing this system.
      * @extends pc.ComponentSystem
      */
-    var AnimationComponentSystem = function AnimationComponentSystem (app) {
+    var AnimationComponentSystem = function AnimationComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'animation';
         this.description = "Specifies the animation assets that can run on the model specified by the Entity's model Component.";
-
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.AnimationComponent;
         this.DataType = pc.AnimationComponentData;
 
-        this.schema = [
-            'enabled',
-            'assets',
-            'speed',
-            'loop',
-            'activate',
-            'animations',
-            'skeleton',
-            'model',
-            'prevAnim',
-            'currAnim',
-            'fromSkel',
-            'toSkel',
-            'blending',
-            'blendTimeRemaining',
-            'playing'
-        ];
+        this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('update', this.onUpdate, this);
 
         pc.ComponentSystem.on('update', this.onUpdate, this);
     };
-    AnimationComponentSystem = pc.inherits(AnimationComponentSystem, pc.ComponentSystem);
+    AnimationComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    AnimationComponentSystem.prototype.constructor = AnimationComponentSystem;
 
-    pc.extend(AnimationComponentSystem.prototype, {
+    pc.Component._buildAccessors(pc.AnimationComponent.prototype, _schema);
+
+    Object.assign(AnimationComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['activate', 'enabled', 'loop', 'speed', 'assets'];
-            AnimationComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {
-            var component = this.addComponent(clone, {});
+            var key;
+            this.addComponent(clone, {});
 
             clone.animation.data.assets = pc.extend([], entity.animation.assets);
             clone.animation.data.speed = entity.animation.speed;
@@ -55,14 +62,23 @@ pc.extend(pc, function () {
             clone.animation.data.activate = entity.animation.activate;
             clone.animation.data.enabled = entity.animation.enabled;
 
-            var clonedAnimations = {};
+            var clonedAnimations = { };
             var animations = entity.animation.animations;
-            for (var key in animations) {
+            for (key in animations) {
                 if (animations.hasOwnProperty(key)) {
                     clonedAnimations[key] = animations[key];
                 }
             }
             clone.animation.animations = clonedAnimations;
+
+            var clonedAnimationsIndex = { };
+            var animationsIndex = entity.animation.animationsIndex;
+            for (key in animationsIndex) {
+                if (animationsIndex.hasOwnProperty(key)) {
+                    clonedAnimationsIndex[key] = animationsIndex[key];
+                }
+            }
+            clone.animation.animationsIndex = clonedAnimationsIndex;
         },
 
         onBeforeRemove: function (entity, component) {

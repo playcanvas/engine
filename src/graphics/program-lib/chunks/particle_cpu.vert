@@ -5,7 +5,12 @@ attribute vec2 particle_vertexData4;     // X = velocity.z, W = particle ID
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
+
+#ifndef VIEWMATRIX
+#define VIEWMATRIX
 uniform mat4 matrix_view;
+#endif
+
 uniform mat3 matrix_normal;
 uniform mat4 matrix_viewInverse;
 
@@ -19,6 +24,7 @@ uniform sampler2D texLifeAndSourcePosOUT;
 uniform sampler2D internalTex0;
 uniform sampler2D internalTex1;
 uniform sampler2D internalTex2;
+uniform vec3 emitterPos;
 
 varying vec4 texCoordsAlphaLife;
 
@@ -35,19 +41,9 @@ vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix)
     return m * quadXY;
 }
 
-vec3 billboard(vec3 InstanceCoords, vec2 quadXY, out mat3 localMat)
+vec3 billboard(vec3 InstanceCoords, vec2 quadXY)
 {
-    vec3 viewUp = matrix_viewInverse[1].xyz;
-    vec3 posCam = matrix_viewInverse[3].xyz;
-
-    mat3 billMat;
-    billMat[2] = normalize(InstanceCoords - posCam);
-    billMat[0] = normalize(cross(viewUp, billMat[2]));
-    billMat[1] = -viewUp;
-    vec3 pos = billMat * vec3(quadXY, 0);
-
-    localMat = billMat;
-
+    vec3 pos = -matrix_viewInverse[0].xyz * quadXY.x + -matrix_viewInverse[1].xyz * quadXY.y;
     return pos;
 }
 
@@ -64,7 +60,6 @@ void main(void)
     texCoordsAlphaLife = vec4(quadXY * -0.5 + 0.5, particle_vertexData2.z, particle_vertexData.w);
 
     mat2 rotMatrix;
-    mat3 localMat;
 
     float inAngle = particle_vertexData2.x;
     vec3 particlePosMoved = vec3(0.0);

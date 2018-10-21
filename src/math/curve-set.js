@@ -1,9 +1,10 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
+     * @constructor
      * @name pc.CurveSet
-     * @class A curve set is a collection of curves.
+     * @classdesc A curve set is a collection of curves.
      * @description Creates a new curve set.
      * @param {Array} [curveKeys] An array of arrays of keys (pairs of numbers with
      * the time first and value second).
@@ -36,7 +37,7 @@ pc.extend(pc, (function () {
         }
     };
 
-    CurveSet.prototype = {
+    Object.assign(CurveSet.prototype, {
         /**
          * @function
          * @name pc.CurveSet#get
@@ -57,7 +58,7 @@ pc.extend(pc, (function () {
          * @param {Array} [result] The interpolated curve values at the specified time.
          * If this parameter is not supplied, the function allocates a new array internally
          * to return the result.
-         * @return {Array} The interpolated curve values at the specified time
+         * @returns {Array} The interpolated curve values at the specified time
          */
         value: function (time, result) {
             var length = this.curves.length;
@@ -80,8 +81,8 @@ pc.extend(pc, (function () {
         clone: function () {
             var result = new pc.CurveSet();
 
-            result.curves = [ ];
-            for(var i = 0; i < this.curves.length; i++) {
+            result.curves = [];
+            for (var i = 0; i < this.curves.length; i++) {
                 result.curves.push(this.curves[i].clone());
             }
 
@@ -111,8 +112,7 @@ pc.extend(pc, (function () {
 
             return values;
         }
-
-    };
+    });
 
     /**
      * @readonly
@@ -121,7 +121,7 @@ pc.extend(pc, (function () {
      * @description The number of curves in the curve set.
      */
     Object.defineProperty(CurveSet.prototype, 'length', {
-        get: function() {
+        get: function () {
             return this.curves.length;
         }
     });
@@ -138,16 +138,16 @@ pc.extend(pc, (function () {
      * </ul>
      */
     Object.defineProperty(CurveSet.prototype, 'type', {
-        get: function() {
+        get: function () {
             return this._type;
         },
 
-        set: function(value) {
+        set: function (value) {
             this._type = value;
             for (var i = 0; i < this.curves.length; i++) {
                 this.curves[i].type = value;
             }
-        },
+        }
     });
 
     return {
