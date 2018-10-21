@@ -560,6 +560,8 @@ Object.assign(pc, function () {
         }
 
         this.textureFloatHighPrecision = testTextureFloatHighPrecision(this);
+
+        this.initializeCanvasGrabTexture();
     };
 
     Object.assign(GraphicsDevice.prototype, {
@@ -851,6 +853,30 @@ Object.assign(pc, function () {
             this.activeFramebuffer = null;
             this.feedback = null;
             this.transformFeedbackBuffer = null;
+        },
+
+        initializeCanvasGrabTexture: function () {
+            if (this.canvasGrabTexture) return;
+
+            var canvasGrabTexture = new pc.Texture(this, {
+                format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                autoMipmap: false
+            });
+
+            canvasGrabTexture.minFilter = pc.FILTER_LINEAR;
+            canvasGrabTexture.magFilter = pc.FILTER_LINEAR;
+            canvasGrabTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            canvasGrabTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+
+            canvasGrabTexture.name = 'canvasGrabTexture';
+            canvasGrabTexture.setSource(this.canvas);
+
+            var canvasGrabTextureId = this.canvasGrabTextureId;
+            if (!canvasGrabTextureId) canvasGrabTextureId = this.scope.resolve('canvasGrabTexture');
+            canvasGrabTextureId.setValue(canvasGrabTexture);
+
+            this.canvasGrabTextureId = canvasGrabTextureId;
+            this.canvasGrabTexture = canvasGrabTexture;
         },
 
         updateClientRect: function () {
@@ -1801,8 +1827,11 @@ Object.assign(pc, function () {
 
                 if (texture._needsUpload || texture._needsMipmapsUpload) {
                     this.uploadTexture(texture);
-                    texture._needsUpload = false;
-                    texture._needsMipmapsUpload = false;
+
+                    if (texture !== this.canvasGrabTexture) {
+                        texture._needsUpload = false;
+                        texture._needsMipmapsUpload = false;
+                    }
                 }
             } else {
                 // Ensure the texture is currently bound to the correct target on the specified texture unit.
@@ -2897,54 +2926,6 @@ Object.assign(pc, function () {
             }
 
             this.clearShaderCache();
-        },
-
-        initCanvasGrabTexture: function () {
-            if (this.canvasGrabTexture) return;
-
-            var canvasGrabTexture = new pc.Texture(this, {
-                format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                autoMipmap: false
-            });
-
-            canvasGrabTexture.minFilter = pc.FILTER_LINEAR;
-            canvasGrabTexture.magFilter = pc.FILTER_LINEAR;
-            canvasGrabTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-            canvasGrabTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-
-            canvasGrabTexture.name = 'canvasGrabTexture';
-            canvasGrabTexture.setSource(this.canvas);
-
-            var canvasGrabTextureId = this.canvasGrabTextureId;
-            if (!canvasGrabTextureId) canvasGrabTextureId = this.scope.resolve('canvasGrabTexture');
-            canvasGrabTextureId.setValue(canvasGrabTexture);
-
-            this.canvasGrabTextureId = canvasGrabTextureId;
-            this.canvasGrabTexture = canvasGrabTexture;
-        },
-
-        updateCanvasGrabTexture: function () {
-            this.initCanvasGrabTexture();
-
-            var canvasGrabTexture = this.canvasGrabTexture;
-            var glTexture = canvasGrabTexture._glTexture;
-            if (glTexture) {
-                
-                var gl = this.gl;
-                var oldBoundGLTexture = gl.getParameter(gl.TEXTURE_BINDING_2D);
-
-                gl.bindTexture(gl.TEXTURE_2D, glTexture);
-                
-                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-
-                var glFormat = canvasGrabTexture._glFormat;
-                var glPixelType = canvasGrabTexture._glPixelType;
-                var glInternalFormat = canvasGrabTexture._glInternalFormat;
-                gl.texImage2D(gl.TEXTURE_2D, 0, glInternalFormat, glFormat, glPixelType, this.canvas);
-
-                gl.bindTexture(gl.TEXTURE_2D, oldBoundGLTexture);
-            }
         }
     });
 
