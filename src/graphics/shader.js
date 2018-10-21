@@ -242,6 +242,10 @@ Object.assign(pc, function () {
             return retValue;
         },
 
+        needsCanvasGrabTexture: function() {
+            return this.samplers && this.samplers.some(function (sampler) { return sampler.scopeId.name === 'canvasGrabTexture'; });
+        },
+
         /**
          * @function
          * @name pc.Shader#destroy

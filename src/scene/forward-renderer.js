@@ -1634,6 +1634,10 @@ Object.assign(pc, function () {
                         device.setStencilTest(false);
                     }
 
+                    if (material && material.shader && material.shader.needsCanvasGrabTexture()) {
+                        device.updateCanvasGrabTexture();
+                    }
+
                     // Uniforms II: meshInstance overrides
                     parameters = drawCall.parameters;
                     for (paramName in parameters) {

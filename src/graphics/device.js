@@ -2897,6 +2897,46 @@ Object.assign(pc, function () {
             }
 
             this.clearShaderCache();
+        },
+
+        updateCanvasGrabTexture: function () {
+            var canvas = this.canvas;
+            var canvasGrabTexture = this.canvasGrabTexture;
+
+            if (!canvasGrabTexture || canvasGrabTexture.width !== canvas.width || canvasGrabTexture.height !== canvas.height) {
+                if (canvasGrabTexture) canvasGrabTexture.destroy();
+
+                canvasGrabTexture = new pc.Texture(this, {
+                    format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                    autoMipmap: false
+                });
+
+                canvasGrabTexture.minFilter = pc.FILTER_LINEAR;
+                canvasGrabTexture.magFilter = pc.FILTER_LINEAR;
+                canvasGrabTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                canvasGrabTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+
+                canvasGrabTexture.name = "canvasGrabTexture";
+                canvasGrabTexture.setSource(this.canvas);
+
+                var canvasGrabTextureId = this.canvasGrabTextureId;
+                if (!canvasGrabTextureId) canvasGrabTextureId = this.scope.resolve('canvasGrabTexture');
+
+                canvasGrabTextureId.setValue(canvasGrabTexture);
+
+                this.canvasGrabTextureId = canvasGrabTextureId;
+                this.canvasGrabTexture = canvasGrabTexture;
+
+            } else if (canvasGrabTexture._glTexture) {
+                var gl = this.gl;
+                var oldGLTexIdBinding = gl.getParameter(gl.TEXTURE_BINDING_2D);
+
+                gl.bindTexture(gl.TEXTURE_2D, canvasGrabTexture._glTexture);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.texImage2D(gl.TEXTURE_2D, 0, canvasGrabTexture._glInternalFormat, canvasGrabTexture._glFormat, canvasGrabTexture._glPixelType, canvas);
+                gl.bindTexture(gl.TEXTURE_2D, oldGLTexIdBinding);
+            }
         }
     });
 
