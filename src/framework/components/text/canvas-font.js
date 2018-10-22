@@ -62,8 +62,8 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.CanvasFont#createTextures
-     * @description Render the nessecary textures for all characters in a string to be used for the canvas font
-     * @param {String} text The string to look in
+     * @description Render the necessary textures for all characters in a string to be used for the canvas font
+     * @param {String} text The list of characters to render into the texture atlas
      */
     CanvasFont.prototype.createTextures = function (text) {
         var _chars = this._normalizeCharsSet(text);
@@ -87,9 +87,9 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.CanvasFont#updateTextures
-     * @description Ensures the existing textures include all the characters in a new string, and if not, any new
-     * required textures are rendered as needed
-     * @param {String} text The string to look for new characters in
+     * @description Update the list of characters to include in the atlas to include those provided and re-render the texture atlas
+     * to include all the characters that have been supplied so far.
+     * @param {String} text The list of characters to add to the texture atlas
      */
     CanvasFont.prototype.updateTextures = function (text) {
         var _chars = this._normalizeCharsSet(text);
