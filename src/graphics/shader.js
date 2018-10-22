@@ -75,22 +75,21 @@ Object.assign(pc, function () {
      *
      * shader = new pc.Shader(graphicsDevice, shaderDefinition);
      */
-    var Shader = function (graphicsDevice, definition, precache) {
+    var Shader = function (graphicsDevice, definition) {
         this.device = graphicsDevice;
         this.definition = definition;
+        this.ready = false;
 
         // Used for shader variants (see pc.Material)
         this._refCount = 0;
 
-        this.compile(precache);
+        this.compile();
 
         this.device.shaders.push(this);
     };
 
     Object.assign(Shader.prototype, {
-        compile: function (link) {
-            this.ready = false;
-            this._linkInProgress = false;
+        compile: function () {
 
             // #ifdef PROFILER
             var startTime = pc.now();
@@ -113,9 +112,7 @@ Object.assign(pc, function () {
                 this.device._shaderStats.materialShaders++;
             }
 
-            if (link) {
-                this._startLink();
-            }
+            this._startLink();
 
             this.compileToLinkTime = pc.now();
             // #ifdef PROFILER
@@ -144,7 +141,6 @@ Object.assign(pc, function () {
             }
 
             gl.linkProgram(this.program);
-            this._linkInProgress = true;
         },
 
         link: function () {
@@ -158,8 +154,6 @@ Object.assign(pc, function () {
                 target: this
             });
             // #endif
-
-            if (!this._linkInProgress) this._startLink();
 
             // Check for errors
 

@@ -43,7 +43,7 @@ Object.assign(pc, function () {
         var shader = this._cache[key];
         if (!shader) {
             var shaderDefinition = generator.createShaderDefinition(gd, options);
-            shader = this._cache[key] = new pc.Shader(gd, shaderDefinition, true);
+            shader = this._cache[key] = new pc.Shader(gd, shaderDefinition);
         }
         return shader;
     };
