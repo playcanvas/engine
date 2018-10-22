@@ -161,6 +161,11 @@ Object.assign(pc, function () {
         return str;
     };
 
+    CanvasFont.prototype.renderCharacter = function (context, char, x, y, color) {
+        context.fillStyle = color;
+        context.fillText(char, x, y);
+    };
+
     CanvasFont.prototype._renderAtlas = function (charsArray) {
         this.chars = charsArray;
 
@@ -211,9 +216,8 @@ Object.assign(pc, function () {
             ctx.textAlign = TEXT_ALIGN;
             ctx.textBaseline = TEXT_BASELINE;
 
-            ctx.fillStyle = color;
-            // Write text
-            ctx.fillText(ch, _x, _y);
+            this.renderCharacter(ctx, ch, _x, _y, color);
+
             var width = ctx.measureText(ch).width;
             var xoffset = (sx - width) / 2;
             var yoffset = 0;

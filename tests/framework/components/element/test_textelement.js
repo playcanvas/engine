@@ -4,10 +4,21 @@ describe("pc.TextElement", function () {
     var entity;
     var element;
     var fontAsset;
+    var canvas;
 
     beforeEach(function (done) {
-        app = new pc.Application(document.createElement("canvas"));
+        canvas = document.createElement("canvas");
+        app = new pc.Application(canvas);
         buildElement(done);
+    });
+
+
+    afterEach(function () {
+        fontAsset.unload();
+        fontAsset = null;
+        app.destroy();
+        app = null;
+        canvas = null;
     });
 
     var buildElement = function (callback) {
@@ -42,12 +53,6 @@ describe("pc.TextElement", function () {
         expect(element.lines.length).to.equal(expectedLineContents.length);
         expect(element.lines).to.deep.equal(expectedLineContents);
     };
-
-    afterEach(function () {
-        fontAsset.unload();
-        fontAsset = null;
-        app.destroy();
-    });
 
     it("does not break onto multiple lines if the text is short enough", function () {
         element.fontAsset = fontAsset;
@@ -414,5 +419,243 @@ describe("pc.TextElement", function () {
 
         expect(e.element.font).to.equal(font);
         expect(e.element.fontAsset).to.equal(null);
+    });
+
+
+    it('Offscreen element is culled', function () {
+        var canvasWidth = app.graphicsDevice.width;
+        var canvasHeight = app.graphicsDevice.height;
+
+        var screen = new pc.Entity();
+        screen.addComponent('screen', {
+            screenSpace: true
+        });
+        app.root.addChild(screen);
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            text: "test",
+            fontAsset: fontAsset,
+            autoWidth: false,
+            autoHeight: false,
+            width: 100,
+            height: 100,
+            pivot: [0.5,0.5]
+        });
+        screen.addChild(e);
+
+        var camera = new pc.Entity();
+        camera.addComponent('camera');
+        app.root.addChild(camera);
+
+        // update transform
+        app.update(0.1);
+        app.render();
+
+        var meshInstance = e.element._text._model.meshInstances[0];
+
+        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+
+        // move just off screen
+        e.translateLocal(canvasWidth+(100/2)+0.001,0,0);
+
+        app.update(0.1);
+        app.render();
+        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+
+        // move just on screen
+        e.translateLocal(-1, 0, 0);
+
+        app.update(0.1);
+        app.render();
+        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+
+    });
+
+    it('Offscreen autowidth element is culled', function () {
+        var canvasWidth = app.graphicsDevice.width;
+        var canvasHeight = app.graphicsDevice.height;
+
+        var screen = new pc.Entity();
+        screen.addComponent('screen', {
+            screenSpace: true
+        });
+        app.root.addChild(screen);
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            text: "test",
+            fontAsset: fontAsset,
+            autoWidth: true,
+            autoHeight: false,
+            width: 100,
+            height: 100,
+            pivot: [0.5,0.5]
+        });
+        screen.addChild(e);
+
+        var camera = new pc.Entity();
+        camera.addComponent('camera');
+        app.root.addChild(camera);
+
+        // update transform
+        app.update(0.1);
+        app.render();
+
+        var meshInstance = e.element._text._model.meshInstances[0];
+
+        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+
+        // move just off screen
+        e.translateLocal(canvasWidth+(e.element.width/2)+0.001,0,0);
+
+        app.update(0.1);
+        app.render();
+        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+
+        // move just on screen
+        e.translateLocal(-1, 0, 0);
+
+        app.update(0.1);
+        app.render();
+        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+    });
+
+    it('Offscreen child element is culled', function () {
+        var canvasWidth = app.graphicsDevice.width;
+        var canvasHeight = app.graphicsDevice.height;
+
+        var screen = new pc.Entity();
+        screen.addComponent('screen', {
+            screenSpace: true
+        });
+        app.root.addChild(screen);
+
+        var parent = new pc.Entity();
+        parent.addComponent('element', {
+            type: 'text',
+            text: "test",
+            fontAsset: fontAsset,
+            autoWidth: false,
+            autoHeight: false,
+            width: 100,
+            height: 100,
+            pivot: [0.5,0.5]
+        });
+        screen.addChild(parent);
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            text: "test",
+            fontAsset: fontAsset,
+            autoWidth: false,
+            autoHeight: false,
+            width: 100,
+            height: 100,
+            pivot: [0.5,0.5]
+        });
+        parent.addChild(e);
+
+        var camera = new pc.Entity();
+        camera.addComponent('camera');
+        app.root.addChild(camera);
+
+        var meshInstance = e.element._text._model.meshInstances[0];
+
+        // update transform
+        app.update(0.1);
+        app.render();
+        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+
+        // move just off screen
+        parent.translateLocal(50, 50, 0);
+        e.translateLocal(351, 50, 0);
+
+        // update transform
+        app.update(0.1);
+        app.render();
+        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+    });
+
+
+    it('Offscreen rotated element is culled', function () {
+        var canvasWidth = app.graphicsDevice.width;
+        var canvasHeight = app.graphicsDevice.height;
+
+        var screen = new pc.Entity();
+        screen.addComponent('screen', {
+            screenSpace: true
+        });
+        app.root.addChild(screen);
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            text: "test",
+            fontAsset: fontAsset,
+            autoWidth: false,
+            autoHeight: false,
+            width: 100,
+            height: 100,
+            pivot: [0.5,0.5]
+        });
+        screen.addChild(e);
+
+        var camera = new pc.Entity();
+        camera.addComponent('camera');
+        app.root.addChild(camera);
+
+        // move just off screen (when rotated 45°)
+        e.translateLocal(300 + (50*Math.sqrt(2)), 0, 0);
+        e.rotateLocal(0, 0, 45);
+
+        var meshInstance = e.element._text._model.meshInstances[0];
+
+        // update transform
+        app.update(0.1);
+        app.render();
+        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+    });
+
+    it('Offscreen rotated out of plane is culled', function () {
+        var canvasWidth = app.graphicsDevice.width;
+        var canvasHeight = app.graphicsDevice.height;
+
+        var screen = new pc.Entity();
+        screen.addComponent('screen', {
+            screenSpace: true
+        });
+        app.root.addChild(screen);
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            text: "test",
+            fontAsset: fontAsset,
+            autoWidth: false,
+            autoHeight: false,
+            width: 100,
+            height: 100,
+            pivot: [0.5,0.5]
+        });
+        screen.addChild(e);
+
+        var camera = new pc.Entity();
+        camera.addComponent('camera');
+        app.root.addChild(camera);
+
+        // move just off screen (when rotated 45°)
+        e.translateLocal(300, 0, 0);
+        e.rotateLocal(0, 90, 0);
+
+        var meshInstance = e.element._text._model.meshInstances[0];
+
+        // update transform
+        app.update(0.1);
+        app.render();
+        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
     });
 });

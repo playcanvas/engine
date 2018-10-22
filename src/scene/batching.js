@@ -155,6 +155,16 @@ Object.assign(pc, function () {
         // #endif
     };
 
+    // TODO: rename destroy() to something else and rename this to destroy
+    BatchManager.prototype.destroyManager = function () {
+        this.device = null;
+        this.rootNode = null;
+        this.scene = null;
+        this._batchGroups = {};
+        this._batchList = [];
+        this._dirtyGroups = [];
+    };
+
     /**
      * @function
      * @name pc.BatchManager#addGroup
