@@ -195,6 +195,10 @@ Object.assign(pc, function () {
 
         this.updateClientRect();
 
+        // Shader code to WebGL shader cache
+        this.vertexShaderCache = {};
+        this.fragmentShaderCache = {};
+
         // Array of WebGL objects that need to be re-initialized after a context restore event
         this.shaders = [];
         this.buffers = [];
@@ -851,6 +855,43 @@ Object.assign(pc, function () {
             this.activeFramebuffer = null;
             this.feedback = null;
             this.transformFeedbackBuffer = null;
+        },
+
+        createShader: function (type, src) {
+            var shader;
+            var gl = this.gl;
+
+            if (type === gl.VERTEX_SHADER) {
+                shader = this.vertexShaderCache[src];
+            } else if (type === gl.FRAGMENT_SHADER) {
+                shader = this.fragmentShaderCache[src];
+            }
+
+            if (!shader) {
+                shader = gl.createShader(type);
+
+                gl.shaderSource(shader, src);
+                gl.compileShader(shader);
+
+                if (type === gl.VERTEX_SHADER) {
+                    this.vertexShaderCache[src] = shader;
+                } else if (type === gl.FRAGMENT_SHADER) {
+                    this.fragmentShaderCache[src] = shader;
+                }
+            }
+
+            return shader;
+        },
+
+        createProgram: function (vertexShader, fragmentShader) {
+            var gl = this.gl;
+
+            var program = gl.createProgram();
+
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+
+            return program;
         },
 
         updateClientRect: function () {
@@ -2897,6 +2938,16 @@ Object.assign(pc, function () {
             }
 
             this.clearShaderCache();
+
+            var shaderSrc;
+            for (shaderSrc in this.fragmentShaderCache) {
+                gl.deleteShader(this.fragmentShaderCache[shaderSrc]);
+                delete this.fragmentShaderCache[shaderSrc];
+            }
+            for (shaderSrc in this.vertexShaderCache) {
+                gl.deleteShader(this.vertexShaderCache[shaderSrc]);
+                delete this.vertexShaderCache[shaderSrc];
+            }
         }
     });
 

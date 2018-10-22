@@ -12,24 +12,6 @@ Object.assign(pc, function () {
         return chunks.join( "\n" );
     }
 
-    function createShader(gl, type, src) {
-        var shader = gl.createShader(type);
-
-        gl.shaderSource(shader, src);
-        gl.compileShader(shader);
-
-        return shader;
-    }
-
-    function createProgram(gl, vertexShader, fragmentShader) {
-        var program = gl.createProgram();
-
-        gl.attachShader(program, vertexShader);
-        gl.attachShader(program, fragmentShader);
-
-        return program;
-    }
-
     /**
      * @constructor
      * @name pc.Shader
@@ -98,10 +80,11 @@ Object.assign(pc, function () {
             });
             // #endif
 
-            var gl = this.device.gl;
-            this.vshader = createShader(gl, gl.VERTEX_SHADER, this.definition.vshader);
-            this.fshader = createShader(gl, gl.FRAGMENT_SHADER, this.definition.fshader);
-            this.program = createProgram(gl, this.vshader, this.fshader);
+            var device = this.device;
+            var gl = device.gl;
+            this.vshader = device.createShader(gl.VERTEX_SHADER, this.definition.vshader);
+            this.fshader = device.createShader(gl.FRAGMENT_SHADER, this.definition.fshader);
+            this.program = device.createProgram(this.vshader, this.fshader);
 
             // TODO: probably reuse VS/FS
             this.device._shaderStats.vsCompiled++;
@@ -164,9 +147,6 @@ Object.assign(pc, function () {
                 logERROR("Failed to link shader program. Error: " + gl.getProgramInfoLog(this.program));
                 retValue = false;
             }
-
-            gl.deleteShader(this.vshader);
-            gl.deleteShader(this.fshader);
 
             this.attributes = [];
             this.uniforms = [];
