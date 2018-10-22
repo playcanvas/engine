@@ -7,6 +7,10 @@ Object.assign(pc, function () {
         this._cache = {};
         this._generators = {};
         this._isClearingCache = false;
+
+        // Shared Sandard Material option structures
+        this.optionsContext = {};
+        this.optionsContextMin = {};
     };
 
     ProgramLibrary.prototype.register = function (name, generator) {
