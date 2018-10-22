@@ -564,6 +564,8 @@ Object.assign(pc, function () {
         }
 
         this.textureFloatHighPrecision = testTextureFloatHighPrecision(this);
+
+        this.initializeGrabPassTexture();
     };
 
     Object.assign(GraphicsDevice.prototype, {
@@ -892,6 +894,29 @@ Object.assign(pc, function () {
             gl.attachShader(program, fragmentShader);
 
             return program;
+        },
+
+        initializeGrabPassTexture: function () {
+            if (this.grabPassTexture) return;
+
+            var grabPassTexture = new pc.Texture(this, {
+                format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                autoMipmap: false
+            });
+
+            grabPassTexture.minFilter = pc.FILTER_LINEAR;
+            grabPassTexture.magFilter = pc.FILTER_LINEAR;
+            grabPassTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            grabPassTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+
+            grabPassTexture.name = 'texture_grabPass';
+            grabPassTexture.setSource(this.canvas);
+
+            var grabPassTextureId = this.scope.resolve(grabPassTexture.name);
+            grabPassTextureId.setValue(grabPassTexture);
+
+            this.grabPassTextureId = grabPassTextureId;
+            this.grabPassTexture = grabPassTexture;
         },
 
         updateClientRect: function () {
@@ -1842,8 +1867,11 @@ Object.assign(pc, function () {
 
                 if (texture._needsUpload || texture._needsMipmapsUpload) {
                     this.uploadTexture(texture);
-                    texture._needsUpload = false;
-                    texture._needsMipmapsUpload = false;
+
+                    if (texture !== this.grabPassTexture) {
+                        texture._needsUpload = false;
+                        texture._needsMipmapsUpload = false;
+                    }
                 }
             } else {
                 // Ensure the texture is currently bound to the correct target on the specified texture unit.

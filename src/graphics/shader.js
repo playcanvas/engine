@@ -30,6 +30,7 @@ Object.assign(pc, function () {
      * @param {String} definition.vshader Vertex shader source (GLSL code).
      * @param {String} definition.fshader Fragment shader source (GLSL code).
      * @param {Boolean} definition.useTransformFeedback Specifies that this shader outputs post-VS data to a buffer
+     * @param {Object} precache Triggers imediate link.
      * @example
      * // Create a shader that renders primitives with a solid red color
      * var shaderDefinition = {
@@ -59,6 +60,7 @@ Object.assign(pc, function () {
     var Shader = function (graphicsDevice, definition) {
         this.device = graphicsDevice;
         this.definition = definition;
+        this.ready = false;
 
         // Used for shader variants (see pc.Material)
         this._refCount = 0;
@@ -70,7 +72,6 @@ Object.assign(pc, function () {
 
     Object.assign(Shader.prototype, {
         compile: function () {
-            this.ready = false;
 
             // #ifdef PROFILER
             var startTime = pc.now();
@@ -94,6 +95,9 @@ Object.assign(pc, function () {
                 this.device._shaderStats.materialShaders++;
             }
 
+            this._startLink();
+
+            this.compileToLinkTime = pc.now();
             // #ifdef PROFILER
             var endTime = pc.now();
             this.device.fire('shader:compile:end', {
@@ -104,17 +108,8 @@ Object.assign(pc, function () {
             // #endif
         },
 
-        link: function () {
+        _startLink: function () {
             var gl = this.device.gl;
-            var retValue = true;
-
-            // #ifdef PROFILER
-            var startTime = pc.now();
-            this.device.fire('shader:link:start', {
-                timestamp: startTime,
-                target: this
-            });
-            // #endif
 
             if (this.device.webgl2 && this.definition.useTransformFeedback) {
                 // Collect all "out_" attributes and use them for output
@@ -129,6 +124,19 @@ Object.assign(pc, function () {
             }
 
             gl.linkProgram(this.program);
+        },
+
+        link: function () {
+            var gl = this.device.gl;
+            var retValue = true;
+
+            // #ifdef PROFILER
+            var startTime = pc.now();
+            this.device.fire('shader:link:start', {
+                timestamp: startTime,
+                target: this
+            });
+            // #endif
 
             // Check for errors
 

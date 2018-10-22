@@ -151,19 +151,19 @@ pc.programlib.standard = {
                         }
                     }
                 } else {
-                    if (options[prop]) props.push(prop);
+                    if (options[prop] !== undefined) props.push(prop);
                 }
             }
         }
         props.sort();
-        for (prop in props) {
-            if (props.hasOwnProperty(prop)) {
-                key += props[prop] + options[props[prop]];
-            }
+
+        var i = 0;
+        for (i = 0; i < props.length; i++) {
+            key += props[i] + options[props[i]];
         }
 
         if (options.lights) {
-            for (var i = 0; i < options.lights.length; i++) {
+            for (i = 0; i < options.lights.length; i++) {
                 light = options.lights[i];
                 key += light.key;
             }
