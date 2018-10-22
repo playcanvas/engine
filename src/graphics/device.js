@@ -2948,6 +2948,9 @@ Object.assign(pc, function () {
                 gl.deleteShader(this.vertexShaderCache[shaderSrc]);
                 delete this.vertexShaderCache[shaderSrc];
             }
+
+            this.canvas = null;
+            this.gl = null;
         }
     });
 

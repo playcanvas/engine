@@ -4,10 +4,21 @@ describe("pc.TextElement", function () {
     var entity;
     var element;
     var fontAsset;
+    var canvas;
 
     beforeEach(function (done) {
-        app = new pc.Application(document.createElement("canvas"));
+        canvas = document.createElement("canvas");
+        app = new pc.Application(canvas);
         buildElement(done);
+    });
+
+
+    afterEach(function () {
+        fontAsset.unload();
+        fontAsset = null;
+        app.destroy();
+        app = null;
+        canvas = null;
     });
 
     var buildElement = function (callback) {
@@ -42,12 +53,6 @@ describe("pc.TextElement", function () {
         expect(element.lines.length).to.equal(expectedLineContents.length);
         expect(element.lines).to.deep.equal(expectedLineContents);
     };
-
-    afterEach(function () {
-        fontAsset.unload();
-        fontAsset = null;
-        app.destroy();
-    });
 
     it("does not break onto multiple lines if the text is short enough", function () {
         element.fontAsset = fontAsset;

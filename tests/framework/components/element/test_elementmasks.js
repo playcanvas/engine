@@ -1,12 +1,16 @@
 describe("pc.Element: Masks", function () {
     var app;
+    var canvas;
 
     beforeEach(function () {
-        app = new pc.Application(document.createElement("canvas"));
+        canvas = document.createElement("canvas")
+        app = new pc.Application(canvas);
     });
 
     afterEach(function () {
         app.destroy();
+        app = null;
+        canvas = null;
     });
 
     it("add / remove", function () {
