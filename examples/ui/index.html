@@ -1,0 +1,341 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>PlayCanvas UI Example</title>
+        <script src="../../build/output/playcanvas-latest.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="application-canvas"></canvas>
+
+        <script>
+            // draw some axes
+            var drawAxes = function (pos, scale) {
+                var color = new pc.Color(1,0,0);
+
+                var axis = new pc.Vec3();
+                var end = new pc.Vec3().copy(pos).add(axis.set(scale,0,0));
+
+                app.renderLine(pos, end, color);
+
+                color.set(0, 1, 0);
+                end.sub(axis.set(scale,0,0)).add(axis.set(0,scale,0));
+                app.renderLine(pos, end, color);
+
+                color.set(0, 0, 1);
+                end.sub(axis.set(0,scale,0)).add(axis.set(0,0,scale));
+                app.renderLine(pos, end, color);
+            }
+        </script>
+
+
+        <script>
+            var canvas = document.getElementById('application-canvas');
+            var app = new pc.Application(canvas, {
+                mouse: new pc.Mouse(document.body),
+                touch: new pc.TouchDevice(document.body),
+                elementInput: new pc.ElementInput(canvas)
+            });
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            // use device pixel ratio
+            app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
+
+            app.start();
+
+            // create camera
+            var c = new pc.Entity();
+            c.addComponent('camera', {
+                clearColor: new pc.Color(44/255, 62/255, 80/255),
+                farClip: 10000
+            });
+            c.translate(1,1,1);
+            c.lookAt(0,0,0);
+            app.root.addChild(c);
+
+            // Load Assets
+            var assetsToLoad = [
+                new pc.Asset("red_button_atlas.json", "textureatlas", {url: "../assets/button/red_button_atlas.json"}),
+                new pc.Asset("Button Default", "sprite", {url: "../assets/button/red_button_default.json"}),
+                new pc.Asset("Button Pressed", "sprite", {url: "../assets/button/red_button_pressed.json"}),
+                new pc.Asset("Button Hover", "sprite", {url: "../assets/button/red_button_hover.json"}),
+                new pc.Asset("Button Disabled", "sprite", {url: "../assets/button/red_button_disabled.json"}),
+                new pc.Asset('Arial.json', "font", {url: "../assets/arial/Arial.json"}),
+                new pc.Asset("heart.png", "texture", {url: "../assets/heart.png"}),
+                new pc.Asset("grey_panel.png", "texture", {url: "../assets/panel/blue_panel.png"})
+            ]
+
+            var count =0;
+            app.assets.on('load', function () {
+                count++;
+                if (count === assetsToLoad.length) {
+                    onLoadComplete();
+                }
+            });
+
+            for (var i = 0; i < assetsToLoad.length; i++) {
+                app.assets.add(assetsToLoad[i]);
+                app.assets.load(assetsToLoad[i]);
+            }
+
+            var assets = {
+                atlas: assetsToLoad[0],
+                buttonDefault: assetsToLoad[1],
+                buttonPressed: assetsToLoad[2],
+                buttonHover: assetsToLoad[3],
+                buttonDisabled: assetsToLoad[4],
+                font: assetsToLoad[5],
+                heart: assetsToLoad[6],
+                panel: assetsToLoad[7]
+            }
+
+            // global ui elements
+            var menu, panel;
+            var hud, score, lives;
+            var fps;
+
+            // create a button
+            // an image element, with button script and selector attached
+            // and a text element label
+            var createButton = function (text, x, y, active) {
+                var button = new pc.Entity('Button');
+                button.addComponent('element', {
+                    type: 'image',
+                    anchor: [0.5,1,0.5,1],
+                    pivot: [0.5, 1],
+                    width: 256,
+                    height: 64,
+                    spriteAsset: assets.buttonDefault
+                });
+                button.element.useInput = true;
+
+                button.addComponent('button', {
+                    active: active,
+                    transitionMode: pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE,
+                    hoverSpriteAsset: assets.buttonHover,
+                    pressedSpriteAsset: assets.buttonPressed,
+                    inactiveSpriteAsset: assets.buttonDisabled,
+                    imageEntity: button
+                });
+
+                button.setLocalPosition(x, y, 0);
+
+                button.button.on('pressedstart', function () {
+                    label.translateLocal(0, -4, 0);
+                });
+
+                button.button.on('pressedend', function () {
+                    label.translateLocal(0, 4, 0);
+                });
+
+                var label = new pc.Entity();
+                label.name = "label";
+                label.addComponent('element', {
+                    anchor: new pc.Vec4(0.5,0.5,0.5,0.5),
+                    pivot: new pc.Vec2(0.5,0.5),
+                    width: 256,
+                    height: 64,
+                    type: "text",
+                    text: text,
+                    fontAsset: assets.font,
+                    color: active ? new pc.Color(1,1,1) : new pc.Color(0.2,0.2,0.2),
+                    opacity: 0.5
+                });
+                label.setLocalPosition(0, 4, 0)
+                button.addChild(label);
+
+                return button;
+            };
+
+            // enable the menu, disable the hud
+            var showMenu = function () {
+                menu.enabled = true;
+                hud.enabled = false;
+                fps.enabled = false;
+            };
+
+            // enable and reset the hud, disable the menu
+            var showGame = function () {
+                menu.enabled = false;
+                hud.enabled = true;
+                fps.enabled = true;
+                for (var i = 0; i < lives.length; i++) {
+                    lives[i].enabled = true;
+                    points = 0;
+                }
+            }
+
+            // toggle annoy mode
+            function toggleSpin() {
+                spin = !spin;
+            }
+
+            // create the menu screen, panel and buttons
+            function createMenu() {
+                menu = new pc.Entity();
+                menu.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true});
+                menu.screen.scaleMode = "blend";
+                menu.screen.referenceResolution = new pc.Vec2(1280,720);
+                app.root.addChild(menu);
+
+                panel = new pc.Entity();
+                panel.name = "panel";
+                panel.addComponent('element', {
+                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                    pivot: new pc.Vec2(0.5, 0.5),
+                    width: 300,
+                    height: 300,
+                    type: "image",
+                    textureAsset: assets.panel
+                });
+
+                button = createButton("START", 0, -22, true);
+                button.button.on('click', function () {
+                    showGame();
+                });
+                panel.addChild(button);
+
+                button = createButton("ANNOY", 0, -108, true);
+                button.button.on('click', function () {
+                    toggleSpin();
+                });
+                panel.addChild(button);
+
+                button = createButton("DISABLED", 0, -192, false);
+
+                panel.addChild(button);
+                menu.addChild(panel);
+                menu.enabled = false;
+            };
+
+            // create the score text and the lives display
+            function createHud() {
+                hud = new pc.Entity();
+                hud.name = "hud";
+                hud.addComponent("screen", {resolution: new pc.Vec2(640,480), screenSpace: true});
+                hud.screen.scaleMode = "blend";
+                hud.screen.referenceResolution = new pc.Vec2(1280,720);
+
+                score = new pc.Entity();
+                score.addComponent("element", {
+                    anchor: [1,1,1,1],
+                    pivot: [1,1],
+                    type: "text",
+                    text: "0",
+                    fontSize: 64,
+                    fontAsset: assets.font,
+                    color: new pc.Color(1,1,1)
+                });
+                hud.addChild(score);
+                score.translateLocal(-84, -10, 0);
+
+                lives = [];
+                for (var i = 0; i < 3; i++) {
+                    lives[i] = new pc.Entity("Life "+i);
+                    lives[i].addComponent("element", {
+                        anchor: [1,1,1,1],
+                        pivot: [1,1],
+                        width: 64,
+                        height: 64,
+                        type: "image",
+                        textureAsset: assets.heart
+                    });
+                    hud.addChild(lives[i]);
+                    lives[i].translateLocal(-10, -64*i-10, 0);
+                }
+                app.root.addChild(hud);
+                hud.enabled = false;
+            }
+
+            // create some world space text that displays the current FPS
+            function createFps() {
+                fps = new pc.Entity();
+                fps.addComponent("element", {
+                    anchors: [0,0,0,0],
+                    pivot: [0.5,0],
+                    type: "text",
+                    text: "FPS",
+                    fontSize: 16,
+                    fontAsset: assets.font,
+                    color: new pc.Color(1,1,1),
+                    opacity: 1
+                });
+                fps.setLocalScale(1/64,1/64,1.64);
+                app.root.addChild(fps);
+            };
+
+            // called when all assets are loaded
+            function onLoadComplete() {
+
+                // create the entities
+                createMenu();
+                createHud();
+                createFps();
+
+                // show main menu
+                showMenu();
+            }
+
+            var spin = false; // annoy mode
+            var a = 0; // used for animating
+            var points = 0; // current score
+            var averageFps = 60; // current FPS
+
+            // update every frame
+            app.on("update", function (dt) {
+                // increment angle counter
+                a += dt;
+
+                // draw origin
+                drawAxes(pc.Vec3.ZERO, 1)
+
+                // if hud is active
+                if (hud && hud.enabled) {
+                    // increment score
+                    points += 10;
+                    score.element.text = points;
+
+                    // "lose" lives
+                    if (points > 1000) {
+                        lives[2].enabled = false;
+                    }
+                    if (points > 2000) {
+                        lives[1].enabled = false;
+                    }
+                    if (points > 3000) {
+                        lives[0].enabled = false;
+                        showMenu(); // return to main menu
+                    }
+
+                    // update world space FPS counter
+                    averageFps = pc.math.lerp(averageFps, (1/dt), 0.01); // smooth fps
+                    fps.element.text = "Hello World!\n" + averageFps.toPrecision(3) + "fps";
+                    fps.setLocalPosition(
+                        0.5*Math.sin(2*a),
+                        0.125*Math.sin(3*a),
+                        0.125*Math.sin(5*a)
+                    );
+                } else {
+                    // if annoy mode is active rotate the panel
+                    if (spin) {
+                        panel.rotateLocal(0, 0, 90*dt);
+                    }
+                }
+            });
+
+            // hook up window resize events
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
+        </script>
+    </body>
+</html>

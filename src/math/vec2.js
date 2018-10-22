@@ -1,23 +1,27 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
-    * @name pc.Vec2
-    * @class A 2-dimensional vector.
-    * @description Creates a new Vec2 object
-    */
-    var Vec2 = function () {
-        this.data = new Float32Array(2);
-
-        if (arguments.length === 2) {
-            this.data.set(arguments);
+     * @constructor
+     * @name pc.Vec2
+     * @classdesc A 2-dimensional vector.
+     * @description Creates a new Vec2 object.
+     * @param {Number} [x] The x value. If x is an array of length 2, the array will be used to populate all components.
+     * @param {Number} [y] The y value.
+     * @example
+     * var v = new pc.Vec2(1, 2);
+     */
+    var Vec2 = function (x, y) {
+        if (x && x.length === 2) {
+            this.x = x[0];
+            this.y = x[1];
         } else {
-            this.data[0] = 0;
-            this.data[1] = 0;
+            this.x = x || 0;
+            this.y = y || 0;
         }
     };
 
-    Vec2.prototype = {
+    Object.assign(Vec2.prototype, {
         /**
          * @function
          * @name pc.Vec2#add
@@ -34,11 +38,8 @@ pc.extend(pc, (function () {
          * console.log("The result of the addition is: " + a.toString());
          */
         add: function (rhs) {
-            var a = this.data,
-                b = rhs.data;
-
-            a[0] += b[0];
-            a[1] += b[1];
+            this.x += rhs.x;
+            this.y += rhs.y;
 
             return this;
         },
@@ -61,12 +62,8 @@ pc.extend(pc, (function () {
          * console.log("The result of the addition is: " + r.toString());
          */
         add2: function (lhs, rhs) {
-            var a = lhs.data,
-                b = rhs.data,
-                r = this.data;
-
-            r[0] = a[0] + b[0];
-            r[1] = a[1] + b[1];
+            this.x = lhs.x + rhs.x;
+            this.y = lhs.y + rhs.y;
 
             return this;
         },
@@ -100,11 +97,8 @@ pc.extend(pc, (function () {
          * console.log("The two vectors are " + (dst.equals(src) ? "equal" : "different"));
          */
         copy: function (rhs) {
-            var a = this.data,
-                b = rhs.data;
-
-            a[0] = b[0];
-            a[1] = b[1];
+            this.x = rhs.x;
+            this.y = rhs.y;
 
             return this;
         },
@@ -122,10 +116,7 @@ pc.extend(pc, (function () {
          * console.log("The result of the dot product is: " + v1dotv2);
          */
         dot: function (rhs) {
-            var a = this.data,
-                b = rhs.data;
-
-            return a[0] * b[0] + a[1] * b[1];
+            return this.x * rhs.x + this.y * rhs.y;
         },
 
         /**
@@ -140,10 +131,7 @@ pc.extend(pc, (function () {
          * console.log("The two vectors are " + (a.equals(b) ? "equal" : "different"));
          */
         equals: function (rhs) {
-            var a = this.data,
-                b = rhs.data;
-
-            return a[0] === b[0] && a[1] === b[1];
+            return this.x === rhs.x && this.y === rhs.y;
         },
 
         /**
@@ -158,9 +146,7 @@ pc.extend(pc, (function () {
          * console.log("The length of the vector is: " + len);
          */
         length: function () {
-            var v = this.data;
-
-            return Math.sqrt(v[0] * v[0] + v[1] * v[1]);
+            return Math.sqrt(this.x * this.x + this.y * this.y);
         },
 
         /**
@@ -175,9 +161,7 @@ pc.extend(pc, (function () {
          * console.log("The length squared of the vector is: " + len);
          */
         lengthSq: function () {
-            var v = this.data;
-
-            return v[0] * v[0] + v[1] * v[1];
+            return this.x * this.x + this.y * this.y;
         },
 
         /**
@@ -200,12 +184,8 @@ pc.extend(pc, (function () {
          * r.lerp(a, b, 1);   // r is equal to b
          */
         lerp: function (lhs, rhs, alpha) {
-            var a = lhs.data,
-                b = rhs.data,
-                r = this.data;
-
-            r[0] = a[0] + alpha * (b[0] - a[0]);
-            r[1] = a[1] + alpha * (b[1] - a[1]);
+            this.x = lhs.x + alpha * (rhs.x - lhs.x);
+            this.y = lhs.y + alpha * (rhs.y - lhs.y);
 
             return this;
         },
@@ -213,7 +193,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Vec2#mul
-         * @description Returns the result of multiplying the specified 2-dimensional vectors together.
+         * @description Multiplies a 2-dimensional vector to another in place.
          * @param {pc.Vec2} rhs The 2-dimensional vector used as the second multiplicand of the operation.
          * @returns {pc.Vec2} Self for chaining.
          * @example
@@ -226,11 +206,8 @@ pc.extend(pc, (function () {
          * console.log("The result of the multiplication is: " + a.toString());
          */
         mul: function (rhs) {
-            var a = this.data,
-                b = rhs.data;
-
-            a[0] *= b[0];
-            a[1] *= b[1];
+            this.x *= rhs.x;
+            this.y *= rhs.y;
 
             return this;
         },
@@ -253,12 +230,8 @@ pc.extend(pc, (function () {
          * console.log("The result of the multiplication is: " + r.toString());
          */
         mul2: function (lhs, rhs) {
-            var a = lhs.data,
-                b = rhs.data,
-                r = this.data;
-
-            r[0] = a[0] * b[0];
-            r[1] = a[1] * b[1];
+            this.x = lhs.x * rhs.x;
+            this.y = lhs.y * rhs.y;
 
             return this;
         },
@@ -267,6 +240,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec2#normalize
          * @description Returns the specified 2-dimensional vector copied and converted to a unit vector.
+         * If the vector has a length of zero, the vector's elements will be set to zero.
          * @returns {pc.Vec2} Self for chaining.
          * @example
          * var v = new pc.Vec2(25, 0);
@@ -277,15 +251,22 @@ pc.extend(pc, (function () {
          * console.log("The result of the vector normalization is: " + v.toString());
          */
         normalize: function () {
-            return this.scale(1 / this.length());
+            var lengthSq = this.x * this.x + this.y * this.y;
+            if (lengthSq > 0) {
+                var invLength = 1 / Math.sqrt(lengthSq);
+                this.x *= invLength;
+                this.y *= invLength;
+            }
+
+            return this;
         },
 
         /**
          * @function
          * @name pc.Vec2#scale
-         * @description Scales each dimension of the specified 2-dimensional vector by the supplied
+         * @description Scales each component of the specified 2-dimensional vector by the supplied
          * scalar value.
-         * @param {Number} scalar The value by which each vector dimension is multiplied.
+         * @param {Number} scalar The value by which each vector component is multiplied.
          * @returns {pc.Vec2} Self for chaining.
          * @example
          * var v = new pc.Vec2(2, 4);
@@ -300,10 +281,8 @@ pc.extend(pc, (function () {
          * v.scale(0.5);
          */
         scale: function (scalar) {
-            var v = this.data;
-
-            v[0] *= scalar;
-            v[1] *= scalar;
+            this.x *= scalar;
+            this.y *= scalar;
 
             return this;
         },
@@ -312,8 +291,9 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec2#set
          * @description Sets the specified 2-dimensional vector to the supplied numerical values.
-         * @param {Number} x The value to set on the first dimension of the vector.
-         * @param {Number} y The value to set on the second dimension of the vector.
+         * @param {Number} x The value to set on the first component of the vector.
+         * @param {Number} y The value to set on the second component of the vector.
+         * @returns {pc.Vec2} Self for chaining.
          * @example
          * var v = new pc.Vec2();
          * v.set(5, 10);
@@ -322,10 +302,8 @@ pc.extend(pc, (function () {
          * console.log("The result of the vector set is: " + v.toString());
          */
         set: function (x, y) {
-            var v = this.data;
-
-            v[0] = x;
-            v[1] = y;
+            this.x = x;
+            this.y = y;
 
             return this;
         },
@@ -346,11 +324,8 @@ pc.extend(pc, (function () {
          * console.log("The result of the addition is: " + a.toString());
          */
         sub: function (rhs) {
-            var a = this.data,
-                b = rhs.data;
-
-            a[0] -= b[0];
-            a[1] -= b[1];
+            this.x -= rhs.x;
+            this.y -= rhs.y;
 
             return this;
         },
@@ -373,12 +348,8 @@ pc.extend(pc, (function () {
          * console.log("The result of the addition is: " + r.toString());
          */
         sub2: function (lhs, rhs) {
-            var a = lhs.data,
-                b = rhs.data,
-                r = this.data;
-
-            r[0] = a[0] - b[0];
-            r[1] = a[1] - b[1];
+            this.x = lhs.x - rhs.x;
+            this.y = lhs.y - rhs.y;
 
             return this;
         },
@@ -394,9 +365,9 @@ pc.extend(pc, (function () {
          * console.log(v.toString());
          */
         toString: function () {
-            return "[" + this.data[0] + ", " + this.data[1] + "]";
+            return '[' + this.x + ', ' + this.y + ']';
         }
-    };
+    });
 
     /**
      * @field
@@ -412,15 +383,6 @@ pc.extend(pc, (function () {
      * // Set x
      * vec.x = 0;
      */
-    Object.defineProperty(Vec2.prototype, 'x', {
-        get: function () {
-            return this.data[0];
-        },
-        set: function (value) {
-            this.data[0] = value;
-        }
-    });
-
     /**
      * @field
      * @type Number
@@ -435,14 +397,6 @@ pc.extend(pc, (function () {
      * // Set y
      * vec.y = 0;
      */
-    Object.defineProperty(Vec2.prototype, 'y', {
-        get: function () {
-            return this.data[1];
-        },
-        set: function (value) {
-            this.data[1] = value;
-        }
-    });
 
     /**
      * @field

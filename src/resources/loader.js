@@ -1,29 +1,30 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
-    * @name pc.ResourceLoader
-    * @class Load resource data, potentially from remote sources. Caches resource on load to prevent multiple requests
-    * Add ResourceHandlers to handle different types of resources
-    */
+     * @constructor
+     * @name pc.ResourceLoader
+     * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
+     * multiple requests. Add ResourceHandlers to handle different types of resources.
+     */
     var ResourceLoader = function () {
         this._handlers = {};
         this._requests = {};
         this._cache = {};
     };
 
-    ResourceLoader.prototype = {
+    Object.assign(ResourceLoader.prototype, {
         /**
-        * @function
-        * @name pc.ResourceLoader#addHandler
-        * @description Add a handler for a resource type. Handler should support: load(url, callback) and open(url, data).
-        * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets
-        * @param {String} type The name of the type that the handler will load
-        * @param {pc.ResourceHandler} handler An instance of a resource handler supporting load() and open().
-        * @example
-        * var loader = new ResourceLoader();
-        * loader.addHandler("json", new pc.JsonHandler());
-        */
+         * @function
+         * @name pc.ResourceLoader#addHandler
+         * @description Add a handler for a resource type. Handler should support: load(url, callback) and open(url, data).
+         * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets
+         * @param {String} type The name of the type that the handler will load
+         * @param {pc.ResourceHandler} handler An instance of a resource handler supporting load() and open().
+         * @example
+         * var loader = new ResourceLoader();
+         * loader.addHandler("json", new pc.JsonHandler());
+         */
         addHandler: function (type, handler) {
             this._handlers[type] = handler;
             handler._loader = this;
@@ -38,19 +39,22 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.ResourceLoader#load
-        * @description Make a request for a resource from a remote URL. Parse the returned data using the handler for the specified type
-        * When loaded and parsed use the callback to return an instance of the resource. Handles multiple requests for
-        * @param {String} url The URL of the resource to load
-        * @param {String} type The type of resource expected
-        * @param {Function} callback The callback used when the resource is loaded or an error occurs. Passed (err, resource) where err is null if there are no errors
-        * @example
-        * app.loader.load("../path/to/texture.png", "texture", function (err, texture) {
-        *     // use texture here
-        * });
-        */
-        load: function(url, type, callback) {
+         * @function
+         * @name pc.ResourceLoader#load
+         * @description Make a request for a resource from a remote URL. Parse the returned data using the
+         * handler for the specified type. When loaded and parsed, use the callback to return an instance of
+         * the resource.
+         * @param {String} url The URL of the resource to load.
+         * @param {String} type The type of resource expected.
+         * @param {Function} callback The callback used when the resource is loaded or an error occurs.
+         * @param {pc.Asset} [asset] Optional asset that is passed into handler
+         * Passed (err, resource) where err is null if there are no errors.
+         * @example
+         * app.loader.load("../path/to/texture.png", "texture", function (err, texture) {
+         *     // use texture here
+         * });
+         */
+        load: function (url, type, callback, asset) {
             var handler = this._handlers[type];
             if (!handler) {
                 var err = "No handler for asset type: " + type;
@@ -77,7 +81,7 @@ pc.extend(pc, function () {
 
                     var i, len = this._requests[key].length;
                     if (!err) {
-                        var resource = handler.open(url, data);
+                        var resource = handler.open(url, data, asset);
                         this._cache[key] = resource;
                         for (i = 0; i < len; i++)
                             this._requests[key][i](null, resource, extra);
@@ -86,15 +90,18 @@ pc.extend(pc, function () {
                             this._requests[key][i](err);
                     }
                     delete this._requests[key];
-                }.bind(this));
+                }.bind(this), asset);
             }
         },
 
         /**
-        * @function
-        * @name pc.ResourceLoader#open
-        * @description Convert raw resource data into a resource instance. e.g. take 3D model format JSON and return a pc.Model.
-        */
+         * @function
+         * @name pc.ResourceLoader#open
+         * @description Convert raw resource data into a resource instance. e.g. take 3D model format JSON and return a pc.Model.
+         * @param {String} type The type of resource.
+         * @param {*} data The raw resource data.
+         * @returns {*} The parsed resource data.
+         */
         open: function (type, data) {
             var handler = this._handlers[type];
             if (!handler) {
@@ -107,10 +114,13 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.ResourceLoader#patch
-        * @description Perform any operations on a resource, that requires a dependency on it's asset data or any other asset data
-        */
+         * @function
+         * @name pc.ResourceLoader#patch
+         * @description Perform any operations on a resource, that requires a dependency on its asset data
+         * or any other asset data.
+         * @param {pc.Asset} asset The asset to patch.
+         * @param {pc.AssetRegistry} assets The asset registry.
+         */
         patch: function (asset, assets) {
             var handler = this._handlers[asset.type];
             if (!handler)  {
@@ -128,10 +138,13 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.ResourceLoader#getFromCache
-        * @description Check cache for resource from a URL. If present return the cached value
-        */
+         * @function
+         * @name pc.ResourceLoader#getFromCache
+         * @description Check cache for resource from a URL. If present, return the cached value.
+         * @param {String} url The URL of the resource to get from the cache.
+         * @param {String} type The type of the resource.
+         * @returns {*} The resource loaded from the cache.
+         */
         getFromCache: function (url, type) {
             if (this._cache[url + type]) {
                 return this._cache[url + type];
@@ -139,16 +152,16 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name  pc.ResourceLoader#destroy
-        * @description Destroys resource loader
-        */
+         * @function
+         * @name pc.ResourceLoader#destroy
+         * @description Destroys the resource loader.
+         */
         destroy: function () {
             this._handlers = {};
             this._requests = {};
             this._cache = {};
         }
-    };
+    });
 
     return {
         ResourceLoader: ResourceLoader

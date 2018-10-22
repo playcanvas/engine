@@ -1,15 +1,17 @@
-float getShadowHardVS(sampler2D shadowMap, vec3 shadowParams) {
-    float depth = unpackFloat(texture2DProj(shadowMap, vMainShadowUv));
-    return (depth < min(vMainShadowUv.z + shadowParams.z, 1.0)) ? 0.0 : 1.0;
-}
+#ifdef GL2
+#define SHADOW_SAMPLERVS sampler2DShadow
+#else
+#define SHADOW_SAMPLERVS sampler2D
+#endif
 
-float getShadowPCF3x3VS(sampler2D shadowMap, vec3 shadowParams) {
+float getShadowPCF3x3VS(SHADOW_SAMPLERVS shadowMap, vec3 shadowParams) {
     dShadowCoord = vMainShadowUv.xyz;
+    dShadowCoord.z = saturate(dShadowCoord.z) - 0.0001;
 
-    dShadowCoord.z += getShadowBias(shadowParams.x, shadowParams.z);
+    #ifdef SHADOWBIAS
+        dShadowCoord.z += getShadowBias(shadowParams.x, shadowParams.z);
+    #endif
 
-    dShadowCoord.xyz /= vMainShadowUv.w;
-    dShadowCoord.z = min(dShadowCoord.z, 1.0);
     return _getShadowPCF3x3(shadowMap, shadowParams);
 }
 

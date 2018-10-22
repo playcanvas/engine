@@ -1,9 +1,11 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
+     * @private
+     * @constructor
      * @name pc.Listener
-     * @class Represents an audio listener - used internally.
+     * @classdesc Represents an audio listener - used internally.
      * @param {pc.SoundManager} manager The sound manager
      */
     var Listener = function (manager) {
@@ -16,7 +18,7 @@ pc.extend(pc, function () {
         }
     };
 
-    Listener.prototype = {
+    Object.assign(Listener.prototype, {
         getPosition: function () {
             return this.position;
         },
@@ -50,7 +52,7 @@ pc.extend(pc, function () {
         getOrientation: function () {
             return this.orientation;
         }
-    };
+    });
 
     return {
         Listener: Listener

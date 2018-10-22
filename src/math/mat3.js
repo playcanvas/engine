@@ -1,22 +1,22 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
-    * @name pc.Mat3
-    * @class A 3x3 matrix.
-    * @description Creates a new Mat3 object
-    */
+     * @constructor
+     * @name pc.Mat3
+     * @classdesc A 3x3 matrix.
+     * @description Creates a new identity Mat3 object.
+     */
     var Mat3 = function () {
-        this.data = new Float32Array(9);
-
-        if (arguments.length === 9) {
-            this.data.set(arguments);
-        } else {
-            this.setIdentity();
-        }
+        var data;
+        // Create an identity matrix. Note that a new Float32Array has all elements set
+        // to zero by default, so we only need to set the relevant elements to one.
+        data = new Float32Array(9);
+        data[0] = data[4] = data[8] = 1;
+        this.data = data;
     };
 
-    Mat3.prototype = {
+    Object.assign(Mat3.prototype, {
         /**
          * @function
          * @name pc.Mat3#clone
@@ -24,9 +24,8 @@ pc.extend(pc, (function () {
          * @returns {pc.Mat3} A duplicate matrix.
          * @example
          * var src = new pc.Mat3().translate(10, 20, 30);
-         * var dst = new pc.Mat3();
-         * dst.copy(src);
-         * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
+         * var dst = src.clone();
+         * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
          */
         clone: function () {
             return new pc.Mat3().copy(this);
@@ -36,16 +35,43 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Mat3#copy
          * @description Copies the contents of a source 3x3 matrix to a destination 3x3 matrix.
-         * @param {pc.Mat3} src A 3x3 matrix to be copied.
+         * @param {pc.Mat3} rhs A 3x3 matrix to be copied.
          * @returns {pc.Mat3} Self for chaining
          * @example
          * var src = new pc.Mat3().translate(10, 20, 30);
          * var dst = new pc.Mat3();
          * dst.copy(src);
-         * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
+         * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
          */
         copy: function (rhs) {
             var src = rhs.data;
+            var dst = this.data;
+
+            dst[0] = src[0];
+            dst[1] = src[1];
+            dst[2] = src[2];
+            dst[3] = src[3];
+            dst[4] = src[4];
+            dst[5] = src[5];
+            dst[6] = src[6];
+            dst[7] = src[7];
+            dst[8] = src[8];
+
+            return this;
+        },
+
+        /**
+         * @function
+         * @name pc.Mat3#set
+         * @description Copies the contents of a source array[9] to a destination 3x3 matrix.
+         * @param {Array} src An array[9] to be copied.
+         * @returns {pc.Mat3} Self for chaining
+         * @example
+         * var src = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+         * var dst = new pc.Mat3();
+         * dst.copy(src);
+         */
+        set: function (src) {
             var dst = this.data;
 
             dst[0] = src[0];
@@ -116,7 +142,7 @@ pc.extend(pc, (function () {
          * @returns {pc.Mat3} Self for chaining.
          * @example
          * m.setIdentity();
-         * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
+         * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
          */
         setIdentity: function () {
             var m = this.data;
@@ -146,12 +172,12 @@ pc.extend(pc, (function () {
          * console.log(m.toString());
          */
         toString: function () {
-            var t = "[";
+            var t = '[';
             for (var i = 0; i < 9; i++) {
                 t += this.data[i];
-                t += (i !== 9) ? ", " : "";
+                t += (i !== 9) ? ', ' : '';
             }
-            t += "]";
+            t += ']';
             return t;
         },
 
@@ -176,7 +202,7 @@ pc.extend(pc, (function () {
 
             return this;
         }
-    };
+    });
 
     /**
      * @field
@@ -189,7 +215,7 @@ pc.extend(pc, (function () {
     Object.defineProperty(Mat3, 'IDENTITY', {
         get: function () {
             var identity = new Mat3();
-            return function() {
+            return function () {
                 return identity;
             };
         }()
@@ -205,8 +231,8 @@ pc.extend(pc, (function () {
      */
     Object.defineProperty(Mat3, 'ZERO', {
         get: function () {
-            var zero = new Mat3(0, 0, 0, 0, 0, 0, 0, 0, 0);
-            return function() {
+            var zero = new Mat3().set([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+            return function () {
                 return zero;
             };
         }()

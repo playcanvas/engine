@@ -13,7 +13,7 @@ void addLightMap() {
 
     dLightDirNormW = normalize(dir.xyz * 2.0 - vec3(1.0));
 
-    float vlight = saturate(dot(dLightDirNormW, -vNormalW));
+    float vlight = saturate(dot(dLightDirNormW, -dVertexNormalW));
     float flight = saturate(dot(dLightDirNormW, -dNormalW));
     float nlight = (flight / max(vlight,0.01)) * 0.5;
 

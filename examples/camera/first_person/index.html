@@ -7,112 +7,113 @@
 
 <body>
     <!-- The canvas element -->
-    <canvas id="application-canvas" tabindex="0"></canvas>
+    <canvas id="application-canvas"></canvas>
 
     <!-- The script -->
     <script>
-    // ***********    Initialize application   *******************
-    var canvas = document.getElementById("application-canvas");
-    // focus the canvas for keyboard input
-    canvas.focus();
+        // ***********    Initialize application   *******************
+        var canvas = document.getElementById("application-canvas");
+        // focus the canvas for keyboard input
+        canvas.focus();
 
-    // Create the application and start the update loop
-    var app = new pc.Application(canvas, {
-        mouse: new pc.Mouse(canvas),
-        keyboard: new pc.Keyboard(canvas)
-    });
-
-    app.start();
-
-    // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-    app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
-    app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
-
-    // ***********    Helper functions    *******************
-
-    function createMaterial (color) {
-        var material = new pc.PhongMaterial();
-        material.diffuse = color;
-        // we need to call material.update when we change its properties
-        material.update()
-        return material;
-    }
-
-    function createBox (position, size, material) {
-        // create an entity and add a model component of type 'box'
-        var box = new pc.Entity();
-        box.addComponent("model", {
-            type: "box"
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas, {
+            mouse: new pc.Mouse(canvas),
+            keyboard: new pc.Keyboard(window)
         });
 
-        box.model.material = material;
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        // move the box
-        box.setLocalPosition(position);
-        box.setLocalScale(size);
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+    </script>
 
-        // add the box to the hierarchy
-        app.root.addChild(box);
-    }
+    <script src="first_person_camera.js"></script>
 
+    <script>        
+        app.start();
 
-    // ***********    Create Boxes    *******************
+        // ***********    Helper functions    *******************
 
-    // create a few materials for our boxes
-    var red = createMaterial(new pc.Color(1,0,0));
-    var white = createMaterial(new pc.Color(1,1,1));
-
-    // create a few boxes in our scene
-    for (var i=0; i<3; i++) {
-        for (var j=0; j<2; j++) {
-            createBox(new pc.Vec3(i*2, 0, j*4), pc.Vec3.ONE, red);
+        function createMaterial (color) {
+            var material = new pc.StandardMaterial();
+            material.diffuse = color;
+            // we need to call material.update when we change its properties
+            material.update()
+            return material;
         }
-    }
 
-    // create a floor
-    createBox(new pc.Vec3(0, -0.5, 0), new pc.Vec3(10, 0.1, 10), white);
+        function createBox (position, size, material) {
+            // create an entity and add a model component of type 'box'
+            var box = new pc.Entity();
+            box.addComponent("model", {
+                type: "box"
+            });
 
-    // ***********    Create lights   *******************
+            box.model.material = material;
 
-    // make our scene prettier by adding a directional light
-    var light = new pc.Entity();
-    light.addComponent("light", {
-        type: "point",
-        color: new pc.Color(1, 1, 1),
-        range: 100
-    });
-    light.setLocalPosition(0, 0, 2);
+            // move the box
+            box.setLocalPosition(position);
+            box.setLocalScale(size);
 
-    // set the direction for our light
-    // light.setLocalEulerAngles(45, 30, 0);
+            // add the box to the hierarchy
+            app.root.addChild(box);
+        }
 
-    // add the light to the hierarchy
-    app.root.addChild(light);
 
-    // ***********    Create camera    *******************
+        // ***********    Create Boxes    *******************
 
-    // Create an Entity with a camera component
-    var camera = new pc.Entity();
-    camera.addComponent("camera", {
-        clearColor: new pc.Color(0.5, 0.5, 0.8),
-        nearClip: 0.3,
-        farClip: 30
-    });
+        // create a few materials for our boxes
+        var red = createMaterial(new pc.Color(1,0,0));
+        var white = createMaterial(new pc.Color(1,1,1));
 
-    // add the first_person_camera script to the camera
-    camera.addComponent("script", {
-        scripts: [{
-            url: 'first_person_camera.js'
-        }]
-    })
+        // create a few boxes in our scene
+        for (var i=0; i<3; i++) {
+            for (var j=0; j<2; j++) {
+                createBox(new pc.Vec3(i*2, 0, j*4), pc.Vec3.ONE, red);
+            }
+        }
 
-    // add the camera to the hierarchy
-    app.root.addChild(camera);
+        // create a floor
+        createBox(new pc.Vec3(0, -0.5, 0), new pc.Vec3(10, 0.1, 10), white);
 
-    // Move the camera a little further away
-    camera.translate(0, 0, 2);
+        // ***********    Create lights   *******************
+
+        // make our scene prettier by adding a directional light
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "point",
+            color: new pc.Color(1, 1, 1),
+            range: 100
+        });
+        light.setLocalPosition(0, 0, 2);
+
+        // set the direction for our light
+        // light.setLocalEulerAngles(45, 30, 0);
+
+        // add the light to the hierarchy
+        app.root.addChild(light);
+
+        // ***********    Create camera    *******************
+
+        // Create an Entity with a camera component
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.5, 0.5, 0.8),
+            nearClip: 0.3,
+            farClip: 30
+        });
+
+        // add the first person camera script to the camera
+        camera.addComponent("script");
+        camera.script.create("firstPersonCamera");
+
+        // add the camera to the hierarchy
+        app.root.addChild(camera);
+
+        // Move the camera a little further away
+        camera.translate(0, 0, 2);
 
     </script>
 </body>

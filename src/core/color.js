@@ -1,45 +1,42 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     /**
-    * @name pc.Color
-    * @class Representation of an RGBA color
-    * @description Create a new Color object
-    * @param {Number} r The value of the red component (0-1)
-    * @param {Number} g The value of the green component (0-1)
-    * @param {Number} b The value of the blue component (0-1)
-    * @param {Number} [a] The value of the alpha component (0-1)
-    * @property {Number} r The red component of the color
-    * @property {Number} g The green component of the color
-    * @property {Number} b The blue component of the color
-    * @property {Number} a The alpha component of the color
-    */
-    var Color = function () {
-        this.buffer = new ArrayBuffer(4 * 4);
-
-        this.data = new Float32Array(this.buffer, 0, 4);
-        this.data3 = new Float32Array(this.buffer, 0, 3);
-
-        if (arguments.length >= 3) {
-            this.data[0] = arguments[0];
-            this.data[1] = arguments[1];
-            this.data[2] = arguments[2];
-            this.data[3] = (arguments.length >= 4) ? arguments[3] : 1;
+     * @constructor
+     * @name pc.Color
+     * @classdesc Representation of an RGBA color
+     * @description Create a new Color object
+     * @param {Number} [r] The value of the red component (0-1). If r is an array of length 3 or 4, the array will be used to populate all components.
+     * @param {Number} [g] The value of the green component (0-1)
+     * @param {Number} [b] The value of the blue component (0-1)
+     * @param {Number} [a] The value of the alpha component (0-1)
+     * @property {Number} r The red component of the color
+     * @property {Number} g The green component of the color
+     * @property {Number} b The blue component of the color
+     * @property {Number} a The alpha component of the color
+     */
+    var Color = function (r, g, b, a) {
+        var length = r && r.length;
+        if (length === 3 || length === 4) {
+            this.r = r[0];
+            this.g = r[1];
+            this.b = r[2];
+            this.a = r[3] !== undefined ? r[3] : 1;
         } else {
-            this.data[0] = 0;
-            this.data[1] = 0;
-            this.data[2] = 0;
-            this.data[3] = 1;
+            this.r = r || 0;
+            this.g = g || 0;
+            this.b = b || 0;
+            this.a = a !== undefined ? a : 1;
         }
     };
 
-    Color.prototype = {
+    Object.assign(Color.prototype, {
         /**
-        * @function
-        * @name pc.Color#clone
-        * @description Returns a clone of the specified color.
-        * @returns {pc.Color} A duplicate color object
-        */
+         * @function
+         * @name pc.Color#clone
+         * @description Returns a clone of the specified color.
+         * @returns {pc.Color} A duplicate color object
+         */
         clone: function () {
-            return new pc.Color(this.data[0], this.data[1], this.data[2], this.data[3]);
+            return new pc.Color(this.r, this.g, this.b, this.a);
         },
 
         /**
@@ -57,13 +54,10 @@ pc.extend(pc, (function () {
          * console.log("The two colors are " + (dst.equals(src) ? "equal" : "different"));
          */
         copy: function (rhs) {
-            var a = this.data,
-                b = rhs.data;
-
-            a[0] = b[0];
-            a[1] = b[1];
-            a[2] = b[2];
-            a[3] = b[3];
+            this.r = rhs.r;
+            this.g = rhs.g;
+            this.b = rhs.b;
+            this.a = rhs.a;
 
             return this;
         },
@@ -79,12 +73,10 @@ pc.extend(pc, (function () {
          * @returns {pc.Color} Self for chaining
          */
         set: function (r, g, b, a) {
-            var c = this.data;
-
-            c[0] = r;
-            c[1] = g;
-            c[2] = b;
-            c[3] = (a === undefined) ? 1 : a;
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = (a === undefined) ? 1 : a;
 
             return this;
         },
@@ -98,7 +90,7 @@ pc.extend(pc, (function () {
          * @returns {pc.Color} Self for chaining
          */
         fromString: function (hex) {
-            var i = parseInt(hex.replace('#', '0x'));
+            var i = parseInt(hex.replace('#', '0x'), 16);
             var bytes;
             if (hex.length > 7) {
                 bytes = pc.math.intToBytes32(i);
@@ -107,7 +99,7 @@ pc.extend(pc, (function () {
                 bytes[3] = 255;
             }
 
-            this.set(bytes[0]/255, bytes[1]/255, bytes[2]/255, bytes[3]/255);
+            this.set(bytes[0] / 255, bytes[1] / 255, bytes[2] / 255, bytes[3] / 255);
 
             return this;
         },
@@ -116,8 +108,9 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Color#toString
          * @description Converts the color to string form. The format is '#RRGGBBAA', where
-         * RR, GG, BB, AA are the red, green, blue and alph values. When the alpha value is not
+         * RR, GG, BB, AA are the red, green, blue and alpha values. When the alpha value is not
          * included (the default), this is the same format as used in HTML/CSS.
+         * @param {Boolean} alpha If true, the output string will include the alpha value.
          * @returns {String} The color in string form.
          * @example
          * var c = new pc.Color(1, 1, 1);
@@ -125,10 +118,10 @@ pc.extend(pc, (function () {
          * console.log(c.toString());
          */
         toString: function (alpha) {
-            var s = "#" + ((1 << 24) + (parseInt(this.r*255) << 16) + (parseInt(this.g*255) << 8) + parseInt(this.b*255)).toString(16).slice(1);
+            var s = "#" + ((1 << 24) + (Math.round(this.r * 255) << 16) + (Math.round(this.g * 255) << 8) + Math.round(this.b * 255)).toString(16).slice(1);
             if (alpha === true) {
-                var a = parseInt(this.a * 255).toString(16);
-                if (this.a < 16/255) {
+                var a = Math.round(this.a * 255).toString(16);
+                if (this.a < 16 / 255) {
                     s += '0' + a;
                 } else {
                     s += a;
@@ -137,42 +130,6 @@ pc.extend(pc, (function () {
             }
 
             return s;
-        }
-    };
-
-    Object.defineProperty(Color.prototype, 'r', {
-        get: function () {
-            return this.data[0];
-        },
-        set: function (value) {
-            this.data[0] = value;
-        }
-    });
-
-    Object.defineProperty(Color.prototype, 'g', {
-        get: function () {
-            return this.data[1];
-        },
-        set: function (value) {
-            this.data[1] = value;
-        }
-    });
-
-    Object.defineProperty(Color.prototype, 'b', {
-        get: function () {
-            return this.data[2];
-        },
-        set: function (value) {
-            this.data[2] = value;
-        }
-    });
-
-    Object.defineProperty(Color.prototype, 'a', {
-        get: function () {
-            return this.data[3];
-        },
-        set: function (value) {
-            this.data[3] = value;
         }
     });
 

@@ -1,15 +1,21 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     // Draws shaded full-screen quad in a single call
     var _postEffectQuadVB = null;
+    var _postEffectQuadDraw = {
+        type: pc.PRIMITIVE_TRISTRIP,
+        base: 0,
+        count: 4,
+        indexed: false
+    };
 
     function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend) {
         if (_postEffectQuadVB === null) {
             var vertexFormat = new pc.VertexFormat(device, [{
                 semantic: pc.SEMANTIC_POSITION,
                 components: 2,
-                type: pc.ELEMENTTYPE_FLOAT32
+                type: pc.TYPE_FLOAT32
             }]);
             _postEffectQuadVB = new pc.VertexBuffer(device, vertexFormat, 4);
 
@@ -24,13 +30,14 @@ pc.extend(pc, (function () {
             iterator.end();
         }
 
+        var oldRt = device.renderTarget;
         device.setRenderTarget(target);
         device.updateBegin();
         var x, y, w, h;
         var sx, sy, sw, sh;
         if (!rect) {
-            w = (target !== null) ? target.width : device.width;
-            h = (target !== null) ? target.height : device.height;
+            w = target ? target.width : device.width;
+            h = target ? target.height : device.height;
             x = 0;
             y = 0;
         } else {
@@ -57,29 +64,32 @@ pc.extend(pc, (function () {
 
         var oldDepthTest = device.getDepthTest();
         var oldDepthWrite = device.getDepthWrite();
+        var oldCull = device.getCullMode();
         device.setDepthTest(false);
         device.setDepthWrite(false);
+        device.setCullMode(pc.CULLFACE_NONE);
         if (!useBlend) device.setBlending(false);
         device.setVertexBuffer(_postEffectQuadVB, 0);
         device.setShader(shader);
-        device.draw({
-            type: pc.PRIMITIVE_TRISTRIP,
-            base: 0,
-            count: 4,
-            indexed: false
-        });
+        device.draw(_postEffectQuadDraw);
         device.setDepthTest(oldDepthTest);
         device.setDepthWrite(oldDepthWrite);
+        device.setCullMode(oldCull);
         device.updateEnd();
+
+        device.setRenderTarget(oldRt);
+        device.updateBegin();
     }
 
     function destroyPostEffectQuad() {
-        _postEffectQuadVB = null;
+        if (_postEffectQuadVB) {
+            _postEffectQuadVB.destroy();
+            _postEffectQuadVB = null;
+        }
     }
 
     return {
         drawQuadWithShader: drawQuadWithShader,
-        destroyPostEffectQuad: destroyPostEffectQuad,
+        destroyPostEffectQuad: destroyPostEffectQuad
     };
 }()));
-

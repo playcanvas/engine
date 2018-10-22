@@ -1,17 +1,18 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     var ammoVec1, ammoQuat;
 
     /**
-    * @private
-    * @name pc.Trigger
-    * @class Creates a trigger object used to create internal physics objects that interact with
-    * rigid bodies and trigger collision events with no collision response
-    * @param {pc.Application} app The running {pc.Application}
-    * @param {pc.Component} component The component for which the trigger will be created
-    * @param {pc.ComponentData} data The data for the component
-    */
-    var Trigger = function Trigger (app, component, data) {
+     * @private
+     * @constructor
+     * @name pc.Trigger
+     * @classdesc Creates a trigger object used to create internal physics objects that interact with
+     * rigid bodies and trigger collision events with no collision response
+     * @param {pc.Application} app The running {pc.Application}
+     * @param {pc.Component} component The component for which the trigger will be created
+     * @param {pc.ComponentData} data The data for the component
+     */
+    var Trigger = function Trigger(app, component, data) {
         this.entity = component.entity;
         this.component = component;
         this.app = app;
@@ -24,7 +25,7 @@ pc.extend(pc, function () {
         this.initialize(data);
     };
 
-    Trigger.prototype =  {
+    Object.assign(Trigger.prototype,  {
         initialize: function (data) {
             var entity = this.entity;
             var shape = data.shape;
@@ -57,7 +58,7 @@ pc.extend(pc, function () {
                 body.setRestitution(0);
                 body.setFriction(0);
                 body.setDamping(0, 0);
-                ammoVec1.setValue(0,0,0);
+                ammoVec1.setValue(0, 0, 0);
                 body.setLinearFactor(ammoVec1);
                 body.setAngularFactor(ammoVec1);
 
@@ -116,10 +117,9 @@ pc.extend(pc, function () {
             // that it properly deactivates after we remove it from the physics world
             body.forceActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
         }
-    };
+    });
 
     return {
         Trigger: Trigger
     };
-
 }());

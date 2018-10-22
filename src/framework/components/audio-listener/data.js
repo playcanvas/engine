@@ -1,10 +1,9 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var AudioListenerComponentData = function () {
         // Serialized
         this.enabled = true;
     };
-    AudioListenerComponentData = pc.inherits(AudioListenerComponentData, pc.ComponentData);
-    
+
     return {
         AudioListenerComponentData: AudioListenerComponentData
     };

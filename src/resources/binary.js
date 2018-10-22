@@ -1,13 +1,13 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var BinaryHandler = function () {
 
     };
 
-    BinaryHandler.prototype = {
+    Object.assign(BinaryHandler.prototype, {
         load: function (url, callback) {
-            pc.http.get(url, {responseType: pc.Http.ResponseType.ARRAY_BUFFER}, function (err, response) {
+            pc.http.get(url, { responseType: pc.Http.ResponseType.ARRAY_BUFFER }, function (err, response) {
                 if (!err) {
                     callback(null, response);
                 } else {
@@ -22,7 +22,7 @@ pc.extend(pc, function () {
 
         patch: function (asset, assets) {
         }
-    };
+    });
 
     return {
         BinaryHandler: BinaryHandler

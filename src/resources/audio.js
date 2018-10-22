@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     // checks if user is running IE
@@ -23,13 +23,9 @@ pc.extend(pc, function () {
 
     var AudioHandler = function (manager) {
         this.manager = manager;
-        try {
-            this._audio = new Audio();
-        } catch (e) {
-        }
     };
 
-    AudioHandler.prototype = {
+    Object.assign(AudioHandler.prototype, {
         _isSupported: function (url) {
             var toMIME = {
                 '.ogg': 'audio/ogg',
@@ -44,10 +40,9 @@ pc.extend(pc, function () {
             var ext = pc.path.getExtension(url);
 
             if (toMIME[ext]) {
-                return this._audio.canPlayType(toMIME[ext]) !== '';
-            } else {
-                return false;
+                return true;
             }
+            return false;
         },
 
         load: function (url, callback) {
@@ -76,23 +71,23 @@ pc.extend(pc, function () {
         open: function (url, data) {
             return data;
         }
-    };
+    });
 
     if (pc.SoundManager.hasAudioContext()) {
         /**
          * @private
          * @function
-         * @name  pc.SoundHandler._createSound
+         * @name pc.SoundHandler._createSound
          * @description Loads an audio asset using an AudioContext by URL and calls success or error with the created resource or error respectively
-         * @param  {String} url     The url of the audio asset
-         * @param  {Function} success Function to be called if the audio asset was loaded or if we
+         * @param {String} url The url of the audio asset
+         * @param {Function} success Function to be called if the audio asset was loaded or if we
          * just want to continue without errors even if the audio is not loaded.
-         * @param  {Function} error   Function to be called if there was an error while loading the audio asset
+         * @param {Function} error Function to be called if there was an error while loading the audio asset
          */
         AudioHandler.prototype._createSound = function (url, success, error) {
             var manager = this.manager;
 
-            if (! manager.context) {
+            if (!manager.context) {
                 error('Audio manager has no audio context');
                 return;
             }
@@ -111,12 +106,12 @@ pc.extend(pc, function () {
         /**
          * @private
          * @function
-         * @name  pc.SoundHandler._createSound
+         * @name pc.SoundHandler._createSound
          * @description Loads an audio asset using an Audio element by URL and calls success or error with the created resource or error respectively
-         * @param  {String} url     The url of the audio asset
-         * @param  {Function} success Function to be called if the audio asset was loaded or if we
+         * @param {String} url The url of the audio asset
+         * @param {Function} success Function to be called if the audio asset was loaded or if we
          * just want to continue without errors even if the audio is not loaded.
-         * @param  {Function} error   Function to be called if there was an error while loading the audio asset
+         * @param {Function} error Function to be called if there was an error while loading the audio asset
          */
         AudioHandler.prototype._createSound = function (url, success, error) {
             var audio = null;

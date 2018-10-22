@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+        <title>PlayCanvas WebVR Example</title>
+        <script src="../../build/output/playcanvas-latest.js"></script>
+        <script src="https://code.playcanvas.com/webvr-polyfill.91fbc44.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+            canvas {
+                width:100%;
+                height:100%;
+
+            }
+            .message {
+                position: absolute;
+                left: 20px;
+                bottom: 0px;
+                color: #ccc;
+                font-family: "Proxima Nova", Arial, sans-serif;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="application-canvas"></canvas>
+        <div>
+            <p class="message"></p>
+        </div>
+        <script>
+            // draw some axes
+            var drawAxes = function (pos, scale) {
+                var color = new pc.Color(1,0,0);
+
+                var axis = new pc.Vec3();
+                var end = new pc.Vec3().copy(pos).add(axis.set(scale,0,0));
+
+                app.renderLine(pos, end, color);
+
+                color.set(0, 1, 0);
+                end.sub(axis.set(scale,0,0)).add(axis.set(0,scale,0));
+                app.renderLine(pos, end, color);
+
+                color.set(0, 0, 1);
+                end.sub(axis.set(0,scale,0)).add(axis.set(0,0,scale));
+                app.renderLine(pos, end, color);
+            }
+        </script>
+
+
+        <script>
+            var message = function (msg) {
+                var el = document.querySelector('.message');
+                el.textContent = msg;
+            }
+
+            var canvas = document.getElementById('application-canvas');
+            var app = new pc.Application(canvas, {
+                mouse: new pc.Mouse(canvas),
+                touch: new pc.TouchDevice(canvas),
+                vr: true
+            });
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            // use device pixel ratio
+            app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
+
+            app.start();
+
+            // create camera
+            var c = new pc.Entity();
+            c.addComponent('camera', {
+                clearColor: new pc.Color(44/255, 62/255, 80/255),
+                farClip: 10000
+            });
+            app.root.addChild(c);
+
+            var l = new pc.Entity();
+            l.addComponent("light", {
+                type: "spot",
+                range: 30
+            });
+            l.translate(0,10,0);
+            app.root.addChild(l);
+
+
+            var createCube = function(x,y,z) {
+                var cube = new pc.Entity();
+                cube.addComponent("model", {
+                    type: "box",
+                });
+                cube.setLocalScale(1,1,1);
+                cube.translate(x, y, z);
+                app.root.addChild(cube);
+            };
+
+            // create a grid of cubes
+            var SIZE = 16;
+            for (var x = 0; x < SIZE; x++) {
+                for (var y = 0; y < SIZE; y++) {
+                    createCube(2*x - SIZE, -1.5, 2*y - SIZE);
+                }
+            }
+
+            var activate = function () {
+                if (app.vr && app.vr.display) {
+                    c.camera.enterVr(function (err) {
+                        if (err) {message(err);}
+                        message("");
+                    });
+                } else {
+                    message("WebVR not available")
+                }
+            };
+
+            app.mouse.on("mousedown", function () {
+                activate();
+            });
+
+            if (app.touch) {
+                app.touch.on("touchend", function () {
+                    if (!c.camera.vrDisplay) {
+                        // if not in VR, activate
+                        activate();
+                    } else {
+                        // otherwise reset camera
+                        c.camera.vrDisplay.reset();
+                    }
+                });
+            }
+
+            app.vr.on("ready", function (displays) {
+                message("VRDisplays: " + displays.length);
+            });
+
+            // hook up window resize events
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
+        </script>
+    </body>
+</html>

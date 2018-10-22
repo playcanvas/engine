@@ -1,9 +1,9 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var CssHandler = function () {};
 
-    CssHandler.prototype = {
+    Object.assign(CssHandler.prototype, {
         load: function (url, callback) {
             pc.http.get(url, function (err, response) {
                 if (!err) {
@@ -20,7 +20,7 @@ pc.extend(pc, function () {
 
         patch: function (asset, assets) {
         }
-    };
+    });
 
     /**
      * @function
@@ -31,7 +31,7 @@ pc.extend(pc, function () {
      * var css = 'body {height: 100;}';
      * var style = pc.createStyle(css);
      * document.head.appendChild(style);
-     * @return {Element} The style DOM element
+     * @returns {Element} The style DOM element
      */
     var createStyle = function (cssString) {
         var result = document.createElement('style');

@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -27,8 +27,9 @@ pc.extend(pc, (function () {
     var CURVE_CARDINAL = 3;
 
     /**
+     * @constructor
      * @name pc.Curve
-     * @class A curve is a collection of keys (time/value pairs). The shape of the
+     * @classdesc A curve is a collection of keys (time/value pairs). The shape of the
      * curve is defined by its type that specifies an interpolation scheme for the keys.
      * @description Creates a new curve.
      * @param {Number[]} [data] An array of keys (pairs of numbers with the time first and
@@ -43,14 +44,14 @@ pc.extend(pc, (function () {
 
         if (data) {
             for (var i = 0; i < data.length - 1; i += 2) {
-                this.keys.push([data[i], data[i+1]]);
+                this.keys.push([data[i], data[i + 1]]);
             }
         }
 
         this.sort();
     };
 
-    Curve.prototype = {
+    Object.assign(Curve.prototype, {
         /**
          * @function
          * @name pc.Curve#add
@@ -102,9 +103,10 @@ pc.extend(pc, (function () {
          * @name pc.Curve#value
          * @description Returns the interpolated value of the curve at specified time.
          * @param {Number} time The time at which to calculate the value
-         * @return {Number} The interpolated value
+         * @returns {Number} The interpolated value
          */
         value: function (time) {
+            var i, len;
             var keys = this.keys;
 
             // no keys
@@ -115,8 +117,8 @@ pc.extend(pc, (function () {
             // Clamp values before first and after last key
             if (time < keys[0][0]) {
                 return keys[0][1];
-            } else if (time > keys[keys.length-1][0]) {
-                return keys[keys.length-1][1];
+            } else if (time > keys[keys.length - 1][0]) {
+                return keys[keys.length - 1][1];
             }
 
             var leftTime = 0;
@@ -125,7 +127,7 @@ pc.extend(pc, (function () {
             var rightTime = 1;
             var rightValue = 0;
 
-            for (var i = 0, len = keys.length; i < len; i++) {
+            for (i = 0, len = keys.length; i < len; i++) {
                 // early exit check
                 if (keys[i][0] === time) {
                     return keys[i][1];
@@ -150,8 +152,8 @@ pc.extend(pc, (function () {
             } else if (this.type === CURVE_CATMULL || this.type === CURVE_CARDINAL) {
                 var p1 = leftValue;
                 var p2 = rightValue;
-                var p0 = p1+(p1-p2); // default control points are extended back/forward from existing points
-                var p3 = p2+(p2-p1);
+                var p0 = p1 + (p1 - p2); // default control points are extended back/forward from existing points
+                var p3 = p2 + (p2 - p1);
 
                 var dt1 = rightTime - leftTime;
                 var dt0 = dt1;
@@ -159,51 +161,51 @@ pc.extend(pc, (function () {
 
                 // back up index to left key
                 if (i > 0) {
-                    i = i - 1;
+                    i--;
                 }
 
                 if (i > 0) {
-                    p0 = keys[i-1][1];
-                    dt0 = keys[i][0] - keys[i-1][0];
+                    p0 = keys[i - 1][1];
+                    dt0 = keys[i][0] - keys[i - 1][0];
                 }
 
-                if (keys.length > i+1) {
-                    dt1 = keys[i+1][0] - keys[i][0];
+                if (keys.length > i + 1) {
+                    dt1 = keys[i + 1][0] - keys[i][0];
                 }
 
-                if (keys.length > i+2) {
-                    dt2 = keys[i+2][0] - keys[i+1][0];
-                    p3 = keys[i+2][1];
+                if (keys.length > i + 2) {
+                    dt2 = keys[i + 2][0] - keys[i + 1][0];
+                    p3 = keys[i + 2][1];
                 }
 
                 // normalize p0 and p3 to be equal time with p1->p2
-                p0 = p1 + (p0-p1)*dt1/dt0;
-                p3 = p2 + (p3-p2)*dt1/dt2;
+                p0 = p1 + (p0 - p1) * dt1 / dt0;
+                p3 = p2 + (p3 - p2) * dt1 / dt2;
 
                 if (this.type === CURVE_CATMULL) {
                     return this._interpolateCatmullRom(p0, p1, p2, p3, interpolation);
-                } else {
-                    return this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
                 }
+
+                return this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
             }
 
             return pc.math.lerp(leftValue, rightValue, interpolation);
         },
 
         _interpolateHermite: function (p0, p1, t0, t1, s) {
-            var s2 = s*s;
-            var s3 = s*s*s;
-            var h0 = 2*s3 - 3*s2 + 1;
-            var h1 = -2*s3 + 3*s2;
-            var h2 = s3 - 2*s2 + s;
+            var s2 = s * s;
+            var s3 = s * s * s;
+            var h0 = 2 * s3 - 3 * s2 + 1;
+            var h1 = -2 * s3 + 3 * s2;
+            var h2 = s3 - 2 * s2 + s;
             var h3 = s3 - s2;
 
             return p0 * h0 + p1 * h1 + t0 * h2 + t1 * h3;
         },
 
         _interpolateCardinal: function (p0, p1, p2, p3, s, t) {
-            var t0 = t*(p2 - p0);
-            var t1 = t*(p3 - p1);
+            var t0 = t * (p2 - p0);
+            var t1 = t * (p3 - p1);
 
             return this._interpolateHermite(p1, p2, t0, t1, s);
         },
@@ -258,10 +260,10 @@ pc.extend(pc, (function () {
 
             return values;
         }
-    };
+    });
 
     Object.defineProperty(Curve.prototype, 'length', {
-        get: function() {
+        get: function () {
             return this.keys.length;
         }
     });

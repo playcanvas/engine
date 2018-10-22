@@ -1,4 +1,2 @@
 
-    Normal = normalize(localPos - localMat[2]);
-
-
+    Normal = normalize(localPos + matrix_viewInverse[2].xyz);

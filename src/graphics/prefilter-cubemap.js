@@ -1,19 +1,12 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
-
-    function fixChrome() {
-        // https://code.google.com/p/chromium/issues/detail?id=447419
-        // Workaround: wait a little
-        var endTime = Date.now() + 10;
-        while(Date.now() < endTime) {};
-    }
 
     function syncToCpu(device, targ, face) {
         var tex = targ._colorBuffer;
-        if (tex.format!=pc.PIXELFORMAT_R8_G8_B8_A8) return;
+        if (tex.format != pc.PIXELFORMAT_R8_G8_B8_A8) return;
         var pixels = new Uint8Array(tex.width * tex.height * 4);
         var gl = device.gl;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, targ._glFrameBuffer);
+        device.setFramebuffer(targ._glFrameBuffer);
         gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
         if (!tex._levels) tex._levels = [];
         if (!tex._levels[0]) tex._levels[0] = [];
@@ -26,7 +19,6 @@ pc.extend(pc, (function () {
         var method = options.method;
         var samples = options.samples;
         var cpuSync = options.cpuSync;
-        var chromeFix = options.chromeFix;
 
         if (cpuSync && !sourceCubemap._levels[0]) {
             console.error("ERROR: prefilter: cubemap must have _levels");
@@ -36,11 +28,11 @@ pc.extend(pc, (function () {
         var chunks = pc.shaderChunks;
         var rgbmSource = sourceCubemap.rgbm;
         var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.rgbmPS +
-            chunks.prefilterCubemapPS.
-                replace(/\$METHOD/g, method===0? "cos" : "phong").
-                replace(/\$NUMSAMPLES/g, samples).
-                replace(/\$textureCube/g, rgbmSource? "textureCubeRGBM" : "textureCube"),
-            "prefilter" + method + "" + samples + "" + rgbmSource);
+            chunks.prefilterCubemapPS
+                .replace(/\$METHOD/g, method === 0 ? "cos" : "phong")
+                .replace(/\$NUMSAMPLES/g, samples)
+                .replace(/\$textureCube/g, rgbmSource ? "textureCubeRGBM" : "textureCube"),
+                                                 "prefilter" + method + "" + samples + "" + rgbmSource);
         var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputCubemapPS, "outputCubemap");
         var constantTexSource = device.scope.resolve("source");
         var constantParams = device.scope.resolve("params");
@@ -49,13 +41,13 @@ pc.extend(pc, (function () {
         var format = sourceCubemap.format;
 
         var cmapsList = [[], options.filteredFixed, options.filteredRgbm, options.filteredFixedRgbm];
-        var gloss = method===0? [0.9, 0.85, 0.7, 0.4, 0.25] : [512, 128, 32, 8, 2]; // TODO: calc more correct values depending on mip
+        var gloss = method === 0 ? [0.9, 0.85, 0.7, 0.4, 0.25] : [512, 128, 32, 8, 2]; // TODO: calc more correct values depending on mip
         var mipSize = [64, 32, 16, 8, 4]; // TODO: make non-static?
         var numMips = 5;
         var targ;
         var i, face, pass;
 
-        var rgbFormat = format===pc.PIXELFORMAT_R8_G8_B8;
+        var rgbFormat = format === pc.PIXELFORMAT_R8_G8_B8;
         var isImg = false;
         var nextCubemap, cubemap;
         if (cpuSync) {
@@ -64,19 +56,15 @@ pc.extend(pc, (function () {
         if ((rgbFormat || isImg) && cpuSync) {
             // WebGL can't read non-RGBA pixels
             format = pc.PIXELFORMAT_R8_G8_B8_A8;
-            nextCubemap = new pc.gfx.Texture(device, {
+            nextCubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: rgbmSource,
                 format: format,
                 width: size,
                 height: size,
-                autoMipmap: false
+                mipmaps: false
             });
-            nextCubemap.minFilter = pc.FILTER_LINEAR;
-            nextCubemap.magFilter = pc.FILTER_LINEAR;
-            nextCubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-            nextCubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-            for(face=0; face<6; face++) {
+            for (face = 0; face < 6; face++) {
                 targ = new pc.RenderTarget(device, nextCubemap, {
                     face: face,
                     depth: false
@@ -86,7 +74,6 @@ pc.extend(pc, (function () {
                 constantTexSource.setValue(sourceCubemap);
                 constantParams.setValue(params.data);
 
-                if (chromeFix) fixChrome();
                 pc.drawQuadWithShader(device, targ, shader2);
                 syncToCpu(device, targ, face);
             }
@@ -98,22 +85,18 @@ pc.extend(pc, (function () {
             var log128 = Math.round(Math.log2(128));
             var logSize = Math.round(Math.log2(size));
             var steps = logSize - log128;
-            for(i=0; i<steps; i++) {
+            for (i = 0; i < steps; i++) {
                 size = sourceCubemap.width * 0.5;
-                var sampleGloss = method===0? 1 : Math.pow(2, Math.round(Math.log2(gloss[0]) + (steps - i) * 2));
-                nextCubemap = new pc.gfx.Texture(device, {
+                var sampleGloss = method === 0 ? 1 : Math.pow(2, Math.round(Math.log2(gloss[0]) + (steps - i) * 2));
+                nextCubemap = new pc.Texture(device, {
                     cubemap: true,
                     rgbm: rgbmSource,
                     format: format,
                     width: size,
                     height: size,
-                    autoMipmap: false
+                    mipmaps: false
                 });
-                nextCubemap.minFilter = pc.FILTER_LINEAR;
-                nextCubemap.magFilter = pc.FILTER_LINEAR;
-                nextCubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                nextCubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                for(face=0; face<6; face++) {
+                for (face = 0; face < 6; face++) {
                     targ = new pc.RenderTarget(device, nextCubemap, {
                         face: face,
                         depth: false
@@ -121,13 +104,12 @@ pc.extend(pc, (function () {
                     params.x = face;
                     params.y = sampleGloss;
                     params.z = size;
-                    params.w = rgbmSource? 3 : 0;
+                    params.w = rgbmSource ? 3 : 0;
                     constantTexSource.setValue(sourceCubemap);
                     constantParams.setValue(params.data);
 
-                    if (chromeFix) fixChrome();
                     pc.drawQuadWithShader(device, targ, shader2);
-                    if (i===steps-1 && cpuSync) {
+                    if (i === steps - 1 && cpuSync) {
                         syncToCpu(device, targ, face);
                     }
                 }
@@ -138,19 +120,15 @@ pc.extend(pc, (function () {
 
         var sourceCubemapRgbm = null;
         if (!rgbmSource && options.filteredFixedRgbm) {
-            nextCubemap = new pc.gfx.Texture(device, {
+            nextCubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: true,
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
                 width: size,
                 height: size,
-                autoMipmap: false
+                mipmaps: false
             });
-            nextCubemap.minFilter = pc.FILTER_LINEAR;
-            nextCubemap.magFilter = pc.FILTER_LINEAR;
-            nextCubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-            nextCubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-            for(face=0; face<6; face++) {
+            for (face = 0; face < 6; face++) {
                 targ = new pc.RenderTarget(device, nextCubemap, {
                     face: face,
                     depth: false
@@ -160,34 +138,29 @@ pc.extend(pc, (function () {
                 constantTexSource.setValue(sourceCubemap);
                 constantParams.setValue(params.data);
 
-                if (chromeFix) fixChrome();
                 pc.drawQuadWithShader(device, targ, shader2);
                 syncToCpu(device, targ, face);
             }
             sourceCubemapRgbm = nextCubemap;
         }
 
-        var unblurredGloss = method===0? 1 : 2048;
-        var startPass = method===0 ? 0 : -1; // do prepass for unblurred downsampled textures when using importance sampling
+        var unblurredGloss = method === 0 ? 1 : 2048;
+        var startPass = method === 0 ? 0 : -1; // do prepass for unblurred downsampled textures when using importance sampling
         cmapsList[startPass] = [];
 
         // Initialize textures
-        for(i=0; i<numMips; i++) {
-            for(pass=startPass; pass<cmapsList.length; pass++) {
+        for (i = 0; i < numMips; i++) {
+            for (pass = startPass; pass < cmapsList.length; pass++) {
                 if (cmapsList[pass] != null) {
-                    cmapsList[pass][i] = new pc.gfx.Texture(device, {
+                    cmapsList[pass][i] = new pc.Texture(device, {
                         cubemap: true,
-                        rgbm: pass<2? rgbmSource : true,
-                        format: pass<2? format : pc.PIXELFORMAT_R8_G8_B8_A8,
-                        fixCubemapSeams: pass===1 || pass===3,
+                        rgbm: pass < 2 ? rgbmSource : true,
+                        format: pass < 2 ? format : pc.PIXELFORMAT_R8_G8_B8_A8,
+                        fixCubemapSeams: pass === 1 || pass === 3,
                         width: mipSize[i],
                         height: mipSize[i],
-                        autoMipmap: false
+                        mipmaps: false
                     });
-                    cmapsList[pass][i].minFilter = pc.FILTER_LINEAR;
-                    cmapsList[pass][i].magFilter = pc.FILTER_LINEAR;
-                    cmapsList[pass][i].addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                    cmapsList[pass][i].addressV = pc.ADDRESS_CLAMP_TO_EDGE;
                 }
             }
         }
@@ -198,28 +171,27 @@ pc.extend(pc, (function () {
         // Pass 1: filter + edge fixup
         // Pass 2: filter + encode to RGBM
         // Pass 3: filter + edge fixup + encode to RGBM
-        for(pass=startPass; pass<cmapsList.length; pass++) {
+        for (pass = startPass; pass < cmapsList.length; pass++) {
             if (cmapsList[pass] != null) {
-                if (pass>1 && rgbmSource) {
+                if (pass > 1 && rgbmSource) {
                     // already RGBM
                     cmapsList[pass] = cmapsList[pass - 2];
                     continue;
                 }
-                for(i=0; i<numMips; i++) {
-                    for(face=0; face<6; face++) {
+                for (i = 0; i < numMips; i++) {
+                    for (face = 0; face < 6; face++) {
                         targ = new pc.RenderTarget(device, cmapsList[pass][i], { // TODO: less excessive allocations
                             face: face,
                             depth: false
                         });
                         params.x = face;
-                        params.y = pass<0? unblurredGloss : gloss[i];
+                        params.y = pass < 0 ? unblurredGloss : gloss[i];
                         params.z = mipSize[i];
-                        params.w = rgbmSource? 3 : pass;
-                        constantTexSource.setValue(i===0? sourceCubemap :
-                            method===0? cmapsList[0][i - 1] : cmapsList[-1][i - 1]);
+                        params.w = rgbmSource ? 3 : pass;
+                        constantTexSource.setValue(i === 0 ? sourceCubemap :
+                            method === 0 ? cmapsList[0][i - 1] : cmapsList[-1][i - 1]);
                         constantParams.setValue(params.data);
 
-                        if (chromeFix) fixChrome();
                         pc.drawQuadWithShader(device, targ, shader);
                         if (cpuSync) syncToCpu(device, targ, face);
                     }
@@ -240,23 +212,20 @@ pc.extend(pc, (function () {
                 options.filteredFixed[4],
                 options.filteredFixed[5]
             ];
-            cubemap = new pc.gfx.Texture(device, {
+            cubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: rgbmSource,
                 fixCubemapSeams: true,
                 format: format,
                 width: 128,
                 height: 128,
-                autoMipmap: false
+                addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+                addressV: pc.ADDRESS_CLAMP_TO_EDGE
             });
-            for(i=0; i<6; i++) {
+            for (i = 0; i < 6; i++)
                 cubemap._levels[i] = mips[i]._levels[0];
-            }
-            cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-            cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+
             cubemap.upload();
-            cubemap.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
-            cubemap.magFilter = pc.FILTER_LINEAR;
             cubemap._prefilteredMips = true;
             options.singleFilteredFixed = cubemap;
         }
@@ -271,42 +240,39 @@ pc.extend(pc, (function () {
                 options.filteredFixedRgbm[4],
                 options.filteredFixedRgbm[5]
             ];
-            cubemap = new pc.gfx.Texture(device, {
+            cubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: true,
                 fixCubemapSeams: true,
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
                 width: 128,
                 height: 128,
-                autoMipmap: false
+                addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+                addressV: pc.ADDRESS_CLAMP_TO_EDGE
             });
-            for(i=0; i<6; i++) {
+            for (i = 0; i < 6; i++) {
                 cubemap._levels[i] = mips[i]._levels[0];
             }
-            cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-            cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
             cubemap.upload();
-            cubemap.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
-            cubemap.magFilter = pc.FILTER_LINEAR;
             cubemap._prefilteredMips = true;
             options.singleFilteredFixedRgbm = cubemap;
         }
     }
 
     // https://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/
-    function areaElement(x,y) {
+    function areaElement(x, y) {
         return Math.atan2(x * y, Math.sqrt(x * x + y * y + 1));
     }
     function texelCoordSolidAngle(u, v, size) {
-       //scale up to [-1, 1] range (inclusive), offset by 0.5 to point to texel center.
-       var _u = (2.0 * (u + 0.5) / size ) - 1.0;
-       var _v = (2.0 * (v + 0.5) / size ) - 1.0;
+        // Scale up to [-1, 1] range (inclusive), offset by 0.5 to point to texel center.
+        var _u = (2.0 * (u + 0.5) / size ) - 1.0;
+        var _v = (2.0 * (v + 0.5) / size ) - 1.0;
 
-       // fixSeams
+        // fixSeams
         _u *= 1.0 - 1.0 / size;
         _v *= 1.0 - 1.0 / size;
 
-       var invResolution = 1.0 / size;
+        var invResolution = 1.0 / size;
 
         // U and V are the -1..1 texture coordinate on the current face.
         // Get projected area for this texel
@@ -317,10 +283,9 @@ pc.extend(pc, (function () {
         var solidAngle = areaElement(x0, y0) - areaElement(x0, y1) - areaElement(x1, y0) + areaElement(x1, y1);
 
         // fixSeams cut
-        if ((u===0 && v===0) || (u===size-1 && v===0) || (u===0 && v===size-1) || (u===size-1 && v===size-1)) {
+        if ((u === 0 && v === 0) || (u === size - 1 && v === 0) || (u === 0 && v === size - 1) || (u === size - 1 && v === size - 1)) {
             solidAngle /= 3;
-        }
-        else if (u===0 || v===0 || u===size-1 || v===size-1) {
+        } else if (u === 0 || v === 0 || u === size - 1 || v === size - 1) {
             solidAngle *= 0.5;
         }
 
@@ -332,7 +297,7 @@ pc.extend(pc, (function () {
         var cubeSize = source.width;
         var x, y;
 
-        if (source.format!=pc.PIXELFORMAT_R8_G8_B8_A8) {
+        if (source.format != pc.PIXELFORMAT_R8_G8_B8_A8) {
             console.error("ERROR: SH: cubemap must be RGBA8");
             return;
         }
@@ -349,36 +314,28 @@ pc.extend(pc, (function () {
                 var chunks = pc.shaderChunks;
                 var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.fullscreenQuadPS, "fsQuadSimple");
                 var constantTexSource = device.scope.resolve("source");
-                for(face=0; face<6; face++) {
+                for (face = 0; face < 6; face++) {
                     var img = source._levels[0][face];
 
-                    var tex = new pc.gfx.Texture(device, {
+                    var tex = new pc.Texture(device, {
                         cubemap: false,
                         rgbm: false,
                         format: source.format,
                         width: cubeSize,
                         height: cubeSize,
-                        autoMipmap: false
+                        mipmaps: false
                     });
-                    tex.minFilter = pc.FILTER_NEAREST;
-                    tex.magFilter = pc.FILTER_NEAREST;
-                    tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                    tex.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
                     tex._levels[0] = img;
                     tex.upload();
 
-                    var tex2 = new pc.gfx.Texture(device, {
+                    var tex2 = new pc.Texture(device, {
                         cubemap: false,
                         rgbm: false,
                         format: source.format,
                         width: cubeSize,
                         height: cubeSize,
-                        autoMipmap: false
+                        mipmaps: false
                     });
-                    tex2.minFilter = pc.FILTER_NEAREST;
-                    tex2.magFilter = pc.FILTER_NEAREST;
-                    tex2.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-                    tex2.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
                     var targ = new pc.RenderTarget(device, tex2, {
                         depth: false
@@ -399,10 +356,10 @@ pc.extend(pc, (function () {
         }
 
         var dirs = [];
-        for(y=0; y<cubeSize; y++) {
-            for(x=0; x<cubeSize; x++) {
-                var u = (x / (cubeSize-1)) * 2 - 1;
-                var v = (y / (cubeSize-1)) * 2 - 1;
+        for (y = 0; y < cubeSize; y++) {
+            for (x = 0; x < cubeSize; x++) {
+                var u = (x / (cubeSize - 1)) * 2 - 1;
+                var v = (y / (cubeSize - 1)) * 2 - 1;
                 dirs[y * cubeSize + x] = new pc.Vec3(u, v, 1.0).normalize();
             }
         }
@@ -429,42 +386,42 @@ pc.extend(pc, (function () {
         var weight1, weight2, weight3, weight4, weight5;
 
         var accum = 0;
-        for(face=0; face<6; face++) {
-            for(y=0; y<cubeSize; y++) {
-                for(x=0; x<cubeSize; x++) {
+        for (face = 0; face < 6; face++) {
+            for (y = 0; y < cubeSize; y++) {
+                for (x = 0; x < cubeSize; x++) {
 
                     addr = y * cubeSize + x;
                     weight = texelCoordSolidAngle(x, y, cubeSize);
 
                     // http://home.comcast.net/~tom_forsyth/blog.wiki.html#[[Spherical%20Harmonics%20in%20Actual%20Games%20notes]]
-                    weight1 = weight * 4/17;
-                    weight2 = weight * 8/17;
-                    weight3 = weight * 15/17;
-                    weight4 = weight * 5/68;
-                    weight5 = weight * 15/68;
+                    weight1 = weight * 4 / 17;
+                    weight2 = weight * 8 / 17;
+                    weight3 = weight * 15 / 17;
+                    weight4 = weight * 5 / 68;
+                    weight5 = weight * 15 / 68;
 
                     dir = dirs[addr];
-                    if (face==nx) {
+                    if (face == nx) {
                         dx = dir.z;
                         dy = -dir.y;
                         dz = -dir.x;
-                    } else if (face==px) {
+                    } else if (face == px) {
                         dx = -dir.z;
                         dy = -dir.y;
                         dz = dir.x;
-                    } else if (face==ny) {
+                    } else if (face == ny) {
                         dx = dir.x;
                         dy = dir.z;
                         dz = dir.y;
-                    } else if (face==py) {
+                    } else if (face == py) {
                         dx = dir.x;
                         dy = -dir.z;
                         dz = -dir.y;
-                    } else if (face==nz) {
+                    } else if (face == nz) {
                         dx = dir.x;
                         dy = -dir.y;
                         dz = dir.z;
-                    } else if (face==pz) {
+                    } else if (face == pz) {
                         dx = -dir.x;
                         dy = -dir.y;
                         dz = -dir.z;
@@ -474,7 +431,7 @@ pc.extend(pc, (function () {
 
                     a = source._levels[0][face][addr * 4 + 3] / 255.0;
 
-                    for(c=0; c<3; c++) {
+                    for (c = 0; c < 3; c++) {
                         value =  source._levels[0][face][addr * 4 + c] / 255.0;
                         if (source.rgbm) {
                             value *= a * 8.0;
@@ -501,7 +458,7 @@ pc.extend(pc, (function () {
             }
         }
 
-        for(c=0; c<sh.length; c++) {
+        for (c = 0; c < sh.length; c++) {
             sh[c] *= 4 * Math.PI / accum;
         }
 
@@ -514,4 +471,3 @@ pc.extend(pc, (function () {
         shFromCubemap: shFromCubemap
     };
 }()));
-
