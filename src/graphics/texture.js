@@ -724,8 +724,8 @@ Object.assign(pc, function () {
                 if (!invalid) {
                     // mark levels as updated
                     for (i = 0; i < 6; i++) {
-                        if (this._levels[0][i] !== source[i])
-                            this._levelsUpdated[0][i] = true;
+                        if (this._levels[mipLevel][i] !== source[i])
+                            this._levelsUpdated[mipLevel][i] = true;
                     }
                 }
             } else {
@@ -735,8 +735,8 @@ Object.assign(pc, function () {
 
                 if (!invalid) {
                     // mark level as updated
-                    if (source !== this._levels[0])
-                        this._levelsUpdated[0] = true;
+                    if (source !== this._levels[mipLevel])
+                        this._levelsUpdated[mipLevel] = true;
 
                     width = source.width;
                     height = source.height;
@@ -763,11 +763,13 @@ Object.assign(pc, function () {
                 }
             } else {
                 // valid texture
-                this._width = width;
-                this._height = height;
+                if (mipLevel === 0) {
+                    this._width = width;
+                    this._height = height;
+                }
                 this._pot = pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
 
-                this._levels[0] = source;
+                this._levels[mipLevel] = source;
             }
 
             // valid or changed state of validity
