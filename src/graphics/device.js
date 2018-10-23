@@ -839,7 +839,7 @@ Object.assign(pc, function () {
             // Recompile all shaders (they'll be linked when they're next actually used)
             var i, len;
             for (i = 0, len = this.shaders.length; i < len; i++) {
-                this.compileAndLinkShader(shaders[i]);
+                this.compileAndLinkShader(this.shaders[i]);
             }
             this.shader = null;
 
