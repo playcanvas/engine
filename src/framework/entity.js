@@ -331,11 +331,7 @@ Object.assign(pc, function () {
         this.fire('destroy', this);
 
         // clear all events
-        if (this._callbacks)
-            this._callbacks = null;
-
-        if (this._callbackActive)
-            this._callbackActive = null;
+        this.off();
 
         // remove from entity index
         if (this._guid) {
