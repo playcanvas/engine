@@ -363,6 +363,30 @@ Object.assign(pc, function () {
             gl.FLOAT
         ];
 
+        this.pcUniformType = {};
+        this.pcUniformType[gl.BOOL]         = pc.UNIFORMTYPE_BOOL;
+        this.pcUniformType[gl.INT]          = pc.UNIFORMTYPE_INT;
+        this.pcUniformType[gl.FLOAT]        = pc.UNIFORMTYPE_FLOAT;
+        this.pcUniformType[gl.FLOAT_VEC2]   = pc.UNIFORMTYPE_VEC2;
+        this.pcUniformType[gl.FLOAT_VEC3]   = pc.UNIFORMTYPE_VEC3;
+        this.pcUniformType[gl.FLOAT_VEC4]   = pc.UNIFORMTYPE_VEC4;
+        this.pcUniformType[gl.INT_VEC2]     = pc.UNIFORMTYPE_IVEC2;
+        this.pcUniformType[gl.INT_VEC3]     = pc.UNIFORMTYPE_IVEC3;
+        this.pcUniformType[gl.INT_VEC4]     = pc.UNIFORMTYPE_IVEC4;
+        this.pcUniformType[gl.BOOL_VEC2]    = pc.UNIFORMTYPE_BVEC2;
+        this.pcUniformType[gl.BOOL_VEC3]    = pc.UNIFORMTYPE_BVEC3;
+        this.pcUniformType[gl.BOOL_VEC4]    = pc.UNIFORMTYPE_BVEC4;
+        this.pcUniformType[gl.FLOAT_MAT2]   = pc.UNIFORMTYPE_MAT2;
+        this.pcUniformType[gl.FLOAT_MAT3]   = pc.UNIFORMTYPE_MAT3;
+        this.pcUniformType[gl.FLOAT_MAT4]   = pc.UNIFORMTYPE_MAT4;
+        this.pcUniformType[gl.SAMPLER_2D]   = pc.UNIFORMTYPE_TEXTURE2D;
+        this.pcUniformType[gl.SAMPLER_CUBE] = pc.UNIFORMTYPE_TEXTURECUBE;
+        if (this.webgl2) {
+            this.pcUniformType[gl.SAMPLER_2D_SHADOW]   = pc.UNIFORMTYPE_TEXTURE2D_SHADOW;
+            this.pcUniformType[gl.SAMPLER_CUBE_SHADOW] = pc.UNIFORMTYPE_TEXTURECUBE_SHADOW;
+            this.pcUniformType[gl.SAMPLER_3D]          = pc.UNIFORMTYPE_TEXTURE3D;
+        }
+
         this.targetToSlot = {};
         this.targetToSlot[gl.TEXTURE_2D] = 0;
         this.targetToSlot[gl.TEXTURE_CUBE_MAP] = 1;
@@ -859,41 +883,195 @@ Object.assign(pc, function () {
             this.transformFeedbackBuffer = null;
         },
 
-        createShader: function (type, src) {
-            var shader;
+        compileShader: function (src, isVertexShader) {
             var gl = this.gl;
 
-            if (type === gl.VERTEX_SHADER) {
-                shader = this.vertexShaderCache[src];
-            } else if (type === gl.FRAGMENT_SHADER) {
-                shader = this.fragmentShaderCache[src];
-            }
+            var shader = isVertexShader ? this.vertexShaderCache[src] : this.fragmentShaderCache[src];
 
             if (!shader) {
-                shader = gl.createShader(type);
+                // #ifdef PROFILER
+                var startTime = pc.now();
+                this.fire('shader:compile:start', {
+                    timestamp: startTime,
+                    target: this
+                });
+                // #endif
+
+                shader = gl.createShader(isVertexShader ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
 
                 gl.shaderSource(shader, src);
                 gl.compileShader(shader);
 
-                if (type === gl.VERTEX_SHADER) {
+                // #ifdef PROFILER
+                var endTime = pc.now();
+                this.fire('shader:compile:end', {
+                    timestamp: endTime,
+                    target: this
+                });
+                this._shaderStats.compileTime += endTime - startTime;
+                // #endif
+
+                if (isVertexShader) {
                     this.vertexShaderCache[src] = shader;
-                } else if (type === gl.FRAGMENT_SHADER) {
+                    // #ifdef PROFILER
+                    this._shaderStats.vsCompiled++;
+                    // #endif
+                } else {
                     this.fragmentShaderCache[src] = shader;
+                    // #ifdef PROFILER
+                    this._shaderStats.fsCompiled++;
+                    // #endif
                 }
             }
 
             return shader;
         },
 
-        createProgram: function (vertexShader, fragmentShader) {
+        createShader: function (shader) {
             var gl = this.gl;
+
+            var definition = shader.definition;
+            var vertexShader = this.compileShader(definition.vshader, true);
+            var fragmentShader = this.compileShader(definition.fshader, false);
+
+            if (definition.tag === pc.SHADERTAG_MATERIAL) {
+                this._shaderStats.materialShaders++;
+            }
 
             var program = gl.createProgram();
 
             gl.attachShader(program, vertexShader);
             gl.attachShader(program, fragmentShader);
 
-            return program;
+            if (this.webgl2 && definition.useTransformFeedback) {
+                // Collect all "out_" attributes and use them for output
+                var attrs = definition.attributes;
+                var outNames = [];
+                for (var attr in attrs) {
+                    if (attrs.hasOwnProperty(attr)) {
+                        outNames.push("out_" + attr);
+                    }
+                }
+                gl.transformFeedbackVaryings(program, outNames, gl.INTERLEAVED_ATTRIBS);
+            }
+
+            gl.linkProgram(program);
+
+            // Cache the WebGL objects on the shader
+            shader._glVertexShader = vertexShader;
+            shader._glFragmentShader = fragmentShader;
+            shader._glProgram = program;
+
+            this.shaders.push(shader);
+        },
+
+        destroyShader: function (shader) {
+            var idx = this.shaders.indexOf(shader);
+            if (idx !== -1) {
+                this.shaders.splice(idx, 1);
+            }
+
+            if (shader._glProgram) {
+                var gl = this.gl;
+                gl.deleteProgram(shader._glProgram);
+                shader._glProgram = null;
+                this.removeShaderFromCache(shader);
+            }
+        },
+
+        postLink: function (shader) {
+            var gl = this.gl;
+            var retValue = true;
+
+            var program = shader._glProgram;
+            var vertexShader = shader._glVertexShader;
+            var fragmentShader = shader._glFragmentShader;
+
+            var definition = shader.definition;
+
+            // #ifdef PROFILER
+            var startTime = pc.now();
+            this.fire('shader:link:start', {
+                timestamp: startTime,
+                target: this
+            });
+            // #endif
+
+            // Check for errors
+            var addLineNumbers = function (src) {
+                var chunks = src.split("\n");
+
+                // Chrome reports shader errors on lines indexed from 1
+                for (var i = 0, len = chunks.length; i < len; i++) {
+                    chunks[i] = (i + 1) + ":\t" + chunks[i];
+                }
+
+                return chunks.join( "\n" );
+            };
+
+            // vshader
+            if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+                console.error("Failed to compile vertex shader:\n\n" + addLineNumbers(definition.vshader) + "\n\n" + gl.getShaderInfoLog(vertexShader));
+                retValue = false;
+            }
+            // fshader
+            if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+                console.error("Failed to compile fragment shader:\n\n" + addLineNumbers(definition.fshader) + "\n\n" + gl.getShaderInfoLog(fragmentShader));
+                retValue = false;
+            }
+            // program
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error("Failed to link shader program. Error: " + gl.getProgramInfoLog(program));
+                retValue = false;
+            }
+
+            // Query the program for each vertex buffer input (GLSL 'attribute')
+            var i = 0;
+            var info, location;
+
+            var numAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+            while (i < numAttributes) {
+                info = gl.getActiveAttrib(program, i++);
+                location = gl.getAttribLocation(program, info.name);
+
+                // Check attributes are correctly linked up
+                if (definition.attributes[info.name] === undefined) {
+                    console.error('Vertex shader attribute "' + info.name + '" is not mapped to a semantic in shader definition.');
+                }
+
+                shader.attributes.push(new pc.ShaderInput(this, definition.attributes[info.name], this.pcUniformType[info.type], location));
+            }
+
+            // Query the program for each shader state (GLSL 'uniform')
+            i = 0;
+            var numUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+            while (i < numUniforms) {
+                info = gl.getActiveUniform(program, i++);
+                location = gl.getUniformLocation(program, info.name);
+
+                var uniform = new pc.ShaderInput(this, info.name, this.pcUniformType[info.type], location);
+
+                if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
+                    (this.webgl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
+                ) {
+                    shader.samplers.push(uniform);
+                } else {
+                    shader.uniforms.push(uniform);
+                }
+            }
+
+            shader.ready = true;
+
+            // #ifdef PROFILER
+            var endTime = pc.now();
+            this.fire('shader:link:end', {
+                timestamp: endTime,
+                target: this
+            });
+            this._shaderStats.compileTime += endTime - startTime;
+            // #endif
+
+            return retValue;
         },
 
         initializeGrabPassTexture: function () {
@@ -2865,14 +3043,17 @@ Object.assign(pc, function () {
                 this.shader = shader;
 
                 if (!shader.ready) {
-                    if (!shader.link()) {
+                    if (!this.postLink(shader)) {
                         return false;
                     }
                 }
 
                 // Set the active shader
+                this.gl.useProgram(shader._glProgram);
+
+                // #ifdef PROFILER
                 this._shaderSwitchesPerFrame++;
-                this.gl.useProgram(shader.program);
+                // #endig
 
                 this.attributesInvalidated = true;
             }
