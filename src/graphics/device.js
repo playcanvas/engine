@@ -839,7 +839,7 @@ Object.assign(pc, function () {
             // Recompile all shaders (they'll be linked when they're next actually used)
             var i, len;
             for (i = 0, len = this.shaders.length; i < len; i++) {
-                this.shaders[i].compile();
+                this.compileAndLinkShader(shaders[i]);
             }
             this.shader = null;
 
@@ -2843,9 +2843,9 @@ Object.assign(pc, function () {
         compileShader: function (src, isVertexShader) {
             var gl = this.gl;
 
-            var shader = isVertexShader ? this.vertexShaderCache[src] : this.fragmentShaderCache[src];
+            var glShader = isVertexShader ? this.vertexShaderCache[src] : this.fragmentShaderCache[src];
 
-            if (!shader) {
+            if (!glShader) {
                 // #ifdef PROFILER
                 var startTime = pc.now();
                 this.fire('shader:compile:start', {
@@ -2854,10 +2854,10 @@ Object.assign(pc, function () {
                 });
                 // #endif
 
-                shader = gl.createShader(isVertexShader ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
+                glShader = gl.createShader(isVertexShader ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
 
-                gl.shaderSource(shader, src);
-                gl.compileShader(shader);
+                gl.shaderSource(glShader, src);
+                gl.compileShader(glShader);
 
                 // #ifdef PROFILER
                 var endTime = pc.now();
@@ -2869,36 +2869,36 @@ Object.assign(pc, function () {
                 // #endif
 
                 if (isVertexShader) {
-                    this.vertexShaderCache[src] = shader;
+                    this.vertexShaderCache[src] = glShader;
                     // #ifdef PROFILER
                     this._shaderStats.vsCompiled++;
                     // #endif
                 } else {
-                    this.fragmentShaderCache[src] = shader;
+                    this.fragmentShaderCache[src] = glShader;
                     // #ifdef PROFILER
                     this._shaderStats.fsCompiled++;
                     // #endif
                 }
             }
 
-            return shader;
+            return glShader;
         },
 
-        createShader: function (shader) {
+        compileAndLinkShader: function (shader) {
             var gl = this.gl;
 
             var definition = shader.definition;
-            var vertexShader = this.compileShader(definition.vshader, true);
-            var fragmentShader = this.compileShader(definition.fshader, false);
+            var glVertexShader = this.compileShader(definition.vshader, true);
+            var glFragmentShader = this.compileShader(definition.fshader, false);
 
             if (definition.tag === pc.SHADERTAG_MATERIAL) {
                 this._shaderStats.materialShaders++;
             }
 
-            var program = gl.createProgram();
+            var glProgram = gl.createProgram();
 
-            gl.attachShader(program, vertexShader);
-            gl.attachShader(program, fragmentShader);
+            gl.attachShader(glProgram, glVertexShader);
+            gl.attachShader(glProgram, glFragmentShader);
 
             if (this.webgl2 && definition.useTransformFeedback) {
                 // Collect all "out_" attributes and use them for output
@@ -2909,15 +2909,19 @@ Object.assign(pc, function () {
                         outNames.push("out_" + attr);
                     }
                 }
-                gl.transformFeedbackVaryings(program, outNames, gl.INTERLEAVED_ATTRIBS);
+                gl.transformFeedbackVaryings(glProgram, outNames, gl.INTERLEAVED_ATTRIBS);
             }
 
-            gl.linkProgram(program);
+            gl.linkProgram(glProgram);
 
             // Cache the WebGL objects on the shader
-            shader._glVertexShader = vertexShader;
-            shader._glFragmentShader = fragmentShader;
-            shader._glProgram = program;
+            shader._glVertexShader = glVertexShader;
+            shader._glFragmentShader = glFragmentShader;
+            shader._glProgram = glProgram;
+        },
+
+        createShader: function (shader) {
+            this.compileAndLinkShader(shader);
 
             this.shaders.push(shader);
         },
