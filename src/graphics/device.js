@@ -3053,7 +3053,7 @@ Object.assign(pc, function () {
 
                 // #ifdef PROFILER
                 this._shaderSwitchesPerFrame++;
-                // #endig
+                // #endif
 
                 this.attributesInvalidated = true;
             }
