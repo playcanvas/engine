@@ -2948,9 +2948,9 @@ Object.assign(pc, function () {
             var lines = src.split("\n");
 
             // Chrome reports shader errors on lines indexed from 1
-            lines.map(function (line, index) {
-                return "" + (index + 1) + line;
-            };
+            for (var i = 0, len = lines.length; i < len; i++) {
+                lines[i] = (i + 1) + ":\t" + lines[i];
+            }
 
             return lines.join( "\n" );
         },
