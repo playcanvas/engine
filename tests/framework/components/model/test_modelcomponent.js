@@ -12,6 +12,7 @@ describe("pc.ModelComponent", function () {
 
     afterEach(function () {
         app.destroy();
+        assets = {};
     });
 
     var loadAssetList = function (list, cb) {

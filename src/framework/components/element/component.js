@@ -730,7 +730,6 @@ Object.assign(pc, function () {
 
         onRemove: function () {
             this.entity.off('insert', this._onInsert, this);
-
             this._unpatch();
             if (this._image) this._image.destroy();
             if (this._text) this._text.destroy();
@@ -744,6 +743,8 @@ Object.assign(pc, function () {
                 this._unbindScreen(this.screen.screen);
                 this.screen.screen.syncDrawOrder();
             }
+
+            this.off();
         },
 
         // recalculates

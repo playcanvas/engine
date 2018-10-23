@@ -1,5 +1,5 @@
 pc.programlib.particle = {
-    generateKey: function (device, options) {
+    generateKey: function (options) {
         var key = "particle";
         for (var prop in options) {
             if (options.hasOwnProperty(prop)) {

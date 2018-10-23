@@ -208,23 +208,26 @@ Object.assign(pc, function () {
         // Add handlers for when the WebGL context is lost or restored
         this.contextLost = false;
 
-        canvas.addEventListener("webglcontextlost", function (event) {
+        this._contextLostHandler = function (event) {
             event.preventDefault();
             this.contextLost = true;
             // #ifdef DEBUG
             console.log('pc.GraphicsDevice: WebGL context lost.');
             // #endif
             this.fire('devicelost');
-        }.bind(this), false);
+        }.bind(this);
 
-        canvas.addEventListener("webglcontextrestored", function () {
+        this._contextRestoredHandler = function () {
             // #ifdef DEBUG
             console.log('pc.GraphicsDevice: WebGL context restored.');
             // #endif
             this.initializeContext();
             this.contextLost = false;
             this.fire('devicerestored');
-        }.bind(this), false);
+        }.bind(this);
+
+        canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
+        canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
 
         // Retrieve the WebGL context
         var preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
@@ -3168,6 +3171,9 @@ Object.assign(pc, function () {
             }
 
             this.clearShaderCache();
+
+            this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
+            this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
 
             this.canvas = null;
             this.gl = null;

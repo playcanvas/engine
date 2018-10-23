@@ -1,5 +1,5 @@
 pc.programlib.skybox = {
-    generateKey: function (device, options) {
+    generateKey: function (options) {
         var key = "skybox" + options.rgbm + " " + options.hdr + " " + options.fixSeams + "" +
                   options.toneMapping + "" + options.gamma + "" + options.useIntensity + "" + options.mip;
         return key;
