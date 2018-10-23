@@ -45,14 +45,14 @@ Object.assign(pc, function () {
                 var context = this.context;
 
                 // resume AudioContext on user interaction because of new Chrome autoplay policy
-                var resumeContext = function () {
-                    context.resume();
-                    window.removeEventListener('mousedown', resumeContext);
-                    window.removeEventListener('touchend', resumeContext);
-                };
+                this.resumeContext = function () {
+                    this.context.resume();
+                    window.removeEventListener('mousedown', this.resumeContext);
+                    window.removeEventListener('touchend', this.resumeContext);
+                }.bind(this);
 
-                window.addEventListener('mousedown', resumeContext);
-                window.addEventListener('touchend', resumeContext);
+                window.addEventListener('mousedown', this.resumeContext);
+                window.addEventListener('touchend', this.resumeContext);
 
                 // iOS only starts sound as a response to user interaction
                 if (pc.platform.ios) {
@@ -92,7 +92,6 @@ Object.assign(pc, function () {
     SoundManager.hasAudioContext = hasAudioContext;
 
     Object.assign(SoundManager.prototype, {
-
         suspend: function  () {
             this.suspended = true;
             this.fire('suspend');
@@ -104,6 +103,9 @@ Object.assign(pc, function () {
         },
 
         destroy: function () {
+            window.removeEventListener('mousedown', this.resumeContext);
+            window.removeEventListener('touchend', this.resumeContext);
+
             this.fire('destroy');
             if (this.context && this.context.close) {
                 this.context.close();
