@@ -3140,8 +3140,10 @@ Object.assign(pc, function () {
         },
 
         destroy: function () {
+            var gl = this.gl;
+
             if (this.webgl2 && this.feedback) {
-                this.gl.deleteTransformFeedback(this.feedback);
+                gl.deleteTransformFeedback(this.feedback);
             }
 
             this.clearShaderCache();
