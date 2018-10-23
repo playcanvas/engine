@@ -1470,37 +1470,25 @@ Object.assign(pc, function () {
             this.root = null;
 
             if (this.mouse) {
-                this.mouse.off('mouseup');
-                this.mouse.off('mousedown');
-                this.mouse.off('mousewheel');
-                this.mouse.off('mousemove');
+                this.mouse.off();
                 this.mouse.detach();
-
                 this.mouse = null;
             }
 
             if (this.keyboard) {
-                this.keyboard.off("keydown");
-                this.keyboard.off("keyup");
-                this.keyboard.off("keypress");
+                this.keyboard.off();
                 this.keyboard.detach();
-
                 this.keyboard = null;
             }
 
             if (this.touch) {
-                this.touch.off('touchstart');
-                this.touch.off('touchend');
-                this.touch.off('touchmove');
-                this.touch.off('touchcancel');
+                this.touch.off();
                 this.touch.detach();
-
                 this.touch = null;
             }
 
             if (this.elementInput) {
                 this.elementInput.detach();
-
                 this.elementInput = null;
             }
 
