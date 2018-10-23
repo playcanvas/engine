@@ -39,7 +39,7 @@ Object.assign(pc, function () {
             return null;
         }
         var gd = this._device;
-        var key = generator.generateKey(gd, options); // TODO: gd is never used in generateKey(), remove?
+        var key = generator.generateKey(options);
         var shader = this._cache[key];
         if (!shader) {
             var shaderDefinition = generator.createShaderDefinition(gd, options);
