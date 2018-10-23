@@ -2944,12 +2944,23 @@ Object.assign(pc, function () {
             }
         },
 
+        _addLineNumbers: function (src) {
+            var lines = src.split("\n");
+
+            // Chrome reports shader errors on lines indexed from 1
+            lines.map(function (line, index) {
+                return "" + (index + 1) + line;
+            };
+
+            return lines.join( "\n" );
+        },
+
         postLink: function (shader) {
             var gl = this.gl;
 
-            var program = shader._glProgram;
-            var vertexShader = shader._glVertexShader;
-            var fragmentShader = shader._glFragmentShader;
+            var glVertexShader = shader._glVertexShader;
+            var glFragmentShader = shader._glFragmentShader;
+            var glProgram = shader._glProgram;
 
             var definition = shader.definition;
 
@@ -2962,64 +2973,53 @@ Object.assign(pc, function () {
             // #endif
 
             // Check for errors
-            var addLineNumbers = function (src) {
-                var chunks = src.split("\n");
-
-                // Chrome reports shader errors on lines indexed from 1
-                for (var i = 0, len = chunks.length; i < len; i++) {
-                    chunks[i] = (i + 1) + ":\t" + chunks[i];
-                }
-
-                return chunks.join( "\n" );
-            };
-
-            // vshader
-            if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-                console.error("Failed to compile vertex shader:\n\n" + addLineNumbers(definition.vshader) + "\n\n" + gl.getShaderInfoLog(vertexShader));
+            if (!gl.getShaderParameter(glVertexShader, gl.COMPILE_STATUS)) {
+                console.error("Failed to compile vertex shader:\n\n" + this._addLineNumbers(definition.vshader) + "\n\n" + gl.getShaderInfoLog(glVertexShader));
                 return false;
             }
-            // fshader
-            if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-                console.error("Failed to compile fragment shader:\n\n" + addLineNumbers(definition.fshader) + "\n\n" + gl.getShaderInfoLog(fragmentShader));
+            if (!gl.getShaderParameter(glFragmentShader, gl.COMPILE_STATUS)) {
+                console.error("Failed to compile fragment shader:\n\n" + this._addLineNumbers(definition.fshader) + "\n\n" + gl.getShaderInfoLog(glFragmentShader));
                 return false;
             }
-            // program
-            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-                console.error("Failed to link shader program. Error: " + gl.getProgramInfoLog(program));
+            if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
+                console.error("Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram));
                 return false;
             }
+
+            var i, info, location, shaderInput;
 
             // Query the program for each vertex buffer input (GLSL 'attribute')
-            var i, info, location;
-
-            var numAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+            i = 0;
+            var numAttributes = gl.getProgramParameter(glProgram, gl.ACTIVE_ATTRIBUTES);
             while (i < numAttributes) {
-                info = gl.getActiveAttrib(program, i++);
-                location = gl.getAttribLocation(program, info.name);
+                info = gl.getActiveAttrib(glProgram, i++);
+                location = gl.getAttribLocation(glProgram, info.name);
 
                 // Check attributes are correctly linked up
                 if (definition.attributes[info.name] === undefined) {
                     console.error('Vertex shader attribute "' + info.name + '" is not mapped to a semantic in shader definition.');
                 }
 
-                shader.attributes.push(new pc.ShaderInput(this, definition.attributes[info.name], this.pcUniformType[info.type], location));
+                shaderInput = new pc.ShaderInput(this, definition.attributes[info.name], this.pcUniformType[info.type], location);
+
+                shader.attributes.push(shaderInput);
             }
 
             // Query the program for each shader state (GLSL 'uniform')
             i = 0;
-            var numUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+            var numUniforms = gl.getProgramParameter(glProgram, gl.ACTIVE_UNIFORMS);
             while (i < numUniforms) {
-                info = gl.getActiveUniform(program, i++);
-                location = gl.getUniformLocation(program, info.name);
+                info = gl.getActiveUniform(glProgram, i++);
+                location = gl.getUniformLocation(glProgram, info.name);
 
-                var uniform = new pc.ShaderInput(this, info.name, this.pcUniformType[info.type], location);
+                shaderInput = new pc.ShaderInput(this, info.name, this.pcUniformType[info.type], location);
 
                 if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
                     (this.webgl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
                 ) {
-                    shader.samplers.push(uniform);
+                    shader.samplers.push(shaderInput);
                 } else {
-                    shader.uniforms.push(uniform);
+                    shader.uniforms.push(shaderInput);
                 }
             }
 
