@@ -2840,7 +2840,7 @@ Object.assign(pc, function () {
             }
         },
 
-        compileShader: function (src, isVertexShader) {
+        compileShaderSource: function (src, isVertexShader) {
             var gl = this.gl;
 
             var glShader = isVertexShader ? this.vertexShaderCache[src] : this.fragmentShaderCache[src];
@@ -2888,12 +2888,8 @@ Object.assign(pc, function () {
             var gl = this.gl;
 
             var definition = shader.definition;
-            var glVertexShader = this.compileShader(definition.vshader, true);
-            var glFragmentShader = this.compileShader(definition.fshader, false);
-
-            if (definition.tag === pc.SHADERTAG_MATERIAL) {
-                this._shaderStats.materialShaders++;
-            }
+            var glVertexShader = this.compileShaderSource(definition.vshader, true);
+            var glFragmentShader = this.compileShaderSource(definition.fshader, false);
 
             var glProgram = gl.createProgram();
 
@@ -2918,6 +2914,12 @@ Object.assign(pc, function () {
             shader._glVertexShader = glVertexShader;
             shader._glFragmentShader = glFragmentShader;
             shader._glProgram = glProgram;
+
+            // #ifdef PROFILER
+            if (definition.tag === pc.SHADERTAG_MATERIAL) {
+                this._shaderStats.materialShaders++;
+            }
+            // #endif
         },
 
         createShader: function (shader) {
@@ -2933,8 +2935,7 @@ Object.assign(pc, function () {
             }
 
             if (shader._glProgram) {
-                var gl = this.gl;
-                gl.deleteProgram(shader._glProgram);
+                this.gl.deleteProgram(shader._glProgram);
                 shader._glProgram = null;
                 this.removeShaderFromCache(shader);
             }
@@ -3136,6 +3137,17 @@ Object.assign(pc, function () {
          * @description Frees memory from all shaders ever allocated with this device
          */
         clearShaderCache: function () {
+            var gl = this.gl;
+            var shaderSrc;
+            for (shaderSrc in this.fragmentShaderCache) {
+                gl.deleteShader(this.fragmentShaderCache[shaderSrc]);
+                delete this.fragmentShaderCache[shaderSrc];
+            }
+            for (shaderSrc in this.vertexShaderCache) {
+                gl.deleteShader(this.vertexShaderCache[shaderSrc]);
+                delete this.vertexShaderCache[shaderSrc];
+            }
+
             this.programLib.clearCache();
         },
 
@@ -3146,21 +3158,16 @@ Object.assign(pc, function () {
         destroy: function () {
             var gl = this.gl;
 
+            gl.canvas.width = 1;
+            gl.canvas.height = 1;
+
+            this.grabPassTexture.destroy();
+
             if (this.webgl2 && this.feedback) {
                 gl.deleteTransformFeedback(this.feedback);
             }
 
             this.clearShaderCache();
-
-            var shaderSrc;
-            for (shaderSrc in this.fragmentShaderCache) {
-                gl.deleteShader(this.fragmentShaderCache[shaderSrc]);
-                delete this.fragmentShaderCache[shaderSrc];
-            }
-            for (shaderSrc in this.vertexShaderCache) {
-                gl.deleteShader(this.vertexShaderCache[shaderSrc]);
-                delete this.vertexShaderCache[shaderSrc];
-            }
 
             this.canvas = null;
             this.gl = null;
