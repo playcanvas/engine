@@ -3040,13 +3040,13 @@ Object.assign(pc, function () {
          */
         setShader: function (shader) {
             if (shader !== this.shader) {
-                this.shader = shader;
-
                 if (!shader.ready) {
                     if (!this.postLink(shader)) {
                         return false;
                     }
                 }
+
+                this.shader = shader;
 
                 // Set the active shader
                 this.gl.useProgram(shader._glProgram);
