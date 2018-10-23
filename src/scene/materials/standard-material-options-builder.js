@@ -192,7 +192,7 @@ Object.assign(pc, function () {
         }
 
         if (options.lights.length === 0) {
-            options.noShadow = false;
+            options.noShadow = true;
         }
     };
 
