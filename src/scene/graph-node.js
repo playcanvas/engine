@@ -934,35 +934,31 @@ Object.assign(pc, function () {
 
         _dirtifyLocal: function () {
             if (!this._dirtyLocal) {
-                this._dirtyLocal = true;
                 this._dirtifyWorld();
-            } else {
-                this._queueSync(this, 0);
+                this._dirtyLocal = true;
             }
         },
 
         _dirtifyWorld: function () {
-            //if (!this._dirtyWorld)
-            this._queueSync(this, 0);
-            this._dirtifyWorldChild();
+            if (!this._dirtyWorld) {
+                this._queueSync();
+                this._dirtifyWorldImpl();
+            }
         },
 
-        _dirtifyWorldChild: function () {
+        _dirtifyWorldImpl: function () {
             if (!this._dirtyWorld) {
                 this._dirtyWorld = true;
                 for (var i = 0; i < this._children.length; i++) {
-                    this._children[i]._dirtifyWorldChild();
+                    this._children[i]._dirtifyWorldImpl();
                 }
             }
             this._dirtyNormal = true;
             this._aabbVer++;
         },
 
-        _queueSync: function (node, depth) {
-            if (this._parent)
-                this._parent._queueSync(node, depth + 1);
-            else
-                pc.syncQueue.Push(depth, node);
+        _queueSync: function () {
+            pc.syncQueue.Push(this._graphDepth, this);
         },
 
         /**
@@ -1161,6 +1157,12 @@ Object.assign(pc, function () {
             // The graph depth of the child and all of its descendants will now change
             node._updateGraphDepth();
 
+            for (var t = pc.syncQueue._values.length - 1; t > 0; t--) {
+                pc.syncQueue._values[t].syncHierarchy();
+            }
+            pc.syncQueue._values = [];
+            pc.syncQueue._index = [];
+
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node._dirtifyWorld();
 
@@ -1291,12 +1293,14 @@ Object.assign(pc, function () {
 
         _sync: function () {
             if (this._dirtyLocal) {
+                console.log("_sync lcl", this.name);
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
                 this._dirtyLocal = false;
             }
 
             if (this._dirtyWorld) {
+                console.log("_sync wrld", this.name);
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {

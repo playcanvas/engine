@@ -1089,8 +1089,11 @@ Object.assign(pc, function () {
             pc.syncQueue._values = [];
             pc.syncQueue._index = [];
 
-            // this.root.syncHierarchy();
+            console.log('=============================');
+            this.root.syncHierarchy();
 
+            console.log('=============================');
+            this.root.syncHierarchy();
 
             this.batcher.updateAll();
             pc._skipRenderCounter = 0;
