@@ -2938,7 +2938,6 @@ Object.assign(pc, function () {
 
         postLink: function (shader) {
             var gl = this.gl;
-            var retValue = true;
 
             var program = shader._glProgram;
             var vertexShader = shader._glVertexShader;
@@ -2969,22 +2968,21 @@ Object.assign(pc, function () {
             // vshader
             if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
                 console.error("Failed to compile vertex shader:\n\n" + addLineNumbers(definition.vshader) + "\n\n" + gl.getShaderInfoLog(vertexShader));
-                retValue = false;
+                return false;
             }
             // fshader
             if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
                 console.error("Failed to compile fragment shader:\n\n" + addLineNumbers(definition.fshader) + "\n\n" + gl.getShaderInfoLog(fragmentShader));
-                retValue = false;
+                return false;
             }
             // program
             if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
                 console.error("Failed to link shader program. Error: " + gl.getProgramInfoLog(program));
-                retValue = false;
+                return false;
             }
 
             // Query the program for each vertex buffer input (GLSL 'attribute')
-            var i = 0;
-            var info, location;
+            var i, info, location;
 
             var numAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
             while (i < numAttributes) {
@@ -3028,7 +3026,7 @@ Object.assign(pc, function () {
             this._shaderStats.compileTime += endTime - startTime;
             // #endif
 
-            return retValue;
+            return true;
         },
 
         /**
