@@ -138,34 +138,39 @@ pc.programlib.standard = {
         transformUv1: { n: "transformVS", f: _oldChunkTransformUv1 }
     },
 
-    generateKey: function (device, options) {
-        var prop, props = [];
+    generateKey: function (options) {
+        if (!this.props) {
+            this.props = [];
+            for (var prop in options) {
+                if (options.hasOwnProperty(prop) && prop !== "chunks" && prop !== "lights")
+                    this.props.push(prop);
+            }
+            this.props.sort();
+        }
+
         var key = "standard";
-        var light;
-        for (prop in options) {
-            if (options.hasOwnProperty(prop)) {
-                if (prop === "chunks") {
-                    for (var p in options[prop]) {
-                        if (options[prop].hasOwnProperty(p)) {
-                            props.push(p + options.chunks[p]);
-                        }
-                    }
-                } else {
-                    if (options[prop]) props.push(prop);
+
+        var i;
+        var props = this.props;
+        for (i = 0; i < props.length; i++) {
+            if (options[props[i]])
+                key += props[i] + options[props[i]];
+        }
+
+        if (options.chunks) {
+            var chunks = [];
+            for (var p in options.chunks) {
+                if (options.chunks.hasOwnProperty(p)) {
+                    chunks.push(p + options.chunks[p]);
                 }
             }
-        }
-        props.sort();
-        for (prop in props) {
-            if (props.hasOwnProperty(prop)) {
-                key += props[prop] + options[props[prop]];
-            }
+            chunks.sort();
+            key += chunks;
         }
 
         if (options.lights) {
-            for (var i = 0; i < options.lights.length; i++) {
-                light = options.lights[i];
-                key += light.key;
+            for (i = 0; i < options.lights.length; i++) {
+                key += options.lights[i].key;
             }
         }
 

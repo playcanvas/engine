@@ -1,5 +1,5 @@
 pc.programlib.basic = {
-    generateKey: function (device, options) {
+    generateKey: function (options) {
         var key = 'basic';
         if (options.fog)          key += '_fog';
         if (options.alphaTest)    key += '_atst';
