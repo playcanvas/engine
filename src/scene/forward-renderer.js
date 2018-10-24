@@ -1552,7 +1552,7 @@ Object.assign(pc, function () {
                         // #ifdef DEBUG
                         if (!device.setShader(drawCall._shader[pass])) {
                             console.error('Error in material "' + material.name + '" with flags ' + objDefs);
-                            drawCall.material = pc.Scene.defaultMaterial;
+                            drawCall.material = scene.defaultMaterial;
                         }
                         // #else
                         device.setShader(drawCall._shader[pass]);

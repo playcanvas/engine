@@ -444,8 +444,9 @@ Object.assign(pc, function () {
                 meshInstance._shader[j] = null;
             }
             meshInstance._material = null;
-            if (this !== pc.Scene.defaultMaterial) {
-                meshInstance.material = pc.Scene.defaultMaterial;
+            var defaultMaterial = pc.getDefaultMaterial();
+            if (this !== defaultMaterial) {
+                meshInstance.material = defaultMaterial;
             }
         }
     };

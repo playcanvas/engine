@@ -4,7 +4,6 @@ describe("pc.ModelComponent", function () {
 
     beforeEach(function (done) {
         app = new pc.Application(document.createElement("canvas"));
-
         loadAssets(function () {
             done();
         });
