@@ -1,6 +1,7 @@
 describe('pc.Batcher', function () {
     beforeEach(function () {
         this.app = new pc.Application(document.createElement("canvas"));
+
         this.bg = this.app.batcher.addGroup("Test Group", false, 100);
 
     });

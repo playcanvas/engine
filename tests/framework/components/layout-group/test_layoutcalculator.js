@@ -2,6 +2,7 @@ describe("pc.LayoutCalculator", function () {
     var app;
     var calculator;
     var options;
+    var elements;
     var mixedWidthElements;
     var mixedHeightElements;
     var mixedWidthElementsWithLayoutChildComponents;

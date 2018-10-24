@@ -62,6 +62,10 @@ Object.assign(pc, function () {
     pc.Component._buildAccessors(pc.ElementComponent.prototype, _schema);
 
     Object.assign(ElementComponentSystem.prototype, {
+        destroy: function () {
+            this._defaultTexture.destroy();
+        },
+
         initializeComponentData: function (component, data, properties) {
             component._beingInitialized = true;
 

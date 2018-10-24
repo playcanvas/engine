@@ -2927,10 +2927,15 @@ Object.assign(pc, function () {
                 this.gl.deleteTransformFeedback(this.feedback);
             }
 
+            this.grabPassTexture.destroy();
+
             this.clearShaderCache();
 
             this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
             this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
+
+            this._contextLostHandler = null;
+            this._contextRestoredHandler = null;
 
             this.canvas = null;
             this.gl = null;

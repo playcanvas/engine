@@ -6,16 +6,15 @@ Object.assign(pc, function () {
      * @description {@link pc.ResourceHandler} use to load 3D model resources
      * @param {pc.GraphicsDevice} device The graphics device that will be rendering
      */
-    var ModelHandler = function (device) {
+    var ModelHandler = function (device, defaultMaterial) {
         this._device = device;
         this._parsers = [];
+        this._defaultMaterial = defaultMaterial;
 
         this.addParser(new pc.JsonModelParser(this._device), function (url, data) {
             return (pc.path.getExtension(url) === '.json');
         });
     };
-
-    ModelHandler.DEFAULT_MATERIAL = pc.Scene.defaultMaterial;
 
     Object.assign(ModelHandler.prototype, {
         /**
@@ -78,13 +77,14 @@ Object.assign(pc, function () {
                         }
 
                         asset.once('remove', function (asset) {
-                            if (meshInstance.material === asset.resource)
-                                meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                            if (meshInstance.material === asset.resource) {
+                                meshInstance.material = this._defaultMaterial;
+                            }
                         });
                     };
 
                     if (!data.mapping[i]) {
-                        meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                        meshInstance.material = this._defaultMaterial;
                         return;
                     }
 
@@ -94,7 +94,7 @@ Object.assign(pc, function () {
 
                     if (id !== undefined) { // id mapping
                         if (!id) {
-                            meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                            meshInstance.material = this._defaultMaterial;
                         } else {
                             material = assets.get(id);
                             if (material) {
