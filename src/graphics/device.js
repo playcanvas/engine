@@ -3167,8 +3167,6 @@ Object.assign(pc, function () {
                 gl.deleteTransformFeedback(this.feedback);
             }
 
-            this.grabPassTexture.destroy();
-
             this.clearShaderCache();
 
             this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
