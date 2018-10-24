@@ -593,6 +593,8 @@ Object.assign(pc, function () {
         this.textureFloatHighPrecision = testTextureFloatHighPrecision(this);
 
         this.initializeGrabPassTexture();
+
+        this.programLib.precompile();
     };
 
     Object.assign(GraphicsDevice.prototype, {

@@ -73,6 +73,13 @@ Object.assign(pc, function () {
         }
     };
 
+    ProgramLibrary.prototype.precompile = function () {
+        var options = pc.precompileShaders.options;
+        for (var i = 0; i < options.lenght; i++) {
+            console.log(options[i]);
+        }
+    };
+
     return {
         ProgramLibrary: ProgramLibrary
     };
