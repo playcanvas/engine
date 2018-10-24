@@ -259,6 +259,10 @@ Object.assign(pc, function () {
 
             clone.worldTransform.copy(this.worldTransform);
             clone._dirtyWorld = this._dirtyWorld;
+
+            if (clone._dirtifyLocal || clone._dirtifyWorld)
+                clone._queueSync();
+
             clone._dirtyNormal = this._dirtyNormal;
             clone._aabbVer = this._aabbVer + 1;
 
@@ -1157,11 +1161,13 @@ Object.assign(pc, function () {
             // The graph depth of the child and all of its descendants will now change
             node._updateGraphDepth();
 
-            for (var t = pc.syncQueue._values.length - 1; t > 0; t--) {
-                pc.syncQueue._values[t].syncHierarchy();
+            if (node._dirtifyLocal || node._dirtifyWorld) {
+                for (var t = pc.syncQueue._values.length - 1; t >= 0; t--) {
+                    pc.syncQueue._values[t].syncHierarchy();
+                }
+                pc.syncQueue._values = [];
+                pc.syncQueue._index = [];
             }
-            pc.syncQueue._values = [];
-            pc.syncQueue._index = [];
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node._dirtifyWorld();
@@ -1291,16 +1297,23 @@ Object.assign(pc, function () {
             return results;
         },
 
+        getHierarchyPath: function () {
+            var path = this.name;
+            for (var parent = this._parent; parent; parent = parent._parent)
+                path = parent.name + '/' + path;
+            return path;
+        },
+
         _sync: function () {
             if (this._dirtyLocal) {
-                console.log("_sync lcl", this.name);
+                // console.log("_sync lcl", this.getHierarchyPath());
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
                 this._dirtyLocal = false;
             }
 
             if (this._dirtyWorld) {
-                console.log("_sync wrld", this.name);
+                // console.log("_sync wrld", this.getHierarchyPath());
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
@@ -1362,9 +1375,12 @@ Object.assign(pc, function () {
             if (!this._enabled)
                 return;
 
+            var children = this._children;
+
+            // console.log(this.getHierarchyPath(), children.length);
+
             this._sync();
 
-            var children = this._children;
             for (var i = 0, len = children.length; i < len; i++) {
                 children[i].syncHierarchy();
             }
