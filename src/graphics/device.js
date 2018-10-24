@@ -3161,9 +3161,6 @@ Object.assign(pc, function () {
         destroy: function () {
             var gl = this.gl;
 
-            gl.canvas.width = 1;
-            gl.canvas.height = 1;
-
             this.grabPassTexture.destroy();
 
             if (this.webgl2 && this.feedback) {
