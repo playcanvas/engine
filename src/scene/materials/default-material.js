@@ -1,3 +1,3 @@
-pc.Scene.defaultMaterial = new pc.StandardMaterial();
-// set default material to physical shading
-pc.Scene.defaultMaterial.shadingModel = pc.SPECULAR_BLINN;
+pc.getDefaultMaterial = function () {
+    return pc.Application.getApplication().scene.defaultMaterial;
+};

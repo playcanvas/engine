@@ -443,7 +443,7 @@ Object.assign(pc, function () {
         this._scriptPrefix = options.scriptPrefix || '';
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
-        this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
+        this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice, this.scene.defaultMaterial));
         this.loader.addHandler("material", new pc.MaterialHandler(this));
         this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice, this.assets, this.loader));
         this.loader.addHandler("text", new pc.TextHandler());
@@ -1461,10 +1461,12 @@ Object.assign(pc, function () {
             }
 
             this.off('librariesloaded');
-            document.removeEventListener('visibilitychange', this._visibilityChangeHandler);
-            document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler);
-            document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler);
-            document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler);
+            document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+            this._visibilityChangeHandler = null;
+            this.onVisibilityChange = null;
 
             this.root.destroy();
             this.root = null;
@@ -1507,7 +1509,16 @@ Object.assign(pc, function () {
             var assets = this.assets.list();
             for (i = 0; i < assets.length; i++) {
                 assets[i].unload();
+                assets[i].off();
             }
+            this.assets.off();
+
+            for (var key in this.loader.getHandler('script')._cache) {
+                var element = this.loader.getHandler('script')._cache[key];
+                var parent = element.parentNode;
+                if (parent) parent.removeChild(element);
+            }
+            this.loader.getHandler('script')._cache = {};
 
             this.loader.destroy();
             this.loader = null;
@@ -1532,7 +1543,6 @@ Object.assign(pc, function () {
             this.batcher = null;
 
             this._entityIndex = {};
-            this._visibilityChangeHandler = null;
 
             this.defaultLayerDepth.onPreRenderOpaque = null;
             this.defaultLayerDepth.onPostRenderOpaque = null;
@@ -1557,7 +1567,7 @@ Object.assign(pc, function () {
             }
 
             pc.http = new pc.Http();
-
+            pc.script.app = null;
             // remove default particle texture
             pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
         }

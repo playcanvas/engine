@@ -3172,6 +3172,9 @@ Object.assign(pc, function () {
             this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
             this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
 
+            this._contextLostHandler = null;
+            this._contextRestoredHandler = null;
+
             this.canvas = null;
             this.gl = null;
         }
