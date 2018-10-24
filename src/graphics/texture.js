@@ -601,7 +601,7 @@ Object.assign(pc, function () {
                 this.device.destroyTexture(this);
             }
             this.device = null;
-            this._levels = [];
+            this._levels = null;
         },
 
         // Force a full resubmission of the texture to WebGL (used on a context restore event)
