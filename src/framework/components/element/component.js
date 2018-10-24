@@ -886,7 +886,7 @@ Object.assign(pc, function () {
             return mo;
         },
 
-        isCulled: function (camera) {
+        isVisibleForCamera: function (camera) {
             var clipL, clipR, clipT, clipB;
 
             if (this.maskedBy) {

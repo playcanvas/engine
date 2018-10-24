@@ -40,6 +40,7 @@ Object.assign(pc, function () {
         initializeComponentData: function (component, data, properties) {
             if (data.priority !== undefined) component.priority = data.priority;
             if (data.screenSpace !== undefined) component.screenSpace = data.screenSpace;
+            component.cull = component.screenSpace;
             if (data.scaleMode !== undefined) component.scaleMode = data.scaleMode;
             if (data.scaleBlend !== undefined) component.scaleBlend = data.scaleBlend;
             if (data.resolution !== undefined) {

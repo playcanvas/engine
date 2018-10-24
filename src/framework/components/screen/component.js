@@ -43,7 +43,7 @@ Object.assign(pc, function () {
         this._priority = 0;
 
         this._screenSpace = false;
-        this.cull = true;
+        this.cull = this._screenSpace;
         this._screenMatrix = new pc.Mat4();
 
         system.app.graphicsDevice.on("resizecanvas", this._onResize, this);

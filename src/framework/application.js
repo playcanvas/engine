@@ -1089,6 +1089,7 @@ Object.assign(pc, function () {
             // Draw call stats
             stats = this.stats.drawCalls;
             stats.forward = this.renderer._forwardDrawCalls;
+            stats.culled = this.renderer._numDrawCallsCulled;
             stats.depth = 0;
             stats.shadow = this.renderer._shadowDrawCalls;
             stats.skinned = this.renderer._skinDrawCalls;
@@ -1100,6 +1101,7 @@ Object.assign(pc, function () {
             this.renderer._depthDrawCalls = 0;
             this.renderer._shadowDrawCalls = 0;
             this.renderer._forwardDrawCalls = 0;
+            this.renderer._numDrawCallsCulled = 0;
             this.renderer._skinDrawCalls = 0;
             this.renderer._immediateRendered = 0;
             this.renderer._instancedDrawCalls = 0;
