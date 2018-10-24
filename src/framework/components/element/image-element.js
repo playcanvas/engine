@@ -171,19 +171,19 @@ Object.assign(pc, function () {
         if (!this.meshInstance) return;
         var element = this._element;
 
-        var cullFn = null;
-        if (cull && element._isScreenSpace() && element._isScreenCulled()) {
-            cullFn = function (camera) {
-                return element.isCulled(camera);
+        var visibleFn = null;
+        if (cull && element._isScreenCulled()) {
+            visibleFn = function (camera) {
+                return element.isVisibleForCamera(camera);
             };
         }
 
         this.meshInstance.cull = cull;
-        this.meshInstance.isCulled = cullFn;
+        this.meshInstance.isVisibleFunc = visibleFn;
 
         if (this.unmaskMeshInstance) {
             this.unmaskMeshInstance.cull = cull;
-            this.unmaskMeshInstance.isCulled = cullFn;
+            this.unmaskMeshInstance.isVisibleFunc = visibleFn;
         }
     };
 
