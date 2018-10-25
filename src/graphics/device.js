@@ -2919,6 +2919,7 @@ Object.assign(pc, function () {
             shader._glProgram = glProgram;
 
             // #ifdef PROFILER
+            this._shaderStats.linked++;
             if (definition.tag === pc.SHADERTAG_MATERIAL) {
                 this._shaderStats.materialShaders++;
             }
