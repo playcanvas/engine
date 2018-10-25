@@ -2062,6 +2062,8 @@ Object.assign(pc, function () {
 
         updateShaders: function (drawCalls) {
 
+            console.log("FORCE UPDATE ALL SHADERS");
+
             // #ifdef PROFILER
             var time = pc.now();
             // #endif
@@ -2091,6 +2093,34 @@ Object.assign(pc, function () {
             // #endif
         },
 
+        updateLitShaders: function (drawCalls) {
+
+            console.log("FORCE UPDATE LITTED SHADERS");
+
+            // #ifdef PROFILER
+            var time = pc.now();
+            // #endif
+
+            for (var i = 0; i < drawCalls.length; i++) {
+                var drawCall = drawCalls[i];
+                if (drawCall.material !== undefined) {
+                    var mat = drawCall.material;
+                    if (mat.updateShader !== pc.Material.prototype.updateShader) {
+                        if (mat.useLighting === false || (mat.emitter && !mat.emitter.lighting)) {
+                            // console.log('skipping', mat.name);
+                            continue;
+                        }
+                        mat.clearVariants();
+                        mat.shader = null;
+                    }
+                }
+            }
+
+            // #ifdef PROFILER
+            this.scene._stats.updateShadersTime += pc.now() - time;
+            // #endif
+        },
+
         beginFrame: function (comp) {
             var device = this.device;
             var scene = this.scene;
@@ -2107,6 +2137,12 @@ Object.assign(pc, function () {
             if (scene.updateShaders) {
                 this.updateShaders(meshInstances);
                 scene.updateShaders = false;
+                scene._shaderVersion++;
+            }
+
+            if (scene.forceUpdateLitShaders) {
+                this.updateLitShaders(meshInstances);
+                scene.forceUpdateLitShaders = false;
                 scene._shaderVersion++;
             }
 
@@ -2462,7 +2498,7 @@ Object.assign(pc, function () {
             // Update static layer data, if something's changed
             var updated = comp._update();
             if (updated & pc.COMPUPDATED_LIGHTS) {
-                this.scene.updateShaders = true;
+                this.scene.forceUpdateLitShaders = true;
             }
 
             // #ifdef PROFILER

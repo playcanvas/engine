@@ -7,6 +7,7 @@ Object.assign(pc, function () {
         this._cache = {};
         this._generators = {};
         this._isClearingCache = false;
+        this._precached = false;
 
         // Shared Sandard Material option structures
         this.optionsContext = {};

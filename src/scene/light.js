@@ -304,7 +304,7 @@ Object.assign(pc, function () {
 
             this._enabled = value;
             if (this._scene !== null)
-                this._scene.updateShaders = true;
+                ;// this._scene.updateShaders = true;
         }
     });
 
@@ -319,7 +319,7 @@ Object.assign(pc, function () {
             this._type = value;
             this._destroyShadowMap();
             if (this._scene !== null)
-                this._scene.updateShaders = true;
+                ;// this._scene.updateShaders = true;
             this.updateKey();
 
             var stype = this._shadowType;
@@ -340,7 +340,7 @@ Object.assign(pc, function () {
 
             this._mask = value;
             if (this._scene !== null)
-                this._scene.updateShaders = true;
+                ;// this._scene.updateShaders = true;
         }
     });
 
@@ -373,7 +373,7 @@ Object.assign(pc, function () {
             this._shadowType = value;
             this._destroyShadowMap();
             if (this._scene !== null)
-                this._scene.updateShaders = true;
+                ;// this._scene.updateShaders = true;
             this.updateKey();
         }
     });
@@ -388,7 +388,7 @@ Object.assign(pc, function () {
 
             this._castShadows = value;
             if (this._scene !== null)
-                this._scene.updateShaders = true;
+                ;// this._scene.updateShaders = true;
             this.updateKey();
         }
     });
@@ -434,7 +434,7 @@ Object.assign(pc, function () {
 
             if ((!this._normalOffsetBias && value) || (this._normalOffsetBias && !value)) {
                 if (this._scene !== null)
-                    this._scene.updateShaders = true;
+                    ;// this._scene.updateShaders = true;
                 this.updateKey();
             }
             this._normalOffsetBias = value;
@@ -451,7 +451,7 @@ Object.assign(pc, function () {
 
             this._falloffMode = value;
             if (this._scene !== null)
-                this._scene.updateShaders = true;
+                ;// this._scene.updateShaders = true;
             this.updateKey();
         }
     });
@@ -504,7 +504,7 @@ Object.assign(pc, function () {
 
             this._cookie = value;
             if (this._scene !== null)
-                this._scene.updateShaders = true;
+                ;// this._scene.updateShaders = true;
             this.updateKey();
         }
     });
@@ -519,7 +519,7 @@ Object.assign(pc, function () {
 
             this._cookieFalloff = value;
             if (this._scene !== null)
-                this._scene.updateShaders = true;
+                ;// this._scene.updateShaders = true;
             this.updateKey();
         }
     });
@@ -540,7 +540,7 @@ Object.assign(pc, function () {
             }
             this._cookieChannel = value;
             if (this._scene !== null)
-                this._scene.updateShaders = true;
+                ;// this._scene.updateShaders = true;
             this.updateKey();
         }
     });
@@ -557,7 +557,7 @@ Object.assign(pc, function () {
             var xformNew = !!(value || this._cookieOffsetSet);
             if (xformOld !== xformNew) {
                 if (this._scene !== null)
-                    this._scene.updateShaders = true;
+                    ;// this._scene.updateShaders = true;
             }
             this._cookieTransform = value;
             this._cookieTransformSet = !!value;
@@ -581,7 +581,7 @@ Object.assign(pc, function () {
             var xformNew = !!(this._cookieTransformSet || value);
             if (xformOld !== xformNew) {
                 if (this._scene !== null)
-                    this._scene.updateShaders = true;
+                    ;// this._scene.updateShaders = true;
             }
             if (xformNew && !value && this._cookieOffset) {
                 this._cookieOffset.set(0, 0);

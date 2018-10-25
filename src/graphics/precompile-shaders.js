@@ -1,5 +1,6 @@
-pc.precompileShaders = {
-    options: [
-        { name: "standard" }
-    ]
-};
+Object.assign(pc, function () {
+    'use strict';
+    pc.PrecompileShaders =
+        [
+        ];
+}());
