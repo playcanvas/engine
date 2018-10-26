@@ -444,7 +444,7 @@ Object.assign(pc, function () {
         this._scriptPrefix = options.scriptPrefix || '';
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
-        this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
+        this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice, this.scene.defaultMaterial));
         this.loader.addHandler("material", new pc.MaterialHandler(this));
         this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice, this.assets, this.loader));
         this.loader.addHandler("text", new pc.TextHandler());
@@ -1160,6 +1160,7 @@ Object.assign(pc, function () {
             // Draw call stats
             stats = this.stats.drawCalls;
             stats.forward = this.renderer._forwardDrawCalls;
+            stats.culled = this.renderer._numDrawCallsCulled;
             stats.depth = 0;
             stats.shadow = this.renderer._shadowDrawCalls;
             stats.skinned = this.renderer._skinDrawCalls;
@@ -1171,6 +1172,7 @@ Object.assign(pc, function () {
             this.renderer._depthDrawCalls = 0;
             this.renderer._shadowDrawCalls = 0;
             this.renderer._forwardDrawCalls = 0;
+            this.renderer._numDrawCallsCulled = 0;
             this.renderer._skinDrawCalls = 0;
             this.renderer._immediateRendered = 0;
             this.renderer._instancedDrawCalls = 0;
@@ -1523,6 +1525,8 @@ Object.assign(pc, function () {
          * @description Destroys application and removes all event listeners.
          */
         destroy: function () {
+            var i, l;
+
             Application._applications[this.graphicsDevice.canvas.id] = null;
 
             if (Application._currentApplication === this) {
@@ -1530,46 +1534,36 @@ Object.assign(pc, function () {
             }
 
             this.off('librariesloaded');
-            document.removeEventListener('visibilitychange', this._visibilityChangeHandler);
-            document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler);
-            document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler);
-            document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler);
+            document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
+            document.removeEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+            this._visibilityChangeHandler = null;
+            this.onVisibilityChange = null;
 
             this.root.destroy();
             this.root = null;
 
             if (this.mouse) {
-                this.mouse.off('mouseup');
-                this.mouse.off('mousedown');
-                this.mouse.off('mousewheel');
-                this.mouse.off('mousemove');
+                this.mouse.off();
                 this.mouse.detach();
-
                 this.mouse = null;
             }
 
             if (this.keyboard) {
-                this.keyboard.off("keydown");
-                this.keyboard.off("keyup");
-                this.keyboard.off("keypress");
+                this.keyboard.off();
                 this.keyboard.detach();
-
                 this.keyboard = null;
             }
 
             if (this.touch) {
-                this.touch.off('touchstart');
-                this.touch.off('touchend');
-                this.touch.off('touchmove');
-                this.touch.off('touchcancel');
+                this.touch.off();
                 this.touch.detach();
-
                 this.touch = null;
             }
 
             if (this.elementInput) {
                 this.elementInput.detach();
-
                 this.elementInput = null;
             }
 
@@ -1577,21 +1571,58 @@ Object.assign(pc, function () {
                 this.controller = null;
             }
 
+            var systems = this.systems.list;
+            for (i = 0, l = systems.length; i < l; i++) {
+                systems[i].destroy();
+            }
+
             pc.ComponentSystem.destroy();
 
             // destroy all texture resources
             var assets = this.assets.list();
-            for (var i = 0; i < assets.length; i++) {
+            for (i = 0; i < assets.length; i++) {
                 assets[i].unload();
+                assets[i].off();
             }
+            this.assets.off();
+
+            for (var key in this.loader.getHandler('script')._cache) {
+                var element = this.loader.getHandler('script')._cache[key];
+                var parent = element.parentNode;
+                if (parent) parent.removeChild(element);
+            }
+            this.loader.getHandler('script')._cache = {};
 
             this.loader.destroy();
             this.loader = null;
 
+            this.scene.destroy();
             this.scene = null;
 
             this.systems = [];
             this.context = null;
+
+            // script registry
+            this.scripts.destroy();
+            this.scripts = null;
+
+            this._sceneRegistry.destroy();
+            this._sceneRegistry = null;
+
+            this.lightmapper.destroy();
+            this.lightmapper = null;
+
+            this.batcher.destroyManager();
+            this.batcher = null;
+
+            this._entityIndex = {};
+
+            this.defaultLayerDepth.onPreRenderOpaque = null;
+            this.defaultLayerDepth.onPostRenderOpaque = null;
+            this.defaultLayerDepth.onDisable = null;
+            this.defaultLayerDepth.onEnable = null;
+            this.defaultLayerDepth = null;
+            this.defaultLayerWorld = null;
 
             pc.destroyPostEffectQuad();
 
@@ -1601,13 +1632,15 @@ Object.assign(pc, function () {
             this.renderer = null;
             this.tick = null;
 
+            this.off(); // remove all events
+
             if (this._audioManager) {
                 this._audioManager.destroy();
                 this._audioManager = null;
             }
 
             pc.http = new pc.Http();
-
+            pc.script.app = null;
             // remove default particle texture
             pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
         }

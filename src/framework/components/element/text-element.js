@@ -159,7 +159,12 @@ Object.assign(pc, function () {
 
             var removedModel = false;
 
-            var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
+            var element = this._element;
+            var screenSpace = element._isScreenSpace();
+            var screenCulled = element._isScreenCulled();
+            var visibleFn = function (camera) {
+                return element.isVisibleForCamera(camera);
+            };
 
             for (i = 0, len = this._meshInfo.length; i < len; i++) {
                 var l = charactersPerTexture[i] || 0;
@@ -167,7 +172,7 @@ Object.assign(pc, function () {
 
                 if (meshInfo.count !== l) {
                     if (!removedModel) {
-                        this._element.removeModelFromLayers(this._model);
+                        element.removeModelFromLayers(this._model);
                         removedModel = true;
                     }
 
@@ -221,12 +226,15 @@ Object.assign(pc, function () {
                     mi.name = "Text Element: " + this._entity.name;
                     mi.castShadow = false;
                     mi.receiveShadow = false;
-
-                    mi.drawOrder = this._drawOrder;
-                    if (screenSpace) {
-                        mi.cull = false;
-                    }
+                    mi.cull = !screenSpace;
                     mi.screenSpace = screenSpace;
+                    mi.drawOrder = this._drawOrder;
+
+                    if (screenCulled) {
+                        mi.cull = true;
+                        mi.isVisibleFunc = visibleFn;
+                    }
+
                     this._setTextureParams(mi, this._font.textures[i]);
                     this._colorUniform[0] = this._color.r;
                     this._colorUniform[1] = this._color.g;
@@ -292,18 +300,29 @@ Object.assign(pc, function () {
         },
 
         _updateMaterial: function (screenSpace) {
-            var cull;
+            var element = this._element;
+            var screenCulled = element._isScreenCulled();
+            var visibleFn = function (camera) {
+                return element.isVisibleForCamera(camera);
+            };
 
             var msdf = this._font && this._font.type === pc.FONT_MSDF;
             this._material = this._system.getTextElementMaterial(screenSpace, msdf);
-            cull = !screenSpace;
 
             if (this._model) {
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
-                    mi.cull = cull;
+                    mi.cull = !screenSpace;
                     mi.material = this._material;
                     mi.screenSpace = screenSpace;
+
+                    if (screenCulled) {
+                        mi.cull = true;
+                        mi.isVisibleFunc = visibleFn;
+                    } else {
+                        mi.isVisibleFunc = null;
+                    }
+
                 }
             }
         },
@@ -933,7 +952,7 @@ Object.assign(pc, function () {
 
             // if font type has changed we may need to get change material
             if (value.type !== previousFontType) {
-                var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
+                var screenSpace = this._element._isScreenSpace();
                 this._updateMaterial(screenSpace);
             }
 

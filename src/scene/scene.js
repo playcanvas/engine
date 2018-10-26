@@ -474,7 +474,18 @@ Object.assign(pc, function () {
         // backwards compatibilty only
         this._models = [];
 
+        // default material used in case no other material is available
+        this.defaultMaterial = new pc.StandardMaterial();
+        this.defaultMaterial.shadingModel = pc.SPECULAR_BLINN;
+
         pc.events.attach(this);
+    };
+
+    Scene.prototype.destroy = function () {
+        this.root = null;
+        this.defaultMaterial.destroy();
+        this.defaultMaterial = null;
+        this.off();
     };
 
     Object.defineProperty(Scene.prototype, 'fog', {
