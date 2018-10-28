@@ -7,10 +7,6 @@ Object.assign(pc, function () {
         this._cache = {};
         this._generators = {};
         this._isClearingCache = false;
-
-        // Shared Sandard Material option structures
-        this.optionsContext = {};
-        this.optionsContextMin = {};
     };
 
     ProgramLibrary.prototype.register = function (name, generator) {
@@ -39,7 +35,7 @@ Object.assign(pc, function () {
             return null;
         }
         var gd = this._device;
-        var key = generator.generateKey(gd, options); // TODO: gd is never used in generateKey(), remove?
+        var key = generator.generateKey(options);
         var shader = this._cache[key];
         if (!shader) {
             var shaderDefinition = generator.createShaderDefinition(gd, options);

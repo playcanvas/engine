@@ -72,6 +72,11 @@ Object.assign(pc, function () {
     pc.Component._buildAccessors(pc.SpriteComponent.prototype, _schema);
 
     Object.assign(SpriteComponentSystem.prototype, {
+        destroy: function () {
+            this._defaultTexture.destroy();
+            this._defaultTexture = null;
+        },
+
         initializeComponentData: function (component, data, properties) {
             if (data.enabled !== undefined) {
                 component.enabled = data.enabled;

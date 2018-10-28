@@ -866,21 +866,21 @@ describe('pc.ImageElement', function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
         // move just off screen
         e.translateLocal(canvasWidth+(100/2)+0.001,0,0);
 
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
 
         // move just on screen
         e.translateLocal(-1, 0, 0);
 
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
     });
 
@@ -920,7 +920,7 @@ describe('pc.ImageElement', function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
         // move just off screen
         parent.translateLocal(50, 50, 0);
@@ -929,7 +929,7 @@ describe('pc.ImageElement', function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
     });
 
     it('Offscreen rotated element is culled', function () {
@@ -962,7 +962,7 @@ describe('pc.ImageElement', function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
     });
 
     it('Offscreen rotated out of plane is culled', function () {
@@ -995,7 +995,7 @@ describe('pc.ImageElement', function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
     });
 
     it('TextureAtlas asset events are unbound if sprite is changed while loading', function (done) {

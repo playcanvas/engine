@@ -505,8 +505,8 @@ Object.assign(pc, function () {
             if (!meshInstance.visible) return false;
 
             // custom visibility method on MeshInstance
-            if (meshInstance.isCulled) {
-                return meshInstance.isCulled(camera);
+            if (meshInstance.isVisibleFunc) {
+                return meshInstance.isVisibleFunc(camera);
             }
 
             meshPos = meshInstance.aabb.center;
@@ -986,6 +986,7 @@ Object.assign(pc, function () {
         cull: function (camera, drawCalls, visibleList) {
             // #ifdef PROFILER
             var cullTime = pc.now();
+            var numDrawCallsCulled = 0;
             // #endif
 
             var visibleLength = 0;
@@ -1021,6 +1022,9 @@ Object.assign(pc, function () {
 
                     if (drawCall.cull) {
                         visible = this._isVisible(camera, drawCall);
+                        // #ifdef PROFILER
+                        numDrawCallsCulled++;
+                        // #endif
                     }
 
                     if (visible) {
@@ -1037,6 +1041,7 @@ Object.assign(pc, function () {
 
             // #ifdef PROFILER
             this._cullTime += pc.now() - cullTime;
+            this._numDrawCallsCulled += numDrawCallsCulled;
             // #endif
 
             return visibleLength;
@@ -1547,7 +1552,7 @@ Object.assign(pc, function () {
                         // #ifdef DEBUG
                         if (!device.setShader(drawCall._shader[pass])) {
                             console.error('Error in material "' + material.name + '" with flags ' + objDefs);
-                            drawCall.material = pc.Scene.defaultMaterial;
+                            drawCall.material = scene.defaultMaterial;
                         }
                         // #else
                         device.setShader(drawCall._shader[pass]);

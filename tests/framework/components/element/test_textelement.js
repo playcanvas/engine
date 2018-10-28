@@ -455,21 +455,21 @@ describe("pc.TextElement", function () {
 
         var meshInstance = e.element._text._model.meshInstances[0];
 
-        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
         // move just off screen
         e.translateLocal(canvasWidth+(100/2)+0.001,0,0);
 
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
 
         // move just on screen
         e.translateLocal(-1, 0, 0);
 
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
     });
 
@@ -506,21 +506,21 @@ describe("pc.TextElement", function () {
 
         var meshInstance = e.element._text._model.meshInstances[0];
 
-        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
         // move just off screen
         e.translateLocal(canvasWidth+(e.element.width/2)+0.001,0,0);
 
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
 
         // move just on screen
         e.translateLocal(-1, 0, 0);
 
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
     });
 
     it('Offscreen child element is culled', function () {
@@ -568,7 +568,7 @@ describe("pc.TextElement", function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
         // move just off screen
         parent.translateLocal(50, 50, 0);
@@ -577,7 +577,7 @@ describe("pc.TextElement", function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
     });
 
 
@@ -617,7 +617,7 @@ describe("pc.TextElement", function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
     });
 
     it('Offscreen rotated out of plane is culled', function () {
@@ -656,6 +656,6 @@ describe("pc.TextElement", function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
     });
 });
