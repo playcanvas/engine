@@ -894,11 +894,10 @@ Object.assign(pc, function () {
                 }
             }
 
-            var library = device.getProgramLibrary();
+            var generator = pc.programlib.standard;
             // Minimal options for Depth and Shadow passes
             var minimalOptions = pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK;
-
-            var options = minimalOptions ? library.optionsContextMin : library.optionsContext;
+            var options = minimalOptions ? generator.optionsContextMin : generator.optionsContext;
 
             if (minimalOptions)
                 this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
@@ -909,6 +908,7 @@ Object.assign(pc, function () {
                 options = this.onUpdateShader(options);
             }
 
+            var library = device.getProgramLibrary();
             this.shader = library.getProgram('standard', options);
 
             if (!objDefs) {
