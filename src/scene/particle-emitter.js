@@ -1524,7 +1524,7 @@ Object.assign(pc, function () {
         },
 
         _destroyResources: function () {
-            if(this.particleTexIN) {
+            if (this.particleTexIN) {
                 this.particleTexIN.destroy();
                 this.particleTexIN = null;
             }
