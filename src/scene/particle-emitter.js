@@ -25,6 +25,7 @@ Object.assign(pc, function () {
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
+        texture.name = "PSTexture";
 
         var pixels = texture.lock();
 
@@ -562,11 +563,7 @@ Object.assign(pc, function () {
             gd.forceCpuParticles ||
             !gd.extTextureFloat; // no float texture extension
 
-            // force new vertex buffer
-            if (this.vertexBuffer) {
-                this.vertexBuffer.destroy();
-                this.vertexBuffer = undefined;
-            }
+            this._destroyResources();
 
             this.pack8 = (this.pack8 || !gd.textureFloatRenderable) && !this.useCpu;
 
@@ -1526,31 +1523,91 @@ Object.assign(pc, function () {
             // #endif
         },
 
-        destroy: function () {
-            if (this.particleTexIN) this.particleTexIN.destroy();
-            if (this.particleTexOUT) this.particleTexOUT.destroy();
-            if (!this.useCpu && this.particleTexStart) this.particleTexStart.destroy();
-            if (this.rtParticleTexIN) this.rtParticleTexIN.destroy();
-            if (this.rtParticleTexOUT) this.rtParticleTexOUT.destroy();
+        _destroyResources: function () {
+            if(this.particleTexIN) {
+                this.particleTexIN.destroy();
+                this.particleTexIN = null;
+                pc.psTextureCount--;
+            }
 
-            // TODO: delete shaders from cache with reference counting
-            // if (this.shaderParticleUpdateRespawn) this.shaderParticleUpdateRespawn.destroy();
-            // if (this.shaderParticleUpdateNoRespawn) this.shaderParticleUpdateNoRespawn.destroy();
-            // if (this.shaderParticleUpdateOnStop) this.shaderParticleUpdateOnStop.destroy();
+            if (this.particleTexOUT) {
+                this.particleTexOUT.destroy();
+                this.particleTexOUT = null;
+                pc.psTextureCount--;
+            }
 
-            this.particleTexIN = null;
-            this.particleTexOUT = null;
-            this.particleTexStart = null;
-            this.rtParticleTexIN = null;
-            this.rtParticleTexOUT = null;
+            if (this.particleTexStart && this.particleTexStart.destroy) {
+                this.particleTexStart.destroy();
+                this.particleTexStart = null;
+                pc.psTextureCount--;
+            }
 
-            this.shaderParticleUpdateRespawn = null;
-            this.shaderParticleUpdateNoRespawn = null;
-            this.shaderParticleUpdateOnStop = null;
+            if (this.rtParticleTexIN) {
+                this.rtParticleTexIN.destroy();
+                this.rtParticleTexIN = null;
+                pc.psTextureCount--;
+            }
+
+            if (this.rtParticleTexOUT) {
+                this.rtParticleTexOUT.destroy();
+                this.rtParticleTexOUT = null;
+                pc.psTextureCount--;
+            }
+
+            if (this.internalTex0) {
+                this.internalTex0.destroy();
+                this.internalTex0 = null;
+            }
+
+            if (this.internalTex1) {
+                this.internalTex1.destroy();
+                this.internalTex1 = null;
+            }
+
+            if (this.internalTex2) {
+                this.internalTex2.destroy();
+                this.internalTex2 = null;
+            }
+
+            if (this.internalTex3) {
+                this.internalTex3.destroy();
+                this.internalTex3 = null;
+            }
+
+            if (this.shaderParticleUpdateRespawn) {
+                this.shaderParticleUpdateRespawn.destroy();
+                this.shaderParticleUpdateRespawn = null;
+            }
+
+
+            if (this.shaderParticleUpdateNoRespawn) {
+                this.shaderParticleUpdateNoRespawn.destroy();
+                this.shaderParticleUpdateNoRespawn = null;
+            }
+
+            if (this.shaderParticleUpdateOnStop) {
+                this.shaderParticleUpdateOnStop.destroy();
+                this.shaderParticleUpdateOnStop = null;
+            }
 
             if (this.vertexBuffer) {
                 this.vertexBuffer.destroy();
+                this.vertexBuffer = undefined; // we are testing if vb is undefined in some code, no idea why
             }
+
+            if (this.indexBuffer) {
+                this.indexBuffer.destroy();
+                this.indexBuffer = undefined;
+            }
+
+            if (this.material) {
+                this.material.destroy();
+                this.material = null;
+            }
+        },
+
+        destroy: function () {
+            this._destroyResources();
         }
     });
 
