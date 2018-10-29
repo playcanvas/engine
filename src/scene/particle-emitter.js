@@ -1527,31 +1527,26 @@ Object.assign(pc, function () {
             if(this.particleTexIN) {
                 this.particleTexIN.destroy();
                 this.particleTexIN = null;
-                pc.psTextureCount--;
             }
 
             if (this.particleTexOUT) {
                 this.particleTexOUT.destroy();
                 this.particleTexOUT = null;
-                pc.psTextureCount--;
             }
 
             if (this.particleTexStart && this.particleTexStart.destroy) {
                 this.particleTexStart.destroy();
                 this.particleTexStart = null;
-                pc.psTextureCount--;
             }
 
             if (this.rtParticleTexIN) {
                 this.rtParticleTexIN.destroy();
                 this.rtParticleTexIN = null;
-                pc.psTextureCount--;
             }
 
             if (this.rtParticleTexOUT) {
                 this.rtParticleTexOUT.destroy();
                 this.rtParticleTexOUT = null;
-                pc.psTextureCount--;
             }
 
             if (this.internalTex0) {
