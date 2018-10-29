@@ -476,6 +476,7 @@ Object.assign(pc, function () {
 
         // default material used in case no other material is available
         this.defaultMaterial = new pc.StandardMaterial();
+        this.defaultMaterial.name = "Default Material";
         this.defaultMaterial.shadingModel = pc.SPECULAR_BLINN;
 
         pc.events.attach(this);
