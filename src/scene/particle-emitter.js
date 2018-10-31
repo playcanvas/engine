@@ -649,6 +649,9 @@ Object.assign(pc, function () {
             var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterNoRespawnPS + chunks.particleUpdaterEndPS;
             var shaderCodeOnStop = shaderCodeStart + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
 
+
+            // Note: createShaderFromCode can return a shader from the cache (not a new shader) so we *should not* delete these shaders
+            // when the particle emitter is destroyed
             this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0" + this.emitterShape + "" + this.pack8);
             this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1" + this.emitterShape + "" + this.pack8);
             this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2" + this.emitterShape + "" + this.pack8);
@@ -1569,22 +1572,6 @@ Object.assign(pc, function () {
                 this.internalTex3 = null;
             }
 
-            if (this.shaderParticleUpdateRespawn) {
-                this.shaderParticleUpdateRespawn.destroy();
-                this.shaderParticleUpdateRespawn = null;
-            }
-
-
-            if (this.shaderParticleUpdateNoRespawn) {
-                this.shaderParticleUpdateNoRespawn.destroy();
-                this.shaderParticleUpdateNoRespawn = null;
-            }
-
-            if (this.shaderParticleUpdateOnStop) {
-                this.shaderParticleUpdateOnStop.destroy();
-                this.shaderParticleUpdateOnStop = null;
-            }
-
             if (this.vertexBuffer) {
                 this.vertexBuffer.destroy();
                 this.vertexBuffer = undefined; // we are testing if vb is undefined in some code, no idea why
@@ -1599,6 +1586,8 @@ Object.assign(pc, function () {
                 this.material.destroy();
                 this.material = null;
             }
+
+            // note: shaders should not be destroyed as they could be shared between emitters
         },
 
         destroy: function () {
