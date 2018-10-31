@@ -156,7 +156,7 @@ Object.assign(pc, function () {
         this._dirty = false;
 
         var casters, lid, light;
-        if (this._dirtyLights || (result & pc.COMPUPDATED_INSTANCES)) {
+        if (this._dirtyLights) {
             result |= pc.COMPUPDATED_LIGHTS;
             this._lights.length = 0;
             this._lightShadowCasters.length = 0;
