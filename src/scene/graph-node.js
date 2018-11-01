@@ -399,12 +399,16 @@ Object.assign(pc, function () {
             var descendants;
 
             for (i = 0; i < len; i++) {
-                if (this._children[i].tags._has(tags))
-                    result.push(this._children[i]);
+                if (this._children[i].tags._has && typeof this._children[i].tags._has === 'function') {
+                    if (this._children[i].tags._has(tags))
+                        result.push(this._children[i]);
 
-                descendants = this._children[i]._findByTag(tags);
-                if (descendants.length)
-                    result = result.concat(descendants);
+                    descendants = this._children[i]._findByTag(tags);
+                    if (descendants.length)
+                        result = result.concat(descendants);
+                } else {
+                    console.log('* LOG * _findByTag this._children[i]', this._children[i])
+                }
             }
 
             return result;
