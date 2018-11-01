@@ -8,10 +8,6 @@ Object.assign(pc, function () {
         this._generators = {};
         this._isClearingCache = false;
 
-        // Shared Sandard Material option structures
-        this.optionsContext = {};
-        this.optionsContextMin = {};
-
         // Unique non-cached programs collection to dump and update game shaders cache
         this._programsCollection = [];
         this._defaultStdMatOption = {};

@@ -67,6 +67,7 @@ Object.assign(pc, function () {
 
             var data = asset.data;
 
+            var self = this;
             asset.resource.meshInstances.forEach(function (meshInstance, i) {
                 if (data.mapping) {
                     var handleMaterial = function (asset) {
@@ -79,13 +80,13 @@ Object.assign(pc, function () {
 
                         asset.once('remove', function (asset) {
                             if (meshInstance.material === asset.resource) {
-                                meshInstance.material = this._defaultMaterial;
+                                meshInstance.material = self._defaultMaterial;
                             }
                         });
                     };
 
                     if (!data.mapping[i]) {
-                        meshInstance.material = this._defaultMaterial;
+                        meshInstance.material = self._defaultMaterial;
                         return;
                     }
 
@@ -95,7 +96,7 @@ Object.assign(pc, function () {
 
                     if (id !== undefined) { // id mapping
                         if (!id) {
-                            meshInstance.material = this._defaultMaterial;
+                            meshInstance.material = self._defaultMaterial;
                         } else {
                             material = assets.get(id);
                             if (material) {

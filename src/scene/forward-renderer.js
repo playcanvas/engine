@@ -2106,6 +2106,7 @@ Object.assign(pc, function () {
                     var mat = drawCall.material;
                     if (mat.updateShader !== pc.Material.prototype.updateShader) {
                         if (mat.useLighting === false || (mat.emitter && !mat.emitter.lighting)) {
+                            // skip unlit standard and particles materials
                             continue;
                         }
                         mat.clearVariants();
@@ -2135,12 +2136,11 @@ Object.assign(pc, function () {
             if (scene.updateShaders) {
                 this.updateShaders(meshInstances);
                 scene.updateShaders = false;
+                scene.updateLitShaders = false;
                 scene._shaderVersion++;
-            }
-
-            if (scene.forceUpdateLitShaders) {
+            } else if (scene.updateLitShaders) {
                 this.updateLitShaders(meshInstances);
-                scene.forceUpdateLitShaders = false;
+                scene.updateLitShaders = false;
                 scene._shaderVersion++;
             }
 
@@ -2496,7 +2496,7 @@ Object.assign(pc, function () {
             // Update static layer data, if something's changed
             var updated = comp._update();
             if (updated & pc.COMPUPDATED_LIGHTS) {
-                this.scene.forceUpdateLitShaders = true;
+                this.scene.updateLitShaders = true;
             }
 
             // #ifdef PROFILER
