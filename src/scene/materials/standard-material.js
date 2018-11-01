@@ -860,9 +860,9 @@ Object.assign(pc, function () {
 
                 if (useDp && allMips) {
                     if (!prefilteredCubeMap128.dpAtlas) {
-                        prefilteredCubeMap128.dpAtlas = pc.generateDpAtlas(device,
-                                                                           [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16,
-                                                                               prefilteredCubeMap8, prefilteredCubeMap4]);
+                        var atlas = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32,
+                            prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
+                        prefilteredCubeMap128.dpAtlas = pc.generateDpAtlas(device, atlas);
                         prefilteredCubeMap128.sh = pc.shFromCubemap(prefilteredCubeMap16);
                     }
                     this.dpAtlas = prefilteredCubeMap128.dpAtlas;

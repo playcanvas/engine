@@ -7,11 +7,20 @@ Object.assign(pc, function () {
         this._cache = {};
         this._generators = {};
         this._isClearingCache = false;
-        this._precached = false;
 
         // Shared Sandard Material option structures
         this.optionsContext = {};
         this.optionsContextMin = {};
+
+        // Unique non-cached programs collection to dump and update game shaders cache
+        this._programsCollection = [];
+        this._defaultStdMatOption = {};
+        this._defaultStdMatOptionMin = {};
+        var m = new pc.StandardMaterial();
+        m.shaderOptBuilder.updateRef(
+            this._defaultStdMatOption, device, {}, m, null, [], pc.SHADER_FORWARD, null, null);
+        m.shaderOptBuilder.updateMinRef(
+            this._defaultStdMatOptionMin, device, {}, m, null, [], pc.SHADER_SHADOW, null, null);
     };
 
     ProgramLibrary.prototype.register = function (name, generator) {
@@ -43,28 +52,67 @@ Object.assign(pc, function () {
         var key = generator.generateKey(options);
         var shader = this._cache[key];
         if (!shader) {
-            if (this._precached) {
-                var lights;
-                if (options.lights) {
-                    lights = options.lights;
-                    options.lights = lights.map(function (l) {
-                        var lcopy = l.clone ? l.clone() : l;
-                        lcopy.key = l.key;
-                        return lcopy;
-                    });
-                }
-                console.log("Shader cache miss:", name, key);
-                console.log("{ \"name\":\"" + name + "\", \"options\": ", JSON.stringify(options), " },");
-
-                if (options.lights)
-                    options.lights = lights;
+            var lights;
+            if (options.lights) {
+                lights = options.lights;
+                options.lights = lights.map(function (l) {
+                    var lcopy = l.clone ? l.clone() : l;
+                    lcopy.key = l.key;
+                    return lcopy;
+                });
             }
+
+            this.storeNewProgram(name, options);
+            // console.log("Shader cache miss:", name, key);
+            // console.log("{ \"name\":\"" + name + "\", \"options\": ", JSON.stringify(options), " },");
+
+            if (options.lights)
+                options.lights = lights;
+
             var shaderDefinition = generator.createShaderDefinition(gd, options);
             shader = this._cache[key] = new pc.Shader(gd, shaderDefinition);
         } else {
-            console.log("Shader cache hit:", name, key);
+            // console.log("Shader cache hit:", name, key);
         }
         return shader;
+    };
+
+    ProgramLibrary.prototype.storeNewProgram = function (name, options) {
+        var opt = {};
+        if (name === "standard") {
+            // For standard material saving all default values is overkill, so we store only diff
+            var defaultMat = this._getDefaultStdMatOptions(options.pass);
+
+            for (var p in options) {
+                if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p]) || p === "pass")
+                    opt[p] = options[p];
+            }
+        } else {
+            // Other shaders have only dozen params
+            opt = options;
+        }
+
+        this._programsCollection.push(JSON.stringify({ name: name, options: opt }));
+    };
+
+    ProgramLibrary.prototype.dumpPrograms = function () {
+        var text = 'var device = pc.app ? pc.app.graphicsDevice : pc.Application.getApplication().graphicsDevice;\n';
+        text += 'var shaders = [';
+        if (this._programsCollection[0])
+            text += '\n\t' + this._programsCollection[0];
+        for (var i = 1; i < this._programsCollection.length; ++i) {
+            text += ',\n\t' + this._programsCollection[i];
+        }
+        text += '\n];\n';
+        text += 'device.programLib.precompile(shaders);\n';
+
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', 'precompile-shaders.js');
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
     };
 
     ProgramLibrary.prototype.clearCache = function () {
@@ -92,15 +140,30 @@ Object.assign(pc, function () {
         }
     };
 
-    ProgramLibrary.prototype.precompile = function () {
-        var cache = pc.PrecompileShaders;
-        console.log("precompiling", cache.length, "shaders...");
-        for (var i = 0; i < cache.length; i++) {
-            console.log(i);
-            this.getProgram(cache[i].name, cache[i].options);
+    ProgramLibrary.prototype._getDefaultStdMatOptions = function (pass) {
+        return (pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK) ?
+            this._defaultStdMatOptionMin : this._defaultStdMatOption;
+    };
+
+    ProgramLibrary.prototype.precompile = function (cache) {
+        if (cache) {
+            console.log("precompiling", cache.length, "shaders...");
+            for (var i = 0; i < cache.length; i++) {
+                console.log(i);
+                if (cache[i].name === "standard") {
+                    var opt = cache[i].options;
+                    var defaultMat = this._getDefaultStdMatOptions(opt.pass);
+                    for (var p in defaultMat) {
+                        if (defaultMat.hasOwnProperty(p) && opt[p] === undefined)
+                            opt[p] = defaultMat[p];
+                    }
+                    // Patch device specific properties
+                    opt.useTexCubeLod = this._device.useTexCubeLod;
+                }
+                this.getProgram(cache[i].name, cache[i].options);
+            }
+            console.log("... done!");
         }
-        console.log("... done!");
-        this._precached = true;
     };
 
     return {

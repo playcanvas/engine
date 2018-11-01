@@ -61,7 +61,6 @@
 ../src/graphics/program-lib/standard.js
 ../src/graphics/program-lib/skybox.js
 ../src/graphics/post-effect.js
-../src/graphics/precompile-shaders.js
 ../src/scene/scene.js
 ../src/scene/forward-renderer.js
 ../src/scene/graph-node.js
