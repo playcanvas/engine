@@ -468,11 +468,11 @@ Object.assign(pc, function () {
         },
 
         _handleTouchMove: function (event) {
-            if (!this._enabled) return;
-
             // call preventDefault to avoid issues in Chrome Android:
             // http://wilsonpage.co.uk/touch-events-in-chrome-android/
             event.preventDefault();
+
+            if (!this._enabled) return;
 
             var newTouchedElements = this._determineTouchedElements(event);
 
