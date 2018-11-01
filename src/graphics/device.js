@@ -2973,7 +2973,6 @@ Object.assign(pc, function () {
             });
             // #endif
 
-            var t0 = performance.now();
             // Check for errors
             if (!gl.getShaderParameter(glVertexShader, gl.COMPILE_STATUS)) {
                 console.error("Failed to compile vertex shader:\n\n" + this._addLineNumbers(definition.vshader) + "\n\n" + gl.getShaderInfoLog(glVertexShader));
@@ -2987,8 +2986,6 @@ Object.assign(pc, function () {
                 console.error("Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram));
                 return false;
             }
-            var t1 = performance.now();
-            console.log("SHADER LINK", (t1 - t0));
 
             var i, info, location, shaderInput;
 

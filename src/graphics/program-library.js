@@ -63,16 +63,12 @@ Object.assign(pc, function () {
             }
 
             this.storeNewProgram(name, options);
-            // console.log("Shader cache miss:", name, key);
-            // console.log("{ \"name\":\"" + name + "\", \"options\": ", JSON.stringify(options), " },");
 
             if (options.lights)
                 options.lights = lights;
 
             var shaderDefinition = generator.createShaderDefinition(gd, options);
             shader = this._cache[key] = new pc.Shader(gd, shaderDefinition);
-        } else {
-            // console.log("Shader cache hit:", name, key);
         }
         return shader;
     };
@@ -147,9 +143,7 @@ Object.assign(pc, function () {
 
     ProgramLibrary.prototype.precompile = function (cache) {
         if (cache) {
-            console.log("precompiling", cache.length, "shaders...");
             for (var i = 0; i < cache.length; i++) {
-                console.log(i);
                 if (cache[i].name === "standard") {
                     var opt = cache[i].options;
                     var defaultMat = this._getDefaultStdMatOptions(opt.pass);
@@ -162,7 +156,6 @@ Object.assign(pc, function () {
                 }
                 this.getProgram(cache[i].name, cache[i].options);
             }
-            console.log("... done!");
         }
     };
 

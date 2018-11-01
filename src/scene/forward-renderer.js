@@ -2066,9 +2066,6 @@ Object.assign(pc, function () {
         },
 
         updateShaders: function (drawCalls) {
-
-            console.log("FORCE UPDATE ALL SHADERS");
-
             // #ifdef PROFILER
             var time = pc.now();
             // #endif
@@ -2099,9 +2096,6 @@ Object.assign(pc, function () {
         },
 
         updateLitShaders: function (drawCalls) {
-
-            console.log("FORCE UPDATE LITTED SHADERS");
-
             // #ifdef PROFILER
             var time = pc.now();
             // #endif
@@ -2112,7 +2106,6 @@ Object.assign(pc, function () {
                     var mat = drawCall.material;
                     if (mat.updateShader !== pc.Material.prototype.updateShader) {
                         if (mat.useLighting === false || (mat.emitter && !mat.emitter.lighting)) {
-                            // console.log('skipping', mat.name);
                             continue;
                         }
                         mat.clearVariants();
