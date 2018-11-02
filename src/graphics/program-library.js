@@ -7,6 +7,9 @@ Object.assign(pc, function () {
         this._cache = {};
         this._generators = {};
         this._isClearingCache = false;
+        this._precached = false;
+
+        console.log("ProgramLibrary constructed", performance.now());
 
         // Unique non-cached programs collection to dump and update game shaders cache
         this._programsCollection = [];
@@ -17,6 +20,15 @@ Object.assign(pc, function () {
             this._defaultStdMatOption, device, {}, m, null, [], pc.SHADER_FORWARD, null, null);
         m.shaderOptBuilder.updateMinRef(
             this._defaultStdMatOptionMin, device, {}, m, null, [], pc.SHADER_SHADOW, null, null);
+    };
+
+    ProgramLibrary.prototype.bindToAssetLoad = function (app) {
+        var progLib = this;
+        app.assets.on("load", function (asset) {
+            console.log("asset loaded: " + asset.name);
+            if (asset.name === "precompile-shaders.json")
+                progLib.precompile(JSON.parse(asset.data));
+        });
     };
 
     ProgramLibrary.prototype.register = function (name, generator) {
@@ -63,6 +75,9 @@ Object.assign(pc, function () {
             if (options.lights)
                 options.lights = lights;
 
+            if (this._precached)
+                console.warn("ProgramLibrary#getProgram: Cache miss for shader", name, "key", key, "after shaders precaching");
+
             var shaderDefinition = generator.createShaderDefinition(gd, options);
             shader = this._cache[key] = new pc.Shader(gd, shaderDefinition);
         }
@@ -87,6 +102,7 @@ Object.assign(pc, function () {
         this._programsCollection.push(JSON.stringify({ name: name, options: opt }));
     };
 
+    // run pc.app.graphicsDevice.programLib.dumpPrograms(); from browser console to build shader options script
     ProgramLibrary.prototype.dumpPrograms = function () {
         var text = 'var device = pc.app ? pc.app.graphicsDevice : pc.Application.getApplication().graphicsDevice;\n';
         text += 'var shaders = [';
@@ -97,6 +113,8 @@ Object.assign(pc, function () {
         }
         text += '\n];\n';
         text += 'device.programLib.precompile(shaders);\n';
+        text += 'if (pc.version != \"' + pc.version + '\" || pc.revision != \"' + pc.revision + '\")\n';
+        text += '\tconsole.warn(\"precompile-shaders.js: engine version mismatch, rebuild shaders lib with current engine\");';
 
         var element = document.createElement('a');
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
@@ -138,7 +156,10 @@ Object.assign(pc, function () {
     };
 
     ProgramLibrary.prototype.precompile = function (cache) {
+        console.log("Program Library precompile start", performance.now());
         if (cache) {
+            console.log("precompiling", cache.length, "shaders...");
+            var shaders = new Array(cache.length);
             for (var i = 0; i < cache.length; i++) {
                 if (cache[i].name === "standard") {
                     var opt = cache[i].options;
@@ -150,9 +171,21 @@ Object.assign(pc, function () {
                     // Patch device specific properties
                     opt.useTexCubeLod = this._device.useTexCubeLod;
                 }
-                this.getProgram(cache[i].name, cache[i].options);
+                shaders[i] = this.getProgram(cache[i].name, cache[i].options);
             }
+            var device = this._device;
+            var forceLink = function () {
+                console.log("Program Library force link start", performance.now());
+                for (var i = 0; i < shaders.length; i++) {
+                    device.postLink(shaders[i]);
+                }
+                console.log("Program Library force link end", performance.now());
+            };
+            pc.Application.getApplication().on("preload:end", forceLink);
+            console.log("... done!");
         }
+        this._precached = true;
+        console.log("Program Library precompile end", performance.now());
     };
 
     return {
