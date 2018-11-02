@@ -37,6 +37,22 @@ pc.events = {
         return target;
     },
 
+    _debug: {},
+
+    _mark: function () {
+        Object.keys(pc.events._debug).forEach(function (key) {
+            pc.events._debug[key].high = Math.max(pc.events._debug[key].curr, pc.events._debug[key].high);
+        });
+    },
+
+    _print: function () {
+        Object.keys(pc.events._debug).forEach(function (key) {
+            if (pc.events._debug[key].curr > pc.events._debug[key].high) {
+                console.log('broke watermark: ' + key, pc.events._debug[key].curr, pc.events._debug[key].high);
+            }
+        });
+    },
+
     /**
      * @function
      * @name pc.events.on
@@ -66,6 +82,20 @@ pc.events = {
 
         if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
             this._callbackActive[name] = this._callbackActive[name].slice();
+
+
+        if (name) {
+            if (!pc.events._debug[name]) {
+                pc.events._debug[name] = {
+                    curr: 0,
+                    high: 0
+                };
+            }
+            pc.events._debug[name].curr++;
+        } else {
+            debugger;
+        }
+
 
         this._callbacks[name].push({
             callback: callback,
@@ -115,7 +145,16 @@ pc.events = {
             }
         }
 
+        if (name && pc.events._debug[name]) {
+            pc.events._debug[name].curr--;
+        }
+
         if (!name) {
+            var keys = Object.keys(this._callbacks);
+            for (var i = 0; i < keys.length; i++) {
+                pc.events._debug[keys[i]].curr -= this._callbacks[keys[i]].length;
+            }
+
             this._callbacks = null;
         } else if (!callback) {
             if (this._callbacks[name])
