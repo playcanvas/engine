@@ -1455,12 +1455,7 @@ Object.assign(pc, function () {
          */
         destroy: function () {
             var i, l;
-
-            Application._applications[this.graphicsDevice.canvas.id] = null;
-
-            if (Application._currentApplication === this) {
-                Application._currentApplication = null;
-            }
+            var canvasId = this.graphicsDevice.canvas.id;
 
             this.off('librariesloaded');
             document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
@@ -1572,6 +1567,13 @@ Object.assign(pc, function () {
             pc.script.app = null;
             // remove default particle texture
             pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
+
+            Application._applications[canvasId] = null;
+
+            if (Application._currentApplication === this) {
+                Application._currentApplication = null;
+            }
+
         }
     });
 

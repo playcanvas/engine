@@ -140,11 +140,7 @@ Object.assign(pc, function () {
             this.fire('remove');
 
             // remove all events used by elements
-            this.off('set:resolution');
-            this.off('set:referenceresolution');
-            this.off('set:scaleblend');
-            this.off('set:screenspace');
-            this.off('remove');
+            this.off();
         }
     });
 
