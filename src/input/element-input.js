@@ -254,7 +254,7 @@ Object.assign(pc, function () {
                 // able to call preventDefault(). See notes in button/component.js for more details.
                 this._target.addEventListener('touchend', this._touchendHandler, false);
                 this._target.addEventListener('touchmove', this._touchmoveHandler, false);
-                this._target.addEventListener('touchcancel', this._touchcancelHandler, { passive: true });
+                this._target.addEventListener('touchcancel', this._touchcancelHandler, false);
             }
         },
 
@@ -468,11 +468,11 @@ Object.assign(pc, function () {
         },
 
         _handleTouchMove: function (event) {
-            if (!this._enabled) return;
-
             // call preventDefault to avoid issues in Chrome Android:
             // http://wilsonpage.co.uk/touch-events-in-chrome-android/
             event.preventDefault();
+
+            if (!this._enabled) return;
 
             var newTouchedElements = this._determineTouchedElements(event);
 
