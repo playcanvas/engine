@@ -254,7 +254,7 @@ Object.assign(pc, function () {
                 // able to call preventDefault(). See notes in button/component.js for more details.
                 this._target.addEventListener('touchend', this._touchendHandler, false);
                 this._target.addEventListener('touchmove', this._touchmoveHandler, false);
-                this._target.addEventListener('touchcancel', this._touchcancelHandler, { passive: true });
+                this._target.addEventListener('touchcancel', this._touchcancelHandler, false);
             }
         },
 
