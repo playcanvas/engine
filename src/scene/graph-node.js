@@ -1311,7 +1311,9 @@ Object.assign(pc, function () {
             if (!this._enabled)
                 return;
 
-            this._sync();
+            if (this._dirtyLocal || this._dirtyWorld) {
+                this._sync();
+            }
 
             var children = this._children;
             for (var i = 0, len = children.length; i < len; i++) {
