@@ -159,7 +159,7 @@ Object.assign(pc, function () {
         // Note that if the check for (result & pc.COMPUPDATED_INSTANCES) is not present
         // then shadow casting mesh instances are left in a layer when disabling model
         // components that are shadow casters
-        if (this._dirtyLights || (result & pc.COMPUPDATED_INSTANCES)) {
+        if (this._dirtyLights) {
             result |= pc.COMPUPDATED_LIGHTS;
             this._lights.length = 0;
             this._lightShadowCasters.length = 0;
@@ -205,6 +205,12 @@ Object.assign(pc, function () {
                     lid = this._lights.indexOf(light);
                     casters = this._lightShadowCasters[lid];
                     var meshInstances = layer.shadowCasters;
+                    for (k = 0; k < casters.length; k++) {
+                        if (!this._meshInstances.includes(casters[k])) {
+                            casters[k] = casters[casters.length - 1];
+                            casters.length -= 1;
+                        }
+                    }
                     for (k = 0; k < meshInstances.length; k++) {
                         if (casters.indexOf(meshInstances[k]) < 0) casters.push(meshInstances[k]);
                     }
