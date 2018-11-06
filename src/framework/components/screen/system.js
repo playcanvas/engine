@@ -40,6 +40,7 @@ Object.assign(pc, function () {
         initializeComponentData: function (component, data, properties) {
             if (data.priority !== undefined) component.priority = data.priority;
             if (data.screenSpace !== undefined) component.screenSpace = data.screenSpace;
+            component.cull = component.screenSpace;
             if (data.scaleMode !== undefined) component.scaleMode = data.scaleMode;
             if (data.scaleBlend !== undefined) component.scaleBlend = data.scaleBlend;
             if (data.resolution !== undefined) {
@@ -62,6 +63,11 @@ Object.assign(pc, function () {
             // queue up a draw order sync
             component.syncDrawOrder();
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
+        },
+
+        destroy: function () {
+            this.off();
+            this.app.graphicsDevice.off("resizecanvas", this._onResize, this);
         },
 
         _onUpdate: function (dt) {

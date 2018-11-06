@@ -156,7 +156,7 @@ Object.assign(pc, function () {
         this._dirty = false;
 
         var casters, lid, light;
-        if (this._dirtyLights || (result & pc.COMPUPDATED_INSTANCES)) {
+        if (this._dirtyLights) {
             result |= pc.COMPUPDATED_LIGHTS;
             this._lights.length = 0;
             this._lightShadowCasters.length = 0;
@@ -202,6 +202,14 @@ Object.assign(pc, function () {
                     lid = this._lights.indexOf(light);
                     casters = this._lightShadowCasters[lid];
                     var meshInstances = layer.shadowCasters;
+                    for (k = 0; k < casters.length;) {
+                        if (this._meshInstances.indexOf(casters[k]) < 0) {
+                            casters[k] = casters[casters.length - 1];
+                            casters.length -= 1;
+                        } else {
+                            k++;
+                        }
+                    }
                     for (k = 0; k < meshInstances.length; k++) {
                         if (casters.indexOf(meshInstances[k]) < 0) casters.push(meshInstances[k]);
                     }

@@ -72,6 +72,7 @@
 ../src/scene/materials/standard-material.js
 ../src/scene/materials/standard-material-parameters.js
 ../src/scene/materials/standard-material-validator.js
+../src/scene/materials/standard-material-options-builder.js
 ../src/scene/mesh.js
 ../src/scene/skin.js
 ../src/scene/skin-partition.js

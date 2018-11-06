@@ -504,6 +504,11 @@ Object.assign(pc, function () {
         _isVisible: function (camera, meshInstance) {
             if (!meshInstance.visible) return false;
 
+            // custom visibility method on MeshInstance
+            if (meshInstance.isVisibleFunc) {
+                return meshInstance.isVisibleFunc(camera);
+            }
+
             meshPos = meshInstance.aabb.center;
             if (meshInstance._aabb._radiusVer !== meshInstance._aabbVer) {
                 meshInstance._aabb._radius = meshInstance._aabb.halfExtents.length();
@@ -981,6 +986,7 @@ Object.assign(pc, function () {
         cull: function (camera, drawCalls, visibleList) {
             // #ifdef PROFILER
             var cullTime = pc.now();
+            var numDrawCallsCulled = 0;
             // #endif
 
             var visibleLength = 0;
@@ -1016,6 +1022,9 @@ Object.assign(pc, function () {
 
                     if (drawCall.cull) {
                         visible = this._isVisible(camera, drawCall);
+                        // #ifdef PROFILER
+                        numDrawCallsCulled++;
+                        // #endif
                     }
 
                     if (visible) {
@@ -1032,6 +1041,7 @@ Object.assign(pc, function () {
 
             // #ifdef PROFILER
             this._cullTime += pc.now() - cullTime;
+            this._numDrawCallsCulled += numDrawCallsCulled;
             // #endif
 
             return visibleLength;
@@ -1542,7 +1552,7 @@ Object.assign(pc, function () {
                         // #ifdef DEBUG
                         if (!device.setShader(drawCall._shader[pass])) {
                             console.error('Error in material "' + material.name + '" with flags ' + objDefs);
-                            drawCall.material = pc.Scene.defaultMaterial;
+                            drawCall.material = scene.defaultMaterial;
                         }
                         // #else
                         device.setShader(drawCall._shader[pass]);
@@ -2056,7 +2066,6 @@ Object.assign(pc, function () {
         },
 
         updateShaders: function (drawCalls) {
-
             // #ifdef PROFILER
             var time = pc.now();
             // #endif
@@ -2086,6 +2095,31 @@ Object.assign(pc, function () {
             // #endif
         },
 
+        updateLitShaders: function (drawCalls) {
+            // #ifdef PROFILER
+            var time = pc.now();
+            // #endif
+
+            for (var i = 0; i < drawCalls.length; i++) {
+                var drawCall = drawCalls[i];
+                if (drawCall.material !== undefined) {
+                    var mat = drawCall.material;
+                    if (mat.updateShader !== pc.Material.prototype.updateShader) {
+                        if (mat.useLighting === false || (mat.emitter && !mat.emitter.lighting)) {
+                            // skip unlit standard and particles materials
+                            continue;
+                        }
+                        mat.clearVariants();
+                        mat.shader = null;
+                    }
+                }
+            }
+
+            // #ifdef PROFILER
+            this.scene._stats.updateShadersTime += pc.now() - time;
+            // #endif
+        },
+
         beginFrame: function (comp) {
             var device = this.device;
             var scene = this.scene;
@@ -2102,6 +2136,11 @@ Object.assign(pc, function () {
             if (scene.updateShaders) {
                 this.updateShaders(meshInstances);
                 scene.updateShaders = false;
+                scene.updateLitShaders = false;
+                scene._shaderVersion++;
+            } else if (scene.updateLitShaders) {
+                this.updateLitShaders(meshInstances);
+                scene.updateLitShaders = false;
                 scene._shaderVersion++;
             }
 
@@ -2457,7 +2496,7 @@ Object.assign(pc, function () {
             // Update static layer data, if something's changed
             var updated = comp._update();
             if (updated & pc.COMPUPDATED_LIGHTS) {
-                this.scene.updateShaders = true;
+                this.scene.updateLitShaders = true;
             }
 
             // #ifdef PROFILER

@@ -4,7 +4,6 @@ describe("pc.ModelComponent", function () {
 
     beforeEach(function (done) {
         app = new pc.Application(document.createElement("canvas"));
-
         loadAssets(function () {
             done();
         });
@@ -12,6 +11,7 @@ describe("pc.ModelComponent", function () {
 
     afterEach(function () {
         app.destroy();
+        assets = {};
     });
 
     var loadAssetList = function (list, cb) {

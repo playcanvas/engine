@@ -185,6 +185,7 @@ Object.assign(pc, function () {
         detach: function () {
             if (!this._attached) return;
             this._attached = false;
+            this._target = null;
 
             window.removeEventListener("mouseup", this._upHandler);
             window.removeEventListener("mousedown", this._downHandler);

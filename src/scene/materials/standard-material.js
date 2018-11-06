@@ -249,6 +249,8 @@ Object.assign(pc, function () {
         this._assetReferences = {};
         this._validator = null;
 
+        this.shaderOptBuilder = new pc.StandardMaterialOptionsBuilder();
+
         this.reset();
     };
     StandardMaterial.prototype = Object.create(pc.Material.prototype);
@@ -627,33 +629,6 @@ Object.assign(pc, function () {
             return transform;
         },
 
-        _collectLights: function (lType, lights, lightsFiltered, mask, staticLightList) {
-            var light;
-            var i;
-            for (i = 0; i < lights.length; i++) {
-                light = lights[i];
-                if (light._enabled) {
-                    if (light._mask & mask) {
-                        if (lType !== pc.LIGHTTYPE_DIRECTIONAL) {
-                            if (light.isStatic) {
-                                continue;
-                            }
-                        }
-                        lightsFiltered.push(light);
-                    }
-                }
-            }
-
-            if (staticLightList) {
-                for (i = 0; i < staticLightList.length; i++) {
-                    light = staticLightList[i];
-                    if (light._type === lType) {
-                        lightsFiltered.push(light);
-                    }
-                }
-            }
-        },
-
         _setParameter: function (name, value) {
             if (!this.parameters[name])
                 this._propsSet.push(name);
@@ -848,52 +823,12 @@ Object.assign(pc, function () {
             this.dirtyColor = false;
         },
 
-        _getMapTransformID: function (xform, uv) {
-            if (!xform) return 0;
-            if (!this._mapXForms[uv]) this._mapXForms[uv] = [];
-
-            var i, same;
-            for (i = 0; i < this._mapXForms[uv].length; i++) {
-                same = true;
-                if (this._mapXForms[uv][i][0] != xform.x) {
-                    same = false;
-                    break;
-                }
-                if (this._mapXForms[uv][i][1] != xform.y) {
-                    same = false;
-                    break;
-                }
-                if (this._mapXForms[uv][i][2] != xform.z) {
-                    same = false;
-                    break;
-                }
-                if (this._mapXForms[uv][i][3] != xform.w) {
-                    same = false;
-                    break;
-                }
-                if (same) {
-                    return i + 1;
-                }
-            }
-            var newID = this._mapXForms[uv].length;
-            this._mapXForms[uv][newID] = [];
-
-            this._mapXForms[uv][newID][0] = xform.x;
-            this._mapXForms[uv][newID][1] = xform.y;
-            this._mapXForms[uv][newID][2] = xform.z;
-            this._mapXForms[uv][newID][3] = xform.w;
-
-            return newID + 1;
-        },
-
         updateShader: function (device, scene, objDefs, staticLightList, pass, sortedLights) {
 
             if (!this._colorProcessed && this._scene) {
                 this._colorProcessed = true;
                 this._processColor();
             }
-
-            this._mapXForms = [];
 
             var useTexCubeLod = device.useTexCubeLod;
             var useDp = !device.extTextureLod; // no basic extension? likely slow device, force dp
@@ -925,9 +860,9 @@ Object.assign(pc, function () {
 
                 if (useDp && allMips) {
                     if (!prefilteredCubeMap128.dpAtlas) {
-                        prefilteredCubeMap128.dpAtlas = pc.generateDpAtlas(device,
-                                                                           [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16,
-                                                                               prefilteredCubeMap8, prefilteredCubeMap4]);
+                        var atlas = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32,
+                            prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
+                        prefilteredCubeMap128.dpAtlas = pc.generateDpAtlas(device, atlas);
                         prefilteredCubeMap128.sh = pc.shFromCubemap(prefilteredCubeMap16);
                     }
                     this.dpAtlas = prefilteredCubeMap128.dpAtlas;
@@ -959,203 +894,15 @@ Object.assign(pc, function () {
                 }
             }
 
-            var diffuseTint = ((this.diffuse.r !== 1 || this.diffuse.g !== 1 || this.diffuse.b !== 1) &&
-                                (this.diffuseTint || (!this.diffuseMap && !this.diffuseVertexColor))) ? 3 : 0;
-
-            var specularTint = false;
-            var useSpecular = (this.useMetalness ? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap) || (!!this.dpAtlas);
-            useSpecular = useSpecular || (this.useMetalness ? true : !(this.specular.r === 0 && this.specular.g === 0 && this.specular.b === 0));
-
-            if (useSpecular) {
-                if ((this.specularTint || (!this.specularMap && !this.specularVertexColor)) && !this.useMetalness) {
-                    specularTint = this.specular.r !== 1 || this.specular.g !== 1 || this.specular.b !== 1;
-                }
-            }
-
-            var rgbmAmbient = (prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm : false) ||
-                              (this.cubeMap ? this.cubeMap.rgbm : false) ||
-                              (this.dpAtlas ? this.dpAtlas.rgbm : false);
-
-            var hdrAmbient = (prefilteredCubeMap128 ? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.cubeMap ? this.cubeMap.rgbm || this.cubeMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.dpAtlas ? this.dpAtlas.rgbm || this.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
-
-            var rgbmReflection = ((prefilteredCubeMap128 && !this.cubeMap && !this.sphereMap && !this.dpAtlas) ? prefilteredCubeMap128.rgbm : false) ||
-                                 (this.cubeMap ? this.cubeMap.rgbm : false) ||
-                                 (this.sphereMap ? this.sphereMap.rgbm : false) ||
-                                 (this.dpAtlas ? this.dpAtlas.rgbm : false);
-
-            var hdrReflection = ((prefilteredCubeMap128 && !this.cubeMap && !this.sphereMap && !this.dpAtlas) ? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format === pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.cubeMap ? this.cubeMap.rgbm || this.cubeMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.sphereMap ? this.sphereMap.rgbm || this.sphereMap.format === pc.PIXELFORMAT_RGBA32F : false) ||
-                                 (this.dpAtlas ? this.dpAtlas.rgbm || this.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
-
-            var emissiveTint = this.emissiveMap ? 0 : 3;
-            if (!emissiveTint) {
-                emissiveTint = (this.emissive.r !== 1 || this.emissive.g !== 1 || this.emissive.b !== 1 || this.emissiveIntensity !== 1) && this.emissiveTint;
-                emissiveTint = emissiveTint ? 3 : (this.emissiveIntensity !== 1 ? 1 : 0);
-            }
-
-            var options;
+            var generator = pc.programlib.standard;
+            // Minimal options for Depth and Shadow passes
             var minimalOptions = pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK;
+            var options = minimalOptions ? generator.optionsContextMin : generator.optionsContext;
 
-            if (minimalOptions) {
-                // minimal options
-                options = {
-                    opacityTint: this.opacity !== 1 && this.blendType !== pc.BLEND_NONE,
-                    alphaTest: this.alphaTest > 0,
-                    forceFragmentPrecision: this.forceFragmentPrecision,
-                    chunks: this.chunks,
-                    blendType: this.blendType,
-                    forceUv1: this.forceUv1,
-                    pass: pass
-                };
-            } else {
-                // full options
-                options = {
-                    fog: this.useFog ? scene.fog : "none",
-                    gamma: this.useGammaTonemap ? scene.gammaCorrection : pc.GAMMA_NONE,
-                    toneMap: this.useGammaTonemap ? scene.toneMapping : -1,
-                    blendMapsWithColors: true,
-                    ambientTint: this.ambientTint,
-                    diffuseTint: diffuseTint,
-                    specularTint: specularTint ? 3 : 0,
-                    metalnessTint: (this.useMetalness && this.metalness < 1) ? 1 : 0,
-                    glossTint: 1,
-                    emissiveTint: emissiveTint,
-                    opacityTint: (this.opacity !== 1 && this.blendType !== pc.BLEND_NONE) ? 1 : 0,
-                    alphaTest: this.alphaTest > 0,
-                    alphaToCoverage: this.alphaToCoverage,
-                    needsNormalFloat: this.normalizeNormalMap,
-                    sphereMap: !!this.sphereMap,
-                    cubeMap: !!this.cubeMap,
-                    dpAtlas: !!this.dpAtlas,
-                    ambientSH: !!this.ambientSH,
-                    useSpecular: useSpecular,
-                    rgbmAmbient: rgbmAmbient,
-                    rgbmReflection: rgbmReflection,
-                    hdrAmbient: hdrAmbient,
-                    hdrReflection: hdrReflection,
-                    fixSeams: prefilteredCubeMap128 ? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap ? this.cubeMap.fixCubemapSeams : false),
-                    prefilteredCubemap: !!prefilteredCubeMap128,
-                    emissiveFormat: this.emissiveMap ? (this.emissiveMap.rgbm ? 1 : (this.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null,
-                    lightMapFormat: this.lightMap ? (this.lightMap.rgbm ? 1 : (this.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null,
-                    useRgbm: rgbmReflection || rgbmAmbient || (this.emissiveMap ? this.emissiveMap.rgbm : 0) || (this.lightMap ? this.lightMap.rgbm : 0),
-                    specularAntialias: this.specularAntialias,
-                    conserveEnergy: this.conserveEnergy,
-                    occludeSpecular: this.occludeSpecular,
-                    occludeSpecularFloat: (this.occludeSpecularIntensity !== 1.0),
-                    occludeDirect: this.occludeDirect,
-                    shadingModel: this.shadingModel,
-                    fresnelModel: this.fresnelModel,
-                    packedNormal: this.normalMap ? (this.normalMap.format === pc.PIXELFORMAT_DXT5) : false,
-                    forceFragmentPrecision: this.forceFragmentPrecision,
-                    fastTbn: this.fastTbn,
-                    cubeMapProjection: this.cubeMapProjection,
-                    chunks: this.chunks,
-                    customFragmentShader: this.customFragmentShader,
-                    refraction: !!this.refraction,
-                    useMetalness: this.useMetalness,
-                    blendType: this.blendType,
-                    skyboxIntensity: (prefilteredCubeMap128 === globalSky128 && prefilteredCubeMap128) && (scene.skyboxIntensity !== 1),
-                    forceUv1: this.forceUv1,
-                    useTexCubeLod: useTexCubeLod,
-                    msdf: !!this.msdfMap,
-                    twoSidedLighting: this.twoSidedLighting,
-                    pixelSnap: this.pixelSnap,
-                    pass: pass,
-                    nineSlicedMode: this.nineSlicedMode
-                };
-
-                if (pass === pc.SHADER_FORWARDHDR) {
-                    if (options.gamma) options.gamma = pc.GAMMA_SRGBHDR;
-                    options.toneMap = pc.TONEMAP_LINEAR;
-                }
-            }
-
-            var hasUv0 = false;
-            var hasUv1 = false;
-            var hasVcolor = false;
-            if (objDefs) {
-                if (!minimalOptions) {
-                    options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
-                    if ((objDefs & pc.SHADERDEF_LM) !== 0) {
-                        options.lightMapFormat = 1; // rgbm
-                        options.lightMap = true;
-                        options.lightMapChannel = "rgb";
-                        options.lightMapUv = 1;
-                        options.lightMapTransform = 0;
-                        options.lightMapWithoutAmbient = !this.lightMap;
-                        options.useRgbm = true;
-                        if ((objDefs & pc.SHADERDEF_DIRLM) !== 0) {
-                            options.dirLightMap = true;
-                        }
-                    }
-                    if (this.normalMap) options.hasTangents = (objDefs & pc.SHADERDEF_TANGENTS) !== 0;
-                }
-                options.screenSpace = (objDefs & pc.SHADERDEF_SCREENSPACE) !== 0;
-                options.skin = (objDefs & pc.SHADERDEF_SKIN) !== 0;
-                options.useInstancing = (objDefs & pc.SHADERDEF_INSTANCING) !== 0;
-                hasUv0 = (objDefs & pc.SHADERDEF_UV0) !== 0;
-                hasUv1 = (objDefs & pc.SHADERDEF_UV1) !== 0;
-                hasVcolor = (objDefs & pc.SHADERDEF_VCOLOR) !== 0;
-            }
-
-            var isOpacity;
-            for (var p in pc._matTex2D) {
-                isOpacity = p === "opacity";
-                if (isOpacity && this.blendType === pc.BLEND_NONE && this.alphaTest === 0.0 && !this.alphaToCoverage) continue;
-
-                if (minimalOptions && !isOpacity) continue;
-
-                var cname;
-                var mname = p + "Map";
-                var vname = p + "VertexColor";
-                if (p !== "height" && this[vname]) {
-                    if (hasVcolor) {
-                        cname = p + "VertexColorChannel";
-                        options[vname] = this[vname];
-                        options[cname] = this[cname];
-                        options.vertexColors = true;
-                    }
-                }
-                if (this[mname]) {
-                    var uname = mname + "Uv";
-                    var allow = true;
-                    if (this[uname] === 0 && !hasUv0) allow = false;
-                    if (this[uname] === 1 && !hasUv1) allow = false;
-                    if (allow) {
-                        options[mname] = !!this[mname];
-                        var tname = mname + "Transform";
-                        cname = mname + "Channel";
-                        options[tname] = this._getMapTransformID(this[tname], this[uname]);
-                        options[cname] = this[cname];
-                        options[uname] = this[uname];
-                    }
-                }
-            }
-
-            this._mapXForms = null;
-
-            if (this.useLighting && !minimalOptions) {
-                var lightsFiltered = [];
-                var mask = objDefs ? (objDefs >> 16) : 1;
-                if (sortedLights) {
-                    this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, sortedLights[pc.LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
-                    this._collectLights(pc.LIGHTTYPE_POINT,       sortedLights[pc.LIGHTTYPE_POINT], lightsFiltered, mask, staticLightList);
-                    this._collectLights(pc.LIGHTTYPE_SPOT,        sortedLights[pc.LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
-                }
-                options.lights = lightsFiltered;
-            } else {
-                options.lights = [];
-            }
-
-            if (!minimalOptions) {
-                options.aoMapUv = options.aoMapUv || this.aoUvSet; // backwards component
-                if (options.lights.length === 0) {
-                    options.noShadow = false;
-                }
-            }
+            if (minimalOptions)
+                this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+            else
+                this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
 
             if (this.onUpdateShader) {
                 options = this.onUpdateShader(options);
