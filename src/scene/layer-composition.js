@@ -156,9 +156,6 @@ Object.assign(pc, function () {
         this._dirty = false;
 
         var casters, lid, light;
-        // Note that if the check for (result & pc.COMPUPDATED_INSTANCES) is not present
-        // then shadow casting mesh instances are left in a layer when disabling model
-        // components that are shadow casters
         if (this._dirtyLights) {
             result |= pc.COMPUPDATED_LIGHTS;
             this._lights.length = 0;
