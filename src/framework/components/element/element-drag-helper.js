@@ -70,7 +70,7 @@ Object.assign(pc, function () {
             this._app.mouse[onOrOff]('mousemove', this._onMove, this);
             window[addOrRemoveEventListener]('mouseup', this._handleMouseUpOrTouchEnd, false);
 
-            if ('ontouchstart' in window) {
+            if (pc.platform.touch) {
                 this._app.touch[onOrOff]('touchmove', this._onMove, this);
                 window[addOrRemoveEventListener]('touchend', this._handleMouseUpOrTouchEnd, false);
                 window[addOrRemoveEventListener]('touchcancel', this._handleMouseUpOrTouchEnd, false);

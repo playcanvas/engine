@@ -89,7 +89,7 @@ Object.assign(pc, function () {
     if (navigator.isCocoonJS)
         platform.cocoonjs = true;
 
-    platform.touch = 'ontouchstart' in window;
+    platform.touch = 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
 
     platform.gamepads = 'getGamepads' in navigator;
 
