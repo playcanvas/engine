@@ -205,10 +205,12 @@ Object.assign(pc, function () {
                     lid = this._lights.indexOf(light);
                     casters = this._lightShadowCasters[lid];
                     var meshInstances = layer.shadowCasters;
-                    for (k = 0; k < casters.length; k++) {
+                    for (k = 0; k < casters.length;) {
                         if (!this._meshInstances.includes(casters[k])) {
                             casters[k] = casters[casters.length - 1];
                             casters.length -= 1;
+                        } else {
+                            k++;
                         }
                     }
                     for (k = 0; k < meshInstances.length; k++) {
