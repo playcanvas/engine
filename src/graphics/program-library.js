@@ -20,14 +20,6 @@ Object.assign(pc, function () {
             this._defaultStdMatOptionMin, device, {}, m, null, [], pc.SHADER_SHADOW, null, null);
     };
 
-    ProgramLibrary.prototype.bindToAssetLoad = function (app) {
-        var progLib = this;
-        app.assets.on("load", function (asset) {
-            if (asset.name === "precompile-shaders.json")
-                progLib.precompile(JSON.parse(asset.data));
-        });
-    };
-
     ProgramLibrary.prototype.register = function (name, generator) {
         if (!this.isRegistered(name)) {
             this._generators[name] = generator;

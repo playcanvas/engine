@@ -179,7 +179,6 @@ Object.assign(pc, function () {
         this._enableList = [];
         this._enableList.size = 0;
         this.assets = new pc.AssetRegistry(this.loader);
-        this.graphicsDevice.programLib.bindToAssetLoad(this);
         if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
         this.scriptsOrder = options.scriptsOrder || [];
         this.scripts = new pc.ScriptRegistry(this);
