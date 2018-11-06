@@ -552,7 +552,6 @@ Object.assign(pc, function () {
                 return;
 
             var xformNew = !!(this._cookieTransformSet || value);
-
             if (xformNew && !value && this._cookieOffset) {
                 this._cookieOffset.set(0, 0);
             } else {
