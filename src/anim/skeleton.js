@@ -114,7 +114,7 @@ Object.assign(pc, function () {
 
                 // Determine the interpolated keyframe for this animated node
                 interpKey = this._interpolatedKeyDict[nodeName];
-                if(interpKey === undefined) {
+                if (interpKey === undefined) {
                     // #ifdef DEBUG
                     console.warn('Unknown skeleton node name: ' + nodeName);
                     // #endif
