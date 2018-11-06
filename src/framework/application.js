@@ -132,7 +132,6 @@ Object.assign(pc, function () {
      */
 
     var Application = function (canvas, options) {
-        console.log("Application constructed", performance.now());
         options = options || {};
 
         // Open the log
@@ -545,7 +544,6 @@ Object.assign(pc, function () {
          * @param {Function} callback The Function called when the configuration file is loaded and parsed
          */
         configure: function (url, callback) {
-            console.log("app configure", performance.now());
             var self = this;
             pc.http.get(url, function (err, response) {
                 if (err) {
@@ -579,7 +577,6 @@ Object.assign(pc, function () {
         preload: function (callback) {
             var self = this;
 
-            console.log("preload started", performance.now());
             self.fire("preload:start");
 
             // get list of assets to preload
@@ -600,7 +597,6 @@ Object.assign(pc, function () {
 
                 if (!_done && _assets.done()) {
                     _done = true;
-                    console.log("preload ended", performance.now());
                     self.fire("preload:end");
                     callback();
                 }

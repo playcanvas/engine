@@ -9,8 +9,6 @@ Object.assign(pc, function () {
         this._isClearingCache = false;
         this._precached = false;
 
-        console.log("ProgramLibrary constructed", performance.now());
-
         // Unique non-cached programs collection to dump and update game shaders cache
         this._programsCollection = [];
         this._defaultStdMatOption = {};
@@ -25,7 +23,6 @@ Object.assign(pc, function () {
     ProgramLibrary.prototype.bindToAssetLoad = function (app) {
         var progLib = this;
         app.assets.on("load", function (asset) {
-            console.log("asset loaded: " + asset.name);
             if (asset.name === "precompile-shaders.json")
                 progLib.precompile(JSON.parse(asset.data));
         });
@@ -156,9 +153,8 @@ Object.assign(pc, function () {
     };
 
     ProgramLibrary.prototype.precompile = function (cache) {
-        console.log("Program Library precompile start", performance.now());
+
         if (cache) {
-            console.log("precompiling", cache.length, "shaders...");
             var shaders = new Array(cache.length);
             for (var i = 0; i < cache.length; i++) {
                 if (cache[i].name === "standard") {
@@ -173,19 +169,16 @@ Object.assign(pc, function () {
                 }
                 shaders[i] = this.getProgram(cache[i].name, cache[i].options);
             }
-            var device = this._device;
-            var forceLink = function () {
-                console.log("Program Library force link start", performance.now());
-                for (var i = 0; i < shaders.length; i++) {
-                    device.postLink(shaders[i]);
-                }
-                console.log("Program Library force link end", performance.now());
-            };
-            pc.Application.getApplication().on("preload:end", forceLink);
-            console.log("... done!");
+            // Uncomment to force finish linking after preload
+            // var device = this._device;
+            // var forceLink = function () {
+            //     for (var i = 0; i < shaders.length; i++) {
+            //         device.postLink(shaders[i]);
+            //     }
+            // };
+            // pc.Application.getApplication().on("preload:end", forceLink);
         }
         this._precached = true;
-        console.log("Program Library precompile end", performance.now());
     };
 
     return {
