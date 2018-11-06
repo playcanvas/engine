@@ -797,7 +797,8 @@ Object.assign(pc, function () {
                 this.localRotation.setFromEulerAngles(x, y, z);
             }
 
-            this._dirtifyLocal();
+            if (!this._dirtyLocal)
+                this._dirtifyLocal();
         },
 
         /**
@@ -825,7 +826,8 @@ Object.assign(pc, function () {
                 this.localPosition.set(x, y, z);
             }
 
-            this._dirtifyLocal();
+            if (!this._dirtyLocal)
+                this._dirtifyLocal();
         },
 
         /**
@@ -854,7 +856,8 @@ Object.assign(pc, function () {
                 this.localRotation.set(x, y, z, w);
             }
 
-            this._dirtifyLocal();
+            if (!this._dirtyLocal)
+                this._dirtifyLocal();
         },
 
         /**
@@ -882,7 +885,8 @@ Object.assign(pc, function () {
                 this.localScale.set(x, y, z);
             }
 
-            this._dirtifyLocal();
+            if (!this._dirtyLocal)
+                this._dirtifyLocal();
         },
 
         /**
@@ -902,7 +906,8 @@ Object.assign(pc, function () {
         _dirtifyLocal: function () {
             if (!this._dirtyLocal) {
                 this._dirtyLocal = true;
-                this._dirtifyWorld();
+                if (!this._dirtyWorld)
+                    this._dirtifyWorld();
             }
         },
 
@@ -954,7 +959,8 @@ Object.assign(pc, function () {
                     invParentWtm.transformPoint(position, this.localPosition);
                 }
 
-                this._dirtifyLocal();
+                if (!this._dirtyLocal)
+                    this._dirtifyLocal();
             };
         }(),
 
@@ -996,7 +1002,8 @@ Object.assign(pc, function () {
                     this.localRotation.copy(invParentRot).mul(rotation);
                 }
 
-                this._dirtifyLocal();
+                if (!this._dirtyLocal)
+                    this._dirtifyLocal();
             };
         }(),
 
@@ -1035,7 +1042,8 @@ Object.assign(pc, function () {
                     this.localRotation.mul2(invParentRot, this.localRotation);
                 }
 
-                this._dirtifyLocal();
+                if (!this._dirtyLocal)
+                    this._dirtifyLocal();
             };
         }(),
 
@@ -1311,7 +1319,9 @@ Object.assign(pc, function () {
             if (!this._enabled)
                 return;
 
-            this._sync();
+            if (this._dirtyLocal || this._dirtyWorld) {
+                this._sync();
+            }
 
             var children = this._children;
             for (var i = 0, len = children.length; i < len; i++) {
@@ -1445,7 +1455,8 @@ Object.assign(pc, function () {
                 this.localRotation.transformVector(translation, translation);
                 this.localPosition.add(translation);
 
-                this._dirtifyLocal();
+                if (!this._dirtyLocal)
+                    this._dirtifyLocal();
             };
         }(),
 
@@ -1489,7 +1500,8 @@ Object.assign(pc, function () {
                     this.localRotation.mul2(quaternion, rot);
                 }
 
-                this._dirtifyLocal();
+                if (!this._dirtyLocal)
+                    this._dirtifyLocal();
             };
         }(),
 
@@ -1523,7 +1535,8 @@ Object.assign(pc, function () {
 
                 this.localRotation.mul(quaternion);
 
-                this._dirtifyLocal();
+                if (!this._dirtyLocal)
+                    this._dirtifyLocal();
             };
         }()
     });
