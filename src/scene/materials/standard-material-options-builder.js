@@ -137,7 +137,7 @@ Object.assign(pc, function () {
             (stdMat.dpAtlas ? stdMat.dpAtlas.rgbm || stdMat.dpAtlas.format === pc.PIXELFORMAT_RGBA32F : false);
 
         var globalSky128;
-        if (stdMat.useSkybox)
+        if (stdMat.useSkybox && scene._skyboxPrefiltered)
             globalSky128 = scene._skyboxPrefiltered[0];
 
         options.fog = stdMat.useFog ? scene.fog : "none";
