@@ -4,15 +4,15 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ResourceLoader
-     * @param {String} bundleLoader Bundle loader.
+     * @param {pc.BundleRegistry} bundles The Bundle registry
      * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
      * multiple requests. Add ResourceHandlers to handle different types of resources.
      */
-    var ResourceLoader = function (bundleLoader) {
+    var ResourceLoader = function (bundles) {
         this._handlers = {};
         this._requests = {};
         this._cache = {};
-        this._bundleLoader = bundleLoader;
+        this._bundles = bundles;
     };
 
     Object.assign(ResourceLoader.prototype, {
@@ -76,7 +76,17 @@ Object.assign(pc, function () {
                 // new request
                 this._requests[key] = [callback];
 
-                var handleLoad = function (urlObj) {
+                var handleLoad = function (err, urlObj) {
+                    if (err) {
+                        if (this._requests[key]) {
+                            for (var i = 0, len = this._requests[key].length; i < len; i++) {
+                                this._requests[key][i](err);
+                            }
+                        }
+                        delete this._requests[key];
+                        return;
+                    }
+
                     handler.load(urlObj, function (err, data, extra) {
                         // make sure key exists because loader
                         // might have been destroyed by now
@@ -84,6 +94,7 @@ Object.assign(pc, function () {
                             return;
 
                         var i, len = this._requests[key].length;
+
                         if (!err) {
                             var resource = handler.open(urlObj.original, data, asset);
                             this._cache[key] = resource;
@@ -97,12 +108,14 @@ Object.assign(pc, function () {
                     }.bind(this));
                 }.bind(this);
 
-                if (this._bundleLoader.hasAsset(url)) {
-                    this._bundleLoader.loadAsset(url, function (assetUrlFromBundle) {
-                        handleLoad({ load: assetUrlFromBundle, original: url });
+                var normalizedUrl = url.split('?')[0];
+
+                if (this._bundles.hasFile(normalizedUrl)) {
+                    this._bundles.loadFile(normalizedUrl, function (err, fileUrlFromBundle) {
+                        handleLoad(err, { load: fileUrlFromBundle, original: url });
                     });
                 } else {
-                    handleLoad({ load: url, original: url });
+                    handleLoad(null, { load: url, original: url });
                 }
 
             }

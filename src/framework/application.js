@@ -167,7 +167,7 @@ Object.assign(pc, function () {
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this._audioManager = new pc.SoundManager(options);
-        this.bundles = new pc.BundleLoader();
+        this.bundles = new pc.BundleRegistry();
         this.loader = new pc.ResourceLoader(this.bundles);
 
         // stores all entities that have been created
@@ -578,6 +578,7 @@ Object.assign(pc, function () {
          */
         preload: function (callback) {
             var self = this;
+            var i, len, total;
 
             self.fire("preload:start");
 
@@ -605,12 +606,11 @@ Object.assign(pc, function () {
             };
 
             // totals loading progress of assets
-            var total = assets.length;
+            total = assets.length;
             var count = function () {
                 return _assets.count;
             };
 
-            var i;
             if (_assets.length) {
                 var onAssetLoad = function (asset) {
                     _assets.inc();
@@ -864,7 +864,18 @@ Object.assign(pc, function () {
             if (!bundles) return;
 
             for (var i = 0; i < bundles.length; i++) {
-                this.bundles.add(bundles[i].name, bundles[i].url, bundles[i].assetUrls);
+                var bundle = new pc.Bundle(
+                    bundles[i].name,
+                    bundles[i].url,
+                    bundles[i].fileUrls,
+                    bundles[i].preload
+                );
+
+                this.bundles.add(bundle);
+
+                if (bundle.preload) {
+                    this.bundles.load(bundle.name);
+                }
             }
         },
 
