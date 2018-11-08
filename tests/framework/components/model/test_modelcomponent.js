@@ -316,12 +316,12 @@ describe("pc.ModelComponent", function () {
             });
             app.root.addChild(e);
 
-            expect(app.assets.hasEvent('remove:2')).to.be.true;
-            expect(e.model._materialEvents[0]['remove:'+assets.material.id]).to.exist;
+            expect(app.assets.hasEvent('remove:'+assets.material.id)).to.be.true;
+            expect(e.model._materialEvents[0]['remove:' + assets.material.id]).to.exist;
 
             e.destroy();
 
-            expect(app.assets.hasEvent('remove:2')).to.be.false;
+            expect(app.assets.hasEvent('remove:' + assets.material.id)).to.be.false;
             done();
         });
     });
