@@ -2066,7 +2066,6 @@ Object.assign(pc, function () {
         },
 
         updateShaders: function (drawCalls) {
-
             // #ifdef PROFILER
             var time = pc.now();
             // #endif
@@ -2120,7 +2119,6 @@ Object.assign(pc, function () {
             this.scene._stats.updateShadersTime += pc.now() - time;
             // #endif
         },
-
 
         beginFrame: function (comp) {
             var device = this.device;
