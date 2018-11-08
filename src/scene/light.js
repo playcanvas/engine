@@ -290,6 +290,10 @@ Object.assign(pc, function () {
                 key |= (chanId[this._cookieChannel.charAt(2)] << 14);
             }
 
+            if (key !== this.key && this._scene !== null) {
+                this._scene.layers._dirtyLights = true;
+            }
+
             this.key = key;
         }
     });
@@ -321,8 +325,6 @@ Object.assign(pc, function () {
             var stype = this._shadowType;
             this._shadowType = null;
             this.shadowType = stype; // refresh shadow type; switching from direct/spot to point and back may change it
-
-            if (this._scene !== null) this._scene.layers._dirtyLights = true;
         }
     });
 
