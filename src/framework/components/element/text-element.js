@@ -66,6 +66,8 @@ Object.assign(pc, function () {
 
     Object.assign(TextElement.prototype, {
         destroy: function () {
+            this._setMaterial(null); // clear material from mesh instances
+
             if (this._model) {
                 this._element.removeModelFromLayers(this._model);
                 this._model.destroy();
@@ -184,6 +186,7 @@ Object.assign(pc, function () {
                     // destroy old mesh
                     if (meshInfo.meshInstance) {
                         this._removeMeshInstance(meshInfo.meshInstance);
+                        meshInfo.meshInstance.material = null;
                     }
 
                     // if there are no letters for this mesh continue
