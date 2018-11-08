@@ -217,7 +217,7 @@ Object.assign(pc, function () {
         this._useMouse = !options || options.useMouse !== false;
         this._useTouch = !options || options.useTouch !== false;
 
-        if ('ontouchstart' in window) {
+        if (pc.platform.touch) {
             this._clickedEntities = {};
         }
 
@@ -248,13 +248,13 @@ Object.assign(pc, function () {
                 window.addEventListener('DOMMouseScroll', this._wheelHandler, { passive: true });
             }
 
-            if (this._useTouch && 'ontouchstart' in window) {
+            if (this._useTouch && pc.platform.touch) {
                 this._target.addEventListener('touchstart', this._touchstartHandler, { passive: true });
                 // Passive is not used for the touchend event because some components need to be
                 // able to call preventDefault(). See notes in button/component.js for more details.
                 this._target.addEventListener('touchend', this._touchendHandler, false);
                 this._target.addEventListener('touchmove', this._touchmoveHandler, false);
-                this._target.addEventListener('touchcancel', this._touchcancelHandler, { passive: true });
+                this._target.addEventListener('touchcancel', this._touchcancelHandler, false);
             }
         },
 
@@ -468,11 +468,11 @@ Object.assign(pc, function () {
         },
 
         _handleTouchMove: function (event) {
-            if (!this._enabled) return;
-
             // call preventDefault to avoid issues in Chrome Android:
             // http://wilsonpage.co.uk/touch-events-in-chrome-android/
             event.preventDefault();
+
+            if (!this._enabled) return;
 
             var newTouchedElements = this._determineTouchedElements(event);
 

@@ -114,7 +114,12 @@ Object.assign(pc, function () {
 
                 // Determine the interpolated keyframe for this animated node
                 interpKey = this._interpolatedKeyDict[nodeName];
-
+                if (interpKey === undefined) {
+                    // #ifdef DEBUG
+                    console.warn('Unknown skeleton node name: ' + nodeName);
+                    // #endif
+                    continue;
+                }
                 // If there's only a single key, just copy the key to the interpolated key...
                 foundKey = false;
                 if (keys.length !== 1) {
@@ -342,7 +347,8 @@ Object.assign(pc, function () {
                     transform.localRotation.copy(interpKey._quat);
                     transform.localScale.copy(interpKey._scale);
 
-                    transform._dirtifyLocal();
+                    if (!transform._dirtyLocal)
+                        transform._dirtifyLocal();
 
                     interpKey._written = false;
                 }

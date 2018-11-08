@@ -138,20 +138,33 @@ pc.programlib.standard = {
         transformUv1: { n: "transformVS", f: _oldChunkTransformUv1 }
     },
 
+    // Shared Sandard Material option structures
+    optionsContext: {},
+    optionsContextMin: {},
+
     generateKey: function (options) {
-        if (!this.props) {
-            this.props = [];
+        var buildPropertiesList = function (options) {
+            var props = [];
             for (var prop in options) {
                 if (options.hasOwnProperty(prop) && prop !== "chunks" && prop !== "lights")
-                    this.props.push(prop);
+                    props.push(prop);
             }
-            this.props.sort();
+            return props.sort();
+        };
+        var props;
+        if (options === this.optionsContextMin) {
+            if (!this.propsMin) this.propsMin = buildPropertiesList(options);
+            props = this.propsMin;
+        } else if (options === this.optionsContext) {
+            if (!this.props) this.props = buildPropertiesList(options);
+            props = this.props;
+        } else {
+            props = buildPropertiesList(options);
         }
 
         var key = "standard";
 
         var i;
-        var props = this.props;
         for (i = 0; i < props.length; i++) {
             if (options[props[i]])
                 key += props[i] + options[props[i]];
