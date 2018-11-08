@@ -1573,7 +1573,6 @@ Object.assign(pc, function () {
             if (Application._currentApplication === this) {
                 Application._currentApplication = null;
             }
-
         }
     });
 
