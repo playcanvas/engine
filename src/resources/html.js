@@ -4,7 +4,7 @@ Object.assign(pc, function () {
     var HtmlHandler = function () {};
 
     Object.assign(HtmlHandler.prototype, {
-        load: function (url, originalUrl, callback) {
+        load: function (url, callback) {
             if (typeof url === 'string') {
                 url = {
                     load: url,

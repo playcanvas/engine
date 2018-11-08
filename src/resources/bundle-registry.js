@@ -47,7 +47,7 @@ Object.assign(pc, function () {
          * var bundle = this.app.bundles.get(name);
          */
         get: function (name) {
-            return this._bundles[bundle.name] || null;
+            return this._bundles[name] || null;
         },
 
         /**
@@ -177,8 +177,8 @@ Object.assign(pc, function () {
          * this.app.bundles.hasFile(asset.getFileUrl());
          */
         hasFile: function (url) {
-            for (i in this._bundles) {
-                var bundle = this._bundles[i];
+            for (var name in this._bundles) {
+                var bundle = this._bundles[name];
                 if (bundle.loaded || bundle.loading) {
                     if (bundle.hasFile(url)) {
                         return true;
@@ -294,7 +294,7 @@ Object.assign(pc, function () {
         // loaded or being loaded). If such a bundle is found then nothing will happen for that URL
         // otherwise the pending request will fail for that URL.
         _failFileRequestsIfNecessary: function (urls, err) {
-            for (url in urls) {
+            for (var url in urls) {
                 if (!this._fileRequests.hasOwnProperty(url)) continue;
 
                 var bundle = this._findBundleForUrl(url);
