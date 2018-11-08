@@ -167,8 +167,7 @@ Object.assign(pc, function () {
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this._audioManager = new pc.SoundManager(options);
-        this.bundles = new pc.BundleRegistry();
-        this.loader = new pc.ResourceLoader(this.bundles);
+        this.loader = new pc.ResourceLoader(this);
 
         // stores all entities that have been created
         // for this app by guid
@@ -181,6 +180,7 @@ Object.assign(pc, function () {
         this._enableList.size = 0;
         this.assets = new pc.AssetRegistry(this.loader);
         if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
+        this.bundles = new pc.BundleRegistry(this.assets);
         this.scriptsOrder = options.scriptsOrder || [];
         this.scripts = new pc.ScriptRegistry(this);
 
@@ -443,6 +443,7 @@ Object.assign(pc, function () {
 
         this._scriptPrefix = options.scriptPrefix || '';
 
+        this.loader.addHandler("bundle", new pc.BundleHandler());
         this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice, this.scene.defaultMaterial));
         this.loader.addHandler("material", new pc.MaterialHandler(this));
@@ -552,13 +553,11 @@ Object.assign(pc, function () {
                 }
 
                 var props = response.application_properties;
-                var bundles = response.bundles;
                 var scenes = response.scenes;
                 var assets = response.assets;
 
                 self._parseApplicationProperties(props, function (err) {
                     self._onVrChange(props.vr);
-                    self._parseBundles(bundles);
                     self._parseScenes(scenes);
                     self._parseAssets(assets);
                     if (!err) {
@@ -859,26 +858,6 @@ Object.assign(pc, function () {
             }
         },
 
-        // insert bundles into bundle registry
-        _parseBundles: function (bundles) {
-            if (!bundles) return;
-
-            for (var i = 0; i < bundles.length; i++) {
-                var bundle = new pc.Bundle(
-                    bundles[i].name,
-                    bundles[i].url,
-                    bundles[i].fileUrls,
-                    bundles[i].preload
-                );
-
-                this.bundles.add(bundle);
-
-                if (bundle.preload) {
-                    this.bundles.load(bundle.name);
-                }
-            }
-        },
-
         // insert scene name/urls into the registry
         _parseScenes: function (scenes) {
             if (!scenes) return;
@@ -893,7 +872,8 @@ Object.assign(pc, function () {
             var i, id;
             var list = [];
 
-            var scriptsIndex = { };
+            var scriptsIndex = {};
+            var bundlesIndex = {};
 
             if (!pc.script.legacy) {
                 // add scripts in order of loading first
@@ -906,16 +886,37 @@ Object.assign(pc, function () {
                     list.push(assets[id]);
                 }
 
+                // then add bundles
+                for (id in assets) {
+                    if (assets[id].type === 'bundle') {
+                        bundlesIndex[id] = true;
+                        list.push(assets[id]);
+                    }
+                }
+
                 // then add rest of assets
                 for (id in assets) {
-                    if (scriptsIndex[id])
+                    if (scriptsIndex[id] || bundlesIndex[id])
                         continue;
 
                     list.push(assets[id]);
                 }
             } else {
-                for (id in assets)
+                // add bundles
+                for (id in assets) {
+                    if (assets[id].type === 'bundle') {
+                        bundlesIndex[id] = true;
+                        list.push(assets[id]);
+                    }
+                }
+
+                // then add rest of assets
+                for (id in assets) {
+                    if (bundlesIndex[id])
+                        continue;
+
                     list.push(assets[id]);
+                }
             }
 
             for (i = 0; i < list.length; i++) {

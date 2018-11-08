@@ -4,15 +4,15 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ResourceLoader
-     * @param {pc.BundleRegistry} bundles The Bundle registry
+     * @param {pc.Application} app The application
      * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
      * multiple requests. Add ResourceHandlers to handle different types of resources.
      */
-    var ResourceLoader = function (bundles) {
+    var ResourceLoader = function (app) {
         this._handlers = {};
         this._requests = {};
         this._cache = {};
-        this._bundles = bundles;
+        this._app = app;
     };
 
     Object.assign(ResourceLoader.prototype, {
@@ -109,9 +109,15 @@ Object.assign(pc, function () {
                 }.bind(this);
 
                 var normalizedUrl = url.split('?')[0];
+                if (this._app.bundles.hasUrl(normalizedUrl)) {
+                    console.log('Trying to load from bundle: ' + normalizedUrl);
 
-                if (this._bundles.hasFile(normalizedUrl)) {
-                    this._bundles.loadFile(normalizedUrl, function (err, fileUrlFromBundle) {
+                    if (!this._app.bundles.canLoadUrl(normalizedUrl)) {
+                        handleLoad('Bundle for ' + url + ' not loaded yet');
+                        return;
+                    }
+
+                    this._app.bundles.loadUrl(normalizedUrl, function (err, fileUrlFromBundle) {
                         handleLoad(err, { load: fileUrlFromBundle, original: url });
                     });
                 } else {

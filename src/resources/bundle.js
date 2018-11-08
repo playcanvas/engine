@@ -1,24 +1,50 @@
 Object.assign(pc, function () {
-    var Bundle = function (name, url, fileUrls, preload) {
-        this.name = name;
-        this.url = url;
-        this.files = {};
-        for (var i = 0, len = fileUrls.length; i < len; i++) {
-            this.files[fileUrls[i]] = null;
+    'use strict';
+
+    var BundleHandler = function () {};
+
+    var HTTP_OPTIONS = {
+        cache: true,
+        responseType: 'blob'
+    };
+
+    Object.assign(BundleHandler.prototype, {
+        load: function (url, callback) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
+            pc.http.get(url.load, HTTP_OPTIONS, function (err, response) {
+                if (! err) {
+                    // TODO: check if we need a FileReader
+                    // TODO: more error handling for FileReader and untar
+                    var fileReader = new FileReader();
+                    fileReader.onload = function (event) {
+                        var arrayBuffer = event.target.result;
+                        untar(arrayBuffer).then(function (files) {
+                            callback(null, files);
+                        });
+                    };
+                    fileReader.readAsArrayBuffer(response);
+                } else {
+                    callback("Error loading bundle resource " + url.original + ": " + err);
+                }
+            });
+        },
+
+        open: function (url, data) {
+            return new pc.Bundle(data);
+        },
+
+        patch: function (asset, assets) {
         }
-        this.loaded = false;
-        this.loading = false;
-        this.preload = !!preload;
 
-        // this is an event emitter
-        Object.assign(this, pc.events);
-    };
-
-    Bundle.prototype.hasFile = function (url) {
-        return this.files.hasOwnProperty(url);
-    };
+    });
 
     return {
-        Bundle: Bundle
+        BundleHandler: BundleHandler
     };
 }());
