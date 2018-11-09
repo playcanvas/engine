@@ -38,7 +38,7 @@
             const elSize = 32;
             var cf = new pc.CanvasFont(app, {
                 color: new pc.Color(1, 1, 1), // white
-                fontName: "Andale Mono",
+                fontName: "Arial",
                 fontSize: size,
                 width: 128,
                 height: 128,
@@ -155,7 +155,7 @@
             msdfElementEntity.translateLocal(0, -elSize*3, 0);
 
             // purely for debugging: do not do this in a real application
-            var showCanvasAtlasForDebug = true;
+            var showCanvasAtlasForDebug = false;
             if (showCanvasAtlasForDebug) {
                 var wrapper = document.createElement('div');
                 for (var i = 0; i < cf.textures.length; i++) {
