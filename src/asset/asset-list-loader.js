@@ -71,6 +71,9 @@ Object.assign(pc, function () {
             }
 
             if (count === total) {
+                // call next tick because we want
+                // this to be fired after any other
+                // asset load events
                 setTimeout(function () {
                     _done(failed);
                 }, 0);
@@ -82,7 +85,8 @@ Object.assign(pc, function () {
 
         for (i = 0; i < l; i++) {
             asset = this._assets[i];
-            if (!asset.loaded) {
+
+            if (!asset.loading && !asset.loaded) {
                 this._registry.load(asset);
                 total++;
             }

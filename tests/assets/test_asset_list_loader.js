@@ -145,4 +145,25 @@ describe('pc.AssetListLoader', function () {
             done();
         });
     });
+
+
+    it('load is called even if the same asset is included twice', function (done) {
+        assetList.push(assetList[0]);
+
+        assetList.forEach(function (a) {
+            expect(a.loaded).to.be.false;
+        });
+
+        var loader = new pc.AssetListLoader(assetList, app.assets);
+
+        loader.load(function (err, failed) {
+            expect(err).to.not.exist;
+
+            assetList.forEach(function (a) {
+                expect(a.loaded).to.be.true;
+            });
+
+            done();
+        });
+    });
 });
