@@ -357,7 +357,12 @@ Object.assign(pc, function () {
 
             var result = this._parseUpToScreen();
 
-            this.entity._dirtifyWorld();
+            if (this.entity._dirtyLocal || this.entity._dirtyWorld || this._anchorDirty) {
+                pc.syncQueue.RunSync();
+            }
+            this.entity._dirtifyLocal();
+            // TODO: to figure out if local or world is proper flag
+            // this.entity._dirtifyWorld();
 
             this._updateScreen(result.screen);
 
@@ -745,6 +750,12 @@ Object.assign(pc, function () {
                 this._unbindScreen(this.screen.screen);
                 this.screen.screen.syncDrawOrder();
             }
+
+            if (this.entity._dirtyLocal || this.entity._dirtyWorld || this._anchorDirty) {
+                pc.syncQueue.RunSync();
+            }
+            this.entity._dirtifyLocal();
+            // TODO: to figure out if local or world is proper flag
 
             this.off();
         },

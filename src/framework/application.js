@@ -1081,21 +1081,13 @@ Object.assign(pc, function () {
                 return acc;
             };
             var acc = pc.syncQueue._values.reduce(function (a, x) { return a + countNested(x); }, 0);
-            // console.log('START Sync hierarchy');
-            for (var t = pc.syncQueue._values.length - 1; t >= 0; t--) {
-                pc.syncQueue._values[t].syncHierarchy();
-            }
             console.log('Sync hierarchy', pc.syncQueue._values.length + '/' + acc, 'of',  countNested(this.root));
 
+            // pc.syncQueue.RunSync();
             pc.syncQueue._values = [];
             pc.syncQueue._index = [];
 
-            // console.log('1st =============================');
-            // this.root.syncHierarchy();
-
-            // console.log('2nd =============================');
-            // this.root.syncHierarchy();
-            // console.log('Done =============================');
+            this.root.syncHierarchy();
 
             this.batcher.updateAll();
             pc._skipRenderCounter = 0;

@@ -18,7 +18,28 @@ Object.assign(pc, function () {
             this._values.splice(l - 1, 1);
             this._index.splice(l - 1, 1);
             return a;
-        } else return { v: null, p: 0 };
+        }
+        return { v: null, p: 0 };
+    };
+
+    PriorityQueue.prototype.RunSync = function () {
+        for (var t = this._values.length - 1; t >= 0; t--) {
+            if (this._values[t]._graphDepth != this._index[t]) {
+                var count = 0;
+                for (var c = 0; c < this._values.length; c++) {
+                    if (this._values[t] === this._values[c])
+                        count++;
+                }
+                console.log('conflict :', this._values[t].getPath(),
+                            'depth', this._values[t]._graphDepth, 'key', this._index[t],
+                            'count', count);
+
+                continue;
+            }
+            this._values[t].syncHierarchy();
+        }
+        this._values = [];
+        this._index = [];
     };
 
     PriorityQueue.prototype.PushBack = function (p, v) {
@@ -30,9 +51,11 @@ Object.assign(pc, function () {
         var bs = function (index, s, e, k) {
             if (s === e) return s;
             var m = Math.floor((s + e) / 2);
-            if (index[m] < k) return bs(index, s, m, k);
-            else if (index[m] > k) return bs(index, m + 1, e, k);
-            else return m;
+            if (index[m] < k)
+                return bs(index, s, m, k);
+            else if (index[m] > k)
+                return bs(index, m + 1, e, k);
+            return m;
         };
         var i = bs(this._index, 0, this._index.length, p);
         this._values.splice(i, 0, v);
@@ -951,16 +974,16 @@ Object.assign(pc, function () {
         _dirtifyWorld: function () {
             if (!this._dirtyWorld) {
                 this._queueSync();
-                this._dirtifyWorldImpl();
+                if (!this._dirtyWorld)
+                    this._dirtifyWorldImpl();
             }
         },
 
         _dirtifyWorldImpl: function () {
-            if (!this._dirtyWorld) {
-                this._dirtyWorld = true;
-                for (var i = 0; i < this._children.length; i++) {
+            this._dirtyWorld = true;
+            for (var i = 0; i < this._children.length; i++) {
+                if (!this._children[i]._dirtyWorld)
                     this._children[i]._dirtifyWorldImpl();
-                }
             }
             this._dirtyNormal = true;
             this._aabbVer++;
@@ -1166,19 +1189,15 @@ Object.assign(pc, function () {
                 node._notifyHierarchyStateChanged(node, enabledInHierarchy);
             }
 
+            if (node._dirtifyLocal || node._dirtifyWorld) {
+                pc.syncQueue.RunSync();
+            }
+
             // The graph depth of the child and all of its descendants will now change
             node._updateGraphDepth();
 
-            if (node._dirtifyLocal || node._dirtifyWorld) {
-                for (var t = pc.syncQueue._values.length - 1; t >= 0; t--) {
-                    pc.syncQueue._values[t].syncHierarchy();
-                }
-                pc.syncQueue._values = [];
-                pc.syncQueue._index = [];
-            }
-
             // The child (plus subhierarchy) will need world transforms to be recalculated
-            node._dirtifyWorld();
+            node._dirtifyLocal();
 
             // alert an entity that it has been inserted
             if (node.fire) node.fire('insert', this);
