@@ -18,7 +18,8 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.AssetListLoader#load
-     * @param {Function} done Callback called when all assets in the list are loaded
+     * @description  Start loading asset list, call done() when all assets have loaded or failed to load
+     * @param {Function} done Callback called when all assets in the list are loaded. Passed (err, failed) where err is the undefined if no errors are encountered and failed contains a list of assets that failed to load
      *
      */
     AssetListLoader.prototype.load = function (done) {
@@ -36,6 +37,7 @@ Object.assign(pc, function () {
         var _done = function (failed) {
             self._loaded = true;
             self._registry.off("load", _onLoad, this);
+            self._registry.off("error", _onError, this);
 
             if (failed && failed.length) {
                 if (done) {
@@ -78,7 +80,7 @@ Object.assign(pc, function () {
                     _done(failed);
                 }, 0);
             }
-        }
+        };
 
         this._registry.on("load", _onLoad, this);
         this._registry.on("error", _onError, this);
