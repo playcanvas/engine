@@ -108,6 +108,7 @@ Object.assign(pc, function () {
         onRemove: function () {
             this.asset = null;
             this.materialAsset = null;
+            this._unsetMaterialEvents();
         },
 
         onLayersChanged: function (oldComp, newComp) {
@@ -831,8 +832,6 @@ Object.assign(pc, function () {
         set: function (value) {
             if (this._batchGroupId === value) return;
 
-            this._batchGroupId = value;
-
             var batcher = this.system.app.batcher;
             if (this._batchGroupId >= 0) batcher.markGroupDirty(this._batchGroupId);
             if (value >= 0) batcher.markGroupDirty(value);
@@ -841,6 +840,8 @@ Object.assign(pc, function () {
                 // re-add model to scene, in case it was removed by batching
                 this.addModelToLayers();
             }
+
+            this._batchGroupId = value;
         }
     });
 

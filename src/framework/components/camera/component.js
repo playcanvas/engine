@@ -403,6 +403,10 @@ Object.assign(pc, function () {
             this.system.removeCamera(this);
         },
 
+        onRemove: function () {
+            this.off();
+        },
+
         /**
          * @function
          * @name pc.CameraComponent#calculateAspectRatio
