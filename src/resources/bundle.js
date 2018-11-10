@@ -16,7 +16,7 @@ Object.assign(pc, function () {
                 };
             }
 
-            pc.http.get('lol', HTTP_OPTIONS, function (err, response) {
+            pc.http.get(url.load, HTTP_OPTIONS, function (err, response) {
                 if (! err) {
                     // TODO: more error handling for FileReader and untar
                     untar(response).then(function (files) {
