@@ -147,7 +147,7 @@ Object.assign(pc, function () {
             if (!this.file)
                 return null;
 
-            if (this.type === 'texture' || this.type === 'textureatlas') {
+            if (this.type === 'texture' || this.type === 'textureatlas' || this.type === 'bundle') {
                 var device = this.registry._loader.getHandler('texture')._device;
 
                 if (this.variants.pvr && device.extCompressedTexturePVRTC) {

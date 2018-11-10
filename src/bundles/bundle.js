@@ -9,11 +9,11 @@ Object.assign(pc, function () {
     };
 
     Bundle.prototype.hasUrl = function (url) {
-        return !!this._blobUrls[url];
+        return !!this._blobUrls[decodeURIComponent(url)];
     };
 
     Bundle.prototype.getBlobUrl = function (url) {
-        return this._blobUrls[url] || null;
+        return this._blobUrls[decodeURIComponent(url)] || null;
     };
 
     return {

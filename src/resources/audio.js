@@ -99,7 +99,13 @@ Object.assign(pc, function () {
                 return;
             }
 
-            pc.http.get(url, function (err, response) {
+            // if this is a blob URL we need to set the response type to arraybuffer
+            var options = {};
+            if (url.startsWith('blob:')) {
+                options.responseType = pc.Http.ResponseType.ARRAY_BUFFER;
+            }
+
+            pc.http.get(url, options, function (err, response) {
                 if (err) {
                     error(err);
                     return;

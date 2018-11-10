@@ -78,6 +78,7 @@ Object.assign(pc, function () {
 
                 var handleLoad = function (err, urlObj) {
                     if (err) {
+                        console.error(err);
                         if (this._requests[key]) {
                             for (var i = 0, len = this._requests[key].length; i < len; i++) {
                                 this._requests[key][i](err);
@@ -95,8 +96,16 @@ Object.assign(pc, function () {
 
                         var i, len = this._requests[key].length;
 
+                        var resource;
+                        if (! err) {
+                            try {
+                                resource = handler.open(urlObj.original, data, asset);
+                            } catch (ex) {
+                                err = ex;
+                            }
+                        }
+
                         if (!err) {
-                            var resource = handler.open(urlObj.original, data, asset);
                             this._cache[key] = resource;
                             for (i = 0; i < len; i++)
                                 this._requests[key][i](null, resource, extra);
@@ -105,13 +114,11 @@ Object.assign(pc, function () {
                                 this._requests[key][i](err);
                         }
                         delete this._requests[key];
-                    }.bind(this));
+                    }.bind(this), asset);
                 }.bind(this);
 
                 var normalizedUrl = url.split('?')[0];
                 if (this._app.bundles.hasUrl(normalizedUrl)) {
-                    console.log('Trying to load from bundle: ' + normalizedUrl);
-
                     if (!this._app.bundles.canLoadUrl(normalizedUrl)) {
                         handleLoad('Bundle for ' + url + ' not loaded yet');
                         return;

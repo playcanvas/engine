@@ -4,8 +4,7 @@ Object.assign(pc, function () {
     var BundleHandler = function () {};
 
     var HTTP_OPTIONS = {
-        cache: true,
-        responseType: 'blob'
+        responseType: pc.Http.ResponseType.ARRAY_BUFFER
     };
 
     Object.assign(BundleHandler.prototype, {
@@ -17,18 +16,14 @@ Object.assign(pc, function () {
                 };
             }
 
-            pc.http.get(url.load, HTTP_OPTIONS, function (err, response) {
+            pc.http.get('lol', HTTP_OPTIONS, function (err, response) {
                 if (! err) {
-                    // TODO: check if we need a FileReader
                     // TODO: more error handling for FileReader and untar
-                    var fileReader = new FileReader();
-                    fileReader.onload = function (event) {
-                        var arrayBuffer = event.target.result;
-                        untar(arrayBuffer).then(function (files) {
-                            callback(null, files);
-                        });
-                    };
-                    fileReader.readAsArrayBuffer(response);
+                    untar(response).then(function (files) {
+                        callback(null, files);
+                    }).catch(function (err) {
+                        callback("Error loading bundle resource " + url.original + ": " + err);
+                    });
                 } else {
                     callback("Error loading bundle resource " + url.original + ": " + err);
                 }

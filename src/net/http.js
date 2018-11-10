@@ -30,7 +30,8 @@ Object.assign(pc, function () {
         TEXT: 'text',
         ARRAY_BUFFER: 'arraybuffer',
         BLOB: 'blob',
-        DOCUMENT: 'document'
+        DOCUMENT: 'document',
+        JSON: 'json'
     };
 
     Http.binaryExtensions = [
@@ -379,15 +380,19 @@ Object.assign(pc, function () {
             try {
                 // Check the content type to see if we want to parse it
                 if (contentType === this.ContentType.JSON || url.split('?')[0].endsWith(".json")) {
+
                     // It's a JSON response
                     response = JSON.parse(xhr.responseText);
                 } else if (this._isBinaryContentType(contentType)) {
                     response = xhr.response;
                 } else {
-                    if (xhr.responseType === Http.ResponseType.ARRAY_BUFFER) {
+                    if (contentType) {
                         logWARNING(pc.string.format('responseType: {0} being served with Content-Type: {1}', xhr.responseType, contentType));
+                    }
+
+                    if (xhr.responseType === Http.ResponseType.ARRAY_BUFFER) {
                         response = xhr.response;
-                    } else if (xhr.responseType === Http.ResponseType.BLOB) {
+                    } else if (xhr.responseType === Http.ResponseType.BLOB || xhr.responseType === Http.ResponseType.JSON) {
                         response = xhr.response;
                     } else {
                         if (xhr.responseType === Http.ResponseType.DOCUMENT || contentType === this.ContentType.XML) {

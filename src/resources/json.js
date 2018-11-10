@@ -14,7 +14,13 @@ Object.assign(pc, function () {
                 };
             }
 
-            pc.http.get(url.load, function (err, response) {
+            // if this a blob URL we need to set the response type as json
+            var options = {};
+            if (url.load.startsWith('blob:')) {
+                options.responseType = pc.Http.ResponseType.JSON;
+            }
+
+            pc.http.get(url.load, options, function (err, response) {
                 if (!err) {
                     callback(null, response);
                 } else {

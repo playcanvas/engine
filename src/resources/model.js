@@ -36,7 +36,12 @@ Object.assign(pc, function () {
                 };
             }
 
-            pc.http.get(url.load, function (err, response) {
+            var options = {};
+            if (url.load.startsWith('blob:')) {
+                options.responseType = pc.Http.ResponseType.JSON;
+            }
+
+            pc.http.get(url.load, options, function (err, response) {
                 if (!callback)
                     return;
 

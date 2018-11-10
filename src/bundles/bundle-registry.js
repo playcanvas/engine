@@ -139,6 +139,13 @@ Object.assign(pc, function () {
         // that can be satisfied by the specified bundle
         // then resolve them
         _onBundleLoaded: function (bundleAsset) {
+            // this can happen if the bundleAsset failed
+            // to create its resource
+            if (! bundleAsset.resource) {
+                this._onBundleError('Bundle ' + bundleAsset.id + ' failed to load', bundleAsset);
+                return;
+            }
+
             for (var url in this._fileRequests) {
                 var bundles = this._urlsInBundles[url];
                 if (!bundles || bundles.indexOf(bundleAsset) === -1) continue;
