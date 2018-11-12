@@ -1534,6 +1534,11 @@ Object.assign(pc, function () {
             }
             this.assets.off();
 
+
+            // destroy bundle registry
+            this.bundles.destroy();
+            this.bundles = null;
+
             for (var key in this.loader.getHandler('script')._cache) {
                 var element = this.loader.getHandler('script')._cache[key];
                 var parent = element.parentNode;
