@@ -136,6 +136,10 @@ Object.assign(pc, function () {
                         }
                     }
                 }
+
+                // fail any pending requests for this bundle
+                this._onBundleError('Bundle ' + asset.id + ' was removed', asset);
+
             } else if (this._assetsInBundles[asset.id]) {
                 // remove asset from _assetInBundles
                 delete this._assetsInBundles[asset.id];
