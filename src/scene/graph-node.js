@@ -6,62 +6,6 @@ Object.assign(pc, function () {
     var scaleCompensateScale = new pc.Vec3();
     var scaleCompensateScaleForParent = new pc.Vec3();
 
-    var PriorityQueue = function () {
-        this._index = [];
-        this._values = [];
-    };
-
-    PriorityQueue.prototype.Pull = function () {
-        var l = this._index.length;
-        if (l) {
-            var a = { v: this._values[l - 1], p: this._index[l - 1] };
-            this._values.splice(l - 1, 1);
-            this._index.splice(l - 1, 1);
-            return a;
-        }
-        return { v: null, p: 0 };
-    };
-
-    PriorityQueue.prototype.RunSync = function () {
-        for (var t = this._values.length - 1; t >= 0; t--) {
-            if (this._values[t]._graphDepth != this._index[t]) {
-                var count = 0;
-                for (var c = 0; c < this._values.length; c++) {
-                    if (this._values[t] === this._values[c])
-                        count++;
-                }
-                console.log('conflict :', this._values[t].getPath(),
-                            'depth', this._values[t]._graphDepth, 'key', this._index[t],
-                            'count', count);
-
-                continue;
-            }
-            this._values[t].syncHierarchy();
-        }
-        this._values = [];
-        this._index = [];
-    };
-
-    PriorityQueue.prototype.PushBack = function (p, v) {
-        this._values.push(v);
-        this._index.push(p);
-    };
-
-    PriorityQueue.prototype.Push = function (p, v) {
-        var bs = function (index, s, e, k) {
-            if (s === e) return s;
-            var m = Math.floor((s + e) / 2);
-            if (index[m] < k)
-                return bs(index, s, m, k);
-            else if (index[m] > k)
-                return bs(index, m + 1, e, k);
-            return m;
-        };
-        var i = bs(this._index, 0, this._index.length, p);
-        this._values.splice(i, 0, v);
-        this._index.splice(i, 0, p);
-    };
-
     /**
      * @constructor
      * @name pc.GraphNode
@@ -283,7 +227,7 @@ Object.assign(pc, function () {
             clone.worldTransform.copy(this.worldTransform);
             clone._dirtyWorld = this._dirtyWorld;
 
-            if (clone._dirtifyLocal || clone._dirtifyWorld)
+            if (clone._dirtyLocal || clone._dirtyWorld)
                 clone._queueSync();
 
             clone._dirtyNormal = this._dirtyNormal;
@@ -989,8 +933,14 @@ Object.assign(pc, function () {
             this._aabbVer++;
         },
 
+        // Sync Queue is currently in App and there is no reference to App obj in graph-node
+        // It's temporary solution to access it from global namespace
         _queueSync: function () {
-            pc.syncQueue.Push(this._graphDepth, this);
+            pc.Application.getApplication().syncQueue.push(this._graphDepth, this);
+        },
+
+        _cancelSync: function () {
+            pc.Application.getApplication().syncQueue.erase(this);
         },
 
         /**
@@ -1189,12 +1139,13 @@ Object.assign(pc, function () {
                 node._notifyHierarchyStateChanged(node, enabledInHierarchy);
             }
 
-            if (node._dirtifyLocal || node._dirtifyWorld) {
-                pc.syncQueue.RunSync();
-            }
-
             // The graph depth of the child and all of its descendants will now change
             node._updateGraphDepth();
+
+            if (node._dirtifyLocal || node._dirtifyWorld) {
+                node._cancelSync();
+                node._queueSync();
+            }
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node._dirtifyLocal();
@@ -1238,6 +1189,12 @@ Object.assign(pc, function () {
 
                     // Clear parent
                     child._parent = null;
+                    child._updateGraphDepth();
+
+                    if (child._dirtifyLocal || child._dirtifyWorld) {
+                        child._cancelSync();
+                        child._queueSync();
+                    }
 
                     // alert the parent that it has had a child removed
                     if (this.fire) this.fire('childremove', child);
@@ -1625,7 +1582,6 @@ Object.assign(pc, function () {
     });
 
     return {
-        GraphNode: GraphNode,
-        PriorityQueue: PriorityQueue
+        GraphNode: GraphNode
     };
 }());

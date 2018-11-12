@@ -357,14 +357,14 @@ Object.assign(pc, function () {
 
             var result = this._parseUpToScreen();
 
-            if (this.entity._dirtyLocal || this.entity._dirtyWorld || this._anchorDirty) {
-                pc.syncQueue.RunSync();
-            }
-            this.entity._dirtifyLocal();
-            // TODO: to figure out if local or world is proper flag
-            // this.entity._dirtifyWorld();
-
             this._updateScreen(result.screen);
+
+            if (this.entity._dirtyLocal || this.entity._dirtyWorld) {
+                this.entity._cancelSync();
+                this.entity._queueSync();
+            } else {
+                this.entity._dirtifyWorld();
+            }
 
             this._dirtifyMask();
         },
@@ -629,6 +629,13 @@ Object.assign(pc, function () {
             // if there is a screen and it is not being destroyed
             if (this.screen && !this.screen._destroying) {
                 this._updateScreen(null);
+
+                if (this.entity._dirtyLocal || this.entity._dirtyWorld) {
+                    this.entity._cancelSync();
+                    this.entity._queueSync();
+                } else {
+                    this.entity._dirtifyWorld();
+                }
             }
         },
 
@@ -711,9 +718,13 @@ Object.assign(pc, function () {
             }
 
             this.fire("enableelement");
+
+            this.entity._queueSync();
         },
 
         onDisable: function () {
+            this.entity._cancelSync();
+
             this.system.app.scene.off("set:layers", this.onLayersChanged, this);
             if (this.system.app.scene.layers) {
                 this.system.app.scene.layers.off("add", this.onLayerAdded, this);
@@ -751,11 +762,12 @@ Object.assign(pc, function () {
                 this.screen.screen.syncDrawOrder();
             }
 
-            if (this.entity._dirtyLocal || this.entity._dirtyWorld || this._anchorDirty) {
-                pc.syncQueue.RunSync();
+            if (this.entity._dirtyLocal || this.entity._dirtyWorld) {
+                this.entity._cancelSync();
+                this.entity._queueSync();
+            } else {
+                this.entity._dirtifyWorld();
             }
-            this.entity._dirtifyLocal();
-            // TODO: to figure out if local or world is proper flag
 
             this.off();
         },
