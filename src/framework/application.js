@@ -1026,7 +1026,9 @@ Object.assign(pc, function () {
             // #endif
 
             this.fire("prerender");
+
             this.syncQueue.RunSync();
+
             this.batcher.updateAll();
             pc._skipRenderCounter = 0;
             this.renderer.renderComposition(this.scene.layers);
@@ -1456,7 +1458,8 @@ Object.assign(pc, function () {
          */
         destroy: function () {
             var i, l;
-            var canvasId = this.graphicsDevice.canvas.id;
+
+            Application._applications[this.graphicsDevice.canvas.id] = null;
 
             this.off('librariesloaded');
             document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
@@ -1568,8 +1571,6 @@ Object.assign(pc, function () {
             pc.script.app = null;
             // remove default particle texture
             pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
-
-            Application._applications[canvasId] = null;
 
             if (Application._currentApplication === this) {
                 Application._currentApplication = null;

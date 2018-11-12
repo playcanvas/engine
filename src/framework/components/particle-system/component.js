@@ -614,12 +614,6 @@ Object.assign(pc, function () {
                 this.removeModelFromLayers();
                 if (this.data.depthSoftening) this._releaseDepth();
             }
-
-            if (this.emitter) {
-                // clear camera as it isn't updated while disabled and we don't want to hold
-                // onto old reference
-                this.emitter.camera = null;
-            }
         },
 
         /**
@@ -714,7 +708,7 @@ Object.assign(pc, function () {
             this.enabled = enabled;
         },
 
-        onRemove: function () {
+        onDestroy: function () {
             var data = this.data;
             if (data.model) {
                 this.entity.removeChild(data.model.getGraph());
@@ -735,8 +729,6 @@ Object.assign(pc, function () {
                     this[prop] = null;
                 }
             }
-
-            this.off();
         }
     });
 

@@ -149,7 +149,6 @@ Object.assign(pc, function () {
 
         onBeforeRemove: function (entity, component) {
             this.removeCamera(component);
-            component.onRemove();
         },
 
         onRemove: function (entity, data) {

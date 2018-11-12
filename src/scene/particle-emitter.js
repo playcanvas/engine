@@ -1591,8 +1591,6 @@ Object.assign(pc, function () {
         },
 
         destroy: function () {
-            this.camera = null;
-
             this._destroyResources();
         }
     });

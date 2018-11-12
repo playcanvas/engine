@@ -247,7 +247,7 @@ Object.assign(pc, function () {
         },
 
         onRemove: function (entity, component) {
-            component.onRemove();
+            component.onDestroy();
         }
     });
 

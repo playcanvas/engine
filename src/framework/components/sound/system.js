@@ -123,8 +123,6 @@ Object.assign(pc, function () {
                     slots[key].stop();
                 }
             }
-
-            component.onRemove();
         }
     });
 

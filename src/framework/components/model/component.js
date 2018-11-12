@@ -108,7 +108,6 @@ Object.assign(pc, function () {
         onRemove: function () {
             this.asset = null;
             this.materialAsset = null;
-            this._unsetMaterialEvents();
         },
 
         onLayersChanged: function (oldComp, newComp) {

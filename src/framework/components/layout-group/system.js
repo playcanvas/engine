@@ -119,7 +119,7 @@ Object.assign(pc, function () {
                 // any layout groups which are children of other layout groups will always have their
                 // new size set before their own reflow is calculated.
                 queue.sort(function (componentA, componentB) {
-                    return (componentA.entity.graphDepth - componentB.entity.graphDepth);
+                    return componentA.entity.graphDepth > componentB.entity.graphDepth;
                 });
 
                 for (var i = 0; i < queue.length; ++i) {

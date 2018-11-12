@@ -28,7 +28,6 @@ Object.assign(pc, function () {
     };
 
     ImageRenderable.prototype.destroy = function () {
-        this.setMaterial(null); // clear material references
         this._element.removeModelFromLayers(this.model);
         this.model.destroy();
         this.model = null;
