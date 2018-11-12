@@ -1026,7 +1026,7 @@ Object.assign(pc, function () {
             // #endif
 
             this.fire("prerender");
-            this.syncQueue.RunSync();
+            this.syncQueue.runSync();
             this.batcher.updateAll();
             pc._skipRenderCounter = 0;
             this.renderer.renderComposition(this.scene.layers);

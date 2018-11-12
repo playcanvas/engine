@@ -5,8 +5,8 @@ Object.assign(pc, function () {
     };
 
     SyncQueue.prototype.runSync = function () {
-        for (var t = this._values.length - 1; t >= 0; t--) {
-            this._values[t].syncHierarchy();
+        for (var i = 0; i < this._values.length; i++) {
+            this._values[i].syncHierarchy();
         }
         this._values = [];
         this._index = [];
@@ -24,9 +24,9 @@ Object.assign(pc, function () {
         var bs = function (index, s, e, k) {
             if (s === e) return s;
             var m = Math.floor((s + e) / 2);
-            if (index[m] < k)
+            if (index[m] > k)
                 return bs(index, s, m, k);
-            else if (index[m] > k)
+            else if (index[m] < k)
                 return bs(index, m + 1, e, k);
             return m;
         };
