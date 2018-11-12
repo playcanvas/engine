@@ -72,6 +72,11 @@ Object.assign(pc, function () {
 
             for (var i = 0, len = urls.length; i < len; i++) {
                 var url = urls[i];
+                // Just set the URL to point to the same bundles as the asset does.
+                // This is a performance/memory optimization and it assumes that
+                // the URL will not exist in any other asset. If that does happen then
+                // this will not work as expected if the asset is removed, as the URL will
+                // be removed too.
                 this._urlsInBundles[url] = this._assetsInBundles[asset.id];
             }
         },
@@ -103,45 +108,45 @@ Object.assign(pc, function () {
 
         // Remove asset from internal indexes
         _onAssetRemoved: function (asset) {
-            if (asset.type !== 'bundle') return;
+            if (asset.type === 'bundle') {
+                // remove bundle from index
+                delete this._bundleAssets[asset.id];
 
-            delete this._bundleAssets[asset.id];
+                // remove event listeners
+                this._assets.off('load:' + asset.id, this._onBundleLoaded, this);
+                this._assets.off('error:' + asset.id, this._onBundleError, this);
 
-            this._assets.off('load:' + asset.id, this._onBundleLoaded, this);
-            this._assets.off('error:' + asset.id, this._onBundleError, this);
+                // remove bundle from _assetsInBundles and _urlInBundles indexes
+                var idx, id;
+                for (id in this._assetsInBundles) {
+                    var array = this._assetsInBundles[id];
+                    idx = array.indexOf(asset);
+                    if (idx !== -1) {
+                        array.splice(idx, 1);
+                        if (! array.length) {
+                            delete this._assetsInBundles[id];
 
-            for (var i = 0, len = asset.data.assets.length; i < len; i++) {
-                this._unindexAssetFromBundle(asset.data.assets[i], asset);
-            }
-        },
-
-        // Remove the specified asset and its URLs from the bundle indexes
-        _unindexAssetFromBundle: function (assetId, bundleAsset) {
-            var bundles = this._assetsInBundles[assetId];
-            if (bundles) {
-                var idx = bundles.indexOf(bundleAsset);
-                if (idx !== -1) {
-                    bundles.splice(idx, 1);
-                    if (! bundles.length) {
-                        delete this._assetsInBundles[assetId];
+                            // make sure we do not leave that array in
+                            // any _urlInBundles entries
+                            for (var url in this._urlsInBundles) {
+                                if (this._urlsInBundles[url] === array) {
+                                    delete this._urlsInBundles[url];
+                                }
+                            }
+                        }
                     }
+                }
+            } else if (this._assetsInBundles[asset.id]) {
+                // remove asset from _assetInBundles
+                delete this._assetsInBundles[asset.id];
+
+                // remove asset urls from _urlsInBundles
+                var urls = this._getAssetFileUrls(asset);
+                for (var i = 0, len = urls.length; i < len; i++) {
+                    delete this._urlsInBundles[urls[i]];
                 }
             }
 
-            var asset = this._assets.get(assetId);
-            if (asset) {
-                this._unindexAssetFileUrls(asset);
-            }
-        },
-
-        // Remove the file URLs from the index
-        _unindexAssetFileUrls: function (asset) {
-            var urls = this._getAssetFileUrls(asset);
-            if (! urls) return;
-
-            for (var i = 0, len = urls.length; i < len; i++) {
-                delete this._urlsInBundles[urls[i]];
-            }
         },
 
         // If we have any pending file requests
@@ -161,7 +166,7 @@ Object.assign(pc, function () {
 
                 var requests = this._fileRequests[url];
                 for (var i = 0, len = requests.length; i < len; i++) {
-                    requests[i](null, bundleAsset.resource.getBlobUrl(url));
+                    requests[i](null, bundleAsset.resource.getBlobUrl(decodeURIComponent(url)));
                 }
 
                 delete this._fileRequests[url];
@@ -288,8 +293,6 @@ Object.assign(pc, function () {
          * });
          */
         loadUrl: function (url, callback) {
-            url = decodeURIComponent(url); // internal indexes rely on decoded URI components
-
             var bundle = this._findLoadedOrLoadingBundleForUrl(url);
             if (! bundle) {
                 callback('URL ' + url + ' not found in any bundles');
@@ -298,7 +301,7 @@ Object.assign(pc, function () {
 
             // Only load files from bundles that're explicilty requested to be loaded.
             if (bundle.loaded) {
-                callback(null, bundle.resource.getBlobUrl(url));
+                callback(null, bundle.resource.getBlobUrl(decodeURIComponent(url)));
             } else if (this._fileRequests.hasOwnProperty(url)) {
                 this._fileRequests[url].push(callback);
             } else {

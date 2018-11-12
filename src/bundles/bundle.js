@@ -23,7 +23,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Bundle#getBlobUrl
      * @description Returns a blob URL for the specified URL.
-     * @param {String} url The original file URL
+     * @param {String} url The original file URL. Make sure you have called decodeURIComponent on the URL first.
      * @returns {String} A blob URL
      */
     Bundle.prototype.getBlobUrl = function (url) {
