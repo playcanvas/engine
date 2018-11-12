@@ -380,7 +380,6 @@ Object.assign(pc, function () {
             try {
                 // Check the content type to see if we want to parse it
                 if (contentType === this.ContentType.JSON || url.split('?')[0].endsWith(".json")) {
-
                     // It's a JSON response
                     response = JSON.parse(xhr.responseText);
                 } else if (this._isBinaryContentType(contentType)) {
