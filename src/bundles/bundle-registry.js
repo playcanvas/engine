@@ -2,6 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
+     * @private
      * @constructor
      * @name pc.BundleRegistry
      * @param {pc.AssetRegistry} assets The asset registry
@@ -18,8 +19,6 @@ Object.assign(pc, function () {
         this._urlsInBundles = {};
         // contains requests to load file URLs indexed by URL
         this._fileRequests = {};
-        // if true then this registry has been destroyed already
-        this._destroyed = false;
 
         this._assets.on('add', this._onAssetAdded, this);
         this._assets.on('remove', this._onAssetRemoved, this);
@@ -79,11 +78,21 @@ Object.assign(pc, function () {
 
         // Get all the possible URLs of an asset
         _getAssetFileUrls: function (asset) {
-            // TODO: Handle hidden URLs like additional font URLs etc...
             var url = asset.getFileUrl();
             if (! url) return null;
 
-            var urls = [this._normalizeUrl(url)];
+            url = this._normalizeUrl(url);
+            var urls = [url];
+
+            // a font might have additional files
+            // so add them in the list
+            if (asset.type === 'font') {
+                var numFiles = asset.data.info.maps.length;
+                for (var i = 1; i < numFiles; i++) {
+                    urls.push(url.replace('.png', i + '.png'));
+                }
+            }
+
             return urls;
         },
 
@@ -94,15 +103,15 @@ Object.assign(pc, function () {
 
         // Remove asset from internal indexes
         _onAssetRemoved: function (asset) {
-            if (asset.type === 'bundle') {
-                delete this._bundleAssets[asset.id];
+            if (asset.type !== 'bundle') return;
 
-                this._assets.off('load:' + asset.id, this._onBundleLoaded, this);
-                this._assets.off('error:' + asset.id, this._onBundleError, this);
+            delete this._bundleAssets[asset.id];
 
-                for (var i = 0, len = asset.data.assets.length; i < len; i++) {
-                    this._unindexAssetFromBundle(asset.data.assets[i], asset);
-                }
+            this._assets.off('load:' + asset.id, this._onBundleLoaded, this);
+            this._assets.off('error:' + asset.id, this._onBundleError, this);
+
+            for (var i = 0, len = asset.data.assets.length; i < len; i++) {
+                this._unindexAssetFromBundle(asset.data.assets[i], asset);
             }
         },
 
@@ -265,6 +274,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.BundleRegistry#loadUrl
          * @description Loads the specified file URL from a bundle that is either loaded or currently being loaded.
@@ -278,6 +288,8 @@ Object.assign(pc, function () {
          * });
          */
         loadUrl: function (url, callback) {
+            url = decodeURIComponent(url); // internal indexes rely on decoded URI components
+
             var bundle = this._findLoadedOrLoadingBundleForUrl(url);
             if (! bundle) {
                 callback('URL ' + url + ' not found in any bundles');
@@ -295,14 +307,13 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.ResourceLoader#destroy
          * @description Destroys the registry, and releases its resources. Does not unload bundle assets
          * as these should be unloaded by the {@link pc.AssetRegistry}.
          */
         destroy: function () {
-            if (this._destroyed) return;
-
             this._assets.off('add', this._onAssetAdded, this);
             this._assets.off('remove', this._onAssetRemoved, this);
 
@@ -316,8 +327,6 @@ Object.assign(pc, function () {
             this._assetsInBundles = null;
             this._urlsInBundles = null;
             this._fileRequests = null;
-
-            this._destroyed = true;
         }
     });
 

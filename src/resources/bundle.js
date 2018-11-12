@@ -1,6 +1,11 @@
 Object.assign(pc, function () {
     'use strict';
-
+    /**
+     * @private
+     * @constructor
+     * @name pc.BundleHandler
+     * @classdesc Loads Bundle Assets
+     */
     var BundleHandler = function () {};
 
     var HTTP_OPTIONS = {
