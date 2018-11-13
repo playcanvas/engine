@@ -1290,14 +1290,12 @@ Object.assign(pc, function () {
 
         _sync: function () {
             if (this._dirtyLocal) {
-                // console.log("_sync lcl", this.getHierarchyPath());
                 this.localTransform.setTRS(this.localPosition, this.localRotation, this.localScale);
 
                 this._dirtyLocal = false;
             }
 
             if (this._dirtyWorld) {
-                // console.log("_sync wrld", this.getHierarchyPath());
                 if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
