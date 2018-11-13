@@ -32,8 +32,7 @@ Object.assign(pc, function () {
             if (asset.type === 'bundle') {
                 this._bundleAssets[asset.id] = asset;
 
-                this._assets.on('load:' + asset.id, this._onBundleLoaded, this);
-                this._assets.on('error:' + asset.id, this._onBundleError, this);
+                this._registerBundleEventListeners(asset.id);
 
                 for (var i = 0, len = asset.data.assets.length; i < len; i++) {
                     this._indexAssetInBundle(asset.data.assets[i], asset);
@@ -44,6 +43,16 @@ Object.assign(pc, function () {
                     this._indexAssetFileUrls(asset);
                 }
             }
+        },
+
+        _registerBundleEventListeners: function (bundleAssetId) {
+            this._assets.on('load:' + bundleAssetId, this._onBundleLoaded, this);
+            this._assets.on('error:' + bundleAssetId, this._onBundleError, this);
+        },
+
+        _unregisterBundleEventListeners: function (bundleAssetId) {
+            this._assets.off('load:' + bundleAssetId, this._onBundleLoaded, this);
+            this._assets.off('error:' + bundleAssetId, this._onBundleError, this);
         },
 
         // Index the specified asset id and its file URLs so that
@@ -113,8 +122,7 @@ Object.assign(pc, function () {
                 delete this._bundleAssets[asset.id];
 
                 // remove event listeners
-                this._assets.off('load:' + asset.id, this._onBundleLoaded, this);
-                this._assets.off('error:' + asset.id, this._onBundleError, this);
+                this._unregisterBundleEventListeners(asset.id);
 
                 // remove bundle from _assetsInBundles and _urlInBundles indexes
                 var idx, id;
@@ -325,8 +333,7 @@ Object.assign(pc, function () {
             this._assets.off('remove', this._onAssetRemoved, this);
 
             for (var id in this._bundleAssets) {
-                this._assets.on('load:' + id, this._onBundleLoaded, this);
-                this._assets.on('error:' + id, this._onBundleError, this);
+                this._unregisterBundleEventListeners(id);
             }
 
             this._assets = null;
