@@ -809,7 +809,7 @@ Object.assign(pc, function () {
             // set the layer list
             this._layers.length = 0;
             for (i = 0; i < value.length; i++) {
-                this._layers[0] = value[0];
+                this._layers[i] = value[i];
             }
 
             // don't add into layers until we're enabled
