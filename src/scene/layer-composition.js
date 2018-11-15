@@ -18,6 +18,8 @@ Object.assign(pc, function () {
         this.layerList = [];
         this.subLayerList = [];
         this.subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
+        this._opaqueOrder = {};
+        this._transparentOrder = {};
 
         this._dirty = false;
         this._dirtyBlend = false;
@@ -365,8 +367,8 @@ Object.assign(pc, function () {
         if (this._isLayerAdded(layer)) return;
         this.layerList.push(layer);
         this.layerList.push(layer);
-        this.subLayerList.push(false);
-        this.subLayerList.push(true);
+        this._opaqueOrder[layer.id] = this.subLayerList.push(false) - 1;
+        this._transparentOrder[layer.id] = this.subLayerList.push(true) - 1;
         this.subLayerEnabled.push(true);
         this.subLayerEnabled.push(true);
         this._dirty = true;
@@ -387,6 +389,8 @@ Object.assign(pc, function () {
         if (this._isLayerAdded(layer)) return;
         this.layerList.splice(index, 0,    layer,  layer);
         this.subLayerList.splice(index, 0, false,  true);
+        this._opaqueOrder[layer.id] = index;
+        this._transparentOrder[layer.id] = index + 1;
         this.subLayerEnabled.splice(index, 0, true,  true);
         this._dirty = true;
         this._dirtyLights = true;
@@ -403,6 +407,10 @@ Object.assign(pc, function () {
     LayerComposition.prototype.remove = function (layer) {
         // remove all occurences of a layer
         var id = this.layerList.indexOf(layer);
+
+        delete this._opaqueOrder[id];
+        delete this._transparentOrder[id];
+
         while (id >= 0) {
             this.layerList.splice(id, 1);
             this.subLayerList.splice(id, 1);
@@ -413,6 +421,7 @@ Object.assign(pc, function () {
             this._dirtyCameras = true;
             this.fire("remove", layer);
         }
+
     };
 
     // Sublayer API
@@ -427,7 +436,7 @@ Object.assign(pc, function () {
         // add opaque to the end of the array
         if (this._isSublayerAdded(layer, false)) return;
         this.layerList.push(layer);
-        this.subLayerList.push(false);
+        this._opaqueOrder[layer.id] = this.subLayerList.push(false) - 1;
         this.subLayerEnabled.push(true);
         this._dirty = true;
         this._dirtyLights = true;
@@ -447,6 +456,7 @@ Object.assign(pc, function () {
         if (this._isSublayerAdded(layer, false)) return;
         this.layerList.splice(index, 0,    layer);
         this.subLayerList.splice(index, 0, false);
+        this._opaqueOrder[layer.id] = index;
         this.subLayerEnabled.splice(index, 0, true);
         this._dirty = true;
         this._dirtyLights = true;
@@ -466,6 +476,7 @@ Object.assign(pc, function () {
             if (this.layerList[i] === layer && !this.subLayerList[i]) {
                 this.layerList.splice(i, 1);
                 this.subLayerList.splice(i, 1);
+                delete this._opaqueOrder[layer.id];
                 this.subLayerEnabled.splice(i, 1);
                 this._dirty = true;
                 this._dirtyLights = true;
@@ -488,7 +499,7 @@ Object.assign(pc, function () {
         // add transparent to the end of the array
         if (this._isSublayerAdded(layer, true)) return;
         this.layerList.push(layer);
-        this.subLayerList.push(true);
+        this._transparentOrder[layer.id] = this.subLayerList.push(true) - 1;
         this.subLayerEnabled.push(true);
         this._dirty = true;
         this._dirtyLights = true;
@@ -508,6 +519,7 @@ Object.assign(pc, function () {
         if (this._isSublayerAdded(layer, true)) return;
         this.layerList.splice(index, 0,    layer);
         this.subLayerList.splice(index, 0, true);
+        this._transparentOrder[layer.id] = index;
         this.subLayerEnabled.splice(index, 0, true);
         this._dirty = true;
         this._dirtyLights = true;
@@ -527,6 +539,7 @@ Object.assign(pc, function () {
             if (this.layerList[i] === layer && this.subLayerList[i]) {
                 this.layerList.splice(i, 1);
                 this.subLayerList.splice(i, 1);
+                delete this._transparentOrder[layer.id];
                 this.subLayerEnabled.splice(i, 1);
                 this._dirty = true;
                 this._dirtyLights = true;
@@ -602,6 +615,50 @@ Object.assign(pc, function () {
             if (this.layerList[i].name === name) return this.layerList[i];
         }
         return null;
+    };
+
+    LayerComposition.prototype._sortLayersDescending = function (layersA, layersB, order) {
+        var i = 0;
+        var len = 0;
+        var id = 0;
+        var topLayerA = -1;
+        var topLayerB = -1;
+
+        // search for which layer is on top in layersA
+        for (i = 0, len = layersA.length; i < len; i++) {
+            id = layersA[i];
+            if (order.hasOwnProperty(id)) {
+                topLayerA = Math.max(topLayerA, order[id]);
+            }
+        }
+
+        // search for which layer is on top in layersB
+        for (i = 0, len = layersB.length; i < len; i++) {
+            id = layersB[i];
+            if (order.hasOwnProperty(id)) {
+                topLayerB = Math.max(topLayerB, order[id]);
+            }
+        }
+
+        // if the layers of layersA or layersB do not exist at all
+        // in the composition then return early with the other.
+        if (topLayerA === -1 && topLayerB !== -1) {
+            return 1;
+        } else if (topLayerB === -1 && topLayerA !== -1) {
+            return -1;
+        }
+
+        // sort in descending order since we want
+        // the higher order to be first
+        return topLayerB - topLayerA;
+    };
+
+    LayerComposition.prototype.sortTransparentLayers = function (layersA, layersB) {
+        return this._sortLayersDescending(layersA, layersB, this._transparentOrder);
+    };
+
+    LayerComposition.prototype.sortOpaqueLayers = function (layersA, layersB) {
+        return this._sortLayersDescending(layersA, layersB, this._opaqueOrder);
     };
 
     return {
