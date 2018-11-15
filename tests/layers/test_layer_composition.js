@@ -217,4 +217,122 @@ describe.only('pc.LayerComposition', function () {
         expect(this.composition.sortOpaqueLayers([this.layer.id], [this.layer.id])).to.equal(0);
     });
 
+    it('sortOpaqueLayers() returns correct value after insert()', function () {
+        var layerFront = new pc.Layer({ id: 2 });
+        var layerBack = new pc.Layer({ id: 3 });
+        this.composition.insert(layerFront, 0);
+        this.composition.insert(layerBack, 0);
+        expect(this.composition.sortOpaqueLayers([layerBack.id], [layerFront.id])).to.be.above(0);
+        expect(this.composition.sortOpaqueLayers([layerFront.id], [layerBack.id])).to.be.below(0);
+    });
+
+    it('sortOpaqueLayers() returns correct value after remove()', function () {
+        var layerFront = new pc.Layer({ id: 2 });
+        var layerMiddle = new pc.Layer({ id: 3 });
+        var layerBack = new pc.Layer({ id: 4 });
+        this.composition.push(layerBack);
+        this.composition.push(layerMiddle);
+        this.composition.push(layerFront);
+        this.composition.remove(layerMiddle);
+        expect(this.composition.sortOpaqueLayers([layerBack.id], [layerFront.id])).to.be.above(0);
+        expect(this.composition.sortOpaqueLayers([layerFront.id], [layerBack.id])).to.be.below(0);
+
+        // re-add middle layer on top of the front layer
+        this.composition.push(layerMiddle);
+        expect(this.composition.sortOpaqueLayers([layerFront.id], [layerMiddle.id])).to.be.above(0);
+    });
+
+    it('sortOpaqueLayers() returns correct value after pushOpaque()', function () {
+        var layerFront = new pc.Layer({ id: 2 });
+        var layerBack = new pc.Layer({ id: 3 });
+        this.composition.pushOpaque(layerBack);
+        this.composition.pushOpaque(layerFront);
+        expect(this.composition.sortOpaqueLayers([layerBack.id], [layerFront.id])).to.be.above(0);
+        expect(this.composition.sortOpaqueLayers([layerFront.id], [layerBack.id])).to.be.below(0);
+    });
+
+    it('sortOpaqueLayers() returns correct value after insertOpaque()', function () {
+        var layerFront = new pc.Layer({ id: 2 });
+        var layerBack = new pc.Layer({ id: 3 });
+        this.composition.insertOpaque(layerFront, 0);
+        this.composition.insertOpaque(layerBack, 0);
+        expect(this.composition.sortOpaqueLayers([layerBack.id], [layerFront.id])).to.be.above(0);
+        expect(this.composition.sortOpaqueLayers([layerFront.id], [layerBack.id])).to.be.below(0);
+    });
+
+    it('sortOpaqueLayers() returns correct value after removeOpaque()', function () {
+        var layerFront = new pc.Layer({ id: 2 });
+        var layerMiddle = new pc.Layer({ id: 3 });
+        var layerBack = new pc.Layer({ id: 4 });
+        this.composition.pushOpaque(layerBack);
+        this.composition.pushOpaque(layerMiddle);
+        this.composition.pushOpaque(layerFront);
+        this.composition.removeOpaque(layerMiddle);
+        expect(this.composition.sortOpaqueLayers([layerBack.id], [layerFront.id])).to.be.above(0);
+        expect(this.composition.sortOpaqueLayers([layerFront.id], [layerBack.id])).to.be.below(0);
+
+        // re-add middle layer on top of the front layer
+        this.composition.pushOpaque(layerMiddle);
+        expect(this.composition.sortOpaqueLayers([layerFront.id], [layerMiddle.id])).to.be.above(0);
+    });
+
+    it('sortTransparentLayers() returns correct value after insert()', function () {
+        var layerFront = new pc.Layer({ id: 2 });
+        var layerBack = new pc.Layer({ id: 3 });
+        this.composition.insert(layerFront, 0);
+        this.composition.insert(layerBack, 0);
+        expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
+        expect(this.composition.sortTransparentLayers([layerFront.id], [layerBack.id])).to.be.below(0);
+    });
+
+    it('sortTransparentLayers() returns correct value after remove()', function () {
+        var layerFront = new pc.Layer({ id: 2 });
+        var layerMiddle = new pc.Layer({ id: 3 });
+        var layerBack = new pc.Layer({ id: 4 });
+        this.composition.push(layerBack);
+        this.composition.push(layerMiddle);
+        this.composition.push(layerFront);
+        this.composition.remove(layerMiddle);
+        expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
+        expect(this.composition.sortTransparentLayers([layerFront.id], [layerBack.id])).to.be.below(0);
+
+        // re-add middle layer on top of the front layer
+        this.composition.push(layerMiddle);
+        expect(this.composition.sortTransparentLayers([layerFront.id], [layerMiddle.id])).to.be.above(0);
+    });
+
+    it('sortTransparentLayers() returns correct value after pushTransparent()', function () {
+        var layerFront = new pc.Layer({ id: 2 });
+        var layerBack = new pc.Layer({ id: 3 });
+        this.composition.pushTransparent(layerBack);
+        this.composition.pushTransparent(layerFront);
+        expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
+        expect(this.composition.sortTransparentLayers([layerFront.id], [layerBack.id])).to.be.below(0);
+    });
+
+    it('sortTransparentLayers() returns correct value after insertTransparent()', function () {
+        var layerFront = new pc.Layer({ id: 2 });
+        var layerBack = new pc.Layer({ id: 3 });
+        this.composition.insertTransparent(layerFront, 0);
+        this.composition.insertTransparent(layerBack, 0);
+        expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
+        expect(this.composition.sortTransparentLayers([layerFront.id], [layerBack.id])).to.be.below(0);
+    });
+
+    it('sortTransparentLayers() returns correct value after removeTransparent()', function () {
+        var layerFront = new pc.Layer({ id: 2 });
+        var layerMiddle = new pc.Layer({ id: 3 });
+        var layerBack = new pc.Layer({ id: 4 });
+        this.composition.pushTransparent(layerBack);
+        this.composition.pushTransparent(layerMiddle);
+        this.composition.pushTransparent(layerFront);
+        this.composition.removeTransparent(layerMiddle);
+        expect(this.composition.sortTransparentLayers([layerBack.id], [layerFront.id])).to.be.above(0);
+        expect(this.composition.sortTransparentLayers([layerFront.id], [layerBack.id])).to.be.below(0);
+
+        // re-add middle layer on top of the front layer
+        this.composition.pushTransparent(layerMiddle);
+        expect(this.composition.sortTransparentLayers([layerFront.id], [layerMiddle.id])).to.be.above(0);
+    });
+
 });

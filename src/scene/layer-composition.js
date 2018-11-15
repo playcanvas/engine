@@ -389,8 +389,10 @@ Object.assign(pc, function () {
         if (this._isLayerAdded(layer)) return;
         this.layerList.splice(index, 0,    layer,  layer);
         this.subLayerList.splice(index, 0, false,  true);
-        this._opaqueOrder[layer.id] = index;
-        this._transparentOrder[layer.id] = index + 1;
+
+        var count = this.layerList.length;
+        this._updateOpaqueOrder(index, count - 1);
+        this._updateTransparentOrder(index, count - 1);
         this.subLayerEnabled.splice(index, 0, true,  true);
         this._dirty = true;
         this._dirtyLights = true;
@@ -422,6 +424,10 @@ Object.assign(pc, function () {
             this.fire("remove", layer);
         }
 
+        // update both orders
+        var count = this.layerList.length;
+        this._updateOpaqueOrder(0, count - 1);
+        this._updateTransparentOrder(0, count - 1);
     };
 
     // Sublayer API
@@ -456,7 +462,10 @@ Object.assign(pc, function () {
         if (this._isSublayerAdded(layer, false)) return;
         this.layerList.splice(index, 0,    layer);
         this.subLayerList.splice(index, 0, false);
-        this._opaqueOrder[layer.id] = index;
+
+        var count = this.subLayerList.length;
+        this._updateOpaqueOrder(index, count - 1);
+
         this.subLayerEnabled.splice(index, 0, true);
         this._dirty = true;
         this._dirtyLights = true;
@@ -472,11 +481,14 @@ Object.assign(pc, function () {
      */
     LayerComposition.prototype.removeOpaque = function (layer) {
         // remove opaque occurences of a layer
-        for (var i = 0; i < this.layerList.length; i++) {
+        for (var i = 0, len = this.layerList.length; i < len; i++) {
             if (this.layerList[i] === layer && !this.subLayerList[i]) {
                 this.layerList.splice(i, 1);
                 this.subLayerList.splice(i, 1);
-                delete this._opaqueOrder[layer.id];
+
+                len--;
+                this._updateOpaqueOrder(i, len - 1);
+
                 this.subLayerEnabled.splice(i, 1);
                 this._dirty = true;
                 this._dirtyLights = true;
@@ -519,7 +531,10 @@ Object.assign(pc, function () {
         if (this._isSublayerAdded(layer, true)) return;
         this.layerList.splice(index, 0,    layer);
         this.subLayerList.splice(index, 0, true);
-        this._transparentOrder[layer.id] = index;
+
+        var count = this.subLayerList.length;
+        this._updateTransparentOrder(index, count - 1);
+
         this.subLayerEnabled.splice(index, 0, true);
         this._dirty = true;
         this._dirtyLights = true;
@@ -535,11 +550,14 @@ Object.assign(pc, function () {
      */
     LayerComposition.prototype.removeTransparent = function (layer) {
         // remove transparent occurences of a layer
-        for (var i = 0; i < this.layerList.length; i++) {
+        for (var i = 0, len = this.layerList.length; i < len; i++) {
             if (this.layerList[i] === layer && this.subLayerList[i]) {
                 this.layerList.splice(i, 1);
                 this.subLayerList.splice(i, 1);
-                delete this._transparentOrder[layer.id];
+
+                len--;
+                this._updateTransparentOrder(i, len - 1);
+
                 this.subLayerEnabled.splice(i, 1);
                 this._dirty = true;
                 this._dirtyLights = true;
@@ -615,6 +633,22 @@ Object.assign(pc, function () {
             if (this.layerList[i].name === name) return this.layerList[i];
         }
         return null;
+    };
+
+    LayerComposition.prototype._updateOpaqueOrder = function (startIndex, endIndex) {
+        for (var i = startIndex; i <= endIndex; i++) {
+            if (this.subLayerList[i] === false) {
+                this._opaqueOrder[this.layerList[i].id] = i;
+            }
+        }
+    };
+
+    LayerComposition.prototype._updateTransparentOrder = function (startIndex, endIndex) {
+        for (var i = startIndex; i <= endIndex; i++) {
+            if (this.subLayerList[i] === true) {
+                this._transparentOrder[this.layerList[i].id] = i;
+            }
+        }
     };
 
     // Used to determine which array of layers has any sublayer that is
