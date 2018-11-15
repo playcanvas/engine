@@ -202,10 +202,10 @@ Object.assign(pc, function () {
         var maxHeight = 0;
         var maxDescent = 0;
         var metrics = {};
-        var ch;
+        var i, ch;
         for (i = 0; i < symbols.length; i++) {
             ch = symbols[i];
-            metrics[ch] = this._getTextMetrics(ch)
+            metrics[ch] = this._getTextMetrics(ch);
             maxHeight = Math.max(maxHeight, metrics[ch].height);
             maxDescent = Math.max(maxDescent, metrics[ch].descent);
         }
@@ -217,10 +217,9 @@ Object.assign(pc, function () {
         var halfWidth = sx / 2;
         var _x = halfWidth;
         var _y = sy;
-        var i;
 
         for (i = 0; i < symbols.length; i++) {
-            var ch = symbols[i];
+            ch = symbols[i];
             var code = pc.string.getCodePoint(symbols[i]);
 
             var fs = this.fontSize;
@@ -354,7 +353,7 @@ Object.assign(pc, function () {
 
     // Calculate some metrics that aren't available via the
     // browser API, notably character height and descent size
-    CanvasFont.prototype._getTextMetrics = function(text) {
+    CanvasFont.prototype._getTextMetrics = function (text) {
         var textSpan = document.createElement('span');
         textSpan.id = 'content-span';
         textSpan.innerHTML = text;
@@ -369,7 +368,7 @@ Object.assign(pc, function () {
         div.appendChild(textSpan);
         div.appendChild(block);
         div.style.font = this.fontName;
-        div.style.fontSize = this.fontSize+'px';
+        div.style.fontSize = this.fontSize + 'px';
 
         var body = document.body;
         body.appendChild(div);
