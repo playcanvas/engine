@@ -617,6 +617,9 @@ Object.assign(pc, function () {
         return null;
     };
 
+    // Used to determine which array of layers has any sublayer that is
+    // on top of all the sublayers in the other array. The order is a dictionary
+    // of <layerId, index>.
     LayerComposition.prototype._sortLayersDescending = function (layersA, layersB, order) {
         var i = 0;
         var len = 0;
@@ -653,10 +656,28 @@ Object.assign(pc, function () {
         return topLayerB - topLayerA;
     };
 
+    /**
+     * @function
+     * @name pc.LayerComposition#sortTransparentLayers
+     * @description Used to determine which array of layers has any transparent sublayer that is on top of all the transparent sublayers in the other array.
+     * @param {Number[]} layersA IDs of layers
+     * @param {Number[]} layersB IDs of layers
+     * @returns {Number} Returns a negative number if any of the transparent sublayers in layersA is on top of all the transparent sublayers in layersB,
+     * or a positive number if any of the transparent sublayers in layersB is on top of all the transparent sublayers in layersA, or 0 otherwise.
+     */
     LayerComposition.prototype.sortTransparentLayers = function (layersA, layersB) {
         return this._sortLayersDescending(layersA, layersB, this._transparentOrder);
     };
 
+    /**
+     * @function
+     * @name pc.LayerComposition#sortOpaqueLayers
+     * @description Used to determine which array of layers has any opaque sublayer that is on top of all the opaque sublayers in the other array.
+     * @param {Number[]} layersA IDs of layers
+     * @param {Number[]} layersB IDs of layers
+     * @returns {Number} Returns a negative number if any of the opaque sublayers in layersA is on top of all the opaque sublayers in layersB,
+     * or a positive number if any of the opaque sublayers in layersB is on top of all the opaque sublayers in layersA, or 0 otherwise.
+     */
     LayerComposition.prototype.sortOpaqueLayers = function (layersA, layersB) {
         return this._sortLayersDescending(layersA, layersB, this._opaqueOrder);
     };
