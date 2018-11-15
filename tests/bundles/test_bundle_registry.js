@@ -19,14 +19,14 @@ describe('pc.BundleRegistry', function () {
     });
 
     it('bundle asset is added to the bundle registry', function () {
-        var asset = new pc.Asset('bundle', 'bundle', null, {assets: []});
+        var asset = new pc.Asset('bundle', 'bundle', null, { assets: [] });
         this.assets.add(asset);
         var assets = this.bundles.list();
         expect(assets).to.deep.equal([asset]);
     });
 
     it('bundle asset is removed from the bundle registry', function () {
-        var asset = new pc.Asset('bundle', 'bundle', null, {assets: []});
+        var asset = new pc.Asset('bundle', 'bundle', null, { assets: [] });
         this.assets.add(asset);
         var bundles = this.bundles.list();
         expect(bundles).to.deep.equal([asset]);
