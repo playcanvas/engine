@@ -336,7 +336,7 @@ Object.assign(pc, function () {
             delete this._app._entityIndex[this._guid];
         }
 
-        pc.GraphNode.prototype.destroy.call();
+        pc.GraphNode.prototype.destroy.call(this);
 
         this._destroying = false;
     };
