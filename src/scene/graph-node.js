@@ -226,6 +226,10 @@ Object.assign(pc, function () {
 
             clone.worldTransform.copy(this.worldTransform);
             clone._dirtyWorld = this._dirtyWorld;
+
+            if (clone._dirtyLocal || clone._dirtyWorld)
+                clone._queueSync();
+
             clone._dirtyNormal = this._dirtyNormal;
             clone._aabbVer = this._aabbVer + 1;
 
@@ -913,14 +917,34 @@ Object.assign(pc, function () {
 
         _dirtifyWorld: function () {
             if (!this._dirtyWorld) {
-                this._dirtyWorld = true;
-                for (var i = 0; i < this._children.length; i++) {
-                    if (!this._children[i]._dirtyWorld)
-                        this._children[i]._dirtifyWorld();
-                }
+                this._queueSync();
+                if (!this._dirtyWorld)
+                    this._dirtifyWorldImpl();
+            }
+        },
+
+        _dirtifyWorldImpl: function () {
+            this._dirtyWorld = true;
+            for (var i = 0; i < this._children.length; i++) {
+                if (!this._children[i]._dirtyWorld)
+                    this._children[i]._dirtifyWorldImpl();
             }
             this._dirtyNormal = true;
             this._aabbVer++;
+        },
+
+        // Sync Queue is currently in App and there is no reference to App obj in graph-node
+        // It's temporary solution to access it from global namespace
+        _queueSync: function () {
+            pc.Application.getApplication().syncQueue.push(this._graphDepth, this);
+        },
+
+        _cancelSync: function () {
+            pc.Application.getApplication().syncQueue.erase(this);
+        },
+
+        destroy: function () {
+            this._cancelSync();
         },
 
         /**
@@ -1122,8 +1146,13 @@ Object.assign(pc, function () {
             // The graph depth of the child and all of its descendants will now change
             node._updateGraphDepth();
 
+            if (node._dirtifyLocal || node._dirtifyWorld) {
+                node._cancelSync();
+                node._queueSync();
+            }
+
             // The child (plus subhierarchy) will need world transforms to be recalculated
-            node._dirtifyWorld();
+            node._dirtifyLocal();
 
             // alert an entity that it has been inserted
             if (node.fire) node.fire('insert', this);
@@ -1164,6 +1193,12 @@ Object.assign(pc, function () {
 
                     // Clear parent
                     child._parent = null;
+                    child._updateGraphDepth();
+
+                    if (child._dirtifyLocal || child._dirtifyWorld) {
+                        child._cancelSync();
+                        child._queueSync();
+                    }
 
                     // alert the parent that it has had a child removed
                     if (this.fire) this.fire('childremove', child);
