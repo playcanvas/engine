@@ -943,6 +943,10 @@ Object.assign(pc, function () {
             pc.Application.getApplication().syncQueue.erase(this);
         },
 
+        destroy: function () {
+            this._cancelSync();
+        },
+
         /**
          * @function
          * @name pc.GraphNode#setPosition
@@ -1279,13 +1283,6 @@ Object.assign(pc, function () {
             }
 
             return results;
-        },
-
-        getHierarchyPath: function () {
-            var path = this.name;
-            for (var parent = this._parent; parent; parent = parent._parent)
-                path = parent.name + '/' + path;
-            return path;
         },
 
         _sync: function () {

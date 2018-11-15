@@ -5,7 +5,7 @@ Object.assign(pc, function () {
     };
 
     SyncQueue.prototype.runSync = function () {
-        for (var i = 0; i < this._values.length; i++) {
+        for (var i = 0, len = this._values.length; i < len; i++) {
             this._values[i].syncHierarchy();
         }
         this._values.length = 0;
