@@ -1,4 +1,4 @@
-describe.only('pc.LayerComposition', function () {
+describe('pc.LayerComposition', function () {
     beforeEach(function () {
         this.layer = new pc.Layer({ id: 1, name: 'layer' });
         this.composition = new pc.LayerComposition();
