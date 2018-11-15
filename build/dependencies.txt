@@ -85,6 +85,7 @@
 ../src/scene/layer.js
 ../src/scene/layer-composition.js
 ../src/scene/sprite.js
+../src/scene/sync-queue.js
 ../src/scene/texture-atlas.js
 ../src/scene/stencil-parameters.js
 ../src/anim/animation.js
