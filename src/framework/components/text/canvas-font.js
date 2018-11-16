@@ -46,6 +46,7 @@ Object.assign(pc, function () {
             autoMipmap: true
         });
 
+        texture.name = 'font';
         texture.setSource(canvas);
         texture.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
         texture.magFilter = pc.FILTER_LINEAR;
@@ -248,6 +249,7 @@ Object.assign(pc, function () {
                             format: pc.PIXELFORMAT_R8_G8_B8_A8,
                             autoMipmap: true
                         });
+                        texture.name = 'font-atlas';
                         texture.setSource(canvas);
                         texture.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
                         texture.magFilter = pc.FILTER_LINEAR;
