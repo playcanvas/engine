@@ -149,8 +149,10 @@ Object.assign(pc, function () {
             for (i = 0; i < textLength; i++) {
                 var char = symbols[i];
                 var info = this._font.data.chars[char];
-                if (!info) continue;
-
+                if (!info) {
+                    charactersPerTexture[map]++;
+                    continue;
+                }
                 var map = info.map;
 
                 if (!charactersPerTexture[map])
@@ -409,10 +411,11 @@ Object.assign(pc, function () {
                 var quadsize = 1;
                 var glyphMinX = 0;
                 var glyphWidth = 0;
+                var size;
 
                 data = json.chars[char];
                 if (data && data.scale) {
-                    var size = (data.width + data.height) / 2;
+                    size = (data.width + data.height) / 2;
                     scale = (size / MAGIC) * this._fontSize / size;
                     quadsize = (size / MAGIC) * this._fontSize / data.scale;
                     advance = data.xadvance * scale;
@@ -427,8 +430,20 @@ Object.assign(pc, function () {
                         glyphMinX = 0;
                     }
                 } else {
+                    // get a default size for a missing character
+                    var chars = Object.keys(json.chars)
+                    if (chars.length) {
+                        var char = json.chars[Object.keys(json.chars)[0]];
+                        size = (char.width + char.height) / 2;
+                    } else {
+                        // nothing to work with here!
+                        size = 1;
+                    }
+
+                    scale = (size / MAGIC) * this._fontSize / size;
+
                     // missing character
-                    advance = 1;
+                    advance = size * scale;
                     x = 0;
                     y = 0;
                     quadsize = this._fontSize;
