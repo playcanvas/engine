@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     var MAX_TEXTURE_SIZE = 4096;
-    var DEFAULT_TEXTURE_SIZE = 2048;
+    var DEFAULT_TEXTURE_SIZE = 512;
 
     /**
      * @private
@@ -13,8 +13,8 @@ Object.assign(pc, function () {
      * @param {String} [options.fontWeight] The weight of the font, e.g. 'normal', 'bold', defaults to "normal"
      * @param {Number} [options.fontSize] The size the font will be rendered into to the texture atlas at, defaults to 32
      * @param {pc.Color} [options.color] The color the font will be rendered into the texture atlas as, defaults to white
-     * @param {Number} [options.width] The width of each texture atlas, defaults to 2048
-     * @param {Number} [options.height] The height of each texture atlas, defaults to 2048
+     * @param {Number} [options.width] The width of each texture atlas, defaults to 512
+     * @param {Number} [options.height] The height of each texture atlas, defaults to 512
      * @param {Number} [options.getCharScale] A custom function which takes a codepoint and return scale value 0-1 to scale char down before rendering into atlas. Return -1 to use default scale value.
      */
     var CanvasFont = function (app, options) {
