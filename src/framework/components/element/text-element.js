@@ -146,14 +146,20 @@ Object.assign(pc, function () {
 
             var charactersPerTexture = {};
 
+            var char, info, map;
             for (i = 0; i < textLength; i++) {
-                var char = symbols[i];
-                var info = this._font.data.chars[char];
+                char = symbols[i];
+                info = this._font.data.chars[char];
+                // if char is missing use 'space' or first char in map
                 if (!info) {
-                    charactersPerTexture[map]++;
-                    continue;
+                    if (this._font.data.chars[' ']) {
+                        info = this._font.data.chars[' '];
+                    } else {
+                        info = this._font.data.chars[Object.keys(this._font.data.chars)[0]];
+                    }
                 }
-                var map = info.map;
+
+                map = info.map;
 
                 if (!charactersPerTexture[map])
                     charactersPerTexture[map] = 0;
@@ -411,13 +417,24 @@ Object.assign(pc, function () {
                 var quadsize = 1;
                 var glyphMinX = 0;
                 var glyphWidth = 0;
-                var size;
+                var dataScale, size;
 
                 data = json.chars[char];
-                if (data && data.scale) {
+
+                // use 'space' if available or first character
+                if (!data) {
+                    if (json.chars[' ']) {
+                        data = json.chars[' '];
+                    } else {
+                        data = json.chars[Object.keys(json.chars)[0]];
+                    }
+                }
+
+                if (data) {
+                    dataScale = data.scale || 1;
                     size = (data.width + data.height) / 2;
                     scale = (size / MAGIC) * this._fontSize / size;
-                    quadsize = (size / MAGIC) * this._fontSize / data.scale;
+                    quadsize = (size / MAGIC) * this._fontSize / dataScale;
                     advance = data.xadvance * scale;
                     x = data.xoffset * scale;
                     y = data.yoffset * scale;
@@ -430,23 +447,7 @@ Object.assign(pc, function () {
                         glyphMinX = 0;
                     }
                 } else {
-                    // get a default size for a missing character
-                    var chars = Object.keys(json.chars)
-                    if (chars.length) {
-                        var defaultChar = json.chars[Object.keys(json.chars)[0]];
-                        size = (defaultChar.width + defaultChar.height) / 2;
-                    } else {
-                        // nothing to work with here!
-                        size = 1;
-                    }
-
-                    scale = (size / MAGIC) * this._fontSize / size;
-
-                    // missing character
-                    advance = size * scale;
-                    x = 0;
-                    y = 0;
-                    quadsize = this._fontSize;
+                    console.error("Couldn't substitute missing character: '" + char + "'");
                 }
 
                 var isLineBreak = LINE_BREAK_CHAR.test(char);
@@ -708,8 +709,9 @@ Object.assign(pc, function () {
                 if (data.chars[space]) {
                     return this._getUv(space);
                 }
+
                 // otherwise - missing char
-                return [0, 0, 1, 1];
+                return [0, 0, 0, 0];
             }
 
             var map = data.chars[char].map;
