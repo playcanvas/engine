@@ -433,8 +433,8 @@ Object.assign(pc, function () {
                     // get a default size for a missing character
                     var chars = Object.keys(json.chars)
                     if (chars.length) {
-                        var char = json.chars[Object.keys(json.chars)[0]];
-                        size = (char.width + char.height) / 2;
+                        var defaultChar = json.chars[Object.keys(json.chars)[0]];
+                        size = (defaultChar.width + defaultChar.height) / 2;
                     } else {
                         // nothing to work with here!
                         size = 1;
