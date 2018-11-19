@@ -1147,10 +1147,8 @@ Object.assign(pc, function () {
             node._updateGraphDepth();
 
             if (node._dirtifyLocal || node._dirtifyWorld) {
-                node._cancelSync();
                 node._queueSync();
             }
-
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node._dirtifyLocal();
 
@@ -1166,6 +1164,10 @@ Object.assign(pc, function () {
                 this._graphDepth = this._parent._graphDepth + 1;
             } else {
                 this._graphDepth = 0;
+            }
+
+            if (this._dirtifyLocal || this._dirtifyWorld) {
+                this._cancelSync();
             }
 
             for (var i = 0, len = this._children.length; i < len; i++) {
@@ -1196,7 +1198,6 @@ Object.assign(pc, function () {
                     child._updateGraphDepth();
 
                     if (child._dirtifyLocal || child._dirtifyWorld) {
-                        child._cancelSync();
                         child._queueSync();
                     }
 
