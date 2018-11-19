@@ -1172,7 +1172,7 @@ Object.assign(pc, function () {
             }
 
             if (this._dirtifyLocal || this._dirtifyWorld) {
-                this._sync();
+                pc.GraphNode.prototype._sync.call(this);
                 this._cancelSync();
             }
 
