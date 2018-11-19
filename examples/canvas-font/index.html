@@ -41,15 +41,7 @@
                 fontName: "Arial",
                 fontSize: size,
                 width: 128,
-                height: 128,
-                getCharScale: function (code) {
-                    // finger pointing up is a particular long character, use more scaling
-                    if (code === 0x261D) {
-                        return 0.8;
-                    } else {
-                        return -1; // use default scaler
-                    }
-                }
+                height: 128
             });
 
             var asset = new pc.Asset("CanvasFont", "font", {});
