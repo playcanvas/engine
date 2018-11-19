@@ -119,6 +119,11 @@ Object.assign(pc, function () {
             if (this._enabled !== enabled) {
                 this._enabled = enabled;
 
+                if (this._dirtifyLocal || this._dirtifyWorld) {
+                    this._queueSync();
+                }
+                this._dirtifyLocal();
+
                 if (!this._parent || this._parent.enabled)
                     this._notifyHierarchyStateChanged(this, enabled);
             }
@@ -1167,6 +1172,7 @@ Object.assign(pc, function () {
             }
 
             if (this._dirtifyLocal || this._dirtifyWorld) {
+                this._sync();
                 this._cancelSync();
             }
 
@@ -1200,6 +1206,7 @@ Object.assign(pc, function () {
                     if (child._dirtifyLocal || child._dirtifyWorld) {
                         child._queueSync();
                     }
+                    node._dirtifyLocal();
 
                     // alert the parent that it has had a child removed
                     if (this.fire) this.fire('childremove', child);
