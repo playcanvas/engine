@@ -78,6 +78,7 @@ Object.assign(pc, function () {
             minFilter: pc.FILTER_NEAREST,
             magFilter: pc.FILTER_NEAREST
         });
+        tex.name = 'testFHP';
         var targ = new pc.RenderTarget(device, tex, {
             depth: false
         });
@@ -91,6 +92,7 @@ Object.assign(pc, function () {
             minFilter: pc.FILTER_NEAREST,
             magFilter: pc.FILTER_NEAREST
         });
+        tex2.name = 'testFHP';
         var targ2 = new pc.RenderTarget(device, tex2, {
             depth: false
         });

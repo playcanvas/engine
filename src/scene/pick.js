@@ -191,6 +191,7 @@ Object.assign(pc, function () {
                         width: self.width,
                         height: self.height
                     });
+                    colorBuffer.name = 'pick';
                     colorBuffer.minFilter = pc.FILTER_NEAREST;
                     colorBuffer.magFilter = pc.FILTER_NEAREST;
                     colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
