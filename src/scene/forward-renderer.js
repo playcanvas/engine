@@ -2198,6 +2198,16 @@ Object.assign(pc, function () {
                     layer.instances.visibleOpaque[j].done = false;
                     layer.instances.visibleTransparent[j].done = false;
                 }
+
+                // remove visible lists if cameras have been removed, remove one per frame
+                if (layer.cameras.length < layer.instances.visibleOpaque.length) {
+                    layer.instances.visibleOpaque.splice(layer.cameras.length, 1);
+                }
+
+                if (layer.cameras.length < layer.instances.visibleTransparent.length) {
+                    layer.instances.visibleTransparent.splice(layer.cameras.length, 1);
+                }
+
                 // Generate static lighting for meshes in this layer if needed
                 if (layer._needsStaticPrepare && layer._staticLightHash) {
                     // TODO: reuse with the same staticLightHash

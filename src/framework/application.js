@@ -174,6 +174,7 @@ Object.assign(pc, function () {
         this._entityIndex = {};
 
         this.scene = new pc.Scene();
+        this.syncQueue = new pc.SyncQueue();
         this.root = new pc.Entity(this);
         this.root._enabledInHierarchy = true;
         this._enableList = [];
@@ -1025,7 +1026,7 @@ Object.assign(pc, function () {
             // #endif
 
             this.fire("prerender");
-            this.root.syncHierarchy();
+            this.syncQueue.runSync();
             this.batcher.updateAll();
             pc._skipRenderCounter = 0;
             this.renderer.renderComposition(this.scene.layers);
@@ -1455,8 +1456,7 @@ Object.assign(pc, function () {
          */
         destroy: function () {
             var i, l;
-
-            Application._applications[this.graphicsDevice.canvas.id] = null;
+            var canvasId = this.graphicsDevice.canvas.id;
 
             this.off('librariesloaded');
             document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
@@ -1568,6 +1568,8 @@ Object.assign(pc, function () {
             pc.script.app = null;
             // remove default particle texture
             pc.ParticleEmitter.DEFAULT_PARAM_TEXTURE = null;
+
+            Application._applications[canvasId] = null;
 
             if (Application._currentApplication === this) {
                 Application._currentApplication = null;
