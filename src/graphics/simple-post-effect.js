@@ -73,10 +73,15 @@ Object.assign(pc, (function () {
 
         var oldDepthTest = device.getDepthTest();
         var oldDepthWrite = device.getDepthWrite();
-        var oldCull = device.getCullMode();
+        var oldCullMode = device.getCullMode();
+        var oldWR = device.writeRed;
+        var oldWG = device.writeGreen;
+        var oldWB = device.writeBlue;
+        var oldWA = device.writeAlpha;
         device.setDepthTest(false);
         device.setDepthWrite(false);
         device.setCullMode(pc.CULLFACE_NONE);
+        device.setColorWrite(true, true, true, true);
         if (!useBlend) device.setBlending(false);
 
         device.setVertexBuffer(_postEffectQuadVB, 0);
@@ -86,7 +91,8 @@ Object.assign(pc, (function () {
 
         device.setDepthTest(oldDepthTest);
         device.setDepthWrite(oldDepthWrite);
-        device.setCullMode(oldCull);
+        device.setCullMode(oldCullMode);
+        device.setColorWrite(oldWR, oldWG, oldWB, oldWA);
 
         device.updateEnd();
 

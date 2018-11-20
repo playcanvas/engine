@@ -101,7 +101,7 @@ Object.assign(pc, function () {
         device.setBlending(false);
         device.setDepthTest(false);
         device.setDepthWrite(false);
-        device.setCullMode(pc.CULLFACE_BACK);
+        device.setCullMode(pc.CULLFACE_NONE);
         device.setColorWrite(true, true, true, true);
 
         device.setVertexBuffer(vertexBuffer, 0);
