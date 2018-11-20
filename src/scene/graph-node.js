@@ -119,10 +119,14 @@ Object.assign(pc, function () {
             if (this._enabled !== enabled) {
                 this._enabled = enabled;
 
-                if (this._dirtifyLocal || this._dirtifyWorld) {
-                    this._queueSync();
+                if (enabled) {
+                    if (this._dirtyLocal || this._dirtyWorld) {
+                        this._queueSync();
+                    }
+                    this._dirtifyLocal();
+                } else {
+                    this._cancelSync();
                 }
-                this._dirtifyLocal();
 
                 if (!this._parent || this._parent.enabled)
                     this._notifyHierarchyStateChanged(this, enabled);
@@ -1151,7 +1155,7 @@ Object.assign(pc, function () {
             // The graph depth of the child and all of its descendants will now change
             node._updateGraphDepth();
 
-            if (node._dirtifyLocal || node._dirtifyWorld) {
+            if (node._dirtyLocal || node._dirtyWorld) {
                 node._queueSync();
             }
             // The child (plus subhierarchy) will need world transforms to be recalculated
@@ -1171,10 +1175,7 @@ Object.assign(pc, function () {
                 this._graphDepth = 0;
             }
 
-            if (this._dirtifyLocal || this._dirtifyWorld) {
-                pc.GraphNode.prototype._sync.call(this);
-                this._cancelSync();
-            }
+            this._cancelSync();
 
             for (var i = 0, len = this._children.length; i < len; i++) {
                 this._children[i]._updateGraphDepth();
@@ -1202,11 +1203,6 @@ Object.assign(pc, function () {
                     // Clear parent
                     child._parent = null;
                     child._updateGraphDepth();
-
-                    if (child._dirtifyLocal || child._dirtifyWorld) {
-                        child._queueSync();
-                    }
-                    node._dirtifyLocal();
 
                     // alert the parent that it has had a child removed
                     if (this.fire) this.fire('childremove', child);
