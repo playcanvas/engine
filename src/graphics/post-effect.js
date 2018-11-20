@@ -65,8 +65,8 @@ Object.assign(pc, function () {
     function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
         var oldRt = device.getRenderTarget();
         device.setRenderTarget(target);
-
         device.updateBegin();
+
         var w = (target !== null) ? target.width : device.width;
         var h = (target !== null) ? target.height : device.height;
         var x = 0;
@@ -104,9 +104,7 @@ Object.assign(pc, function () {
         device.setCullMode(pc.CULLFACE_BACK);
         device.setColorWrite(true, true, true, true);
 
-        var oldVb = device.vertexBuffers[0];
         device.setVertexBuffer(vertexBuffer, 0);
-        var oldShader = device.getShader();
         device.setShader(shader);
 
         device.draw(primitive);
