@@ -1312,7 +1312,7 @@ Object.assign(pc, function () {
             this._screenCorners[3].set(this._absLeft, this._absTop, 0);
 
             // transform corners to screen space
-            var screenSpace = this.screen.screen.screenSpace;
+            var screenSpace = this._isScreenSpace();
             for (var i = 0; i < 4; i++) {
                 this._screenTransform.transformPoint(this._screenCorners[i], this._screenCorners[i]);
                 if (screenSpace)
