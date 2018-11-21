@@ -82,25 +82,25 @@ Object.assign(pc, function () {
         this._bytesRead += 512;
 
         var file = {
-            name: headers.substr(0, 100),
-            mode: headers.substr(100, 8),
-            uid: parseInt(headers.substr(108, 8), 10),
-            gid: parseInt(headers.substr(116, 8), 10),
+            name: headers.substr(0, 100).replace(/\0/g, ''),
+            // mode: headers.substr(100, 8),
+            // uid: parseInt(headers.substr(108, 8), 10),
+            // gid: parseInt(headers.substr(116, 8), 10),
             size: parseInt(headers.substr(124, 12), 8),
-            mtime: parseInt(headers.substr(136, 12), 8),
-            checksum: parseInt(headers.substr(148, 8), 10),
-            type: headers.substr(156, 1),
-            linkname: headers.substr(157, 100),
+            // mtime: parseInt(headers.substr(136, 12), 8),
+            // checksum: parseInt(headers.substr(148, 8), 10),
+            // type: headers.substr(156, 1),
+            // linkname: headers.substr(157, 100),
             ustarFormat: headers.substr(257, 6)
         };
 
         if (file.ustarFormat.indexOf("ustar") > -1) {
-            file.version = headers.substr(263, 2);
-            file.uname = headers.substr(265, 32);
-            file.gname = headers.substr(297, 32);
-            file.devmajor = parseInt(headers.substr(329, 8), 10);
-            file.devminor = parseInt(headers.substr(337, 8), 10);
-            file.namePrefix = headers.substr(345, 155);
+            // file.version = headers.substr(263, 2);
+            // file.uname = headers.substr(265, 32);
+            // file.gname = headers.substr(297, 32);
+            // file.devmajor = parseInt(headers.substr(329, 8), 10);
+            // file.devminor = parseInt(headers.substr(337, 8), 10);
+            file.namePrefix = headers.substr(345, 155).replace(/\0/g, '');
 
             if (file.namePrefix.length > 0) {
                 file.name = file.namePrefix.trim() + file.name.trim();
