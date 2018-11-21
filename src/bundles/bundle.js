@@ -11,11 +11,23 @@ Object.assign(pc, function () {
     var Bundle = function (files) {
         this._blobUrls = {};
 
-        // index files by name
-        this._files = {};
         for (var i = 0, len = files.length; i < len; i++) {
-            this._files[files[i].name] = files[i];
+            if (files[i].url) {
+                this._blobUrls[files[i].name] = files[i].url;
+            }
         }
+    };
+
+    /**
+     * @private
+     * @function
+     * @name pc.Bundle#hasBlobUrl
+     * @description Returns true if the specified URL exists in the loaded bundle
+     * @param {String} url The original file URL. Make sure you have called decodeURIComponent on the URL first.
+     * @returns {Boolean} True of false
+     */
+    Bundle.prototype.hasBlobUrl = function (url) {
+        return !!this._blobUrls[url];
     };
 
     /**
@@ -27,15 +39,7 @@ Object.assign(pc, function () {
      * @returns {String} A blob URL
      */
     Bundle.prototype.getBlobUrl = function (url) {
-        var blobUrl = this._blobUrls[url];
-        if (blobUrl) return blobUrl;
-
-        if (! this._files[url]) return null;
-
-        blobUrl = this._files[url].getBlobUrl();
-        this._blobUrls[url] = blobUrl;
-
-        return blobUrl;
+        return this._blobUrls[url];
     };
 
 
@@ -46,8 +50,6 @@ Object.assign(pc, function () {
      * @description Destroys the bundle and frees up blob URLs
      */
     Bundle.prototype.destroy = function () {
-        this._files = null;
-
         for (var key in this._blobUrls) {
             URL.revokeObjectURL(this._blobUrls[key]);
         }

@@ -181,6 +181,8 @@ Object.assign(pc, function () {
         this.assets = new pc.AssetRegistry(this.loader);
         if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
         this.bundles = new pc.BundleRegistry(this.assets);
+        // set this to false if you want to run without using bundles
+        this._enableBundles = true;
         this.scriptsOrder = options.scriptsOrder || [];
         this.scripts = new pc.ScriptRegistry(this);
 

@@ -172,17 +172,22 @@ Object.assign(pc, function () {
                 return;
             }
 
-            for (var url in this._fileRequests) {
-                var bundles = this._urlsInBundles[url];
-                if (!bundles || bundles.indexOf(bundleAsset) === -1) continue;
+            // on next tick resolve the pending asset requests
+            // don't do it on the same tick because that ties the loading
+            // of the bundle to the loading of all the assets
+            requestAnimationFrame(function () {
+                for (var url in this._fileRequests) {
+                    var bundles = this._urlsInBundles[url];
+                    if (!bundles || bundles.indexOf(bundleAsset) === -1) continue;
 
-                var requests = this._fileRequests[url];
-                for (var i = 0, len = requests.length; i < len; i++) {
-                    requests[i](null, bundleAsset.resource.getBlobUrl(decodeURIComponent(url)));
+                    var requests = this._fileRequests[url];
+                    for (var i = 0, len = requests.length; i < len; i++) {
+                        requests[i](null, bundleAsset.resource.getBlobUrl(decodeURIComponent(url)));
+                    }
+
+                    delete this._fileRequests[url];
                 }
-
-                delete this._fileRequests[url];
-            }
+            }.bind(this));
         },
 
         // If we have outstanding file requests for any

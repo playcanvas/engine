@@ -110,6 +110,7 @@ Object.assign(pc, function () {
                             for (i = 0; i < len; i++)
                                 this._requests[key][i](null, resource, extra);
                         } else {
+                            console.error(err);
                             for (i = 0; i < len; i++)
                                 this._requests[key][i](err);
                         }
@@ -118,7 +119,7 @@ Object.assign(pc, function () {
                 }.bind(this);
 
                 var normalizedUrl = url.split('?')[0];
-                if (this._app.bundles.hasUrl(normalizedUrl)) {
+                if (this._app._enableBundles && this._app.bundles.hasUrl(normalizedUrl)) {
                     if (!this._app.bundles.canLoadUrl(normalizedUrl)) {
                         handleLoad('Bundle for ' + url + ' not loaded yet');
                         return;

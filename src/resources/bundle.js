@@ -23,11 +23,17 @@ Object.assign(pc, function () {
 
             pc.http.get(url.load, HTTP_OPTIONS, function (err, response) {
                 if (! err) {
-                    untar(response).then(function (files) {
+                    try {
+                        var untar = new pc.Untar(response);
+                        var files = [];
+                        while (untar.hasNext()) {
+                            files.push(untar.readNextFile());
+                        }
+
                         callback(null, files);
-                    }).catch(function (err) {
-                        callback("Error loading bundle resource " + url.original + ": " + err);
-                    });
+                    } catch (ex) {
+                        callback("Error loading bundle resource " + url.original + ": " + ex);
+                    }
                 } else {
                     callback("Error loading bundle resource " + url.original + ": " + err);
                 }
