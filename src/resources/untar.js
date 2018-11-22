@@ -89,7 +89,7 @@ Object.assign(pc, function () {
             size: parseInt(headers.substr(124, 12), 8),
             // mtime: parseInt(headers.substr(136, 12), 8),
             // checksum: parseInt(headers.substr(148, 8), 10),
-            // type: headers.substr(156, 1),
+            type: headers.substr(156, 1),
             // linkname: headers.substr(157, 100),
             ustarFormat: headers.substr(257, 6)
         };
