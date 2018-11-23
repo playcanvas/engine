@@ -63,7 +63,7 @@ Object.assign(pc, function () {
         this.default9SlicedMaterialTiledMode.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
         this.default9SlicedMaterialTiledMode.update();
 
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
         this.on('beforeremove', this.onBeforeRemove, this);
     };
     SpriteComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);

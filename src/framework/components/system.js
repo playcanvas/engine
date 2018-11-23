@@ -17,31 +17,98 @@ Object.assign(pc, function () {
 
     // Class methods
     Object.assign(ComponentSystem, {
+        _helper: function (a, p) {
+            for (var i = 0, l = a.length; i < l; i++) {
+                a[i].f.call(a[i].s, p);
+            }
+        },
+
         initialize: function (root) {
-            ComponentSystem.fire('initialize', root);
+            this._helper(this._init, root);
         },
 
         postInitialize: function (root) {
-            ComponentSystem.fire('postInitialize', root);
+            this._helper(this._postInit, root);
         },
 
         // Update all ComponentSystems
         update: function (dt, inTools) {
-            if (inTools) {
-                ComponentSystem.fire('toolsUpdate', dt);
-            } else {
-                ComponentSystem.fire('update', dt);
-            }
+            this._helper(inTools ? this._toolsUpdate : this._update, dt);
         },
 
         // Update all ComponentSystems
         fixedUpdate: function (dt, inTools) {
-            ComponentSystem.fire('fixedUpdate', dt);
+            this._helper(this._fixedUpdate, dt);
         },
 
         // Update all ComponentSystems
         postUpdate: function (dt, inTools) {
-            ComponentSystem.fire('postUpdate', dt);
+            this._helper(this._postUpdate, dt);
+        },
+
+        _init: [],
+        _postInit: [],
+        _toolsUpdate: [],
+        _update: [],
+        _fixedUpdate: [],
+        _postUpdate: [],
+
+        bind: function (event, func, scope) {
+            switch (event) {
+                case 'initialize':
+                    this._init.push({ f: func, s: scope });
+                    break;
+                case 'postInitialize':
+                    this._postInit.push({ f: func, s: scope });
+                    break;
+                case 'update':
+                    this._update.push({ f: func, s: scope });
+                    break;
+                case 'postUpdate':
+                    this._postUpdate.push({ f: func, s: scope });
+                    break;
+                case 'fixedUpdate':
+                    this._fixedUpdate.push({ f: func, s: scope });
+                    break;
+                case 'toolsUpdate':
+                    this._toolsUpdate.push({ f: func, s: scope });
+                    break;
+                default:
+                    console.error('Component System does not support event', event);
+            }
+        },
+
+        _erase: function (a, f, s) {
+            for (var i = 0; i < a.length; i++) {
+                if (a[i].f === f && a[i].s === s) {
+                    a.splice(i--, 1);
+                }
+            }
+        },
+
+        unbind: function (event, func, scope) {
+            switch (event) {
+                case 'initialize':
+                    this._erase(this._init, func, scope);
+                    break;
+                case 'postInitialize':
+                    this._erase(this._postInit, func, scope);
+                    break;
+                case 'update':
+                    this._erase(this._update, func, scope);
+                    break;
+                case 'postUpdate':
+                    this._erase(this._postUpdate, func, scope);
+                    break;
+                case 'fixedUpdate':
+                    this._erase(this._fixedUpdate, func, scope);
+                    break;
+                case 'toolsUpdate':
+                    this._erase(this._toolsUpdate, func, scope);
+                    break;
+                default:
+                    console.error('Component System does not support event', event);
+            }
         }
     });
 

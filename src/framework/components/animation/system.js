@@ -39,7 +39,7 @@ Object.assign(pc, function () {
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('update', this.onUpdate, this);
 
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     AnimationComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     AnimationComponentSystem.prototype.constructor = AnimationComponentSystem;

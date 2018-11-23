@@ -27,7 +27,7 @@ Object.assign(pc, function () {
         this.on('beforeremove', this._onRemoveComponent, this);
 
         // Perform reflow when running in the engine
-        pc.ComponentSystem.on('postUpdate', this._onPostUpdate, this);
+        pc.ComponentSystem.bind('postUpdate', this._onPostUpdate, this);
     };
     LayoutGroupComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     LayoutGroupComponentSystem.prototype.constructor = LayoutGroupComponentSystem;
