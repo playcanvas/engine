@@ -277,7 +277,7 @@ Object.assign(pc, function () {
                         width: self.graphicsDevice.width,
                         height: self.graphicsDevice.height
                     });
-                    depthBuffer.name = 'rt-depth1';
+                    colorBuffer.name = 'rt-depth1';
                     colorBuffer.minFilter = pc.FILTER_NEAREST;
                     colorBuffer.magFilter = pc.FILTER_NEAREST;
                     colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
