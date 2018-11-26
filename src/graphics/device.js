@@ -77,6 +77,7 @@ Object.assign(pc, function () {
             magFilter: pc.FILTER_NEAREST
         };
         var tex1 = new pc.Texture(device, textureOptions);
+        tex.name = 'testFHP';
         var targ1 = new pc.RenderTarget(device, tex1, {
             depth: false
         });
@@ -84,6 +85,7 @@ Object.assign(pc, function () {
 
         textureOptions.format = pc.PIXELFORMAT_R8_G8_B8_A8;
         var tex2 = new pc.Texture(device, textureOptions);
+        tex2.name = 'testFHP';
         var targ2 = new pc.RenderTarget(device, tex2, {
             depth: false
         });

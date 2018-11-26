@@ -31,6 +31,7 @@ Object.assign(pc, function () {
         pixelData[2] = 255.0;
         pixelData[3] = 255.0;
         pixels.set(pixelData);
+        this._defaultTexture.name = 'sprite';
         this._defaultTexture.unlock();
 
         // default material used by sprites
