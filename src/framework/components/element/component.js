@@ -357,14 +357,9 @@ Object.assign(pc, function () {
 
             var result = this._parseUpToScreen();
 
-            this._updateScreen(result.screen);
+            this.entity._dirtifyWorld();
 
-            if (this.entity._dirtyLocal || this.entity._dirtyWorld) {
-                this.entity._cancelSync();
-                this.entity._queueSync();
-            } else {
-                this.entity._dirtifyWorld();
-            }
+            this._updateScreen(result.screen);
 
             this._dirtifyMask();
         },
@@ -629,13 +624,6 @@ Object.assign(pc, function () {
             // if there is a screen and it is not being destroyed
             if (this.screen && !this.screen._destroying) {
                 this._updateScreen(null);
-
-                if (this.entity._dirtyLocal || this.entity._dirtyWorld) {
-                    this.entity._cancelSync();
-                    this.entity._queueSync();
-                } else {
-                    this.entity._dirtifyWorld();
-                }
             }
         },
 
@@ -718,13 +706,9 @@ Object.assign(pc, function () {
             }
 
             this.fire("enableelement");
-
-            this.entity._queueSync();
         },
 
         onDisable: function () {
-            this.entity._cancelSync();
-
             this.system.app.scene.off("set:layers", this.onLayersChanged, this);
             if (this.system.app.scene.layers) {
                 this.system.app.scene.layers.off("add", this.onLayerAdded, this);
@@ -760,13 +744,6 @@ Object.assign(pc, function () {
             if (this.screen && this.screen.screen) {
                 this._unbindScreen(this.screen.screen);
                 this.screen.screen.syncDrawOrder();
-            }
-
-            if (this.entity._dirtyLocal || this.entity._dirtyWorld) {
-                this.entity._cancelSync();
-                this.entity._queueSync();
-            } else {
-                this.entity._dirtifyWorld();
             }
 
             this.off();
@@ -1312,7 +1289,7 @@ Object.assign(pc, function () {
             this._screenCorners[3].set(this._absLeft, this._absTop, 0);
 
             // transform corners to screen space
-            var screenSpace = this._isScreenSpace();
+            var screenSpace = this.screen.screen.screenSpace;
             for (var i = 0; i < 4; i++) {
                 this._screenTransform.transformPoint(this._screenCorners[i], this._screenCorners[i]);
                 if (screenSpace)
