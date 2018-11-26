@@ -1,5 +1,4 @@
 describe("pc.ElementDragHelper", function() {
-
     var stubbedOntouchstart;
     var app;
     var entity;
@@ -16,6 +15,7 @@ describe("pc.ElementDragHelper", function() {
         if (!('ontouchstart' in window)) {
             window.ontouchstart = {};
             stubbedOntouchstart = true;
+            pc.platform.touch = true;
         }
 
         var canvasWidth = 300;
@@ -75,8 +75,13 @@ describe("pc.ElementDragHelper", function() {
     afterEach(function () {
         sinon.restore();
 
+        dragHelper.destroy();
+
+        app.destroy();
+
         if (stubbedOntouchstart) {
             delete window.ontouchstart;
+            pc.platform.touch = false;
         }
     });
 

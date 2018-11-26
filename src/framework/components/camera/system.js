@@ -149,6 +149,7 @@ Object.assign(pc, function () {
 
         onBeforeRemove: function (entity, component) {
             this.removeCamera(component);
+            component.onRemove();
         },
 
         onRemove: function (entity, data) {
@@ -173,7 +174,7 @@ Object.assign(pc, function () {
                         if (cam._node) {
                             cam._node.localTransform.copy(vrDisplay.combinedViewInv);
                             cam._node._dirtyLocal = false;
-                            cam._node._dirtify();
+                            cam._node._dirtifyWorld();
                         }
                     }
                 }

@@ -186,6 +186,10 @@ Object.assign(pc, function () {
             });
 
             return matchingProperties;
+        },
+
+        destroy: function () {
+            this.off();
         }
     };
 
@@ -194,18 +198,31 @@ Object.assign(pc, function () {
             return value;
         }
 
-        value = (value && value.data) ? value.data : value;
-
         switch (type) {
             case 'rgb':
+                if (value instanceof pc.Color) {
+                    return value.clone();
+                }
                 return new pc.Color(value[0], value[1], value[2]);
             case 'rgba':
+                if (value instanceof pc.Color) {
+                    return value.clone();
+                }
                 return new pc.Color(value[0], value[1], value[2], value[3]);
             case 'vec2':
+                if (value instanceof pc.Vec2) {
+                    return value.clone();
+                }
                 return new pc.Vec2(value[0], value[1]);
             case 'vec3':
+                if (value instanceof pc.Vec3) {
+                    return value.clone();
+                }
                 return new pc.Vec3(value[0], value[1], value[2]);
             case 'vec4':
+                if (value instanceof pc.Vec4) {
+                    return value.clone();
+                }
                 return new pc.Vec4(value[0], value[1], value[2], value[3]);
             case 'boolean':
             case 'number':

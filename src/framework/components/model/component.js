@@ -50,7 +50,7 @@ Object.assign(pc, function () {
         this._receiveShadows = true;
 
         this._materialAsset = null;
-        this._material = pc.ModelHandler.DEFAULT_MATERIAL;
+        this._material = system.defaultMaterial;
 
         this._castShadowsLightmap = true;
         this._lightmapped = false;
@@ -108,6 +108,7 @@ Object.assign(pc, function () {
         onRemove: function () {
             this.asset = null;
             this.materialAsset = null;
+            this._unsetMaterialEvents();
         },
 
         onLayersChanged: function (oldComp, newComp) {
@@ -201,14 +202,14 @@ Object.assign(pc, function () {
                     meshInstance.material = materialAsset.resource;
 
                     this._setMaterialEvent(index, 'remove', materialAsset.id, function () {
-                        meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                        meshInstance.material = this.system.defaultMaterial;
                     });
                 } else {
                     this._setMaterialEvent(index, 'load', materialAsset.id, function (asset) {
                         meshInstance.material = asset.resource;
 
                         this._setMaterialEvent(index, 'remove', materialAsset.id, function () {
-                            meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                            meshInstance.material = this.system.defaultMaterial;
                         });
                     });
 
@@ -370,7 +371,7 @@ Object.assign(pc, function () {
         },
 
         _onMaterialAssetUnload: function (asset) {
-            this.material = pc.ModelHandler.DEFAULT_MATERIAL;
+            this.material = this.system.defaultMaterial;
         },
 
         _onMaterialAssetRemove: function (asset) {
@@ -808,7 +809,7 @@ Object.assign(pc, function () {
             // set the layer list
             this._layers.length = 0;
             for (i = 0; i < value.length; i++) {
-                this._layers[0] = value[0];
+                this._layers[i] = value[i];
             }
 
             // don't add into layers until we're enabled
@@ -831,8 +832,6 @@ Object.assign(pc, function () {
         set: function (value) {
             if (this._batchGroupId === value) return;
 
-            this._batchGroupId = value;
-
             var batcher = this.system.app.batcher;
             if (this._batchGroupId >= 0) batcher.markGroupDirty(this._batchGroupId);
             if (value >= 0) batcher.markGroupDirty(value);
@@ -841,6 +840,8 @@ Object.assign(pc, function () {
                 // re-add model to scene, in case it was removed by batching
                 this.addModelToLayers();
             }
+
+            this._batchGroupId = value;
         }
     });
 
@@ -871,13 +872,13 @@ Object.assign(pc, function () {
                 if (this._materialAsset) {
                     var asset = assets.get(this._materialAsset);
                     if (!asset) {
-                        this.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                        this.material = this.system.defaultMaterial;
                         assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
                     } else {
                         this._bindMaterialAsset(asset);
                     }
                 } else {
-                    this.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                    this.material = this.system.defaultMaterial;
                 }
             }
         }
@@ -934,7 +935,7 @@ Object.assign(pc, function () {
                         asset = this.system.app.assets.get(value[i]);
                         this._loadAndSetMeshInstanceMaterial(asset, meshInstances[i], i);
                     } else {
-                        meshInstances[i].material = pc.ModelHandler.DEFAULT_MATERIAL;
+                        meshInstances[i].material = this.system.defaultMaterial;
                     }
                 } else if (assetMapping) {
                     if (assetMapping[i] && (assetMapping[i].material || assetMapping[i].path)) {
@@ -948,7 +949,7 @@ Object.assign(pc, function () {
                         }
                         this._loadAndSetMeshInstanceMaterial(asset, meshInstances[i], i);
                     } else {
-                        meshInstances[i].material = pc.ModelHandler.DEFAULT_MATERIAL;
+                        meshInstances[i].material = this.system.defaultMaterial;
                     }
                 }
             }

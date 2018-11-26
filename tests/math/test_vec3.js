@@ -77,6 +77,28 @@ describe("pc.Vec3", function () {
         equal(1, r.z);
     });
 
+    it("cross: first arg is also result", function() {
+        var r = new pc.Vec3(1, 0, 0);
+        var v2 = new pc.Vec3(0, 1, 0);
+
+        r.cross(r, v2);
+
+        equal(0, r.x);
+        equal(0, r.y);
+        equal(1, r.z);
+    });
+
+    it("cross: second arg is also result", function() {
+        var v1 = new pc.Vec3(1, 0, 0);
+        var r = new pc.Vec3(0, 1, 0);
+
+        r.cross(v1, r);
+
+        equal(0, r.x);
+        equal(0, r.y);
+        equal(1, r.z);
+    });
+
     it("dot", function() {
         var v1 = new pc.Vec3(1, 2, 3);
         var v2 = new pc.Vec3(4, 5, 6);

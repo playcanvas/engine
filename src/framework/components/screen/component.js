@@ -23,6 +23,7 @@ Object.assign(pc, function () {
      * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @extends pc.Component
      * @property {Boolean} screenSpace If true then the ScreenComponent will render its child {@link pc.ElementComponent}s in screen space instead of world space. Enable this to create 2D user interfaces.
+     * @property {Boolean} cull If true then elements inside this screen will be not be rendered when outside of the screen (only valid when screenSpace is true)
      * @property {String} scaleMode Can either be {@link pc.SCALEMODE_NONE} or {@link pc.SCALEMODE_BLEND}. See the description of referenceResolution for more information.
      * @property {Number} scaleBlend A value between 0 and 1 that is used when scaleMode is equal to {@link pc.SCALEMODE_BLEND}. Scales the ScreenComponent with width as a reference (when value is 0), the height as a reference (when value is 1) or anything in between.
      * @property {pc.Vec2} resolution The width and height of the ScreenComponent. When screenSpace is true the resolution will always be equal to {@link pc.GraphicsDevice#width} x {@link pc.GraphicsDevice#height}.
@@ -42,6 +43,7 @@ Object.assign(pc, function () {
         this._priority = 0;
 
         this._screenSpace = false;
+        this.cull = this._screenSpace;
         this._screenMatrix = new pc.Mat4();
 
         system.app.graphicsDevice.on("resizecanvas", this._onResize, this);
@@ -138,11 +140,7 @@ Object.assign(pc, function () {
             this.fire('remove');
 
             // remove all events used by elements
-            this.off('set:resolution');
-            this.off('set:referenceresolution');
-            this.off('set:scaleblend');
-            this.off('set:screenspace');
-            this.off('remove');
+            this.off();
         }
     });
 
@@ -160,7 +158,7 @@ Object.assign(pc, function () {
             this._calcProjectionMatrix();
 
             if (!this.entity._dirtyLocal)
-                this.entity._dirtify(true);
+                this.entity._dirtifyLocal();
 
             this.fire("set:resolution", this._resolution);
         },
@@ -176,7 +174,7 @@ Object.assign(pc, function () {
             this._calcProjectionMatrix();
 
             if (!this.entity._dirtyLocal)
-                this.entity._dirtify(true);
+                this.entity._dirtifyLocal();
 
             this.fire("set:referenceresolution", this._resolution);
         },
@@ -198,7 +196,7 @@ Object.assign(pc, function () {
             this.resolution = this._resolution; // force update either way
 
             if (!this.entity._dirtyLocal)
-                this.entity._dirtify(true);
+                this.entity._dirtifyLocal();
 
             this.fire('set:screenspace', this._screenSpace);
         },
@@ -235,7 +233,7 @@ Object.assign(pc, function () {
             this._calcProjectionMatrix();
 
             if (!this.entity._dirtyLocal)
-                this.entity._dirtify(true);
+                this.entity._dirtifyLocal();
 
             this.fire("set:scaleblend", this._scaleBlend);
         },

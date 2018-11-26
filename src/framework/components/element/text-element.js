@@ -66,6 +66,8 @@ Object.assign(pc, function () {
 
     Object.assign(TextElement.prototype, {
         destroy: function () {
+            this._setMaterial(null); // clear material from mesh instances
+
             if (this._model) {
                 this._element.removeModelFromLayers(this._model);
                 this._model.destroy();
@@ -144,12 +146,20 @@ Object.assign(pc, function () {
 
             var charactersPerTexture = {};
 
+            var char, info, map;
             for (i = 0; i < textLength; i++) {
-                var char = symbols[i];
-                var info = this._font.data.chars[char];
-                if (!info) continue;
+                char = symbols[i];
+                info = this._font.data.chars[char];
+                // if char is missing use 'space' or first char in map
+                if (!info) {
+                    if (this._font.data.chars[' ']) {
+                        info = this._font.data.chars[' '];
+                    } else {
+                        info = this._font.data.chars[Object.keys(this._font.data.chars)[0]];
+                    }
+                }
 
-                var map = info.map;
+                map = info.map;
 
                 if (!charactersPerTexture[map])
                     charactersPerTexture[map] = 0;
@@ -159,7 +169,12 @@ Object.assign(pc, function () {
 
             var removedModel = false;
 
-            var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
+            var element = this._element;
+            var screenSpace = element._isScreenSpace();
+            var screenCulled = element._isScreenCulled();
+            var visibleFn = function (camera) {
+                return element.isVisibleForCamera(camera);
+            };
 
             for (i = 0, len = this._meshInfo.length; i < len; i++) {
                 var l = charactersPerTexture[i] || 0;
@@ -167,7 +182,7 @@ Object.assign(pc, function () {
 
                 if (meshInfo.count !== l) {
                     if (!removedModel) {
-                        this._element.removeModelFromLayers(this._model);
+                        element.removeModelFromLayers(this._model);
                         removedModel = true;
                     }
 
@@ -179,6 +194,7 @@ Object.assign(pc, function () {
                     // destroy old mesh
                     if (meshInfo.meshInstance) {
                         this._removeMeshInstance(meshInfo.meshInstance);
+                        meshInfo.meshInstance.material = null;
                     }
 
                     // if there are no letters for this mesh continue
@@ -221,12 +237,15 @@ Object.assign(pc, function () {
                     mi.name = "Text Element: " + this._entity.name;
                     mi.castShadow = false;
                     mi.receiveShadow = false;
-
-                    mi.drawOrder = this._drawOrder;
-                    if (screenSpace) {
-                        mi.cull = false;
-                    }
+                    mi.cull = !screenSpace;
                     mi.screenSpace = screenSpace;
+                    mi.drawOrder = this._drawOrder;
+
+                    if (screenCulled) {
+                        mi.cull = true;
+                        mi.isVisibleFunc = visibleFn;
+                    }
+
                     this._setTextureParams(mi, this._font.textures[i]);
                     this._colorUniform[0] = this._color.r;
                     this._colorUniform[1] = this._color.g;
@@ -292,18 +311,29 @@ Object.assign(pc, function () {
         },
 
         _updateMaterial: function (screenSpace) {
-            var cull;
+            var element = this._element;
+            var screenCulled = element._isScreenCulled();
+            var visibleFn = function (camera) {
+                return element.isVisibleForCamera(camera);
+            };
 
             var msdf = this._font && this._font.type === pc.FONT_MSDF;
             this._material = this._system.getTextElementMaterial(screenSpace, msdf);
-            cull = !screenSpace;
 
             if (this._model) {
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
-                    mi.cull = cull;
+                    mi.cull = !screenSpace;
                     mi.material = this._material;
                     mi.screenSpace = screenSpace;
+
+                    if (screenCulled) {
+                        mi.cull = true;
+                        mi.isVisibleFunc = visibleFn;
+                    } else {
+                        mi.isVisibleFunc = null;
+                    }
+
                 }
             }
         },
@@ -387,12 +417,24 @@ Object.assign(pc, function () {
                 var quadsize = 1;
                 var glyphMinX = 0;
                 var glyphWidth = 0;
+                var dataScale, size;
 
                 data = json.chars[char];
-                if (data && data.scale) {
-                    var size = (data.width + data.height) / 2;
+
+                // use 'space' if available or first character
+                if (!data) {
+                    if (json.chars[' ']) {
+                        data = json.chars[' '];
+                    } else {
+                        data = json.chars[Object.keys(json.chars)[0]];
+                    }
+                }
+
+                if (data) {
+                    dataScale = data.scale || 1;
+                    size = (data.width + data.height) / 2;
                     scale = (size / MAGIC) * this._fontSize / size;
-                    quadsize = (size / MAGIC) * this._fontSize / data.scale;
+                    quadsize = (size / MAGIC) * this._fontSize / dataScale;
                     advance = data.xadvance * scale;
                     x = data.xoffset * scale;
                     y = data.yoffset * scale;
@@ -405,11 +447,7 @@ Object.assign(pc, function () {
                         glyphMinX = 0;
                     }
                 } else {
-                    // missing character
-                    advance = 1;
-                    x = 0;
-                    y = 0;
-                    quadsize = this._fontSize;
+                    console.error("Couldn't substitute missing character: '" + char + "'");
                 }
 
                 var isLineBreak = LINE_BREAK_CHAR.test(char);
@@ -671,8 +709,9 @@ Object.assign(pc, function () {
                 if (data.chars[space]) {
                     return this._getUv(space);
                 }
+
                 // otherwise - missing char
-                return [0, 0, 1, 1];
+                return [0, 0, 0, 0];
             }
 
             var map = data.chars[char].map;
@@ -933,7 +972,7 @@ Object.assign(pc, function () {
 
             // if font type has changed we may need to get change material
             if (value.type !== previousFontType) {
-                var screenSpace = (this._element.screen && this._element.screen.screen.screenSpace);
+                var screenSpace = this._element._isScreenSpace();
                 this._updateMaterial(screenSpace);
             }
 

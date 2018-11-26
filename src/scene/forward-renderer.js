@@ -181,6 +181,7 @@ Object.assign(pc, function () {
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
+        shadowMap.name = 'shadowmap';
 
         if (shadowType === pc.SHADOW_PCF5 || (shadowType === pc.SHADOW_PCF3 && device.webgl2)) {
             shadowMap.compareOnRead = true;
@@ -213,6 +214,7 @@ Object.assign(pc, function () {
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
+        cubemap.name = 'shadowcube';
 
         var targets = [];
         var target;
@@ -363,8 +365,6 @@ Object.assign(pc, function () {
         var library = device.getProgramLibrary();
         this.library = library;
 
-        this.frontToBack = false;
-
         // Uniforms
         var scope = device.scope;
         this.projId = scope.resolve('matrix_projection');
@@ -505,6 +505,11 @@ Object.assign(pc, function () {
 
         _isVisible: function (camera, meshInstance) {
             if (!meshInstance.visible) return false;
+
+            // custom visibility method on MeshInstance
+            if (meshInstance.isVisibleFunc) {
+                return meshInstance.isVisibleFunc(camera);
+            }
 
             meshPos = meshInstance.aabb.center;
             if (meshInstance._aabb._radiusVer !== meshInstance._aabbVer) {
@@ -916,8 +921,14 @@ Object.assign(pc, function () {
                 this.lightShadowMatrixId[cnt].setValue(spot._shadowMatrix.data);
                 this.lightCookieIntId[cnt].setValue(spot.cookieIntensity);
                 if (spot._cookieTransform) {
-                    this.lightCookieMatrixId[cnt].setValue(spot._cookieTransform.data);
-                    this.lightCookieOffsetId[cnt].setValue(spot._cookieOffset.data);
+                    spot._cookieTransformUniform[0] = spot._cookieTransform.x;
+                    spot._cookieTransformUniform[1] = spot._cookieTransform.y;
+                    spot._cookieTransformUniform[2] = spot._cookieTransform.z;
+                    spot._cookieTransformUniform[3] = spot._cookieTransform.w;
+                    this.lightCookieMatrixId[cnt].setValue(spot._cookieTransformUniform);
+                    spot._cookieOffsetUniform[0] = spot._cookieOffset.x;
+                    spot._cookieOffsetUniform[1] = spot._cookieOffset.y;
+                    this.lightCookieOffsetId[cnt].setValue(spot._cookieOffsetUniform);
                 }
             }
         },
@@ -977,6 +988,7 @@ Object.assign(pc, function () {
         cull: function (camera, drawCalls, visibleList) {
             // #ifdef PROFILER
             var cullTime = pc.now();
+            var numDrawCallsCulled = 0;
             // #endif
 
             var visibleLength = 0;
@@ -1012,6 +1024,9 @@ Object.assign(pc, function () {
 
                     if (drawCall.cull) {
                         visible = this._isVisible(camera, drawCall);
+                        // #ifdef PROFILER
+                        numDrawCallsCulled++;
+                        // #endif
                     }
 
                     if (visible) {
@@ -1028,6 +1043,7 @@ Object.assign(pc, function () {
 
             // #ifdef PROFILER
             this._cullTime += pc.now() - cullTime;
+            this._numDrawCallsCulled += numDrawCallsCulled;
             // #endif
 
             return visibleLength;
@@ -1538,7 +1554,7 @@ Object.assign(pc, function () {
                         // #ifdef DEBUG
                         if (!device.setShader(drawCall._shader[pass])) {
                             console.error('Error in material "' + material.name + '" with flags ' + objDefs);
-                            drawCall.material = pc.Scene.defaultMaterial;
+                            drawCall.material = scene.defaultMaterial;
                         }
                         // #else
                         device.setShader(drawCall._shader[pass]);
@@ -1903,15 +1919,15 @@ Object.assign(pc, function () {
 
                         invMatrix.copy(drawCall.node.worldTransform).invert();
                         localLightBounds.setFromTransformedAabb(lightAabb[j], invMatrix);
-                        minv = localLightBounds.getMin().data;
-                        maxv = localLightBounds.getMax().data;
+                        minv = localLightBounds.getMin();
+                        maxv = localLightBounds.getMax();
                         bit = 1 << s;
 
                         for (k = 0; k < numTris; k++) {
                             index = k * 6;
-                            if ((triBounds[index] <= maxv[0]) && (triBounds[index + 3] >= minv[0]) &&
-                                (triBounds[index + 1] <= maxv[1]) && (triBounds[index + 4] >= minv[1]) &&
-                                (triBounds[index + 2] <= maxv[2]) && (triBounds[index + 5] >= minv[2])) {
+                            if ((triBounds[index] <= maxv.x) && (triBounds[index + 3] >= minv.x) &&
+                                (triBounds[index + 1] <= maxv.y) && (triBounds[index + 4] >= minv.y) &&
+                                (triBounds[index + 2] <= maxv.z) && (triBounds[index + 5] >= minv.z)) {
 
                                 // triLightComb[k] += j + "_";  // uncomment to remove 32 lights limit
                                 triLightComb[k] |= bit; // comment to remove 32 lights limit
@@ -2052,7 +2068,6 @@ Object.assign(pc, function () {
         },
 
         updateShaders: function (drawCalls) {
-
             // #ifdef PROFILER
             var time = pc.now();
             // #endif
@@ -2082,6 +2097,31 @@ Object.assign(pc, function () {
             // #endif
         },
 
+        updateLitShaders: function (drawCalls) {
+            // #ifdef PROFILER
+            var time = pc.now();
+            // #endif
+
+            for (var i = 0; i < drawCalls.length; i++) {
+                var drawCall = drawCalls[i];
+                if (drawCall.material !== undefined) {
+                    var mat = drawCall.material;
+                    if (mat.updateShader !== pc.Material.prototype.updateShader) {
+                        if (mat.useLighting === false || (mat.emitter && !mat.emitter.lighting)) {
+                            // skip unlit standard and particles materials
+                            continue;
+                        }
+                        mat.clearVariants();
+                        mat.shader = null;
+                    }
+                }
+            }
+
+            // #ifdef PROFILER
+            this.scene._stats.updateShadersTime += pc.now() - time;
+            // #endif
+        },
+
         beginFrame: function (comp) {
             var device = this.device;
             var scene = this.scene;
@@ -2098,6 +2138,11 @@ Object.assign(pc, function () {
             if (scene.updateShaders) {
                 this.updateShaders(meshInstances);
                 scene.updateShaders = false;
+                scene.updateLitShaders = false;
+                scene._shaderVersion++;
+            } else if (scene.updateLitShaders) {
+                this.updateLitShaders(meshInstances);
+                scene.updateLitShaders = false;
                 scene._shaderVersion++;
             }
 
@@ -2155,6 +2200,16 @@ Object.assign(pc, function () {
                     layer.instances.visibleOpaque[j].done = false;
                     layer.instances.visibleTransparent[j].done = false;
                 }
+
+                // remove visible lists if cameras have been removed, remove one per frame
+                if (layer.cameras.length < layer.instances.visibleOpaque.length) {
+                    layer.instances.visibleOpaque.splice(layer.cameras.length, 1);
+                }
+
+                if (layer.cameras.length < layer.instances.visibleTransparent.length) {
+                    layer.instances.visibleTransparent.splice(layer.cameras.length, 1);
+                }
+
                 // Generate static lighting for meshes in this layer if needed
                 if (layer._needsStaticPrepare && layer._staticLightHash) {
                     // TODO: reuse with the same staticLightHash
@@ -2453,7 +2508,7 @@ Object.assign(pc, function () {
             // Update static layer data, if something's changed
             var updated = comp._update();
             if (updated & pc.COMPUPDATED_LIGHTS) {
-                this.scene.updateShaders = true;
+                this.scene.updateLitShaders = true;
             }
 
             // #ifdef PROFILER

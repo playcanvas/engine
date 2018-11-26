@@ -117,6 +117,7 @@ Object.assign(pc, function () {
                 height: 4,
                 format: pc.PIXELFORMAT_R8_G8_B8
             });
+            texture.name = 'dds-legacy-empty';
             return texture;
         }
 
@@ -288,6 +289,7 @@ Object.assign(pc, function () {
                     height: img.height,
                     format: format
                 });
+                texture.name = url;
                 texture.setSource(img);
             } else if (data instanceof ArrayBuffer) { // Container format
                 var LEGACY = true;
@@ -313,11 +315,13 @@ Object.assign(pc, function () {
                         // #ifdef DEBUG
                         console.warn("This DDS or KTX pixel format is currently unsupported. Empty texture will be created instead.");
                         // #endif
-                        return new pc.Texture(this._device, {
+                        texture = new pc.Texture(this._device, {
                             width: 4,
                             height: 4,
                             format: pc.PIXELFORMAT_R8_G8_B8
                         });
+                        texture.name = 'unsupported-empty';
+                        return texture;
                     }
 
                     texture = new pc.Texture(this._device, {

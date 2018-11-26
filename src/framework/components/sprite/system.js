@@ -31,6 +31,7 @@ Object.assign(pc, function () {
         pixelData[2] = 255.0;
         pixelData[3] = 255.0;
         pixels.set(pixelData);
+        this._defaultTexture.name = 'sprite';
         this._defaultTexture.unlock();
 
         // default material used by sprites
@@ -72,6 +73,11 @@ Object.assign(pc, function () {
     pc.Component._buildAccessors(pc.SpriteComponent.prototype, _schema);
 
     Object.assign(SpriteComponentSystem.prototype, {
+        destroy: function () {
+            this._defaultTexture.destroy();
+            this._defaultTexture = null;
+        },
+
         initializeComponentData: function (component, data, properties) {
             if (data.enabled !== undefined) {
                 component.enabled = data.enabled;

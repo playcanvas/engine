@@ -137,6 +137,9 @@ Object.assign(pc, function () {
         this.drawOrder = 0;
         this.visibleThisFrame = 0;
 
+        // custom function used to customize culling (e.g. for 2D UI elements)
+        this.isVisibleFunc = null;
+
         this.parameters = {};
 
         this.stencilFront = null;

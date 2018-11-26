@@ -87,6 +87,7 @@ Object.assign(pc, function () {
      * @param {Element} element The element to attach listen for events on
      */
     var TouchDevice = function (element) {
+        this._element = null;
 
         this._startHandler = this._handleTouchStart.bind(this);
         this._endHandler = this._handleTouchEnd.bind(this);
