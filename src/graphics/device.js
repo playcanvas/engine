@@ -77,7 +77,7 @@ Object.assign(pc, function () {
             magFilter: pc.FILTER_NEAREST
         };
         var tex1 = new pc.Texture(device, textureOptions);
-        tex.name = 'testFHP';
+        tex1.name = 'testFHP';
         var targ1 = new pc.RenderTarget(device, tex1, {
             depth: false
         });
