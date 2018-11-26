@@ -174,7 +174,6 @@ Object.assign(pc, function () {
         this._entityIndex = {};
 
         this.scene = new pc.Scene();
-        this.syncQueue = new pc.SyncQueue();
         this.root = new pc.Entity(this);
         this.root._enabledInHierarchy = true;
         this._enableList = [];
@@ -1028,7 +1027,7 @@ Object.assign(pc, function () {
             // #endif
 
             this.fire("prerender");
-            this.syncQueue.runSync();
+            this.root.syncHierarchy();
             this.batcher.updateAll();
             pc._skipRenderCounter = 0;
             this.renderer.renderComposition(this.scene.layers);
