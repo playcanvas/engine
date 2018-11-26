@@ -23,6 +23,7 @@ Object.assign(pc, (function () {
             height: size,
             mipmaps: false
         });
+        tex.name = 'paraboloid';
 
         var targ = new pc.RenderTarget(device, tex, {
             depth: false
@@ -69,6 +70,7 @@ Object.assign(pc, (function () {
             height: size,
             mipmaps: false
         });
+        tex.name = 'paraboloid';
         var targ = new pc.RenderTarget(device, tex, {
             depth: false
         });
