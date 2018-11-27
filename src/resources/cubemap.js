@@ -21,6 +21,7 @@ Object.assign(pc, function () {
                     mipmaps: true,
                     fixCubemapSeams: !!assetCubeMap._dds
                 });
+                assetCubeMap.resources[0].name = 'cubemap';
 
                 loaded = true;
             }
@@ -80,6 +81,7 @@ Object.assign(pc, function () {
                         height: Math.pow(2, 7 - i)
                     });
 
+                    mip.name = 'cubemap-mip';
                     mip._levels[0] = assetCubeMap._dds._levels[i];
                     mip.upload();
                     assetCubeMap.resources.push(mip);

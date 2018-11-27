@@ -186,6 +186,7 @@ Object.assign(pc, function () {
             colorBuffer.magFilter = pc.FILTER_LINEAR;
             colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
             colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+            colorBuffer.name = 'pe-bloom';
             var target = new pc.RenderTarget(graphicsDevice, colorBuffer, { depth: false });
 
             this.targets.push(target);

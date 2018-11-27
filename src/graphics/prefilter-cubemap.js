@@ -64,6 +64,7 @@ Object.assign(pc, (function () {
                 height: size,
                 mipmaps: false
             });
+            nextCubemap.name = 'prefiltered-cube';
             for (face = 0; face < 6; face++) {
                 targ = new pc.RenderTarget(device, nextCubemap, {
                     face: face,
@@ -96,6 +97,7 @@ Object.assign(pc, (function () {
                     height: size,
                     mipmaps: false
                 });
+                nextCubemap.name = 'prefiltered-cube';
                 for (face = 0; face < 6; face++) {
                     targ = new pc.RenderTarget(device, nextCubemap, {
                         face: face,
@@ -128,6 +130,7 @@ Object.assign(pc, (function () {
                 height: size,
                 mipmaps: false
             });
+            nextCubemap.name = 'prefiltered-cube';
             for (face = 0; face < 6; face++) {
                 targ = new pc.RenderTarget(device, nextCubemap, {
                     face: face,
@@ -161,6 +164,7 @@ Object.assign(pc, (function () {
                         height: mipSize[i],
                         mipmaps: false
                     });
+                    cmapsList[pass][i] = 'prefiltered-cube';
                 }
             }
         }
@@ -222,6 +226,7 @@ Object.assign(pc, (function () {
                 addressU: pc.ADDRESS_CLAMP_TO_EDGE,
                 addressV: pc.ADDRESS_CLAMP_TO_EDGE
             });
+            cubemap.name = 'prefiltered-cube';
             for (i = 0; i < 6; i++)
                 cubemap._levels[i] = mips[i]._levels[0];
 
@@ -250,6 +255,7 @@ Object.assign(pc, (function () {
                 addressU: pc.ADDRESS_CLAMP_TO_EDGE,
                 addressV: pc.ADDRESS_CLAMP_TO_EDGE
             });
+            cubemap.name = 'prefiltered-cube';
             for (i = 0; i < 6; i++) {
                 cubemap._levels[i] = mips[i]._levels[0];
             }
@@ -325,6 +331,7 @@ Object.assign(pc, (function () {
                         height: cubeSize,
                         mipmaps: false
                     });
+                    tex.name = 'prefiltered-cube';
                     tex._levels[0] = img;
                     tex.upload();
 
@@ -336,6 +343,7 @@ Object.assign(pc, (function () {
                         height: cubeSize,
                         mipmaps: false
                     });
+                    tex2.name = 'prefiltered-cube';
 
                     var targ = new pc.RenderTarget(device, tex2, {
                         depth: false

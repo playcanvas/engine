@@ -315,7 +315,9 @@ Object.assign(pc, function () {
         var children = this._children;
         var child = children.shift();
         while (child) {
-            child.destroy();
+            if (child instanceof pc.Entity) {
+                child.destroy();
+            }
 
             // make sure child._parent is null because
             // we have removed it from the children array before calling
@@ -335,8 +337,6 @@ Object.assign(pc, function () {
         if (this._guid) {
             delete this._app._entityIndex[this._guid];
         }
-
-        pc.GraphNode.prototype.destroy.call(this);
 
         this._destroying = false;
     };
