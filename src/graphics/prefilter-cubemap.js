@@ -164,7 +164,7 @@ Object.assign(pc, (function () {
                         height: mipSize[i],
                         mipmaps: false
                     });
-                    cmapsList[pass][i] = 'prefiltered-cube';
+                    cmapsList[pass][i].name = 'prefiltered-cube';
                 }
             }
         }
