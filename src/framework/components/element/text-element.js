@@ -624,8 +624,8 @@ Object.assign(pc, function () {
                 for (var v = 0; v < numVertices; v++) {
                     if (v >= vertMax) {
                         // clear unused vertices
-                        it.element[pc.SEMANTIC_POSITION].set(0,0,0);
-                        it.element[pc.SEMANTIC_TEXCOORD0].set(0,0);
+                        it.element[pc.SEMANTIC_POSITION].set(0, 0, 0);
+                        it.element[pc.SEMANTIC_TEXCOORD0].set(0, 0);
                     } else {
                         it.element[pc.SEMANTIC_POSITION].set(this._meshInfo[i].positions[v * 3 + 0], this._meshInfo[i].positions[v * 3 + 1], this._meshInfo[i].positions[v * 3 + 2]);
                         it.element[pc.SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v * 2 + 0], this._meshInfo[i].uvs[v * 2 + 1]);
