@@ -33,6 +33,10 @@ uniform float font_sdfIntensity; // intensity is used to boost the value read fr
 uniform float font_pxrange;      // the number of pixels between inside and outside the font in SDF
 uniform float font_textureWidth; // the width of the texture atlas
 
+const float smoothing = 2.0/16.0;
+const float outlineWidth = 3.0/16.0;
+const float outerEdgeCenter = 1.0 - outlineWidth;
+
 vec4 applyMsdf(vec4 color) {
     float font_size = 16.0; // TODO fix this
 
@@ -69,5 +73,10 @@ vec4 applyMsdf(vec4 color) {
     float opacity = smoothstep(center-smoothing, center+smoothing, sigDist);
 
     // return final color
-    return mix(vec4(0.0), color, opacity);
+    vec4 finalColor = mix(vec4(0.0), color, opacity);
+
+    float distance = finalColor.a;
+    float alpha = smoothstep(outerEdgeCenter - smoothing, outerEdgeCenter + smoothing, distance);
+    float border = smoothstep(0.5 - smoothing, 0.5 + smoothing, distance);
+    return vec4( mix(vec3(0.0), vec3(1.0), border), alpha );
 }
