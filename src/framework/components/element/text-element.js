@@ -1,5 +1,24 @@
 Object.assign(pc, function () {
 
+    var MeshInfo = function () {
+        // number of symbols
+        this.count = 0;
+        // number of quads created
+        this.quad = 0;
+        // number of quads on specific line
+        this.lines = {};
+        // float array for positions
+        this.positions = [];
+        // float array for normals
+        this.normals = [];
+        // float array for UVs
+        this.uvs = [];
+        // float array for indices
+        this.indices = [];
+        // pc.MeshInstance created from this MeshInfo
+        this.meshInstance = null;
+    };
+
     var TextElement = function TextElement(element) {
         this._element = element;
         this._system = element.system;
@@ -599,11 +618,18 @@ Object.assign(pc, function () {
                 }
 
                 // update vertex buffer
-                var numVertices = this._meshInfo[i].quad * 4;
+                var numVertices = this._meshInfo[i].count * 4; // number of verts we allocated
+                var vertMax = this._meshInfo[i].quad * 4;  // number of verts we need (usually count minus line break characters)
                 var it = new pc.VertexIterator(this._meshInfo[i].meshInstance.mesh.vertexBuffer);
                 for (var v = 0; v < numVertices; v++) {
-                    it.element[pc.SEMANTIC_POSITION].set(this._meshInfo[i].positions[v * 3 + 0], this._meshInfo[i].positions[v * 3 + 1], this._meshInfo[i].positions[v * 3 + 2]);
-                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v * 2 + 0], this._meshInfo[i].uvs[v * 2 + 1]);
+                    if (v >= vertMax) {
+                        // clear unused vertices
+                        it.element[pc.SEMANTIC_POSITION].set(0, 0, 0);
+                        it.element[pc.SEMANTIC_TEXCOORD0].set(0, 0);
+                    } else {
+                        it.element[pc.SEMANTIC_POSITION].set(this._meshInfo[i].positions[v * 3 + 0], this._meshInfo[i].positions[v * 3 + 1], this._meshInfo[i].positions[v * 3 + 2]);
+                        it.element[pc.SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v * 2 + 0], this._meshInfo[i].uvs[v * 2 + 1]);
+                    }
                     it.next();
                 }
                 it.end();
@@ -980,16 +1006,7 @@ Object.assign(pc, function () {
             // as the number of font textures
             for (i = 0, len = this._font.textures.length; i < len; i++) {
                 if (!this._meshInfo[i]) {
-                    this._meshInfo[i] = {
-                        count: 0,
-                        quad: 0,
-                        lines: {},
-                        positions: [],
-                        normals: [],
-                        uvs: [],
-                        indices: [],
-                        meshInstance: null
-                    };
+                    this._meshInfo[i] = new MeshInfo();
                 } else {
                     // keep existing entry but set correct parameters to mesh instance
                     var mi = this._meshInfo[i].meshInstance;
