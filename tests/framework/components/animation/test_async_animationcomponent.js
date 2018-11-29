@@ -46,7 +46,7 @@ describe("async pc.AnimationComponent", function () {
         });
     };
 
-    it.only("async assets, can create animation and auto play them", function (done) {
+    it("async assets, can create animation and auto play them", function (done) {
         var entity = new pc.Entity();
 
         loadAssets(function () {
@@ -69,7 +69,7 @@ describe("async pc.AnimationComponent", function () {
 
     });
 
-    it.only("async assets, clone of animation component loads animations", function (done) {
+    it("async assets, clone of animation component loads animations", function (done) {
         var entity = new pc.Entity();
 
         loadAssets(function () {
