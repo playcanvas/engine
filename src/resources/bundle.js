@@ -4,12 +4,11 @@ Object.assign(pc, function () {
      * @private
      * @constructor
      * @name pc.BundleHandler
+     * @param {pc.AssetRegistry} assets The asset registry
      * @classdesc Loads Bundle Assets
      */
-    var BundleHandler = function () {};
-
-    var HTTP_OPTIONS = {
-        responseType: pc.Http.ResponseType.ARRAY_BUFFER
+    var BundleHandler = function (assets) {
+        this._assets = assets;
     };
 
     Object.assign(BundleHandler.prototype, {
@@ -21,13 +20,21 @@ Object.assign(pc, function () {
                 };
             }
 
-            pc.http.get(url.load, HTTP_OPTIONS, function (err, response) {
+            var prefix = this._assets.prefix;
+
+            pc.http.get(url.load, {
+                responseType: pc.Http.ResponseType.ARRAY_BUFFER
+            }, function (err, response) {
                 if (! err) {
                     try {
                         var untar = new pc.Untar(response);
                         var files = [];
                         while (untar.hasNext()) {
-                            files.push(untar.readNextFile());
+                            var file = untar.readNextFile();
+                            if (prefix && file.name) {
+                                file.name = prefix + file.name;
+                            }
+                            files.push(file);
                         }
 
                         callback(null, files);

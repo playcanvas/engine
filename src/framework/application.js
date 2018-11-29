@@ -445,7 +445,7 @@ Object.assign(pc, function () {
 
         this._scriptPrefix = options.scriptPrefix || '';
 
-        this.loader.addHandler("bundle", new pc.BundleHandler());
+        this.loader.addHandler("bundle", new pc.BundleHandler(this.assets));
         this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice, this.scene.defaultMaterial));
         this.loader.addHandler("material", new pc.MaterialHandler(this));
