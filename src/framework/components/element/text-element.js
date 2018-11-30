@@ -94,6 +94,7 @@ Object.assign(pc, function () {
             }
 
             this.fontAsset = null;
+            this.font = null;
 
             this._element.off('resize', this._onParentResize, this);
             this._element.off('set:screen', this._onScreenChange, this);
@@ -672,9 +673,18 @@ Object.assign(pc, function () {
             asset.off("remove", this._onFontRemove, this);
         },
 
+        _onFontRender: function () {
+            // if the font has been changed (e.g. canvasfont re-render)
+            // re-applying the same font updates character map and ensures
+            // everything is up to date.
+            this.font = this._font;
+        },
+
         _onFontLoad: function (asset) {
             if (this.font !== asset.resource) {
                 this.font = asset.resource;
+
+
             }
         },
 
@@ -808,6 +818,7 @@ Object.assign(pc, function () {
                     console.warn('Element created with unicodeConverter option but no unicodeConverter function registered');
                 }
             }
+
             if (this._text !== str) {
                 if (this._font) {
                     this._updateText(str);
@@ -981,10 +992,18 @@ Object.assign(pc, function () {
 
             var previousFontType;
 
-            if (this._font) previousFontType = this._font.type;
+            if (this._font) {
+                previousFontType = this._font.type;
+
+                // remove render event listener
+                if (this._font.off) this._font.off('render', this._onFontRender, this);
+            }
 
             this._font = value;
             if (!value) return;
+
+            // attach render event listener
+            if (this._font.on) this._font.on('render', this._onFontRender, this);
 
             if (this._fontAsset) {
                 var asset = this._system.app.assets.get(this._fontAsset);
@@ -1008,7 +1027,7 @@ Object.assign(pc, function () {
                 if (!this._meshInfo[i]) {
                     this._meshInfo[i] = new MeshInfo();
                 } else {
-                    // keep existing entry but set correct parameters to mesh instance
+                    // keep exist ing entry but set correct parameters to mesh instance
                     var mi = this._meshInfo[i].meshInstance;
                     if (mi) {
                         mi.setParameter("font_sdfIntensity", this._font.intensity);
