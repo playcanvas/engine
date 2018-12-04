@@ -225,28 +225,6 @@ Object.assign(pc, function () {
         // execute UntarScope function in the worker
         var code = '(' + UntarScope.toString() + ')(true)\n\n';
 
-        // // add onmessage handler
-        // code += [
-        //     '\n',
-        //     'onmessage = function (e) {',
-        //     '   try {',
-        //     '     var untar = new Untar(e.data.arrayBuffer, true);',
-        //     '     var files = [];',
-        //     '     var prefix = e.data.prefix;',
-        //     '     while (untar.hasNext()) {',
-        //     '        var file = untar.readNextFile();',
-        //     '        if (prefix && file.name) {',
-        //     '            file.name = prefix + file.name;',
-        //     '        }',
-        //     '        files.push(file);',
-        //     '      }',
-        //     '      postMessage({files: files});',
-        //     '   } catch (err) {',
-        //     '     postMessage({error: err.toString()})',
-        //     '   }',
-        //     '}'
-        // ].join('\n');
-
         // create blob URL for the code above to be used for the worker
         var blob = new Blob([code], { type: 'application/javascript' });
         return URL.createObjectURL(blob);
