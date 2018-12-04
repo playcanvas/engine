@@ -180,9 +180,19 @@ Object.assign(pc, function () {
                     var bundles = this._urlsInBundles[url];
                     if (!bundles || bundles.indexOf(bundleAsset) === -1) continue;
 
+                    var decodedUrl = decodeURIComponent(url);
+                    var err = null;
+                    if (!bundleAsset.resource.hasBlobUrl(decodedUrl)) {
+                        err = 'Bundle ' + bundleAsset.id + ' does not contain URL ' + url;
+                    }
+
                     var requests = this._fileRequests[url];
                     for (var i = 0, len = requests.length; i < len; i++) {
-                        requests[i](null, bundleAsset.resource.getBlobUrl(decodeURIComponent(url)));
+                        if (err) {
+                            requests[i](err);
+                        } else {
+                            requests[i](null, bundleAsset.resource.getBlobUrl(decodedUrl));
+                        }
                     }
 
                     delete this._fileRequests[url];
@@ -318,7 +328,13 @@ Object.assign(pc, function () {
 
             // Only load files from bundles that're explicilty requested to be loaded.
             if (bundle.loaded) {
-                callback(null, bundle.resource.getBlobUrl(decodeURIComponent(url)));
+                var decodedUrl = decodeURIComponent(url);
+                if (!bundle.resource.hasBlobUrl(decodedUrl)) {
+                    callback('Bundle ' + bundle.id + ' does not contain URL ' + url);
+                    return;
+                }
+
+                callback(null, bundle.resource.getBlobUrl(decodedUrl));
             } else if (this._fileRequests.hasOwnProperty(url)) {
                 this._fileRequests[url].push(callback);
             } else {
