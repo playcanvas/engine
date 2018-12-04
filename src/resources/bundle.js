@@ -9,6 +9,7 @@ Object.assign(pc, function () {
      */
     var BundleHandler = function (assets) {
         this._assets = assets;
+        this._worker = null;
     };
 
     Object.assign(BundleHandler.prototype, {
@@ -20,24 +21,28 @@ Object.assign(pc, function () {
                 };
             }
 
-            var prefix = this._assets.prefix;
+            var self = this;
 
             pc.http.get(url.load, {
                 responseType: pc.Http.ResponseType.ARRAY_BUFFER
             }, function (err, response) {
                 if (! err) {
                     try {
-                        var untar = new pc.Untar(response);
-                        var files = [];
-                        while (untar.hasNext()) {
-                            var file = untar.readNextFile();
-                            if (prefix && file.name) {
-                                file.name = prefix + file.name;
-                            }
-                            files.push(file);
+                        // create web worker if necessary
+                        if (!self._worker) {
+                            self._worker = new pc.UntarWorker(self._assets);
                         }
 
-                        callback(null, files);
+                        self._worker.untar(response, function (err, files) {
+                            callback(err, files);
+
+                            // if we have no more requests for this worker then
+                            // destroy it
+                            if (! self._worker.hasPendingRequests()) {
+                                self._worker.destroy();
+                                self._worker = null;
+                            }
+                        });
                     } catch (ex) {
                         callback("Error loading bundle resource " + url.original + ": " + ex);
                     }
