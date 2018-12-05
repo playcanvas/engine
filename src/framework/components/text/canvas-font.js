@@ -54,6 +54,8 @@ Object.assign(pc, function () {
 
         this.chars = "";
         this.data = {};
+
+        pc.events.attach(this);
     };
 
     /**
@@ -162,11 +164,9 @@ Object.assign(pc, function () {
     CanvasFont.prototype.renderCharacter = function (context, char, x, y, color) {
         context.fillStyle = color;
         context.fillText(char, x, y);
-
     };
 
     CanvasFont.prototype._renderAtlas = function (charsArray) {
-
         this.chars = charsArray;
 
         var numTextures = 1;
@@ -284,6 +284,9 @@ Object.assign(pc, function () {
             }
             this.textures.splice(numTextures);
         }
+
+        // alert text-elements that the font has been re-rendered
+        this.fire("render");
     };
 
     CanvasFont.prototype._createJson = function (chars, fontName, width, height) {

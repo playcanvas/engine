@@ -146,9 +146,7 @@
             backing.addChild(msdfElementEntity);
             msdfElementEntity.translateLocal(0, -elSize*3, 0);
 
-            // purely for debugging: do not do this in a real application
-            var showCanvasAtlasForDebug = false;
-            if (showCanvasAtlasForDebug) {
+            function renderAtlases () {
                 var wrapper = document.createElement('div');
                 for (var i = 0; i < cf.textures.length; i++) {
                     var canvas = cf.textures[i].getSource();
@@ -160,6 +158,9 @@
                 wrapper.style.top = '0px';
                 document.body.appendChild(wrapper);
             }
+            // purely for debugging: do not do this in a real application
+            var showCanvasAtlasForDebug = false;
+            renderAtlases();
 
         </script>
     </body>
