@@ -47,7 +47,6 @@
             var asset = new pc.Asset("CanvasFont", "font", {});
             app.assets.add(asset);
             asset.resource = cf;
-            asset.data = cf.data;
             asset.loaded = true;
 
             var fontAsset = new pc.Asset("Verdana", "font", {
@@ -108,20 +107,6 @@
                 alignment: [1, 0]
             });
 
-            setTimeout(function () {
-                var str = "🇨🇦🇦🇺🇨🇳"
-
-                cf.updateTextures(str);
-
-                if (showCanvasAtlasForDebug) {
-                    renderAtlases();
-                }
-
-                // asset.fire('change', asset, 'data', cf.data, cf.data);
-
-                canvasElementEntity1.element.text = str + canvasElementEntity1.element.text;
-            }, 1000)
-
             cf.updateTextures(secondline);
             var canvasElementEntity2 = new pc.Entity();
             canvasElementEntity2.addComponent("element", {
@@ -174,7 +159,8 @@
                 document.body.appendChild(wrapper);
             }
             // purely for debugging: do not do this in a real application
-            var showCanvasAtlasForDebug = true;
+            var showCanvasAtlasForDebug = false;
+            renderAtlases();
 
         </script>
     </body>
