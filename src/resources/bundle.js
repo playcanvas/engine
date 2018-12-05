@@ -28,21 +28,7 @@ Object.assign(pc, function () {
             }, function (err, response) {
                 if (! err) {
                     try {
-                        // create web worker if necessary
-                        if (!self._worker) {
-                            self._worker = new pc.UntarWorker(self._assets);
-                        }
-
-                        self._worker.untar(response, function (err, files) {
-                            callback(err, files);
-
-                            // if we have no more requests for this worker then
-                            // destroy it
-                            if (! self._worker.hasPendingRequests()) {
-                                self._worker.destroy();
-                                self._worker = null;
-                            }
-                        });
+                        self._untar(response, callback);
                     } catch (ex) {
                         callback("Error loading bundle resource " + url.original + ": " + ex);
                     }
@@ -50,6 +36,34 @@ Object.assign(pc, function () {
                     callback("Error loading bundle resource " + url.original + ": " + err);
                 }
             });
+        },
+
+        _untar: function (response, callback) {
+            var self = this;
+
+            // use web workers if available otherwise
+            // fallback to untar'ing in the main thread
+            if (pc.platform.workers) {
+                // create web worker if necessary
+                if (!self._worker) {
+                    self._worker = new pc.UntarWorker(self._assets.prefix);
+                }
+
+                self._worker.untar(response, function (err, files) {
+                    callback(err, files);
+
+                    // if we have no more requests for this worker then
+                    // destroy it
+                    if (! self._worker.hasPendingRequests()) {
+                        self._worker.destroy();
+                        self._worker = null;
+                    }
+                });
+            } else {
+                var archive = new pc.Untar(response);
+                var files = archive.untar(self._assets.prefix);
+                callback(null, files);
+            }
         },
 
         open: function (url, data) {

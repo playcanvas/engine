@@ -265,6 +265,7 @@ describe('pc.BundleRegistry', function () {
         this.assets.add(bundleAsset);
         bundleAsset.loaded = true;
         bundleAsset.resource = sinon.fake();
+        bundleAsset.resource.hasBlobUrl = sinon.fake.returns(true);
         bundleAsset.resource.getBlobUrl = sinon.fake.returns('blob url');
 
         this.bundles.loadUrl('text.txt', function (err, blobUrl) {
@@ -296,6 +297,7 @@ describe('pc.BundleRegistry', function () {
             bundleAsset.loading = false;
             bundleAsset.loaded = true;
             bundleAsset.resource = sinon.fake();
+            bundleAsset.resource.hasBlobUrl = sinon.fake.returns(true);
             bundleAsset.resource.getBlobUrl = sinon.fake.returns('blob url');
             this.assets.fire('load:' + bundleAsset.id, bundleAsset);
         }.bind(this));
@@ -330,6 +332,7 @@ describe('pc.BundleRegistry', function () {
             bundleAsset2.loading = false;
             bundleAsset2.loaded = true;
             bundleAsset2.resource = sinon.fake();
+            bundleAsset2.resource.hasBlobUrl = sinon.fake.returns(true);
             bundleAsset2.resource.getBlobUrl = sinon.fake.returns('blob url');
             this.assets.fire('load:' + bundleAsset2.id, bundleAsset2);
         }.bind(this));
@@ -389,6 +392,7 @@ describe('pc.BundleRegistry', function () {
             bundleAsset2.loading = false;
             bundleAsset2.loaded = true;
             bundleAsset2.resource = sinon.fake();
+            bundleAsset2.resource.hasBlobUrl = sinon.fake.returns(true);
             bundleAsset2.resource.getBlobUrl = sinon.fake.returns('blob url');
             this.assets.fire('load:' + bundleAsset2.id, bundleAsset2);
         }.bind(this));

@@ -91,75 +91,51 @@ Object.assign(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.Untar#hasNext
+         * @name pc.Untar#_hasNext
          * @description Whether we have more files to untar
          * @returns {Boolean} Returns true or false
          */
-        Untar.prototype.hasNext = function () {
+        Untar.prototype._hasNext = function () {
             return this._bytesRead + 4 < this._arrayBuffer.byteLength && this._bufferView.getUint32(this._bytesRead) !== 0;
         };
 
         /**
          * @private
          * @function
-         * @name pc.Untar#readNextFile
+         * @name pc.Untar#_readNextFile
          * @description Untars the next file in the archive
          * @returns {Object} Returns a file descriptor in the following format:
-         * {name, size, type, ustarFormat, start, end}
+         * {name, size, start, url}
          */
-        Untar.prototype.readNextFile = function () {
+        Untar.prototype._readNextFile = function () {
             var headersDataView = new DataView(this._arrayBuffer, this._bytesRead, 512);
             var headers = asciiDecoder.decode(headersDataView);
             this._bytesRead += 512;
 
-            var file = {
-                name: headers.substr(0, 100).replace(/\0/g, ''),
-                // mode: headers.substr(100, 8),
-                // uid: parseInt(headers.substr(108, 8), 10),
-                // gid: parseInt(headers.substr(116, 8), 10),
-                size: parseInt(headers.substr(124, 12), 8),
-                // mtime: parseInt(headers.substr(136, 12), 8),
-                // checksum: parseInt(headers.substr(148, 8), 10),
-                type: headers.substr(156, 1),
-                // linkname: headers.substr(157, 100),
-                ustarFormat: headers.substr(257, 6),
-                start: this._bytesRead,
-                end: this._bytesRead
-            };
-
-            file.end += file.size;
-
-            if (file.ustarFormat.indexOf("ustar") > -1) {
-                // file.version = headers.substr(263, 2);
-                // file.uname = headers.substr(265, 32);
-                // file.gname = headers.substr(297, 32);
-                // file.devmajor = parseInt(headers.substr(329, 8), 10);
-                // file.devminor = parseInt(headers.substr(337, 8), 10);
-                file.namePrefix = headers.substr(345, 155).replace(/\0/g, '');
-
-                if (file.namePrefix.length > 0) {
-                    file.name = file.namePrefix.trim() + file.name.trim();
-                }
-            }
+            var name = headers.substr(0, 100).replace(/\0/g, '');
+            var ustarFormat = headers.substr(257, 6);
+            var size = parseInt(headers.substr(124, 12), 8);
+            var type = headers.substr(156, 1);
+            var start = this._bytesRead;
+            var url = null;
 
             var paxHeader;
-            var readPaxHeader = false;
-            switch (file.type) {
+            var moveToNextFile = true;
+            switch (type) {
                 case "0": case "": // Normal file
                     // do not create blob URL if we are in a worker
                     // because if the worker is destroyed it will also destroy the blob URLs
                     if (!isWorker) {
-                        var blob = new Blob([this._arrayBuffer.slice(this._bytesRead, this._bytesRead + file.size)]);
-                        file.url = URL.createObjectURL(blob);
+                        var blob = new Blob([this._arrayBuffer.slice(this._bytesRead, this._bytesRead + size)]);
+                        url = URL.createObjectURL(blob);
                     }
+                    moveToNextFile = false;
                     break;
                 case "g": // Global PAX header
-                    this._globalPaxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, file.size);
-                    readPaxHeader = true;
+                    this._globalPaxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
                     break;
                 case "x": // PAX header
-                    paxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, file.size);
-                    readPaxHeader = true;
+                    paxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
                     break;
                 case "1": // Link to another file already archived
                 case "2": // Symbolic link
@@ -171,17 +147,32 @@ Object.assign(pc, function () {
                 default: // Unknown file type
             }
 
-            this._bytesRead += file.size;
+            this._bytesRead += size;
 
             // File data is padded to reach a 512 byte boundary; skip the padded bytes too.
-            var remainder = file.size % 512;
+            var remainder = size % 512;
             if (remainder !== 0) {
                 this._bytesRead += (512 - remainder);
             }
 
-            if (readPaxHeader) {
-                file = this.readNextFile();
+            if (moveToNextFile) {
+                return this._readNextFile();
             }
+
+            if (ustarFormat.indexOf("ustar") !== -1) {
+                var namePrefix = headers.substr(345, 155).replace(/\0/g, '');
+
+                if (namePrefix.length > 0) {
+                    name = namePrefix.trim() + name.trim();
+                }
+            }
+
+            var file = {
+                name: name,
+                start: start,
+                size: size,
+                url: url
+            };
 
             if (this._globalPaxHeader) {
                 this._globalPaxHeader.applyHeader(file);
@@ -191,26 +182,36 @@ Object.assign(pc, function () {
                 paxHeader.applyHeader(file);
             }
 
-            if (file.name) {
-                file.name = file.name.replace(/\0/g, '');
-            }
-
             return file;
         };
 
+        /**
+         * @private
+         * @function
+         * @name pc.Untar#untar
+         * @description Untars the array buffer provided in the constructor.
+         * @param {String} [filenamePrefix] The prefix for each filename in the tar archive. This is usually the {@link pc.AssetRegistry} prefix.
+         * @returns {Object[]} An array of files in this format {name, start, size, url}
+         */
+        Untar.prototype.untar = function (filenamePrefix) {
+            var files = [];
+            while (this._hasNext()) {
+                var file = this._readNextFile();
+                if (filenamePrefix && file.name) {
+                    file.name = filenamePrefix + file.name;
+                }
+                files.push(file);
+            }
+
+            return files;
+        };
+
+        // if we are in a worker then create the onmessage handler using worker.self
         if (isWorker) {
             self.onmessage = function (e) {
                 try {
-                    var untar = new Untar(e.data.arrayBuffer);
-                    var files = [];
-                    var prefix = e.data.prefix;
-                    while (untar.hasNext()) {
-                        var file = untar.readNextFile();
-                        if (prefix && file.name) {
-                            file.name = prefix + file.name;
-                        }
-                        files.push(file);
-                    }
+                    var archive = new Untar(e.data.arrayBuffer);
+                    var files = archive.untar(e.data.prefix);
                     postMessage({ files: files });
                 } catch (err) {
                     postMessage({ error: err.toString() });
@@ -238,11 +239,11 @@ Object.assign(pc, function () {
     * @name pc.UntarWorker
     * @classdesc Wraps untar'ing a tar archive with a Web Worker.
     * @description Creates new instance of a pc.UntarWorker.
-    * @param {pc.AssetRegistry} assets The asset registry.
+    * @param {String} [filenamePrefix] The prefix that should be added to each file name in the archive. This is usually the {@link pc.AssetRegistry} prefix.
     */
-    var UntarWorker = function (assets) {
-        this._assets = assets;
+    var UntarWorker = function (filenamePrefix) {
         this._pendingRequests = 0;
+        this._filenamePrefix = filenamePrefix;
         this._worker = new Worker(WORKER_URL);
     };
 
@@ -267,10 +268,8 @@ Object.assign(pc, function () {
                 // here - outside of the worker - so that the main thread owns them
                 for (var i = 0, len = e.data.files.length; i < len; i++) {
                     var file = e.data.files[i];
-                    if (file.type === '0' || file.type === '') {
-                        var blob = new Blob([arrayBuffer.slice(file.start, file.end)]);
-                        file.url = URL.createObjectURL(blob);
-                    }
+                    var blob = new Blob([arrayBuffer.slice(file.start, file.start + file.size)]);
+                    file.url = URL.createObjectURL(blob);
                 }
 
                 callback(null, e.data.files);
@@ -278,7 +277,7 @@ Object.assign(pc, function () {
         }.bind(this);
         this._worker.addEventListener('message', onmessage);
         this._worker.postMessage({
-            prefix: this._assets.prefix,
+            prefix: this._filenamePrefix,
             arrayBuffer: arrayBuffer
         });
     };

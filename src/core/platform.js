@@ -61,7 +61,13 @@ Object.assign(pc, function () {
          * @name pc.platform.touch
          * @description if platform supports touch input
          */
-        touch: false
+        touch: false,
+
+        /**
+         * @name pc.platform.workers
+         * @description if the platform supports Web Workers
+         */
+        workers: false
     };
 
     var ua = navigator.userAgent;
@@ -92,6 +98,8 @@ Object.assign(pc, function () {
     platform.touch = 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
 
     platform.gamepads = 'getGamepads' in navigator;
+
+    platform.workers = (typeof(Worker) !== 'undefined');
 
     return {
         platform: platform
