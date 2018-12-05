@@ -1027,7 +1027,7 @@ Object.assign(pc, function () {
                 if (!this._meshInfo[i]) {
                     this._meshInfo[i] = new MeshInfo();
                 } else {
-                    // keep exist ing entry but set correct parameters to mesh instance
+                    // keep existing entry but set correct parameters to mesh instance
                     var mi = this._meshInfo[i].meshInstance;
                     if (mi) {
                         mi.setParameter("font_sdfIntensity", this._font.intensity);
