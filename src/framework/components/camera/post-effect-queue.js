@@ -62,6 +62,7 @@ Object.assign(pc, function () {
                 width: width,
                 height: height
             });
+            colorBuffer.name = 'posteffect';
 
             colorBuffer.minFilter = pc.FILTER_NEAREST;
             colorBuffer.magFilter = pc.FILTER_NEAREST;
@@ -87,6 +88,7 @@ Object.assign(pc, function () {
                 width: width,
                 height: height
             });
+            colorBuffer.name = 'posteffect';
 
             colorBuffer.minFilter = pc.FILTER_NEAREST;
             colorBuffer.magFilter = pc.FILTER_NEAREST;

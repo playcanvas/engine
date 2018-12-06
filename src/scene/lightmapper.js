@@ -276,6 +276,7 @@ Object.assign(pc, function () {
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
                 rgbm: true
             });
+            blackTex.name = 'lightmap';
             for (i = 0; i < nodes.length; i++) {
                 size = this.calculateLightmapSize(nodes[i]);
                 texSize.push(size);
@@ -292,6 +293,7 @@ Object.assign(pc, function () {
                         minFilter: pc.FILTER_NEAREST,
                         magFilter: pc.FILTER_NEAREST
                     });
+                    tex.name = 'lightmap';
 
                     lmaps[pass].push(tex);
                 }
@@ -309,6 +311,7 @@ Object.assign(pc, function () {
                         minFilter: pc.FILTER_NEAREST,
                         magFilter: pc.FILTER_NEAREST
                     });
+                    tex2.name = 'lightmap';
 
                     var targ2 = new pc.RenderTarget(device, tex2, {
                         depth: false

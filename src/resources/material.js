@@ -75,6 +75,7 @@ Object.assign(pc, function () {
                     height: 2,
                     format: pc.PIXELFORMAT_R8_G8_B8_A8
                 });
+                this._placeholderTextures[key].name = 'placeholder';
 
                 // fill pixels with color
                 var pixels = this._placeholderTextures[key].lock();

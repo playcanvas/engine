@@ -33,6 +33,7 @@ Object.assign(pc, (function () {
         var oldRt = device.renderTarget;
         device.setRenderTarget(target);
         device.updateBegin();
+
         var x, y, w, h;
         var sx, sy, sw, sh;
         if (!rect) {
@@ -59,26 +60,47 @@ Object.assign(pc, (function () {
             sh = scissorRect.w;
         }
 
+        var oldVx = device.vx;
+        var oldVy = device.vy;
+        var oldVw = device.vw;
+        var oldVh = device.vh;
         device.setViewport(x, y, w, h);
+        var oldSx = device.sx;
+        var oldSy = device.sy;
+        var oldSw = device.sw;
+        var oldSh = device.sh;
         device.setScissor(sx, sy, sw, sh);
 
         var oldDepthTest = device.getDepthTest();
         var oldDepthWrite = device.getDepthWrite();
-        var oldCull = device.getCullMode();
+        var oldCullMode = device.getCullMode();
+        var oldWR = device.writeRed;
+        var oldWG = device.writeGreen;
+        var oldWB = device.writeBlue;
+        var oldWA = device.writeAlpha;
         device.setDepthTest(false);
         device.setDepthWrite(false);
         device.setCullMode(pc.CULLFACE_NONE);
+        device.setColorWrite(true, true, true, true);
         if (!useBlend) device.setBlending(false);
+
         device.setVertexBuffer(_postEffectQuadVB, 0);
         device.setShader(shader);
+
         device.draw(_postEffectQuadDraw);
+
         device.setDepthTest(oldDepthTest);
         device.setDepthWrite(oldDepthWrite);
-        device.setCullMode(oldCull);
+        device.setCullMode(oldCullMode);
+        device.setColorWrite(oldWR, oldWG, oldWB, oldWA);
+
         device.updateEnd();
 
         device.setRenderTarget(oldRt);
         device.updateBegin();
+
+        device.setViewport(oldVx, oldVy, oldVw, oldVh);
+        device.setScissor(oldSx, oldSy, oldSw, oldSh);
     }
 
     function destroyPostEffectQuad() {

@@ -7,6 +7,16 @@ describe("pc.ParticleSystemComponent", function () {
         app.destroy();
     });
 
+    var addAsset = function (name, url, type, callback) {
+        var asset = new pc.Asset(name, type, {
+            url: url
+        });
+
+        app.assets.add(asset);
+
+        return asset;
+    };
+
     var loadAsset = function (name, url, type, callback) {
         var asset = new pc.Asset(name, type, {
             url: url
@@ -36,20 +46,64 @@ describe("pc.ParticleSystemComponent", function () {
         expect(e.particlesystem).to.not.exist;
     });
 
-    it("colorMapAsset removes events", function (done) {
+    it("colorMapAsset removes events", function () {
         var e = new pc.Entity();
 
-        loadAsset('RedPng', 'base/tests/test-assets/sprite/red-atlas.png', 'texture', function (asset) {
-            e.addComponent('particlesystem', {
-                colorMapAsset: asset.id
-            });
-
-            e.removeComponent('particlesystem');
-
-            expect(asset.hasEvent('remove')).to.equal(false);
-            done();
+        var asset = addAsset('RedPng', 'base/tests/test-assets/sprite/red-atlas.png', 'texture');
+        e.addComponent('particlesystem', {
+            colorMapAsset: asset.id
         });
+
+        e.removeComponent('particlesystem');
+
+        expect(asset.hasEvent('load')).to.equal(false);
+        expect(asset.hasEvent('remove')).to.equal(false);
     });
+
+
+    it("colorMapAsset assign to null removes events", function () {
+        var e = new pc.Entity();
+
+        var asset = addAsset('RedPng', 'base/tests/test-assets/sprite/red-atlas.png', 'texture');
+        e.addComponent('particlesystem', {
+            colorMapAsset: asset.id
+        });
+
+        e.particlesystem.colorMapAsset = null;
+
+        expect(asset.hasEvent('load')).to.equal(false);
+        expect(asset.hasEvent('remove')).to.equal(false);
+    });
+
+    it("normalMapAsset removes events", function () {
+        var e = new pc.Entity();
+
+        var asset = addAsset('RedPng', 'base/tests/test-assets/sprite/red-atlas.png', 'texture');
+        e.addComponent('particlesystem', {
+            normalMapAsset: asset.id
+        });
+
+        e.removeComponent('particlesystem');
+
+        expect(asset.hasEvent('load')).to.equal(false);
+        expect(asset.hasEvent('remove')).to.equal(false);
+    });
+
+
+    it("normalMapAsset assign to null removes events", function () {
+        var e = new pc.Entity();
+
+        var asset = addAsset('RedPng', 'base/tests/test-assets/sprite/red-atlas.png', 'texture');
+        e.addComponent('particlesystem', {
+            normalMapAsset: asset.id
+        });
+
+        e.particlesystem.normalMapAsset = null;
+
+        expect(asset.hasEvent('load')).to.equal(false);
+        expect(asset.hasEvent('remove')).to.equal(false);
+    });
+
 
     it("meshAsset removes events", function (done) {
         var e = new pc.Entity();
@@ -61,6 +115,7 @@ describe("pc.ParticleSystemComponent", function () {
 
             e.removeComponent('particlesystem');
 
+            expect(asset.hasEvent('load')).to.equal(false);
             expect(asset.hasEvent('remove')).to.equal(false);
             done();
         });

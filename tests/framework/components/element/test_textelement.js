@@ -299,6 +299,56 @@ describe("pc.TextElement", function () {
         expect(assets.font.hasEvent('remove')).to.be.false;
     });
 
+    it('CanvasFont render event is unbound when reset', function () {
+        var cf = new pc.CanvasFont(app, {
+            fontName: 'Arial'
+        });
+
+        cf.createTextures('abc');
+
+        expect(cf.hasEvent('render')).to.be.false;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            text: 'abc'
+        });
+        app.root.addChild(e);
+
+        e.element.font = cf;
+
+        expect(cf.hasEvent('render')).to.be.true;
+
+        e.element.font = null;
+
+        expect(cf.hasEvent('render')).to.be.false;
+    });
+
+    it('CanvasFont render event is unbound on destroy', function () {
+        var cf = new pc.CanvasFont(app, {
+            fontName: 'Arial'
+        });
+
+        cf.createTextures('abc');
+
+        expect(cf.hasEvent('render')).to.be.false;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'text',
+            text: 'abc'
+        });
+        app.root.addChild(e);
+
+        e.element.font = cf;
+
+        expect(cf.hasEvent('render')).to.be.true;
+
+        e.destroy();
+
+        expect(cf.hasEvent('render')).to.be.false;
+    });
+
     it("defaults to white color and opacity 1", function () {
         expect(element.color.r).to.equal(1);
         expect(element.color.g).to.equal(1);
