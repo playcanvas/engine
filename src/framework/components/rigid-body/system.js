@@ -183,10 +183,10 @@ Object.assign(pc, function () {
                 // Lazily create temp vars
                 ammoRayStart = new Ammo.btVector3();
                 ammoRayEnd = new Ammo.btVector3();
-                pc.ComponentSystem.on('update', this.onUpdate, this);
+                pc.ComponentSystem.bind('update', this.onUpdate, this);
             } else {
                 // Unbind the update function if we haven't loaded Ammo by now
-                pc.ComponentSystem.off('update', this.onUpdate, this);
+                pc.ComponentSystem.unbind('update', this.onUpdate, this);
             }
         },
 
