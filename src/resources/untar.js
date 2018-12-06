@@ -81,12 +81,18 @@ Object.assign(pc, function () {
          * @param {ArrayBuffer} arrayBuffer The array buffer that holds the tar archive
          * @description Creates a new instance of pc.Untar
          */
-        Untar = function (arrayBuffer) {
+        var UntarCtor = function (arrayBuffer) {
             this._arrayBuffer = arrayBuffer || new ArrayBuffer(0);
             this._bufferView = new DataView(this._arrayBuffer);
             this._globalPaxHeader = null;
             this._bytesRead = 0;
         };
+
+        if (isWorker) {
+            self.Untar = UntarCtor;
+        } else {
+            Untar = UntarCtor;
+        }
 
         /**
          * @private
@@ -120,16 +126,16 @@ Object.assign(pc, function () {
             var url = null;
 
             var paxHeader;
-            var moveToNextFile = true;
+            var normalFile = false;
             switch (type) {
                 case "0": case "": // Normal file
                     // do not create blob URL if we are in a worker
                     // because if the worker is destroyed it will also destroy the blob URLs
+                    normalFile = true;
                     if (!isWorker) {
                         var blob = new Blob([this._arrayBuffer.slice(this._bytesRead, this._bytesRead + size)]);
                         url = URL.createObjectURL(blob);
                     }
-                    moveToNextFile = false;
                     break;
                 case "g": // Global PAX header
                     this._globalPaxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
@@ -155,8 +161,8 @@ Object.assign(pc, function () {
                 this._bytesRead += (512 - remainder);
             }
 
-            if (moveToNextFile) {
-                return this._readNextFile();
+            if (! normalFile) {
+                return null;
             }
 
             if (ustarFormat.indexOf("ustar") !== -1) {
@@ -197,6 +203,7 @@ Object.assign(pc, function () {
             var files = [];
             while (this._hasNext()) {
                 var file = this._readNextFile();
+                if (! file) continue;
                 if (filenamePrefix && file.name) {
                     file.name = filenamePrefix + file.name;
                 }
@@ -209,12 +216,24 @@ Object.assign(pc, function () {
         // if we are in a worker then create the onmessage handler using worker.self
         if (isWorker) {
             self.onmessage = function (e) {
+                var id = e.data.id;
+
                 try {
                     var archive = new Untar(e.data.arrayBuffer);
                     var files = archive.untar(e.data.prefix);
-                    postMessage({ files: files });
+                    // The worker is done so send a message to the main thread.
+                    // Notice we are sending the array buffer back as a Transferrable object
+                    // so that the main thread can re-assume control of the array buffer.
+                    postMessage({
+                        id: id,
+                        files: files,
+                        arrayBuffer: e.data.arrayBuffer
+                    }, [e.data.arrayBuffer]);
                 } catch (err) {
-                    postMessage({ error: err.toString() });
+                    postMessage({
+                        id: id,
+                        error: err.toString()
+                    });
                 }
             };
         }
@@ -242,9 +261,36 @@ Object.assign(pc, function () {
     * @param {String} [filenamePrefix] The prefix that should be added to each file name in the archive. This is usually the {@link pc.AssetRegistry} prefix.
     */
     var UntarWorker = function (filenamePrefix) {
-        this._pendingRequests = 0;
+        this._requestId = 0;
+        this._pendingRequests = {};
         this._filenamePrefix = filenamePrefix;
         this._worker = new Worker(WORKER_URL);
+        this._worker.addEventListener('message', this._onMessage.bind(this));
+    };
+
+    UntarWorker.prototype._onMessage = function (e) {
+        var id = e.data.id;
+        if (! this._pendingRequests[id]) return;
+
+        var callback = this._pendingRequests[id];
+
+        delete this._pendingRequests[id];
+
+        if (e.data.error) {
+            callback(e.data.error);
+        } else {
+            var arrayBuffer = e.data.arrayBuffer;
+
+            // create blob URLs for each file. We are creating the URLs
+            // here - outside of the worker - so that the main thread owns them
+            for (var i = 0, len = e.data.files.length; i < len; i++) {
+                var file = e.data.files[i];
+                var blob = new Blob([arrayBuffer.slice(file.start, file.start + file.size)]);
+                file.url = URL.createObjectURL(blob);
+            }
+
+            callback(null, e.data.files);
+        }
     };
 
     /**
@@ -257,29 +303,19 @@ Object.assign(pc, function () {
      * callback has the following arguments: {error, files}, where error is a string if any, and files is an array of file descriptors
      */
     UntarWorker.prototype.untar = function (arrayBuffer, callback) {
-        this._pendingRequests++;
-        var onmessage = function (e) {
-            this._worker.removeEventListener('message', onmessage);
-            this._pendingRequests--;
-            if (e.data.error) {
-                callback(e.data.error);
-            } else {
-                // create blob URLs for each file. We are creating the URLs
-                // here - outside of the worker - so that the main thread owns them
-                for (var i = 0, len = e.data.files.length; i < len; i++) {
-                    var file = e.data.files[i];
-                    var blob = new Blob([arrayBuffer.slice(file.start, file.start + file.size)]);
-                    file.url = URL.createObjectURL(blob);
-                }
+        var id = this._requestId++;
+        this._pendingRequests[id] = callback;
 
-                callback(null, e.data.files);
-            }
-        }.bind(this);
-        this._worker.addEventListener('message', onmessage);
+        // send data to the worker - notice the last argument
+        // converts the arrayBuffer to a Transferrable object
+        // to avoid copying the array buffer which would cause a stall.
+        // However this causes the worker to assume control of the array
+        // buffer so we cannot access this buffer until the worker is done with it.
         this._worker.postMessage({
+            id: id,
             prefix: this._filenamePrefix,
             arrayBuffer: arrayBuffer
-        });
+        }, [arrayBuffer]);
     };
 
     /**
@@ -290,7 +326,11 @@ Object.assign(pc, function () {
      * @returns {Boolean} Returns true of false
      */
     UntarWorker.prototype.hasPendingRequests = function () {
-        return this._pendingRequests > 0;
+        for (var key in this._pendingRequests) {
+            return true;
+        }
+
+        return false;
     };
 
     /**
@@ -303,6 +343,8 @@ Object.assign(pc, function () {
         if (this._worker) {
             this._worker.terminate();
             this._worker = null;
+
+            this._pendingRequests = null;
         }
     };
 
