@@ -1015,13 +1015,6 @@ describe('pc.ImageElement', function () {
 
         expect(app.assets.hasEvent('load:' + textureAtlasAsset.id)).to.be.false;
 
-        var e = new pc.Entity();
-        e.addComponent('element', {
-            type: 'image',
-            spriteAsset: spriteAsset.id
-        });
-        app.root.addChild(e);
-
         if (spriteAsset.resource) {
             fail("spriteAsset should not be loaded at this stage");
         }
@@ -1038,6 +1031,14 @@ describe('pc.ImageElement', function () {
 
             done();
         });
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: spriteAsset.id
+        });
+        app.root.addChild(e);
+
     });
 
     it('Cloning image element with texture works', function () {
