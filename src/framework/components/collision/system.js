@@ -395,7 +395,7 @@ Object.assign(pc, function () {
 
         this.on('remove', this.onRemove, this);
 
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     CollisionComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     CollisionComponentSystem.prototype.constructor = CollisionComponentSystem;
@@ -408,7 +408,7 @@ Object.assign(pc, function () {
                 //
             } else {
                 // Unbind the update function if we haven't loaded Ammo by now
-                pc.ComponentSystem.off('update', this.onUpdate, this);
+                pc.ComponentSystem.unbind('update', this.onUpdate, this);
             }
         },
 

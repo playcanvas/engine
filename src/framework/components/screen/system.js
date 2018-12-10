@@ -27,7 +27,7 @@ Object.assign(pc, function () {
 
         this.app.graphicsDevice.on("resizecanvas", this._onResize, this);
 
-        pc.ComponentSystem.on('update', this._onUpdate, this);
+        pc.ComponentSystem.bind('update', this._onUpdate, this);
 
         this.on('beforeremove', this.onRemoveComponent, this);
     };

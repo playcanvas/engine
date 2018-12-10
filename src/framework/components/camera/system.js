@@ -55,7 +55,7 @@ Object.assign(pc, function () {
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
 
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     CameraComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     CameraComponentSystem.prototype.constructor = CameraComponentSystem;

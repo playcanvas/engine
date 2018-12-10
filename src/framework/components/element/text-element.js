@@ -1,5 +1,24 @@
 Object.assign(pc, function () {
 
+    var MeshInfo = function () {
+        // number of symbols
+        this.count = 0;
+        // number of quads created
+        this.quad = 0;
+        // number of quads on specific line
+        this.lines = {};
+        // float array for positions
+        this.positions = [];
+        // float array for normals
+        this.normals = [];
+        // float array for UVs
+        this.uvs = [];
+        // float array for indices
+        this.indices = [];
+        // pc.MeshInstance created from this MeshInfo
+        this.meshInstance = null;
+    };
+
     var TextElement = function TextElement(element) {
         this._element = element;
         this._system = element.system;
@@ -75,6 +94,7 @@ Object.assign(pc, function () {
             }
 
             this.fontAsset = null;
+            this.font = null;
 
             this._element.off('resize', this._onParentResize, this);
             this._element.off('set:screen', this._onScreenChange, this);
@@ -146,12 +166,20 @@ Object.assign(pc, function () {
 
             var charactersPerTexture = {};
 
+            var char, info, map;
             for (i = 0; i < textLength; i++) {
-                var char = symbols[i];
-                var info = this._font.data.chars[char];
-                if (!info) continue;
+                char = symbols[i];
+                info = this._font.data.chars[char];
+                // if char is missing use 'space' or first char in map
+                if (!info) {
+                    if (this._font.data.chars[' ']) {
+                        info = this._font.data.chars[' '];
+                    } else {
+                        info = this._font.data.chars[Object.keys(this._font.data.chars)[0]];
+                    }
+                }
 
-                var map = info.map;
+                map = info.map;
 
                 if (!charactersPerTexture[map])
                     charactersPerTexture[map] = 0;
@@ -409,12 +437,24 @@ Object.assign(pc, function () {
                 var quadsize = 1;
                 var glyphMinX = 0;
                 var glyphWidth = 0;
+                var dataScale, size;
 
                 data = json.chars[char];
-                if (data && data.scale) {
-                    var size = (data.width + data.height) / 2;
+
+                // use 'space' if available or first character
+                if (!data) {
+                    if (json.chars[' ']) {
+                        data = json.chars[' '];
+                    } else {
+                        data = json.chars[Object.keys(json.chars)[0]];
+                    }
+                }
+
+                if (data) {
+                    dataScale = data.scale || 1;
+                    size = (data.width + data.height) / 2;
                     scale = (size / MAGIC) * this._fontSize / size;
-                    quadsize = (size / MAGIC) * this._fontSize / data.scale;
+                    quadsize = (size / MAGIC) * this._fontSize / dataScale;
                     advance = data.xadvance * scale;
                     x = data.xoffset * scale;
                     y = data.yoffset * scale;
@@ -427,11 +467,7 @@ Object.assign(pc, function () {
                         glyphMinX = 0;
                     }
                 } else {
-                    // missing character
-                    advance = 1;
-                    x = 0;
-                    y = 0;
-                    quadsize = this._fontSize;
+                    console.error("Couldn't substitute missing character: '" + char + "'");
                 }
 
                 var isLineBreak = LINE_BREAK_CHAR.test(char);
@@ -583,11 +619,18 @@ Object.assign(pc, function () {
                 }
 
                 // update vertex buffer
-                var numVertices = this._meshInfo[i].quad * 4;
+                var numVertices = this._meshInfo[i].count * 4; // number of verts we allocated
+                var vertMax = this._meshInfo[i].quad * 4;  // number of verts we need (usually count minus line break characters)
                 var it = new pc.VertexIterator(this._meshInfo[i].meshInstance.mesh.vertexBuffer);
                 for (var v = 0; v < numVertices; v++) {
-                    it.element[pc.SEMANTIC_POSITION].set(this._meshInfo[i].positions[v * 3 + 0], this._meshInfo[i].positions[v * 3 + 1], this._meshInfo[i].positions[v * 3 + 2]);
-                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v * 2 + 0], this._meshInfo[i].uvs[v * 2 + 1]);
+                    if (v >= vertMax) {
+                        // clear unused vertices
+                        it.element[pc.SEMANTIC_POSITION].set(0, 0, 0);
+                        it.element[pc.SEMANTIC_TEXCOORD0].set(0, 0);
+                    } else {
+                        it.element[pc.SEMANTIC_POSITION].set(this._meshInfo[i].positions[v * 3 + 0], this._meshInfo[i].positions[v * 3 + 1], this._meshInfo[i].positions[v * 3 + 2]);
+                        it.element[pc.SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v * 2 + 0], this._meshInfo[i].uvs[v * 2 + 1]);
+                    }
                     it.next();
                 }
                 it.end();
@@ -630,9 +673,18 @@ Object.assign(pc, function () {
             asset.off("remove", this._onFontRemove, this);
         },
 
+        _onFontRender: function () {
+            // if the font has been changed (e.g. canvasfont re-render)
+            // re-applying the same font updates character map and ensures
+            // everything is up to date.
+            this.font = this._font;
+        },
+
         _onFontLoad: function (asset) {
             if (this.font !== asset.resource) {
                 this.font = asset.resource;
+
+
             }
         },
 
@@ -693,8 +745,9 @@ Object.assign(pc, function () {
                 if (data.chars[space]) {
                     return this._getUv(space);
                 }
+
                 // otherwise - missing char
-                return [0, 0, 1, 1];
+                return [0, 0, 0, 0];
             }
 
             var map = data.chars[char].map;
@@ -765,6 +818,7 @@ Object.assign(pc, function () {
                     console.warn('Element created with unicodeConverter option but no unicodeConverter function registered');
                 }
             }
+
             if (this._text !== str) {
                 if (this._font) {
                     this._updateText(str);
@@ -938,10 +992,18 @@ Object.assign(pc, function () {
 
             var previousFontType;
 
-            if (this._font) previousFontType = this._font.type;
+            if (this._font) {
+                previousFontType = this._font.type;
+
+                // remove render event listener
+                if (this._font.off) this._font.off('render', this._onFontRender, this);
+            }
 
             this._font = value;
             if (!value) return;
+
+            // attach render event listener
+            if (this._font.on) this._font.on('render', this._onFontRender, this);
 
             if (this._fontAsset) {
                 var asset = this._system.app.assets.get(this._fontAsset);
@@ -963,16 +1025,7 @@ Object.assign(pc, function () {
             // as the number of font textures
             for (i = 0, len = this._font.textures.length; i < len; i++) {
                 if (!this._meshInfo[i]) {
-                    this._meshInfo[i] = {
-                        count: 0,
-                        quad: 0,
-                        lines: {},
-                        positions: [],
-                        normals: [],
-                        uvs: [],
-                        indices: [],
-                        meshInstance: null
-                    };
+                    this._meshInfo[i] = new MeshInfo();
                 } else {
                     // keep existing entry but set correct parameters to mesh instance
                     var mi = this._meshInfo[i].meshInstance;

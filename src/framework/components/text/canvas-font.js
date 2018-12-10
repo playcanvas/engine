@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     var MAX_TEXTURE_SIZE = 4096;
-    var DEFAULT_TEXTURE_SIZE = 2048;
+    var DEFAULT_TEXTURE_SIZE = 512;
 
     /**
      * @private
@@ -13,9 +13,8 @@ Object.assign(pc, function () {
      * @param {String} [options.fontWeight] The weight of the font, e.g. 'normal', 'bold', defaults to "normal"
      * @param {Number} [options.fontSize] The size the font will be rendered into to the texture atlas at, defaults to 32
      * @param {pc.Color} [options.color] The color the font will be rendered into the texture atlas as, defaults to white
-     * @param {Number} [options.width] The width of each texture atlas, defaults to 2048
-     * @param {Number} [options.height] The height of each texture atlas, defaults to 2048
-     * @param {Number} [options.getCharScale] A custom function which takes a codepoint and return scale value 0-1 to scale char down before rendering into atlas. Return -1 to use default scale value.
+     * @param {Number} [options.width] The width of each texture atlas, defaults to 512
+     * @param {Number} [options.height] The height of each texture atlas, defaults to 512
      */
     var CanvasFont = function (app, options) {
         this.type = "bitmap";
@@ -31,8 +30,6 @@ Object.assign(pc, function () {
         this.fontName = options.fontName || 'Arial';
         this.color = options.color || new pc.Color(1, 1, 1);
 
-        this._customGetCharScale = options.getCharScale || null;
-
         var w = options.width > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.width || DEFAULT_TEXTURE_SIZE);
         var h = options.height > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.height || DEFAULT_TEXTURE_SIZE);
 
@@ -46,6 +43,7 @@ Object.assign(pc, function () {
             autoMipmap: true
         });
 
+        texture.name = 'font';
         texture.setSource(canvas);
         texture.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
         texture.magFilter = pc.FILTER_LINEAR;
@@ -56,6 +54,8 @@ Object.assign(pc, function () {
 
         this.chars = "";
         this.data = {};
+
+        pc.events.attach(this);
     };
 
     /**
@@ -181,7 +181,6 @@ Object.assign(pc, function () {
         // generate a "transparent" color for the background
         // browsers seem to optimize away all color data if alpha=0
         // so setting alpha to min value and hope this isn't noticable
-        // might be able to
         var a = this.color.a;
         this.color.a = 1 / 255;
         var transparent = this._colorToRgbString(this.color, true);
@@ -198,20 +197,33 @@ Object.assign(pc, function () {
 
         this.data = this._createJson(this.chars, this.fontName, w, h);
 
+        var symbols = pc.string.getSymbols(this.chars.join(''));
+        var prevNumTextures = this.textures.length;
+
+        var maxHeight = 0;
+        var maxDescent = 0;
+        var metrics = {};
+        var i, ch;
+        for (i = 0; i < symbols.length; i++) {
+            ch = symbols[i];
+            metrics[ch] = this._getTextMetrics(ch);
+            maxHeight = Math.max(maxHeight, metrics[ch].height);
+            maxDescent = Math.max(maxDescent, metrics[ch].descent);
+        }
+
+        this.glyphSize = Math.max(this.glyphSize, maxHeight);
+
         var sx = this.glyphSize;
         var sy = this.glyphSize;
         var halfWidth = sx / 2;
         var _x = halfWidth;
         var _y = sy;
-        var i;
 
-        var symbols = pc.string.getSymbols(this.chars.join(''));
-        var prevNumTextures = this.textures.length;
         for (i = 0; i < symbols.length; i++) {
-            var ch = symbols[i];
+            ch = symbols[i];
             var code = pc.string.getCodePoint(symbols[i]);
 
-            var fs = this._getCharScale(code) * this.fontSize;
+            var fs = this.fontSize;
             ctx.font = this.fontWeight + ' ' + fs.toString() + 'px ' + this.fontName;
             ctx.textAlign = TEXT_ALIGN;
             ctx.textBaseline = TEXT_BASELINE;
@@ -220,7 +232,7 @@ Object.assign(pc, function () {
 
             var width = ctx.measureText(ch).width;
             var xoffset = (sx - width) / 2;
-            var yoffset = 0;
+            var yoffset = metrics[ch].descent - maxDescent;
             var xadvance = width;
 
             this._addChar(this.data, ch, code, _x - halfWidth, _y - sy, sx, sy, xoffset, yoffset, xadvance, numTextures - 1, w, h);
@@ -248,6 +260,7 @@ Object.assign(pc, function () {
                             format: pc.PIXELFORMAT_R8_G8_B8_A8,
                             autoMipmap: true
                         });
+                        texture.name = 'font-atlas';
                         texture.setSource(canvas);
                         texture.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
                         texture.magFilter = pc.FILTER_LINEAR;
@@ -271,6 +284,9 @@ Object.assign(pc, function () {
             }
             this.textures.splice(numTextures);
         }
+
+        // alert text-elements that the font has been re-rendered
+        this.fire("render");
     };
 
     CanvasFont.prototype._createJson = function (chars, fontName, width, height) {
@@ -292,52 +308,12 @@ Object.assign(pc, function () {
         return base;
     };
 
-    // Most characters are rendered at the same pixel size as specified
-    // Some very tall characters will render outside of the box, for these
-    // we scale them down when rendering and character data in the font
-    // is set so that they are scaled up again when rendered in the quad
-    //
-    // This default implementation checks for capital letters with accents
-    // and emoji-style unicode characters which are usually render too tall
-    //
-    // If we required we can allow a user-custom function here that users can
-    // supply special cases for their character set
-    CanvasFont.prototype._getCharScale = function (code) {
-        // if a custom scale function is available use it
-        // custom scale function can ignore chars by return -1
-        if (this._customGetCharScale) {
-            var scale = this._customGetCharScale(code);
-            if (scale >= 0) {
-                return scale;
-            }
-        }
-
-        if (code >= 0x00C0 && code <= 0x00DD) {
-            // capital letters with accents
-            return 0.875;
-        } else if (code >= 0x1f000 && code <= 0x1F9FF) {
-            // "emoji" misc. images and emoticon range of unicode
-            return 0.8;
-        } else if (code >= 0x2600 && code <= 0x26FF) {
-            // 'miscelaneous symbols'
-            return 0.8;
-        } else if (code >= 0x2700 && code <= 0x27BF) {
-            // 'dingbats'
-            return 0.8;
-        } else if (code === 0x27A1 || (code >= 0x2B00 && code <= 0x2B0F)) {
-            // arrows
-            return 0.8;
-        }
-
-        return 1.0;
-    };
-
     CanvasFont.prototype._addChar = function (json, char, charCode, x, y, w, h, xoffset, yoffset, xadvance, mapNum, mapW, mapH) {
         if (json.info.maps.length < mapNum + 1) {
             json.info.maps.push({ "width": mapW, "height": mapH });
         }
 
-        var scale = this._getCharScale(charCode) * this.fontSize / 32;
+        var scale = this.fontSize / 32;
 
         json.chars[char] = {
             "id": charCode,
@@ -378,6 +354,49 @@ Object.assign(pc, function () {
         var chars = Object.keys(set);
         // sort
         return chars.sort();
+    };
+
+    // Calculate some metrics that aren't available via the
+    // browser API, notably character height and descent size
+    CanvasFont.prototype._getTextMetrics = function (text) {
+        var textSpan = document.createElement('span');
+        textSpan.id = 'content-span';
+        textSpan.innerHTML = text;
+
+        var block = document.createElement("div");
+        block.id = 'content-block';
+        block.style.display = 'inline-block';
+        block.style.width = '1px';
+        block.style.height = '0px';
+
+        var div = document.createElement('div');
+        div.appendChild(textSpan);
+        div.appendChild(block);
+        div.style.font = this.fontName;
+        div.style.fontSize = this.fontSize + 'px';
+
+        var body = document.body;
+        body.appendChild(div);
+
+        var ascent = -1;
+        var descent = -1;
+        var height = -1;
+
+        try {
+            block.style['vertical-align'] = 'baseline';
+            ascent = block.offsetTop - textSpan.offsetTop;
+            block.style['vertical-align'] = 'bottom';
+            height = block.offsetTop - textSpan.offsetTop;
+            descent = height - ascent;
+        } finally {
+            document.body.removeChild(div);
+        }
+
+        return {
+            ascent: ascent,
+            descent: descent,
+            height: height
+        };
     };
 
     return {
