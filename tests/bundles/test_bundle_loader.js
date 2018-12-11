@@ -1,4 +1,4 @@
-describe.only('Test Bundle Loader', function () {
+describe('Test Bundle Loader', function () {
     beforeEach(function () {
         this._workers = pc.platform.workers;
 
@@ -62,6 +62,10 @@ describe.only('Test Bundle Loader', function () {
                         height: 128
                     }]
                 }
+            }),
+            new pc.Asset('audio', 'audio', {
+                filename: 'audio.mp3',
+                url: 'files/audio/audio.mp3'
             })
         ];
 
@@ -99,6 +103,9 @@ describe.only('Test Bundle Loader', function () {
             },
             font: {
                 instanceof: pc.Font
+            },
+            audio: {
+                instanceof: pc.Audio
             }
         };
 
@@ -237,7 +244,7 @@ describe.only('Test Bundle Loader', function () {
         });
     });
 
-    it.only('should fail loading assets if the bundle has not started loading', function (done) {
+    it('should fail loading assets if the bundle has not started loading', function (done) {
         this.app.assets.add(this.bundleAsset);
 
         this.app.assets.on('error:' + this.assets[0].id, function (err) {
