@@ -176,6 +176,11 @@ Object.assign(pc, function () {
             // don't do it on the same tick because that ties the loading
             // of the bundle to the loading of all the assets
             requestAnimationFrame(function () {
+                // make sure the registry hasn't been destroyed already
+                if (!this._fileRequests) {
+                    return;
+                }
+
                 for (var url in this._fileRequests) {
                     var bundles = this._urlsInBundles[url];
                     if (!bundles || bundles.indexOf(bundleAsset) === -1) continue;
