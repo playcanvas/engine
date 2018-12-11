@@ -1,3 +1,4 @@
+
 Object.assign(pc, function () {
     var Untar; // see below why we declare this here
 
@@ -10,8 +11,15 @@ Object.assign(pc, function () {
     function UntarScope(isWorker) {
         'use strict';
 
-        var utfDecoder = new TextDecoder('utf-8');
-        var asciiDecoder = new TextDecoder('windows-1252');
+        var utfDecoder;
+        var asciiDecoder;
+
+        if (typeof TextDecoder !== 'undefined') {
+            utfDecoder = new TextDecoder('utf-8');
+            asciiDecoder = new TextDecoder('windows-1252');
+        } else {
+            console.warn('TextDecoder not supported - pc.Untar module will not work');
+        }
 
         function PaxHeader(fields) {
             this._fields = fields;
@@ -200,6 +208,11 @@ Object.assign(pc, function () {
          * @returns {Object[]} An array of files in this format {name, start, size, url}
          */
         Untar.prototype.untar = function (filenamePrefix) {
+            if (! utfDecoder) {
+                console.error('Cannot untar because TextDecoder interface is not available for this platform.');
+                return [];
+            }
+
             var files = [];
             while (this._hasNext()) {
                 var file = this._readNextFile();

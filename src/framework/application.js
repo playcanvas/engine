@@ -445,7 +445,10 @@ Object.assign(pc, function () {
 
         this._scriptPrefix = options.scriptPrefix || '';
 
-        this.loader.addHandler("bundle", new pc.BundleHandler(this.assets));
+        if (this._enableBundles) {
+            this.loader.addHandler("bundle", new pc.BundleHandler(this.assets));
+        }
+
         this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice, this.scene.defaultMaterial));
         this.loader.addHandler("material", new pc.MaterialHandler(this));
@@ -889,10 +892,12 @@ Object.assign(pc, function () {
                 }
 
                 // then add bundles
-                for (id in assets) {
-                    if (assets[id].type === 'bundle') {
-                        bundlesIndex[id] = true;
-                        list.push(assets[id]);
+                if (this._enableBundles) {
+                    for (id in assets) {
+                        if (assets[id].type === 'bundle') {
+                            bundlesIndex[id] = true;
+                            list.push(assets[id]);
+                        }
                     }
                 }
 
@@ -904,13 +909,16 @@ Object.assign(pc, function () {
                     list.push(assets[id]);
                 }
             } else {
-                // add bundles
-                for (id in assets) {
-                    if (assets[id].type === 'bundle') {
-                        bundlesIndex[id] = true;
-                        list.push(assets[id]);
+                if (this._enableBundles) {
+                    // add bundles
+                    for (id in assets) {
+                        if (assets[id].type === 'bundle') {
+                            bundlesIndex[id] = true;
+                            list.push(assets[id]);
+                        }
                     }
                 }
+
 
                 // then add rest of assets
                 for (id in assets) {
