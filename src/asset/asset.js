@@ -14,6 +14,15 @@ Object.assign(pc, function () {
         'i' // non case-sensitive flag
     );
 
+    var VARIANT_SUPPORT = {
+        pvr: 'extCompressedTexturePVRTC',
+        dxt: 'extCompressedTextureS3TC',
+        etc2: 'extCompressedTextureETC',
+        etc1: 'extCompressedTextureETC1'
+    };
+
+    var VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1'];
+
     /**
      * @constructor
      * @name pc.Asset
@@ -148,16 +157,32 @@ Object.assign(pc, function () {
                 return null;
 
             if (this.type === 'texture' || this.type === 'textureatlas' || this.type === 'bundle') {
-                var device = this.registry._loader.getHandler('texture')._device;
+                var app = this.registry._loader._app;
+                var device = app.graphicsDevice;
 
-                if (this.variants.pvr && device.extCompressedTexturePVRTC) {
-                    return this.variants.pvr;
-                } else if (this.variants.dxt && device.extCompressedTextureS3TC) {
-                    return this.variants.dxt;
-                } else if (this.variants.etc2 && device.extCompressedTextureETC) {
-                    return this.variants.etc2;
-                } else if (this.variants.etc1 && device.extCompressedTextureETC1) {
-                    return this.variants.etc1;
+                for (var i = 0, len = VARIANT_DEFAULT_PRIORITY.length; i < len; i++) {
+                    var variant = VARIANT_DEFAULT_PRIORITY[i];
+                    // if the device supports the variant
+                    if (! device[VARIANT_SUPPORT[variant]]) continue;
+
+                    // if the variant exists in the asset then just return it
+                    if (this.file.variants[variant]) {
+                        return this.file.variants[variant];
+                    }
+
+                    // if the variant does not exist but we the asset is in a bundle
+                    // and the bundle contain assets with this variant then return the default
+                    // file for the asset
+                    if (app._enableBundles) {
+                        var bundles = app.bundles.listBundlesForAsset(this);
+                        if (! bundles) continue;
+
+                        for (var j = 0, len2 = bundles.length; j < len2; j++) {
+                            if (bundles[j].file && bundles[j].file.variants && bundles[j].file.variants[variant]) {
+                                return this.file;
+                            }
+                        }
+                    }
                 }
             }
 

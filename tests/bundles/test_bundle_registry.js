@@ -36,7 +36,7 @@ describe('pc.BundleRegistry', function () {
         expect(bundles).to.deep.equal([]);
     });
 
-    it('listBundlesForAsset() returns empty array for assets not in bundles', function () {
+    it('listBundlesForAsset() returns null for assets not in bundles', function () {
         var asset = new pc.Asset('asset', 'text', {
             url: 'text.txt'
         });
@@ -53,7 +53,7 @@ describe('pc.BundleRegistry', function () {
         this.assets.add(bundleAsset);
 
         var bundles = this.bundles.listBundlesForAsset(notInBundle);
-        expect(bundles).to.deep.equal([]);
+        expect(bundles).to.equal(null);
     });
 
     it('listBundlesForAsset() lists bundles for asset if asset added before bundle', function () {
@@ -101,7 +101,7 @@ describe('pc.BundleRegistry', function () {
         this.assets.remove(bundleAsset);
 
         var bundles = this.bundles.listBundlesForAsset(asset);
-        expect(bundles).to.deep.equal([]);
+        expect(bundles).to.equal(null);
     });
 
     it('listBundlesForAsset() does not return bundle for removed asset', function () {
@@ -118,7 +118,7 @@ describe('pc.BundleRegistry', function () {
         this.assets.remove(asset);
 
         var bundles = this.bundles.listBundlesForAsset(asset);
-        expect(bundles).to.deep.equal([]);
+        expect(bundles).to.equal(null);
     });
 
     it('hasUrl() returns true for url in bundle', function () {

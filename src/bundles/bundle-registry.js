@@ -253,15 +253,10 @@ Object.assign(pc, function () {
          * @name pc.BundleRegistry#listBundlesForAsset
          * @description Lists all of the available bundles that reference the specified asset id.
          * @param {pc.Asset} asset The asset
-         * @returns {pc.Asset[]} An array of bundle assets.
+         * @returns {pc.Asset[]} An array of bundle assets or null if the asset is not in any bundle.
          */
         listBundlesForAsset: function (asset) {
-            var bundles = this._assetsInBundles[asset.id];
-            if (bundles) {
-                return bundles.slice();
-            }
-
-            return [];
+            return this._assetsInBundles[asset.id] || null;
         },
 
         /**
