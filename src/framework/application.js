@@ -182,7 +182,7 @@ Object.assign(pc, function () {
         if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
         this.bundles = new pc.BundleRegistry(this.assets);
         // set this to false if you want to run without using bundles
-        this._enableBundles = true;
+        this.enableBundles = true;
         this.scriptsOrder = options.scriptsOrder || [];
         this.scripts = new pc.ScriptRegistry(this);
 
@@ -447,7 +447,7 @@ Object.assign(pc, function () {
 
         this._scriptPrefix = options.scriptPrefix || '';
 
-        if (this._enableBundles) {
+        if (this.enableBundles) {
             this.loader.addHandler("bundle", new pc.BundleHandler(this.assets));
         }
 
@@ -894,7 +894,7 @@ Object.assign(pc, function () {
                 }
 
                 // then add bundles
-                if (this._enableBundles) {
+                if (this.enableBundles) {
                     for (id in assets) {
                         if (assets[id].type === 'bundle') {
                             bundlesIndex[id] = true;
@@ -911,7 +911,7 @@ Object.assign(pc, function () {
                     list.push(assets[id]);
                 }
             } else {
-                if (this._enableBundles) {
+                if (this.enableBundles) {
                     // add bundles
                     for (id in assets) {
                         if (assets[id].type === 'bundle') {

@@ -119,7 +119,7 @@ Object.assign(pc, function () {
                 }.bind(this);
 
                 var normalizedUrl = url.split('?')[0];
-                if (this._app._enableBundles && this._app.bundles.hasUrl(normalizedUrl)) {
+                if (this._app.enableBundles && this._app.bundles.hasUrl(normalizedUrl)) {
                     if (!this._app.bundles.canLoadUrl(normalizedUrl)) {
                         handleLoad('Bundle for ' + url + ' not loaded yet');
                         return;

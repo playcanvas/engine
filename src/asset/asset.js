@@ -173,7 +173,7 @@ Object.assign(pc, function () {
                     // if the variant does not exist but the asset is in a bundle
                     // and the bundle contain assets with this variant then return the default
                     // file for the asset
-                    if (app._enableBundles) {
+                    if (app.enableBundles) {
                         var bundles = app.bundles.listBundlesForAsset(this);
                         if (! bundles) continue;
 
