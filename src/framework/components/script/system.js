@@ -52,10 +52,10 @@ Object.assign(pc, function () {
         this.preloading = true;
 
         this.on('beforeremove', this._onBeforeRemove, this);
-        pc.ComponentSystem.on('initialize', this._onInitialize, this);
-        pc.ComponentSystem.on('postInitialize', this._onPostInitialize, this);
-        pc.ComponentSystem.on('update', this._onUpdate, this);
-        pc.ComponentSystem.on('postUpdate', this._onPostUpdate, this);
+        pc.ComponentSystem.bind('initialize', this._onInitialize, this);
+        pc.ComponentSystem.bind('postInitialize', this._onPostInitialize, this);
+        pc.ComponentSystem.bind('update', this._onUpdate, this);
+        pc.ComponentSystem.bind('postUpdate', this._onPostUpdate, this);
     };
     ScriptComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     ScriptComponentSystem.prototype.constructor = ScriptComponentSystem;

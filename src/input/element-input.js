@@ -207,6 +207,7 @@ Object.assign(pc, function () {
         this._touchendHandler = this._handleTouchEnd.bind(this);
         this._touchcancelHandler = this._touchendHandler;
         this._touchmoveHandler = this._handleTouchMove.bind(this);
+        this._sortHandler = this._sortElements.bind(this);
 
         this._elements = [];
         this._hoveredElement = null;
@@ -621,6 +622,9 @@ Object.assign(pc, function () {
         },
 
         _sortElements: function (a, b) {
+            var layerOrder = this.app.scene.layers.sortTransparentLayers(a.layers, b.layers);
+            if (layerOrder !== 0) return layerOrder;
+
             if (a.screen && !b.screen)
                 return -1;
             if (!a.screen && b.screen)
@@ -639,7 +643,7 @@ Object.assign(pc, function () {
             var result = null;
 
             // sort elements
-            this._elements.sort(this._sortElements);
+            this._elements.sort(this._sortHandler);
 
             for (var i = 0, len = this._elements.length; i < len; i++) {
                 var element = this._elements[i];

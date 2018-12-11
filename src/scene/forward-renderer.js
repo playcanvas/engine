@@ -181,6 +181,7 @@ Object.assign(pc, function () {
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
+        shadowMap.name = 'shadowmap';
 
         if (shadowType === pc.SHADOW_PCF5 || (shadowType === pc.SHADOW_PCF3 && device.webgl2)) {
             shadowMap.compareOnRead = true;
@@ -213,6 +214,7 @@ Object.assign(pc, function () {
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
+        cubemap.name = 'shadowcube';
 
         var targets = [];
         var target;

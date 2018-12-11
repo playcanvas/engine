@@ -31,6 +31,7 @@ Object.assign(pc, function () {
         pixelData[2] = 255.0;
         pixelData[3] = 255.0;
         pixels.set(pixelData);
+        this._defaultTexture.name = 'sprite';
         this._defaultTexture.unlock();
 
         // default material used by sprites
@@ -63,7 +64,7 @@ Object.assign(pc, function () {
         this.default9SlicedMaterialTiledMode.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
         this.default9SlicedMaterialTiledMode.update();
 
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
         this.on('beforeremove', this.onBeforeRemove, this);
     };
     SpriteComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);

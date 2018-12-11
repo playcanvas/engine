@@ -50,6 +50,7 @@ Object.assign(pc, function () {
         // Uniforms
         this.mixRatio = 0.5;
         this.blendMap = new pc.Texture(graphicsDevice);
+        this.blendMap.name = 'pe-blend';
     };
 
     BlendEffect.prototype = Object.create(pc.PostEffect.prototype);
