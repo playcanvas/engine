@@ -87,7 +87,8 @@ Object.assign(pc, function () {
             this[onOrOff]('set_inactiveSpriteAsset', this._onSetTransitionValue, this);
             this[onOrOff]('set_inactiveSpriteFrame', this._onSetTransitionValue, this);
 
-            pc.ComponentSystem[onOrOff]('update', this._onUpdate, this);
+            var bindEvent = (onOrOff === 'on') ? 'bind' : 'unbind';
+            pc.ComponentSystem[bindEvent]('update', this._onUpdate, this);
 
             system.app.systems.element[onOrOff]('add', this._onElementComponentAdd, this);
             system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemove, this);
