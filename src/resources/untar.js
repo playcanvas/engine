@@ -88,17 +88,15 @@ Object.assign(pc, function () {
          * @param {ArrayBuffer} arrayBuffer The array buffer that holds the tar archive
          * @description Creates a new instance of pc.Untar
          */
-        var UntarCtor = function (arrayBuffer) {
+        var UntarInternal = function (arrayBuffer) {
             this._arrayBuffer = arrayBuffer || new ArrayBuffer(0);
             this._bufferView = new DataView(this._arrayBuffer);
             this._globalPaxHeader = null;
             this._bytesRead = 0;
         };
 
-        if (isWorker) {
-            self.Untar = UntarCtor;
-        } else {
-            Untar = UntarCtor;
+        if (! isWorker) {
+            Untar = UntarInternal;
         }
 
         /**
@@ -108,7 +106,7 @@ Object.assign(pc, function () {
          * @description Whether we have more files to untar
          * @returns {Boolean} Returns true or false
          */
-        Untar.prototype._hasNext = function () {
+        UntarInternal.prototype._hasNext = function () {
             return this._bytesRead + 4 < this._arrayBuffer.byteLength && this._bufferView.getUint32(this._bytesRead) !== 0;
         };
 
@@ -120,7 +118,7 @@ Object.assign(pc, function () {
          * @returns {Object} Returns a file descriptor in the following format:
          * {name, size, start, url}
          */
-        Untar.prototype._readNextFile = function () {
+        UntarInternal.prototype._readNextFile = function () {
             var headersDataView = new DataView(this._arrayBuffer, this._bytesRead, 512);
             var headers = asciiDecoder.decode(headersDataView);
             this._bytesRead += 512;
@@ -206,7 +204,7 @@ Object.assign(pc, function () {
          * @param {String} [filenamePrefix] The prefix for each filename in the tar archive. This is usually the {@link pc.AssetRegistry} prefix.
          * @returns {Object[]} An array of files in this format {name, start, size, url}
          */
-        Untar.prototype.untar = function (filenamePrefix) {
+        UntarInternal.prototype.untar = function (filenamePrefix) {
             if (! utfDecoder) {
                 console.error('Cannot untar because TextDecoder interface is not available for this platform.');
                 return [];
@@ -231,7 +229,7 @@ Object.assign(pc, function () {
                 var id = e.data.id;
 
                 try {
-                    var archive = new Untar(e.data.arrayBuffer);
+                    var archive = new UntarInternal(e.data.arrayBuffer);
                     var files = archive.untar(e.data.prefix);
                     // The worker is done so send a message to the main thread.
                     // Notice we are sending the array buffer back as a Transferrable object
