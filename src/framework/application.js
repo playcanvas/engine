@@ -182,7 +182,9 @@ Object.assign(pc, function () {
         if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
         this.bundles = new pc.BundleRegistry(this.assets);
         // set this to false if you want to run without using bundles
-        this.enableBundles = true;
+        // We set it to true only if TextDecoder is available because we currently
+        // rely on it for untarring.
+        this.enableBundles = (typeof TextDecoder !== 'undefined');
         this.scriptsOrder = options.scriptsOrder || [];
         this.scripts = new pc.ScriptRegistry(this);
 
