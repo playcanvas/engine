@@ -442,7 +442,7 @@ Object.assign(pc, function () {
         },
 
         onUpdate: function () {
-            if (this._contentReference.entity && this.enabled && this.entity.enabled) {
+            if (this._contentReference.entity) {
                 this._updateVelocity();
                 this._syncScrollbarEnabledState(pc.ORIENTATION_HORIZONTAL);
                 this._syncScrollbarEnabledState(pc.ORIENTATION_VERTICAL);

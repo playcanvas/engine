@@ -430,7 +430,7 @@ Object.assign(pc, function () {
         },
 
         onUpdate: function () {
-            if (this._tweenInfo && this.enabled && this.entity.enabled) {
+            if (this._tweenInfo) {
                 this._updateTintTween();
             }
         },

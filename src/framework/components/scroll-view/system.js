@@ -58,8 +58,12 @@ Object.assign(pc, function () {
             var components = this.store;
 
             for (var id in components) {
-                var component = components[id].entity.scrollview;
-                component.onUpdate();
+                var entity = components[id].entity;
+                var component = entity.scrollview;
+                if (component.enabled && entity.enabled) {
+                    component.onUpdate();
+                }
+
             }
         },
 
