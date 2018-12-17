@@ -405,7 +405,7 @@ Object.assign(pc, function () {
                     startTime: pc.now(),
                     from: new pc.Color(color.r, color.g, color.b, opacity),
                     to: tintColor.clone(),
-                    lerpVec: new pc.Vec4()
+                    lerpColor: new pc.Color()
                 };
             }
         },
@@ -416,9 +416,9 @@ Object.assign(pc, function () {
             elapsedProportion = pc.math.clamp(elapsedProportion, 0, 1);
 
             if (Math.abs(elapsedProportion - 1) > 1e-5) {
-                var lerpVec = this._tweenInfo.lerpVec;
-                lerpVec.lerp(this._tweenInfo.from, this._tweenInfo.to, elapsedProportion);
-                this._applyTintImmediately(new pc.Color(lerpVec.x, lerpVec.y, lerpVec.z, lerpVec.w));
+                var lerpColor = this._tweenInfo.lerpColor;
+                lerpColor.lerp(this._tweenInfo.from, this._tweenInfo.to, elapsedProportion);
+                this._applyTintImmediately(new pc.Color(lerpColor.r, lerpColor.g, lerpColor.b, lerpColor.a));
             } else {
                 this._applyTintImmediately(this._tweenInfo.to);
                 this._cancelTween();
