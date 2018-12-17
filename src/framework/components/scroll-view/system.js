@@ -37,6 +37,8 @@ Object.assign(pc, function () {
         this.schema = _schema;
 
         this.on('beforeremove', this._onRemoveComponent, this);
+
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     ScrollViewComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     ScrollViewComponentSystem.prototype.constructor = ScrollViewComponentSystem;
@@ -50,6 +52,15 @@ Object.assign(pc, function () {
             }
 
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
+        },
+
+        onUpdate: function (dt) {
+            var components = this.store;
+
+            for (var id in components) {
+                var component = components[id].entity.scrollview;
+                component.onUpdate();
+            }
         },
 
         _onRemoveComponent: function (entity, component) {

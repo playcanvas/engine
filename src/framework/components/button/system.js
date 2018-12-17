@@ -37,6 +37,8 @@ Object.assign(pc, function () {
         this.schema = _schema;
 
         this.on('beforeremove', this._onRemoveComponent, this);
+
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     ButtonComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     ButtonComponentSystem.prototype.constructor = ButtonComponentSystem;
@@ -46,6 +48,15 @@ Object.assign(pc, function () {
     Object.assign(ButtonComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
+        },
+
+        onUpdate: function (dt) {
+            var components = this.store;
+
+            for (var id in components) {
+                var component = components[id].entity.button;
+                component.onUpdate();
+            }
         },
 
         _onRemoveComponent: function (entity, component) {
