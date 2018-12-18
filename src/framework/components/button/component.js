@@ -87,9 +87,6 @@ Object.assign(pc, function () {
             this[onOrOff]('set_inactiveSpriteAsset', this._onSetTransitionValue, this);
             this[onOrOff]('set_inactiveSpriteFrame', this._onSetTransitionValue, this);
 
-            var bindEvent = (onOrOff === 'on') ? 'bind' : 'unbind';
-            pc.ComponentSystem[bindEvent]('update', this._onUpdate, this);
-
             system.app.systems.element[onOrOff]('add', this._onElementComponentAdd, this);
             system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemove, this);
         },
@@ -432,7 +429,7 @@ Object.assign(pc, function () {
             delete this._tweenInfo;
         },
 
-        _onUpdate: function () {
+        onUpdate: function () {
             if (this._tweenInfo) {
                 this._updateTintTween();
             }
