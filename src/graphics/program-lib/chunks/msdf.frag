@@ -33,19 +33,23 @@ uniform float font_sdfIntensity; // intensity is used to boost the value read fr
 uniform float font_pxrange;      // the number of pixels between inside and outside the font in SDF
 uniform float font_textureWidth; // the width of the texture atlas
 
-vec4 applyMsdf(vec4 color) {
-    float font_size = 16.0; // TODO fix this
+vec2 shadowVector = vec2(0.0062, -0.0046);
 
+vec4 applyMsdf(vec4 color) {
     // sample the field
     vec3 tsample = texture2D(texture_msdfMap, vUv0).rgb;
+    vec2 uvShdw = vUv0 - shadowVector;
+    vec3 ssample = texture2D(texture_msdfMap, uvShdw).rgb;
     // get the signed distance value
     float sigDist = median(tsample.r, tsample.g, tsample.b);
+    float sigDistShdw = median(ssample.r, ssample.g, ssample.b);
 
     #ifdef USE_FWIDTH
         // smoothing depends on size of texture on screen
         vec2 w = fwidth(vUv0);
-        float smoothing = clamp(map(0.0, 2.0 * font_pxrange / font_textureWidth, w.x), 0.0, 0.5);
+        float smoothing = clamp(2.0 * w.x * font_textureWidth / font_pxrange, 0.0, 0.5);
     #else
+        float font_size = 16.0; // TODO fix this
         // smoothing gets smaller as the font size gets bigger
         // don't have fwidth we can approximate from font size, this doesn't account for scaling
         // so a big font scaled down will be wrong...
@@ -60,14 +64,21 @@ vec4 applyMsdf(vec4 color) {
 
     
     // remap to a smaller range (used on smaller font sizes)
+    float border = 0.1;
     sigDist = map(mapMin, mapMax, sigDist);
+    float sigDistOutline = map(mapMin, mapMax, sigDist + border);
+    sigDistShdw = map(mapMin, mapMax, sigDistShdw + border);
 
     float center = 0.5;
-
     // calculate smoothing and use to generate opacity
-    // float smoothing = clamp(font_smoothing * (1.0-roy), 0.0, center);
-    float opacity = smoothstep(center-smoothing, center+smoothing, sigDist);
+    float inside = smoothstep(center-smoothing, center+smoothing, sigDist);
+    float outline = smoothstep(center-smoothing, center+smoothing, sigDistOutline);
+    float shadow = smoothstep(center-smoothing, center+smoothing, sigDistShdw);
 
+    vec3 bcolor = mix(outline * 2.0*color.rgb, color.rgb, inside);
+    vec3 scolor = mix(bcolor, 0.5*(1.0 - color.rgb), (1.0 - outline)*shadow);
+    float opacity = (1.0 - outline)*shadow + outline;
+    
     // return final color
-    return mix(vec4(0.0), color, opacity);
+    return vec4(mix(vec3(0.0), scolor, opacity), opacity);
 }
