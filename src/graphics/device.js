@@ -532,7 +532,7 @@ Object.assign(pc, function () {
         if (this.unmaskedRenderer === 'Apple A8 GPU') {
             this.forceCpuParticles = true;
         }
-        
+
         // Workaround for A12 and A12X chips that removed smooth seams from CubeMaps
         if (this.unmaskedRenderer === 'Apple A12 GPU' || this.unmaskedRenderer === 'Apple A12X GPU') {
             this.useTexCubeLod = false;
