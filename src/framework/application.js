@@ -586,7 +586,7 @@ Object.assign(pc, function () {
          */
         preload: function (callback) {
             var self = this;
-            var i, len, total;
+            var i, total;
 
             self.fire("preload:start");
 
