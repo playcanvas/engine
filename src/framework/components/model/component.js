@@ -108,10 +108,10 @@ Object.assign(pc, function () {
         onRemove: function () {
             if (this.type === 'asset') {
                 this.asset = null;
-                this.materialAsset = null;
             } else {
                 this.model = null;
             }
+            this.materialAsset = null;
             this._unsetMaterialEvents();
         },
 
