@@ -37,7 +37,6 @@ uniform vec4 outline_color;
 uniform float outline_distance;
 uniform vec4 shadow_color;
 uniform vec2 shadow_offset;
-//vec2 shadowVector = vec2(0.0062, -0.0046);
 
 vec4 applyMsdf(vec4 color) {
     // sample the field
