@@ -34,7 +34,7 @@ uniform float font_pxrange;      // the number of pixels between inside and outs
 uniform float font_textureWidth; // the width of the texture atlas
 
 uniform vec4 outline_color;
-uniform float outline_distance;
+uniform float outline_thickness;
 uniform vec4 shadow_color;
 uniform vec2 shadow_offset;
 
@@ -66,9 +66,9 @@ vec4 applyMsdf(vec4 color) {
     float mapMax = clamp(1.0 - font_sdfIntensity, mapMin, 1.0);
 
     // remap to a smaller range (used on smaller font sizes)
-    float sigDistInner = map(mapMin, mapMax, sigDist - outline_distance);
-    float sigDistOutline = map(mapMin, mapMax, sigDist + outline_distance);
-    sigDistShdw = map(mapMin, mapMax, sigDistShdw + outline_distance);
+    float sigDistInner = map(mapMin, mapMax, sigDist - outline_thickness);
+    float sigDistOutline = map(mapMin, mapMax, sigDist + outline_thickness);
+    sigDistShdw = map(mapMin, mapMax, sigDistShdw + outline_thickness);
 
     float center = 0.5;
     // calculate smoothing and use to generate opacity

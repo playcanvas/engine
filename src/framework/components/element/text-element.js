@@ -70,7 +70,7 @@ Object.assign(pc, function () {
 
         this._outlineColor = new pc.Color(0, 0, 0, 0);
         this._outlineColorUniform = new Float32Array(4);
-        this._outlineDistance = 0.0;
+        this._outlineThickness = 0.0;
 
         this._shadowColor = new pc.Color(0, 0, 0, 0);
         this._shadowColorUniform = new Float32Array(4);
@@ -290,7 +290,7 @@ Object.assign(pc, function () {
                     this._outlineColorUniform[2] = this._outlineColor.b;
                     this._outlineColorUniform[3] = this._outlineColor.a;
                     mi.setParameter("outline_color", this._outlineColorUniform);
-                    mi.setParameter("outline_distance", this._outlineDistance);
+                    mi.setParameter("outline_thickness", this._outlineThickness);
 
                     this._shadowColorUniform[0] = this._shadowColor.r;
                     this._shadowColorUniform[1] = this._shadowColor.g;
@@ -1242,19 +1242,19 @@ Object.assign(pc, function () {
         }
     });
 
-    Object.defineProperty(TextElement.prototype, "outlineDistance", {
+    Object.defineProperty(TextElement.prototype, "outlineThickness", {
         get: function () {
-            return this._outlineDistance;
+            return this._outlineThickness;
         },
 
         set: function (value) {
-            var _prev = this._outlineDistance;
-            this._outlineDistance = value;
+            var _prev = this._outlineThickness;
+            this._outlineThickness = value;
             if (_prev !== value && this._font) {
                 if (this._model) {
                     for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                         var mi = this._model.meshInstances[i];
-                        mi.setParameter("outline_distance", this._outlineDistance);
+                        mi.setParameter("outline_thickness", this._outlineThickness);
                     }
                 }
             }
