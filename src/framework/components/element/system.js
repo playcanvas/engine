@@ -187,7 +187,11 @@ Object.assign(pc, function () {
                 if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
                 if (data.rtlReorder !== undefined) component.rtlReorder = data.rtlReorder;
                 if (data.unicodeConverter !== undefined) component.unicodeConverter = data.unicodeConverter;
-                if (data.text !== undefined) component.text = data.text;
+                if (data.text !== null && data.text !== undefined) {
+                    component.text = data.text;
+                } else if (data.key !== null && data.key !== undefined) {
+                    component.key = data.key;
+                }
                 if (data.color !== undefined) {
                     color = data.color;
                     if (! (color instanceof pc.Color)) {
@@ -260,6 +264,7 @@ Object.assign(pc, function () {
                 sprite: source.sprite,
                 spriteFrame: source.spriteFrame,
                 pixelsPerUnit: source.pixelsPerUnit,
+                key: source.key,
                 text: source.text,
                 spacing: source.spacing,
                 lineHeight: source.lineHeight,

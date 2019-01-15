@@ -54,6 +54,33 @@ describe("pc.TextElement", function () {
         expect(element.lines).to.deep.equal(expectedLineContents);
     };
 
+    // Creates data for a single translation as if it was a whole asset
+    var createTranslation = function (locale, key, translations) {
+        var messages = {};
+        messages[key] = translations;
+        var data = {
+            header: {
+                version: 1
+            },
+            data: [{
+                info: {
+                    locale: locale
+                },
+                messages: messages
+            }]
+        };
+
+        return data;
+    };
+
+    // Adds the specified key->translations pair for the specified locale to
+    // the specified i18n instance, as if it's adding a whole new asset
+    var addText = function (locale, key, translations) {
+        var data = createTranslation(locale, key, translations);
+        app.i18n.addData(data);
+        return data;
+    };
+
     it("does not break onto multiple lines if the text is short enough", function () {
         element.fontAsset = fontAsset;
 
@@ -707,5 +734,45 @@ describe("pc.TextElement", function () {
         app.update(0.1);
         app.render();
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
+    });
+
+    it('text is set to translated text when we set the key', function () {
+        addText('en-US', 'key', 'translation');
+        element.fontAsset = fontAsset;
+        element.key = "key";
+        assertLineContents(["translation"]);
+    });
+
+    it('text is not translated when we set the text property', function () {
+        addText('en-US', 'key', 'translation');
+        element.fontAsset = fontAsset;
+        element.text = "key";
+        assertLineContents(["key"]);
+        expect(element.key).to.equal(null);
+    });
+
+    it('text changes language when we change the locale', function () {
+        addText('en-US', 'key', 'translation');
+        addText('fr-FR', 'key', 'french');
+        element.fontAsset = fontAsset;
+        element.key = "key";
+        assertLineContents(["translation"]);
+        app.i18n.locale = 'fr-FR';
+        assertLineContents(["french"]);
+    });
+
+    it('text changes language when we add translations for the current locale', function () {
+        element.fontAsset = fontAsset;
+        element.key = "key";
+        assertLineContents(["key"]);
+        addText('en-US', 'key', 'translation');
+        assertLineContents(["translation"]);
+    });
+
+    it('text does not automatically change if its key is plural', function () {
+        addText('en-US', 'key', ['translation']);
+        element.fontAsset = fontAsset;
+        element.key = "key";
+        assertLineContents(["key"]);
     });
 });
