@@ -464,4 +464,32 @@ describe('I18n tests', function () {
         app.assets.add(asset);
         app.assets.load(asset);
     });
+
+    it('translations are re-loaded when the contents of the asset change', function (done) {
+        sinon.stub(pc.JsonHandler.prototype, 'load').callsFake(function (url, callback) {
+            callback(null, createTranslation('en-US', 'key', 'translation'));
+        });
+
+        var asset = new pc.Asset('a1', 'json', { url: '/fake/url.json' });
+
+        app.i18n.once('data:add', function () {
+            expect(app.i18n.getText('key')).to.equal('translation');
+
+            setTimeout(function () {
+                app.i18n.once('data:add', function () {
+                    expect(app.i18n.getText('key')).to.equal('changed');
+                    done();
+                });
+
+                asset.resource = createTranslation('en-US', 'key', 'changed');
+            });
+        });
+
+        asset.once('load', function () {
+            app.i18n.assets = [asset];
+        });
+
+        app.assets.add(asset);
+        app.assets.load(asset);
+    });
 });
