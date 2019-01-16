@@ -831,7 +831,7 @@ Object.assign(pc, function () {
             }
 
             var useTexCubeLod = device.useTexCubeLod;
-            var useDp = !device.extTextureLod; // no basic extension? likely slow device, force dp
+            var useDp = !device.extTextureLod || device.forceCubeMapDp; // no basic extension? likely slow device, force dp
 
             var globalSky128, globalSky64, globalSky32, globalSky16, globalSky8, globalSky4;
             if (this.useSkybox) {
