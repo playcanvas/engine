@@ -507,6 +507,12 @@ Object.assign(pc, function () {
 
         this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
         this.useTexCubeLod = this.extTextureLod && this.maxTextures < 16;
+        this.forceCubeMapDp = false;
+        
+        // Workaround for A12 and A12X chips that removed smooth seams from CubeMaps
+        if (this.unmaskedRenderer === 'Apple A12 GPU' || this.unmaskedRenderer === 'Apple A12X GPU') {
+            this.forceCubeMapDp = true;
+        }
 
         // Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
         // based on the number of available uniforms and the number of uniforms required for non-
@@ -531,11 +537,6 @@ Object.assign(pc, function () {
 
         if (this.unmaskedRenderer === 'Apple A8 GPU') {
             this.forceCpuParticles = true;
-        }
-
-        // Workaround for A12 and A12X chips that removed smooth seams from CubeMaps
-        if (this.unmaskedRenderer === 'Apple A12 GPU' || this.unmaskedRenderer === 'Apple A12X GPU') {
-            this.useTexCubeLod = false;
         }
 
         // Profiler stats
