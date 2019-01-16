@@ -111,6 +111,8 @@
 ../src/script/script.js
 ../src/bundles/bundle.js
 ../src/bundles/bundle-registry.js
+../src/i18n/i18n-parser.js
+../src/i18n/i18n.js
 ../src/framework/script.js
 ../src/framework/application.js
 ../src/framework/stats.js
