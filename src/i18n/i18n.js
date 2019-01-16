@@ -225,8 +225,8 @@ Object.assign(pc, (function () {
      * @returns {String} The translated text. If no translations are found at all for the locale then it will return
      * the en-US translation. If no translation exists for that key then it will return the localization key.
      * @example
-     * var localized = this.app.i18n.getPluralText('5 apples', 5);
-     * var localizedFrench = this.app.i18n.getText('10 oranges', 10, 'fr-FR');
+     * // manually replace {number} in the resulting translation with our number
+     * var localized = this.app.i18n.getPluralText('{number} apples', number).replace("{number}", number);
      */
     I18n.prototype.getPluralText = function (key, n, locale) {
         var result = key;
