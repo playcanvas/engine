@@ -91,6 +91,13 @@ describe('I18n tests', function () {
         expect(app.i18n.getText('key')).to.equal('french');
     });
 
+    it('getText() when called on plural key should return the first entry', function () {
+        addText('fr-IT', 'key', ['one', 'other']);
+        expect(app.i18n.getText('key', 'fr-FR')).to.equal('one');
+        app.i18n.locale = 'fr-FR';
+        expect(app.i18n.getText('key')).to.equal('one');
+    });
+
     it('getPluralText() should return key when no translations exist for that locale', function () {
         expect(app.i18n.getPluralText('key')).to.equal('key');
 

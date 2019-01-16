@@ -198,15 +198,16 @@ Object.assign(pc, (function () {
         }
 
         if (translations) {
-
-            // #ifdef DEBUG
-            if (Array.isArray(translations[key])) {
-                console.error('Invalid call to getText for key ' + key + ' and locale ' + locale + '. Use getPluralText instead for this key.');
-                return result;
+            result = translations[key];
+            if (result) {
+                // if this is a plural key then return the first entry in the array
+                if (Array.isArray(result)) {
+                    result = result[0] || "";
+                }
+            } else {
+                // if translation was not found then return the key
+                result = key;
             }
-            // #endif
-
-            result = translations[key] || key;
         }
 
         return result;
@@ -250,14 +251,6 @@ Object.assign(pc, (function () {
         }
 
         if (translations && translations[key]) {
-
-            // #ifdef DEBUG
-            if (!Array.isArray(translations[key])) {
-                console.error('Invalid call to getPluralText for key ' + key + ' and locale ' + locale + '. Use getText instead for this key.');
-                return result;
-            }
-            // #endif
-
             var index = pluralFn(n);
             result = translations[key][index] || key;
         }
@@ -472,6 +465,7 @@ Object.assign(pc, (function () {
 
     I18n.prototype._onAssetAdd = function (asset) {
         asset.on('load', this._onAssetLoad, this);
+        asset.on('change', this._onAssetChange, this);
         asset.on('remove', this._onAssetRemove, this);
         asset.on('unload', this._onAssetUnload, this);
 
@@ -484,8 +478,15 @@ Object.assign(pc, (function () {
         this.addData(asset.resource);
     };
 
+    I18n.prototype._onAssetChange = function (asset) {
+        if (asset.resource) {
+            this.addData(asset.resource);
+        }
+    };
+
     I18n.prototype._onAssetRemove = function (asset) {
         asset.off('load', this._onAssetLoad, this);
+        asset.off('change', this._onAssetChange, this);
         asset.off('remove', this._onAssetRemove, this);
         asset.off('unload', this._onAssetUnload, this);
 

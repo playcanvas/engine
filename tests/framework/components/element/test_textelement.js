@@ -769,10 +769,31 @@ describe("pc.TextElement", function () {
         assertLineContents(["translation"]);
     });
 
-    it('text does not automatically change if its key is plural', function () {
-        addText('en-US', 'key', ['translation']);
+    it('text changes to first plural entry when the key is plural', function () {
         element.fontAsset = fontAsset;
         element.key = "key";
         assertLineContents(["key"]);
+        addText('en-US', 'key', ['one', 'other']);
+        assertLineContents(["one"]);
+    });
+
+    it('cloning text element clones the localization key', function () {
+        addText('en-US', 'key', 'translation');
+        element.fontAsset = fontAsset;
+        element.key = 'key';
+
+        var clone = element.entity.clone();
+        expect(clone.element.key).to.equal('key');
+        expect(clone.element.text).to.equal('translation');
+    });
+
+    it('cloning text element with no localization key clones text correctly', function () {
+        addText('en-US', 'key', 'translation');
+        element.fontAsset = fontAsset;
+        element.text = 'text';
+
+        var clone = element.entity.clone();
+        expect(clone.element.key).to.equal(null);
+        expect(clone.element.text).to.equal('text');
     });
 });

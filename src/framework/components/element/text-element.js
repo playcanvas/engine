@@ -149,14 +149,9 @@ Object.assign(pc, function () {
             }
         },
 
-        _resetLocalizedText: function (force) {
+        _resetLocalizedText: function () {
             if (this._i18nKey) {
-                var translated = this._system.app.i18n.getText(this._i18nKey);
-                if (!Array.isArray(translated)) {
-                    this._setText(translated);
-                } else if (force === true) {
-                    this._setText(this._i18nKey);
-                }
+                this._setText(this._system.app.i18n.getText(this._i18nKey));
             }
         },
 
@@ -864,7 +859,7 @@ Object.assign(pc, function () {
             }
 
             this._i18nKey = str;
-            this._resetLocalizedText(true);
+            this._resetLocalizedText();
         }
     });
 
