@@ -131,6 +131,13 @@ Object.assign(pc, function () {
      * }
      */
 
+     /**
+     * @private
+     * @name pc.Application#i18n
+     * @type {pc.I18n}
+     * @description Handles localization
+     */
+
     var Application = function (canvas, options) {
         options = options || {};
 
@@ -187,6 +194,8 @@ Object.assign(pc, function () {
         this.enableBundles = (typeof TextDecoder !== 'undefined');
         this.scriptsOrder = options.scriptsOrder || [];
         this.scripts = new pc.ScriptRegistry(this);
+
+        this.i18n = new pc.I18n(this);
 
         this._sceneRegistry = new pc.SceneRegistry(this);
 
@@ -831,6 +840,11 @@ Object.assign(pc, function () {
                     this.batcher.addGroup(grp.name, grp.dynamic, grp.maxAabbSize, grp.id, grp.layers);
                 }
 
+            }
+
+            // set localization assets
+            if (props.i18nAssets) {
+                this.i18n.assets = props.i18nAssets;
             }
 
             this._loadLibraries(props.libraries, callback);
@@ -1552,6 +1566,9 @@ Object.assign(pc, function () {
             // destroy bundle registry
             this.bundles.destroy();
             this.bundles = null;
+
+            this.i18n.destroy();
+            this.i18n = null;
 
             for (var key in this.loader.getHandler('script')._cache) {
                 var element = this.loader.getHandler('script')._cache[key];

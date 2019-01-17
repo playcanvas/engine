@@ -26,6 +26,7 @@ Object.assign(pc, function () {
 
         // public
         this._text = "";
+        this._i18nKey = null;
 
         this._fontAsset = null;
         this._font = null;
@@ -88,6 +89,10 @@ Object.assign(pc, function () {
         element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
         element.on('set:draworder', this._onDrawOrderChange, this);
         element.on('set:pivot', this._onPivotChange, this);
+
+        this._system.app.i18n.on('set:locale', this._resetLocalizedText, this);
+        this._system.app.i18n.on('data:add', this._onLocalizationData, this);
+        this._system.app.i18n.on('data:remove', this._onLocalizationData, this);
     };
 
     var LINE_BREAK_CHAR = /^[\r\n]$/;
@@ -147,6 +152,36 @@ Object.assign(pc, function () {
         _onPivotChange: function (pivot) {
             if (this._font)
                 this._updateText();
+        },
+
+        _onLocalizationData: function (locale, messages) {
+            if (this._i18nKey && messages[this._i18nKey]) {
+                this._resetLocalizedText();
+            }
+        },
+
+        _resetLocalizedText: function () {
+            if (this._i18nKey) {
+                this._setText(this._system.app.i18n.getText(this._i18nKey));
+            }
+        },
+
+        _setText: function (text) {
+            if (this.unicodeConverter) {
+                var unicodeConverterFunc = this._system.getUnicodeConverter();
+                if (unicodeConverterFunc) {
+                    text = unicodeConverterFunc(text);
+                } else {
+                    console.warn('Element created with unicodeConverter option but no unicodeConverter function registered');
+                }
+            }
+
+            if (this._text !== text) {
+                if (this._font) {
+                    this._updateText(text);
+                }
+                this._text = text;
+            }
         },
 
         _updateText: function (text) {
@@ -833,25 +868,25 @@ Object.assign(pc, function () {
         get: function () {
             return this._text;
         },
-
         set: function (value) {
-            var str = value.toString();
+            this._i18nKey = null;
+            var str = value && value.toString() || "";
+            this._setText(str);
+        }
+    });
 
-            if (this.unicodeConverter) {
-                var unicodeConverterFunc = this._system.getUnicodeConverter();
-                if (unicodeConverterFunc) {
-                    str = unicodeConverterFunc(str);
-                } else {
-                    console.warn('Element created with unicodeConverter option but no unicodeConverter function registered');
-                }
+    Object.defineProperty(TextElement.prototype, "key", {
+        get: function () {
+            return this._i18nKey;
+        },
+        set: function (value) {
+            var str = value !== null ? value.toString() : null;
+            if (this._i18nKey === str) {
+                return;
             }
 
-            if (this._text !== str) {
-                if (this._font) {
-                    this._updateText(str);
-                }
-                this._text = str;
-            }
+            this._i18nKey = str;
+            this._resetLocalizedText();
         }
     });
 
