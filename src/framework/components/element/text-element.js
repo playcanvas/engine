@@ -68,12 +68,14 @@ Object.assign(pc, function () {
         this._rtlReorder = false;
         this._unicodeConverter = false;
 
-        this._outlineColor = new pc.Color(0, 0, 0, 0);
+        this._outlineColor = new pc.Color(0, 0, 0, 1);
         this._outlineColorUniform = new Float32Array(4);
+        this._outlineThicknessScale = 0.1; // 0.1 coefficient to map editor range of 0 - 1 to shader value
         this._outlineThickness = 0.0;
 
-        this._shadowColor = new pc.Color(0, 0, 0, 0);
+        this._shadowColor = new pc.Color(0, 0, 0, 1);
         this._shadowColorUniform = new Float32Array(4);
+        this._shadowOffsetScale = 0.005; // maps the editor scale value to shader scale
         this._shadowOffset = new pc.Vec2(0, 0);
         this._shadowOffsetUniform = new Float32Array(2);
 
@@ -290,15 +292,15 @@ Object.assign(pc, function () {
                     this._outlineColorUniform[2] = this._outlineColor.b;
                     this._outlineColorUniform[3] = this._outlineColor.a;
                     mi.setParameter("outline_color", this._outlineColorUniform);
-                    mi.setParameter("outline_thickness", this._outlineThickness);
+                    mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
 
                     this._shadowColorUniform[0] = this._shadowColor.r;
                     this._shadowColorUniform[1] = this._shadowColor.g;
                     this._shadowColorUniform[2] = this._shadowColor.b;
                     this._shadowColorUniform[3] = this._shadowColor.a;
                     mi.setParameter("shadow_color", this._shadowColorUniform);
-                    this._shadowOffsetUniform[0] = this._shadowOffset.x;
-                    this._shadowOffsetUniform[1] = this._shadowOffset.y;
+                    this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
+                    this._shadowOffsetUniform[1] = this._shadowOffsetScale * this._shadowOffset.y;
                     mi.setParameter("shadow_offset", this._shadowOffsetUniform);
 
                     meshInfo.meshInstance = mi;
@@ -1194,6 +1196,7 @@ Object.assign(pc, function () {
             var r = value.r;
             var g = value.g;
             var b = value.b;
+            var a = value.a;
 
             // #ifdef DEBUG
             if (this._outlineColor === value) {
@@ -1201,42 +1204,27 @@ Object.assign(pc, function () {
             }
             // #endif
 
-            if (this._outlineColor.r === r && this._outlineColor.g === g && this._outlineColor.b === b) {
+            if (this._outlineColor.r === r &&
+                this._outlineColor.g === g &&
+                this._outlineColor.b === b &&
+                this._outlineColor.a === a) {
                 return;
             }
 
             this._outlineColor.r = r;
             this._outlineColor.g = g;
             this._outlineColor.b = b;
+            this._outlineColor.a = a;
 
             if (this._model) {
                 this._outlineColorUniform[0] = this._outlineColor.r;
                 this._outlineColorUniform[1] = this._outlineColor.g;
                 this._outlineColorUniform[2] = this._outlineColor.b;
+                this._outlineColorUniform[3] = this._outlineColor.a;
 
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.setParameter("outline_color", this._outlineColorUniform);
-                }
-            }
-        }
-    });
-
-    Object.defineProperty(TextElement.prototype, "outlineOpacity", {
-        get: function () {
-            return this._outlineColor.a;
-        },
-
-        set: function (value) {
-            if (this._outlineColor.a === value) return;
-
-            this._outlineColor.a = value;
-
-            if (this._model) {
-                this._outlineColorUniform[3] = this._outlineColor.a;
-                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                    var mi = this._model.meshInstances[i];
-                    mi.setParameter('outline_color', this._outlineColorUniform);
                 }
             }
         }
@@ -1254,7 +1242,7 @@ Object.assign(pc, function () {
                 if (this._model) {
                     for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                         var mi = this._model.meshInstances[i];
-                        mi.setParameter("outline_thickness", this._outlineThickness);
+                        mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
                     }
                 }
             }
@@ -1270,6 +1258,7 @@ Object.assign(pc, function () {
             var r = value.r;
             var g = value.g;
             var b = value.b;
+            var a = value.a;
 
             // #ifdef DEBUG
             if (this._shadowColor === value) {
@@ -1277,42 +1266,27 @@ Object.assign(pc, function () {
             }
             // #endif
 
-            if (this._shadowColor.r === r && this._shadowColor.g === g && this._shadowColor.b === b) {
+            if (this._shadowColor.r === r &&
+                this._shadowColor.g === g &&
+                this._shadowColor.b === b &&
+                this._shadowColor.a === a) {
                 return;
             }
 
             this._shadowColor.r = r;
             this._shadowColor.g = g;
             this._shadowColor.b = b;
+            this._shadowColor.a = a;
 
             if (this._model) {
                 this._shadowColorUniform[0] = this._shadowColor.r;
                 this._shadowColorUniform[1] = this._shadowColor.g;
                 this._shadowColorUniform[2] = this._shadowColor.b;
+                this._shadowColorUniform[3] = this._shadowColor.a;
 
                 for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     var mi = this._model.meshInstances[i];
                     mi.setParameter("shadow_color", this._shadowColorUniform);
-                }
-            }
-        }
-    });
-
-    Object.defineProperty(TextElement.prototype, "shadowOpacity", {
-        get: function () {
-            return this._shadowColor.a;
-        },
-
-        set: function (value) {
-            if (this._shadowColor.a === value) return;
-
-            this._shadowColor.a = value;
-
-            if (this._model) {
-                this._shadowColorUniform[3] = this._shadowColor.a;
-                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                    var mi = this._model.meshInstances[i];
-                    mi.setParameter('shadow_color', this._shadowColorUniform);
                 }
             }
         }
@@ -1324,20 +1298,17 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
-            if (value instanceof pc.Vec2) {
-                if (this._shadowOffset.x === value.x && this._shadowOffset.y === value.y)
-                    return;
-                this._shadowOffset.set(value.x, value.y);
-            } else {
-                if (this._shadowOffset.x === value[0] && this._shadowOffset.y === value[1])
-                    return;
-                this._shadowOffset.set(value[0], value[1]);
+            var x = (value instanceof pc.Vec2) ? value.x : value[0],
+                y = (value instanceof pc.Vec2) ? value.y : value[1];
+            if (this._shadowOffset.x === x && this._shadowOffset.y === y) {
+                return;
             }
+            this._shadowOffset.set(x, y);
 
             if (this._font) {
                 if (this._model) {
-                    this._shadowOffsetUniform[0] = this._shadowOffset.x;
-                    this._shadowOffsetUniform[1] = this._shadowOffset.y;
+                    this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
+                    this._shadowOffsetUniform[1] = this._shadowOffsetScale * this._shadowOffset.y;
 
                     for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
                         var mi = this._model.meshInstances[i];
