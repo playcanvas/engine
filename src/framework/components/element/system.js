@@ -187,7 +187,11 @@ Object.assign(pc, function () {
                 if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
                 if (data.rtlReorder !== undefined) component.rtlReorder = data.rtlReorder;
                 if (data.unicodeConverter !== undefined) component.unicodeConverter = data.unicodeConverter;
-                if (data.text !== undefined) component.text = data.text;
+                if (data.text !== null && data.text !== undefined) {
+                    component.text = data.text;
+                } else if (data.key !== null && data.key !== undefined) {
+                    component.key = data.key;
+                }
                 if (data.color !== undefined) {
                     color = data.color;
                     if (! (color instanceof pc.Color)) {
@@ -236,7 +240,7 @@ Object.assign(pc, function () {
         cloneComponent: function (entity, clone) {
             var source = entity.element;
 
-            return this.addComponent(clone, {
+            var data = {
                 enabled: source.enabled,
                 width: source.width,
                 height: source.height,
@@ -260,7 +264,6 @@ Object.assign(pc, function () {
                 sprite: source.sprite,
                 spriteFrame: source.spriteFrame,
                 pixelsPerUnit: source.pixelsPerUnit,
-                text: source.text,
                 spacing: source.spacing,
                 lineHeight: source.lineHeight,
                 wrapLines: source.wrapLines,
@@ -271,7 +274,15 @@ Object.assign(pc, function () {
                 useInput: source.useInput,
                 batchGroupId: source.batchGroupId,
                 mask: source.mask
-            });
+            };
+
+            if (source.key !== undefined && source.key !== null) {
+                data.key = source.key;
+            } else {
+                data.text = source.text;
+            }
+
+            return this.addComponent(clone, data);
         },
 
         getTextElementMaterial: function (screenSpace, msdf) {

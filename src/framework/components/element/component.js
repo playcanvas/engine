@@ -78,6 +78,7 @@ Object.assign(pc, function () {
      * @property {Boolean} wrapLines Whether to automatically wrap lines based on the element width. Only works for {@link pc.ELEMENTTYPE_TEXT} types, and when autoWidth is set to false.
      * @property {pc.Vec2} alignment The horizontal and vertical alignment of the text. Values range from 0 to 1 where [0,0] is the bottom left and [1,1] is the top right.  Only works for {@link pc.ELEMENTTYPE_TEXT} types.
      * @property {String} text The text to render. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {String} key The localization key to use to get the localized text from {@link pc.Application#i18n}. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
      * @property {Number} textureAsset The id of the texture asset to render. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {pc.Texture} texture The texture to render. Only works for {@link pc.ELEMENTTYPE_IMAGE} types.
      * @property {Number} spriteAsset The id of the sprite asset to render. Only works for {@link pc.ELEMENTTYPE_IMAGE} types which can render either a texture or a sprite.
@@ -1498,6 +1499,7 @@ Object.assign(pc, function () {
     _define("rtlReorder");
     _define("unicodeConverter");
     _define("text");
+    _define("key");
     _define("texture");
     _define("textureAsset");
     _define("material");
