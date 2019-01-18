@@ -212,6 +212,10 @@ Object.assign(pc, function () {
                 if (data.fontAsset !== undefined) component.fontAsset = data.fontAsset;
                 if (data.font !== undefined) component.font = data.font;
                 if (data.alignment !== undefined) component.alignment = data.alignment;
+                if (data.outlineColor !== undefined) component.outlineColor = data.outlineColor;
+                if (data.outlineThickness !== undefined) component.outlineThickness = data.outlineThickness;
+                if (data.shadowColor !== undefined) component.shadowColor = data.shadowColor;
+                if (data.shadowOffset !== undefined) component.shadowOffset = data.shadowOffset;
             } else {
                 // group
             }
@@ -273,7 +277,11 @@ Object.assign(pc, function () {
                 font: source.font,
                 useInput: source.useInput,
                 batchGroupId: source.batchGroupId,
-                mask: source.mask
+                mask: source.mask,
+                outlineColor: source.outlineColor && source.outlineColor.clone() || source.outlineColor,
+                outlineThickness: source.outlineThickness,
+                shadowColor: source.shadowColor && source.shadowColor.clone() || source.shadowColor,
+                shadowOffset: source.shadowOffset && source.shadowOffset.clone() || source.shadowOffset
             };
 
             if (source.key !== undefined && source.key !== null) {

@@ -71,7 +71,7 @@ Object.assign(pc, function () {
 
         this._outlineColor = new pc.Color(0, 0, 0, 1);
         this._outlineColorUniform = new Float32Array(4);
-        this._outlineThicknessScale = 0.1; // 0.1 coefficient to map editor range of 0 - 1 to shader value
+        this._outlineThicknessScale = 0.2; // 0.2 coefficient to map editor range of 0 - 1 to shader value
         this._outlineThickness = 0.0;
 
         this._shadowColor = new pc.Color(0, 0, 0, 1);
@@ -1228,10 +1228,10 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
-            var r = value.r;
-            var g = value.g;
-            var b = value.b;
-            var a = value.a;
+            var r = (value instanceof pc.Color) ? value.r : value[0];
+            var g = (value instanceof pc.Color) ? value.g : value[1];
+            var b = (value instanceof pc.Color) ? value.b : value[2];
+            var a = (value instanceof pc.Color) ? value.a : value[3];
 
             // #ifdef DEBUG
             if (this._outlineColor === value) {
@@ -1290,10 +1290,10 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
-            var r = value.r;
-            var g = value.g;
-            var b = value.b;
-            var a = value.a;
+            var r = (value instanceof pc.Color) ? value.r : value[0];
+            var g = (value instanceof pc.Color) ? value.g : value[1];
+            var b = (value instanceof pc.Color) ? value.b : value[2];
+            var a = (value instanceof pc.Color) ? value.a : value[3];
 
             // #ifdef DEBUG
             if (this._shadowColor === value) {
