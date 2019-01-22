@@ -66,6 +66,10 @@ Object.assign(pc, function () {
      * @property {Boolean} useInput If true then the component will receive Mouse or Touch input events.
      * @property {pc.Color} color The color of the image for {@link pc.ELEMENTTYPE_IMAGE} types or the color of the text for {@link pc.ELEMENTTYPE_TEXT} types.
      * @property {Number} opacity The opacity of the image for {@link pc.ELEMENTTYPE_IMAGE} types or the text for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {pc.Color} outlineColor The text outline effect color and opacity . Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Number} outlineThickness The width of the text outline effect. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {pc.Color} shadowColor The text shadow effect color and opacity. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {pc.Vec2} shadowOffset The text shadow effect shift amount from original text. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
      * @property {Number} textWidth The width of the text rendered by the component. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
      * @property {Number} textHeight The height of the text rendered by the component. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
      * @property {Number} autoWidth Automatically set the width of the component to be the same as the textWidth. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
@@ -1511,6 +1515,10 @@ Object.assign(pc, function () {
     _define("opacity");
     _define("rect");
     _define("mask");
+    _define("outlineColor");
+    _define("outlineThickness");
+    _define("shadowColor");
+    _define("shadowOffset");
 
     return {
         ElementComponent: ElementComponent

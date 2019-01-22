@@ -69,6 +69,17 @@ Object.assign(pc, function () {
         this._rtlReorder = false;
         this._unicodeConverter = false;
 
+        this._outlineColor = new pc.Color(0, 0, 0, 1);
+        this._outlineColorUniform = new Float32Array(4);
+        this._outlineThicknessScale = 0.2; // 0.2 coefficient to map editor range of 0 - 1 to shader value
+        this._outlineThickness = 0.0;
+
+        this._shadowColor = new pc.Color(0, 0, 0, 1);
+        this._shadowColorUniform = new Float32Array(4);
+        this._shadowOffsetScale = 0.005; // maps the editor scale value to shader scale
+        this._shadowOffset = new pc.Vec2(0, 0);
+        this._shadowOffsetUniform = new Float32Array(2);
+
         // initialize based on screen
         this._onScreenChange(this._element.screen);
 
@@ -310,6 +321,22 @@ Object.assign(pc, function () {
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
                     mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
+
+                    this._outlineColorUniform[0] = this._outlineColor.r;
+                    this._outlineColorUniform[1] = this._outlineColor.g;
+                    this._outlineColorUniform[2] = this._outlineColor.b;
+                    this._outlineColorUniform[3] = this._outlineColor.a;
+                    mi.setParameter("outline_color", this._outlineColorUniform);
+                    mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
+
+                    this._shadowColorUniform[0] = this._shadowColor.r;
+                    this._shadowColorUniform[1] = this._shadowColor.g;
+                    this._shadowColorUniform[2] = this._shadowColor.b;
+                    this._shadowColorUniform[3] = this._shadowColor.a;
+                    mi.setParameter("shadow_color", this._shadowColorUniform);
+                    this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
+                    this._shadowOffsetUniform[1] = this._shadowOffsetScale * this._shadowOffset.y;
+                    mi.setParameter("shadow_offset", this._shadowOffsetUniform);
 
                     meshInfo.meshInstance = mi;
 
@@ -1192,6 +1219,138 @@ Object.assign(pc, function () {
                 this._aabbDirty = false;
             }
             return this._aabb;
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "outlineColor", {
+        get: function () {
+            return this._outlineColor;
+        },
+
+        set: function (value) {
+            var r = (value instanceof pc.Color) ? value.r : value[0];
+            var g = (value instanceof pc.Color) ? value.g : value[1];
+            var b = (value instanceof pc.Color) ? value.b : value[2];
+            var a = (value instanceof pc.Color) ? value.a : value[3];
+
+            // #ifdef DEBUG
+            if (this._outlineColor === value) {
+                console.warn("Setting element.outlineColor to itself will have no effect");
+            }
+            // #endif
+
+            if (this._outlineColor.r === r &&
+                this._outlineColor.g === g &&
+                this._outlineColor.b === b &&
+                this._outlineColor.a === a) {
+                return;
+            }
+
+            this._outlineColor.r = r;
+            this._outlineColor.g = g;
+            this._outlineColor.b = b;
+            this._outlineColor.a = a;
+
+            if (this._model) {
+                this._outlineColorUniform[0] = this._outlineColor.r;
+                this._outlineColorUniform[1] = this._outlineColor.g;
+                this._outlineColorUniform[2] = this._outlineColor.b;
+                this._outlineColorUniform[3] = this._outlineColor.a;
+
+                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                    var mi = this._model.meshInstances[i];
+                    mi.setParameter("outline_color", this._outlineColorUniform);
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "outlineThickness", {
+        get: function () {
+            return this._outlineThickness;
+        },
+
+        set: function (value) {
+            var _prev = this._outlineThickness;
+            this._outlineThickness = value;
+            if (_prev !== value && this._font) {
+                if (this._model) {
+                    for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                        var mi = this._model.meshInstances[i];
+                        mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
+                    }
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "shadowColor", {
+        get: function () {
+            return this._shadowColor;
+        },
+
+        set: function (value) {
+            var r = (value instanceof pc.Color) ? value.r : value[0];
+            var g = (value instanceof pc.Color) ? value.g : value[1];
+            var b = (value instanceof pc.Color) ? value.b : value[2];
+            var a = (value instanceof pc.Color) ? value.a : value[3];
+
+            // #ifdef DEBUG
+            if (this._shadowColor === value) {
+                console.warn("Setting element.shadowColor to itself will have no effect");
+            }
+            // #endif
+
+            if (this._shadowColor.r === r &&
+                this._shadowColor.g === g &&
+                this._shadowColor.b === b &&
+                this._shadowColor.a === a) {
+                return;
+            }
+
+            this._shadowColor.r = r;
+            this._shadowColor.g = g;
+            this._shadowColor.b = b;
+            this._shadowColor.a = a;
+
+            if (this._model) {
+                this._shadowColorUniform[0] = this._shadowColor.r;
+                this._shadowColorUniform[1] = this._shadowColor.g;
+                this._shadowColorUniform[2] = this._shadowColor.b;
+                this._shadowColorUniform[3] = this._shadowColor.a;
+
+                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                    var mi = this._model.meshInstances[i];
+                    mi.setParameter("shadow_color", this._shadowColorUniform);
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "shadowOffset", {
+        get: function () {
+            return this._shadowOffset;
+        },
+
+        set: function (value) {
+            var x = (value instanceof pc.Vec2) ? value.x : value[0],
+                y = (value instanceof pc.Vec2) ? value.y : value[1];
+            if (this._shadowOffset.x === x && this._shadowOffset.y === y) {
+                return;
+            }
+            this._shadowOffset.set(x, y);
+
+            if (this._font) {
+                if (this._model) {
+                    this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
+                    this._shadowOffsetUniform[1] = this._shadowOffsetScale * this._shadowOffset.y;
+
+                    for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                        var mi = this._model.meshInstances[i];
+                        mi.setParameter("shadow_offset", this._shadowOffsetUniform);
+                    }
+                }
+            }
         }
     });
 
