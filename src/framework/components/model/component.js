@@ -264,6 +264,10 @@ Object.assign(pc, function () {
                     }
                 }
             }
+
+            if (this.batchGroupId >= 0) {
+                app.batcher.markGroupDirty(this.batchGroupId);
+            }
         },
 
         onDisable: function () {
