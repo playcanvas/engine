@@ -66,7 +66,7 @@ vec4 applyMsdf(vec4 color) {
     float mapMax = clamp(1.0 - font_sdfIntensity, mapMin, 1.0);
 
     // remap to a smaller range (used on smaller font sizes)
-    float sigDistInner = map(mapMin, mapMax, sigDist - outline_thickness);
+    float sigDistInner = map(mapMin, mapMax, sigDist);
     float sigDistOutline = map(mapMin, mapMax, sigDist + outline_thickness);
     sigDistShdw = map(mapMin, mapMax, sigDistShdw + outline_thickness);
 
