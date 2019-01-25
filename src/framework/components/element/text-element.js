@@ -36,7 +36,15 @@ Object.assign(pc, function () {
 
         this._spacing = 1;
         this._fontSize = 32;
+        // the font size that is set directly by the fontSize setter
+        this._originalFontSize = 32;
+        this._maxFontSize = 32;
+        this._minFontSize = 8;
+        this._autoFitWidth = false;
+        this._autoFitHeight = false;
+        this._maxLines = -1;
         this._lineHeight = 32;
+        this._scaledLineHeight = 32;
         this._wrapLines = false;
 
         this._drawOrder = 0;
@@ -48,6 +56,7 @@ Object.assign(pc, function () {
 
         this.width = 0;
         this.height = 0;
+
 
         // private
         this._node = new pc.GraphNode();
@@ -420,9 +429,26 @@ Object.assign(pc, function () {
             }
         },
 
-        _updateMeshes: function (symbols) {
+        _updateMeshes: function (symbols, fontSize) {
             var json = this._font.data;
             var self = this;
+
+            var autoFit = this._shouldAutoFit();
+            if (fontSize !== undefined) {
+                this._fontSize = fontSize;
+            } else if (autoFit) {
+                this._fontSize = this._maxFontSize;
+            }
+
+            var minFont = Math.min(this._minFontSize, this._maxFontSize);
+            var maxFont = this._maxFontSize;
+
+            this._scaledLineHeight = this._lineHeight;
+            if (autoFit) {
+                // if auto-fitting then scale the line height
+                // according to the current fontSize value relative to the max font size
+                this._scaledLineHeight *= this._fontSize / (this._maxFontSize || 0.0001);
+            }
 
             this.width = 0;
             this.height = 0;
@@ -441,6 +467,7 @@ Object.assign(pc, function () {
             var lineStartIndex = 0;
             var numWordsThisLine = 0;
             var numCharsThisLine = 0;
+            var numBreaksThisLine = 0;
             var splitHorizontalAnchors = Math.abs(this._element.anchor.x - this._element.anchor.z) >= 0.0001;
 
             var maxLineWidth = this._element.calculatedWidth;
@@ -475,17 +502,34 @@ Object.assign(pc, function () {
 
             function breakLine(lineBreakIndex, lineBreakX) {
                 self._lineWidths.push(lineBreakX);
-                var substring = symbols
-                    .slice(lineStartIndex, lineBreakIndex)
-                    .join('');
+                var chars = symbols.slice(lineStartIndex, lineBreakIndex);
+
+                // Remove line breaks from line.
+                // Line breaks would only be there for the final line
+                // when we reach the maxLines limit.
+                // TODO: We could possibly not do this and just let lines have
+                // new lines in them. Apart from being a bit weird it should not affect
+                // the rendered text.
+                if (numBreaksThisLine) {
+                    var i = chars.length;
+                    while (i-- && numBreaksThisLine > 0)  {
+                        if (LINE_BREAK_CHAR.test(chars[i])) {
+                            chars.splice(i, 1);
+                            numBreaksThisLine--;
+                        }
+                    }
+                }
+
+                var substring = chars.join('');
 
                 self._lineContents.push(substring);
 
                 _x = 0;
-                _y -= self._lineHeight;
+                _y -= self._scaledLineHeight;
                 lines++;
                 numWordsThisLine = 0;
                 numCharsThisLine = 0;
+                numBreaksThisLine = 0;
                 wordStartX = 0;
                 lineStartIndex = lineBreakIndex;
             }
@@ -537,9 +581,13 @@ Object.assign(pc, function () {
                 var isWhitespace = WHITESPACE_CHAR.test(char);
 
                 if (isLineBreak) {
-                    breakLine(i, _xMinusTrailingWhitespace);
-                    wordStartIndex = i + 1;
-                    lineStartIndex = i + 1;
+                    numBreaksThisLine++;
+                    if (this._maxLines < 0 || lines < this._maxLines) {
+                        breakLine(i, _xMinusTrailingWhitespace);
+                        wordStartIndex = i + 1;
+                        lineStartIndex = i + 1;
+                    }
+
                     continue;
                 }
 
@@ -549,32 +597,34 @@ Object.assign(pc, function () {
                 // If we've exceeded the maximum line width, move everything from the beginning of
                 // the current word onwards down onto a new line.
                 if (candidateLineWidth >= maxLineWidth && numCharsThisLine > 0 && !isWhitespace) {
-                    // Handle the case where a line containing only a single long word needs to be
-                    // broken onto multiple lines.
-                    if (numWordsThisLine === 0) {
-                        wordStartIndex = i;
-                        breakLine(i, _xMinusTrailingWhitespace);
-                    } else {
-                        // Move back to the beginning of the current word.
-                        var backtrack = Math.max(i - wordStartIndex, 0);
-                        if (this._meshInfo.length <= 1) {
-                            meshInfo.lines[lines - 1] -= backtrack;
-                            meshInfo.quad -= backtrack;
+                    if (this._maxLines < 0 || lines < this._maxLines) {
+                        // Handle the case where a line containing only a single long word needs to be
+                        // broken onto multiple lines.
+                        if (numWordsThisLine === 0) {
+                            wordStartIndex = i;
+                            breakLine(i, _xMinusTrailingWhitespace);
                         } else {
-                            // We should only backtrack the quads that were in the word from this same texture
-                            // We will have to update N number of mesh infos as a result (all textures used in the word in question)
-                            for (var j = wordStartIndex; j < i; j++) {
-                                var backChar = symbols[j];
-                                var backCharData = json.chars[backChar];
-                                var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
-                                backMeshInfo.lines[lines - 1] -= 1;
-                                backMeshInfo.quad -= 1;
+                            // Move back to the beginning of the current word.
+                            var backtrack = Math.max(i - wordStartIndex, 0);
+                            if (this._meshInfo.length <= 1) {
+                                meshInfo.lines[lines - 1] -= backtrack;
+                                meshInfo.quad -= backtrack;
+                            } else {
+                                // We should only backtrack the quads that were in the word from this same texture
+                                // We will have to update N number of mesh infos as a result (all textures used in the word in question)
+                                for (var j = wordStartIndex; j < i; j++) {
+                                    var backChar = symbols[j];
+                                    var backCharData = json.chars[backChar];
+                                    var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
+                                    backMeshInfo.lines[lines - 1] -= 1;
+                                    backMeshInfo.quad -= 1;
+                                }
                             }
-                        }
-                        i -= backtrack + 1;
+                            i -= backtrack + 1;
 
-                        breakLine(wordStartIndex, wordStartX);
-                        continue;
+                            breakLine(wordStartIndex, wordStartX);
+                            continue;
+                        }
                     }
                 }
 
@@ -599,7 +649,26 @@ Object.assign(pc, function () {
 
 
                 this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
+
+                // scale font size if autoFitWidth is true and the width is larger than the calculated width
+                if (this._shouldAutoFitWidth() && this.width > this._element.calculatedWidth) {
+                    fontSize = Math.floor(this._element.fontSize * this._element.calculatedWidth / (this.width || 0.0001));
+                    fontSize = pc.math.clamp(fontSize, minFont, maxFont);
+                    if (fontSize !== this._element.fontSize) {
+                        return this._updateMeshes(symbols, fontSize);
+                    }
+                }
+
                 this.height = Math.max(this.height, fontMaxY - (_y + fontMinY));
+
+                // scale font size if autoFitHeight is true and the height is larger than the calculated height
+                if (this._shouldAutoFitHeight() && this.height > this._element.calculatedHeight) {
+                    // try 1 pixel smaller for fontSize and iterate
+                    fontSize = pc.math.clamp(this._fontSize - 1, minFont, maxFont);
+                    if (fontSize !== this._element.fontSize) {
+                        return this._updateMeshes(symbols, fontSize);
+                    }
+                }
 
                 // advance cursor
                 _x += (this._spacing * advance);
@@ -861,6 +930,19 @@ Object.assign(pc, function () {
                     instances[i].stencilBack = stencilParams;
                 }
             }
+        },
+
+        _shouldAutoFitWidth: function () {
+            return this._autoFitWidth && !this._autoWidth;
+        },
+
+        _shouldAutoFitHeight: function () {
+            return this._autoFitHeight && !this._autoHeight;
+        },
+
+        _shouldAutoFit: function () {
+            return this._autoFitWidth && !this._autoWidth ||
+                   this._autoFitHeight && !this._autoHeight;
         }
     });
 
@@ -954,6 +1036,7 @@ Object.assign(pc, function () {
         set: function (value) {
             var _prev = this._lineHeight;
             this._lineHeight = value;
+            this._scaledLineHeight = value;
             if (_prev !== value && this._font) {
                 this._updateText();
             }
@@ -1002,6 +1085,7 @@ Object.assign(pc, function () {
         set: function (value) {
             var _prev = this._fontSize;
             this._fontSize = value;
+            this._originalFontSize = value;
             if (_prev !== value && this._font) {
                 this._updateText();
             }
@@ -1144,6 +1228,7 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            var old = this._autoWidth;
             this._autoWidth = value;
 
             // change width of element to match text width but only if the element
@@ -1151,6 +1236,18 @@ Object.assign(pc, function () {
             if (value && Math.abs(this._element.anchor.x - this._element.anchor.z) < 0.0001) {
                 this._element.width = this.width;
             }
+
+            // restore fontSize if autoWidth changed
+            if (old !== value) {
+                var newFontSize = this._shouldAutoFit() ? this._maxFontSize : this._originalFontSize;
+                if (newFontSize !== this._fontSize) {
+                    this._fontSize = newFontSize;
+                    if (this._font) {
+                        this._updateText();
+                    }
+                }
+            }
+
         }
     });
 
@@ -1160,12 +1257,24 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            var old = this._autoHeight;
             this._autoHeight = value;
 
             // change height of element to match text height but only if the element
             // does not have split vertical anchors
             if (value && Math.abs(this._element.anchor.y - this._element.anchor.w) < 0.0001) {
                 this._element.height = this.height;
+            }
+
+            // restore fontSize if autoHeight changed
+            if (old !== value) {
+                var newFontSize = this._shouldAutoFit() ? this._maxFontSize : this._originalFontSize;
+                if (newFontSize !== this._fontSize) {
+                    this._fontSize = newFontSize;
+                    if (this._font) {
+                        this._updateText();
+                    }
+                }
             }
         }
     });
@@ -1353,6 +1462,81 @@ Object.assign(pc, function () {
             }
         }
     });
+
+    Object.defineProperty(TextElement.prototype, 'minFontSize', {
+        get: function () {
+            return this._minFontSize;
+        },
+        set: function (value) {
+            if (this._minFontSize === value) return;
+            this._minFontSize = value;
+
+            if (this.font && this._shouldAutoFit()) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'maxFontSize', {
+        get: function () {
+            return this._maxFontSize;
+        },
+        set: function (value) {
+            if (this._maxFontSize === value) return;
+            this._maxFontSize = value;
+
+            if (this.font && this._shouldAutoFit()) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'autoFitWidth', {
+        get: function () {
+            return this._autoFitWidth;
+        },
+        set: function (value) {
+            if (this._autoFitWidth === value) return;
+            this._autoFitWidth = value;
+
+            this._fontSize = this._shouldAutoFit() ? this._maxFontSize : this._originalFontSize;
+            if (this.font) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'autoFitHeight', {
+        get: function () {
+            return this._autoFitHeight;
+        },
+        set: function (value) {
+            if (this._autoFitHeight === value) return;
+            this._autoFitHeight = value;
+
+            this._fontSize = this._shouldAutoFit() ? this._maxFontSize : this._originalFontSize;
+            if (this.font) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'maxLines', {
+        get: function () {
+            return this._maxLines;
+        },
+        set: function (value) {
+            if (this._maxLines === value) return;
+            if (value === null && this._maxLines === -1) return;
+
+            this._maxLines = (value === null ? -1 : value);
+
+            if (this.font && this._wrapLines) {
+                this._updateText();
+            }
+        }
+    });
+
 
     return {
         TextElement: TextElement

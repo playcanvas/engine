@@ -1490,6 +1490,11 @@ Object.assign(pc, function () {
     };
 
     _define("fontSize");
+    _define("minFontSize");
+    _define("maxFontSize");
+    _define("maxLines");
+    _define("autoFitWidth");
+    _define("autoFitHeight");
     _define("color");
     _define("font");
     _define("fontAsset");
