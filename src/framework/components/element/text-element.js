@@ -36,6 +36,8 @@ Object.assign(pc, function () {
 
         this._spacing = 1;
         this._fontSize = 32;
+        this._fontMinY = 0;
+        this._fontMaxY = 0;
         // the font size that is set directly by the fontSize setter
         this._originalFontSize = 32;
         this._maxFontSize = 32;
@@ -429,38 +431,25 @@ Object.assign(pc, function () {
             }
         },
 
-        _updateMeshes: function (symbols, fontSize) {
+        _updateMeshes: function (symbols) {
             var json = this._font.data;
             var self = this;
-
-            var autoFit = this._shouldAutoFit();
-            if (fontSize !== undefined) {
-                this._fontSize = fontSize;
-            } else if (autoFit) {
-                this._fontSize = this._maxFontSize;
-            }
 
             var minFont = Math.min(this._minFontSize, this._maxFontSize);
             var maxFont = this._maxFontSize;
 
-            this._scaledLineHeight = this._lineHeight;
+            var autoFit = this._shouldAutoFit();
+
             if (autoFit) {
-                // if auto-fitting then scale the line height
-                // according to the current fontSize value relative to the max font size
-                this._scaledLineHeight *= this._fontSize / (this._maxFontSize || 0.0001);
+                this._fontSize = this._maxFontSize;
             }
 
-            this.width = 0;
-            this.height = 0;
-            this._lineWidths = [];
-            this._lineContents = [];
-
+            var MAGIC = 32;
             var l = symbols.length;
             var _x = 0; // cursors
             var _xMinusTrailingWhitespace = 0;
             var _y = 0;
             var _z = 0;
-
             var lines = 1;
             var wordStartX = 0;
             var wordStartIndex = 0;
@@ -475,30 +464,11 @@ Object.assign(pc, function () {
                 maxLineWidth = Number.POSITIVE_INFINITY;
             }
 
-            // todo: move this into font asset?
-            // calculate max font extents from all available chars
             var fontMinY = 0;
             var fontMaxY = 0;
             var scale = 1;
-            var MAGIC = 32;
 
             var char, charId, data, i, quad;
-
-            // TODO: Optimize this as it loops through all the chars in the asset
-            // every time the text changes...
-            for (charId in json.chars) {
-                data = json.chars[charId];
-                scale = (data.height / MAGIC) * this._fontSize / data.height;
-                if (data.bounds) {
-                    fontMinY = Math.min(fontMinY, data.bounds[1] * scale);
-                    fontMaxY = Math.max(fontMaxY, data.bounds[3] * scale);
-                }
-            }
-
-            for (i = 0; i < this._meshInfo.length; i++) {
-                this._meshInfo[i].quad = 0;
-                this._meshInfo[i].lines = {};
-            }
 
             function breakLine(lineBreakIndex, lineBreakX) {
                 self._lineWidths.push(lineBreakX);
@@ -534,183 +504,234 @@ Object.assign(pc, function () {
                 lineStartIndex = lineBreakIndex;
             }
 
-            for (i = 0; i < l; i++) {
-                char = symbols[i];
+            var retryUpdateMeshes = true;
+            while (retryUpdateMeshes) {
+                retryUpdateMeshes = false;
 
-                var x = 0;
-                var y = 0;
-                var advance = 0;
-                var quadsize = 1;
-                var glyphMinX = 0;
-                var glyphWidth = 0;
-                var dataScale, size;
+                // if auto-fitting then scale the line height
+                // according to the current fontSize value relative to the max font size
+                this._scaledLineHeight = this._lineHeight * this._fontSize / (this._maxFontSize || 0.0001);
 
-                data = json.chars[char];
+                this.width = 0;
+                this.height = 0;
+                this._lineWidths = [];
+                this._lineContents = [];
 
-                // use 'space' if available or first character
-                if (!data) {
-                    if (json.chars[' ']) {
-                        data = json.chars[' '];
-                    } else {
-                        data = json.chars[Object.keys(json.chars)[0]];
-                    }
+                _x = 0;
+                _xMinusTrailingWhitespace = 0;
+                _y = 0;
+                _z = 0;
+
+                lines = 1;
+                wordStartX = 0;
+                wordStartIndex = 0;
+                lineStartIndex = 0;
+                numWordsThisLine = 0;
+                numCharsThisLine = 0;
+                numBreaksThisLine = 0;
+
+                scale = this._fontSize / MAGIC;
+
+                // scale max font extents
+                fontMinY = this._fontMinY * scale;
+                fontMaxY = this._fontMaxY * scale;
+
+                for (i = 0; i < this._meshInfo.length; i++) {
+                    this._meshInfo[i].quad = 0;
+                    this._meshInfo[i].lines = {};
                 }
 
-                if (data) {
-                    dataScale = data.scale || 1;
-                    size = (data.width + data.height) / 2;
-                    scale = (size / MAGIC) * this._fontSize / size;
-                    quadsize = (size / MAGIC) * this._fontSize / dataScale;
-                    advance = data.xadvance * scale;
-                    x = data.xoffset * scale;
-                    y = data.yoffset * scale;
+                for (i = 0; i < l; i++) {
+                    char = symbols[i];
 
-                    if (data.bounds) {
-                        glyphWidth = (data.bounds[2] - data.bounds[0]) * scale;
-                        glyphMinX = data.bounds[0] * scale;
-                    } else {
-                        glyphWidth = x;
-                        glyphMinX = 0;
+                    var x = 0;
+                    var y = 0;
+                    var advance = 0;
+                    var quadsize = 1;
+                    var glyphMinX = 0;
+                    var glyphWidth = 0;
+                    var dataScale, size;
+
+                    data = json.chars[char];
+
+                    // use 'space' if available or first character
+                    if (!data) {
+                        if (json.chars[' ']) {
+                            data = json.chars[' '];
+                        } else {
+                            for (var key in json.chars) {
+                                data = json.chars[key];
+                                break;
+                            }
+                        }
                     }
-                } else {
-                    console.error("Couldn't substitute missing character: '" + char + "'");
-                }
 
-                var isLineBreak = LINE_BREAK_CHAR.test(char);
-                var isWordBoundary = WORD_BOUNDARY_CHAR.test(char);
-                var isWhitespace = WHITESPACE_CHAR.test(char);
+                    if (data) {
+                        dataScale = data.scale || 1;
+                        size = (data.width + data.height) / 2;
+                        quadsize = scale * size / dataScale;
+                        advance = data.xadvance * scale;
+                        x = data.xoffset * scale;
+                        y = data.yoffset * scale;
 
-                if (isLineBreak) {
-                    numBreaksThisLine++;
-                    if (this._maxLines < 0 || lines < this._maxLines) {
-                        breakLine(i, _xMinusTrailingWhitespace);
+                        if (data.bounds) {
+                            glyphWidth = (data.bounds[2] - data.bounds[0]) * scale;
+                            glyphMinX = data.bounds[0] * scale;
+                        } else {
+                            glyphWidth = x;
+                            glyphMinX = 0;
+                        }
+                    } else {
+                        console.error("Couldn't substitute missing character: '" + char + "'");
+                    }
+
+                    var isLineBreak = LINE_BREAK_CHAR.test(char);
+
+                    if (isLineBreak) {
+                        numBreaksThisLine++;
+                        if (this._maxLines < 0 || lines < this._maxLines) {
+                            breakLine(i, _xMinusTrailingWhitespace);
+                            wordStartIndex = i + 1;
+                            lineStartIndex = i + 1;
+                        }
+
+                        continue;
+                    }
+
+                    var isWhitespace = WHITESPACE_CHAR.test(char);
+
+                    var meshInfo = this._meshInfo[(data && data.map) || 0];
+                    var candidateLineWidth = _x + glyphWidth + glyphMinX;
+
+                    // If we've exceeded the maximum line width, move everything from the beginning of
+                    // the current word onwards down onto a new line.
+                    if (candidateLineWidth >= maxLineWidth && numCharsThisLine > 0 && !isWhitespace) {
+                        if (this._maxLines < 0 || lines < this._maxLines) {
+                            // Handle the case where a line containing only a single long word needs to be
+                            // broken onto multiple lines.
+                            if (numWordsThisLine === 0) {
+                                wordStartIndex = i;
+                                breakLine(i, _xMinusTrailingWhitespace);
+                            } else {
+                                // Move back to the beginning of the current word.
+                                var backtrack = Math.max(i - wordStartIndex, 0);
+                                if (this._meshInfo.length <= 1) {
+                                    meshInfo.lines[lines - 1] -= backtrack;
+                                    meshInfo.quad -= backtrack;
+                                } else {
+                                    // We should only backtrack the quads that were in the word from this same texture
+                                    // We will have to update N number of mesh infos as a result (all textures used in the word in question)
+                                    for (var j = wordStartIndex; j < i; j++) {
+                                        var backChar = symbols[j];
+                                        var backCharData = json.chars[backChar];
+                                        var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
+                                        backMeshInfo.lines[lines - 1] -= 1;
+                                        backMeshInfo.quad -= 1;
+                                    }
+                                }
+                                i -= backtrack + 1;
+
+                                breakLine(wordStartIndex, wordStartX);
+                                continue;
+                            }
+                        }
+                    }
+
+                    quad = meshInfo.quad;
+                    meshInfo.lines[lines - 1] = quad;
+
+                    meshInfo.positions[quad * 4 * 3 + 0] = _x - x;
+                    meshInfo.positions[quad * 4 * 3 + 1] = _y - y;
+                    meshInfo.positions[quad * 4 * 3 + 2] = _z;
+
+                    meshInfo.positions[quad * 4 * 3 + 3] = _x - x + quadsize;
+                    meshInfo.positions[quad * 4 * 3 + 4] = _y - y;
+                    meshInfo.positions[quad * 4 * 3 + 5] = _z;
+
+                    meshInfo.positions[quad * 4 * 3 + 6] = _x - x + quadsize;
+                    meshInfo.positions[quad * 4 * 3 + 7] = _y - y + quadsize;
+                    meshInfo.positions[quad * 4 * 3 + 8] = _z;
+
+                    meshInfo.positions[quad * 4 * 3 + 9]  = _x - x;
+                    meshInfo.positions[quad * 4 * 3 + 10] = _y - y + quadsize;
+                    meshInfo.positions[quad * 4 * 3 + 11] = _z;
+
+
+                    this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
+
+                    // scale font size if autoFitWidth is true and the width is larger than the calculated width
+                    var fontSize;
+                    if (this._shouldAutoFitWidth() && this.width > this._element.calculatedWidth) {
+                        fontSize = Math.floor(this._element.fontSize * this._element.calculatedWidth / (this.width || 0.0001));
+                        fontSize = pc.math.clamp(fontSize, minFont, maxFont);
+                        if (fontSize !== this._element.fontSize) {
+                            this._fontSize = fontSize;
+                            retryUpdateMeshes = true;
+                            break;
+                        }
+                    }
+
+                    this.height = Math.max(this.height, fontMaxY - (_y + fontMinY));
+
+                    // scale font size if autoFitHeight is true and the height is larger than the calculated height
+                    if (this._shouldAutoFitHeight() && this.height > this._element.calculatedHeight) {
+                        // try 1 pixel smaller for fontSize and iterate
+                        fontSize = pc.math.clamp(this._fontSize - 1, minFont, maxFont);
+                        if (fontSize !== this._element.fontSize) {
+                            this._fontSize = fontSize;
+                            retryUpdateMeshes = true;
+                            break;
+                        }
+                    }
+
+                    // advance cursor
+                    _x += (this._spacing * advance);
+
+                    // For proper alignment handling when a line wraps _on_ a whitespace character,
+                    // we need to keep track of the width of the line without any trailing whitespace
+                    // characters. This applies to both single whitespaces and also multiple sequential
+                    // whitespaces.
+                    if (!isWhitespace && !isLineBreak) {
+                        _xMinusTrailingWhitespace = _x;
+                    }
+
+                    var isWordBoundary = WORD_BOUNDARY_CHAR.test(char);
+                    if (isWordBoundary) { // char is space, tab, or dash
+                        numWordsThisLine++;
+                        wordStartX = _xMinusTrailingWhitespace;
                         wordStartIndex = i + 1;
-                        lineStartIndex = i + 1;
                     }
 
+                    numCharsThisLine++;
+
+                    var uv = this._getUv(char);
+
+                    meshInfo.uvs[quad * 4 * 2 + 0] = uv[0];
+                    meshInfo.uvs[quad * 4 * 2 + 1] = uv[1];
+
+                    meshInfo.uvs[quad * 4 * 2 + 2] = uv[2];
+                    meshInfo.uvs[quad * 4 * 2 + 3] = uv[1];
+
+                    meshInfo.uvs[quad * 4 * 2 + 4] = uv[2];
+                    meshInfo.uvs[quad * 4 * 2 + 5] = uv[3];
+
+                    meshInfo.uvs[quad * 4 * 2 + 6] = uv[0];
+                    meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
+
+                    meshInfo.quad++;
+                }
+
+                if (retryUpdateMeshes) {
                     continue;
                 }
 
-                var meshInfo = this._meshInfo[(data && data.map) || 0];
-                var candidateLineWidth = _x + glyphWidth + glyphMinX;
-
-                // If we've exceeded the maximum line width, move everything from the beginning of
-                // the current word onwards down onto a new line.
-                if (candidateLineWidth >= maxLineWidth && numCharsThisLine > 0 && !isWhitespace) {
-                    if (this._maxLines < 0 || lines < this._maxLines) {
-                        // Handle the case where a line containing only a single long word needs to be
-                        // broken onto multiple lines.
-                        if (numWordsThisLine === 0) {
-                            wordStartIndex = i;
-                            breakLine(i, _xMinusTrailingWhitespace);
-                        } else {
-                            // Move back to the beginning of the current word.
-                            var backtrack = Math.max(i - wordStartIndex, 0);
-                            if (this._meshInfo.length <= 1) {
-                                meshInfo.lines[lines - 1] -= backtrack;
-                                meshInfo.quad -= backtrack;
-                            } else {
-                                // We should only backtrack the quads that were in the word from this same texture
-                                // We will have to update N number of mesh infos as a result (all textures used in the word in question)
-                                for (var j = wordStartIndex; j < i; j++) {
-                                    var backChar = symbols[j];
-                                    var backCharData = json.chars[backChar];
-                                    var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
-                                    backMeshInfo.lines[lines - 1] -= 1;
-                                    backMeshInfo.quad -= 1;
-                                }
-                            }
-                            i -= backtrack + 1;
-
-                            breakLine(wordStartIndex, wordStartX);
-                            continue;
-                        }
-                    }
+                // As we only break lines when the text becomes too wide for the container,
+                // there will almost always be some leftover text on the final line which has
+                // not yet been pushed to _lineContents.
+                if (lineStartIndex < l) {
+                    breakLine(l, _x);
                 }
 
-                quad = meshInfo.quad;
-                meshInfo.lines[lines - 1] = quad;
-
-                meshInfo.positions[quad * 4 * 3 + 0] = _x - x;
-                meshInfo.positions[quad * 4 * 3 + 1] = _y - y;
-                meshInfo.positions[quad * 4 * 3 + 2] = _z;
-
-                meshInfo.positions[quad * 4 * 3 + 3] = _x - x + quadsize;
-                meshInfo.positions[quad * 4 * 3 + 4] = _y - y;
-                meshInfo.positions[quad * 4 * 3 + 5] = _z;
-
-                meshInfo.positions[quad * 4 * 3 + 6] = _x - x + quadsize;
-                meshInfo.positions[quad * 4 * 3 + 7] = _y - y + quadsize;
-                meshInfo.positions[quad * 4 * 3 + 8] = _z;
-
-                meshInfo.positions[quad * 4 * 3 + 9]  = _x - x;
-                meshInfo.positions[quad * 4 * 3 + 10] = _y - y + quadsize;
-                meshInfo.positions[quad * 4 * 3 + 11] = _z;
-
-
-                this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
-
-                // scale font size if autoFitWidth is true and the width is larger than the calculated width
-                if (this._shouldAutoFitWidth() && this.width > this._element.calculatedWidth) {
-                    fontSize = Math.floor(this._element.fontSize * this._element.calculatedWidth / (this.width || 0.0001));
-                    fontSize = pc.math.clamp(fontSize, minFont, maxFont);
-                    if (fontSize !== this._element.fontSize) {
-                        return this._updateMeshes(symbols, fontSize);
-                    }
-                }
-
-                this.height = Math.max(this.height, fontMaxY - (_y + fontMinY));
-
-                // scale font size if autoFitHeight is true and the height is larger than the calculated height
-                if (this._shouldAutoFitHeight() && this.height > this._element.calculatedHeight) {
-                    // try 1 pixel smaller for fontSize and iterate
-                    fontSize = pc.math.clamp(this._fontSize - 1, minFont, maxFont);
-                    if (fontSize !== this._element.fontSize) {
-                        return this._updateMeshes(symbols, fontSize);
-                    }
-                }
-
-                // advance cursor
-                _x += (this._spacing * advance);
-
-                // For proper alignment handling when a line wraps _on_ a whitespace character,
-                // we need to keep track of the width of the line without any trailing whitespace
-                // characters. This applies to both single whitespaces and also multiple sequential
-                // whitespaces.
-                if (!isWhitespace && !isLineBreak) {
-                    _xMinusTrailingWhitespace = _x;
-                }
-
-                if (isWordBoundary) { // char is space, tab, or dash
-                    numWordsThisLine++;
-                    wordStartX = _xMinusTrailingWhitespace;
-                    wordStartIndex = i + 1;
-                }
-
-                numCharsThisLine++;
-
-                var uv = this._getUv(char);
-
-                meshInfo.uvs[quad * 4 * 2 + 0] = uv[0];
-                meshInfo.uvs[quad * 4 * 2 + 1] = uv[1];
-
-                meshInfo.uvs[quad * 4 * 2 + 2] = uv[2];
-                meshInfo.uvs[quad * 4 * 2 + 3] = uv[1];
-
-                meshInfo.uvs[quad * 4 * 2 + 4] = uv[2];
-                meshInfo.uvs[quad * 4 * 2 + 5] = uv[3];
-
-                meshInfo.uvs[quad * 4 * 2 + 6] = uv[0];
-                meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
-
-                meshInfo.quad++;
-            }
-
-            // As we only break lines when the text becomes too wide for the container,
-            // there will almost always be some leftover text on the final line which has
-            // not yet been pushed to _lineContents.
-            if (lineStartIndex < l) {
-                breakLine(l, _x);
             }
 
             // force autoWidth / autoHeight change to update width/height of element
@@ -1146,7 +1167,21 @@ Object.assign(pc, function () {
             }
 
             this._font = value;
+
+            this._fontMinY = 0;
+            this._fontMaxY = 0;
+
             if (!value) return;
+
+            // calculate min / max font extents from all available chars
+            var json = this._font.data;
+            for (var charId in json.chars) {
+                var data = json.chars[charId];
+                if (data.bounds) {
+                    this._fontMinY = Math.min(this._fontMinY, data.bounds[1]);
+                    this._fontMaxY = Math.max(this._fontMaxY, data.bounds[3]);
+                }
+            }
 
             // attach render event listener
             if (this._font.on) this._font.on('render', this._onFontRender, this);
