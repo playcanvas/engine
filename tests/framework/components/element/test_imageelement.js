@@ -1012,18 +1012,6 @@ describe('pc.ImageElement', function () {
             url: 'base/tests/test-assets/sprite/red-atlas.json'
         });
 
-        app.assets.add(spriteAsset);
-        app.assets.add(textureAtlasAsset);
-
-        expect(app.assets.hasEvent('load:' + textureAtlasAsset.id)).to.be.false;
-
-        var e = new pc.Entity();
-        e.addComponent('element', {
-            type: 'image',
-            spriteAsset: spriteAsset.id
-        });
-        app.root.addChild(e);
-
         spriteAsset.once("load", function () {
             expect(app.assets.hasEvent('load:' + textureAtlasAsset.id)).to.be.true;
 
@@ -1036,6 +1024,19 @@ describe('pc.ImageElement', function () {
 
             done();
         });
+
+        app.assets.add(spriteAsset);
+        app.assets.add(textureAtlasAsset);
+
+        expect(app.assets.hasEvent('load:' + textureAtlasAsset.id)).to.be.false;
+
+        var e = new pc.Entity();
+        e.addComponent('element', {
+            type: 'image',
+            spriteAsset: spriteAsset.id
+        });
+        app.root.addChild(e);
+
     });
 
     it('Cloning image element with texture works', function () {
