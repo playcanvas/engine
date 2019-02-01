@@ -334,8 +334,9 @@ Object.assign(pc, function () {
                     this._shadowColorUniform[2] = this._shadowColor.b;
                     this._shadowColorUniform[3] = this._shadowColor.a;
                     mi.setParameter("shadow_color", this._shadowColorUniform);
+                    var ratio = this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
                     this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
-                    this._shadowOffsetUniform[1] = this._shadowOffsetScale * this._shadowOffset.y;
+                    this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;
                     mi.setParameter("shadow_offset", this._shadowOffsetUniform);
 
                     meshInfo.meshInstance = mi;
@@ -1340,15 +1341,13 @@ Object.assign(pc, function () {
             }
             this._shadowOffset.set(x, y);
 
-            if (this._font) {
-                if (this._model) {
+            if (this._font && this._model) {
+                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                    var ratio = this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
                     this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
-                    this._shadowOffsetUniform[1] = this._shadowOffsetScale * this._shadowOffset.y;
-
-                    for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                        var mi = this._model.meshInstances[i];
-                        mi.setParameter("shadow_offset", this._shadowOffsetUniform);
-                    }
+                    this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;
+                    var mi = this._model.meshInstances[i];
+                    mi.setParameter("shadow_offset", this._shadowOffsetUniform);
                 }
             }
         }
