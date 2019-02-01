@@ -321,11 +321,11 @@ Object.assign(pc, function () {
                     for (i = 0; i < drawCalls.length; i++) {
                         if (!drawCalls[i]._staticSource) continue;
                         if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
-                        groupMeshInstances[node.model.batchGroupId].push(drawCalls[i]);
+                        arr.push(drawCalls[i]);
                     }
                     for (i = 0; i < nodeMeshInstances.length; i++) {
                         if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
-                            groupMeshInstances[node.model.batchGroupId].push(nodeMeshInstances[i]);
+                            arr.push(nodeMeshInstances[i]);
                         }
                     }
                 } else {
@@ -346,15 +346,15 @@ Object.assign(pc, function () {
                 if (!arr) arr = groupMeshInstances[node.element.batchGroupId] = [];
                 var valid = false;
                 if (node.element._text) {
-                    groupMeshInstances[node.element.batchGroupId].push(node.element._text._model.meshInstances[0]);
+                    arr.push(node.element._text._model.meshInstances[0]);
 
                     node.element.removeModelFromLayers(node.element._text._model);
 
                     valid = true;
                 } else if (node.element._image) {
-                    groupMeshInstances[node.element.batchGroupId].push(node.element._image._model.meshInstances[0]);
+                    arr.push(node.element._image._renderable.model.meshInstances[0]);
 
-                    node.element.removeModelFromLayers(node.element._image._model);
+                    node.element.removeModelFromLayers(node.element._image._renderable.model);
 
                     valid = true;
                 }
@@ -371,7 +371,7 @@ Object.assign(pc, function () {
                 arr = groupMeshInstances[node.sprite.batchGroupId];
                 if (!arr) arr = groupMeshInstances[node.sprite.batchGroupId] = [];
                 if (node.sprite._meshInstance) {
-                    groupMeshInstances[node.sprite.batchGroupId].push(node.sprite._meshInstance);
+                    arr.push(node.sprite._meshInstance);
                     this.scene.removeModel(node.sprite._model);
                     node.sprite._batchGroup = this._batchGroups[node.sprite.batchGroupId];
                 }
@@ -738,10 +738,7 @@ Object.assign(pc, function () {
         var indexOffset = 0;
         var vbOffset = 0;
         var offsetPF, offsetNF, offsetUF, offsetU2F, offsetTF, offsetCF;
-        var transform, vec;
-        if (!dynamic) {
-            vec = new pc.Vec3();
-        }
+        var transform, vec =  new pc.Vec3();
 
         for (i = 0; i < meshInstances.length; i++) {
             mesh = meshInstances[i].mesh;
@@ -766,85 +763,56 @@ Object.assign(pc, function () {
             }
             data = new Float32Array(mesh.vertexBuffer.storage);
             data8 = new Uint8Array(mesh.vertexBuffer.storage);
-            if (dynamic) {
-                // Dynamic: store mesh instances without transformation (will be applied later in the shader)
-                for (j = 0; j < numVerts; j++) {
-                    batchData[j * batchVertSizeF + vbOffset] =     data[j * vertSizeF + offsetPF];
-                    batchData[j * batchVertSizeF + vbOffset + 1] = data[j * vertSizeF + offsetPF + 1];
-                    batchData[j * batchVertSizeF + vbOffset + 2] = data[j * vertSizeF + offsetPF + 2];
 
-                    if (hasNormal) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF] =     data[j * vertSizeF + offsetNF];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 1] = data[j * vertSizeF + offsetNF + 1];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 2] = data[j * vertSizeF + offsetNF + 2];
-                    }
-                    if (hasUv) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF] =     data[j * vertSizeF + offsetUF];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF + 1] = data[j * vertSizeF + offsetUF + 1];
-                    }
-                    if (hasUv2) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F] =     data[j * vertSizeF + offsetU2F];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F + 1] = data[j * vertSizeF + offsetU2F + 1];
-                    }
-                    if (hasTangent) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF] =     data[j * vertSizeF + offsetTF];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 1] = data[j * vertSizeF + offsetTF + 1];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 2] = data[j * vertSizeF + offsetTF + 2];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 3] = data[j * vertSizeF + offsetTF + 3];
-                    }
-                    if (hasColor) {
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4] =     data8[j * vertSizeF * 4 + offsetCF * 4];
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 1] = data8[j * vertSizeF * 4 + offsetCF * 4 + 1];
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 2] = data8[j * vertSizeF * 4 + offsetCF * 4 + 2];
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 3] = data8[j * vertSizeF * 4 + offsetCF * 4 + 3];
-                    }
-                    batchData[j * batchVertSizeF + batchOffsetEF + vbOffset] = i;
-                }
-            } else {
-                // Static: pre-transform vertices
-                transform = meshInstances[i].node.getWorldTransform();
-                for (j = 0; j < numVerts; j++) {
-                    vec.set(data[j * vertSizeF + offsetPF],
-                            data[j * vertSizeF + offsetPF + 1],
-                            data[j * vertSizeF + offsetPF + 2]);
+            // Static: pre-transform vertices
+            transform = meshInstances[i].node.getWorldTransform();
+
+            for (j = 0; j < numVerts; j++) {
+                vec.set(data[j * vertSizeF + offsetPF],
+                        data[j * vertSizeF + offsetPF + 1],
+                        data[j * vertSizeF + offsetPF + 2]);
+                if (!dynamic)
                     transform.transformPoint(vec, vec);
-                    batchData[j * batchVertSizeF + vbOffset] =     vec.x;
-                    batchData[j * batchVertSizeF + vbOffset + 1] = vec.y;
-                    batchData[j * batchVertSizeF + vbOffset + 2] = vec.z;
-                    if (hasNormal) {
-                        vec.set(data[j * vertSizeF + offsetNF],
-                                data[j * vertSizeF + offsetNF + 1],
-                                data[j * vertSizeF + offsetNF + 2]);
+                batchData[j * batchVertSizeF + vbOffset] =     vec.x;
+                batchData[j * batchVertSizeF + vbOffset + 1] = vec.y;
+                batchData[j * batchVertSizeF + vbOffset + 2] = vec.z;
+                if (hasNormal) {
+                    vec.set(data[j * vertSizeF + offsetNF],
+                            data[j * vertSizeF + offsetNF + 1],
+                            data[j * vertSizeF + offsetNF + 2]);
+                    if (!dynamic)
                         transform.transformVector(vec, vec);
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF] =    vec.x;
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 1] = vec.y;
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 2] = vec.z;
-                    }
-                    if (hasUv) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF] =     data[j * vertSizeF + offsetUF];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF + 1] = data[j * vertSizeF + offsetUF + 1];
-                    }
-                    if (hasUv2) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F] =     data[j * vertSizeF + offsetU2F];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F + 1] = data[j * vertSizeF + offsetU2F + 1];
-                    }
-                    if (hasTangent) {
-                        vec.set(data[j * vertSizeF + offsetTF],
-                                data[j * vertSizeF + offsetTF + 1],
-                                data[j * vertSizeF + offsetTF + 2]);
-                        transform.transformVector(vec, vec);
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF] =    vec.x;
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 1] = vec.y;
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 2] = vec.z;
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 3] = data[j * vertSizeF + offsetTF + 3];
-                    }
-                    if (hasColor) {
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4] =     data8[j * vertSizeF * 4 + offsetCF * 4];
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 1] = data8[j * vertSizeF * 4 + offsetCF * 4 + 1];
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 2] = data8[j * vertSizeF * 4 + offsetCF * 4 + 2];
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 3] = data8[j * vertSizeF * 4 + offsetCF * 4 + 3];
-                    }
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetNF] =    vec.x;
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 1] = vec.y;
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 2] = vec.z;
                 }
+                if (hasUv) {
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetUF] =     data[j * vertSizeF + offsetUF];
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetUF + 1] = data[j * vertSizeF + offsetUF + 1];
+                }
+                if (hasUv2) {
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F] =     data[j * vertSizeF + offsetU2F];
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F + 1] = data[j * vertSizeF + offsetU2F + 1];
+                }
+                if (hasTangent) {
+                    vec.set(data[j * vertSizeF + offsetTF],
+                            data[j * vertSizeF + offsetTF + 1],
+                            data[j * vertSizeF + offsetTF + 2]);
+                    if (!dynamic)
+                        transform.transformVector(vec, vec);
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetTF] =    vec.x;
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 1] = vec.y;
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 2] = vec.z;
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 3] = data[j * vertSizeF + offsetTF + 3];
+                }
+                if (hasColor) {
+                    batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4] =     data8[j * vertSizeF * 4 + offsetCF * 4];
+                    batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 1] = data8[j * vertSizeF * 4 + offsetCF * 4 + 1];
+                    batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 2] = data8[j * vertSizeF * 4 + offsetCF * 4 + 2];
+                    batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 3] = data8[j * vertSizeF * 4 + offsetCF * 4 + 3];
+                }
+                if (dynamic)
+                    batchData[j * batchVertSizeF + batchOffsetEF + vbOffset] = i;
             }
 
             indexBase = mesh.primitive[0].base;
