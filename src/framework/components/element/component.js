@@ -1451,9 +1451,9 @@ Object.assign(pc, function () {
 
             if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching
-                if (this._image._model) {
-                    this.addModelToLayers(this._image._model);
-                } else if (this._text._model) {
+                if (this._image && this._image._renderable.model) {
+                    this.addModelToLayers(this._image._renderable.model);
+                } else if (this._text && this._text._model) {
                     this.addModelToLayers(this._text._model);
                 }
             }

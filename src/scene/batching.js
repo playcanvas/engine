@@ -346,15 +346,28 @@ Object.assign(pc, function () {
                 if (!arr) arr = groupMeshInstances[node.element.batchGroupId] = [];
                 var valid = false;
                 if (node.element._text) {
+                    if (!node.element._text._model.meshInstances[0].drawOrder) {
+                        node.element.screen.screen._processDrawOrderSync();
+                    }
                     arr.push(node.element._text._model.meshInstances[0]);
-
                     node.element.removeModelFromLayers(node.element._text._model);
 
                     valid = true;
                 } else if (node.element._image) {
-                    arr.push(node.element._image._renderable.model.meshInstances[0]);
-
+                    if (!node.element._image._renderable.meshInstance.drawOrder) {
+                        node.element.screen.screen._processDrawOrderSync();
+                    }
+                    arr.push(node.element._image._renderable.meshInstance);
                     node.element.removeModelFromLayers(node.element._image._renderable.model);
+
+                    if (node.element._image._renderable.unmaskMeshInstance) {
+                        arr.push(node.element._image._renderable.unmaskMeshInstance);
+                        if (!node.element._image._renderable.unmaskMeshInstance.stencilFront ||
+                            !node.element._image._renderable.unmaskMeshInstance.stencilBack) {
+                            node.element._dirtifyMask();
+                            node.element._onPrerender();
+                        }
+                    }
 
                     valid = true;
                 }
@@ -514,7 +527,7 @@ Object.assign(pc, function () {
         var maxInstanceCount = this.device.supportsBoneTextures ? 1024 : this.device.boneLimit;
 
         var i;
-        var material, layer, vertCount, params, params2, param, paramFailed, lightList, defs;
+        var material, layer, vertCount, params, params2, param, paramFailed, lightList, defs, stencil;
         var aabb = new pc.BoundingBox();
         var testAabb = new pc.BoundingBox();
 
@@ -532,6 +545,7 @@ Object.assign(pc, function () {
             layer = meshInstancesLeftA[0].layer;
             defs = meshInstancesLeftA[0]._shaderDefs;
             params = meshInstancesLeftA[0].parameters;
+            stencil = meshInstancesLeftA[0].stencilFront;
             lightList = meshInstancesLeftA[0]._staticLightList;
             vertCount = meshInstancesLeftA[0].mesh.vertexBuffer.getNumVertices();
             aabb.copy(meshInstancesLeftA[0].aabb);
@@ -617,6 +631,12 @@ Object.assign(pc, function () {
                             meshInstancesLeftB.push(meshInstancesLeftA[i]);
                             continue;
                         }
+                    }
+                    // Split stencil mask (UI elements), both front and back expected to be the same
+                    if (stencil) {
+                        var s = meshInstancesLeftA[i].stencilFront;
+                        if (!s || stencil.func != s.func || stencil.zpass != s.zpass)
+                            continue;
                     }
                 }
 
@@ -937,6 +957,9 @@ Object.assign(pc, function () {
         }
 
         meshInstance._updateAabb = false;
+        meshInstance.drawOrder = batch.origMeshInstances[0].drawOrder;
+        meshInstance.stencilFront = batch.origMeshInstances[0].stencilFront;
+        meshInstance.stencilBack = batch.origMeshInstances[0].stencilBack;
         batch.meshInstance = meshInstance;
         this.update(batch);
 
