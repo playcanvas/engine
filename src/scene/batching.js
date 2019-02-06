@@ -676,6 +676,9 @@ Object.assign(pc, function () {
         var batchNumVerts = 0;
         var batchNumIndices = 0;
         for (i = 0; i < meshInstances.length; i++) {
+            if (!meshInstances[i].visible)
+                continue;
+
             if (!material) {
                 material = meshInstances[i].material;
             } else {
@@ -744,6 +747,9 @@ Object.assign(pc, function () {
         }
 
         for (i = 0; i < meshInstances.length; i++) {
+            if (!meshInstances[i].visible)
+                continue;
+
             mesh = meshInstances[i].mesh;
             elems = mesh.vertexBuffer.format.elements;
             numVerts = mesh.vertexBuffer.numVertices;
