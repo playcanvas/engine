@@ -40,6 +40,13 @@ module.exports = function (config) {
             { pattern: 'examples/**/*.*', included: false, served: true, watched: true, nocache: true }
         ]),
 
+        // Serve .gz files with Content-Encoding: gzip
+        customHeaders: [{
+            match: '.*.gz',
+            name: 'Content-Encoding',
+            value: 'gzip'
+        }],
+
         // list of files / patterns to exclude
         exclude: [],
 

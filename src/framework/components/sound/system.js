@@ -37,7 +37,7 @@ Object.assign(pc, function () {
 
         this.manager = manager;
 
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
 
         this.on('beforeremove', this.onBeforeRemove, this);
     };
@@ -123,6 +123,8 @@ Object.assign(pc, function () {
                     slots[key].stop();
                 }
             }
+
+            component.onRemove();
         }
     });
 

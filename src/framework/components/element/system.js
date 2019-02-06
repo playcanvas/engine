@@ -23,6 +23,7 @@ Object.assign(pc, function () {
 
         // default texture - make white so we can tint it with emissive color
         this._defaultTexture = new pc.Texture(app.graphicsDevice, { width: 1, height: 1, format: pc.PIXELFORMAT_R8_G8_B8_A8 });
+        this._defaultTexture.name = 'element-system';
         var pixels = this._defaultTexture.lock();
         var pixelData = new Uint8Array(4);
         pixelData[0] = 255.0;
@@ -186,7 +187,11 @@ Object.assign(pc, function () {
                 if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
                 if (data.rtlReorder !== undefined) component.rtlReorder = data.rtlReorder;
                 if (data.unicodeConverter !== undefined) component.unicodeConverter = data.unicodeConverter;
-                if (data.text !== undefined) component.text = data.text;
+                if (data.text !== null && data.text !== undefined) {
+                    component.text = data.text;
+                } else if (data.key !== null && data.key !== undefined) {
+                    component.key = data.key;
+                }
                 if (data.color !== undefined) {
                     color = data.color;
                     if (! (color instanceof pc.Color)) {
@@ -207,6 +212,10 @@ Object.assign(pc, function () {
                 if (data.fontAsset !== undefined) component.fontAsset = data.fontAsset;
                 if (data.font !== undefined) component.font = data.font;
                 if (data.alignment !== undefined) component.alignment = data.alignment;
+                if (data.outlineColor !== undefined) component.outlineColor = data.outlineColor;
+                if (data.outlineThickness !== undefined) component.outlineThickness = data.outlineThickness;
+                if (data.shadowColor !== undefined) component.shadowColor = data.shadowColor;
+                if (data.shadowOffset !== undefined) component.shadowOffset = data.shadowOffset;
             } else {
                 // group
             }
@@ -235,7 +244,7 @@ Object.assign(pc, function () {
         cloneComponent: function (entity, clone) {
             var source = entity.element;
 
-            return this.addComponent(clone, {
+            var data = {
                 enabled: source.enabled,
                 width: source.width,
                 height: source.height,
@@ -259,7 +268,6 @@ Object.assign(pc, function () {
                 sprite: source.sprite,
                 spriteFrame: source.spriteFrame,
                 pixelsPerUnit: source.pixelsPerUnit,
-                text: source.text,
                 spacing: source.spacing,
                 lineHeight: source.lineHeight,
                 wrapLines: source.wrapLines,
@@ -269,8 +277,20 @@ Object.assign(pc, function () {
                 font: source.font,
                 useInput: source.useInput,
                 batchGroupId: source.batchGroupId,
-                mask: source.mask
-            });
+                mask: source.mask,
+                outlineColor: source.outlineColor && source.outlineColor.clone() || source.outlineColor,
+                outlineThickness: source.outlineThickness,
+                shadowColor: source.shadowColor && source.shadowColor.clone() || source.shadowColor,
+                shadowOffset: source.shadowOffset && source.shadowOffset.clone() || source.shadowOffset
+            };
+
+            if (source.key !== undefined && source.key !== null) {
+                data.key = source.key;
+            } else {
+                data.text = source.text;
+            }
+
+            return this.addComponent(clone, data);
         },
 
         getTextElementMaterial: function (screenSpace, msdf) {

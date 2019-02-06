@@ -24,7 +24,7 @@ Object.assign(pc, function () {
         this.manager = manager;
         this.current = null;
 
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     AudioListenerComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     AudioListenerComponentSystem.prototype.constructor = AudioListenerComponentSystem;

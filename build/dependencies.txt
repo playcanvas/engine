@@ -85,6 +85,7 @@
 ../src/scene/layer.js
 ../src/scene/layer-composition.js
 ../src/scene/sprite.js
+../src/scene/sync-queue.js
 ../src/scene/texture-atlas.js
 ../src/scene/stencil-parameters.js
 ../src/anim/animation.js
@@ -108,6 +109,10 @@
 ../src/net/http.js
 ../src/script/script-registry.js
 ../src/script/script.js
+../src/bundles/bundle.js
+../src/bundles/bundle-registry.js
+../src/i18n/i18n-parser.js
+../src/i18n/i18n.js
 ../src/framework/script.js
 ../src/framework/application.js
 ../src/framework/stats.js
@@ -199,6 +204,8 @@
 ../src/framework/utils/entity-reference.js
 ../src/framework/utils/sorted-loop-array.js
 ../src/resources/loader.js
+../src/resources/bundle.js
+../src/resources/untar.js
 ../src/resources/animation.js
 ../src/resources/audio.js
 ../src/resources/cubemap.js

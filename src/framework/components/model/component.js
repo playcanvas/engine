@@ -108,6 +108,7 @@ Object.assign(pc, function () {
         onRemove: function () {
             this.asset = null;
             this.materialAsset = null;
+            this._unsetMaterialEvents();
         },
 
         onLayersChanged: function (oldComp, newComp) {
@@ -262,6 +263,10 @@ Object.assign(pc, function () {
                         }
                     }
                 }
+            }
+
+            if (this.batchGroupId >= 0) {
+                app.batcher.markGroupDirty(this.batchGroupId);
             }
         },
 
@@ -808,7 +813,7 @@ Object.assign(pc, function () {
             // set the layer list
             this._layers.length = 0;
             for (i = 0; i < value.length; i++) {
-                this._layers[0] = value[0];
+                this._layers[i] = value[i];
             }
 
             // don't add into layers until we're enabled

@@ -213,6 +213,10 @@ Object.assign(pc, function () {
             this.data.playingBeforeDisable = playingBeforeDisable;
         },
 
+        onRemove: function () {
+            this.off();
+        },
+
         /**
          * @function
          * @name pc.SoundComponent#addSlot

@@ -1,5 +1,24 @@
 Object.assign(pc, function () {
 
+    var MeshInfo = function () {
+        // number of symbols
+        this.count = 0;
+        // number of quads created
+        this.quad = 0;
+        // number of quads on specific line
+        this.lines = {};
+        // float array for positions
+        this.positions = [];
+        // float array for normals
+        this.normals = [];
+        // float array for UVs
+        this.uvs = [];
+        // float array for indices
+        this.indices = [];
+        // pc.MeshInstance created from this MeshInfo
+        this.meshInstance = null;
+    };
+
     var TextElement = function TextElement(element) {
         this._element = element;
         this._system = element.system;
@@ -7,6 +26,7 @@ Object.assign(pc, function () {
 
         // public
         this._text = "";
+        this._i18nKey = null;
 
         this._fontAsset = null;
         this._font = null;
@@ -49,6 +69,17 @@ Object.assign(pc, function () {
         this._rtlReorder = false;
         this._unicodeConverter = false;
 
+        this._outlineColor = new pc.Color(0, 0, 0, 1);
+        this._outlineColorUniform = new Float32Array(4);
+        this._outlineThicknessScale = 0.2; // 0.2 coefficient to map editor range of 0 - 1 to shader value
+        this._outlineThickness = 0.0;
+
+        this._shadowColor = new pc.Color(0, 0, 0, 1);
+        this._shadowColorUniform = new Float32Array(4);
+        this._shadowOffsetScale = 0.005; // maps the editor scale value to shader scale
+        this._shadowOffset = new pc.Vec2(0, 0);
+        this._shadowOffsetUniform = new Float32Array(2);
+
         // initialize based on screen
         this._onScreenChange(this._element.screen);
 
@@ -58,6 +89,10 @@ Object.assign(pc, function () {
         element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
         element.on('set:draworder', this._onDrawOrderChange, this);
         element.on('set:pivot', this._onPivotChange, this);
+
+        this._system.app.i18n.on('set:locale', this._resetLocalizedText, this);
+        this._system.app.i18n.on('data:add', this._onLocalizationData, this);
+        this._system.app.i18n.on('data:remove', this._onLocalizationData, this);
     };
 
     var LINE_BREAK_CHAR = /^[\r\n]$/;
@@ -66,6 +101,8 @@ Object.assign(pc, function () {
 
     Object.assign(TextElement.prototype, {
         destroy: function () {
+            this._setMaterial(null); // clear material from mesh instances
+
             if (this._model) {
                 this._element.removeModelFromLayers(this._model);
                 this._model.destroy();
@@ -73,6 +110,7 @@ Object.assign(pc, function () {
             }
 
             this.fontAsset = null;
+            this.font = null;
 
             this._element.off('resize', this._onParentResize, this);
             this._element.off('set:screen', this._onScreenChange, this);
@@ -116,6 +154,36 @@ Object.assign(pc, function () {
                 this._updateText();
         },
 
+        _onLocalizationData: function (locale, messages) {
+            if (this._i18nKey && messages[this._i18nKey]) {
+                this._resetLocalizedText();
+            }
+        },
+
+        _resetLocalizedText: function () {
+            if (this._i18nKey) {
+                this._setText(this._system.app.i18n.getText(this._i18nKey));
+            }
+        },
+
+        _setText: function (text) {
+            if (this.unicodeConverter) {
+                var unicodeConverterFunc = this._system.getUnicodeConverter();
+                if (unicodeConverterFunc) {
+                    text = unicodeConverterFunc(text);
+                } else {
+                    console.warn('Element created with unicodeConverter option but no unicodeConverter function registered');
+                }
+            }
+
+            if (this._text !== text) {
+                if (this._font) {
+                    this._updateText(text);
+                }
+                this._text = text;
+            }
+        },
+
         _updateText: function (text) {
             var i;
             var len;
@@ -144,12 +212,20 @@ Object.assign(pc, function () {
 
             var charactersPerTexture = {};
 
+            var char, info, map;
             for (i = 0; i < textLength; i++) {
-                var char = symbols[i];
-                var info = this._font.data.chars[char];
-                if (!info) continue;
+                char = symbols[i];
+                info = this._font.data.chars[char];
+                // if char is missing use 'space' or first char in map
+                if (!info) {
+                    if (this._font.data.chars[' ']) {
+                        info = this._font.data.chars[' '];
+                    } else {
+                        info = this._font.data.chars[Object.keys(this._font.data.chars)[0]];
+                    }
+                }
 
-                var map = info.map;
+                map = info.map;
 
                 if (!charactersPerTexture[map])
                     charactersPerTexture[map] = 0;
@@ -184,6 +260,7 @@ Object.assign(pc, function () {
                     // destroy old mesh
                     if (meshInfo.meshInstance) {
                         this._removeMeshInstance(meshInfo.meshInstance);
+                        meshInfo.meshInstance.material = null;
                     }
 
                     // if there are no letters for this mesh continue
@@ -244,6 +321,22 @@ Object.assign(pc, function () {
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
                     mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
+
+                    this._outlineColorUniform[0] = this._outlineColor.r;
+                    this._outlineColorUniform[1] = this._outlineColor.g;
+                    this._outlineColorUniform[2] = this._outlineColor.b;
+                    this._outlineColorUniform[3] = this._outlineColor.a;
+                    mi.setParameter("outline_color", this._outlineColorUniform);
+                    mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
+
+                    this._shadowColorUniform[0] = this._shadowColor.r;
+                    this._shadowColorUniform[1] = this._shadowColor.g;
+                    this._shadowColorUniform[2] = this._shadowColor.b;
+                    this._shadowColorUniform[3] = this._shadowColor.a;
+                    mi.setParameter("shadow_color", this._shadowColorUniform);
+                    this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
+                    this._shadowOffsetUniform[1] = this._shadowOffsetScale * this._shadowOffset.y;
+                    mi.setParameter("shadow_offset", this._shadowOffsetUniform);
 
                     meshInfo.meshInstance = mi;
 
@@ -406,12 +499,24 @@ Object.assign(pc, function () {
                 var quadsize = 1;
                 var glyphMinX = 0;
                 var glyphWidth = 0;
+                var dataScale, size;
 
                 data = json.chars[char];
-                if (data && data.scale) {
-                    var size = (data.width + data.height) / 2;
+
+                // use 'space' if available or first character
+                if (!data) {
+                    if (json.chars[' ']) {
+                        data = json.chars[' '];
+                    } else {
+                        data = json.chars[Object.keys(json.chars)[0]];
+                    }
+                }
+
+                if (data) {
+                    dataScale = data.scale || 1;
+                    size = (data.width + data.height) / 2;
                     scale = (size / MAGIC) * this._fontSize / size;
-                    quadsize = (size / MAGIC) * this._fontSize / data.scale;
+                    quadsize = (size / MAGIC) * this._fontSize / dataScale;
                     advance = data.xadvance * scale;
                     x = data.xoffset * scale;
                     y = data.yoffset * scale;
@@ -424,11 +529,7 @@ Object.assign(pc, function () {
                         glyphMinX = 0;
                     }
                 } else {
-                    // missing character
-                    advance = 1;
-                    x = 0;
-                    y = 0;
-                    quadsize = this._fontSize;
+                    console.error("Couldn't substitute missing character: '" + char + "'");
                 }
 
                 var isLineBreak = LINE_BREAK_CHAR.test(char);
@@ -580,11 +681,18 @@ Object.assign(pc, function () {
                 }
 
                 // update vertex buffer
-                var numVertices = this._meshInfo[i].quad * 4;
+                var numVertices = this._meshInfo[i].count * 4; // number of verts we allocated
+                var vertMax = this._meshInfo[i].quad * 4;  // number of verts we need (usually count minus line break characters)
                 var it = new pc.VertexIterator(this._meshInfo[i].meshInstance.mesh.vertexBuffer);
                 for (var v = 0; v < numVertices; v++) {
-                    it.element[pc.SEMANTIC_POSITION].set(this._meshInfo[i].positions[v * 3 + 0], this._meshInfo[i].positions[v * 3 + 1], this._meshInfo[i].positions[v * 3 + 2]);
-                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v * 2 + 0], this._meshInfo[i].uvs[v * 2 + 1]);
+                    if (v >= vertMax) {
+                        // clear unused vertices
+                        it.element[pc.SEMANTIC_POSITION].set(0, 0, 0);
+                        it.element[pc.SEMANTIC_TEXCOORD0].set(0, 0);
+                    } else {
+                        it.element[pc.SEMANTIC_POSITION].set(this._meshInfo[i].positions[v * 3 + 0], this._meshInfo[i].positions[v * 3 + 1], this._meshInfo[i].positions[v * 3 + 2]);
+                        it.element[pc.SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v * 2 + 0], this._meshInfo[i].uvs[v * 2 + 1]);
+                    }
                     it.next();
                 }
                 it.end();
@@ -627,9 +735,18 @@ Object.assign(pc, function () {
             asset.off("remove", this._onFontRemove, this);
         },
 
+        _onFontRender: function () {
+            // if the font has been changed (e.g. canvasfont re-render)
+            // re-applying the same font updates character map and ensures
+            // everything is up to date.
+            this.font = this._font;
+        },
+
         _onFontLoad: function (asset) {
             if (this.font !== asset.resource) {
                 this.font = asset.resource;
+
+
             }
         },
 
@@ -690,8 +807,9 @@ Object.assign(pc, function () {
                 if (data.chars[space]) {
                     return this._getUv(space);
                 }
+
                 // otherwise - missing char
-                return [0, 0, 1, 1];
+                return [0, 0, 0, 0];
             }
 
             var map = data.chars[char].map;
@@ -750,24 +868,25 @@ Object.assign(pc, function () {
         get: function () {
             return this._text;
         },
-
         set: function (value) {
-            var str = value.toString();
+            this._i18nKey = null;
+            var str = value && value.toString() || "";
+            this._setText(str);
+        }
+    });
 
-            if (this.unicodeConverter) {
-                var unicodeConverterFunc = this._system.getUnicodeConverter();
-                if (unicodeConverterFunc) {
-                    str = unicodeConverterFunc(str);
-                } else {
-                    console.warn('Element created with unicodeConverter option but no unicodeConverter function registered');
-                }
+    Object.defineProperty(TextElement.prototype, "key", {
+        get: function () {
+            return this._i18nKey;
+        },
+        set: function (value) {
+            var str = value !== null ? value.toString() : null;
+            if (this._i18nKey === str) {
+                return;
             }
-            if (this._text !== str) {
-                if (this._font) {
-                    this._updateText(str);
-                }
-                this._text = str;
-            }
+
+            this._i18nKey = str;
+            this._resetLocalizedText();
         }
     });
 
@@ -935,10 +1054,18 @@ Object.assign(pc, function () {
 
             var previousFontType;
 
-            if (this._font) previousFontType = this._font.type;
+            if (this._font) {
+                previousFontType = this._font.type;
+
+                // remove render event listener
+                if (this._font.off) this._font.off('render', this._onFontRender, this);
+            }
 
             this._font = value;
             if (!value) return;
+
+            // attach render event listener
+            if (this._font.on) this._font.on('render', this._onFontRender, this);
 
             if (this._fontAsset) {
                 var asset = this._system.app.assets.get(this._fontAsset);
@@ -960,16 +1087,7 @@ Object.assign(pc, function () {
             // as the number of font textures
             for (i = 0, len = this._font.textures.length; i < len; i++) {
                 if (!this._meshInfo[i]) {
-                    this._meshInfo[i] = {
-                        count: 0,
-                        quad: 0,
-                        lines: {},
-                        positions: [],
-                        normals: [],
-                        uvs: [],
-                        indices: [],
-                        meshInstance: null
-                    };
+                    this._meshInfo[i] = new MeshInfo();
                 } else {
                     // keep existing entry but set correct parameters to mesh instance
                     var mi = this._meshInfo[i].meshInstance;
@@ -1101,6 +1219,138 @@ Object.assign(pc, function () {
                 this._aabbDirty = false;
             }
             return this._aabb;
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "outlineColor", {
+        get: function () {
+            return this._outlineColor;
+        },
+
+        set: function (value) {
+            var r = (value instanceof pc.Color) ? value.r : value[0];
+            var g = (value instanceof pc.Color) ? value.g : value[1];
+            var b = (value instanceof pc.Color) ? value.b : value[2];
+            var a = (value instanceof pc.Color) ? value.a : value[3];
+
+            // #ifdef DEBUG
+            if (this._outlineColor === value) {
+                console.warn("Setting element.outlineColor to itself will have no effect");
+            }
+            // #endif
+
+            if (this._outlineColor.r === r &&
+                this._outlineColor.g === g &&
+                this._outlineColor.b === b &&
+                this._outlineColor.a === a) {
+                return;
+            }
+
+            this._outlineColor.r = r;
+            this._outlineColor.g = g;
+            this._outlineColor.b = b;
+            this._outlineColor.a = a;
+
+            if (this._model) {
+                this._outlineColorUniform[0] = this._outlineColor.r;
+                this._outlineColorUniform[1] = this._outlineColor.g;
+                this._outlineColorUniform[2] = this._outlineColor.b;
+                this._outlineColorUniform[3] = this._outlineColor.a;
+
+                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                    var mi = this._model.meshInstances[i];
+                    mi.setParameter("outline_color", this._outlineColorUniform);
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "outlineThickness", {
+        get: function () {
+            return this._outlineThickness;
+        },
+
+        set: function (value) {
+            var _prev = this._outlineThickness;
+            this._outlineThickness = value;
+            if (_prev !== value && this._font) {
+                if (this._model) {
+                    for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                        var mi = this._model.meshInstances[i];
+                        mi.setParameter("outline_thickness", this._outlineThicknessScale * this._outlineThickness);
+                    }
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "shadowColor", {
+        get: function () {
+            return this._shadowColor;
+        },
+
+        set: function (value) {
+            var r = (value instanceof pc.Color) ? value.r : value[0];
+            var g = (value instanceof pc.Color) ? value.g : value[1];
+            var b = (value instanceof pc.Color) ? value.b : value[2];
+            var a = (value instanceof pc.Color) ? value.a : value[3];
+
+            // #ifdef DEBUG
+            if (this._shadowColor === value) {
+                console.warn("Setting element.shadowColor to itself will have no effect");
+            }
+            // #endif
+
+            if (this._shadowColor.r === r &&
+                this._shadowColor.g === g &&
+                this._shadowColor.b === b &&
+                this._shadowColor.a === a) {
+                return;
+            }
+
+            this._shadowColor.r = r;
+            this._shadowColor.g = g;
+            this._shadowColor.b = b;
+            this._shadowColor.a = a;
+
+            if (this._model) {
+                this._shadowColorUniform[0] = this._shadowColor.r;
+                this._shadowColorUniform[1] = this._shadowColor.g;
+                this._shadowColorUniform[2] = this._shadowColor.b;
+                this._shadowColorUniform[3] = this._shadowColor.a;
+
+                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                    var mi = this._model.meshInstances[i];
+                    mi.setParameter("shadow_color", this._shadowColorUniform);
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, "shadowOffset", {
+        get: function () {
+            return this._shadowOffset;
+        },
+
+        set: function (value) {
+            var x = (value instanceof pc.Vec2) ? value.x : value[0],
+                y = (value instanceof pc.Vec2) ? value.y : value[1];
+            if (this._shadowOffset.x === x && this._shadowOffset.y === y) {
+                return;
+            }
+            this._shadowOffset.set(x, y);
+
+            if (this._font) {
+                if (this._model) {
+                    this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
+                    this._shadowOffsetUniform[1] = this._shadowOffsetScale * this._shadowOffset.y;
+
+                    for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                        var mi = this._model.meshInstances[i];
+                        mi.setParameter("shadow_offset", this._shadowOffsetUniform);
+                    }
+                }
+            }
         }
     });
 

@@ -40,8 +40,8 @@ Object.assign(pc, function () {
 
         this.initialized = false;
 
-        pc.ComponentSystem.on('initialize', this.onInitialize, this);
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('initialize', this.onInitialize, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
 
         this.on('remove', this.onRemove, this);
     };

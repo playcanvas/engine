@@ -117,6 +117,7 @@ Object.assign(pc, function () {
                 height: 4,
                 format: pc.PIXELFORMAT_R8_G8_B8
             });
+            texture.name = 'dds-legacy-empty';
             return texture;
         }
 
@@ -197,10 +198,17 @@ Object.assign(pc, function () {
 
     Object.assign(TextureHandler.prototype, {
         load: function (url, callback) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             var self = this;
             var image;
 
-            var urlWithoutParams = url.indexOf('?') >= 0 ? url.split('?')[0] : url;
+            var urlWithoutParams = url.original.indexOf('?') >= 0 ? url.original.split('?')[0] : url.original;
 
             var ext = pc.path.getExtension(urlWithoutParams).toLowerCase();
             if (ext === '.dds' || ext === '.ktx') {
@@ -209,7 +217,7 @@ Object.assign(pc, function () {
                     responseType: "arraybuffer"
                 };
 
-                pc.http.get(url, options, function (err, response) {
+                pc.http.get(url.load, options, function (err, response) {
                     if (!err) {
                         callback(null, response);
                     } else {
@@ -219,7 +227,7 @@ Object.assign(pc, function () {
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
                 image = new Image();
                 // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
-                if (self.crossOrigin !== undefined && pc.ABSOLUTE_URL.test(url)) {
+                if (self.crossOrigin !== undefined && pc.ABSOLUTE_URL.test(url.original)) {
                     image.crossOrigin = self.crossOrigin;
                 }
 
@@ -230,10 +238,10 @@ Object.assign(pc, function () {
 
                 // Call error callback with details.
                 image.onerror = function (event) {
-                    callback(pc.string.format("Error loading Texture from: '{0}'", url));
+                    callback(pc.string.format("Error loading Texture from: '{0}'", url.original));
                 };
 
-                image.src = url;
+                image.src = url.load;
             } else {
                 var blobStart = urlWithoutParams.indexOf("blob:");
                 if (blobStart >= 0) {
@@ -288,6 +296,7 @@ Object.assign(pc, function () {
                     height: img.height,
                     format: format
                 });
+                texture.name = url;
                 texture.setSource(img);
             } else if (data instanceof ArrayBuffer) { // Container format
                 var LEGACY = true;
@@ -313,11 +322,13 @@ Object.assign(pc, function () {
                         // #ifdef DEBUG
                         console.warn("This DDS or KTX pixel format is currently unsupported. Empty texture will be created instead.");
                         // #endif
-                        return new pc.Texture(this._device, {
+                        texture = new pc.Texture(this._device, {
                             width: 4,
                             height: 4,
                             format: pc.PIXELFORMAT_R8_G8_B8
                         });
+                        texture.name = 'unsupported-empty';
+                        return texture;
                     }
 
                     texture = new pc.Texture(this._device, {

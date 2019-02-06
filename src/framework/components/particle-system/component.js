@@ -229,6 +229,33 @@ Object.assign(pc, function () {
             layer.removeMeshInstances(this.data.model.meshInstances);
         },
 
+        _bindColorMapAsset: function (asset) {
+            asset.once('remove', this._onColorMapRemoved, this);
+
+            if (asset.resource) {
+                this.colorMap = asset.resource;
+            } else {
+                asset.once("load", this._onColorMapLoad, this);
+                if (this.enabled && this.entity.enabled) {
+                    this.system.app.assets.load(asset);
+                }
+
+            }
+        },
+
+        _unbindColorMapAsset: function (asset) {
+            asset.off("remove", this._onColorMapRemoved, this);
+            asset.off("load", this._onColorMapLoad, this);
+        },
+
+        _onColorMapLoad: function (asset) {
+            this.colorMap = asset.resource;
+        },
+
+        _onColorMapRemoved: function (asset) {
+            this.colorMapAsset = null;
+        },
+
         onSetColorMapAsset: function (name, oldValue, newValue) {
             var self = this;
             var asset;
@@ -236,7 +263,7 @@ Object.assign(pc, function () {
             if (oldValue) {
                 asset = assets.get(oldValue);
                 if (asset) {
-                    asset.off('remove', this.onColorMapRemoved, this);
+                    this._unbindColorMapAsset(asset);
                 }
             }
 
@@ -248,23 +275,10 @@ Object.assign(pc, function () {
 
                 asset = assets.get(newValue);
                 if (asset) {
-                    asset.on('remove', this.onColorMapRemoved, this);
-                    asset.ready(function (asset) {
-                        self.colorMap = asset.resource;
-                    });
-                    if (self.enabled && self.entity.enabled) {
-                        assets.load(asset);
-                    }
+                    self._bindColorMapAsset(asset);
                 } else {
                     assets.once("add:" + newValue, function (asset) {
-                        asset.on('remove', this.onColorMapRemoved, this);
-                        asset.ready(function (asset) {
-                            self.colorMap = asset.resource;
-                        });
-
-                        if (self.enabled && self.entity.enabled) {
-                            assets.load(asset);
-                        }
+                        self._bindColorMapAsset(asset);
                     });
                 }
             } else {
@@ -272,9 +286,31 @@ Object.assign(pc, function () {
             }
         },
 
-        onColorMapRemoved: function (asset) {
-            asset.off('remove', this.onColorMapRemoved, this);
-            this.colorMapAsset = null;
+        _bindNormalMapAsset: function (asset) {
+            asset.once('remove', this._onNormalMapRemoved, this);
+
+            if (asset.resource) {
+                this.normalMap = asset.resource;
+            } else {
+                asset.once("load", this._onNormalMapLoad, this);
+                if (this.enabled && this.entity.enabled) {
+                    this.system.app.assets.load(asset);
+                }
+
+            }
+        },
+
+        _unbindNormalMapAsset: function (asset) {
+            asset.off("remove", this._onNormalMapRemoved, this);
+            asset.off("load", this._onNormalMapLoad, this);
+        },
+
+        _onNormalMapLoad: function (asset) {
+            this.normalMap = asset.resource;
+        },
+
+        _onNormalMapRemoved: function (asset) {
+            this.normalMapAsset = null;
         },
 
         onSetNormalMapAsset: function (name, oldValue, newValue) {
@@ -285,7 +321,7 @@ Object.assign(pc, function () {
             if (oldValue) {
                 asset = assets.get(oldValue);
                 if (asset) {
-                    asset.off('remove', this.onNormalMapRemoved, this);
+                    this._unbindNormalMapAsset(asset);
                 }
             }
 
@@ -297,34 +333,15 @@ Object.assign(pc, function () {
 
                 asset = assets.get(newValue);
                 if (asset) {
-                    asset.on('remove', this.onNormalMapRemoved, this);
-                    asset.ready(function (asset) {
-                        self.normalMap = asset.resource;
-                    });
-
-                    if (self.enabled && self.entity.enabled) {
-                        assets.load(asset);
-                    }
+                    self._bindNormalMapAsset(asset);
                 } else {
                     assets.once("add:" + newValue, function (asset) {
-                        asset.on('remove', this.onNormalMapRemoved, this);
-                        asset.ready(function (asset) {
-                            self.normalMap = asset.resource;
-                        });
-
-                        if (self.enabled && self.entity.enabled) {
-                            assets.load(asset);
-                        }
+                        self._bindNormalMapAsset(asset);
                     });
                 }
             } else {
                 this.normalMap = null;
             }
-        },
-
-        onNormalMapRemoved: function (asset) {
-            asset.off('remove', this.onNormalMapRemoved, this);
-            this.normalMapAsset = null;
         },
 
         _bindMeshAsset: function (asset) {
@@ -614,6 +631,12 @@ Object.assign(pc, function () {
                 this.removeModelFromLayers();
                 if (this.data.depthSoftening) this._releaseDepth();
             }
+
+            if (this.emitter) {
+                // clear camera as it isn't updated while disabled and we don't want to hold
+                // onto old reference
+                this.emitter.camera = null;
+            }
         },
 
         /**
@@ -708,7 +731,7 @@ Object.assign(pc, function () {
             this.enabled = enabled;
         },
 
-        onDestroy: function () {
+        onRemove: function () {
             var data = this.data;
             if (data.model) {
                 this.entity.removeChild(data.model.getGraph());
@@ -729,6 +752,8 @@ Object.assign(pc, function () {
                     this[prop] = null;
                 }
             }
+
+            this.off();
         }
     });
 

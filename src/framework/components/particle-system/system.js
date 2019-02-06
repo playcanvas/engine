@@ -90,7 +90,7 @@ Object.assign(pc, function () {
         };
 
         this.on('beforeremove', this.onRemove, this);
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     ParticleSystemComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     ParticleSystemComponentSystem.prototype.constructor = ParticleSystemComponentSystem;
@@ -247,7 +247,7 @@ Object.assign(pc, function () {
         },
 
         onRemove: function (entity, component) {
-            component.onDestroy();
+            component.onRemove();
         }
     });
 
