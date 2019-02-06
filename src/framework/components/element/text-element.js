@@ -792,8 +792,8 @@ Object.assign(pc, function () {
             var keys = Object.keys(this._font.data.chars);
             for (var i = 0; i < keys.length; i++) {
                 var char = this._font.data.chars[keys[i]];
-                if (char.scale && char.range) {
-                    return char.scale * char.range;
+                if (char.range) {
+                    return (char.scale || 1) * char.range;
                 }
             }
             return 2; // default
