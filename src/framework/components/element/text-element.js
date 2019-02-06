@@ -321,6 +321,7 @@ Object.assign(pc, function () {
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
                     mi.setParameter("font_textureWidth", this._font.data.info.maps[i].width);
+                    mi.setParameter("font_smoothing", this._font.data.smoothing);
 
                     this._outlineColorUniform[0] = this._outlineColor.r;
                     this._outlineColorUniform[1] = this._outlineColor.g;

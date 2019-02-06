@@ -2,6 +2,13 @@ Object.assign(pc, function () {
     'use strict';
 
     function upgradeDataSchema(data) {
+        // convert v1,v2,v3 into v4
+        if (data.version < 4) {
+            data.smoothing = 1.0; // legacy smoothing value
+        } else {
+            data.smoothing = data.smoothing || 0.2; // v4 smoothing value
+        }
+
         // convert v1 and v2 to v3 font data schema
         if (data.version < 3) {
             if (data.version < 2) {
