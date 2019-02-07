@@ -50,6 +50,7 @@ Object.assign(pc, function () {
         this.id = id;
         this.name = name;
         this.layers = layers === undefined ? [pc.LAYERID_WORLD] : layers;
+        this._ui = false;
     };
 
     // Modified SkinInstance for batching
@@ -371,11 +372,13 @@ Object.assign(pc, function () {
 
                     valid = true;
                 }
-                // #ifdef DEBUG
+
                 if (valid) {
+                    this._batchGroups[node.element.batchGroupId]._ui = true;
+                    // #ifdef DEBUG
                     node.element._batchGroup = this._batchGroups[node.element.batchGroupId];
+                    // #endif
                 }
-                // #endif
             }
         }
 
@@ -474,7 +477,7 @@ Object.assign(pc, function () {
                 continue;
             }
 
-            lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize);
+            lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize, groupData._ui);
             for (i = 0; i < lists.length; i++) {
                 batch = this.create(lists[i], groupData.dynamic, parseInt(groupId, 10));
                 for (j = 0; j < groupData.layers.length; j++) {
@@ -501,6 +504,32 @@ Object.assign(pc, function () {
         return false;
     }
 
+    function equalParamSets(params1, params2) {
+        var param;
+        for (param in params1) { // compare A -> B
+            if (params1.hasOwnProperty(param) && !paramsIdentical(params1[param], params2[param]))
+                return false;
+        }
+        for (param in params2) { // compare B -> A
+            if (params2.hasOwnProperty(param) && !paramsIdentical(params2[param], params1[param]))
+                return false;
+        }
+        return true;
+    }
+
+    function equalLightLists(lightList1, lightList2) {
+        var k;
+        for (k = 0; k < lightList1.length; k++) {
+            if (lightList2.indexOf(lightList1[k]) < 0)
+                return false;
+        }
+        for (k = 0; k < lightList2.length; k++) {
+            if (lightList1.indexOf(lightList2[k]) < 0)
+                return false;
+        }
+        return  true;
+    }
+
     /**
      * @function
      * @name pc.BatchManager#prepare
@@ -517,29 +546,46 @@ Object.assign(pc, function () {
      * @param {Array} meshInstances Input list of mesh instances
      * @param {Boolean} dynamic Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
      * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
+     * @param {Boolean} isUI Are we batching UI elements
      * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
      * @returns {Array} An array of arrays of mesh instances, each valid to pass to {@link pc.BatchManager#create}.
      */
-    BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize) {
+    BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize, isUI) {
         if (meshInstances.length === 0) return [];
         if (maxAabbSize === undefined) maxAabbSize = Number.POSITIVE_INFINITY;
         var halfMaxAabbSize = maxAabbSize * 0.5;
         var maxInstanceCount = this.device.supportsBoneTextures ? 1024 : this.device.boneLimit;
 
         var i;
-        var material, layer, vertCount, params, params2, param, paramFailed, lightList, defs, stencil;
+        var material, layer, vertCount, params, lightList, defs, stencil, staticLights;
         var aabb = new pc.BoundingBox();
         var testAabb = new pc.BoundingBox();
+        var skipUIAabb = null;
 
         var lists = [];
         var j = 0;
+        if (isUI) {
+            meshInstances.sort(function (a, b) {
+                return a.drawOrder - b.drawOrder;
+            });
+        }
         var meshInstancesLeftA = meshInstances;
         var meshInstancesLeftB;
 
-        var k;
+        var skipMesh = isUI ? function (mi) {
+            if (skipUIAabb)
+                skipUIAabb.add(mi.aabb);
+            else
+                skipUIAabb = mi.aabb.clone();
+            meshInstancesLeftB.push(mi);
+        } : function (mi) {
+            meshInstancesLeftB.push(mi);
+        };
+
+        var mi, sf;
 
         while (meshInstancesLeftA.length > 0) {
-            lists[j] = [];
+            lists[j] = [meshInstancesLeftA[0]];
             meshInstancesLeftB = [];
             material = meshInstancesLeftA[0].material;
             layer = meshInstancesLeftA[0].layer;
@@ -549,110 +595,62 @@ Object.assign(pc, function () {
             lightList = meshInstancesLeftA[0]._staticLightList;
             vertCount = meshInstancesLeftA[0].mesh.vertexBuffer.getNumVertices();
             aabb.copy(meshInstancesLeftA[0].aabb);
+            skipUIAabb = null;
 
-            for (i = 0; i < meshInstancesLeftA.length; i++) {
-
-                if (i > 0) {
-                    // Split by material
-                    if (material !== meshInstancesLeftA[i].material) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by layer (legacy)
-                    if (layer !== meshInstancesLeftA[i].layer) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by shader defines
-                    if (defs !== meshInstancesLeftA[i]._shaderDefs) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by static source
-                    // Split by vert count
-                    if (vertCount + meshInstancesLeftA[i].mesh.vertexBuffer.getNumVertices() > 0xFFFF) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by AABB
-                    testAabb.copy(aabb);
-                    testAabb.add(meshInstancesLeftA[i].aabb);
-                    if (testAabb.halfExtents.x > halfMaxAabbSize ||
-                        testAabb.halfExtents.y > halfMaxAabbSize ||
-                        testAabb.halfExtents.z > halfMaxAabbSize) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by parameters
-                    params2 = meshInstancesLeftA[i].parameters;
-                    paramFailed = false;
-                    for (param in params) { // compare A -> B
-                        if (!params.hasOwnProperty(param)) continue;
-                        if (!paramsIdentical(params[param], params2[param])) {
-                            paramFailed = true;
-                            break;
-                        }
-                    }
-                    if (!paramFailed) {
-                        for (param in params2) { // compare B -> A
-                            if (!params2.hasOwnProperty(param)) continue;
-                            if (!paramsIdentical(params2[param], params[param])) {
-                                paramFailed = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (paramFailed) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by static/non static
-                    params2 = meshInstancesLeftA[i]._staticLightList;
-                    if ((lightList && !params2) || (!lightList && params2)) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by static light list
-                    if (lightList && params2) {
-                        paramFailed = false;
-                        for (k = 0; k < lightList.length; k++) {
-                            if (params2.indexOf(lightList[k]) < 0) {
-                                paramFailed = true;
-                                break;
-                            }
-                        }
-                        for (k = 0; k < params2.length; k++) {
-                            if (lightList.indexOf(params2[k]) < 0) {
-                                paramFailed = true;
-                                break;
-                            }
-                        }
-                        if (paramFailed) {
-                            meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                            continue;
-                        }
-                    }
-                    // Split stencil mask (UI elements), both front and back expected to be the same
-                    if (stencil) {
-                        var s = meshInstancesLeftA[i].stencilFront;
-                        if (!s || stencil.func != s.func || stencil.zpass != s.zpass)
-                            continue;
-                    }
-                }
-
-                aabb.add(meshInstancesLeftA[i].aabb);
-                vertCount += meshInstancesLeftA[i].mesh.vertexBuffer.getNumVertices();
-                lists[j].push(meshInstancesLeftA[i]);
+            for (i = 1; i < meshInstancesLeftA.length; i++) {
+                mi = meshInstancesLeftA[i];
 
                 // Split by instance number
-                if (dynamic && lists[j].length === maxInstanceCount) {
-                    if (i === meshInstancesLeftA.length) {
-                        meshInstancesLeftB = [];
-                    } else {
-                        meshInstancesLeftB = meshInstancesLeftA.slice(i + 1);
-                    }
+                if (dynamic && lists[j].length >= maxInstanceCount) {
+                    meshInstancesLeftB = meshInstancesLeftB.concat(meshInstancesLeftA.slice(i));
                     break;
                 }
+
+                // Split by material, layer (legacy), shader defines, static source, vert count, overlaping UI
+                if ((material !== mi.material) ||
+                    (layer !== mi.layer) ||
+                    (defs !== mi._shaderDefs) ||
+                    (vertCount + mi.mesh.vertexBuffer.getNumVertices() > 0xFFFF) ||
+                    (isUI && skipUIAabb && skipUIAabb.intersects(mi.aabb))) {
+                    skipMesh(mi);
+                    continue;
+                }
+                // Split by AABB
+                testAabb.copy(aabb);
+                testAabb.add(mi.aabb);
+                if (testAabb.halfExtents.x > halfMaxAabbSize ||
+                    testAabb.halfExtents.y > halfMaxAabbSize ||
+                    testAabb.halfExtents.z > halfMaxAabbSize) {
+                    skipMesh(mi);
+                    continue;
+                }
+                // Split stencil mask (UI elements), both front and back expected to be the same
+                if (stencil) {
+                    if (!(sf = mi.stencilFront) || stencil.func != sf.func || stencil.zpass != sf.zpass) {
+                        skipMesh(mi);
+                        continue;
+                    }
+                }
+                // Split by parameters
+                if (!equalParamSets(params, mi.parameters)) {
+                    skipMesh(mi);
+                    continue;
+                }
+                // Split by static light list
+                staticLights = mi._staticLightList;
+                if (lightList && staticLights) {
+                    if (!equalLightLists(lightList, staticLights)) {
+                        skipMesh(mi);
+                        continue;
+                    }
+                } else if (lightList || staticLights) { // Split by static/non static
+                    skipMesh(mi);
+                    continue;
+                }
+
+                aabb.add(mi.aabb);
+                vertCount += mi.mesh.vertexBuffer.getNumVertices();
+                lists[j].push(mi);
             }
             j++;
             meshInstancesLeftA = meshInstancesLeftB;
