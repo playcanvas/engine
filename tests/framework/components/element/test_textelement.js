@@ -36,7 +36,7 @@ describe("pc.TextElement", function () {
             // use timeout to prevent tests running inside ready() callback (so events are cleared on asset)
             setTimeout(function () {
                 callback();
-            })
+            });
         });
 
         app.assets.add(fontAsset);
@@ -244,6 +244,347 @@ describe("pc.TextElement", function () {
             "fg",
             "hij"
         ]);
+    });
+
+    it("does not break beyond 1 line if maxLines is equal to 1", function () {
+        element.fontAsset = fontAsset;
+        element.maxLines = 1;
+        element.text = "abcde fghij klmno pqrst uvwxyz";
+        // long contents
+        assertLineContents([
+            "abcde fghij klmno pqrst uvwxyz"
+        ]);
+        // multiple new lines
+        element.text = "abcde\n\n\nfg\nhij";
+        assertLineContents([
+            "abcdefghij"
+        ]);
+        // \r chars
+        element.text = "abcde\rfghij";
+        assertLineContents([
+            "abcdefghij"
+        ]);
+        // hyphens
+        element.text = "abcde fghij-klm nopqr stuvwxyz";
+        assertLineContents([
+            "abcde fghij-klm nopqr stuvwxyz"
+        ]);
+        // whitespace at end of line
+        element.text = "abcdefgh        i";
+        assertLineContents([
+            "abcdefgh        i"
+        ]);
+        // individual characters
+        element.width = 1;
+        element.text = "abcdef ghijkl";
+        assertLineContents([
+            "abcdef ghijkl"
+        ]);
+    });
+
+    it("breaks remaining text in last line when maxLines limit is reached", function () {
+        element.fontAsset = fontAsset;
+        element.maxLines = 2;
+        element.text = "abcde fghij klmno pqrst uvwxyz";
+        // long contents
+        assertLineContents([
+            'abcde fghij ',
+            'klmno pqrst uvwxyz'
+        ]);
+        // multiple new lines
+        element.text = "abcde\n\n\nfg\nhij";
+        assertLineContents([
+            "abcde",
+            "fghij"
+        ]);
+        // \r chars
+        element.text = "abcde\rfghij";
+        assertLineContents([
+            "abcde",
+            "fghij"
+        ]);
+        // hyphens
+        element.text = "abcde fghij-klm nopqr stuvwxyz";
+        assertLineContents([
+            "abcde fghij-",
+            "klm nopqr stuvwxyz"
+        ]);
+        // whitespace at end of line
+        element.text = "abcdefgh        i";
+        assertLineContents([
+            "abcdefgh        ",
+            "i"
+        ]);
+        // individual characters
+        element.width = 1;
+        element.text = "abcdef ghijkl";
+        assertLineContents([
+            "a",
+            "bcdef ghijkl"
+        ]);
+    });
+
+    it("reduces font size when width is larger then the element width and autoFitWidth is true", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.width = 10;
+        element.text = "ab";
+
+        var width = element.calculatedWidth;
+        var textWidth = element._text.width;
+        element.autoFitWidth = true;
+        expect(element.fontSize).to.equal(Math.floor(32 * width / textWidth));
+        expect(element._text._scaledLineHeight).to.equal(32 * element.fontSize / element.maxFontSize);
+    });
+
+    it("does not reduce font size when width is larger then the element width and autoFitWidth is false", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.width = 10;
+        element.text = "ab";
+        expect(element.fontSize).to.equal(32);
+    });
+
+    it("does not reduce font size when autoFitWidth and autoWidth are both true", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = true;
+        element.autoHeight = false;
+        element.width = 10;
+        element.text = "ab";
+        expect(element.fontSize).to.equal(32);
+    });
+
+    it("does not reduce the font size below minFontSize", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.width = 1;
+        element.text = "ab";
+        element.autoFitWidth = true;
+        expect(element.fontSize).to.equal(element.minFontSize);
+    });
+
+    it("updates fontSize to new minFontSize", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.width = 1;
+        element.text = "abcdefghijklmn";
+        element.minFontSize = 8;
+        element.autoFitWidth = true;
+        expect(element.fontSize).to.equal(8);
+        element.minFontSize = 4;
+        expect(element.fontSize).to.equal(4);
+    });
+
+    it("does not increase the font size above maxFontSize", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.maxFontSize = 10;
+        element.width = 1000;
+        element.text = "ab";
+        element.autoFitWidth = true;
+        expect(element.fontSize).to.equal(element.maxFontSize);
+    });
+
+    it("updates fontSize to new maxFontSize", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.maxFontSize = 10;
+        element.width = 1000;
+        element.text = "abcdefghijklmn";
+        element.autoFitWidth = true;
+        expect(element.fontSize).to.equal(10);
+        element.maxFontSize = 11;
+        expect(element.fontSize).to.equal(11);
+    });
+
+    it("reduces font size when height is larger then the element height and autoFitHeight is true", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.height = 50;
+        element.text = "ab\nab";
+        element.autoFitHeight = true;
+        expect(element.fontSize).to.equal(23);
+        expect(element._text._scaledLineHeight).to.equal(23);
+    });
+
+    it("does not reduce font size when height is larger then the element height and autoFitHeight is false", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.height = 50;
+        element.text = "ab\nab";
+        expect(element.fontSize).to.equal(32);
+    });
+
+    it("does not reduce font size when autoFitHeight and autoHeight are both true", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = true;
+        element.autoFitHeight = true;
+        element.height = 50;
+        element.text = "ab\nab";
+        expect(element.fontSize).to.equal(32);
+    });
+
+    it("does not reduce font size below minFontSize when height is larger then the element height", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.height = 1;
+        element.minFontSize = 8;
+        element.text = "ab\nab";
+        element.autoFitHeight = true;
+        expect(element.fontSize).to.equal(element.minFontSize);
+    });
+
+    it("does not increase font size above maxFontSize when height is smaller then the element height", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.height = 1000;
+        element.maxFontSize = 8;
+        element.text = "ab\nab";
+        element.autoFitHeight = true;
+        expect(element.fontSize).to.equal(element.maxFontSize);
+    });
+
+    it('restores fontSize after setting autoFitWidth to false', function () {
+        element.fontSize = 44;
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.width = 10;
+        element.text = "ab";
+        element.autoFitWidth = true;
+        expect(element.fontSize).to.not.equal(44);
+        element.autoFitWidth = false;
+        expect(element.fontSize).to.equal(44);
+    });
+
+    it('does not change fontSize after setting autoFitWidth to true while autoWidth is already true', function () {
+        element.fontSize = 44;
+        element.fontAsset = fontAsset;
+        element.autoWidth = true;
+        element.autoHeight = false;
+        element.text = "ab";
+        expect(element.fontSize).to.equal(44);
+        element.autoFitWidth = true;
+        expect(element.fontSize).to.equal(44);
+    });
+
+    it('restores fontSize to maxFontSize after setting autoFitWidth to false if autoFitHeight is true', function () {
+        element.fontSize = 44;
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.width = 10;
+        element.height = 1000;
+        element.text = "ab";
+        element.autoFitWidth = true;
+        element.autoFitHeight = true;
+        expect(element.fontSize).to.not.equal(44);
+        element.autoFitWidth = false;
+        expect(element.fontSize).to.equal(element.maxFontSize);
+    });
+
+    it('restores fontSize after setting autoFitHeight to false', function () {
+        element.fontSize = 44;
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.height = 50;
+        element.text = "ab\nab";
+        element.autoFitHeight = true;
+        expect(element.fontSize).to.not.equal(44);
+        element.autoFitHeight = false;
+        expect(element.fontSize).to.equal(44);
+    });
+
+    it('does not change fontSize after setting autoFitHeight to true while autoHeight is already true', function () {
+        element.fontSize = 44;
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = true;
+        element.text = "ab\nab";
+        expect(element.fontSize).to.equal(44);
+        element.autoFitHeight = true;
+        expect(element.fontSize).to.equal(44);
+    });
+
+    it('restores fontSize to maxFontSize after setting autoFitHeight to false if autoFitWidth is true', function () {
+        element.fontSize = 44;
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.height = 50;
+        element.text = "ab\nab";
+        element.autoFitHeight = true;
+        element.autoFitWidth = true;
+        expect(element.fontSize).to.not.equal(44);
+        element.autoFitHeight = false;
+        expect(element.fontSize).to.equal(element.maxFontSize);
+    });
+
+    it('restores fontSize if autoFitWidth is true and autoWidth becomes true', function () {
+        element.fontSize = 44;
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.width = 10;
+        element.text = "ab";
+        element.autoFitWidth = true;
+        expect(element.fontSize).to.not.equal(44);
+        element.autoWidth = true;
+        expect(element.fontSize).to.equal(44);
+    });
+
+    it('restores fontSize if autoFitHeight is true and autoHeight becomes true', function () {
+        element.fontSize = 44;
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.height = 50;
+        element.text = "ab\nab";
+        element.autoFitHeight = true;
+        expect(element.fontSize).to.not.equal(44);
+        element.autoHeight = true;
+        expect(element.fontSize).to.equal(44);
+    });
+
+    it('restores fontSize to maxFontSize when autoHeight becomes true while autoFitHeight and autoFitWidth are true', function () {
+        element.fontSize = 44;
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.height = 50;
+        element.width = 1000;
+        element.text = "ab\nab";
+        element.autoFitWidth = true;
+        element.autoFitHeight = true;
+        expect(element.fontSize).to.not.equal(44);
+        element.autoHeight = true;
+        expect(element.fontSize).to.equal(element.maxFontSize);
+    });
+
+    it('restores fontSize to maxFontSize when autoWidth becomes true while autoFitHeight and autoFitWidth are true', function () {
+        element.fontSize = 44;
+        element.fontAsset = fontAsset;
+        element.autoWidth = false;
+        element.autoHeight = false;
+        element.height = 1000;
+        element.text = "ab";
+        element.autoFitWidth = true;
+        element.autoFitHeight = true;
+        expect(element.fontSize).to.not.equal(44);
+        element.autoWidth = true;
+        expect(element.fontSize).to.equal(element.maxFontSize);
     });
 
     it('AssetRegistry events unbound on destroy for font asset', function () {
