@@ -36,7 +36,17 @@ Object.assign(pc, function () {
 
         this._spacing = 1;
         this._fontSize = 32;
+        this._fontMinY = 0;
+        this._fontMaxY = 0;
+        // the font size that is set directly by the fontSize setter
+        this._originalFontSize = 32;
+        this._maxFontSize = 32;
+        this._minFontSize = 8;
+        this._autoFitWidth = false;
+        this._autoFitHeight = false;
+        this._maxLines = -1;
         this._lineHeight = 32;
+        this._scaledLineHeight = 32;
         this._wrapLines = false;
 
         this._drawOrder = 0;
@@ -48,6 +58,7 @@ Object.assign(pc, function () {
 
         this.width = 0;
         this.height = 0;
+
 
         // private
         this._node = new pc.GraphNode();
@@ -334,8 +345,9 @@ Object.assign(pc, function () {
                     this._shadowColorUniform[2] = this._shadowColor.b;
                     this._shadowColorUniform[3] = this._shadowColor.a;
                     mi.setParameter("shadow_color", this._shadowColorUniform);
+                    var ratio = this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
                     this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
-                    this._shadowOffsetUniform[1] = this._shadowOffsetScale * this._shadowOffset.y;
+                    this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;
                     mi.setParameter("shadow_offset", this._shadowOffsetUniform);
 
                     meshInfo.meshInstance = mi;
@@ -424,23 +436,28 @@ Object.assign(pc, function () {
             var json = this._font.data;
             var self = this;
 
-            this.width = 0;
-            this.height = 0;
-            this._lineWidths = [];
-            this._lineContents = [];
+            var minFont = Math.min(this._minFontSize, this._maxFontSize);
+            var maxFont = this._maxFontSize;
 
+            var autoFit = this._shouldAutoFit();
+
+            if (autoFit) {
+                this._fontSize = this._maxFontSize;
+            }
+
+            var MAGIC = 32;
             var l = symbols.length;
             var _x = 0; // cursors
             var _xMinusTrailingWhitespace = 0;
             var _y = 0;
             var _z = 0;
-
             var lines = 1;
             var wordStartX = 0;
             var wordStartIndex = 0;
             var lineStartIndex = 0;
             var numWordsThisLine = 0;
             var numCharsThisLine = 0;
+            var numBreaksThisLine = 0;
             var splitHorizontalAnchors = Math.abs(this._element.anchor.x - this._element.anchor.z) >= 0.0001;
 
             var maxLineWidth = this._element.calculatedWidth;
@@ -448,200 +465,274 @@ Object.assign(pc, function () {
                 maxLineWidth = Number.POSITIVE_INFINITY;
             }
 
-            // todo: move this into font asset?
-            // calculate max font extents from all available chars
             var fontMinY = 0;
             var fontMaxY = 0;
             var scale = 1;
-            var MAGIC = 32;
 
             var char, charId, data, i, quad;
 
-            // TODO: Optimize this as it loops through all the chars in the asset
-            // every time the text changes...
-            for (charId in json.chars) {
-                data = json.chars[charId];
-                scale = (data.height / MAGIC) * this._fontSize / data.height;
-                if (data.bounds) {
-                    fontMinY = Math.min(fontMinY, data.bounds[1] * scale);
-                    fontMaxY = Math.max(fontMaxY, data.bounds[3] * scale);
-                }
-            }
-
-            for (i = 0; i < this._meshInfo.length; i++) {
-                this._meshInfo[i].quad = 0;
-                this._meshInfo[i].lines = {};
-            }
-
             function breakLine(lineBreakIndex, lineBreakX) {
                 self._lineWidths.push(lineBreakX);
-                var substring = symbols
-                    .slice(lineStartIndex, lineBreakIndex)
-                    .join('');
+                var chars = symbols.slice(lineStartIndex, lineBreakIndex);
+
+                // Remove line breaks from line.
+                // Line breaks would only be there for the final line
+                // when we reach the maxLines limit.
+                // TODO: We could possibly not do this and just let lines have
+                // new lines in them. Apart from being a bit weird it should not affect
+                // the rendered text.
+                if (numBreaksThisLine) {
+                    var i = chars.length;
+                    while (i-- && numBreaksThisLine > 0)  {
+                        if (LINE_BREAK_CHAR.test(chars[i])) {
+                            chars.splice(i, 1);
+                            numBreaksThisLine--;
+                        }
+                    }
+                }
+
+                var substring = chars.join('');
 
                 self._lineContents.push(substring);
 
                 _x = 0;
-                _y -= self._lineHeight;
+                _y -= self._scaledLineHeight;
                 lines++;
                 numWordsThisLine = 0;
                 numCharsThisLine = 0;
+                numBreaksThisLine = 0;
                 wordStartX = 0;
                 lineStartIndex = lineBreakIndex;
             }
 
-            for (i = 0; i < l; i++) {
-                char = symbols[i];
+            var retryUpdateMeshes = true;
+            while (retryUpdateMeshes) {
+                retryUpdateMeshes = false;
 
-                var x = 0;
-                var y = 0;
-                var advance = 0;
-                var quadsize = 1;
-                var glyphMinX = 0;
-                var glyphWidth = 0;
-                var dataScale, size;
+                // if auto-fitting then scale the line height
+                // according to the current fontSize value relative to the max font size
+                this._scaledLineHeight = this._lineHeight * this._fontSize / (this._maxFontSize || 0.0001);
 
-                data = json.chars[char];
+                this.width = 0;
+                this.height = 0;
+                this._lineWidths = [];
+                this._lineContents = [];
 
-                // use 'space' if available or first character
-                if (!data) {
-                    if (json.chars[' ']) {
-                        data = json.chars[' '];
-                    } else {
-                        data = json.chars[Object.keys(json.chars)[0]];
-                    }
+                _x = 0;
+                _xMinusTrailingWhitespace = 0;
+                _y = 0;
+                _z = 0;
+
+                lines = 1;
+                wordStartX = 0;
+                wordStartIndex = 0;
+                lineStartIndex = 0;
+                numWordsThisLine = 0;
+                numCharsThisLine = 0;
+                numBreaksThisLine = 0;
+
+                scale = this._fontSize / MAGIC;
+
+                // scale max font extents
+                fontMinY = this._fontMinY * scale;
+                fontMaxY = this._fontMaxY * scale;
+
+                for (i = 0; i < this._meshInfo.length; i++) {
+                    this._meshInfo[i].quad = 0;
+                    this._meshInfo[i].lines = {};
                 }
 
-                if (data) {
-                    dataScale = data.scale || 1;
-                    size = (data.width + data.height) / 2;
-                    scale = (size / MAGIC) * this._fontSize / size;
-                    quadsize = (size / MAGIC) * this._fontSize / dataScale;
-                    advance = data.xadvance * scale;
-                    x = data.xoffset * scale;
-                    y = data.yoffset * scale;
+                for (i = 0; i < l; i++) {
+                    char = symbols[i];
 
-                    if (data.bounds) {
-                        glyphWidth = (data.bounds[2] - data.bounds[0]) * scale;
-                        glyphMinX = data.bounds[0] * scale;
-                    } else {
-                        glyphWidth = x;
-                        glyphMinX = 0;
+                    var x = 0;
+                    var y = 0;
+                    var advance = 0;
+                    var quadsize = 1;
+                    var glyphMinX = 0;
+                    var glyphWidth = 0;
+                    var dataScale, size;
+
+                    data = json.chars[char];
+
+                    // use 'space' if available or first character
+                    if (!data) {
+                        if (json.chars[' ']) {
+                            data = json.chars[' '];
+                        } else {
+                            for (var key in json.chars) {
+                                data = json.chars[key];
+                                break;
+                            }
+                        }
                     }
-                } else {
-                    console.error("Couldn't substitute missing character: '" + char + "'");
+
+                    if (data) {
+                        dataScale = data.scale || 1;
+                        size = (data.width + data.height) / 2;
+                        quadsize = scale * size / dataScale;
+                        advance = data.xadvance * scale;
+                        x = data.xoffset * scale;
+                        y = data.yoffset * scale;
+
+                        if (data.bounds) {
+                            glyphWidth = (data.bounds[2] - data.bounds[0]) * scale;
+                            glyphMinX = data.bounds[0] * scale;
+                        } else {
+                            glyphWidth = x;
+                            glyphMinX = 0;
+                        }
+                    } else {
+                        console.error("Couldn't substitute missing character: '" + char + "'");
+                    }
+
+                    var isLineBreak = LINE_BREAK_CHAR.test(char);
+
+                    if (isLineBreak) {
+                        numBreaksThisLine++;
+                        if (this._maxLines < 0 || lines < this._maxLines) {
+                            breakLine(i, _xMinusTrailingWhitespace);
+                            wordStartIndex = i + 1;
+                            lineStartIndex = i + 1;
+                        }
+
+                        continue;
+                    }
+
+                    var isWhitespace = WHITESPACE_CHAR.test(char);
+
+                    var meshInfo = this._meshInfo[(data && data.map) || 0];
+                    var candidateLineWidth = _x + glyphWidth + glyphMinX;
+
+                    // If we've exceeded the maximum line width, move everything from the beginning of
+                    // the current word onwards down onto a new line.
+                    if (candidateLineWidth >= maxLineWidth && numCharsThisLine > 0 && !isWhitespace) {
+                        if (this._maxLines < 0 || lines < this._maxLines) {
+                            // Handle the case where a line containing only a single long word needs to be
+                            // broken onto multiple lines.
+                            if (numWordsThisLine === 0) {
+                                wordStartIndex = i;
+                                breakLine(i, _xMinusTrailingWhitespace);
+                            } else {
+                                // Move back to the beginning of the current word.
+                                var backtrack = Math.max(i - wordStartIndex, 0);
+                                if (this._meshInfo.length <= 1) {
+                                    meshInfo.lines[lines - 1] -= backtrack;
+                                    meshInfo.quad -= backtrack;
+                                } else {
+                                    // We should only backtrack the quads that were in the word from this same texture
+                                    // We will have to update N number of mesh infos as a result (all textures used in the word in question)
+                                    for (var j = wordStartIndex; j < i; j++) {
+                                        var backChar = symbols[j];
+                                        var backCharData = json.chars[backChar];
+                                        var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
+                                        backMeshInfo.lines[lines - 1] -= 1;
+                                        backMeshInfo.quad -= 1;
+                                    }
+                                }
+                                i -= backtrack + 1;
+
+                                breakLine(wordStartIndex, wordStartX);
+                                continue;
+                            }
+                        }
+                    }
+
+                    quad = meshInfo.quad;
+                    meshInfo.lines[lines - 1] = quad;
+
+                    meshInfo.positions[quad * 4 * 3 + 0] = _x - x;
+                    meshInfo.positions[quad * 4 * 3 + 1] = _y - y;
+                    meshInfo.positions[quad * 4 * 3 + 2] = _z;
+
+                    meshInfo.positions[quad * 4 * 3 + 3] = _x - x + quadsize;
+                    meshInfo.positions[quad * 4 * 3 + 4] = _y - y;
+                    meshInfo.positions[quad * 4 * 3 + 5] = _z;
+
+                    meshInfo.positions[quad * 4 * 3 + 6] = _x - x + quadsize;
+                    meshInfo.positions[quad * 4 * 3 + 7] = _y - y + quadsize;
+                    meshInfo.positions[quad * 4 * 3 + 8] = _z;
+
+                    meshInfo.positions[quad * 4 * 3 + 9]  = _x - x;
+                    meshInfo.positions[quad * 4 * 3 + 10] = _y - y + quadsize;
+                    meshInfo.positions[quad * 4 * 3 + 11] = _z;
+
+
+                    this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
+
+                    // scale font size if autoFitWidth is true and the width is larger than the calculated width
+                    var fontSize;
+                    if (this._shouldAutoFitWidth() && this.width > this._element.calculatedWidth) {
+                        fontSize = Math.floor(this._element.fontSize * this._element.calculatedWidth / (this.width || 0.0001));
+                        fontSize = pc.math.clamp(fontSize, minFont, maxFont);
+                        if (fontSize !== this._element.fontSize) {
+                            this._fontSize = fontSize;
+                            retryUpdateMeshes = true;
+                            break;
+                        }
+                    }
+
+                    this.height = Math.max(this.height, fontMaxY - (_y + fontMinY));
+
+                    // scale font size if autoFitHeight is true and the height is larger than the calculated height
+                    if (this._shouldAutoFitHeight() && this.height > this._element.calculatedHeight) {
+                        // try 1 pixel smaller for fontSize and iterate
+                        fontSize = pc.math.clamp(this._fontSize - 1, minFont, maxFont);
+                        if (fontSize !== this._element.fontSize) {
+                            this._fontSize = fontSize;
+                            retryUpdateMeshes = true;
+                            break;
+                        }
+                    }
+
+                    // advance cursor
+                    _x += (this._spacing * advance);
+
+                    // For proper alignment handling when a line wraps _on_ a whitespace character,
+                    // we need to keep track of the width of the line without any trailing whitespace
+                    // characters. This applies to both single whitespaces and also multiple sequential
+                    // whitespaces.
+                    if (!isWhitespace && !isLineBreak) {
+                        _xMinusTrailingWhitespace = _x;
+                    }
+
+                    var isWordBoundary = WORD_BOUNDARY_CHAR.test(char);
+                    if (isWordBoundary) { // char is space, tab, or dash
+                        numWordsThisLine++;
+                        wordStartX = _xMinusTrailingWhitespace;
+                        wordStartIndex = i + 1;
+                    }
+
+                    numCharsThisLine++;
+
+                    var uv = this._getUv(char);
+
+                    meshInfo.uvs[quad * 4 * 2 + 0] = uv[0];
+                    meshInfo.uvs[quad * 4 * 2 + 1] = uv[1];
+
+                    meshInfo.uvs[quad * 4 * 2 + 2] = uv[2];
+                    meshInfo.uvs[quad * 4 * 2 + 3] = uv[1];
+
+                    meshInfo.uvs[quad * 4 * 2 + 4] = uv[2];
+                    meshInfo.uvs[quad * 4 * 2 + 5] = uv[3];
+
+                    meshInfo.uvs[quad * 4 * 2 + 6] = uv[0];
+                    meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
+
+                    meshInfo.quad++;
                 }
 
-                var isLineBreak = LINE_BREAK_CHAR.test(char);
-                var isWordBoundary = WORD_BOUNDARY_CHAR.test(char);
-                var isWhitespace = WHITESPACE_CHAR.test(char);
-
-                if (isLineBreak) {
-                    breakLine(i, _xMinusTrailingWhitespace);
-                    wordStartIndex = i + 1;
-                    lineStartIndex = i + 1;
+                if (retryUpdateMeshes) {
                     continue;
                 }
 
-                var meshInfo = this._meshInfo[(data && data.map) || 0];
-                var candidateLineWidth = _x + glyphWidth + glyphMinX;
-
-                // If we've exceeded the maximum line width, move everything from the beginning of
-                // the current word onwards down onto a new line.
-                if (candidateLineWidth >= maxLineWidth && numCharsThisLine > 0 && !isWhitespace) {
-                    // Handle the case where a line containing only a single long word needs to be
-                    // broken onto multiple lines.
-                    if (numWordsThisLine === 0) {
-                        wordStartIndex = i;
-                        breakLine(i, _xMinusTrailingWhitespace);
-                    } else {
-                        // Move back to the beginning of the current word.
-                        var backtrack = Math.max(i - wordStartIndex, 0);
-                        if (this._meshInfo.length <= 1) {
-                            meshInfo.lines[lines - 1] -= backtrack;
-                            meshInfo.quad -= backtrack;
-                        } else {
-                            // We should only backtrack the quads that were in the word from this same texture
-                            // We will have to update N number of mesh infos as a result (all textures used in the word in question)
-                            for (var j = wordStartIndex; j < i; j++) {
-                                var backChar = symbols[j];
-                                var backCharData = json.chars[backChar];
-                                var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
-                                backMeshInfo.lines[lines - 1] -= 1;
-                                backMeshInfo.quad -= 1;
-                            }
-                        }
-                        i -= backtrack + 1;
-
-                        breakLine(wordStartIndex, wordStartX);
-                        continue;
-                    }
+                // As we only break lines when the text becomes too wide for the container,
+                // there will almost always be some leftover text on the final line which has
+                // not yet been pushed to _lineContents.
+                if (lineStartIndex < l) {
+                    breakLine(l, _x);
                 }
 
-                quad = meshInfo.quad;
-                meshInfo.lines[lines - 1] = quad;
-
-                meshInfo.positions[quad * 4 * 3 + 0] = _x - x;
-                meshInfo.positions[quad * 4 * 3 + 1] = _y - y;
-                meshInfo.positions[quad * 4 * 3 + 2] = _z;
-
-                meshInfo.positions[quad * 4 * 3 + 3] = _x - x + quadsize;
-                meshInfo.positions[quad * 4 * 3 + 4] = _y - y;
-                meshInfo.positions[quad * 4 * 3 + 5] = _z;
-
-                meshInfo.positions[quad * 4 * 3 + 6] = _x - x + quadsize;
-                meshInfo.positions[quad * 4 * 3 + 7] = _y - y + quadsize;
-                meshInfo.positions[quad * 4 * 3 + 8] = _z;
-
-                meshInfo.positions[quad * 4 * 3 + 9]  = _x - x;
-                meshInfo.positions[quad * 4 * 3 + 10] = _y - y + quadsize;
-                meshInfo.positions[quad * 4 * 3 + 11] = _z;
-
-
-                this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
-                this.height = Math.max(this.height, fontMaxY - (_y + fontMinY));
-
-                // advance cursor
-                _x += (this._spacing * advance);
-
-                // For proper alignment handling when a line wraps _on_ a whitespace character,
-                // we need to keep track of the width of the line without any trailing whitespace
-                // characters. This applies to both single whitespaces and also multiple sequential
-                // whitespaces.
-                if (!isWhitespace && !isLineBreak) {
-                    _xMinusTrailingWhitespace = _x;
-                }
-
-                if (isWordBoundary) { // char is space, tab, or dash
-                    numWordsThisLine++;
-                    wordStartX = _xMinusTrailingWhitespace;
-                    wordStartIndex = i + 1;
-                }
-
-                numCharsThisLine++;
-
-                var uv = this._getUv(char);
-
-                meshInfo.uvs[quad * 4 * 2 + 0] = uv[0];
-                meshInfo.uvs[quad * 4 * 2 + 1] = uv[1];
-
-                meshInfo.uvs[quad * 4 * 2 + 2] = uv[2];
-                meshInfo.uvs[quad * 4 * 2 + 3] = uv[1];
-
-                meshInfo.uvs[quad * 4 * 2 + 4] = uv[2];
-                meshInfo.uvs[quad * 4 * 2 + 5] = uv[3];
-
-                meshInfo.uvs[quad * 4 * 2 + 6] = uv[0];
-                meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
-
-                meshInfo.quad++;
-            }
-
-            // As we only break lines when the text becomes too wide for the container,
-            // there will almost always be some leftover text on the final line which has
-            // not yet been pushed to _lineContents.
-            if (lineStartIndex < l) {
-                breakLine(l, _x);
             }
 
             // force autoWidth / autoHeight change to update width/height of element
@@ -791,8 +882,8 @@ Object.assign(pc, function () {
             var keys = Object.keys(this._font.data.chars);
             for (var i = 0; i < keys.length; i++) {
                 var char = this._font.data.chars[keys[i]];
-                if (char.scale && char.range) {
-                    return char.scale * char.range;
+                if (char.range) {
+                    return (char.scale || 1) * char.range;
                 }
             }
             return 2; // default
@@ -861,6 +952,19 @@ Object.assign(pc, function () {
                     instances[i].stencilBack = stencilParams;
                 }
             }
+        },
+
+        _shouldAutoFitWidth: function () {
+            return this._autoFitWidth && !this._autoWidth;
+        },
+
+        _shouldAutoFitHeight: function () {
+            return this._autoFitHeight && !this._autoHeight;
+        },
+
+        _shouldAutoFit: function () {
+            return this._autoFitWidth && !this._autoWidth ||
+                   this._autoFitHeight && !this._autoHeight;
         }
     });
 
@@ -954,6 +1058,7 @@ Object.assign(pc, function () {
         set: function (value) {
             var _prev = this._lineHeight;
             this._lineHeight = value;
+            this._scaledLineHeight = value;
             if (_prev !== value && this._font) {
                 this._updateText();
             }
@@ -1002,6 +1107,7 @@ Object.assign(pc, function () {
         set: function (value) {
             var _prev = this._fontSize;
             this._fontSize = value;
+            this._originalFontSize = value;
             if (_prev !== value && this._font) {
                 this._updateText();
             }
@@ -1062,7 +1168,21 @@ Object.assign(pc, function () {
             }
 
             this._font = value;
+
+            this._fontMinY = 0;
+            this._fontMaxY = 0;
+
             if (!value) return;
+
+            // calculate min / max font extents from all available chars
+            var json = this._font.data;
+            for (var charId in json.chars) {
+                var data = json.chars[charId];
+                if (data.bounds) {
+                    this._fontMinY = Math.min(this._fontMinY, data.bounds[1]);
+                    this._fontMaxY = Math.max(this._fontMaxY, data.bounds[3]);
+                }
+            }
 
             // attach render event listener
             if (this._font.on) this._font.on('render', this._onFontRender, this);
@@ -1144,6 +1264,7 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            var old = this._autoWidth;
             this._autoWidth = value;
 
             // change width of element to match text width but only if the element
@@ -1151,6 +1272,18 @@ Object.assign(pc, function () {
             if (value && Math.abs(this._element.anchor.x - this._element.anchor.z) < 0.0001) {
                 this._element.width = this.width;
             }
+
+            // restore fontSize if autoWidth changed
+            if (old !== value) {
+                var newFontSize = this._shouldAutoFit() ? this._maxFontSize : this._originalFontSize;
+                if (newFontSize !== this._fontSize) {
+                    this._fontSize = newFontSize;
+                    if (this._font) {
+                        this._updateText();
+                    }
+                }
+            }
+
         }
     });
 
@@ -1160,12 +1293,24 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
+            var old = this._autoHeight;
             this._autoHeight = value;
 
             // change height of element to match text height but only if the element
             // does not have split vertical anchors
             if (value && Math.abs(this._element.anchor.y - this._element.anchor.w) < 0.0001) {
                 this._element.height = this.height;
+            }
+
+            // restore fontSize if autoHeight changed
+            if (old !== value) {
+                var newFontSize = this._shouldAutoFit() ? this._maxFontSize : this._originalFontSize;
+                if (newFontSize !== this._fontSize) {
+                    this._fontSize = newFontSize;
+                    if (this._font) {
+                        this._updateText();
+                    }
+                }
             }
         }
     });
@@ -1340,19 +1485,92 @@ Object.assign(pc, function () {
             }
             this._shadowOffset.set(x, y);
 
-            if (this._font) {
-                if (this._model) {
+            if (this._font && this._model) {
+                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                    var ratio = this._font.data.info.maps[i].width / this._font.data.info.maps[i].height;
                     this._shadowOffsetUniform[0] = this._shadowOffsetScale * this._shadowOffset.x;
-                    this._shadowOffsetUniform[1] = this._shadowOffsetScale * this._shadowOffset.y;
-
-                    for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                        var mi = this._model.meshInstances[i];
-                        mi.setParameter("shadow_offset", this._shadowOffsetUniform);
-                    }
+                    this._shadowOffsetUniform[1] = ratio * this._shadowOffsetScale * this._shadowOffset.y;
+                    var mi = this._model.meshInstances[i];
+                    mi.setParameter("shadow_offset", this._shadowOffsetUniform);
                 }
             }
         }
     });
+
+    Object.defineProperty(TextElement.prototype, 'minFontSize', {
+        get: function () {
+            return this._minFontSize;
+        },
+        set: function (value) {
+            if (this._minFontSize === value) return;
+            this._minFontSize = value;
+
+            if (this.font && this._shouldAutoFit()) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'maxFontSize', {
+        get: function () {
+            return this._maxFontSize;
+        },
+        set: function (value) {
+            if (this._maxFontSize === value) return;
+            this._maxFontSize = value;
+
+            if (this.font && this._shouldAutoFit()) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'autoFitWidth', {
+        get: function () {
+            return this._autoFitWidth;
+        },
+        set: function (value) {
+            if (this._autoFitWidth === value) return;
+            this._autoFitWidth = value;
+
+            this._fontSize = this._shouldAutoFit() ? this._maxFontSize : this._originalFontSize;
+            if (this.font) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'autoFitHeight', {
+        get: function () {
+            return this._autoFitHeight;
+        },
+        set: function (value) {
+            if (this._autoFitHeight === value) return;
+            this._autoFitHeight = value;
+
+            this._fontSize = this._shouldAutoFit() ? this._maxFontSize : this._originalFontSize;
+            if (this.font) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'maxLines', {
+        get: function () {
+            return this._maxLines;
+        },
+        set: function (value) {
+            if (this._maxLines === value) return;
+            if (value === null && this._maxLines === -1) return;
+
+            this._maxLines = (value === null ? -1 : value);
+
+            if (this.font && this._wrapLines) {
+                this._updateText();
+            }
+        }
+    });
+
 
     return {
         TextElement: TextElement
