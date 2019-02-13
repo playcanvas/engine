@@ -239,6 +239,7 @@ Object.assign(pc, function () {
      */
     BatchManager.prototype.markGroupDirty = function (id) {
         if (this._dirtyGroups.indexOf(id) < 0) {
+            console.log("make batch group dirty");
             this._dirtyGroups.push(id);
         }
     };
@@ -346,9 +347,9 @@ Object.assign(pc, function () {
                 arr = groupMeshInstances[node.element.batchGroupId];
                 if (!arr) arr = groupMeshInstances[node.element.batchGroupId] = [];
                 var valid = false;
-                if (node.element._text) {
+                if (node.element._text && node.element._text._model.meshInstances.length > 0) {
                     if (!node.element._text._model.meshInstances[0].drawOrder) {
-                        node.element.screen.screen._processDrawOrderSync();
+                        // node.element.screen.screen._processDrawOrderSync();
                     }
                     arr.push(node.element._text._model.meshInstances[0]);
                     node.element.removeModelFromLayers(node.element._text._model);
@@ -356,7 +357,7 @@ Object.assign(pc, function () {
                     valid = true;
                 } else if (node.element._image) {
                     if (!node.element._image._renderable.meshInstance.drawOrder) {
-                        node.element.screen.screen._processDrawOrderSync();
+                        // node.element.screen.screen._processDrawOrderSync();
                     }
                     arr.push(node.element._image._renderable.meshInstance);
                     node.element.removeModelFromLayers(node.element._image._renderable.model);
@@ -573,10 +574,11 @@ Object.assign(pc, function () {
         var meshInstancesLeftB;
 
         var skipMesh = isUI ? function (mi) {
-            if (skipUIAabb)
+            if (skipUIAabb) {
                 skipUIAabb.add(mi.aabb);
-            else
+            } else {
                 skipUIAabb = mi.aabb.clone();
+            }
             meshInstancesLeftB.push(mi);
         } : function (mi) {
             meshInstancesLeftB.push(mi);
@@ -610,8 +612,7 @@ Object.assign(pc, function () {
                 if ((material !== mi.material) ||
                     (layer !== mi.layer) ||
                     (defs !== mi._shaderDefs) ||
-                    (vertCount + mi.mesh.vertexBuffer.getNumVertices() > 0xFFFF) ||
-                    (isUI && skipUIAabb && skipUIAabb.intersects(mi.aabb))) {
+                    (vertCount + mi.mesh.vertexBuffer.getNumVertices() > 0xFFFF)) {
                     skipMesh(mi);
                     continue;
                 }
@@ -648,10 +649,19 @@ Object.assign(pc, function () {
                     continue;
                 }
 
+                if (isUI && skipUIAabb && skipUIAabb.intersects(mi.aabb)) {
+                    skipMesh(mi);
+                    continue;
+                }
+
                 aabb.add(mi.aabb);
                 vertCount += mi.mesh.vertexBuffer.getNumVertices();
                 lists[j].push(mi);
             }
+            if (isUI) {
+                console.log("batching block:", lists[j].length);
+            }
+
             j++;
             meshInstancesLeftA = meshInstancesLeftB;
         }
@@ -989,8 +999,8 @@ Object.assign(pc, function () {
      */
     BatchManager.prototype.update = function (batch) {
         batch._aabb.copy(batch.origMeshInstances[0].aabb);
-        for (var i = 0; i < batch.origMeshInstances.length; i++) {
-            if (i > 0) batch._aabb.add(batch.origMeshInstances[i].aabb); // this is the slowest part
+        for (var i = 1; i < batch.origMeshInstances.length; i++) {
+            batch._aabb.add(batch.origMeshInstances[i].aabb); // this is the slowest part
         }
         batch.meshInstance.aabb = batch._aabb;
         batch._aabb._radiusVer = -1;
