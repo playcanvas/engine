@@ -1,4 +1,4 @@
-describe("pc.TextElement", function () {
+describe.only("pc.TextElement", function () {
     var app;
     var assets;
     var entity;
@@ -342,9 +342,12 @@ describe("pc.TextElement", function () {
         element.fontAsset = fontAsset;
         element.autoWidth = false;
         element.autoHeight = false;
+        element.fontSize = 20;
+        element.lineHeight = 20;
         element.width = 10;
         element.text = "ab";
-        expect(element.fontSize).to.equal(32);
+        expect(element.fontSize).to.equal(20);
+        expect(element._text._scaledLineHeight).to.equal(20);
     });
 
     it("does not reduce font size when autoFitWidth and autoWidth are both true", function () {
@@ -418,9 +421,12 @@ describe("pc.TextElement", function () {
         element.fontAsset = fontAsset;
         element.autoWidth = false;
         element.autoHeight = false;
+        element.fontSize = 20;
+        element.lineHeight = 20;
         element.height = 50;
         element.text = "ab\nab";
-        expect(element.fontSize).to.equal(32);
+        expect(element.fontSize).to.equal(20);
+        expect(element._text._scaledLineHeight).to.equal(20);
     });
 
     it("does not reduce font size when autoFitHeight and autoHeight are both true", function () {
