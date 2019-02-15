@@ -511,7 +511,11 @@ Object.assign(pc, function () {
 
                 // if auto-fitting then scale the line height
                 // according to the current fontSize value relative to the max font size
-                this._scaledLineHeight = this._lineHeight * this._fontSize / (this._maxFontSize || 0.0001);
+                if (autoFit) {
+                    this._scaledLineHeight = this._lineHeight * this._fontSize / (this._maxFontSize || 0.0001);
+                } else {
+                    this._scaledLineHeight = this._lineHeight;
+                }
 
                 this.width = 0;
                 this.height = 0;
