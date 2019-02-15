@@ -34,7 +34,6 @@ Object.assign(pc, function () {
             }, function (err, response) {
                 if (! err) {
                     try {
-                        console.log('Untar ' + url.original);
                         self._untar(response, callback);
                     } catch (ex) {
                         callback("Error loading bundle resource " + url.original + ": " + ex);
@@ -54,7 +53,6 @@ Object.assign(pc, function () {
             // because it will be faster and we don't need this
             // to run asynchronously in the preload phase
             if (pc.platform.workers && !this._preloading) {
-                console.log('Untar using worker');
                 // create web worker if necessary
                 if (!self._worker) {
                     self._worker = new pc.UntarWorker(self._assets.prefix);
@@ -71,7 +69,6 @@ Object.assign(pc, function () {
                     }
                 });
             } else {
-                console.log('Untar on main thread');
                 var archive = new pc.Untar(response);
                 var files = archive.untar(self._assets.prefix);
                 callback(null, files);
