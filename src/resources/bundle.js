@@ -4,12 +4,18 @@ Object.assign(pc, function () {
      * @private
      * @constructor
      * @name pc.BundleHandler
-     * @param {pc.AssetRegistry} assets The asset registry
+     * @param {pc.Application} app The application
      * @classdesc Loads Bundle Assets
      */
-    var BundleHandler = function (assets) {
-        this._assets = assets;
+    var BundleHandler = function (app) {
+        this._app = app;
+        this._assets = app.assets;
         this._worker = null;
+
+        this._preloading = false;
+
+        app.on('preload:start', this._onPreloadStart, this);
+        app.on('preload:end', this._onPreloadEnd, this);
     };
 
     Object.assign(BundleHandler.prototype, {
@@ -28,6 +34,7 @@ Object.assign(pc, function () {
             }, function (err, response) {
                 if (! err) {
                     try {
+                        console.log('Untar ' + url.original);
                         self._untar(response, callback);
                     } catch (ex) {
                         callback("Error loading bundle resource " + url.original + ": " + ex);
@@ -41,9 +48,13 @@ Object.assign(pc, function () {
         _untar: function (response, callback) {
             var self = this;
 
-            // use web workers if available otherwise
-            // fallback to untar'ing in the main thread
-            if (pc.platform.workers) {
+            // Use web workers if available otherwise
+            // fallback to untar'ing in the main thread.
+            // Do not use workers if we are preloading
+            // because it will be faster and we don't need this
+            // to run asynchronously in the preload phase
+            if (pc.platform.workers && !this._preloading) {
+                console.log('Untar using worker');
                 // create web worker if necessary
                 if (!self._worker) {
                     self._worker = new pc.UntarWorker(self._assets.prefix);
@@ -60,6 +71,7 @@ Object.assign(pc, function () {
                     }
                 });
             } else {
+                console.log('Untar on main thread');
                 var archive = new pc.Untar(response);
                 var files = archive.untar(self._assets.prefix);
                 callback(null, files);
@@ -71,6 +83,14 @@ Object.assign(pc, function () {
         },
 
         patch: function (asset, assets) {
+        },
+
+        _onPreloadStart: function () {
+            this._preloading = true;
+        },
+
+        _onPreloadEnd: function () {
+            this._preloading = false;
         }
 
     });

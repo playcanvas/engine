@@ -459,7 +459,7 @@ Object.assign(pc, function () {
         this._scriptPrefix = options.scriptPrefix || '';
 
         if (this.enableBundles) {
-            this.loader.addHandler("bundle", new pc.BundleHandler(this.assets));
+            this.loader.addHandler("bundle", new pc.BundleHandler(this));
         }
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
