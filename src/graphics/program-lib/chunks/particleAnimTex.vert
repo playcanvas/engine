@@ -4,6 +4,5 @@
     atlasX = fract(atlasX);
 
     texCoordsAlphaLife.xy *= animTexParams.xy;
-    texCoordsAlphaLife.xy += vec2(atlasX, atlasY);
-    texCoordsAlphaLife.y = 1.0 - texCoordsAlphaLife.y;
+    texCoordsAlphaLife.xy += vec2(atlasX, atlasY); 
 
