@@ -669,7 +669,7 @@ Object.assign(pc, function () {
             mesh.primitive[0].indexed = true;
 
             this.material = new pc.Material();
-            this.material.cullMode = pc.CULLFACE_NONE;
+            this.material.cull = pc.CULLFACE_NONE;
             this.material.alphaWrite = false;
             this.material.blend = true;
             this.material.blendType = this.blendType;
