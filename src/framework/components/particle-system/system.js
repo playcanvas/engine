@@ -225,7 +225,7 @@ Object.assign(pc, function () {
                         if (!data.paused) {
                             emitter.simTime += dt;
                             if (emitter.simTime > emitter.fixedTimeStep) {
-                                emitter.addTime(emitter.simTime);
+                                emitter.addTime(emitter.simTime, false);
                                 emitter.simTime = 0;
                                 stats._updatesPerFrame++;
                                 stats._frameTime += emitter._addTimeTime;
