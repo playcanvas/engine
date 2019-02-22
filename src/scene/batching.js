@@ -91,7 +91,7 @@ Object.assign(pc, function () {
     };
 
     Object.assign(SkinBatchInstance.prototype, {
-        updateMatrices: function () {
+        updateMatrices: function (rootNode) {
         },
 
         updateMatrixPalette: function () {
