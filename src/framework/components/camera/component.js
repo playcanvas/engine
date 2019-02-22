@@ -91,7 +91,6 @@ Object.assign(pc, function () {
         this.on("set_cullFaces", this.onSetCullFaces, this);
         this.on("set_flipFaces", this.onSetFlipFaces, this);
         this.on("set_layers", this.onSetLayers, this);
-        this.system.app.on("prerender", this.onPrerender, this);
     };
     CameraComponent.prototype = Object.create(pc.Component.prototype);
     CameraComponent.prototype.constructor = CameraComponent;
@@ -409,7 +408,6 @@ Object.assign(pc, function () {
         },
 
         onRemove: function () {
-            this.system.app.off("prerender", this.onPrerender, this);
             this.off();
         },
 
