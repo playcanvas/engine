@@ -692,7 +692,7 @@ Object.assign(pc, function () {
 
             this._initializeTextures();
 
-            this.addTime(0); // fill dynamic textures and constants with initial data
+            this.addTime(0, false); // fill dynamic textures and constants with initial data
             if (this.preWarm) this.prewarm(this.lifetime);
 
             this.resetTime();
@@ -1088,7 +1088,7 @@ Object.assign(pc, function () {
             this.resetTime();
             var origLoop =  this.loop;
             this.loop = true;
-            this.addTime(0);
+            this.addTime(0, false);
             this.loop = origLoop;
             if (this.preWarm) {
                 this.prewarm(this.lifetime);
@@ -1100,7 +1100,7 @@ Object.assign(pc, function () {
             var iterations = Math.min(Math.floor(lifetimeFraction * this.precision), this.precision);
             var stepDelta = time / iterations;
             for (var i = 0; i < iterations; i++) {
-                this.addTime(stepDelta);
+                this.addTime(stepDelta, false);
             }
         },
 
