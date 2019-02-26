@@ -56,9 +56,6 @@ Object.assign(pc, function () {
 
         this.ready = false;
 
-        // Used for shader variants (see pc.Material)
-        this._refCount = 0;
-
         this.device.createShader(this);
     };
 
