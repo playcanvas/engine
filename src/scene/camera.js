@@ -26,7 +26,9 @@ Object.assign(pc, function () {
 
         this._projMatDirty = true;
         this._projMat = new pc.Mat4();
+        this._viewMatDirty = true;
         this._viewMat = new pc.Mat4();
+        this._viewProjMatDirty = true;
         this._viewProjMat = new pc.Mat4();
 
         this.vrDisplay = null;
@@ -111,10 +113,12 @@ Object.assign(pc, function () {
                 screenCoord = new pc.Vec3();
             }
 
-            var projMat = this.getProjectionMatrix();
-            var wtm = this._node.getWorldTransform();
-            this._viewMat.copy(wtm).invert();
-            this._viewProjMat.mul2(projMat, this._viewMat);
+            if (this._projMatDirty || this._viewMatDirty || this._viewProjMatDirty) {
+                var projMat = this.getProjectionMatrix();
+                var viewMat = this.getViewMatrix();
+                this._viewProjMat.mul2(projMat, viewMat);
+                this._viewProjMatDirty = false;
+            }
             this._viewProjMat.transformPoint(worldCoord, screenCoord);
 
             // calculate w co-coord
@@ -148,10 +152,12 @@ Object.assign(pc, function () {
                 worldCoord = new pc.Vec3();
             }
 
-            var projMat = this.getProjectionMatrix();
-            var wtm = this._node.getWorldTransform();
-            this._viewMat.copy(wtm).invert();
-            this._viewProjMat.mul2(projMat, this._viewMat);
+            if (this._projMatDirty || this._viewMatDirty || this._viewProjMatDirty) {
+                var projMat = this.getProjectionMatrix();
+                var viewMat = this.getViewMatrix();
+                this._viewProjMat.mul2(projMat, viewMat);
+                this._viewProjMatDirty = false;
+            }
             _invViewProjMat.copy(this._viewProjMat).invert();
 
             if (this._projection === pc.PROJECTION_PERSPECTIVE) {
@@ -224,6 +230,22 @@ Object.assign(pc, function () {
                 this._projMatDirty = false;
             }
             return this._projMat;
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Camera#getViewMatrix
+         * @description Retrieves the view matrix for the specified camera based on the entity world transformation.
+         * @returns {pc.Mat4} The camera's view matrix.
+         */
+        getViewMatrix: function () {
+            if (this._viewMatDirty) {
+                var wtm = this._node.getWorldTransform();
+                this._viewMat.copy(wtm).invert();
+                this._viewMatDirty = false;
+            }
+            return this._viewMat;
         },
 
         getRect: function () {
