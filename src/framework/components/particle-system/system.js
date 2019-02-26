@@ -232,7 +232,7 @@ Object.assign(pc, function () {
                             if (numSteps) {
                                 numSteps = Math.min(numSteps, emitter.maxSubSteps);
                                 for (i = 0; i < numSteps; i++) {
-                                    emitter.addTime(emitter.fixedTimeStep);
+                                    emitter.addTime(emitter.fixedTimeStep, false);
                                 }
                                 stats._updatesPerFrame += numSteps;
                                 stats._frameTime += emitter._addTimeTime;
