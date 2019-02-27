@@ -224,7 +224,6 @@ Object.assign(pc, function () {
 
                         if (!data.paused) {
                             emitter.simTime += dt;
-                            numSteps = 0;
                             if (emitter.simTime > emitter.fixedTimeStep) {
                                 numSteps = Math.floor(emitter.simTime / emitter.fixedTimeStep);
                                 emitter.simTime -= numSteps * emitter.fixedTimeStep;
