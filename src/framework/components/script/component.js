@@ -310,8 +310,11 @@ Object.assign(pc, function () {
         },
 
         _scriptMethod: function (script, method, arg) {
+            // #ifdef DEBUG
             try {
+            // #endif
                 script[method](arg);
+            // #ifdef DEBUG
             } catch (ex) {
                 // disable script if it fails to call method
                 script.enabled = false;
@@ -324,6 +327,7 @@ Object.assign(pc, function () {
                 script.fire('error', ex, method);
                 this.fire('error', script, ex, method);
             }
+            // #endif
         },
 
         _onInitialize: function () {
