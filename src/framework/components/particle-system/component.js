@@ -32,7 +32,7 @@ Object.assign(pc, function () {
         'emitterShape',
         'animTilesX',
         'animTilesY',
-        'animFrames',
+        'animNumFrames',
         'animLoop',
         'colorMap',
         'localSpace'
