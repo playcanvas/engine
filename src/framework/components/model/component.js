@@ -837,10 +837,10 @@ Object.assign(pc, function () {
             if (this._batchGroupId === value) return;
 
             var batcher = this.system.app.batcher;
-            if (this._batchGroupId >= 0) {
+            if (this.entity.enabled && this._batchGroupId >= 0) {
                 batcher.remove(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
             }
-            if (value >= 0) {
+            if (this.entity.enabled && value >= 0) {
                 batcher.insert(pc.BatchGroup.MODEL, value, this.entity);
             }
 

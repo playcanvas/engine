@@ -1455,11 +1455,11 @@ Object.assign(pc, function () {
             if (this._batchGroupId === value)
                 return;
 
-            if (this._batchGroupId >= 0) {
+            if (this.entity.enabled && this._batchGroupId >= 0) {
                 this.system.app.batcher.remove(pc.BatchGroup.ELEMENT, this.batchGroupId, this.entity);
             }
 
-            if (value >= 0) {
+            if (this.entity.enabled && value >= 0) {
                 this.system.app.batcher.insert(pc.BatchGroup.ELEMENT, value, this.entity);
             }
 

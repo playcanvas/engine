@@ -804,10 +804,10 @@ Object.assign(pc, function () {
             var prev = this._batchGroupId;
             this._batchGroupId = value;
 
-            if (prev >= 0) {
+            if (this.entity.enabled && prev >= 0) {
                 this.system.app.batcher.remove(pc.BatchGroup.SPRITE, prev, this.entity);
             }
-            if (value >= 0) {
+            if (this.entity.enabled && value >= 0) {
                 this.system.app.batcher.insert(pc.BatchGroup.SPRITE, value, this.entity);
             } else {
                 // re-add model to scene in case it was removed by batching
