@@ -248,7 +248,6 @@ Object.assign(pc, function () {
      */
     BatchManager.prototype.markGroupDirty = function (id) {
         if (this._dirtyGroups.indexOf(id) < 0) {
-            console.log("make batch group dirty");
             this._dirtyGroups.push(id);
         }
     };
@@ -345,6 +344,7 @@ Object.assign(pc, function () {
     };
 
     BatchManager.prototype._extractModel = function (node, arr, group, groupMeshInstances) {
+        if (!node.model) return arr;
         var i;
         if (node.model.isStatic) {
             // static mesh instances can be in both drawCall array with _staticSource linking to original
@@ -374,6 +374,7 @@ Object.assign(pc, function () {
     };
 
     BatchManager.prototype._extractElement = function (node, arr, group) {
+        if (!node.element) return;
         var valid = false;
         if (node.element._text && node.element._text._model.meshInstances.length > 0) {
             if (!node.element._text._model.meshInstances[0].drawOrder) {
@@ -419,6 +420,7 @@ Object.assign(pc, function () {
         for (var g = 0; g < groupIds.length; g++) {
             id = groupIds[g];
             group = this._batchGroups[id];
+            if (!group) continue;
             arr = groupMeshInstances[id];
             if (!arr) arr = groupMeshInstances[id] = [];
 
@@ -432,7 +434,7 @@ Object.assign(pc, function () {
 
             for (var s = 0; s < group._obj.sprite.length; s++) {
                 node = group._obj.sprite[s];
-                if (node.sprite._meshInstance) {
+                if (node.sprite && node.sprite._meshInstance) {
                     arr.push(node.sprite._meshInstance);
                     this.scene.removeModel(node.sprite._model);
                     node.sprite._batchGroup = group;
@@ -688,9 +690,6 @@ Object.assign(pc, function () {
                 aabb.add(mi.aabb);
                 vertCount += mi.mesh.vertexBuffer.getNumVertices();
                 lists[j].push(mi);
-            }
-            if (isUI) {
-                console.log("batching block:", lists[j].length);
             }
 
             j++;
