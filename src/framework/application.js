@@ -149,6 +149,7 @@ Object.assign(pc, function () {
         // Store application instance
         Application._applications[canvas.id] = this;
         Application._currentApplication = this;
+        pc.app = this;
 
         this._time = 0;
         this.timeScale = 1;
