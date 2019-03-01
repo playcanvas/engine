@@ -51,7 +51,16 @@ Object.assign(pc, function () {
         this.name = name;
         this.layers = layers === undefined ? [pc.LAYERID_WORLD] : layers;
         this._ui = false;
+        this._obj = {
+            model: [],
+            element: [],
+            sprite: []
+        };
     };
+
+    BatchGroup.MODEL = 'model';
+    BatchGroup.ELEMENT = 'element';
+    BatchGroup.SPRITE = 'sprite';
 
     // Modified SkinInstance for batching
     // Doesn't contain bind matrices, simplier
@@ -302,101 +311,133 @@ Object.assign(pc, function () {
         }
     };
 
+    BatchManager.prototype.insert = function (type, groupId, node) {
+        var group = this._batchGroups[groupId];
+        if (group) {
+            // #ifdef DEBUG
+            if (group._obj[type].indexOf(node) >= 0)
+                console.warn('Batch ' + groupId + " already has " + type + " " + node.name);
+            // #endif
+            group._obj[type].push(node);
+            this.markGroupDirty(groupId);
+        } else {
+            // #ifdef DEBUG
+            console.warn('Invalid batch ' + groupId + ' insertion');
+            // #endif
+        }
+    };
+
+    BatchManager.prototype.remove = function (type, groupId, node) {
+        var group = this._batchGroups[groupId];
+        if (group) {
+            var idx = group._obj[type].indexOf(node);
+            // #ifdef DEBUG
+            if (idx < 0)
+                console.warn('Batch ' + groupId + " has no " + type + " " + node.name);
+            // #endif
+            group._obj[type].splice(idx, 1);
+            this.markGroupDirty(groupId);
+        } else {
+            // #ifdef DEBUG
+            console.warn('Invalid batch ' + groupId + ' insertion');
+            // #endif
+        }
+    };
+
+    BatchManager.prototype._extractModel = function (node, arr, group, groupMeshInstances) {
+        var i;
+        if (node.model.isStatic) {
+            // static mesh instances can be in both drawCall array with _staticSource linking to original
+            // and in the original array as well, if no triangle splitting was done
+            var drawCalls = this.scene.drawCalls;
+            var nodeMeshInstances = node.model.meshInstances;
+            for (i = 0; i < drawCalls.length; i++) {
+                if (!drawCalls[i]._staticSource) continue;
+                if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
+                arr.push(drawCalls[i]);
+            }
+            for (i = 0; i < nodeMeshInstances.length; i++) {
+                if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
+                    arr.push(nodeMeshInstances[i]);
+                }
+            }
+        } else {
+            arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
+        }
+
+        node.model.removeModelFromLayers(node.model.model);
+
+        // #ifdef DEBUG
+        node.model._batchGroup = group;
+        // #endif
+        return arr;
+    };
+
+    BatchManager.prototype._extractElement = function (node, arr, group) {
+        var valid = false;
+        if (node.element._text && node.element._text._model.meshInstances.length > 0) {
+            if (!node.element._text._model.meshInstances[0].drawOrder) {
+                // node.element.screen.screen._processDrawOrderSync();
+            }
+            arr.push(node.element._text._model.meshInstances[0]);
+            node.element.removeModelFromLayers(node.element._text._model);
+
+            valid = true;
+        } else if (node.element._image) {
+            if (!node.element._image._renderable.meshInstance.drawOrder) {
+                // node.element.screen.screen._processDrawOrderSync();
+            }
+            arr.push(node.element._image._renderable.meshInstance);
+            node.element.removeModelFromLayers(node.element._image._renderable.model);
+
+            if (node.element._image._renderable.unmaskMeshInstance) {
+                arr.push(node.element._image._renderable.unmaskMeshInstance);
+                if (!node.element._image._renderable.unmaskMeshInstance.stencilFront ||
+                    !node.element._image._renderable.unmaskMeshInstance.stencilBack) {
+                    node.element._dirtifyMask();
+                    node.element._onPrerender();
+                }
+            }
+
+            valid = true;
+        }
+
+        if (valid) {
+            group._ui = true;
+            // #ifdef DEBUG
+            node.element._batchGroup = group;
+            // #endif
+        }
+    };
+
     // traverse scene hierarchy down from `node` and collect all components that are marked
     // with a batch group id. Remove from layers any models that these components contains.
     // Fill the `groupMeshInstances` with all the mesh instances to be included in the batch groups,
     // indexed by batch group id.
-    BatchManager.prototype._collectAndRemoveModels = function (node, groupMeshInstances, groupIds) {
-        if (!node.enabled) return;
+    BatchManager.prototype._collectAndRemoveModels = function (groupMeshInstances, groupIds) {
+        var node, group, arr, id;
+        for (var g = 0; g < groupIds.length; g++) {
+            id = groupIds[g];
+            group = this._batchGroups[id];
+            arr = groupMeshInstances[id];
+            if (!arr) arr = groupMeshInstances[id] = [];
 
-        var i, arr;
-        if (node.model && node.model.batchGroupId >= 0 && node.model.model && node.model.enabled) {
-            if (!groupIds || (groupIds && groupIds.indexOf(node.model.batchGroupId) >= 0)) {
-                arr = groupMeshInstances[node.model.batchGroupId];
-                if (!arr) arr = groupMeshInstances[node.model.batchGroupId] = [];
-
-                if (node.model.isStatic) {
-                    // static mesh instances can be in both drawCall array with _staticSource linking to original
-                    // and in the original array as well, if no triangle splitting was done
-                    var drawCalls = this.scene.drawCalls;
-                    var nodeMeshInstances = node.model.meshInstances;
-                    for (i = 0; i < drawCalls.length; i++) {
-                        if (!drawCalls[i]._staticSource) continue;
-                        if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
-                        arr.push(drawCalls[i]);
-                    }
-                    for (i = 0; i < nodeMeshInstances.length; i++) {
-                        if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
-                            arr.push(nodeMeshInstances[i]);
-                        }
-                    }
-                } else {
-                    groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
-                }
-
-                node.model.removeModelFromLayers(node.model.model);
-
-                // #ifdef DEBUG
-                node.model._batchGroup = this._batchGroups[node.model.batchGroupId];
-                // #endif
+            for (var m = 0; m < group._obj.model.length; m++) {
+                arr = this._extractModel(group._obj.model[m], arr, group, groupMeshInstances);
             }
-        }
 
-        if (node.element && node.element.batchGroupId >= 0 && node.element.enabled) {
-            if (!groupIds || (groupIds && groupIds.indexOf(node.element.batchGroupId) >= 0)) {
-                arr = groupMeshInstances[node.element.batchGroupId];
-                if (!arr) arr = groupMeshInstances[node.element.batchGroupId] = [];
-                var valid = false;
-                if (node.element._text && node.element._text._model.meshInstances.length > 0) {
-                    if (!node.element._text._model.meshInstances[0].drawOrder) {
-                        // node.element.screen.screen._processDrawOrderSync();
-                    }
-                    arr.push(node.element._text._model.meshInstances[0]);
-                    node.element.removeModelFromLayers(node.element._text._model);
-
-                    valid = true;
-                } else if (node.element._image) {
-                    if (!node.element._image._renderable.meshInstance.drawOrder) {
-                        // node.element.screen.screen._processDrawOrderSync();
-                    }
-                    arr.push(node.element._image._renderable.meshInstance);
-                    node.element.removeModelFromLayers(node.element._image._renderable.model);
-
-                    if (node.element._image._renderable.unmaskMeshInstance) {
-                        arr.push(node.element._image._renderable.unmaskMeshInstance);
-                        if (!node.element._image._renderable.unmaskMeshInstance.stencilFront ||
-                            !node.element._image._renderable.unmaskMeshInstance.stencilBack) {
-                            node.element._dirtifyMask();
-                            node.element._onPrerender();
-                        }
-                    }
-
-                    valid = true;
-                }
-
-                if (valid) {
-                    this._batchGroups[node.element.batchGroupId]._ui = true;
-                    // #ifdef DEBUG
-                    node.element._batchGroup = this._batchGroups[node.element.batchGroupId];
-                    // #endif
-                }
+            for (var e = 0; e < group._obj.element.length; e++) {
+                this._extractElement(group._obj.element[e], arr, group);
             }
-        }
 
-        if (node.sprite && node.sprite.batchGroupId >= 0 && node.sprite.enabled) {
-            if (!groupIds || (groupIds && groupIds.indexOf(node.sprite.batchGroupId) >= 0)) {
-                arr = groupMeshInstances[node.sprite.batchGroupId];
-                if (!arr) arr = groupMeshInstances[node.sprite.batchGroupId] = [];
+            for (var s = 0; s < group._obj.sprite.length; s++) {
+                node = group._obj.sprite[s];
                 if (node.sprite._meshInstance) {
                     arr.push(node.sprite._meshInstance);
                     this.scene.removeModel(node.sprite._model);
-                    node.sprite._batchGroup = this._batchGroups[node.sprite.batchGroupId];
+                    node.sprite._batchGroup = group;
                 }
             }
-        }
-
-        for (i = 0; i < node._children.length; i++) {
-            this._collectAndRemoveModels(node._children[i], groupMeshInstances, groupIds);
         }
     };
 
@@ -427,42 +468,31 @@ Object.assign(pc, function () {
 
         if (!groupIds) {
             // Full scene
+            groupIds = Object.keys(this._batchGroups);
+        }
 
-            // delete old batches
-            for (i = 0; i < this._batchList.length; i++) {
-                this.destroy(this._batchList[i]);
+        // delete old batches with matching batchGroupId
+        var newBatchList = [];
+        for (i = 0; i < this._batchList.length; i++) {
+            if (groupIds.indexOf(this._batchList[i].batchGroupId) < 0) {
+                newBatchList.push(this._batchList[i]);
+                continue;
             }
-            this._batchList.length = 0;
+            this.destroy(this._batchList[i]);
+        }
+        this._batchList = newBatchList;
 
-            // collect
-            this._collectAndRemoveModels(this.rootNode, groupMeshInstances);
+        // collect
+        this._collectAndRemoveModels(groupMeshInstances, groupIds);
+
+        if (groupIds === this._dirtyGroups) {
             this._dirtyGroups.length = 0;
         } else {
-            // Selected groups
-
-            // delete old batches with matching batchGroupId
-            var newBatchList = [];
-            for (i = 0; i < this._batchList.length; i++) {
-                if (groupIds.indexOf(this._batchList[i].batchGroupId) < 0) {
-                    newBatchList.push(this._batchList[i]);
-                    continue;
-                }
-                this.destroy(this._batchList[i]);
+            var newDirtyGroups = [];
+            for (i = 0; i < this._dirtyGroups.length; i++) {
+                if (groupIds.indexOf(this._dirtyGroups[i]) < 0) newDirtyGroups.push(this._dirtyGroups[i]);
             }
-            this._batchList = newBatchList;
-
-            // collect
-            this._collectAndRemoveModels(this.rootNode, groupMeshInstances, groupIds);
-
-            if (groupIds === this._dirtyGroups) {
-                this._dirtyGroups.length = 0;
-            } else {
-                var newDirtyGroups = [];
-                for (i = 0; i < this._dirtyGroups.length; i++) {
-                    if (groupIds.indexOf(this._dirtyGroups[i]) < 0) newDirtyGroups.push(this._dirtyGroups[i]);
-                }
-                this._dirtyGroups = newDirtyGroups;
-            }
+            this._dirtyGroups = newDirtyGroups;
         }
 
         var group, lists, groupData, batch;
@@ -481,6 +511,7 @@ Object.assign(pc, function () {
             lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize, groupData._ui);
             for (i = 0; i < lists.length; i++) {
                 batch = this.create(lists[i], groupData.dynamic, parseInt(groupId, 10));
+                if (!batch) continue;
                 for (j = 0; j < groupData.layers.length; j++) {
                     this.scene.layers.getLayerById(groupData.layers[j]).addMeshInstances(batch.model.meshInstances);
                 }
@@ -1084,6 +1115,8 @@ Object.assign(pc, function () {
      */
     BatchManager.prototype.destroy = function (batch) {
         batch.refCounter = 0;
+        if (!batch.model)
+            return;
         var layers = this._batchGroups[batch.batchGroupId].layers;
         for (var i = 0; i < layers.length; i++) {
             this.scene.layers.getLayerById(layers[i]).removeMeshInstances(batch.model.meshInstances);
