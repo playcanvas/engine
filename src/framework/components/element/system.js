@@ -156,14 +156,6 @@ Object.assign(pc, function () {
                 component.layers = data.layers.slice(0);
             }
 
-            // TODO: A hack to test UI batching
-            if (component._layers.indexOf(pc.LAYERID_UI) >= 0 && component._batchGroupId === -1) {
-                //var group = this.app.batcher.getGroupByName("UI_test");
-                //if (!group)
-                //    group = this.app.batcher.addGroup("UI_test", true, 1000); // [pc.LAYERID_UI]
-                // component.batchGroupId = group.id;
-            }
-
             component.type = data.type;
             if (component.type === pc.ELEMENTTYPE_IMAGE) {
                 if (data.rect !== undefined) {
