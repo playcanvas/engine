@@ -377,17 +377,11 @@ Object.assign(pc, function () {
         if (!node.element) return;
         var valid = false;
         if (node.element._text && node.element._text._model.meshInstances.length > 0) {
-            if (!node.element._text._model.meshInstances[0].drawOrder) {
-                // node.element.screen.screen._processDrawOrderSync();
-            }
             arr.push(node.element._text._model.meshInstances[0]);
             node.element.removeModelFromLayers(node.element._text._model);
 
             valid = true;
         } else if (node.element._image) {
-            if (!node.element._image._renderable.meshInstance.drawOrder) {
-                // node.element.screen.screen._processDrawOrderSync();
-            }
             arr.push(node.element._image._renderable.meshInstance);
             node.element.removeModelFromLayers(node.element._image._renderable.model);
 
