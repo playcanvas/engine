@@ -67,9 +67,8 @@ Object.assign(pc, (function () {
          * @param {Array} src An array[9] to be copied.
          * @returns {pc.Mat3} Self for chaining
          * @example
-         * var src = [0, 1, 2, 3, 4, 5, 6, 7, 8];
          * var dst = new pc.Mat3();
-         * dst.copy(src);
+         * dst.set([0, 1, 2, 3, 4, 5, 6, 7, 8]);
          */
         set: function (src) {
             var dst = this.data;
@@ -175,7 +174,7 @@ Object.assign(pc, (function () {
             var t = '[';
             for (var i = 0; i < 9; i++) {
                 t += this.data[i];
-                t += (i !== 9) ? ', ' : '';
+                t += (i !== 8) ? ', ' : '';
             }
             t += ']';
             return t;
