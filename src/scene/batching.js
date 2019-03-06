@@ -313,12 +313,10 @@ Object.assign(pc, function () {
     BatchManager.prototype.insert = function (type, groupId, node) {
         var group = this._batchGroups[groupId];
         if (group) {
-            // #ifdef DEBUG
-            if (group._obj[type].indexOf(node) >= 0)
-                console.warn('Batch ' + groupId + " already has " + type + " " + node.name);
-            // #endif
-            group._obj[type].push(node);
-            this.markGroupDirty(groupId);
+            if (group._obj[type].indexOf(node) < 0) {
+                group._obj[type].push(node);
+                this.markGroupDirty(groupId);
+            }
         } else {
             // #ifdef DEBUG
             console.warn('Invalid batch ' + groupId + ' insertion');
@@ -330,12 +328,10 @@ Object.assign(pc, function () {
         var group = this._batchGroups[groupId];
         if (group) {
             var idx = group._obj[type].indexOf(node);
-            // #ifdef DEBUG
-            if (idx < 0)
-                console.warn('Batch ' + groupId + " has no " + type + " " + node.name);
-            // #endif
-            group._obj[type].splice(idx, 1);
-            this.markGroupDirty(groupId);
+            if (idx >= 0) {
+                group._obj[type].splice(idx, 1);
+                this.markGroupDirty(groupId);
+            }
         } else {
             // #ifdef DEBUG
             console.warn('Invalid batch ' + groupId + ' insertion');
@@ -437,21 +433,6 @@ Object.assign(pc, function () {
         }
     };
 
-    BatchManager.prototype._registerEntities = function (batch, meshInstances) {
-        var node;
-        var ents = [];
-        for (var i = 0; i < meshInstances.length; i++) {
-            node = meshInstances[i].node;
-            while (!node._app && node._parent) {
-                node = node._parent;
-            }
-            if (!node._app) continue;
-            // node is entity
-            ents.push(node);
-        }
-        this.register(batch, ents);
-    };
-
     /**
      * @function
      * @name pc.BatchManager#generate
@@ -511,7 +492,6 @@ Object.assign(pc, function () {
                 for (j = 0; j < groupData.layers.length; j++) {
                     this.scene.layers.getLayerById(groupData.layers[j]).addMeshInstances(batch.model.meshInstances);
                 }
-                this._registerEntities(batch, lists[i]);
             }
         }
     };
@@ -1128,25 +1108,6 @@ Object.assign(pc, function () {
         batch.refCounter--;
         if (batch.refCounter === 0) {
             this.destroy(batch);
-        }
-    };
-
-    /**
-     * @function
-     * @name pc.BatchManager#register
-     * @description Registers entities as used inside the batch, and sets batch's reference counter to entity count.
-     * If these entities are destroyed, {@link pc.BatchManager#destroy} will be called on the batch.
-     * @param {pc.Batch} batch A batch object
-     * @param {Array} entities An array of pc.Entity
-     */
-    BatchManager.prototype.register = function (batch, entities) {
-        batch.refCounter = entities.length;
-        var self = this;
-        var callback = function () {
-            self.decrement(batch);
-        };
-        for (var i = 0; i < entities.length; i++) {
-            entities[i].once('destroy', callback);
         }
     };
 
