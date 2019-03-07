@@ -540,7 +540,6 @@ Object.assign(pc, function () {
         return id ? Application._applications[id] : Application._currentApplication;
     };
 
-
     // Mini-object used to measure progress of loading sets
     var Progress = function (length) {
         this.length = length;
