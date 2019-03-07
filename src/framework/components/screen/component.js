@@ -71,7 +71,12 @@ Object.assign(pc, function () {
             }
 
             if (e.element) {
+                var prevDrawOrder = e.element.drawOrder;
                 e.element.drawOrder = i++;
+
+                if (e.element._batchGroupId >= 0 && prevDrawOrder != e.element.drawOrder) {
+                    this.system.app.batcher.markGroupDirty(e.element._batchGroupId);
+                }
             }
 
             var children = e.getChildren();
