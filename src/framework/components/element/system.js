@@ -138,8 +138,10 @@ Object.assign(pc, function () {
             }
 
             if (shouldForceSetAnchor) {
+                /* eslint-disable no-self-assign */
                 // force update
                 component.anchor = component.anchor;
+                /* eslint-enable no-self-assign */
             }
 
             if (data.enabled !== undefined) {
