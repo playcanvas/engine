@@ -79,7 +79,7 @@ pc.string = function () {
             }
 
             // check if next character is a modifier, in which case we should return it
-            if(isCodeBetween(second, VARIATION_MODIFIER_BEGIN, VARIATION_MODIFIER_END)) {
+            if (isCodeBetween(second, VARIATION_MODIFIER_BEGIN, VARIATION_MODIFIER_END)) {
                 return 3;
             }
 
@@ -88,7 +88,7 @@ pc.string = function () {
         }
 
         // check if next character is the emoji modifier, in which case we should include it
-        if(isCodeBetween(string[index+1], VARIATION_MODIFIER_BEGIN, VARIATION_MODIFIER_END)) {
+        if (isCodeBetween(string[index + 1], VARIATION_MODIFIER_BEGIN, VARIATION_MODIFIER_END)) {
             return 2;
         }
 
