@@ -469,7 +469,7 @@ Object.assign(pc, function () {
             var fontMaxY = 0;
             var scale = 1;
 
-            var char, charId, data, i, quad;
+            var char, data, i, quad;
 
             function breakLine(lineBreakIndex, lineBreakX) {
                 self._lineWidths.push(lineBreakX);

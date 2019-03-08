@@ -115,7 +115,9 @@ Object.assign(pc, function () {
             var onAssetReady = function (asset) {
                 self.animations[asset.name] = asset.resource;
                 self.animationsIndex[asset.id] = asset.name;
+                /* eslint-disable no-self-assign */
                 self.animations = self.animations; // assigning ensures set_animations event is fired
+                /* eslint-enable no-self-assign */
             };
 
             var onAssetAdd = function (asset) {
