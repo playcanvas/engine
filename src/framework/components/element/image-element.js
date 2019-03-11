@@ -424,7 +424,6 @@ Object.assign(pc, function () {
         },
 
         _updateMesh: function (mesh) {
-            var i;
             var element = this._element;
             var w = element.calculatedWidth;
             var h = element.calculatedHeight;
@@ -511,7 +510,7 @@ Object.assign(pc, function () {
                 vertexDataF32[17] = h - vp * h;
                 vertexDataF32[24] = 0 - hp * w;
                 vertexDataF32[25] = h - vp * h;
- 
+
                 w = 1;
                 h = 1;
                 var rect = this._rect;
