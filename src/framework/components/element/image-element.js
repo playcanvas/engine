@@ -537,7 +537,9 @@ Object.assign(pc, function () {
 
                 vb.unlock();
 
-                mesh.aabb.setMinMax(pc.Vec3.ZERO, new pc.Vec3(w, h, 0));
+                var min = new pc.Vec3(0 - hp * w, 0 - vp * h, 0);
+                var max = new pc.Vec3(w - hp * w, h - vp * h, 0);
+                mesh.aabb.setMinMax(min, max);
 
                 if (this._renderable) {
                     this._renderable.node.setLocalScale(1, 1, 1);
