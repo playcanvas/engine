@@ -367,8 +367,14 @@ Object.assign(pc, function () {
             var h = element.calculatedHeight;
 
             var r = this._rect;
-            var vertexData = new ArrayBuffer(32 * 4);
+
+            // Note that when creating a typed array, it's initialized to zeros.
+            // Allocate memory for 4 vertices, 8 floats per vertex, 4 bytes per float.
+            var vertexData = new ArrayBuffer(4 * 8 * 4);
             var vertexDataF32 = new Float32Array(vertexData);
+
+            // Vertex layout is: PX, PY, PZ, NX, NY, NZ, U, V
+            // Since the memory is zeroed, we will only set non-zero elements
 
             // POS: 0, 0, 0
             vertexDataF32[5] = 1;          // NZ
@@ -376,20 +382,20 @@ Object.assign(pc, function () {
             vertexDataF32[7] = r.y;        // V
 
             // POS: w, 0, 0
-            vertexDataF32[8] = w;
+            vertexDataF32[8] = w;          // PX
             vertexDataF32[13] = 1;         // NZ
             vertexDataF32[14] = r.x + r.z; // U
             vertexDataF32[15] = r.y;       // V
 
             // POS: w, h, 0
-            vertexDataF32[16] = w;
-            vertexDataF32[17] = h;
+            vertexDataF32[16] = w;         // PX
+            vertexDataF32[17] = h;         // PY
             vertexDataF32[21] = 1;         // NZ
             vertexDataF32[22] = r.x + r.z; // U
             vertexDataF32[23] = r.y + r.w; // V
 
             // POS: 0, h, 0
-            vertexDataF32[25] = h;
+            vertexDataF32[25] = h;         // PY
             vertexDataF32[29] = 1;         // NZ
             vertexDataF32[30] = r.x;       // U
             vertexDataF32[31] = r.y + r.w; // V
@@ -496,7 +502,7 @@ Object.assign(pc, function () {
                 var hp = element.pivot.x;
                 var vp = element.pivot.y;
 
-                // Update vertex positions
+                // Update vertex positions, accounting for the pivot offset
                 vertexDataF32[0] = 0 - hp * w;
                 vertexDataF32[1] = 0 - vp * h;
                 vertexDataF32[8] = w - hp * w;
