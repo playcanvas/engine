@@ -228,9 +228,16 @@ Object.assign(pc, function () {
             ctx.textAlign = TEXT_ALIGN;
             ctx.textBaseline = TEXT_BASELINE;
 
+            var width = ctx.measureText(ch).width;
+
+            if (width > fs) {
+                fs = this.fontSize * this.fontSize / width;
+                ctx.font = this.fontWeight + ' ' + fs.toString() + 'px ' + this.fontName;
+                width = this.fontSize;
+            }
+
             this.renderCharacter(ctx, ch, _x, _y, color);
 
-            var width = ctx.measureText(ch).width;
             var xoffset = (sx - width) / 2;
             var yoffset = metrics[ch].descent - maxDescent;
             var xadvance = width;

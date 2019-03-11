@@ -381,7 +381,7 @@ Object.assign(pc, function () {
             name: "UI",
             id: pc.LAYERID_UI,
             transparentSortMode: pc.SORTMODE_MANUAL,
-            passThrough: true
+            passThrough: false
         });
         this.defaultLayerImmediate = new pc.Layer({
             enabled: true,
