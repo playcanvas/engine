@@ -46,8 +46,11 @@ Object.assign(pc, function () {
                 } else {
                     component.alignment.set(data.alignment[0], data.alignment[1]);
                 }
+
+                /* eslint-disable no-self-assign */
                 // force update
                 component.alignment = component.alignment;
+                /* eslint-enable no-self-assign */
             }
             if (data.padding !== undefined) {
                 if (data.padding instanceof pc.Vec4){
@@ -55,8 +58,11 @@ Object.assign(pc, function () {
                 } else {
                     component.padding.set(data.padding[0], data.padding[1], data.padding[2], data.padding[3]);
                 }
+
+                /* eslint-disable no-self-assign */
                 // force update
                 component.padding = component.padding;
+                /* eslint-enable no-self-assign */
             }
             if (data.spacing !== undefined) {
                 if (data.spacing instanceof pc.Vec2){
@@ -64,8 +70,11 @@ Object.assign(pc, function () {
                 } else {
                     component.spacing.set(data.spacing[0], data.spacing[1]);
                 }
+
+                /* eslint-disable no-self-assign */
                 // force update
                 component.spacing = component.spacing;
+                /* eslint-enable no-self-assign */
             }
             if (data.widthFitting !== undefined) component.widthFitting = data.widthFitting;
             if (data.heightFitting !== undefined) component.heightFitting = data.heightFitting;
