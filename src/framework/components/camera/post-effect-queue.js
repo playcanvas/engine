@@ -71,7 +71,7 @@ Object.assign(pc, function () {
             colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
             colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
-            return new pc.RenderTarget(this.app.graphicsDevice, colorBuffer, { depth: useDepth, stencil: useStencil});
+            return new pc.RenderTarget(this.app.graphicsDevice, colorBuffer, { depth: useDepth, stencil: useStencil });
         },
 
         _resizeOffscreenTarget: function (rt) {
@@ -101,10 +101,10 @@ Object.assign(pc, function () {
             rt.destroy();
         },
 
-        _destroyOffscreenTarget : function (rt) {
-            if(rt._colorBuffer)
+        _destroyOffscreenTarget: function (rt) {
+            if (rt._colorBuffer)
                 rt._colorBuffer.destroy();
-            if(rt._depthBuffer)
+            if (rt._depthBuffer)
                 rt._depthBuffer.destroy();
 
             rt.destroy();
@@ -171,19 +171,19 @@ Object.assign(pc, function () {
                 }
 
                 this._sourceLayers = [];
-                
-                for(i = 0; i < this.camera.layers.length; i++) {
+
+                for (i = 0; i < this.camera.layers.length; i++) {
                     var layerID = this.camera.layers[i];
                     var layer = this.app.scene.layers.getLayerById(layerID);
                     var index = this.app.scene.layers.layerList.indexOf(layer);
 
                     if (index <= start) {
-                        if(layerID != pc.LAYERID_DEPTH) {
+                        if (layerID != pc.LAYERID_DEPTH) {
                             layer.renderTarget = newEntry.inputTarget;
                             this._sourceLayers.push(layer);
                         }
 
-                        if(index > order)
+                        if (index > order)
                             order = index;
                     }
                 }
@@ -206,7 +206,7 @@ Object.assign(pc, function () {
             if (effect.needsDepthBuffer) {
                 this._requestDepthMap();
             }
-        
+
 
             this.enable();
             this._newPostEffect = undefined;
@@ -220,8 +220,8 @@ Object.assign(pc, function () {
          */
         removeEffect: function (effect) {
             // find index of effect
-            var index = -1;
-            for (var i = 0, len = this.effects.length; i < len; i++) {
+            var i, len, index = -1;
+            for (i = 0, len = this.effects.length; i < len; i++) {
                 if (this.effects[i].effect === effect) {
                     index = i;
                     break;
@@ -245,10 +245,10 @@ Object.assign(pc, function () {
                             this._sourceTarget = this.effects[1].inputTarget;
                         }
                         // Also apply to the source layers
-                        for(var i = 0; i < this._sourceLayers.length; i++) {
+                        for (i = 0; i < this._sourceLayers.length; i++) {
                             this._sourceLayers[i].renderTarget = this.effects[1].inputTarget;
-                        }    
-                        
+                        }
+
                     }
                 }
 
@@ -272,7 +272,7 @@ Object.assign(pc, function () {
         _requestDepthMaps: function () {
             for (var i = 0, len = this.effects.length; i < len; i++) {
                 var effect = this.effects[i].effect;
-                if(this._newPostEffect === effect)
+                if (this._newPostEffect === effect)
                     continue;
 
                 if (effect.needsDepthBuffer) {
