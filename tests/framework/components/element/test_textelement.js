@@ -14,7 +14,10 @@ describe("pc.TextElement", function () {
 
 
     afterEach(function () {
-        fontAsset.unload();
+        for (var key in assets) {
+            assets[key].unload();
+        }
+
         fontAsset = null;
         app.destroy();
         app = null;
@@ -1142,5 +1145,30 @@ describe("pc.TextElement", function () {
         var clone = element.entity.clone();
         expect(clone.element.key).to.equal(null);
         expect(clone.element.text).to.equal('text');
+    });
+
+    it('changing the locale changes the font asset', function (done) {
+        assets.font2 = new pc.Asset("Arial2", "font", {
+            url: "base/examples/assets/Arial/Arial.json"
+        });
+
+        app.assets.add(assets.font2);
+
+        assets.font2.on('load', function () {
+            setTimeout(function () {
+                expect(element.fontAsset).to.equal(assets.font2.id);
+                expect(element.font).to.equal(assets.font2.resource);
+                done();
+            });
+        });
+
+        fontAsset.setLocalizedAssetId('fr', assets.font2.id);
+
+        addText('en-US', 'key', 'translation');
+        addText('fr', 'key', 'french translation');
+        element.fontAsset = fontAsset;
+        element.key = "key";
+
+        app.i18n.locale = 'fr';
     });
 });

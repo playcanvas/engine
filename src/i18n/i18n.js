@@ -163,6 +163,34 @@ Object.assign(pc, (function () {
         this._parser = new pc.I18nParser();
     };
 
+    /**
+     * @private
+     * @function
+     * @name pc.I18n#findAvailableLocale
+     * @description Returns the first available locale based on the desired locale specified. First
+     * tries to find the desired locale and then tries to find an alternative locale based on the language.
+     * @param {String} desiredLocale The desired locale e.g. en-US.
+     * @param {Object} availableLocales A dictionary where each key is an available locale.
+     * @returns {String} The locale found or if no locale is available returns the default en-US locale.
+     */
+    I18n.findAvailableLocale = function (desiredLocale, availableLocales) {
+        if (availableLocales[desiredLocale]) {
+            return desiredLocale;
+        }
+
+        var lang = getLang(desiredLocale);
+
+        var fallback = DEFAULT_LOCALE_FALLBACKS[lang];
+        if (availableLocales[fallback]) {
+            return fallback;
+        }
+
+        if (availableLocales[lang]) {
+            return lang;
+        }
+
+        return DEFAULT_LOCALE;
+    };
 
     /**
      * @private

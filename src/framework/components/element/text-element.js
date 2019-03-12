@@ -28,7 +28,11 @@ Object.assign(pc, function () {
         this._text = "";
         this._i18nKey = null;
 
-        this._fontAsset = null;
+        this._fontAsset = new pc.LocalizedAsset(this._system.app);
+        this._fontAsset.on('load', this._onFontLoad, this);
+        this._fontAsset.on('change', this._onFontChange, this);
+        this._fontAsset.on('remove', this._onFontRemove, this);
+
         this._font = null;
 
         this._color = new pc.Color(1, 1, 1, 1);
@@ -101,7 +105,7 @@ Object.assign(pc, function () {
         element.on('set:draworder', this._onDrawOrderChange, this);
         element.on('set:pivot', this._onPivotChange, this);
 
-        this._system.app.i18n.on('set:locale', this._resetLocalizedText, this);
+        this._system.app.i18n.on('set:locale', this._onLocaleSet, this);
         this._system.app.i18n.on('data:add', this._onLocalizationData, this);
         this._system.app.i18n.on('data:remove', this._onLocalizationData, this);
     };
@@ -120,7 +124,7 @@ Object.assign(pc, function () {
                 this._model = null;
             }
 
-            this.fontAsset = null;
+            this._fontAsset.destroy();
             this.font = null;
 
             this._element.off('resize', this._onParentResize, this);
@@ -165,6 +169,23 @@ Object.assign(pc, function () {
                 this._updateText();
         },
 
+        _onLocaleSet: function (locale) {
+            if (!this._i18nKey) return;
+
+            // if the localized font is different
+            // then the current font and the localized font
+            // is not yet loaded then reset the current font and wait
+            // until the localized font is loaded to see the updated text
+            if (this._fontAsset.localizedAsset) {
+                var asset = this._system.app.assets.get(this._fontAsset.localizedAsset);
+                if (!asset || !asset.resource || asset.resource !== this._font) {
+                    this.font = null;
+                }
+            }
+
+            this._resetLocalizedText();
+        },
+
         _onLocalizationData: function (locale, messages) {
             if (this._i18nKey && messages[this._i18nKey]) {
                 this._resetLocalizedText();
@@ -172,9 +193,7 @@ Object.assign(pc, function () {
         },
 
         _resetLocalizedText: function () {
-            if (this._i18nKey) {
-                this._setText(this._system.app.i18n.getText(this._i18nKey));
-            }
+            this._setText(this._system.app.i18n.getText(this._i18nKey));
         },
 
         _setText: function (text) {
@@ -802,34 +821,6 @@ Object.assign(pc, function () {
             this._aabbDirty = true;
         },
 
-        _onFontAdded: function (asset) {
-            this._system.app.assets.off('add:' + asset.id, this._onFontAdded, this);
-
-            if (asset.id === this._fontAsset) {
-                this._bindFont(asset);
-            }
-        },
-
-        _bindFont: function (asset) {
-            if (!this._entity.enabled) return; // don't bind until enabled
-
-            asset.on("load", this._onFontLoad, this);
-            asset.on("change", this._onFontChange, this);
-            asset.on("remove", this._onFontRemove, this);
-
-            if (asset.resource) {
-                this._onFontLoad(asset);
-            } else {
-                this._system.app.assets.load(asset);
-            }
-        },
-
-        _unbindFont: function (asset) {
-            asset.off("load", this._onFontLoad, this);
-            asset.off("change", this._onFontChange, this);
-            asset.off("remove", this._onFontRemove, this);
-        },
-
         _onFontRender: function () {
             // if the font has been changed (e.g. canvasfont re-render)
             // re-applying the same font updates character map and ensures
@@ -840,8 +831,6 @@ Object.assign(pc, function () {
         _onFontLoad: function (asset) {
             if (this.font !== asset.resource) {
                 this.font = asset.resource;
-
-
             }
         },
 
@@ -929,13 +918,7 @@ Object.assign(pc, function () {
         },
 
         onEnable: function () {
-            if (this._fontAsset) {
-                var asset = this._system.app.assets.get(this._fontAsset);
-                if (asset && asset.resource !== this._font) {
-                    this._unbindFont(asset);
-                    this._bindFont(asset);
-                }
-            }
+            this._fontAsset.autoLoad = true;
 
             if (this._model) {
                 this._element.addModelToLayers(this._model);
@@ -943,6 +926,8 @@ Object.assign(pc, function () {
         },
 
         onDisable: function () {
+            this._fontAsset.autoLoad = false;
+
             if (this._model) {
                 this._element.removeModelFromLayers(this._model);
             }
@@ -994,7 +979,9 @@ Object.assign(pc, function () {
             }
 
             this._i18nKey = str;
-            this._resetLocalizedText();
+            if (str) {
+                this._resetLocalizedText();
+            }
         }
     });
 
@@ -1120,36 +1107,14 @@ Object.assign(pc, function () {
 
     Object.defineProperty(TextElement.prototype, "fontAsset", {
         get: function () {
-            return this._fontAsset;
+            // getting fontAsset returns the currently used localized asset
+            return this._fontAsset.localizedAsset;
         },
 
         set: function (value) {
-            var assets = this._system.app.assets;
-            var _id = value;
-
-            if (value instanceof pc.Asset) {
-                _id = value.id;
-            }
-
-            if (this._fontAsset !== _id) {
-                if (this._fontAsset) {
-                    assets.off('add:' + this._fontAsset, this._onFontAdded, this);
-                    var _prev = assets.get(this._fontAsset);
-                    if (_prev) {
-                        this._unbindFont(_prev);
-                    }
-                }
-
-                this._fontAsset = _id;
-                if (this._fontAsset) {
-                    var asset = assets.get(this._fontAsset);
-                    if (!asset) {
-                        assets.on('add:' + this._fontAsset, this._onFontAdded, this);
-                    } else {
-                        this._bindFont(asset);
-                    }
-                }
-            }
+            // setting the fontAsset sets the default assets which in turn
+            // will set the localized asset to be actually used
+            this._fontAsset.defaultAsset = value;
         }
     });
 
@@ -1191,13 +1156,12 @@ Object.assign(pc, function () {
             // attach render event listener
             if (this._font.on) this._font.on('render', this._onFontRender, this);
 
-            if (this._fontAsset) {
-                var asset = this._system.app.assets.get(this._fontAsset);
+            if (this._fontAsset.localizedAsset) {
+                var asset = this._system.app.assets.get(this._fontAsset.localizedAsset);
                 // if we're setting a font directly which doesn't match the asset
                 // then clear the asset
                 if (asset.resource !== this._font) {
-                    this._unbindFont(asset);
-                    this._fontAsset = null;
+                    this._fontAsset.defaultAsset = null;
                 }
             }
 
