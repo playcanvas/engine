@@ -4,6 +4,7 @@ uniform sampler2D particleTexIN;
 uniform sampler2D internalTex0;
 uniform sampler2D internalTex1;
 uniform sampler2D internalTex2;
+uniform sampler2D internalTex3;
 
 uniform mat3 emitterMatrix;
 uniform vec3 emitterScale;
