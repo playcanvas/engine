@@ -98,7 +98,7 @@ describe('pc.Batcher', function () {
     });
 
 
-    it.only("batch with all invisible meshinstances works", function () {
+    it("batch with all invisible meshinstances works", function () {
         var e1 = new pc.Entity();
         e1.name = "e1";
         e1.addComponent("model", {
