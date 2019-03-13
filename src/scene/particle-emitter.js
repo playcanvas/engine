@@ -221,7 +221,9 @@ Object.assign(pc, function () {
         setProperty("rate2", this.rate);
         setProperty("lifetime", 50);                             // Particle lifetime
         setProperty("emitterExtents", new pc.Vec3(0, 0, 0));        // Spawn point divergence
+        setProperty("emitterExtentsInner", new pc.Vec3(0, 0, 0));   // Volume inside emitterExtents to exclude from reneration
         setProperty("emitterRadius", 0);
+        setProperty("emitterRadiusInner", 0);                       // Same as ExtentsInner but for spherical volume
         setProperty("emitterShape", pc.EMITTERSHAPE_BOX);
         setProperty("initialVelocity", 1);
         setProperty("wrap", false);
