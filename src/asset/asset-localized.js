@@ -11,6 +11,22 @@ Object.assign(pc, function (){
         pc.events.attach(this);
     };
 
+    LocalizedAsset.prototype._bindDefaultAsset = function () {
+        var asset = this._app.assets.get(this._defaultAsset);
+        if (!asset) return;
+
+        asset.on('set:localized', this._onLocaleAdd, this);
+        asset.on('remove:localized', this._onLocaleRemove, this);
+    };
+
+    LocalizedAsset.prototype._unbindDefaultAsset = function () {
+        var asset = this._app.assets.get(this._defaultAsset);
+        if (!asset) return;
+
+        asset.off('set:localized', this._onLocaleAdd, this);
+        asset.off('remove:localized', this._onLocaleRemove, this);
+    };
+
     LocalizedAsset.prototype._bindLocalizedAsset = function () {
         if (!this._autoLoad) return;
 
@@ -55,6 +71,20 @@ Object.assign(pc, function (){
         this.fire('remove', asset);
     };
 
+    LocalizedAsset.prototype._onLocaleAdd = function (locale, assetId) {
+        if (this._app.i18n.locale !== locale) return;
+
+        // reset localized asset
+        this._onSetLocale(locale);
+    };
+
+    LocalizedAsset.prototype._onLocaleRemove = function (locale, assetId) {
+        if (this._app.i18n.locale !== locale) return;
+
+        // reset localized asset
+        this._onSetLocale(locale);
+    };
+
     LocalizedAsset.prototype._onSetLocale = function (locale) {
         if (!this._defaultAsset) {
             this.localizedAsset = null;
@@ -89,7 +119,17 @@ Object.assign(pc, function (){
         set: function (value) {
             var id = value instanceof pc.Asset ? value.id : value;
 
+            if (this._defaultAsset === id) return;
+
+            if (this._defaultAsset) {
+                this._unbindDefaultAsset();
+            }
+
             this._defaultAsset = id;
+
+            if (this._defaultAsset) {
+                this._bindDefaultAsset();
+            }
 
             // reset localized asset
             this._onSetLocale(this._app.i18n.locale);

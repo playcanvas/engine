@@ -126,6 +126,22 @@ Object.assign(pc, function () {
      * @param {*} oldValue The old property value
      */
 
+    /**
+     * @event
+     * @name pc.Asset#set:localized
+     * @description Fired when we add a new localized asset id to the asset.
+     * @param {String} locale The locale
+     * @param {Number} assetId The asset id we added.
+     */
+
+    /**
+     * @event
+     * @name pc.Asset#remove:localized
+     * @description Fired when we remove a localized asset id from the asset.
+     * @param {String} locale The locale
+     * @param {Number} assetId The asset id we removed.
+     */
+
     Object.assign(Asset.prototype, {
         /**
          * @name pc.Asset#getFileUrl
@@ -218,6 +234,22 @@ Object.assign(pc, function () {
          */
         setLocalizedAssetId: function (locale, assetId) {
             this._i18n[locale] = assetId;
+            this.fire('set:localized', locale, assetId);
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Asset#setLocalizedAssetId
+         * @param {String} locale The locale e.g. ar-AR.
+         * @description Removes a localized asset
+         */
+        removeLocalizedAssetId: function (locale) {
+            var assetId = this._i18n[locale];
+            if (assetId) {
+                delete this._i18n[locale];
+                this.fire('remove:localized', locale, assetId);
+            }
         },
 
         /**
