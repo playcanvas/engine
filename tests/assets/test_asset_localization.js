@@ -114,7 +114,7 @@ describe('pc.LocalizedAsset', function () {
         var asset = new pc.Asset("Default Asset", "texture");
         var asset2 = new pc.Asset("Localized Asset", "texture");
 
-        asset.setLocalizedAssetId('fr', asset2.id);
+        asset.addLocalizedAssetId('fr', asset2.id);
 
         app.assets.add(asset);
         app.assets.add(asset2);
@@ -132,7 +132,7 @@ describe('pc.LocalizedAsset', function () {
         var asset = new pc.Asset("Default Asset", "texture");
         var asset2 = new pc.Asset("Localized Asset", "texture");
 
-        asset.setLocalizedAssetId('fr', asset2.id);
+        asset.addLocalizedAssetId('fr', asset2.id);
 
         app.assets.add(asset);
         app.assets.add(asset2);
@@ -151,7 +151,7 @@ describe('pc.LocalizedAsset', function () {
         var asset = new pc.Asset("Default Asset", "texture");
         var asset2 = new pc.Asset("Localized Asset", "texture");
 
-        asset.setLocalizedAssetId('fr', asset2.id);
+        asset.addLocalizedAssetId('fr', asset2.id);
 
         app.assets.add(asset);
         app.assets.add(asset2);
@@ -213,7 +213,7 @@ describe('pc.LocalizedAsset', function () {
         var asset = new pc.Asset("Default Asset", "texture");
         var asset2 = new pc.Asset("Localized Asset", "texture");
 
-        asset.setLocalizedAssetId('fr', asset2.id);
+        asset.addLocalizedAssetId('fr', asset2.id);
 
         app.assets.add(asset);
         app.assets.add(asset2);
@@ -232,7 +232,7 @@ describe('pc.LocalizedAsset', function () {
         var asset = new pc.Asset("Default Asset", "texture");
         var asset2 = new pc.Asset("Localized Asset", "texture");
 
-        asset.setLocalizedAssetId('fr', null);
+        asset.addLocalizedAssetId('fr', null);
 
         app.assets.add(asset);
         app.assets.add(asset2);
@@ -246,24 +246,24 @@ describe('pc.LocalizedAsset', function () {
         expect(la.localizedAsset).to.equal(asset.id);
     });
 
-    it('setting a new locale fires set:localized', function (done) {
+    it('setting a new locale fires add:localized', function (done) {
         var asset = new pc.Asset("Default Asset", "texture");
         var asset2 = new pc.Asset("Localized Asset", "texture");
 
-        asset.on('set:localized', function (locale, assetId) {
+        asset.on('add:localized', function (locale, assetId) {
             expect(locale).to.equal('fr');
             expect(assetId).to.equal(asset2.id);
             done();
         });
 
-        asset.setLocalizedAssetId('fr', asset2.id);
+        asset.addLocalizedAssetId('fr', asset2.id);
     });
 
     it('removing a locale fires remove:localized', function (done) {
         var asset = new pc.Asset("Default Asset", "texture");
         var asset2 = new pc.Asset("Localized Asset", "texture");
 
-        asset.setLocalizedAssetId('fr', asset2.id);
+        asset.addLocalizedAssetId('fr', asset2.id);
 
         asset.on('remove:localized', function (locale, assetId) {
             expect(locale).to.equal('fr');
@@ -285,7 +285,7 @@ describe('pc.LocalizedAsset', function () {
         app.i18n.locale = 'fr';
         expect(la.localizedAsset).to.equal(asset.id);
 
-        asset.setLocalizedAssetId('fr', asset2.id);
+        asset.addLocalizedAssetId('fr', asset2.id);
         expect(la.localizedAsset).to.equal(asset2.id);
     });
 
@@ -295,7 +295,7 @@ describe('pc.LocalizedAsset', function () {
         var asset2 = new pc.Asset("Localized Asset", "texture");
         app.assets.add(asset2);
 
-        asset.setLocalizedAssetId('fr', asset2.id);
+        asset.addLocalizedAssetId('fr', asset2.id);
         app.i18n.locale = 'fr';
 
         var la = new pc.LocalizedAsset(app);
@@ -304,5 +304,62 @@ describe('pc.LocalizedAsset', function () {
 
         asset.removeLocalizedAssetId('fr');
         expect(la.localizedAsset).to.equal(asset.id);
+    });
+
+    it('setting a localized asset for the current locale updates the localizedAsset even if defaultAsset is added to the registry later', function () {
+        var asset = new pc.Asset("Default Asset", "texture");
+        var asset2 = new pc.Asset("Localized Asset", "texture");
+        app.assets.add(asset2);
+
+        var la = new pc.LocalizedAsset(app);
+        la.defaultAsset = asset;
+        app.i18n.locale = 'fr';
+        expect(la.localizedAsset).to.equal(asset.id);
+
+        app.assets.add(asset);
+
+        asset.addLocalizedAssetId('fr', asset2.id);
+        expect(la.localizedAsset).to.equal(asset2.id);
+    });
+
+
+    it.only('removing a localized asset from the registry makes the pc.LocalizedAsset switch to the defaultAsset', function () {
+        var asset = new pc.Asset("Default Asset", "texture");
+        app.assets.add(asset);
+        var asset2 = new pc.Asset("Localized Asset", "texture");
+        app.assets.add(asset2);
+
+        asset.addLocalizedAssetId('fr', asset2.id);
+        app.i18n.locale = 'fr';
+
+        var la = new pc.LocalizedAsset(app);
+        la.autoLoad = true;
+        la.defaultAsset = asset;
+        expect(la.localizedAsset).to.equal(asset2.id);
+
+        app.assets.remove(asset2);
+        expect(la.localizedAsset).to.equal(asset.id);
+    });
+
+    it.only('removing the defaultAsset from the registry keeps same localizedAsset and adds "add" event handler', function () {
+        var asset = new pc.Asset("Default Asset", "texture");
+        app.assets.add(asset);
+        var asset2 = new pc.Asset("Localized Asset", "texture");
+        app.assets.add(asset2);
+
+        asset.addLocalizedAssetId('fr', asset2.id);
+        app.i18n.locale = 'fr';
+
+        var la = new pc.LocalizedAsset(app);
+        la.autoLoad = true;
+        la.defaultAsset = asset;
+        expect(la.localizedAsset).to.equal(asset2.id);
+
+        expect(app.assets.hasEvent('add:' + asset.id)).to.equal(false);
+
+        app.assets.remove(asset);
+        expect(la.localizedAsset).to.equal(asset2.id);
+
+        expect(app.assets.hasEvent('add:' + asset.id)).to.equal(true);
     });
 });

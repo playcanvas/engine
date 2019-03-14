@@ -14,18 +14,38 @@ Object.assign(pc, function (){
 
     LocalizedAsset.prototype._bindDefaultAsset = function () {
         var asset = this._app.assets.get(this._defaultAsset);
-        if (!asset) return;
-
-        asset.on('set:localized', this._onLocaleAdd, this);
-        asset.on('remove:localized', this._onLocaleRemove, this);
+        if (!asset) {
+            this._app.assets.once('add:' + this._defaultAsset, this._onDefaultAssetAdd, this);
+        } else {
+            this._onDefaultAssetAdd(asset);
+        }
     };
 
     LocalizedAsset.prototype._unbindDefaultAsset = function () {
+        if (!this._defaultAsset) return;
+
+        this._app.assets.off('add:' + this._defaultAsset, this._onDefaultAssetAdd, this);
+
         var asset = this._app.assets.get(this._defaultAsset);
         if (!asset) return;
 
-        asset.off('set:localized', this._onLocaleAdd, this);
+        asset.off('add:localized', this._onLocaleAdd, this);
         asset.off('remove:localized', this._onLocaleRemove, this);
+    };
+
+    LocalizedAsset.prototype._onDefaultAssetAdd = function (asset) {
+        if (this._defaultAsset !== asset.id) return;
+
+        asset.on('add:localized', this._onLocaleAdd, this);
+        asset.on('remove:localized', this._onLocaleRemove, this);
+        asset.once('remove', this._onDefaultAssetRemove, this);
+    };
+
+    LocalizedAsset.prototype._onDefaultAssetRemove = function (asset) {
+        if (this._defaultAsset !== asset.id) return;
+        asset.off('add:localized', this._onLocaleAdd, this);
+        asset.off('remove:localized', this._onLocaleAdd, this);
+        this._app.assets.once('add:' + this._defaultAsset, this._onDefaultAssetAdd, this);
     };
 
     LocalizedAsset.prototype._bindLocalizedAsset = function () {
@@ -69,6 +89,9 @@ Object.assign(pc, function (){
     };
 
     LocalizedAsset.prototype._onLocalizedAssetRemove = function (asset) {
+        if (this._localizedAsset === asset.id) {
+            this.localizedAsset = this._defaultAsset;
+        }
         this.fire('remove', asset);
     };
 

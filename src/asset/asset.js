@@ -128,7 +128,7 @@ Object.assign(pc, function () {
 
     /**
      * @event
-     * @name pc.Asset#set:localized
+     * @name pc.Asset#add:localized
      * @description Fired when we add a new localized asset id to the asset.
      * @param {String} locale The locale
      * @param {Number} assetId The asset id we added.
@@ -226,21 +226,21 @@ Object.assign(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.Asset#setLocalizedAssetId
+         * @name pc.Asset#addLocalizedAssetId
          * @param {String} locale The locale e.g. ar-AR.
          * @param {Number} assetId The asset id
-         * @description Sets a replacement asset id for the specified locale. When the locale in {@link pc.Application#i18n} changes then
+         * @description Adds a replacement asset id for the specified locale. When the locale in {@link pc.Application#i18n} changes then
          * references to this asset will be replaced with the specified asset id. (Currently only supported by the {@link pc.ElementComponent}).
          */
-        setLocalizedAssetId: function (locale, assetId) {
+        addLocalizedAssetId: function (locale, assetId) {
             this._i18n[locale] = assetId;
-            this.fire('set:localized', locale, assetId);
+            this.fire('add:localized', locale, assetId);
         },
 
         /**
          * @private
          * @function
-         * @name pc.Asset#setLocalizedAssetId
+         * @name pc.Asset#removeLocalizedAssetId
          * @param {String} locale The locale e.g. ar-AR.
          * @description Removes a localized asset
          */

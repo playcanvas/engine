@@ -957,7 +957,7 @@ Object.assign(pc, function () {
                 // i18n
                 if (data.i18n) {
                     for (var locale in data.i18n) {
-                        asset.setLocalizedAssetId(locale, data.i18n[locale]);
+                        asset.addLocalizedAssetId(locale, data.i18n[locale]);
                     }
                 }
                 // registry

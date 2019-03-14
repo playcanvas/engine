@@ -1162,7 +1162,7 @@ describe("pc.TextElement", function () {
             });
         });
 
-        fontAsset.setLocalizedAssetId('fr', assets.font2.id);
+        fontAsset.addLocalizedAssetId('fr', assets.font2.id);
 
         addText('en-US', 'key', 'translation');
         addText('fr', 'key', 'french translation');
@@ -1189,7 +1189,7 @@ describe("pc.TextElement", function () {
             });
         });
 
-        fontAsset.setLocalizedAssetId('fr', assets.font2.id);
+        fontAsset.addLocalizedAssetId('fr', assets.font2.id);
         element.fontAsset = fontAsset;
         element.text = 'text';
     });
@@ -1201,7 +1201,7 @@ describe("pc.TextElement", function () {
 
         app.assets.add(assets.font2);
 
-        fontAsset.setLocalizedAssetId('fr', assets.font2.id);
+        fontAsset.addLocalizedAssetId('fr', assets.font2.id);
 
         addText('en-US', 'key', 'translation');
         addText('fr', 'key', 'french translation');
