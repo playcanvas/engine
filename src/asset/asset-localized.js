@@ -4,6 +4,7 @@ Object.assign(pc, function (){
         app.i18n.on('set:locale', this._onSetLocale, this);
 
         this._autoLoad = false;
+        this._disableLocalization = false;
 
         this._defaultAsset = null;
         this._localizedAsset = null;
@@ -92,7 +93,7 @@ Object.assign(pc, function (){
         }
 
         var asset = this._app.assets.get(this._defaultAsset);
-        if (!asset) {
+        if (!asset || this._disableLocalization) {
             this.localizedAsset = this._defaultAsset;
             return;
         }
@@ -178,6 +179,20 @@ Object.assign(pc, function (){
                 this._unbindLocalizedAsset();
                 this._bindLocalizedAsset();
             }
+        }
+    });
+
+    Object.defineProperty(LocalizedAsset.prototype, 'disableLocalization', {
+        get: function () {
+            return this._disableLocalization;
+        },
+        set: function (value) {
+            if (this._disableLocalization === value) return;
+
+            this._disableLocalization = value;
+
+            // reset localized asset
+            this._onSetLocale(this._app.i18n.locale);
         }
     });
 

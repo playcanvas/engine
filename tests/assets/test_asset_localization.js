@@ -207,6 +207,102 @@ describe('pc.LocalizedAsset', function () {
         expect(loadFired).to.equal(true);
         expect(changeFired).to.equal(true);
         expect(removeFired).to.equal(true);
+    });
 
+    it('when disableLocalization is true only the defaultAsset is used', function () {
+        var asset = new pc.Asset("Default Asset", "texture");
+        var asset2 = new pc.Asset("Localized Asset", "texture");
+
+        asset.setLocalizedAssetId('fr', asset2.id);
+
+        app.assets.add(asset);
+        app.assets.add(asset2);
+
+        app.i18n.locale = 'fr';
+
+        var la = new pc.LocalizedAsset(app);
+        la.disableLocalization = true;
+        la.defaultAsset = asset.id;
+
+        expect(la.defaultAsset).to.equal(asset.id);
+        expect(la.localizedAsset).to.equal(asset.id);
+    });
+
+    it('setting null asset for locale falls back to defaultAsset', function () {
+        var asset = new pc.Asset("Default Asset", "texture");
+        var asset2 = new pc.Asset("Localized Asset", "texture");
+
+        asset.setLocalizedAssetId('fr', null);
+
+        app.assets.add(asset);
+        app.assets.add(asset2);
+
+        app.i18n.locale = 'fr';
+
+        var la = new pc.LocalizedAsset(app);
+        la.defaultAsset = asset.id;
+
+        expect(la.defaultAsset).to.equal(asset.id);
+        expect(la.localizedAsset).to.equal(asset.id);
+    });
+
+    it('setting a new locale fires set:localized', function (done) {
+        var asset = new pc.Asset("Default Asset", "texture");
+        var asset2 = new pc.Asset("Localized Asset", "texture");
+
+        asset.on('set:localized', function (locale, assetId) {
+            expect(locale).to.equal('fr');
+            expect(assetId).to.equal(asset2.id);
+            done();
+        });
+
+        asset.setLocalizedAssetId('fr', asset2.id);
+    });
+
+    it('removing a locale fires remove:localized', function (done) {
+        var asset = new pc.Asset("Default Asset", "texture");
+        var asset2 = new pc.Asset("Localized Asset", "texture");
+
+        asset.setLocalizedAssetId('fr', asset2.id);
+
+        asset.on('remove:localized', function (locale, assetId) {
+            expect(locale).to.equal('fr');
+            expect(assetId).to.equal(asset2.id);
+            done();
+        });
+
+        asset.removeLocalizedAssetId('fr');
+    });
+
+    it('setting a localized asset for the current locale updates the localizedAsset', function () {
+        var asset = new pc.Asset("Default Asset", "texture");
+        app.assets.add(asset);
+        var asset2 = new pc.Asset("Localized Asset", "texture");
+        app.assets.add(asset2);
+
+        var la = new pc.LocalizedAsset(app);
+        la.defaultAsset = asset;
+        app.i18n.locale = 'fr';
+        expect(la.localizedAsset).to.equal(asset.id);
+
+        asset.setLocalizedAssetId('fr', asset2.id);
+        expect(la.localizedAsset).to.equal(asset2.id);
+    });
+
+    it('removing a localized asset for the current locale updates the localizedAsset to the defaultAsset', function () {
+        var asset = new pc.Asset("Default Asset", "texture");
+        app.assets.add(asset);
+        var asset2 = new pc.Asset("Localized Asset", "texture");
+        app.assets.add(asset2);
+
+        asset.setLocalizedAssetId('fr', asset2.id);
+        app.i18n.locale = 'fr';
+
+        var la = new pc.LocalizedAsset(app);
+        la.defaultAsset = asset;
+        expect(la.localizedAsset).to.equal(asset2.id);
+
+        asset.removeLocalizedAssetId('fr');
+        expect(la.localizedAsset).to.equal(asset.id);
     });
 });

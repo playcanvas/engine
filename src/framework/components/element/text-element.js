@@ -29,6 +29,7 @@ Object.assign(pc, function () {
         this._i18nKey = null;
 
         this._fontAsset = new pc.LocalizedAsset(this._system.app);
+        this._fontAsset.disableLocalization = true;
         this._fontAsset.on('load', this._onFontLoad, this);
         this._fontAsset.on('change', this._onFontChange, this);
         this._fontAsset.on('remove', this._onFontRemove, this);
@@ -176,8 +177,8 @@ Object.assign(pc, function () {
             // then the current font and the localized font
             // is not yet loaded then reset the current font and wait
             // until the localized font is loaded to see the updated text
-            if (this._fontAsset.localizedAsset) {
-                var asset = this._system.app.assets.get(this._fontAsset.localizedAsset);
+            if (this.fontAsset) {
+                var asset = this._system.app.assets.get(this.fontAsset);
                 if (!asset || !asset.resource || asset.resource !== this._font) {
                     this.font = null;
                 }
@@ -980,7 +981,10 @@ Object.assign(pc, function () {
 
             this._i18nKey = str;
             if (str) {
+                this._fontAsset.disableLocalization = false;
                 this._resetLocalizedText();
+            } else {
+                this._fontAsset.disableLocalization = true;
             }
         }
     });

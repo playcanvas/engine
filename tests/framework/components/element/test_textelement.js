@@ -1149,7 +1149,7 @@ describe("pc.TextElement", function () {
 
     it('changing the locale changes the font asset', function (done) {
         assets.font2 = new pc.Asset("Arial2", "font", {
-            url: "base/examples/assets/Arial/Arial.json"
+            url: "base/examples/assets/Arial/Arial2.json"
         });
 
         app.assets.add(assets.font2);
@@ -1170,5 +1170,48 @@ describe("pc.TextElement", function () {
         element.key = "key";
 
         app.i18n.locale = 'fr';
+    });
+
+    it('text element that does not use localization uses the default font asset not its localized variant', function (done) {
+        assets.font2 = new pc.Asset("Arial2", "font", {
+            url: "base/examples/assets/Arial/Arial2.json"
+        });
+
+        app.assets.add(assets.font2);
+        app.assets.load(assets.font2);
+
+        assets.font2.on('load', function () {
+            app.i18n.locale = 'fr';
+            setTimeout(function () {
+                expect(element.font).to.equal(assets.font.resource);
+                expect(element.fontAsset).to.equal(assets.font.id);
+                done();
+            });
+        });
+
+        fontAsset.setLocalizedAssetId('fr', assets.font2.id);
+        element.fontAsset = fontAsset;
+        element.text = 'text';
+    });
+
+    it('if text element is disabled it does not automatically load localizedAssets', function () {
+        assets.font2 = new pc.Asset("Arial2", "font", {
+            url: "base/examples/assets/Arial/Arial2.json"
+        });
+
+        app.assets.add(assets.font2);
+
+        fontAsset.setLocalizedAssetId('fr', assets.font2.id);
+
+        addText('en-US', 'key', 'translation');
+        addText('fr', 'key', 'french translation');
+        element.fontAsset = fontAsset;
+        element.key = "key";
+
+        entity.element.enabled = false;
+
+        app.i18n.locale = 'fr';
+
+        expect(assets.font2.hasEvent('load')).to.equal(false);
     });
 });
