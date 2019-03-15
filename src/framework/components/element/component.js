@@ -715,6 +715,10 @@ Object.assign(pc, function () {
                 this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
             }
 
+            if (this._batchGroupId >= 0) {
+                this.system.app.batcher.insert(pc.BatchGroup.ELEMENT, this.batchGroupId, this.entity);
+            }
+
             this.fire("enableelement");
         },
 
@@ -734,7 +738,7 @@ Object.assign(pc, function () {
             }
 
             if (this._batchGroupId >= 0) {
-                this.system.app.batcher.markGroupDirty(this.batchGroupId);
+                this.system.app.batcher.remove(pc.BatchGroup.ELEMENT, this.batchGroupId, this.entity);
             }
 
             this.fire("disableelement");
@@ -1451,14 +1455,19 @@ Object.assign(pc, function () {
             if (this._batchGroupId === value)
                 return;
 
-            if (this._batchGroupId >= 0) this.system.app.batcher.markGroupDirty(this._batchGroupId);
-            if (value >= 0) this.system.app.batcher.markGroupDirty(value);
+            if (this.entity.enabled && this._batchGroupId >= 0) {
+                this.system.app.batcher.remove(pc.BatchGroup.ELEMENT, this.batchGroupId, this.entity);
+            }
+
+            if (this.entity.enabled && value >= 0) {
+                this.system.app.batcher.insert(pc.BatchGroup.ELEMENT, value, this.entity);
+            }
 
             if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching
-                if (this._image._model) {
-                    this.addModelToLayers(this._image._model);
-                } else if (this._text._model) {
+                if (this._image && this._image._renderable.model) {
+                    this.addModelToLayers(this._image._renderable.model);
+                } else if (this._text && this._text._model) {
                     this.addModelToLayers(this._text._model);
                 }
             }
