@@ -725,7 +725,7 @@ Object.assign(pc, function () {
                 randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
             } else {
                 randomPos.normalize();
-                randomPosTformed.copy(emitterPos).add( randomPos.scale(rW * this.spawnBounds) );
+                randomPosTformed.copy(emitterPos).add( randomPos.scale(rW * this.emitterRadius) );
             }
 
             var particleRate, startSpawnTime;
