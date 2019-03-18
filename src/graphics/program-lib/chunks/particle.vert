@@ -38,10 +38,14 @@ vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix) {
 }
 
 vec3 billboard(vec3 InstanceCoords, vec2 quadXY) {
-    vec3 pos = -matrix_viewInverse[0].xyz * quadXY.x + -matrix_viewInverse[1].xyz * quadXY.y;
-    return pos;
+   vec3 pos = -matrix_viewInverse[0].xyz * quadXY.x + -matrix_viewInverse[1].xyz * quadXY.y;
+   return pos;
 }
 
+vec3 customFace(vec3 InstanceCoords, vec2 quadXY) {
+    vec3 pos = faceTangent * quadXY.x + faceBinorm * quadXY.y;
+    return pos;
+}
 
 void main(void) {
     vec3 meshLocalPos = particle_vertexData.xyz;

@@ -47,6 +47,11 @@ vec3 billboard(vec3 InstanceCoords, vec2 quadXY)
     return pos;
 }
 
+vec3 customFace(vec3 InstanceCoords, vec2 quadXY)
+{
+    vec3 pos = faceTangent * quadXY.x + faceBinorm * quadXY.y;
+    return pos;
+}
 
 void main(void)
 {

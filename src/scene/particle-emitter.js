@@ -320,6 +320,8 @@ Object.assign(pc, function () {
         this.constantInBoundsSize = gd.scope.resolve("inBoundsSize");
         this.constantInBoundsCenter = gd.scope.resolve("inBoundsCenter");
         this.constantMaxVel = gd.scope.resolve("maxVel");
+        this.constantFaceTangent = gd.scope.resolve("faceTangent");
+        this.constantFaceBinorm = gd.scope.resolve("faceBinorm");
 
         this.lightCube = new Float32Array(6 * 3);
         this.lightCubeDir = new Array(6);
@@ -746,9 +748,9 @@ Object.assign(pc, function () {
             randomPos.z = rZ - 0.5;
 
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
-                randomPos.x = (1.0 - extentsInnerRatioUniform[0]) * randomPos.x + 0.5 * extentsInnerRatioUniform[0] * sign(randomPos.x);
-                randomPos.y = (1.0 - extentsInnerRatioUniform[1]) * randomPos.x + 0.5 * extentsInnerRatioUniform[1] * sign(randomPos.y);
-                randomPos.z = (1.0 - extentsInnerRatioUniform[2]) * randomPos.x + 0.5 * extentsInnerRatioUniform[2] * sign(randomPos.z);
+                randomPos.x = (1.0 - extentsInnerRatioUniform[0]) * randomPos.x + 0.5 * extentsInnerRatioUniform[0] * Math.sign(randomPos.x);
+                randomPos.y = (1.0 - extentsInnerRatioUniform[1]) * randomPos.x + 0.5 * extentsInnerRatioUniform[1] * Math.sign(randomPos.y);
+                randomPos.z = (1.0 - extentsInnerRatioUniform[2]) * randomPos.x + 0.5 * extentsInnerRatioUniform[2] * Math.sign(randomPos.z);
                 randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
             } else {
                 randomPos.normalize();
@@ -936,7 +938,8 @@ Object.assign(pc, function () {
                     blend: this.blendType,
                     animTex: this.emitter._isAnimated(),
                     animTexLoop: this.emitter.animLoop,
-                    pack8: this.emitter.pack8
+                    pack8: this.emitter.pack8,
+                    faced: true
                 });
                 this.shader = shader;
             };
@@ -1004,6 +1007,9 @@ Object.assign(pc, function () {
                 material.setParameter('softening', 1.0 / (this.depthSoftening * this.depthSoftening * 100)); // remap to more perceptually linear
             }
             if (this.stretch > 0.0) material.cull = pc.CULLFACE_NONE;
+
+            material.setParameter("faceTangent", new Float32Array([1, 0, 0]));
+            material.setParameter("faceBinorm", new Float32Array([0, 0, 1]));
         },
 
 

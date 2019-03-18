@@ -52,7 +52,7 @@ void main(void)
     float rotSpeed = params.x;
     float rotSpeedDiv = paramDiv.y;
 
-    float radialParams = tex1Dlod_lerp(internalTex3, vec2(nlife, 0), paramDiv);
+    vec3 radialParams = tex1Dlod_lerp(internalTex3, vec2(nlife, 0), paramDiv);
     float radialSpeed = radialParams.x;
     float radialSpeedDiv = radialParams.y;
     vec3 radialVel = radialSpeed * normalize(inPos - emitterPos);

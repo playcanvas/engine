@@ -10,7 +10,7 @@ uniform mat3 emitterMatrix;
 uniform vec3 emitterScale;
 
 uniform vec3 emitterPos, frameRandom, localVelocityDivMult, velocityDivMult;
-uniform float delta, rate, rateDiv, lifetime, numParticles, rotSpeedDivMult, seed;
+uniform float delta, rate, rateDiv, lifetime, numParticles, rotSpeedDivMult, radialSpeedDivMult, seed;
 uniform float startAngle, startAngle2;
 uniform float initialVelocity;
 
