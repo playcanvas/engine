@@ -9,7 +9,8 @@ Object.assign(pc, function () {
         'loop',
         'initialVelocity',
         'animSpeed',
-        'normalMap'
+        'normalMap',
+        'particleNormal'
     ];
 
     // properties that need rebuilding the particle system
@@ -37,7 +38,8 @@ Object.assign(pc, function () {
         'animNumFrames',
         'animLoop',
         'colorMap',
-        'localSpace'
+        'localSpace',
+        'orientation'
     ];
 
     var GRAPH_PROPERTIES = [
@@ -133,6 +135,13 @@ Object.assign(pc, function () {
      * </ul>
      * @property {pc.Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
      * @property {pc.BLEND} blend Blending mode.
+     * @property {pc.PARTICLEORIENTATION} orientation Sorting mode. Forces CPU simulation, so be careful.
+     * <ul>
+     * <li><strong>{@link pc.PARTICLEORIENTATION_SCREEN}</strong>: Particles are facing camera.</li>
+     * <li><strong>{@link pc.PARTICLEORIENTATION_WORLD}</strong>: User defines world space normal (particleNormal) to set planes orientation.</li>
+     * <li><strong>{@link pc.PARTICLEORIENTATION_EMITTER}</strong>: Similar to previous, but the normal is affected by emitter(entity) transformation.</li>
+     * </ul>
+     * @property {pc.Vec3} particleNormal (Only for PARTICLEORIENTATION_WORLD and PARTICLEORIENTATION_EMITTER) The exception of extents of a local space bounding box within which particles are not spawned. Aligned to the center of EmitterExtents.
      * @property {pc.CurveSet} localVelocityGraph Velocity relative to emitter over lifetime.
      * @property {pc.CurveSet} localVelocityGraph2 If not null, particles pick random values between localVelocityGraph and localVelocityGraph2.
      * @property {pc.CurveSet} velocityGraph World-space velocity over lifetime.
@@ -554,6 +563,9 @@ Object.assign(pc, function () {
                     lifetime: data.lifetime,
                     rate: data.rate,
                     rate2: data.rate2,
+
+                    orientation: data.orientation,
+                    particleNormal: data.particleNormal,
 
                     animTilesX: data.animTilesX,
                     animTilesY: data.animTilesY,

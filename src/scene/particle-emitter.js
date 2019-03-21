@@ -242,8 +242,11 @@ Object.assign(pc, function () {
         setProperty("stretch", 0.0);
         setProperty("alignToMotion", false);
         setProperty("depthSoftening", 0);
-        setProperty("mesh", null);                               // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
-                                                                 // Leave undefined to use simple quads
+        setProperty("mesh", null);                              // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
+                                                                // Leave undefined to use simple quads
+        setProperty("particleNormal", new pc.Vec3(0, 1, 0));
+        setProperty("orientation", pc.PARTICLEORIENTATION_SCREEN);
+
         setProperty("depthWrite", false);
         setProperty("noFog", false);
         setProperty("blendType", pc.BLEND_NORMAL);
@@ -505,12 +508,14 @@ Object.assign(pc, function () {
             var maxx = -Number.MAX_VALUE;
             var maxy = -Number.MAX_VALUE;
             var maxz = -Number.MAX_VALUE;
+            var maxR = 0;
             var maxScale = 0;
             var stepWeight = this.lifetime / this.precision;
             var vels = [this.qVelocity, this.qVelocity2, this.qLocalVelocity, this.qLocalVelocity2];
             var accumX = [0, 0, 0, 0];
             var accumY = [0, 0, 0, 0];
             var accumZ = [0, 0, 0, 0];
+            var accumR = [0, 0];
             var i, j;
             var index;
             var x, y, z;
@@ -532,6 +537,10 @@ Object.assign(pc, function () {
                     accumY[j] = y;
                     accumZ[j] = z;
                 }
+                accumR[0] += this.qRadialSpeed[index] * stepWeight;
+                accumR[1] += this.qRadialSpeed2[index] * stepWeight;
+                maxR = Math.max(maxR, Math.max(Math.abs(accumR[0]), Math.abs(accumR[1])));
+
                 maxScale = Math.max(maxScale, this.qScale[index]);
             }
 
@@ -539,36 +548,18 @@ Object.assign(pc, function () {
                 x = this.emitterExtents.x * 0.5;
                 y = this.emitterExtents.y * 0.5;
                 z = this.emitterExtents.z * 0.5;
-                if (maxx < x) maxx = x;
-                if (maxy < y) maxy = y;
-                if (maxz < z) maxz = z;
-                x = -x;
-                y = -y;
-                z = -z;
-                if (minx > x) minx = x;
-                if (miny > y) miny = y;
-                if (minz > z) minz = z;
             } else {
                 x = this.emitterRadius;
                 y = this.emitterRadius;
                 z = this.emitterRadius;
-                if (maxx < x) maxx = x;
-                if (maxy < y) maxy = y;
-                if (maxz < z) maxz = z;
-                x = -x;
-                y = -y;
-                z = -z;
-                if (minx > x) minx = x;
-                if (miny > y) miny = y;
-                if (minz > z) minz = z;
             }
 
-            bMin.x = minx - maxScale;
-            bMin.y = miny - maxScale;
-            bMin.z = minz - maxScale;
-            bMax.x = maxx + maxScale;
-            bMax.y = maxy + maxScale;
-            bMax.z = maxz + maxScale;
+            bMin.x = minx - maxScale - x - maxR;
+            bMin.y = miny - maxScale - y - maxR;
+            bMin.z = minz - maxScale - z - maxR;
+            bMax.x = maxx + maxScale + x + maxR;
+            bMax.y = maxy + maxScale + y + maxR;
+            bMax.z = maxz + maxScale + z + maxR;
             this.localBounds.setMinMax(bMin, bMax);
         },
 
@@ -748,9 +739,18 @@ Object.assign(pc, function () {
             randomPos.z = rZ - 0.5;
 
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
-                randomPos.x = (1.0 - extentsInnerRatioUniform[0]) * randomPos.x + 0.5 * extentsInnerRatioUniform[0] * Math.sign(randomPos.x);
-                randomPos.y = (1.0 - extentsInnerRatioUniform[1]) * randomPos.x + 0.5 * extentsInnerRatioUniform[1] * Math.sign(randomPos.y);
-                randomPos.z = (1.0 - extentsInnerRatioUniform[2]) * randomPos.x + 0.5 * extentsInnerRatioUniform[2] * Math.sign(randomPos.z);
+                var max = Math.max(Math.abs(randomPos.x), Math.max(Math.abs(randomPos.y), Math.abs(randomPos.z)));
+
+                // let's find a contour sourface level coresponding to max random component
+                // and translate 2 other random components to that surface
+                // edge = (1.0 - extentsInnerRatioUniform) * max + 0.5 * extentsInnerRatioUniform;
+                var edgeX = max + (0.5 - max) * extentsInnerRatioUniform[0];
+                var edgeY = max + (0.5 - max) * extentsInnerRatioUniform[1];
+                var edgeZ = max + (0.5 - max) * extentsInnerRatioUniform[2];
+                randomPos.x = edgeX * (max == Math.abs(randomPos.x) ? Math.sign(randomPos.x) : 2 * randomPos.x);
+                randomPos.y = edgeY * (max == Math.abs(randomPos.y) ? Math.sign(randomPos.y) : 2 * randomPos.y);
+                randomPos.z = edgeZ * (max == Math.abs(randomPos.z) ? Math.sign(randomPos.z) : 2 * randomPos.z);
+
                 randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
             } else {
                 randomPos.normalize();
@@ -939,7 +939,7 @@ Object.assign(pc, function () {
                     animTex: this.emitter._isAnimated(),
                     animTexLoop: this.emitter.animLoop,
                     pack8: this.emitter.pack8,
-                    faced: true
+                    customFace: this.emitter.orientation != pc.PARTICLEORIENTATION_SCREEN
                 });
                 this.shader = shader;
             };
@@ -1008,8 +1008,33 @@ Object.assign(pc, function () {
             }
             if (this.stretch > 0.0) material.cull = pc.CULLFACE_NONE;
 
-            material.setParameter("faceTangent", new Float32Array([1, 0, 0]));
-            material.setParameter("faceBinorm", new Float32Array([0, 0, 1]));
+            this._compParticleFaceParams();
+        },
+
+        _compParticleFaceParams: function () {
+            var tangent, binormal;
+            if (this.orientation == pc.PARTICLEORIENTATION_SCREEN) {
+                tangent = new Float32Array([1, 0, 0]);
+                binormal = new Float32Array([0, 0, 1]);
+            } else {
+                var n;
+                if (this.orientation == pc.PARTICLEORIENTATION_WORLD) {
+                    n = this.particleNormal.normalize();
+                } else {
+                    var emitterMat = this.node === null ?
+                        pc.Mat4.IDENTITY : this.node.getWorldTransform();
+                    n = emitterMat.transformVector(this.particleNormal).normalize();
+                }
+                var t = new pc.Vec3(1, 0, 0);
+                if (Math.abs(t.dot(n)) == 1)
+                    t.set(0, 0, 1);
+                var b = new pc.Vec3().cross(n, t).normalize();
+                t.cross(b, n).normalize();
+                tangent = new Float32Array([t.x, t.y, t.z]);
+                binormal = new Float32Array([b.x, b.y, b.z]);
+            }
+            this.material.setParameter("faceTangent", tangent);
+            this.material.setParameter("faceBinorm", binormal);
         },
 
 
@@ -1206,6 +1231,8 @@ Object.assign(pc, function () {
                 this.emitterPosUniform[2] = emitterPos.z;
                 this.material.setParameter("emitterPos", this.emitterPosUniform);
             }
+
+            this._compParticleFaceParams();
 
             if (!this.useCpu) {
                 device.setBlending(false);

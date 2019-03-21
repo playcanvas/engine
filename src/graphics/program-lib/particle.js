@@ -34,7 +34,7 @@ pc.programlib.particle = {
         if (options.normal == 1) vshader += "\nvarying vec3 Normal;\n";
         if (options.soft) vshader += "\nvarying float vDepth;\n";
 
-        var faceVS = options.faced ? chunk.particle_customFaceVS : chunk.particle_billboardVS;
+        var faceVS = options.customFace ? chunk.particle_customFaceVS : chunk.particle_billboardVS;
 
         if (!options.useCpu) {
             vshader += chunk.particle_initVS;

@@ -33,6 +33,8 @@ Object.assign(pc, function () {
         'normalMapAsset',
         'mesh',
         'meshAsset',
+        'orientation',
+        'particleNormal',
         'localVelocityGraph',
         'localVelocityGraph2',
         'velocityGraph',
@@ -79,6 +81,7 @@ Object.assign(pc, function () {
         this.propertyTypes = {
             emitterExtents: 'vec3',
             emitterExtentsInner: 'vec3',
+            particleNormal: 'vec3',
             wrapBounds: 'vec3',
             localVelocityGraph: 'curveset',
             localVelocityGraph2: 'curveset',

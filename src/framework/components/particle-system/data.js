@@ -36,6 +36,9 @@ Object.assign(pc, function () {
         this.depthWrite = false;
         this.noFog = false;
 
+        this.orientation = pc.PARTICLEORIENTATION_SCREEN;
+        this.particleNormal = new pc.Vec3(0, 1, 0);
+
         this.animTilesX = 1;
         this.animTilesY = 1;
         this.animNumFrames = 1;
