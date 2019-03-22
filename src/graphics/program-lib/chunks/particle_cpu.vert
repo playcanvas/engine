@@ -19,7 +19,7 @@ uniform float lifetime;
 uniform float stretch;
 //uniform float graphSampleSize;
 //uniform float graphNumSamples;
-uniform vec3 wrapBounds, emitterScale;
+uniform vec3 wrapBounds, emitterScale, faceTangent, faceBinorm;
 uniform sampler2D texLifeAndSourcePosOUT;
 uniform sampler2D internalTex0;
 uniform sampler2D internalTex1;

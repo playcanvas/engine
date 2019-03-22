@@ -624,9 +624,9 @@ Object.assign(pc, function () {
                 } else {
                     spawnMatrix.setTRS(pc.Vec3.ZERO, this.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.node.localScale));
                 }
-                extentsInnerRatioUniform[0] = this.emitterExtentsInner.x / this.emitterExtents.x;
-                extentsInnerRatioUniform[1] = this.emitterExtentsInner.y / this.emitterExtents.y;
-                extentsInnerRatioUniform[2] = this.emitterExtentsInner.z / this.emitterExtents.z;
+                extentsInnerRatioUniform[0] = this.emitterExtents.x != 0 ? this.emitterExtentsInner.x / this.emitterExtents.x : 0;
+                extentsInnerRatioUniform[1] = this.emitterExtents.y != 0 ? this.emitterExtentsInner.y / this.emitterExtents.y : 0;
+                extentsInnerRatioUniform[2] = this.emitterExtents.z != 0 ? this.emitterExtentsInner.z / this.emitterExtents.z : 0;
             }
             for (i = 0; i < this.numParticles; i++) {
                 this.calcSpawnPosition(emitterPos, i);
@@ -1208,9 +1208,9 @@ Object.assign(pc, function () {
             }
 
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
-                extentsInnerRatioUniform[0] = this.emitterExtentsInner.x / this.emitterExtents.x;
-                extentsInnerRatioUniform[1] = this.emitterExtentsInner.y / this.emitterExtents.y;
-                extentsInnerRatioUniform[2] = this.emitterExtentsInner.z / this.emitterExtents.z;
+                extentsInnerRatioUniform[0] = this.emitterExtents.x != 0 ? this.emitterExtentsInner.x / this.emitterExtents.x : 0;
+                extentsInnerRatioUniform[1] = this.emitterExtents.y != 0 ? this.emitterExtentsInner.y / this.emitterExtents.y : 0;
+                extentsInnerRatioUniform[2] = this.emitterExtents.z != 0 ? this.emitterExtentsInner.z / this.emitterExtents.z : 0;
                 if (this.meshInstance.node === null){
                     spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.emitterExtents);
                 } else {
@@ -1484,7 +1484,7 @@ Object.assign(pc, function () {
                         particlePosPrev.y = this.particleTex[id * particleTexChannels + 1];
                         particlePosPrev.z = this.particleTex[id * particleTexChannels + 2];
 
-                        radialVelocityVec.set(particlePosPrev).sub(emitterPos);
+                        radialVelocityVec.copy(particlePosPrev).sub(emitterPos);
                         radialVelocityVec.normalize().scale(radialSpeed);
 
                         rotSpeed += (rotSpeed2 - rotSpeed) * rndFactor3Vec.y;
