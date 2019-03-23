@@ -340,7 +340,8 @@ Object.assign(pc, function () {
     };
 
     BatchManager.prototype._extractModel = function (node, arr, group, groupMeshInstances) {
-        if (!node.model) return arr;
+        if (!node.model || !node.model.model) return arr;
+
         var i;
         if (node.model.isStatic) {
             // static mesh instances can be in both drawCall array with _staticSource linking to original
