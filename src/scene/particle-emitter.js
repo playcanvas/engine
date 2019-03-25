@@ -756,7 +756,7 @@ Object.assign(pc, function () {
                 randomPos.normalize();
                 var spawnBoundsSphereInnerRatio = this.emitterRadiusInner / this.emitterRadius;
                 var r = rW * (1.0 - spawnBoundsSphereInnerRatio) + spawnBoundsSphereInnerRatio;
-                randomPosTformed.copy(emitterPos).add( randomPos.scale(r * this.spawnBounds) );
+                randomPosTformed.copy(emitterPos).add( randomPos.scale(r * this.emitterRadius) );
             }
 
             var particleRate, startSpawnTime;
