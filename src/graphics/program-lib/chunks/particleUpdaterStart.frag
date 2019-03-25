@@ -64,7 +64,7 @@ void main(void)
 
     addInitialVelocity(localVelocity, rndFactor.xyz);
 
-    outVel = emitterMatrix * (localVelocity + radialVel) + velocity * emitterScale;
+    outVel = emitterMatrix * localVelocity + (radialVel + velocity) * emitterScale;
     outPos = inPos + outVel * delta;
     outAngle = inAngle + rotSpeed * delta;
 

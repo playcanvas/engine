@@ -862,6 +862,11 @@ Object.assign(pc, function () {
                 var lumax2 = [0, 0, 0];
                 maxUnsignedGraphValue(this.qLocalVelocity2, lumax2);
 
+                var rumax = [0];
+                maxUnsignedGraphValue(this.qRadialSpeed, rumax);
+                var rumax2 = [0];
+                maxUnsignedGraphValue(this.qRadialSpeed2, rumax2);
+
                 var maxVel = Math.max(umax[0], umax2[0]);
                 maxVel = Math.max(maxVel, umax[1]);
                 maxVel = Math.max(maxVel, umax2[1]);
@@ -874,7 +879,9 @@ Object.assign(pc, function () {
                 lmaxVel = Math.max(lmaxVel, lumax[2]);
                 lmaxVel = Math.max(lmaxVel, lumax2[2]);
 
-                this.maxVel = maxVel + lmaxVel;
+                var maxRad = Math.max(rumax[0], rumax2[0]);
+
+                this.maxVel = maxVel + lmaxVel + maxRad;
             }
 
 
@@ -1408,6 +1415,23 @@ Object.assign(pc, function () {
                         b = this.qAlpha2[cc];
                         alpha2 = a + (b - a) * c;
 
+                        // var radialSpeed =        tex1D(this.qRadialSpeed, nlife);
+                        a = this.qRadialSpeed[cf];
+                        b = this.qRadialSpeed[cc];
+                        radialSpeed = a + (b - a) * c;
+                        // var radialSpeed2 =       tex1D(this.qRadialSpeed2, nlife);
+                        a = this.qRadialSpeed2[cf];
+                        b = this.qRadialSpeed2[cc];
+                        radialSpeed2 = a + (b - a) * c;
+                        radialSpeed += (radialSpeed2 - radialSpeed) * ((rndFactor * 100.0) % 1.0);
+
+                        particlePosPrev.x = this.particleTex[id * particleTexChannels];
+                        particlePosPrev.y = this.particleTex[id * particleTexChannels + 1];
+                        particlePosPrev.z = this.particleTex[id * particleTexChannels + 2];
+
+                        radialVelocityVec.copy(particlePosPrev).sub(emitterPos);
+                        radialVelocityVec.normalize().scale(radialSpeed);
+
                         cf *= 3;
                         cc *= 3;
 
@@ -1472,21 +1496,6 @@ Object.assign(pc, function () {
                         velocityVec.y += (velocityVec2.y - velocityVec.y) * rndFactor3Vec.y;
                         velocityVec.z += (velocityVec2.z - velocityVec.z) * rndFactor3Vec.z;
 
-                        a = this.qRadialSpeed[cf];
-                        b = this.qRadialSpeed[cc];
-                        radialSpeed = a + (b - a) * c;
-                        a = this.qRadialSpeed2[cf];
-                        b = this.qRadialSpeed2[cc];
-                        radialSpeed2 = a + (b - a) * c;
-                        radialSpeed += (radialSpeed2 - radialSpeed) * ((rndFactor * 100.0) % 1.0);
-
-                        particlePosPrev.x = this.particleTex[id * particleTexChannels];
-                        particlePosPrev.y = this.particleTex[id * particleTexChannels + 1];
-                        particlePosPrev.z = this.particleTex[id * particleTexChannels + 2];
-
-                        radialVelocityVec.copy(particlePosPrev).sub(emitterPos);
-                        radialVelocityVec.normalize().scale(radialSpeed);
-
                         rotSpeed += (rotSpeed2 - rotSpeed) * rndFactor3Vec.y;
                         scale = (scale + (scale2 - scale) * ((rndFactor * 10000.0) % 1.0)) * uniformScale;
                         alphaDiv = (alpha2 - alpha) * ((rndFactor * 1000.0) % 1.0);
@@ -1495,7 +1504,7 @@ Object.assign(pc, function () {
                             rotMat.transformPoint(localVelocityVec, localVelocityVec);
                         }
                         localVelocityVec.add(velocityVec.mul(nonUniformScale));
-                        localVelocityVec.add(radialVelocityVec);
+                        localVelocityVec.add(radialVelocityVec.mul(nonUniformScale));
                         moveDirVec.copy(localVelocityVec);
 
                         particlePos.copy(particlePosPrev).add(localVelocityVec.scale(delta));
