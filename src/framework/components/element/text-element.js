@@ -447,14 +447,15 @@ Object.assign(pc, function () {
 
             var MAGIC = 32;
             var l = symbols.length;
+            var rtl = this._rtlReorder;
             var _x = 0; // cursors
-            var _xMinusTrailingWhitespace = 0;
             var _y = 0;
             var _z = 0;
+            var _xMinusTrailingWhitespace = 0;
             var lines = 1;
             var wordStartX = 0;
-            var wordStartIndex = 0;
-            var lineStartIndex = 0;
+            var wordStartIndex = rtl ? l - 1 : 0;
+            var lineStartIndex = rtl ? l - 1 : 0;
             var numWordsThisLine = 0;
             var numCharsThisLine = 0;
             var numBreaksThisLine = 0;
@@ -472,8 +473,10 @@ Object.assign(pc, function () {
             var char, data, i, quad;
 
             function breakLine(lineBreakIndex, lineBreakX) {
-                self._lineWidths.push(lineBreakX);
-                var chars = symbols.slice(lineStartIndex, lineBreakIndex);
+                self._lineWidths.push(Math.abs(lineBreakX));
+                var sliceStart = lineStartIndex > lineBreakIndex ? lineBreakIndex + 1 : lineStartIndex;
+                var sliceEnd = lineStartIndex > lineBreakIndex ? lineStartIndex + 1 : lineBreakIndex;
+                var chars = symbols.slice(sliceStart, sliceEnd);
 
                 // Remove line breaks from line.
                 // Line breaks would only be there for the final line
@@ -523,14 +526,14 @@ Object.assign(pc, function () {
                 this._lineContents = [];
 
                 _x = 0;
-                _xMinusTrailingWhitespace = 0;
                 _y = 0;
                 _z = 0;
+                _xMinusTrailingWhitespace = 0;
 
                 lines = 1;
                 wordStartX = 0;
-                wordStartIndex = 0;
-                lineStartIndex = 0;
+                wordStartIndex = rtl ? l - 1 : 0;
+                lineStartIndex = rtl ? l - 1 : 0;
                 numWordsThisLine = 0;
                 numCharsThisLine = 0;
                 numBreaksThisLine = 0;
@@ -546,7 +549,7 @@ Object.assign(pc, function () {
                     this._meshInfo[i].lines = {};
                 }
 
-                for (i = 0; i < l; i++) {
+                for (i = (rtl ? l - 1 : 0); (rtl ? i >= 0 : i < l); (rtl ? i-- : i++)) {
                     char = symbols[i];
 
                     var x = 0;
@@ -596,8 +599,8 @@ Object.assign(pc, function () {
                         numBreaksThisLine++;
                         if (this._maxLines < 0 || lines < this._maxLines) {
                             breakLine(i, _xMinusTrailingWhitespace);
-                            wordStartIndex = i + 1;
-                            lineStartIndex = i + 1;
+                            wordStartIndex = rtl ? i - 1 : i + 1;
+                            lineStartIndex = rtl ? i - 1 : i + 1;
                         }
 
                         continue;
@@ -606,7 +609,20 @@ Object.assign(pc, function () {
                     var isWhitespace = WHITESPACE_CHAR.test(char);
 
                     var meshInfo = this._meshInfo[(data && data.map) || 0];
-                    var candidateLineWidth = _x + glyphWidth + glyphMinX;
+
+                    var candidateLineWidth = 0;
+                    if (rtl) {
+                        var _xOffset = 0;
+                        if (numCharsThisLine > 0) {
+                            _xOffset = -this._spacing * advance;
+                        } else {
+                            _xOffset = - glyphWidth - glyphMinX;
+                        }
+
+                        candidateLineWidth = Math.abs(_x + _xOffset);
+                    } else {
+                        candidateLineWidth = _x + glyphMinX + glyphWidth;
+                    }
 
                     // If we've exceeded the maximum line width, move everything from the beginning of
                     // the current word onwards down onto a new line.
@@ -619,14 +635,16 @@ Object.assign(pc, function () {
                                 breakLine(i, _xMinusTrailingWhitespace);
                             } else {
                                 // Move back to the beginning of the current word.
-                                var backtrack = Math.max(i - wordStartIndex, 0);
+                                var backtrack = rtl ? Math.max(wordStartIndex - i, 0) : Math.max(i - wordStartIndex, 0);
                                 if (this._meshInfo.length <= 1) {
                                     meshInfo.lines[lines - 1] -= backtrack;
                                     meshInfo.quad -= backtrack;
                                 } else {
                                     // We should only backtrack the quads that were in the word from this same texture
                                     // We will have to update N number of mesh infos as a result (all textures used in the word in question)
-                                    for (var j = wordStartIndex; j < i; j++) {
+                                    var backtrackStart = rtl ? i + 1 : wordStartIndex;
+                                    var backtrackEnd = rtl ? wordStartIndex + 1 : i;
+                                    for (var j = backtrackStart; j < backtrackEnd; j++) {
                                         var backChar = symbols[j];
                                         var backCharData = json.chars[backChar];
                                         var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
@@ -634,11 +652,24 @@ Object.assign(pc, function () {
                                         backMeshInfo.quad -= 1;
                                     }
                                 }
-                                i -= backtrack + 1;
+
+                                if (rtl) {
+                                    i += backtrack + 1;
+                                } else {
+                                    i -= backtrack + 1;
+                                }
 
                                 breakLine(wordStartIndex, wordStartX);
                                 continue;
                             }
+                        }
+                    }
+
+                    if (rtl) {
+                        if (numCharsThisLine > 0) {
+                            _x -= this._spacing * advance;
+                        } else {
+                            _x -= glyphWidth + glyphMinX;
                         }
                     }
 
@@ -661,8 +692,7 @@ Object.assign(pc, function () {
                     meshInfo.positions[quad * 4 * 3 + 10] = _y - y + quadsize;
                     meshInfo.positions[quad * 4 * 3 + 11] = _z;
 
-
-                    this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
+                    this.width = Math.max(this.width, rtl ? Math.abs(_x) : _x + glyphMinX + glyphWidth);
 
                     // scale font size if autoFitWidth is true and the width is larger than the calculated width
                     var fontSize;
@@ -690,7 +720,9 @@ Object.assign(pc, function () {
                     }
 
                     // advance cursor
-                    _x += (this._spacing * advance);
+                    if (!rtl) {
+                        _x += (this._spacing * advance);
+                    }
 
                     // For proper alignment handling when a line wraps _on_ a whitespace character,
                     // we need to keep track of the width of the line without any trailing whitespace
@@ -704,7 +736,11 @@ Object.assign(pc, function () {
                     if (isWordBoundary) { // char is space, tab, or dash
                         numWordsThisLine++;
                         wordStartX = _xMinusTrailingWhitespace;
-                        wordStartIndex = i + 1;
+                        if (rtl) {
+                            wordStartIndex = i - 1;
+                        } else {
+                            wordStartIndex = i + 1;
+                        }
                     }
 
                     numCharsThisLine++;
@@ -733,9 +769,16 @@ Object.assign(pc, function () {
                 // As we only break lines when the text becomes too wide for the container,
                 // there will almost always be some leftover text on the final line which has
                 // not yet been pushed to _lineContents.
-                if (lineStartIndex < l) {
-                    breakLine(l, _x);
+                if (rtl) {
+                    if (lineStartIndex > 0) {
+                        breakLine(-1, _x);
+                    }
+                } else {
+                    if (lineStartIndex < l) {
+                        breakLine(l, _x);
+                    }
                 }
+
 
             }
 
@@ -757,7 +800,13 @@ Object.assign(pc, function () {
                 var prevQuad = 0;
                 for (var line in this._meshInfo[i].lines) {
                     var index = this._meshInfo[i].lines[line];
-                    var hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - this._lineWidths[parseInt(line, 10)]);
+                    var lw = this._lineWidths[parseInt(line, 10)];
+                    var hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw);
+
+                    if (rtl) {
+                        hoffset += lw;
+                    }
+
                     var voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
 
                     for (quad = prevQuad; quad <= index; quad++) {
