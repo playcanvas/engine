@@ -55,7 +55,11 @@ void main(void)
     vec3 radialParams = tex1Dlod_lerp(internalTex3, vec2(nlife, 0), paramDiv);
     float radialSpeed = radialParams.x;
     float radialSpeedDiv = radialParams.y;
+#ifndef LOCAL_SPACE
     vec3 radialVel = radialSpeed * normalize(inPos - emitterPos);
+#else
+    vec3 radialVel = radialSpeed * normalize(inPos);
+#endif
     radialVel += (2.0 * radialSpeedDiv - 1.0) * radialSpeedDivMult * rndFactor.z;
 
     localVelocity +=    (localVelocityDiv * vec3(2.0) - vec3(1.0)) * localVelocityDivMult * rndFactor.xyz;
@@ -64,7 +68,11 @@ void main(void)
 
     addInitialVelocity(localVelocity, rndFactor.xyz);
 
+#ifndef LOCAL_SPACE
     outVel = emitterMatrix * localVelocity + (radialVel + velocity) * emitterScale;
+#else
+    outVel = localVelocity / emitterScale + emitterMatrixInv * (radialVel + velocity);
+#endif
     outPos = inPos + outVel * delta;
     outAngle = inAngle + rotSpeed * delta;
 
