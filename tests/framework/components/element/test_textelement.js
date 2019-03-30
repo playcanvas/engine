@@ -81,6 +81,21 @@ describe("pc.TextElement", function () {
         return data;
     };
 
+    var registerRtlHandler = function (lineBreakChar) {
+        // splits into phrases based on lineBreakChar
+        // and reverses each character in each phrase
+        app.systems.element.registerRtlReorder(function (symbols) {
+            var result = symbols
+                .join('')
+                .split(lineBreakChar || '\n')
+                .map(function (str) { return str.split('').reverse().join(''); })
+                .join(lineBreakChar || '\n')
+                .split('');
+            console.log(result);
+            return result;
+        });
+    };
+
     it("does not break onto multiple lines if the text is short enough", function () {
         element.fontAsset = fontAsset;
 
@@ -321,6 +336,237 @@ describe("pc.TextElement", function () {
         assertLineContents([
             "a",
             "bcdef ghijkl"
+        ]);
+    });
+
+    it("rtl - breaks onto multiple lines if individual lines are too long", function () {
+        registerRtlHandler();
+
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcde fghij klmno pqrst uvwxyz";
+        assertLineContents([
+            " jihgf edcba",
+            " tsrqp onmlk",
+            "zyxwvu"
+        ]);
+    });
+
+    it("rtl - breaks individual words if they are too long to fit onto a line by themselves (single word case)", function () {
+        registerRtlHandler();
+
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcdefghijklmnopqrstuvwxyz";
+        assertLineContents([
+            'mlkjihgfedcba',
+            'yxwvutsrqpon',
+            'z'
+        ]);
+    });
+
+    it("rtl - breaks individual words if they are too long to fit onto a line by themselves (multi word case)", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcdefgh ijklmnopqrstuvwxyz";
+        assertLineContents([
+            ' hgfedcba',
+            'utsrqponmlkji',
+            'zyxwv'
+        ]);
+    });
+
+    it("rtl - breaks individual characters onto separate lines if the width is really constrained", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.width = 1;
+        element.text = "abcdef ghijkl";
+        assertLineContents([
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            " f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l"
+        ]);
+    });
+
+    it("rtl - does not include whitespace at the end of a line in width calculations", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcdefgh        i";
+        assertLineContents([
+            "        hgfedcba",
+            "i"
+        ]);
+    });
+
+    it("rtl - breaks words on hypens", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcde fghij-klm nopqr stuvwxyz";
+        assertLineContents([
+            "-jihgf edcba",
+            " rqpon mlk",
+            "zyxwvuts"
+        ]);
+    });
+
+    it("rtl - keeps hyphenated word segments together when wrapping them", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.width = 150;
+        element.text = "abcde fghij-klm nopqr stuvwxyz";
+        assertLineContents([
+            " edcba",
+            " mlk-jihgf",
+            " rqpon",
+            "zyxwvuts"
+        ]);
+    });
+
+    it("rtl - splits lines on \\n", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcde\nfghij";
+        console.log(element.lines);
+        assertLineContents([
+            "edcba",
+            "jihgf"
+        ]);
+    });
+
+    it("rtl - splits lines on \\r", function () {
+        registerRtlHandler('\r');
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcde\rfghij";
+        assertLineContents([
+            "edcba",
+            "jihgf"
+        ]);
+    });
+
+    it("rtl - splits lines on multiple \\n", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcde\n\n\nfg\nhij";
+        assertLineContents([
+            "edcba",
+            "",
+            "",
+            "gf",
+            "jih"
+        ]);
+    });
+
+    it("rtl - does not break beyond 1 line if maxLines is equal to 1", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+        element.maxLines = 1;
+        element.text = "abcde fghij klmno pqrst uvwxyz";
+        // long contents
+        assertLineContents([
+            "zyxwvu tsrqp onmlk jihgf edcba"
+        ]);
+        // multiple new lines
+        element.text = "abcde\n\n\nfg\nhij";
+        assertLineContents([
+            "jihgfedcba"
+        ]);
+        // \r chars
+        registerRtlHandler('\r');
+        element.text = "abcde\rfghij";
+        assertLineContents([
+            "jihgfedcba"
+        ]);
+
+        registerRtlHandler('\n');
+        // hyphens
+        element.text = "abcde fghij-klm nopqr stuvwxyz";
+        assertLineContents([
+            "zyxwvuts rqpon mlk-jihgf edcba"
+        ]);
+        // whitespace at end of line
+        element.text = "abcdefgh        i";
+        assertLineContents([
+            "i        hgfedcba"
+        ]);
+        // individual characters
+        element.width = 1;
+        element.text = "abcdef ghijkl";
+        assertLineContents([
+            "lkjihg fedcba"
+        ]);
+    });
+
+    it("rtl breaks remaining text in last line when maxLines limit is reached", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+        element.maxLines = 2;
+        element.text = "abcde fghij klmno pqrst uvwxyz";
+        // long contents
+        assertLineContents([
+            ' jihgf edcba',
+            'zyxwvu tsrqp onmlk'
+        ]);
+        // multiple new lines
+        element.text = "abcde\n\n\nfg\nhij";
+        assertLineContents([
+            "edcba",
+            "jihgf"
+        ]);
+        // \r chars
+        registerRtlHandler('\r');
+        element.text = "abcde\rfghij";
+        assertLineContents([
+            "edcba",
+            "jihgf"
+        ]);
+        // hyphens
+        registerRtlHandler('\n');
+        element.text = "abcde fghij-klm nopqr stuvwxyz";
+        assertLineContents([
+            "-jihgf edcba",
+            "zyxwvuts rqpon mlk"
+        ]);
+        // whitespace at end of line
+        element.text = "abcdefgh        i";
+        assertLineContents([
+            "        hgfedcba",
+            "i"
+        ]);
+        // individual characters
+        element.width = 1;
+        element.text = "abcdef ghijkl";
+        assertLineContents([
+            "a",
+            "lkjihg fedcb"
         ]);
     });
 
