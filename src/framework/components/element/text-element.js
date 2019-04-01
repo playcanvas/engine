@@ -863,6 +863,9 @@ Object.assign(pc, function () {
                     var hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw);
 
                     if (rtl) {
+                        // for rtl we render characters from right to left going from 0 all the way to the
+                        // negative width of each line so we need to add the line width to bring the line
+                        // back to its right place
                         hoffset += lw;
                     }
 
