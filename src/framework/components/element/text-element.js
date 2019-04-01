@@ -474,6 +474,8 @@ Object.assign(pc, function () {
 
             function breakLine(lineBreakIndex, lineBreakX) {
                 self._lineWidths.push(Math.abs(lineBreakX));
+                // in rtl mode lineStartIndex will usually be larger than lineBreakIndex and we will
+                // need to adjust the start / end indices when calling symbols.slice()
                 var sliceStart = lineStartIndex > lineBreakIndex ? lineBreakIndex + 1 : lineStartIndex;
                 var sliceEnd = lineStartIndex > lineBreakIndex ? lineStartIndex + 1 : lineBreakIndex;
                 var chars = symbols.slice(sliceStart, sliceEnd);
@@ -598,6 +600,9 @@ Object.assign(pc, function () {
                     }
                 }
 
+                // In left-to-right mode we loop through the symbols from start to end.
+                // In right-to-left mode we loop through the symbols from end to the beginning
+                // in order to wrap lines in the correct order
                 for (i = (rtl ? l - 1 : 0); (rtl ? i >= 0 : i < l); (rtl ? i-- : i++)) {
                     char = symbols[i];
 
@@ -660,8 +665,13 @@ Object.assign(pc, function () {
                     var meshInfo = this._meshInfo[(data && data.map) || 0];
 
                     var candidateLineWidth = 0;
+
+                    // the amount of negative offset to print the current character
+                    // in RTL mode
                     var _xRtlOffset = 0;
                     if (rtl) {
+                        // for the first character offset the cursor by the glyphWidth + glyphMinX
+                        // and for the rest of the characters offset by xadvance
                         if (numCharsThisLine > 0) {
                             _xRtlOffset = this._spacing * advance;
                         } else {
@@ -717,20 +727,25 @@ Object.assign(pc, function () {
                     quad = meshInfo.quad;
                     meshInfo.lines[lines - 1] = quad;
 
-                    meshInfo.positions[quad * 4 * 3 + 0] = _x - x - _xRtlOffset;
-                    meshInfo.positions[quad * 4 * 3 + 1] = _y - y;
+                    var left = _x - x - _xRtlOffset;
+                    var right = left + quadsize;
+                    var bottom = _y - y;
+                    var top = bottom + quadsize;
+
+                    meshInfo.positions[quad * 4 * 3 + 0] = left;
+                    meshInfo.positions[quad * 4 * 3 + 1] = bottom;
                     meshInfo.positions[quad * 4 * 3 + 2] = _z;
 
-                    meshInfo.positions[quad * 4 * 3 + 3] = _x - x - _xRtlOffset + quadsize;
-                    meshInfo.positions[quad * 4 * 3 + 4] = _y - y;
+                    meshInfo.positions[quad * 4 * 3 + 3] = right;
+                    meshInfo.positions[quad * 4 * 3 + 4] = bottom;
                     meshInfo.positions[quad * 4 * 3 + 5] = _z;
 
-                    meshInfo.positions[quad * 4 * 3 + 6] = _x - x - _xRtlOffset + quadsize;
-                    meshInfo.positions[quad * 4 * 3 + 7] = _y - y + quadsize;
+                    meshInfo.positions[quad * 4 * 3 + 6] = right;
+                    meshInfo.positions[quad * 4 * 3 + 7] = top;
                     meshInfo.positions[quad * 4 * 3 + 8] = _z;
 
-                    meshInfo.positions[quad * 4 * 3 + 9]  = _x - x - _xRtlOffset;
-                    meshInfo.positions[quad * 4 * 3 + 10] = _y - y + quadsize;
+                    meshInfo.positions[quad * 4 * 3 + 9]  = left;
+                    meshInfo.positions[quad * 4 * 3 + 10] = top;
                     meshInfo.positions[quad * 4 * 3 + 11] = _z;
 
                     this.width = Math.max(this.width, rtl ? Math.abs(_x - _xRtlOffset) : _x + glyphMinX + glyphWidth);
@@ -764,6 +779,7 @@ Object.assign(pc, function () {
                     if (!rtl) {
                         _x += (this._spacing * advance);
                     } else {
+                        // for RTL we move left
                         _x -= _xRtlOffset;
                     }
 
