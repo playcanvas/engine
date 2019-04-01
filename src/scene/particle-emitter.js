@@ -454,18 +454,16 @@ Object.assign(pc, function () {
 
             this.worldBoundsNoTrail.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
             this.worldBoundsTrail[0].add(this.worldBoundsNoTrail);
+            this.worldBoundsTrail[1].add(this.worldBoundsNoTrail);
 
             var now = this.simTimeTotal;
             if (now > this.timeToSwitchBounds) {
-                var tmp = this.worldBoundsTrail[0];
-                this.worldBoundsTrail[0] = this.worldBoundsTrail[1];
-                this.worldBoundsTrail[1] = tmp;
-                this.worldBoundsTrail[0].copy(this.worldBoundsNoTrail);
+                this.worldBoundsTrail[0].copy(this.worldBoundsTrail[1]);
+                this.worldBoundsTrail[1].copy(this.worldBoundsNoTrail);
                 this.timeToSwitchBounds = now + this.lifetime;
             }
 
             this.worldBounds.copy(this.worldBoundsTrail[0]);
-            this.worldBounds.add(this.worldBoundsTrail[1]);
 
             this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
 
@@ -1113,6 +1111,17 @@ Object.assign(pc, function () {
             if (this.useCpu) this.vertexBuffer.unlock();
         },
 
+        _setInputBounds: function () {
+            this.inBoundsSizeUniform[0] = this.prevWorldBoundsSize.x;
+            this.inBoundsSizeUniform[1] = this.prevWorldBoundsSize.y;
+            this.inBoundsSizeUniform[2] = this.prevWorldBoundsSize.z;
+            this.constantInBoundsSize.setValue(this.inBoundsSizeUniform);
+            this.inBoundsCenterUniform[0] = this.prevWorldBoundsCenter.x;
+            this.inBoundsCenterUniform[1] = this.prevWorldBoundsCenter.y;
+            this.inBoundsCenterUniform[2] = this.prevWorldBoundsCenter.z;
+            this.constantInBoundsCenter.setValue(this.inBoundsCenterUniform);
+        },
+
         addTime: function (delta, isOnStop) {
             var a, b, c, i, j;
             var device = this.graphicsDevice;
@@ -1190,14 +1199,8 @@ Object.assign(pc, function () {
                     this.worldBoundsAddUniform[1] = this.worldBoundsAdd.y;
                     this.worldBoundsAddUniform[2] = this.worldBoundsAdd.z;
                     this.constantOutBoundsAdd.setValue(this.worldBoundsAddUniform);
-                    this.inBoundsSizeUniform[0] = this.prevWorldBoundsSize.x;
-                    this.inBoundsSizeUniform[1] = this.prevWorldBoundsSize.y;
-                    this.inBoundsSizeUniform[2] = this.prevWorldBoundsSize.z;
-                    this.constantInBoundsSize.setValue(this.inBoundsSizeUniform);
-                    this.inBoundsCenterUniform[0] = this.prevWorldBoundsCenter.x;
-                    this.inBoundsCenterUniform[1] = this.prevWorldBoundsCenter.y;
-                    this.inBoundsCenterUniform[2] = this.prevWorldBoundsCenter.z;
-                    this.constantInBoundsCenter.setValue(this.inBoundsCenterUniform);
+
+                    this._setInputBounds();
 
                     var maxVel = this.maxVel * Math.max(Math.max(emitterScale.x, emitterScale.y), emitterScale.z);
                     maxVel = Math.max(maxVel, 1);
@@ -1257,6 +1260,11 @@ Object.assign(pc, function () {
 
                 device.setDepthTest(true);
                 device.setDepthWrite(true);
+
+                this.prevWorldBoundsSize.copy(this.worldBoundsSize);
+                this.prevWorldBoundsCenter.copy(this.worldBounds.center);
+                if (this.pack8)
+                    this._setInputBounds();
             } else {
                 var data = new Float32Array(this.vertexBuffer.lock());
                 if (this.meshInstance.node) {
