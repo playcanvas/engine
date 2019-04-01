@@ -91,7 +91,6 @@ describe("pc.TextElement", function () {
                 .map(function (str) { return str.split('').reverse().join(''); })
                 .join(lineBreakChar || '\n')
                 .split('');
-            console.log(result);
             return result;
         });
     };
@@ -449,7 +448,6 @@ describe("pc.TextElement", function () {
         element.rtlReorder = true;
 
         element.text = "abcde\nfghij";
-        console.log(element.lines);
         assertLineContents([
             "edcba",
             "jihgf"

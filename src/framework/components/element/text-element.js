@@ -594,7 +594,6 @@ Object.assign(pc, function () {
                         }
 
                         // use the new symbols array
-                        console.log('newsymbols', newSymbols);
                         symbols = newSymbols;
                     }
                 }
