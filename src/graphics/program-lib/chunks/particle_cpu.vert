@@ -1,7 +1,11 @@
 attribute vec4 particle_vertexData;     // XYZ = world pos, W = life
 attribute vec4 particle_vertexData2;     // X = angle, Y = scale, Z = alpha, W = velocity.x
 attribute vec4 particle_vertexData3;     // XYZ = particle local pos, W = velocity.y
-attribute vec2 particle_vertexData4;     // X = velocity.z, W = particle ID
+#ifndef USE_MESH
+attribute vec2 particle_vertexData4;     // X = velocity.z, Y = particle ID
+#else
+attribute vec4 particle_vertexData4;     // X = velocity.z, Y = particle ID, Z = mesh UV.x, W = mesh UV.y
+#endif
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
@@ -57,8 +61,12 @@ void main(void)
     vec2 velocityV = normalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
 
     vec2 quadXY = vertPos.xy;
+    
+#ifndef USE_MESH
     texCoordsAlphaLife = vec4(quadXY * -0.5 + 0.5, particle_vertexData2.z, particle_vertexData.w);
-
+#else
+    texCoordsAlphaLife = vec4(particle_vertexData4.x, particle_vertexData4.y, particle_vertexData2.z, particle_vertexData.w);
+#endif
     mat2 rotMatrix;
 
     float inAngle = particle_vertexData2.x;

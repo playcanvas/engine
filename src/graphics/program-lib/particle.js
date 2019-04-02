@@ -28,6 +28,7 @@ pc.programlib.particle = {
             fshader += "#define GL2\n";
         }
         vshader += "#define VERTEXSHADER\n";
+        if (options.mesh) vshader += "#define USE_MESH\n";
 
         if (options.animTex) vshader += "\nuniform vec4 animTexParams;\n";
         if (options.normal == 2) vshader += "\nvarying mat3 ParticleMat;\n";

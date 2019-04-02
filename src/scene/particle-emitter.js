@@ -985,6 +985,13 @@ Object.assign(pc, function () {
                         components: 4,
                         type: pc.TYPE_FLOAT32
                     }];
+                    if (this.useMesh) {
+                        elements.push({
+                            semantic: pc.SEMANTIC_ATTR1,
+                            components: 2,
+                            type: pc.TYPE_FLOAT32
+                        });
+                    }
                     particleFormat = new pc.VertexFormat(this.graphicsDevice, elements);
 
                     this.vertexBuffer = new pc.VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, pc.BUFFER_DYNAMIC);
@@ -1004,7 +1011,7 @@ Object.assign(pc, function () {
                         type: pc.TYPE_FLOAT32
                     }, {
                         semantic: pc.SEMANTIC_ATTR3,
-                        components: 2,
+                        components: this.useMesh ? 4 : 2,
                         type: pc.TYPE_FLOAT32
                     }];
                     particleFormat = new pc.VertexFormat(this.graphicsDevice, elements);
@@ -1015,10 +1022,16 @@ Object.assign(pc, function () {
 
                 // Fill the vertex buffer
                 var data = new Float32Array(this.vertexBuffer.lock());
-                var meshData, stride;
+                var meshData, stride, texCoordOffset;
                 if (this.useMesh) {
                     meshData = new Float32Array(this.mesh.vertexBuffer.lock());
                     stride = meshData.length / this.mesh.vertexBuffer.numVertices;
+                    for (var elem = 0; elem < this.mesh.vertexBuffer.format.elements.length; elem++) {
+                        if (this.mesh.vertexBuffer.format.elements[elem].name === pc.SEMANTIC_TEXCOORD0) {
+                            texCoordOffset = this.mesh.vertexBuffer.format.elements[elem].offset / 4;
+                            break;
+                        }
+                    }
                 }
 
                 var id;
@@ -1029,14 +1042,16 @@ Object.assign(pc, function () {
                         data[i * 4] = particleVerts[vertID][0];
                         data[i * 4 + 1] = particleVerts[vertID][1];
                         data[i * 4 + 2] = 0;
+                        data[i * 4 + 3] = id;
                     } else {
                         var vert = i % this.numParticleVerts;
-                        data[i * 4] = meshData[vert * stride];
-                        data[i * 4 + 1] = meshData[vert * stride + 1];
-                        data[i * 4 + 2] = meshData[vert * stride + 2];
+                        data[i * 6] = meshData[vert * stride];
+                        data[i * 6 + 1] = meshData[vert * stride + 1];
+                        data[i * 6 + 2] = meshData[vert * stride + 2];
+                        data[i * 6 + 3] = id;
+                        data[i * 6 + 4] = meshData[vert * stride + texCoordOffset + 0];
+                        data[i * 6 + 5] = meshData[vert * stride + texCoordOffset + 1];
                     }
-
-                    data[i * 4 + 3] = id;
                 }
 
                 if (this.useCpu) {
@@ -1280,13 +1295,13 @@ Object.assign(pc, function () {
                 emitterPos = (this.meshInstance.node === null || this.localSpace) ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
                 var posCam = this.camera ? this.camera._node.getPosition() : pc.Vec3.ZERO;
 
-                var vertSize = 14;
+                var vertSize = !this.useMesh ? 14 : 16;
                 var cf, cc;
                 var rotSpeed, rotSpeed2, scale2, alpha, alpha2;
                 var precision1 = this.precision - 1;
 
                 for (i = 0; i < this.numParticles; i++) {
-                    var id = Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3]);
+                    var id = Math.floor(this.vbCPU[i * this.numParticleVerts * (this.useMesh ? 6 : 4) + 3]);
 
                     var rndFactor = this.particleTex[id * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
                     rndFactor3Vec.x = rndFactor;
@@ -1472,9 +1487,10 @@ Object.assign(pc, function () {
                     this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = life;
 
                     for (var v = 0; v < this.numParticleVerts; v++) {
-                        var quadX = this.vbCPU[i * this.numParticleVerts * 4 + v * 4];
-                        var quadY = this.vbCPU[i * this.numParticleVerts * 4 + v * 4 + 1];
-                        var quadZ = this.vbCPU[i * this.numParticleVerts * 4 + v * 4 + 2];
+                        var vbOffset = (i * this.numParticleVerts + v) * (this.useMesh ? 6 : 4);
+                        var quadX = this.vbCPU[vbOffset];
+                        var quadY = this.vbCPU[vbOffset + 1];
+                        var quadZ = this.vbCPU[vbOffset + 2];
                         if (!particleEnabled) {
                             quadX = quadY = quadZ = 0;
                         }
@@ -1494,15 +1510,22 @@ Object.assign(pc, function () {
                         data[w + 11] = moveDirVec.y;
                         data[w + 12] = moveDirVec.z;
                         // 13 is particle id
+                        if (this.useMesh) {
+                            var UVx = this.vbCPU[vbOffset + 4];
+                            var UVy = this.vbCPU[vbOffset + 5];
+                            data[w + 14] = this.vbCPU[vbOffset + 4];
+                            data[w + 15] = this.vbCPU[vbOffset + 5];
+                        }
                     }
                 }
 
                 // Particle sorting
                 // TODO: optimize
                 if (this.sort > pc.PARTICLESORT_NONE && this.camera) {
+                    var vbStride = this.useMesh ? 6 : 4;
                     var particleDistance = this.particleDistance;
                     for (i = 0; i < this.numParticles; i++) {
-                        this.vbToSort[i] = [i, particleDistance[Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3])]]; // particle id
+                        this.vbToSort[i] = [i, particleDistance[Math.floor(this.vbCPU[i * this.numParticleVerts * vbStride + 3])]]; // particle id
                     }
 
                     this.vbOld.set(this.vbCPU);
@@ -1512,9 +1535,9 @@ Object.assign(pc, function () {
                     });
 
                     for (i = 0; i < this.numParticles; i++) {
-                        var src = this.vbToSort[i][0] * this.numParticleVerts * 4;
-                        var dest = i * this.numParticleVerts * 4;
-                        for (j = 0; j < this.numParticleVerts * 4; j++) {
+                        var src = this.vbToSort[i][0] * this.numParticleVerts * vbStride;
+                        var dest = i * this.numParticleVerts * vbStride;
+                        for (j = 0; j < this.numParticleVerts * vbStride; j++) {
                             this.vbCPU[dest + j] = this.vbOld[src + j];
                         }
                     }
