@@ -2,10 +2,11 @@ attribute vec4 particle_vertexData;     // XYZ = world pos, W = life
 attribute vec4 particle_vertexData2;     // X = angle, Y = scale, Z = alpha, W = velocity.x
 attribute vec4 particle_vertexData3;     // XYZ = particle local pos, W = velocity.y
 #ifndef USE_MESH
-attribute vec2 particle_vertexData4;     // X = velocity.z, Y = particle ID
+#define VDATA4TYPE vec2
 #else
-attribute vec4 particle_vertexData4;     // X = velocity.z, Y = particle ID, Z = mesh UV.x, W = mesh UV.y
+#define VDATA4TYPE vec4
 #endif
+attribute VDATA4TYPE particle_vertexData4;     // VDATA4TYPE depends on useMesh property. Start with X = velocity.z, Y = particle ID and for mesh particles proceeds with Z = mesh UV.x, W = mesh UV.y
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
@@ -65,7 +66,7 @@ void main(void)
 #ifndef USE_MESH
     texCoordsAlphaLife = vec4(quadXY * -0.5 + 0.5, particle_vertexData2.z, particle_vertexData.w);
 #else
-    texCoordsAlphaLife = vec4(particle_vertexData4.x, particle_vertexData4.y, particle_vertexData2.z, particle_vertexData.w);
+    texCoordsAlphaLife = vec4(particle_vertexData4.zw, particle_vertexData2.z, particle_vertexData.w);
 #endif
     mat2 rotMatrix;
 

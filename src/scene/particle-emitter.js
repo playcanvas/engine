@@ -1509,10 +1509,8 @@ Object.assign(pc, function () {
                         data[w + 10] = quadZ;
                         data[w + 11] = moveDirVec.y;
                         data[w + 12] = moveDirVec.z;
-                        // 13 is particle id
+                        data[w + 13] = this.vbCPU[vbOffset + 3];
                         if (this.useMesh) {
-                            var UVx = this.vbCPU[vbOffset + 4];
-                            var UVy = this.vbCPU[vbOffset + 5];
                             data[w + 14] = this.vbCPU[vbOffset + 4];
                             data[w + 15] = this.vbCPU[vbOffset + 5];
                         }
