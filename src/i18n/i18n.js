@@ -43,7 +43,7 @@ Object.assign(pc, (function () {
 
     // Gets the function that converts to plural for a language
     var getPluralFn = function (lang) {
-        return PLURALS[lang] || DEFAULT_PLURAL_FN;
+        return PLURALS[lang] || PLURALS[getLang(DEFAULT_LOCALE)];
     };
 
     // Only OTHER
