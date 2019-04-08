@@ -1,7 +1,7 @@
 varying vec4 texCoordsAlphaLife;
 
 uniform sampler2D colorMap;
-uniform sampler2D internalTex3;
+uniform sampler2D colorParam;
 uniform float graphSampleSize;
 uniform float graphNumSamples;
 
@@ -28,7 +28,7 @@ float unpackFloat(vec4 rgbaDepth) {
 
 void main(void) {
     vec4 tex         = texture2DSRGB(colorMap, texCoordsAlphaLife.xy);
-    vec4 ramp     = texture2DSRGB(internalTex3, vec2(texCoordsAlphaLife.w, 0.0));
+    vec4 ramp     = texture2DSRGB(colorParam, vec2(texCoordsAlphaLife.w, 0.0));
     ramp.rgb *= colorMult;
 
     ramp.a += texCoordsAlphaLife.z;

@@ -92,6 +92,7 @@ Object.assign(pc, function () {
     var localVelocityVec = new pc.Vec3();
     var velocityVec2 = new pc.Vec3();
     var localVelocityVec2 = new pc.Vec3();
+    var radialVelocityVec = new pc.Vec3();
     var rndFactor3Vec = new pc.Vec3();
     var particlePosPrev = new pc.Vec3();
     var particlePos = new pc.Vec3();
@@ -99,6 +100,7 @@ Object.assign(pc, function () {
     var moveDirVec = new pc.Vec3();
     var rotMat = new pc.Mat4();
     var spawnMatrix3 = new pc.Mat3();
+    var extentsInnerRatioUniform = new Float32Array(3);
     var emitterMatrix3 = new pc.Mat3();
     var uniformScale = 1;
     var nonUniformScale;
@@ -162,6 +164,17 @@ Object.assign(pc, function () {
         return colors;
     }
 
+    function packTexture2Floats(qA, qB) {
+        var colors = new Array(qA.length * 4);
+        for (var i = 0; i < qA.length; i++) {
+            colors[i * 4] = qA[i];
+            colors[i * 4 + 1] = qB[i];
+            colors[i * 4 + 2] = 0;
+            colors[i * 4 + 3] = 0;
+        }
+        return colors;
+    }
+
     var ParticleEmitter = function (graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
         var gd = graphicsDevice;
@@ -208,7 +221,9 @@ Object.assign(pc, function () {
         setProperty("rate2", this.rate);
         setProperty("lifetime", 50);                             // Particle lifetime
         setProperty("emitterExtents", new pc.Vec3(0, 0, 0));        // Spawn point divergence
+        setProperty("emitterExtentsInner", new pc.Vec3(0, 0, 0));   // Volume inside emitterExtents to exclude from reneration
         setProperty("emitterRadius", 0);
+        setProperty("emitterRadiusInner", 0);                       // Same as ExtentsInner but for spherical volume
         setProperty("emitterShape", pc.EMITTERSHAPE_BOX);
         setProperty("initialVelocity", 1);
         setProperty("wrap", false);
@@ -227,8 +242,11 @@ Object.assign(pc, function () {
         setProperty("stretch", 0.0);
         setProperty("alignToMotion", false);
         setProperty("depthSoftening", 0);
-        setProperty("mesh", null);                               // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
-                                                                 // Leave undefined to use simple quads
+        setProperty("mesh", null);                              // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
+                                                                // Leave undefined to use simple quads
+        setProperty("particleNormal", new pc.Vec3(0, 1, 0));
+        setProperty("orientation", pc.PARTICLEORIENTATION_SCREEN);
+
         setProperty("depthWrite", false);
         setProperty("noFog", false);
         setProperty("blendType", pc.BLEND_NORMAL);
@@ -266,13 +284,18 @@ Object.assign(pc, function () {
         setProperty("rotationSpeedGraph", default0Curve);
         setProperty("rotationSpeedGraph2", this.rotationSpeedGraph);
 
+        setProperty("radialSpeedGraph", default0Curve);
+        setProperty("radialSpeedGraph2", this.radialSpeedGraph);
+
         // Particle updater constants
         this.constantParticleTexIN = gd.scope.resolve("particleTexIN");
         this.constantParticleTexOUT = gd.scope.resolve("particleTexOUT");
         this.constantEmitterPos = gd.scope.resolve("emitterPos");
         this.constantEmitterScale = gd.scope.resolve("emitterScale");
         this.constantSpawnBounds = gd.scope.resolve("spawnBounds");
+        this.constantSpawnPosInnerRatio = gd.scope.resolve("spawnPosInnerRatio");
         this.constantSpawnBoundsSphere = gd.scope.resolve("spawnBoundsSphere");
+        this.constantSpawnBoundsSphereInnerRatio = gd.scope.resolve("spawnBoundsSphereInnerRatio");
         this.constantInitialVelocity = gd.scope.resolve("initialVelocity");
         this.constantFrameRandom = gd.scope.resolve("frameRandom");
         this.constantDelta = gd.scope.resolve("delta");
@@ -285,6 +308,7 @@ Object.assign(pc, function () {
         this.constantInternalTex0 = gd.scope.resolve("internalTex0");
         this.constantInternalTex1 = gd.scope.resolve("internalTex1");
         this.constantInternalTex2 = gd.scope.resolve("internalTex2");
+        this.constantInternalTex3 = gd.scope.resolve("internalTex3");
         this.constantEmitterMatrix = gd.scope.resolve("emitterMatrix");
         this.constantNumParticles = gd.scope.resolve("numParticles");
         this.constantNumParticlesPot = gd.scope.resolve("numParticlesPot");
@@ -299,6 +323,8 @@ Object.assign(pc, function () {
         this.constantInBoundsSize = gd.scope.resolve("inBoundsSize");
         this.constantInBoundsCenter = gd.scope.resolve("inBoundsCenter");
         this.constantMaxVel = gd.scope.resolve("maxVel");
+        this.constantFaceTangent = gd.scope.resolve("faceTangent");
+        this.constantFaceBinorm = gd.scope.resolve("faceBinorm");
 
         this.lightCube = new Float32Array(6 * 3);
         this.lightCubeDir = new Array(6);
@@ -314,7 +340,7 @@ Object.assign(pc, function () {
         this.internalTex0 = null;
         this.internalTex1 = null;
         this.internalTex2 = null;
-        this.internalTex3 = null;
+        this.colorParam = null;
 
         this.vbToSort = null;
         this.vbOld = null;
@@ -480,12 +506,14 @@ Object.assign(pc, function () {
             var maxx = -Number.MAX_VALUE;
             var maxy = -Number.MAX_VALUE;
             var maxz = -Number.MAX_VALUE;
+            var maxR = 0;
             var maxScale = 0;
             var stepWeight = this.lifetime / this.precision;
             var vels = [this.qVelocity, this.qVelocity2, this.qLocalVelocity, this.qLocalVelocity2];
             var accumX = [0, 0, 0, 0];
             var accumY = [0, 0, 0, 0];
             var accumZ = [0, 0, 0, 0];
+            var accumR = [0, 0];
             var i, j;
             var index;
             var x, y, z;
@@ -507,6 +535,10 @@ Object.assign(pc, function () {
                     accumY[j] = y;
                     accumZ[j] = z;
                 }
+                accumR[0] += this.qRadialSpeed[index] * stepWeight;
+                accumR[1] += this.qRadialSpeed2[index] * stepWeight;
+                maxR = Math.max(maxR, Math.max(Math.abs(accumR[0]), Math.abs(accumR[1])));
+
                 maxScale = Math.max(maxScale, this.qScale[index]);
             }
 
@@ -514,36 +546,18 @@ Object.assign(pc, function () {
                 x = this.emitterExtents.x * 0.5;
                 y = this.emitterExtents.y * 0.5;
                 z = this.emitterExtents.z * 0.5;
-                if (maxx < x) maxx = x;
-                if (maxy < y) maxy = y;
-                if (maxz < z) maxz = z;
-                x = -x;
-                y = -y;
-                z = -z;
-                if (minx > x) minx = x;
-                if (miny > y) miny = y;
-                if (minz > z) minz = z;
             } else {
                 x = this.emitterRadius;
                 y = this.emitterRadius;
                 z = this.emitterRadius;
-                if (maxx < x) maxx = x;
-                if (maxy < y) maxy = y;
-                if (maxz < z) maxz = z;
-                x = -x;
-                y = -y;
-                z = -z;
-                if (minx > x) minx = x;
-                if (miny > y) miny = y;
-                if (minz > z) minz = z;
             }
 
-            bMin.x = minx - maxScale;
-            bMin.y = miny - maxScale;
-            bMin.z = minz - maxScale;
-            bMax.x = maxx + maxScale;
-            bMax.y = maxy + maxScale;
-            bMax.z = maxz + maxScale;
+            bMin.x = minx - maxScale - x - maxR;
+            bMin.y = miny - maxScale - y - maxR;
+            bMin.z = minz - maxScale - z - maxR;
+            bMax.x = maxx + maxScale + x + maxR;
+            bMax.y = maxy + maxScale + y + maxR;
+            bMax.z = maxz + maxScale + z + maxR;
             this.localBounds.setMinMax(bMin, bMax);
         },
 
@@ -608,6 +622,9 @@ Object.assign(pc, function () {
                 } else {
                     spawnMatrix.setTRS(pc.Vec3.ZERO, this.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.node.localScale));
                 }
+                extentsInnerRatioUniform[0] = this.emitterExtents.x != 0 ? this.emitterExtentsInner.x / this.emitterExtents.x : 0;
+                extentsInnerRatioUniform[1] = this.emitterExtents.y != 0 ? this.emitterExtentsInner.y / this.emitterExtents.y : 0;
+                extentsInnerRatioUniform[2] = this.emitterExtents.z != 0 ? this.emitterExtentsInner.z / this.emitterExtents.z : 0;
             }
             for (i = 0; i < this.numParticles; i++) {
                 this.calcSpawnPosition(emitterPos, i);
@@ -720,10 +737,24 @@ Object.assign(pc, function () {
             randomPos.z = rZ - 0.5;
 
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
+                var max = Math.max(Math.abs(randomPos.x), Math.max(Math.abs(randomPos.y), Math.abs(randomPos.z)));
+
+                // let's find a contour sourface level coresponding to max random component
+                // and translate 2 other random components to that surface
+                // edge = (1.0 - extentsInnerRatioUniform) * max + 0.5 * extentsInnerRatioUniform;
+                var edgeX = max + (0.5 - max) * extentsInnerRatioUniform[0];
+                var edgeY = max + (0.5 - max) * extentsInnerRatioUniform[1];
+                var edgeZ = max + (0.5 - max) * extentsInnerRatioUniform[2];
+                randomPos.x = edgeX * (max == Math.abs(randomPos.x) ? Math.sign(randomPos.x) : 2 * randomPos.x);
+                randomPos.y = edgeY * (max == Math.abs(randomPos.y) ? Math.sign(randomPos.y) : 2 * randomPos.y);
+                randomPos.z = edgeZ * (max == Math.abs(randomPos.z) ? Math.sign(randomPos.z) : 2 * randomPos.z);
+
                 randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
             } else {
                 randomPos.normalize();
-                randomPosTformed.copy(emitterPos).add( randomPos.scale(rW * this.emitterRadius) );
+                var spawnBoundsSphereInnerRatio = this.emitterRadiusInner / this.emitterRadius;
+                var r = rW * (1.0 - spawnBoundsSphereInnerRatio) + spawnBoundsSphereInnerRatio;
+                randomPosTformed.copy(emitterPos).add( randomPos.scale(r * this.emitterRadius) );
             }
 
             var particleRate, startSpawnTime;
@@ -788,6 +819,7 @@ Object.assign(pc, function () {
             this.qRotSpeed =      this.rotationSpeedGraph.quantize(precision);
             this.qScale =         this.scaleGraph.quantize(precision);
             this.qAlpha =         this.alphaGraph.quantize(precision);
+            this.qRadialSpeed =   this.radialSpeedGraph.quantize(precision);
 
             this.qLocalVelocity2 = this.localVelocityGraph2.quantize(precision);
             this.qVelocity2 = this.velocityGraph2.quantize(precision);
@@ -795,6 +827,7 @@ Object.assign(pc, function () {
             this.qRotSpeed2 =      this.rotationSpeedGraph2.quantize(precision);
             this.qScale2 =         this.scaleGraph2.quantize(precision);
             this.qAlpha2 =         this.alphaGraph2.quantize(precision);
+            this.qRadialSpeed2 =   this.radialSpeedGraph2.quantize(precision);
 
             for (i = 0; i < precision; i++) {
                 this.qRotSpeed[i] *= pc.math.DEG_TO_RAD;
@@ -807,12 +840,14 @@ Object.assign(pc, function () {
             this.rotSpeedUMax = [0];
             this.scaleUMax =    [0];
             this.alphaUMax =    [0];
+            this.radialSpeedUMax = [0];
             this.qLocalVelocityDiv = divGraphFrom2Curves(this.qLocalVelocity, this.qLocalVelocity2, this.localVelocityUMax);
             this.qVelocityDiv =      divGraphFrom2Curves(this.qVelocity, this.qVelocity2, this.velocityUMax);
             this.qColorDiv =         divGraphFrom2Curves(this.qColor, this.qColor2, this.colorUMax);
             this.qRotSpeedDiv =      divGraphFrom2Curves(this.qRotSpeed, this.qRotSpeed2, this.rotSpeedUMax);
             this.qScaleDiv =         divGraphFrom2Curves(this.qScale, this.qScale2, this.scaleUMax);
             this.qAlphaDiv =         divGraphFrom2Curves(this.qAlpha, this.qAlpha2, this.alphaUMax);
+            this.qRadialSpeedDiv =   divGraphFrom2Curves(this.qRadialSpeed, this.qRadialSpeed2, this.radialSpeedUMax);
 
             if (this.pack8) {
                 var umax = [0, 0, 0];
@@ -824,6 +859,11 @@ Object.assign(pc, function () {
                 maxUnsignedGraphValue(this.qLocalVelocity, lumax);
                 var lumax2 = [0, 0, 0];
                 maxUnsignedGraphValue(this.qLocalVelocity2, lumax2);
+
+                var rumax = [0];
+                maxUnsignedGraphValue(this.qRadialSpeed, rumax);
+                var rumax2 = [0];
+                maxUnsignedGraphValue(this.qRadialSpeed2, rumax2);
 
                 var maxVel = Math.max(umax[0], umax2[0]);
                 maxVel = Math.max(maxVel, umax[1]);
@@ -837,7 +877,9 @@ Object.assign(pc, function () {
                 lmaxVel = Math.max(lmaxVel, lumax[2]);
                 lmaxVel = Math.max(lmaxVel, lumax2[2]);
 
-                this.maxVel = maxVel + lmaxVel;
+                var maxRad = Math.max(rumax[0], rumax2[0]);
+
+                this.maxVel = maxVel + lmaxVel + maxRad;
             }
 
 
@@ -845,8 +887,9 @@ Object.assign(pc, function () {
                 this.internalTex0 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qLocalVelocity, this.qLocalVelocityDiv));
                 this.internalTex1 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qVelocity, this.qVelocityDiv));
                 this.internalTex2 = _createTexture(gd, precision, 1, packTexture5Floats(this.qRotSpeed, this.qScale, this.qScaleDiv, this.qRotSpeedDiv, this.qAlphaDiv));
+                this.internalTex3 = _createTexture(gd, precision, 1, packTexture2Floats(this.qRadialSpeed, this.qRadialSpeedDiv));
             }
-            this.internalTex3 = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+            this.colorParam = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
         },
 
         _initializeTextures: function () {
@@ -900,7 +943,8 @@ Object.assign(pc, function () {
                     blend: this.blendType,
                     animTex: this.emitter._isAnimated(),
                     animTexLoop: this.emitter.animLoop,
-                    pack8: this.emitter.pack8
+                    pack8: this.emitter.pack8,
+                    customFace: this.emitter.orientation != pc.PARTICLEORIENTATION_SCREEN
                 });
                 this.shader = shader;
             };
@@ -919,8 +963,9 @@ Object.assign(pc, function () {
                 material.setParameter('internalTex0', this.internalTex0);
                 material.setParameter('internalTex1', this.internalTex1);
                 material.setParameter('internalTex2', this.internalTex2);
+                material.setParameter('internalTex3', this.internalTex3);
             }
-            material.setParameter('internalTex3', this.internalTex3);
+            material.setParameter('colorParam', this.colorParam);
 
             material.setParameter('numParticles', this.numParticles);
             material.setParameter('numParticlesPot', this.numParticlesPot);
@@ -930,6 +975,7 @@ Object.assign(pc, function () {
             material.setParameter('seed', this.seed);
             material.setParameter('scaleDivMult', this.scaleUMax[0]);
             material.setParameter('alphaDivMult', this.alphaUMax[0]);
+            material.setParameter('radialSpeedDivMult', this.radialSpeedUMax[0]);
             material.setParameter("graphNumSamples", this.precision);
             material.setParameter("graphSampleSize", 1.0 / this.precision);
             material.setParameter("emitterScale", new Float32Array([1, 1, 1]));
@@ -966,6 +1012,34 @@ Object.assign(pc, function () {
                 material.setParameter('softening', 1.0 / (this.depthSoftening * this.depthSoftening * 100)); // remap to more perceptually linear
             }
             if (this.stretch > 0.0) material.cull = pc.CULLFACE_NONE;
+
+            this._compParticleFaceParams();
+        },
+
+        _compParticleFaceParams: function () {
+            var tangent, binormal;
+            if (this.orientation == pc.PARTICLEORIENTATION_SCREEN) {
+                tangent = new Float32Array([1, 0, 0]);
+                binormal = new Float32Array([0, 0, 1]);
+            } else {
+                var n;
+                if (this.orientation == pc.PARTICLEORIENTATION_WORLD) {
+                    n = this.particleNormal.normalize();
+                } else {
+                    var emitterMat = this.node === null ?
+                        pc.Mat4.IDENTITY : this.node.getWorldTransform();
+                    n = emitterMat.transformVector(this.particleNormal).normalize();
+                }
+                var t = new pc.Vec3(1, 0, 0);
+                if (Math.abs(t.dot(n)) == 1)
+                    t.set(0, 0, 1);
+                var b = new pc.Vec3().cross(n, t).normalize();
+                t.cross(b, n).normalize();
+                tangent = new Float32Array([t.x, t.y, t.z]);
+                binormal = new Float32Array([b.x, b.y, b.z]);
+            }
+            this.material.setParameter("faceTangent", tangent);
+            this.material.setParameter("faceBinorm", binormal);
         },
 
 
@@ -1150,6 +1224,9 @@ Object.assign(pc, function () {
             }
 
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
+                extentsInnerRatioUniform[0] = this.emitterExtents.x != 0 ? this.emitterExtentsInner.x / this.emitterExtents.x : 0;
+                extentsInnerRatioUniform[1] = this.emitterExtents.y != 0 ? this.emitterExtentsInner.y / this.emitterExtents.y : 0;
+                extentsInnerRatioUniform[2] = this.emitterExtents.z != 0 ? this.emitterExtentsInner.z / this.emitterExtents.z : 0;
                 if (this.meshInstance.node === null){
                     spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.emitterExtents);
                 } else {
@@ -1171,6 +1248,8 @@ Object.assign(pc, function () {
                 this.material.setParameter("emitterPos", this.emitterPosUniform);
             }
 
+            this._compParticleFaceParams();
+
             if (!this.useCpu) {
                 device.setBlending(false);
                 device.setColorWrite(true, true, true, true);
@@ -1189,6 +1268,7 @@ Object.assign(pc, function () {
                 this.constantInternalTex0.setValue(this.internalTex0);
                 this.constantInternalTex1.setValue(this.internalTex1);
                 this.constantInternalTex2.setValue(this.internalTex2);
+                this.constantInternalTex3.setValue(this.internalTex3);
 
                 if (this.pack8) {
                     this.worldBoundsMulUniform[0] = this.worldBoundsMul.x;
@@ -1212,8 +1292,10 @@ Object.assign(pc, function () {
                 if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                     mat4ToMat3(spawnMatrix, spawnMatrix3);
                     this.constantSpawnBounds.setValue(spawnMatrix3.data);
+                    this.constantSpawnPosInnerRatio.setValue(extentsInnerRatioUniform);
                 } else {
                     this.constantSpawnBoundsSphere.setValue(this.emitterRadius);
+                    this.constantSpawnBoundsSphereInnerRatio.setValue(this.emitterRadiusInner / this.emitterRadius);
                 }
                 this.constantInitialVelocity.setValue(this.initialVelocity);
 
@@ -1282,7 +1364,7 @@ Object.assign(pc, function () {
 
                 var vertSize = 14;
                 var cf, cc;
-                var rotSpeed, rotSpeed2, scale2, alpha, alpha2;
+                var rotSpeed, rotSpeed2, scale2, alpha, alpha2, radialSpeed, radialSpeed2;
                 var precision1 = this.precision - 1;
 
                 for (i = 0; i < this.numParticles; i++) {
@@ -1340,6 +1422,23 @@ Object.assign(pc, function () {
                         a = this.qAlpha2[cf];
                         b = this.qAlpha2[cc];
                         alpha2 = a + (b - a) * c;
+
+                        // var radialSpeed =        tex1D(this.qRadialSpeed, nlife);
+                        a = this.qRadialSpeed[cf];
+                        b = this.qRadialSpeed[cc];
+                        radialSpeed = a + (b - a) * c;
+                        // var radialSpeed2 =       tex1D(this.qRadialSpeed2, nlife);
+                        a = this.qRadialSpeed2[cf];
+                        b = this.qRadialSpeed2[cc];
+                        radialSpeed2 = a + (b - a) * c;
+                        radialSpeed += (radialSpeed2 - radialSpeed) * ((rndFactor * 100.0) % 1.0);
+
+                        particlePosPrev.x = this.particleTex[id * particleTexChannels];
+                        particlePosPrev.y = this.particleTex[id * particleTexChannels + 1];
+                        particlePosPrev.z = this.particleTex[id * particleTexChannels + 2];
+
+                        radialVelocityVec.copy(particlePosPrev).sub(emitterPos);
+                        radialVelocityVec.normalize().scale(radialSpeed);
 
                         cf *= 3;
                         cc *= 3;
@@ -1413,11 +1512,9 @@ Object.assign(pc, function () {
                             rotMat.transformPoint(localVelocityVec, localVelocityVec);
                         }
                         localVelocityVec.add(velocityVec.mul(nonUniformScale));
+                        localVelocityVec.add(radialVelocityVec.mul(nonUniformScale));
                         moveDirVec.copy(localVelocityVec);
 
-                        particlePosPrev.x = this.particleTex[id * particleTexChannels];
-                        particlePosPrev.y = this.particleTex[id * particleTexChannels + 1];
-                        particlePosPrev.z = this.particleTex[id * particleTexChannels + 2];
                         particlePos.copy(particlePosPrev).add(localVelocityVec.scale(delta));
                         particleFinalPos.copy(particlePos);
 
@@ -1579,6 +1676,11 @@ Object.assign(pc, function () {
             if (this.internalTex3) {
                 this.internalTex3.destroy();
                 this.internalTex3 = null;
+            }
+
+            if (this.colorParam) {
+                this.colorParam.destroy();
+                this.colorParam = null;
             }
 
             if (this.vertexBuffer) {
