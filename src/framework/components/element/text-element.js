@@ -610,8 +610,6 @@ Object.assign(pc, function () {
                     var y = 0;
                     var advance = 0;
                     var quadsize = 1;
-                    var glyphMinX = 0;
-                    var glyphWidth = 0;
                     var dataScale, size;
 
                     data = json.chars[char];
@@ -635,14 +633,6 @@ Object.assign(pc, function () {
                         advance = data.xadvance * scale;
                         x = data.xoffset * scale;
                         y = data.yoffset * scale;
-
-                        if (data.bounds) {
-                            glyphWidth = (data.bounds[2] - data.bounds[0]) * scale;
-                            glyphMinX = data.bounds[0] * scale;
-                        } else {
-                            glyphWidth = x;
-                            glyphMinX = 0;
-                        }
                     } else {
                         console.error("Couldn't substitute missing character: '" + char + "'");
                     }
@@ -664,24 +654,7 @@ Object.assign(pc, function () {
 
                     var meshInfo = this._meshInfo[(data && data.map) || 0];
 
-                    var candidateLineWidth = 0;
-
-                    // the amount of negative offset to print the current character
-                    // in RTL mode
-                    var _xRtlOffset = 0;
-                    if (rtl) {
-                        // for the first character offset the cursor by the glyphWidth + glyphMinX
-                        // and for the rest of the characters offset by xadvance
-                        if (numCharsThisLine > 0) {
-                            _xRtlOffset = this._spacing * advance;
-                        } else {
-                            _xRtlOffset = glyphWidth + glyphMinX;
-                        }
-
-                        candidateLineWidth = Math.abs(_x - _xRtlOffset);
-                    } else {
-                        candidateLineWidth = _x + glyphMinX + glyphWidth;
-                    }
+                    var candidateLineWidth = rtl ? Math.abs(_x - this._spacing * advance) : _x + this._spacing * advance;
 
                     // If we've exceeded the maximum line width, move everything from the beginning of
                     // the current word onwards down onto a new line.
@@ -727,7 +700,11 @@ Object.assign(pc, function () {
                     quad = meshInfo.quad;
                     meshInfo.lines[lines - 1] = quad;
 
-                    var left = _x - x - _xRtlOffset;
+                    var left = _x - x;
+                    if (rtl) {
+                        left -= this._spacing * advance;
+                    }
+
                     var right = left + quadsize;
                     var bottom = _y - y;
                     var top = bottom + quadsize;
@@ -748,7 +725,7 @@ Object.assign(pc, function () {
                     meshInfo.positions[quad * 4 * 3 + 10] = top;
                     meshInfo.positions[quad * 4 * 3 + 11] = _z;
 
-                    this.width = Math.max(this.width, rtl ? Math.abs(_x - _xRtlOffset) : _x + glyphMinX + glyphWidth);
+                    this.width = Math.max(this.width, candidateLineWidth);
 
                     // scale font size if autoFitWidth is true and the width is larger than the calculated width
                     var fontSize;
@@ -775,13 +752,8 @@ Object.assign(pc, function () {
                         }
                     }
 
-                    // advance cursor
-                    if (!rtl) {
-                        _x += (this._spacing * advance);
-                    } else {
-                        // for RTL we move left
-                        _x -= _xRtlOffset;
-                    }
+                    // advance cursor (for RTL we move left)
+                    _x += rtl ? -this._spacing * advance : this._spacing * advance;
 
                     // For proper alignment handling when a line wraps _on_ a whitespace character,
                     // we need to keep track of the width of the line without any trailing whitespace
