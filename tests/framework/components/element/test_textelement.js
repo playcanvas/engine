@@ -568,6 +568,99 @@ describe("pc.TextElement", function () {
         ]);
     });
 
+    it("rtl and ltr text end up with the same width", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = true;
+        element.wrapLines = false;
+
+        var ltrWidths = {
+            oneLine: 0,
+            spaces: 0,
+            newLines: 0
+        };
+
+        var rtlWidths = Object.assign({}, ltrWidths);
+
+        // new lines
+        element.text = 'abcdefghij';
+        ltrWidths.oneLine = element.width;
+
+        element.text = 'abcde\nfghij';
+        ltrWidths.newLines = element.width;
+
+        element.text = '   abcdefghij   ';
+        ltrWidths.spaces = element.width;
+
+        element.text = '';
+
+        registerRtlHandler();
+        element.rtlReorder = true;
+
+        element.text = 'abcdefghij';
+        rtlWidths.oneLine = element.width;
+
+        element.text = 'abcde\nfghij';
+        rtlWidths.newLines = element.width;
+
+        element.text = '   abcdefghij   ';
+        rtlWidths.spaces = element.width;
+
+        for (var key in ltrWidths) {
+            expect(ltrWidths[key]).to.equal(rtlWidths[key]);
+        }
+    });
+
+    it("rtl and ltr text in one line using CanvasFont ends up with the same width", function () {
+        var cf = new pc.CanvasFont(app, {
+            fontName: 'Arial',
+            fontSize: 64,
+            width: 1024,
+            height: 1024
+        });
+
+        cf.createTextures('abcdefghij');
+
+        element.font = cf;
+        element.autoWidth = true;
+        element.wrapLines = false;
+
+        var ltrWidths = {
+            oneLine: 0,
+            spaces: 0,
+            newLines: 0
+        };
+
+        var rtlWidths = Object.assign({}, ltrWidths);
+
+        // new lines
+        element.text = 'abcdefghij';
+        ltrWidths.oneLine = element.width;
+
+        element.text = 'abcde\nfghij';
+        ltrWidths.newLines = element.width;
+
+        element.text = '   abcdefghij   ';
+        ltrWidths.spaces = element.width;
+
+        element.text = '';
+
+        registerRtlHandler();
+        element.rtlReorder = true;
+
+        element.text = 'abcdefghij';
+        rtlWidths.oneLine = element.width;
+
+        element.text = 'abcde\nfghij';
+        rtlWidths.newLines = element.width;
+
+        element.text = '   abcdefghij   ';
+        rtlWidths.spaces = element.width;
+
+        for (var key in ltrWidths) {
+            expect(ltrWidths[key]).to.equal(rtlWidths[key]);
+        }
+    });
+
     it("reduces font size when width is larger then the element width and autoFitWidth is true", function () {
         element.fontAsset = fontAsset;
         element.autoWidth = false;
@@ -1055,20 +1148,19 @@ describe("pc.TextElement", function () {
 
         var clone = e.clone();
 
-
         expect(e.element.fontAsset).to.be.ok;
 
-        expect(clone.text).to.equal(e.text);
-        expect(clone.fontAsset).to.equal(e.fontAsset);
-        expect(clone.font).to.equal(e.font);
-        expect(clone.color).to.deep.equal(e.color);
-        expect(clone.spacing).to.equal(e.spacing);
-        expect(clone.fontSize).to.equal(e.fontSize);
-        expect(clone.lineHeight).to.equal(e.lineHeight);
-        expect(clone.alignment).to.equal(e.alignment);
-        expect(clone.wrapLine).to.equal(e.wrapLines);
-        expect(clone.autoWidth).to.equal(e.autoWidth);
-        expect(clone.autoHeight).to.equal(e.autoHeight);
+        expect(clone.element.text).to.equal(e.element.text);
+        expect(clone.element.fontAsset).to.equal(e.element.fontAsset);
+        expect(clone.element.font).to.equal(e.element.font);
+        expect(clone.element.color).to.deep.equal(e.element.color);
+        expect(clone.element.spacing).to.equal(e.element.spacing);
+        expect(clone.element.fontSize).to.equal(e.element.fontSize);
+        expect(clone.element.lineHeight).to.equal(e.element.lineHeight);
+        expect(clone.element.alignment).to.deep.equal(e.element.alignment);
+        expect(clone.element.wrapLines).to.equal(e.element.wrapLines);
+        expect(clone.element.autoWidth).to.equal(e.element.autoWidth);
+        expect(clone.element.autoHeight).to.equal(e.element.autoHeight);
     });
 
     it("clears font asset when font is assigned directly", function () {
