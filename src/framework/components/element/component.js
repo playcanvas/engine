@@ -276,7 +276,7 @@ Object.assign(pc, function () {
                 // WARNING: Order is important as calculateSize resets dirtyLocal
                 // so this needs to run before resetting dirtyLocal to false below
                 if (element._sizeDirty) {
-                    element._calculateSize();
+                    element._calculateSize(false, false);
                 }
             }
 
@@ -814,9 +814,11 @@ Object.assign(pc, function () {
         },
 
         _setCalculatedWidth: function (value, updateMargins) {
-            var didChange = Math.abs(value - this._calculatedWidth) > 1e-4;
+            if (Math.abs(value - this._calculatedWidth) <= 1e-4)
+                return;
 
             this._calculatedWidth = value;
+            this.entity._dirtifyLocal();
 
             if (updateMargins) {
                 var p = this.entity.getLocalPosition();
@@ -826,18 +828,16 @@ Object.assign(pc, function () {
             }
 
             this._flagChildrenAsDirty();
-
             this.fire('set:calculatedWidth', this._calculatedWidth);
-
-            if (didChange) {
-                this.fire('resize', this._calculatedWidth, this._calculatedHeight);
-            }
+            this.fire('resize', this._calculatedWidth, this._calculatedHeight);
         },
 
         _setCalculatedHeight: function (value, updateMargins) {
-            var didChange = Math.abs(value - this._calculatedHeight) > 1e-4;
+            if (Math.abs(value - this._calculatedHeight) <= 1e-4)
+                return;
 
             this._calculatedHeight = value;
+            this.entity._dirtifyLocal();
 
             if (updateMargins) {
                 var p = this.entity.getLocalPosition();
@@ -847,12 +847,8 @@ Object.assign(pc, function () {
             }
 
             this._flagChildrenAsDirty();
-
             this.fire('set:calculatedHeight', this._calculatedHeight);
-
-            if (didChange) {
-                this.fire('resize', this._calculatedWidth, this._calculatedHeight);
-            }
+            this.fire('resize', this._calculatedWidth, this._calculatedHeight);
         },
 
         _flagChildrenAsDirty: function () {
@@ -1231,7 +1227,7 @@ Object.assign(pc, function () {
             this._cornersDirty = true;
             this._worldCornersDirty = true;
 
-            this._calculateSize();
+            this._calculateSize(false, false);
 
             this.fire('set:pivot', this._pivot);
         }
