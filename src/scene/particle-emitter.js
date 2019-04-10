@@ -99,9 +99,11 @@ Object.assign(pc, function () {
     var particleFinalPos = new pc.Vec3();
     var moveDirVec = new pc.Vec3();
     var rotMat = new pc.Mat4();
+    var rotMatInv = new pc.Mat4();
     var spawnMatrix3 = new pc.Mat3();
     var extentsInnerRatioUniform = new Float32Array(3);
     var emitterMatrix3 = new pc.Mat3();
+    var emitterMatrix3Inv = new pc.Mat3();
     var uniformScale = 1;
     var nonUniformScale;
     var spawnMatrix = new pc.Mat4();
@@ -310,6 +312,7 @@ Object.assign(pc, function () {
         this.constantInternalTex2 = gd.scope.resolve("internalTex2");
         this.constantInternalTex3 = gd.scope.resolve("internalTex3");
         this.constantEmitterMatrix = gd.scope.resolve("emitterMatrix");
+        this.constantEmitterMatrixInv = gd.scope.resolve("emitterMatrixInv");
         this.constantNumParticles = gd.scope.resolve("numParticles");
         this.constantNumParticlesPot = gd.scope.resolve("numParticlesPot");
         this.constantLocalVelocityDivMult = gd.scope.resolve("localVelocityDivMult");
@@ -478,7 +481,9 @@ Object.assign(pc, function () {
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
 
-            this.worldBoundsNoTrail.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
+            this.worldBoundsNoTrail.setFromTransformedAabb(
+                this.localBounds, this.localSpace ? pc.Mat4.IDENTITY : this.node.getWorldTransform());
+
             this.worldBoundsTrail[0].add(this.worldBoundsNoTrail);
             this.worldBoundsTrail[1].add(this.worldBoundsNoTrail);
 
@@ -596,7 +601,9 @@ Object.assign(pc, function () {
             this.calculateLocalBounds();
             if (this.node) {
                 // this.prevPos.copy(this.node.getPosition());
-                this.worldBounds.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
+                this.worldBounds.setFromTransformedAabb(
+                    this.localBounds, this.localSpace ? pc.Mat4.IDENTITY : this.node.getWorldTransform());
+
                 this.worldBoundsTrail[0].copy(this.worldBounds);
                 this.worldBoundsTrail[1].copy(this.worldBounds);
 
@@ -617,7 +624,7 @@ Object.assign(pc, function () {
             this.particleTex = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
             var emitterPos = (this.node === null || this.localSpace) ? pc.Vec3.ZERO : this.node.getPosition();
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
-                if (this.node === null){
+                if (this.node === null || this.localSpace){
                     spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
                 } else {
                     spawnMatrix.setTRS(pc.Vec3.ZERO, this.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.node.localScale));
@@ -655,7 +662,7 @@ Object.assign(pc, function () {
             }
 
             var chunks = pc.shaderChunks;
-            var shaderCodeStart = chunks.particleUpdaterInitPS +
+            var shaderCodeStart = (this.localSpace ? '#define LOCAL_SPACE\n' : '') + chunks.particleUpdaterInitPS +
             (this.pack8 ? (chunks.particleInputRgba8PS + chunks.particleOutputRgba8PS) :
                 (chunks.particleInputFloatPS + chunks.particleOutputFloatPS)) +
             (this.emitterShape === pc.EMITTERSHAPE_BOX ? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
@@ -749,12 +756,18 @@ Object.assign(pc, function () {
                 randomPos.y = edgeY * (max == Math.abs(randomPos.y) ? Math.sign(randomPos.y) : 2 * randomPos.y);
                 randomPos.z = edgeZ * (max == Math.abs(randomPos.z) ? Math.sign(randomPos.z) : 2 * randomPos.z);
 
-                randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
+                if (!this.localSpace)
+                    randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
+                else
+                    randomPosTformed.copy( spawnMatrix.transformPoint(randomPos) );
             } else {
                 randomPos.normalize();
                 var spawnBoundsSphereInnerRatio = this.emitterRadiusInner / this.emitterRadius;
                 var r = rW * (1.0 - spawnBoundsSphereInnerRatio) + spawnBoundsSphereInnerRatio;
-                randomPosTformed.copy(emitterPos).add( randomPos.scale(r * this.emitterRadius) );
+                if (!this.localSpace)
+                    randomPosTformed.copy(emitterPos).add( randomPos.scale(r * this.emitterRadius) );
+                else
+                    randomPosTformed.copy( randomPos.scale(r * this.emitterRadius) );
             }
 
             var particleRate, startSpawnTime;
@@ -1300,6 +1313,7 @@ Object.assign(pc, function () {
                 this.constantInitialVelocity.setValue(this.initialVelocity);
 
                 mat4ToMat3(emitterMatrix, emitterMatrix3);
+                emitterMatrix.invertTo3x3(emitterMatrix3Inv);
                 this.emitterPosUniform[0] = emitterPos.x;
                 this.emitterPosUniform[1] = emitterPos.y;
                 this.emitterPosUniform[2] = emitterPos.z;
@@ -1318,6 +1332,7 @@ Object.assign(pc, function () {
                 this.emitterScaleUniform[2] = emitterScale.z;
                 this.constantEmitterScale.setValue(this.emitterScaleUniform);
                 this.constantEmitterMatrix.setValue(emitterMatrix3.data);
+                this.constantEmitterMatrixInv.setValue(emitterMatrix3Inv.data);
 
                 this.constantLocalVelocityDivMult.setValue(this.localVelocityUMax);
                 this.constantVelocityDivMult.setValue(this.velocityUMax);
@@ -1354,6 +1369,8 @@ Object.assign(pc, function () {
                     for (j = 0; j < 12; j++) {
                         rotMat.data[j] = fullMat.data[j];
                     }
+                    rotMatInv.copy(rotMat);
+                    rotMatInv.invert();
                     nonUniformScale = this.meshInstance.node.localScale;
                     uniformScale = Math.max(Math.max(nonUniformScale.x, nonUniformScale.y), nonUniformScale.z);
                 }
@@ -1437,7 +1454,10 @@ Object.assign(pc, function () {
                         particlePosPrev.y = this.particleTex[id * particleTexChannels + 1];
                         particlePosPrev.z = this.particleTex[id * particleTexChannels + 2];
 
-                        radialVelocityVec.copy(particlePosPrev).sub(emitterPos);
+                        if (!this.localSpace)
+                            radialVelocityVec.copy(particlePosPrev).sub(emitterPos);
+                        else
+                            radialVelocityVec.copy(particlePosPrev);
                         radialVelocityVec.normalize().scale(radialSpeed);
 
                         cf *= 3;
@@ -1509,10 +1529,24 @@ Object.assign(pc, function () {
                         alphaDiv = (alpha2 - alpha) * ((rndFactor * 1000.0) % 1.0);
 
                         if (this.meshInstance.node) {
-                            rotMat.transformPoint(localVelocityVec, localVelocityVec);
+                            if (!this.localSpace) {
+                                rotMat.transformPoint(localVelocityVec, localVelocityVec);
+                            } else {
+                                localVelocityVec.x /= nonUniformScale.x;
+                                localVelocityVec.y /= nonUniformScale.y;
+                                localVelocityVec.z /= nonUniformScale.z;
+                            }
+
                         }
-                        localVelocityVec.add(velocityVec.mul(nonUniformScale));
-                        localVelocityVec.add(radialVelocityVec.mul(nonUniformScale));
+                        if (!this.localSpace) {
+                            localVelocityVec.add(velocityVec.mul(nonUniformScale));
+                            localVelocityVec.add(radialVelocityVec.mul(nonUniformScale));
+                        } else {
+                            velocityVec.add(radialVelocityVec);
+                            rotMatInv.transformPoint(velocityVec, velocityVec);
+                            localVelocityVec.add(velocityVec);
+                        }
+
                         moveDirVec.copy(localVelocityVec);
 
                         particlePos.copy(particlePosPrev).add(localVelocityVec.scale(delta));
@@ -1524,11 +1558,13 @@ Object.assign(pc, function () {
                         this.particleTex[id * particleTexChannels + 3] += rotSpeed * delta;
 
                         if (this.wrap && this.wrapBounds) {
-                            particleFinalPos.sub(emitterPos);
+                            if (!this.localSpace)
+                                particleFinalPos.sub(emitterPos);
                             particleFinalPos.x = glMod(particleFinalPos.x, this.wrapBounds.x) - this.wrapBounds.x * 0.5;
                             particleFinalPos.y = glMod(particleFinalPos.y, this.wrapBounds.y) - this.wrapBounds.y * 0.5;
                             particleFinalPos.z = glMod(particleFinalPos.z, this.wrapBounds.z) - this.wrapBounds.z * 0.5;
-                            particleFinalPos.add(emitterPos);
+                            if (!this.localSpace)
+                                particleFinalPos.add(emitterPos);
                         }
 
                         if (this.sort > 0) {

@@ -13,7 +13,11 @@ vec3 calcSpawnPosition(vec3 inBounds, float rndFactor) {
     pos.y = edge.y * (maxPos.y == posAbs.y ? sign(pos.y) : 2.0 * pos.y);
     pos.z = edge.z * (maxPos.z == posAbs.z ? sign(pos.z) : 2.0 * pos.z);
 
+#ifndef LOCAL_SPACE
     return emitterPos + spawnBounds * pos;
+#else
+    return spawnBounds * pos;
+#endif
 }
 
 void addInitialVelocity(inout vec3 localVelocity, vec3 inBounds) {

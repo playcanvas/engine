@@ -96,6 +96,7 @@ Object.assign(pc, function () {
      * @property {Boolean} alignToMotion Orient particles in their direction of motion.
      * @property {Boolean} depthWrite If enabled, the particles will write to the depth buffer. If disabled, the depth buffer is left unchanged and particles will be guaranteed to overwrite one another in the order in which they are rendered.
      * @property {Boolean} noFog Disable fogging
+     * @property {Boolean} localSpace Binds particles to emitter transformation rather then world space.
      * @property {Number} numParticles Maximum number of simulated particles.
      * @property {Number} rate Minimal interval in seconds between particle births.
      * @property {Number} rate2 Maximal interval in seconds between particle births.
