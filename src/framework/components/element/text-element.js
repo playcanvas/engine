@@ -658,7 +658,7 @@ Object.assign(pc, function () {
 
                     // If we've exceeded the maximum line width, move everything from the beginning of
                     // the current word onwards down onto a new line.
-                    if (candidateLineWidth >= maxLineWidth && numCharsThisLine > 0 && !isWhitespace) {
+                    if (candidateLineWidth > maxLineWidth && numCharsThisLine > 0 && !isWhitespace) {
                         if (this._maxLines < 0 || lines < this._maxLines) {
                             // Handle the case where a line containing only a single long word needs to be
                             // broken onto multiple lines.

@@ -1479,4 +1479,22 @@ describe("pc.TextElement", function () {
         expect(clone.element.key).to.equal(null);
         expect(clone.element.text).to.equal('text');
     });
+
+    it('text does not wrap when its width reaches exactly the width of the element', function () {
+        element.fontAsset = fontAsset;
+        element.wrapLines = true;
+        element.autoWidth = true;
+        element.text = 'abcd';
+        assertLineContents(['abcd']);
+
+        element.autoWidth = false;
+        element.text = '';
+        element.text = 'abcd';
+        // should not wrap
+        assertLineContents(['abcd']);
+
+        element.text = 'abcde';
+        // now it should wrap
+        assertLineContents(['abcd', 'e']);
+    });
 });
