@@ -97,16 +97,12 @@ Object.assign(pc, (function () {
             var numCurves = this.curves.length;
             var values = new Float32Array(precision * numCurves);
             var step = 1.0 / (precision - 1);
-            var temp = [];
 
-            for (var i = 0; i < precision; i++) { // quantize graph to table of interpolated values
-                var value = this.value(step * i, temp);
-                if (numCurves == 1) {
-                    values[i] = value[0];
-                } else {
-                    for (var j = 0; j < numCurves; j++) {
-                        values[i * numCurves + j] = value[j];
-                    }
+            for (var c = 0; c < numCurves; c++) {
+                var it = new pc.CurveIterator(this.curves[c]);
+                for (var i = 0; i < precision; i++) { // quantize graph to table of interpolated values
+                    values[i * numCurves + c] = it.evaluate();
+                    it.advance(step);
                 }
             }
 
