@@ -25,6 +25,18 @@ Object.assign(pc, (function () {
      * @description A cardinal spline interpolation scheme.
      */
     var CURVE_CARDINAL = 3;
+    /**
+     * @enum pc.CURVE
+     * @name pc.CURVE_CARDINAL_STABLE
+     * @description Variation on the cardinal spline which uses stable knot tangents
+     */
+    var CURVE_CARDINAL_STABLE = 4;
+    /**
+     * @enum pc.CURVE
+     * @name pc.CURVE_STEP
+     * @description A stepped interpolater, free from the shackles of blending
+     */
+    var CURVE_STEP = 5;
 
     /**
      * @constructor
@@ -148,9 +160,14 @@ Object.assign(pc, (function () {
             var div = rightTime - leftTime;
             var interpolation = (div === 0 ? 0 : (time - leftTime) / div);
 
-            if (this.type === CURVE_SMOOTHSTEP) {
+            if (this.type === CURVE_STEP) {
+                return leftValue;
+            } else if (this.type === CURVE_LINEAR) {
+                return pc.math.lerp(leftValue, rightValue, interpolation);
+            } else if (this.type === CURVE_SMOOTHSTEP) {
                 interpolation *= interpolation * (3 - 2 * interpolation);
-            } else if (this.type === CURVE_CATMULL || this.type === CURVE_CARDINAL) {
+                return pc.math.lerp(leftValue, rightValue, interpolation);
+            } else { // all remaining spline types
                 var p1 = leftValue;
                 var p2 = rightValue;
                 var p0 = p1 + (p1 - p2); // default control points are extended back/forward from existing points
@@ -179,18 +196,22 @@ Object.assign(pc, (function () {
                     p3 = keys[i + 2][1];
                 }
 
-                // normalize p0 and p3 to be equal time with p1->p2
-                p0 = p1 + (p0 - p1) * dt1 / dt0;
-                p3 = p2 + (p3 - p2) * dt1 / dt2;
+                if (this.type === CURVE_CARDINAL_STABLE) {
+                    var m1 = this.tension * (2 * dt1 / (dt0 + dt1)) * (p2 - p0);
+                    var m2 = this.tension * (2 * dt1 / (dt1 + dt2)) * (p3 - p1);
+                    return this._interpolateHermite(p1, p2, m1, m2, interpolation);
+                } else {
+                    // normalize p0 and p3 to be equal time with p1->p2
+                    p0 = p1 + (p0 - p1) * dt1 / dt0;
+                    p3 = p2 + (p3 - p2) * dt1 / dt2;
 
-                if (this.type === CURVE_CATMULL) {
-                    return this._interpolateCatmullRom(p0, p1, p2, p3, interpolation);
+                    if (this.type === CURVE_CATMULL) {
+                        return this._interpolateCatmullRom(p0, p1, p2, p3, interpolation);
+                    } else {
+                        return this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
+                    }
                 }
-
-                return this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
             }
-
-            return pc.math.lerp(leftValue, rightValue, interpolation);
         },
 
         _interpolateHermite: function (p0, p1, t0, t1, s) {
@@ -253,10 +274,12 @@ Object.assign(pc, (function () {
             var values = new Float32Array(precision);
             var step = 1.0 / (precision - 1);
 
+            var it = new pc.CurveIterator(this);
+
             // quantize graph to table of interpolated values
             for (var i = 0; i < precision; i++) {
-                var value = this.value(step * i);
-                values[i] = value;
+                values[i] = it.evaluate();
+                it.advance(step);
             }
 
             return values;
@@ -274,6 +297,8 @@ Object.assign(pc, (function () {
         CURVE_LINEAR: CURVE_LINEAR,
         CURVE_SMOOTHSTEP: CURVE_SMOOTHSTEP,
         CURVE_CATMULL: CURVE_CATMULL,
-        CURVE_CARDINAL: CURVE_CARDINAL
+        CURVE_CARDINAL: CURVE_CARDINAL,
+        CURVE_STEP: CURVE_STEP,
+        CURVE_CARDINAL_STABLE: CURVE_CARDINAL_STABLE
     };
 }()));
