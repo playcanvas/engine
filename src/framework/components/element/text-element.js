@@ -128,6 +128,10 @@ Object.assign(pc, function () {
             this._element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
             this._element.off('set:draworder', this._onDrawOrderChange, this);
             this._element.off('set:pivot', this._onPivotChange, this);
+
+            this._system.app.i18n.off('set:locale', this._resetLocalizedText, this);
+            this._system.app.i18n.off('data:add', this._onLocalizationData, this);
+            this._system.app.i18n.off('data:remove', this._onLocalizationData, this);
         },
 
         _onParentResize: function (width, height) {
