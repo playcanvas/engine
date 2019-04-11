@@ -34,6 +34,8 @@ pc.programlib.particle = {
         if (options.normal == 1) vshader += "\nvarying vec3 Normal;\n";
         if (options.soft) vshader += "\nvarying float vDepth;\n";
 
+        var faceVS = options.customFace ? chunk.particle_customFaceVS : chunk.particle_billboardVS;
+
         if (!options.useCpu) {
             vshader += chunk.particle_initVS;
             vshader += (options.pack8 ? chunk.particleInputRgba8PS : chunk.particleInputFloatPS);
@@ -43,7 +45,7 @@ pc.programlib.particle = {
             if (options.animTex) vshader += this._animTex(options, chunk);
             if (options.wrap) vshader += chunk.particle_wrapVS;
             if (options.alignToMotion) vshader += chunk.particle_pointAlongVS;
-            vshader += options.mesh ? chunk.particle_meshVS : chunk.particle_billboardVS;
+            vshader += options.mesh ? chunk.particle_meshVS : faceVS;
             if (options.normal == 1) vshader += chunk.particle_normalVS;
             if (options.normal == 2) vshader += chunk.particle_TBNVS;
             if (options.stretch > 0.0) vshader += chunk.particle_stretchVS;
@@ -56,7 +58,7 @@ pc.programlib.particle = {
             if (options.animTex) vshader += this._animTex(options, chunk);
             // if (options.wrap) vshader += chunk.particle_wrapVS;
             if (options.alignToMotion) vshader += chunk.particle_pointAlongVS;
-            vshader += options.mesh ? chunk.particle_meshVS : chunk.particle_billboardVS;
+            vshader += options.mesh ? chunk.particle_meshVS : faceVS;
             if (options.normal == 1) vshader += chunk.particle_normalVS;
             if (options.normal == 2) vshader += chunk.particle_TBNVS;
             if (options.stretch > 0.0) vshader += chunk.particle_stretchVS;

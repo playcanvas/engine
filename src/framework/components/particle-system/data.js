@@ -8,7 +8,9 @@ Object.assign(pc, function () {
         this.startAngle2 = null;
         this.lifetime = 50;                     // Particle lifetime
         this.emitterExtents = new pc.Vec3();       // Spawn point divergence
+        this.emitterExtentsInner = new pc.Vec3();
         this.emitterRadius = 0;
+        this.emitterRadiusInner = 0;
         this.emitterShape = pc.EMITTERSHAPE_BOX;
         this.initialVelocity = 0;
         this.wrapBounds = new pc.Vec3();
@@ -34,6 +36,9 @@ Object.assign(pc, function () {
         this.depthWrite = false;
         this.noFog = false;
 
+        this.orientation = pc.PARTICLEORIENTATION_SCREEN;
+        this.particleNormal = new pc.Vec3(0, 1, 0);
+
         this.animTilesX = 1;
         this.animTilesY = 1;
         this.animNumFrames = 1;
@@ -58,6 +63,9 @@ Object.assign(pc, function () {
 
         this.rotationSpeedGraph = null;
         this.rotationSpeedGraph2 = null;
+
+        this.radialSpeedGraph = null;
+        this.radialSpeedGraph2 = null;
 
         this.blendType = pc.BLEND_NORMAL;
 
