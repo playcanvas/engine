@@ -143,24 +143,26 @@ Object.assign(pc, (function () {
         evaluate: function() {
             var curve = this.curve;
 
-            // calculate normalized t
-            var t = 0;
-            if (this.recip !== 0) {
-                t = (this.time_ - this.left) * this.recip;
-            }
-
             if (curve.type === pc.CURVE_STEP) {
                 // step
                 return this.p0;
-            } else if (curve.type === pc.CURVE_LINEAR) {
-                // linear
-                return pc.math.lerp(this.p0, this.p1, t);
-            } else if (curve.type === pc.CURVE_SMOOTHSTEP) {
-                // smoothstep
-                return pc.math.lerp(this.p0, this.p1, t * t * (3 - 2 * t));
             } else {
-                // catmull (hermite) and cardinal
-                return curve._interpolateHermite(this.p0, this.p1, this.m0, this.m1, t);
+                // calculate normalized t
+                var t = 0;
+                if (this.recip !== 0) {
+                    t = (this.time_ - this.left) * this.recip;
+                }
+
+                if (curve.type === pc.CURVE_LINEAR) {
+                    // linear
+                    return pc.math.lerp(this.p0, this.p1, t);
+                } else if (curve.type === pc.CURVE_SMOOTHSTEP) {
+                    // smoothstep
+                    return pc.math.lerp(this.p0, this.p1, t * t * (3 - 2 * t));
+                } else {
+                    // curve
+                    return curve._interpolateHermite(this.p0, this.p1, this.m0, this.m1, t);
+                }
             }
         },
 
