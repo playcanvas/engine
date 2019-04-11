@@ -118,10 +118,122 @@ Object.assign(pc, (function () {
          * @returns {Number} The interpolated value
          */
         value: function (time) {
-            // we must reset here as the key data may have changed since the last iterator
-            // evaluate
-            this.it.reset(time);
-            return this.it.evaluate();
+            var i;
+            var keys = this.keys;
+            var len = keys.length;
+
+            // no keys
+            if (!len) {
+                return 0;
+            }
+
+            // Clamp values before first and after last key
+            if (time < keys[0][0]) {
+                return keys[0][1];
+            } else if (time > keys[len - 1][0]) {
+                return keys[len - 1][1];
+            }
+
+            var leftTime = 0;
+            var leftValue = len ? keys[0][1] : 0;
+
+            var rightTime = 1;
+            var rightValue = 0;
+
+            for (i = 0; i < len; i++) {
+                // early exit check
+                if (keys[i][0] === time) {
+                    return keys[i][1];
+                }
+
+                rightValue = keys[i][1];
+
+                if (time < keys[i][0]) {
+                    rightTime = keys[i][0];
+                    break;
+                }
+
+                leftTime = keys[i][0];
+                leftValue = keys[i][1];
+            }
+
+            var div = rightTime - leftTime;
+            var interpolation = (div === 0 ? 0 : (time - leftTime) / div);
+
+            if (this.type === CURVE_STEP) {
+                return leftValue;
+            } else if (this.type === CURVE_LINEAR) {
+                return pc.math.lerp(leftValue, rightValue, interpolation);
+            } else if (this.type === CURVE_SMOOTHSTEP) {
+                interpolation *= interpolation * (3 - 2 * interpolation);
+                return pc.math.lerp(leftValue, rightValue, interpolation);
+            } else { // all remaining spline types
+                var p1 = leftValue;
+                var p2 = rightValue;
+                var p0 = p1 + (p1 - p2); // default control points are extended back/forward from existing points
+                var p3 = p2 + (p2 - p1);
+
+                var dt1 = rightTime - leftTime;
+                var dt0 = dt1;
+                var dt2 = dt1;
+
+                // back up index to left key
+                if (i > 0) {
+                    i--;
+                }
+
+                if (i > 0) {
+                    p0 = keys[i - 1][1];
+                    dt0 = keys[i][0] - keys[i - 1][0];
+                }
+
+                if (len > i + 1) {
+                    dt1 = keys[i + 1][0] - keys[i][0];
+                }
+
+                if (len > i + 2) {
+                    dt2 = keys[i + 2][0] - keys[i + 1][0];
+                    p3 = keys[i + 2][1];
+                }
+
+                if (this.type === CURVE_CARDINAL_STABLE) {
+                    var m1 = this.tension * (2 * dt1 / (dt0 + dt1)) * (p2 - p0);
+                    var m2 = this.tension * (2 * dt1 / (dt1 + dt2)) * (p3 - p1);
+                    return this._interpolateHermite(p1, p2, m1, m2, interpolation);
+                } else {
+                    // normalize p0 and p3 to be equal time with p1->p2
+                    p0 = p1 + (p0 - p1) * dt1 / dt0;
+                    p3 = p2 + (p3 - p2) * dt1 / dt2;
+
+                    if (this.type === CURVE_CATMULL) {
+                        return this._interpolateCatmullRom(p0, p1, p2, p3, interpolation);
+                    } else {
+                        return this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
+                    }
+                }
+            }
+        },
+
+        _interpolateHermite: function (p0, p1, t0, t1, s) {
+            var s2 = s * s;
+            var s3 = s * s * s;
+            var h0 = 2 * s3 - 3 * s2 + 1;
+            var h1 = -2 * s3 + 3 * s2;
+            var h2 = s3 - 2 * s2 + s;
+            var h3 = s3 - s2;
+
+            return p0 * h0 + p1 * h1 + t0 * h2 + t1 * h3;
+        },
+
+        _interpolateCardinal: function (p0, p1, p2, p3, s, t) {
+            var t0 = t * (p2 - p0);
+            var t1 = t * (p3 - p1);
+
+            return this._interpolateHermite(p1, p2, t0, t1, s);
+        },
+
+        _interpolateCatmullRom: function (p0, p1, p2, p3, s) {
+            return this._interpolateCardinal(p0, p1, p2, p3, s, 0.5);
         },
 
         closest: function (time) {
@@ -164,9 +276,12 @@ Object.assign(pc, (function () {
             var step = 1.0 / (precision - 1);
             var it = new pc.CurveIterator(this);
 
+            var it = new pc.CurveIterator(this);
+
             // quantize graph to table of interpolated values
             for (var i = 0; i < precision; i++) {
-                values[i] = it.value(step * i);
+                values[i] = it.evaluate();
+                it.advance(step);
             }
 
             return values;
