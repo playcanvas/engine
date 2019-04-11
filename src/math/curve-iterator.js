@@ -5,6 +5,11 @@ Object.assign(pc, (function () {
      * 
      * @constructor
      * @name pc.CurveIterator
+     * @classdesc CurveIterator performs fast evaluation of a curve by caching
+     * knot information where possible.
+     * @description Creates a new curve iterator.
+     * @param {Curve} curve The curve to iterator over
+     * @param {Number} time The time to start iteration, defaults to 0.
      */
     var CurveIterator = function(curve, time) {
         this.curve = curve;
