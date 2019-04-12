@@ -279,12 +279,9 @@ Object.assign(pc, (function () {
             var step = 1.0 / (precision - 1);
             var it = new pc.CurveIterator(this);
 
-            var it = new pc.CurveIterator(this);
-
             // quantize graph to table of interpolated values
             for (var i = 0; i < precision; i++) {
-                values[i] = it.evaluate();
-                it.advance(step);
+                values[i] = it.value(step * i);
             }
 
             return values;
