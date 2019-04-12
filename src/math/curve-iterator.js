@@ -168,7 +168,6 @@ Object.assign(pc, (function () {
                     result = curve._interpolateHermite(this.p0, this.p1, this.m0, this.m1, t);
                 }
             }
-
             return result;
         },
 
@@ -198,10 +197,10 @@ Object.assign(pc, (function () {
          * @returns {Number} The curve value at the given time
          */
         value: function (time) {
-            if (this.time < this.left || this.time > this.right) {
-                this.reset(this.time);
+            if (time < this.left || time > this.right) {
+                this.reset(time);
             } else {
-                this.time = time;
+                this.time_ = time;
             }
             return this.evaluate();
         }
@@ -226,7 +225,7 @@ Object.assign(pc, (function () {
             this.time_ += amount;
         },
         value: function (time) {
-            reset(time);
+            this.reset(time);
             return this.evaluate();
         }
     });
