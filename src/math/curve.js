@@ -160,62 +160,58 @@ Object.assign(pc, (function () {
             var div = rightTime - leftTime;
             var interpolation = (div === 0 ? 0 : (time - leftTime) / div);
 
-            if (this.type === CURVE_STEP) {
-                return leftValue;
-            }
-
-            if (this.type === CURVE_LINEAR) {
-                return pc.math.lerp(leftValue, rightValue, interpolation);
-            }
-
-            if (this.type === CURVE_SMOOTHSTEP) {
-                interpolation *= interpolation * (3 - 2 * interpolation);
-                return pc.math.lerp(leftValue, rightValue, interpolation);
-            }
-
-            // all remaining spline types
-            var p1 = leftValue;
-            var p2 = rightValue;
-            var p0 = p1 + (p1 - p2); // default control points are extended back/forward from existing points
-            var p3 = p2 + (p2 - p1);
-
-            var dt1 = rightTime - leftTime;
-            var dt0 = dt1;
-            var dt2 = dt1;
-
-            // back up index to left key
-            if (i > 0) {
-                i--;
-            }
-
-            if (i > 0) {
-                p0 = keys[i - 1][1];
-                dt0 = keys[i][0] - keys[i - 1][0];
-            }
-
-            if (len > i + 1) {
-                dt1 = keys[i + 1][0] - keys[i][0];
-            }
-
-            if (len > i + 2) {
-                dt2 = keys[i + 2][0] - keys[i + 1][0];
-                p3 = keys[i + 2][1];
-            }
-
             var result;
-            if (this.type === CURVE_CARDINAL_STABLE) {
-                var m1 = this.tension * (2 * dt1 / (dt0 + dt1)) * (p2 - p0);
-                var m2 = this.tension * (2 * dt1 / (dt1 + dt2)) * (p3 - p1);
-                result = this._interpolateHermite(p1, p2, m1, m2, interpolation);
+            if (this.type === CURVE_STEP) {
+                result = leftValue;
+            } else if (this.type === CURVE_LINEAR) {
+                result = pc.math.lerp(leftValue, rightValue, interpolation);
+            } else if (this.type === CURVE_SMOOTHSTEP) {
+                interpolation *= interpolation * (3 - 2 * interpolation);
+                result = pc.math.lerp(leftValue, rightValue, interpolation);
             } else {
-                // normalize p0 and p3 to be equal time with p1->p2
-                p0 = p1 + (p0 - p1) * dt1 / dt0;
-                p3 = p2 + (p3 - p2) * dt1 / dt2;
+                // all remaining spline types
+                var p1 = leftValue;
+                var p2 = rightValue;
+                var p0 = p1 + (p1 - p2); // default control points are extended back/forward from existing points
+                var p3 = p2 + (p2 - p1);
 
-                if (this.type === CURVE_CATMULL) {
-                    result = this._interpolateCatmullRom(p0, p1, p2, p3, interpolation);
+                var dt1 = rightTime - leftTime;
+                var dt0 = dt1;
+                var dt2 = dt1;
+
+                // back up index to left key
+                if (i > 0) {
+                    i--;
+                }
+
+                if (i > 0) {
+                    p0 = keys[i - 1][1];
+                    dt0 = keys[i][0] - keys[i - 1][0];
+                }
+
+                if (len > i + 1) {
+                    dt1 = keys[i + 1][0] - keys[i][0];
+                }
+
+                if (len > i + 2) {
+                    dt2 = keys[i + 2][0] - keys[i + 1][0];
+                    p3 = keys[i + 2][1];
+                }
+
+                if (this.type === CURVE_CARDINAL_STABLE) {
+                    var m1 = this.tension * (2 * dt1 / (dt0 + dt1)) * (p2 - p0);
+                    var m2 = this.tension * (2 * dt1 / (dt1 + dt2)) * (p3 - p1);
+                    result = this._interpolateHermite(p1, p2, m1, m2, interpolation);
                 } else {
-                    result = this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
+                    // normalize p0 and p3 to be equal time with p1->p2
+                    p0 = p1 + (p0 - p1) * dt1 / dt0;
+                    p3 = p2 + (p3 - p2) * dt1 / dt2;
+
+                    if (this.type === CURVE_CATMULL) {
+                        result = this._interpolateCatmullRom(p0, p1, p2, p3, interpolation);
+                    } else {
+                        result = this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
+                    }
                 }
             }
             return result;
