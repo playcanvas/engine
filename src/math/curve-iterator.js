@@ -38,26 +38,33 @@ Object.assign(pc, (function () {
 
             this.time_ = time;
             if (!len) {
+                // curve is empty
                 this.left = -Infinity;
                 this.right = Infinity;
                 this.recip = 0;
                 this.p0 = this.p1 = this.m0 = this.m1 = 0;
             } else {
                 if (this.time_ < keys[0][0]) {
+                    // iterator falls to the left of the start of the curve
                     this.left = -Infinity;
                     this.right = keys[0][0];
                     this.recip = 0;
                     this.p0 = this.p1 = keys[0][1];
                     this.m0 = this.m1 = 0;
                 } else if (this.time_ >= keys[len - 1][0]) {
+                    // iterator falls to the right of the end of the curve
                     this.left = keys[len - 1][0];
                     this.right = Infinity;
                     this.recip = 0;
                     this.p0 = this.p1 = keys[len - 1][1];
                     this.m0 = this.m1 = 0;
                 } else {
-                    // linear search for the left most key (TODO: for cases with more than
-                    // 'n' keys it will be quicker to perform a binary search instead).
+                    // iterator falls within the bounds of the curve
+                    // perform a linear search for the key just the to left of the
+                    // current time.
+                    // (TODO: for cases where the curve has more than 'n' keys it will
+                    // be more efficient to perform a binary search here instead. Which is
+                    // straight forward thanks to the sorted list of knots).
                     index = 0;
                     while (this.time_ > keys[index + 1][0]) {
                         index++;
@@ -67,19 +74,21 @@ Object.assign(pc, (function () {
                     this.recip = 1.0 / (this.right - this.left);
                     this.p0 = keys[index][1];
                     this.p1 = keys[index + 1][1];
-                    if (this._isCurve()) {
+                    if (this._isHermite()) {
                         this._calcTangents(keys, index);
                     }
                 }
             }
         },
 
-        _isCurve: function () {
+        // returns true if the curve is a hermite and false otherwise
+        _isHermite: function () {
             return [pc.CURVE_CATMULL,
                 pc.CURVE_CARDINAL,
                 pc.CURVE_CARDINAL_STABLE].indexOf(this.curve.type) != -1;
         },
 
+        // calculate tangents for the hermite curve
         _calcTangents: function (keys, index) {
             var a;
             var b = keys[index];
@@ -104,7 +113,7 @@ Object.assign(pc, (function () {
             var tension = this.curve.tension;
 
             if (this.curve.type === pc.CURVE_CARDINAL_STABLE) {
-                // scale (due to non-uniform knot spacing)
+                // tangent scale (due to non-uniform knot spacing)
                 var s1_ = 2 * (c[0] - b[0]) / (c[0] - a[0]);
                 var s2_ = 2 * (c[0] - b[0]) / (d[0] - b[0]);
 
@@ -193,7 +202,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.CurveIterator.value
          * @description Evaluate the curve at the given time
-         * @param {Number} time The time to evaluate
+         * @param {Number} time The time at which to evaluate the curve
          * @returns {Number} The curve value at the given time
          */
         value: function (time) {
@@ -206,6 +215,7 @@ Object.assign(pc, (function () {
         }
     });
 
+    // dummy iterator for testing the legacy curve evaluation
     var DummyIterator = function (curve, time) {
         this.curve = curve;
         this.time_ = time || 0;
