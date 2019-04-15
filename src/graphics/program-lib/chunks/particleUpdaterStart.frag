@@ -71,7 +71,7 @@ void main(void)
 #ifndef LOCAL_SPACE
     outVel = emitterMatrix * localVelocity + (radialVel + velocity) * emitterScale;
 #else
-    outVel = localVelocity / emitterScale + emitterMatrixInv * (radialVel + velocity);
+    outVel = (localVelocity + radialVel) / emitterScale + emitterMatrixInv * velocity;
 #endif
     outPos = inPos + outVel * delta;
     outAngle = inAngle + rotSpeed * delta;

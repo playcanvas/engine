@@ -1557,9 +1557,8 @@ Object.assign(pc, function () {
                             localVelocityVec.add(velocityVec.mul(nonUniformScale));
                             localVelocityVec.add(radialVelocityVec.mul(nonUniformScale));
                         } else {
-                            velocityVec.add(radialVelocityVec);
                             rotMatInv.transformPoint(velocityVec, velocityVec);
-                            localVelocityVec.add(velocityVec);
+                            localVelocityVec.add(velocityVec).add(radialVelocityVec);
                         }
 
                         moveDirVec.copy(localVelocityVec);
