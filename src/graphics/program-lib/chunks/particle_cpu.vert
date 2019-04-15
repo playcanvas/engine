@@ -24,7 +24,7 @@ uniform float lifetime;
 uniform float stretch;
 //uniform float graphSampleSize;
 //uniform float graphNumSamples;
-uniform vec3 wrapBounds, emitterScale;
+uniform vec3 wrapBounds, emitterScale, faceTangent, faceBinorm;
 uniform sampler2D texLifeAndSourcePosOUT;
 uniform sampler2D internalTex0;
 uniform sampler2D internalTex1;
@@ -52,6 +52,11 @@ vec3 billboard(vec3 InstanceCoords, vec2 quadXY)
     return pos;
 }
 
+vec3 customFace(vec3 InstanceCoords, vec2 quadXY)
+{
+    vec3 pos = faceTangent * quadXY.x + faceBinorm * quadXY.y;
+    return pos;
+}
 
 void main(void)
 {
