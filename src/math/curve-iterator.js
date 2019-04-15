@@ -65,7 +65,7 @@ Object.assign(pc, (function () {
                     // (TODO: for cases where the curve has more than 'n' keys it will
                     // be more efficient to perform a binary search here instead. Which is
                     // straight forward thanks to the sorted list of knots).
-                    index = 0;
+                    var index = 0;
                     while (this.time_ > keys[index + 1][0]) {
                         index++;
                     }
@@ -136,6 +136,16 @@ Object.assign(pc, (function () {
             }
         },
 
+        _evaluateHermite: function (p0, p1, t0, t1, s) {
+            var s2 = s * s;
+            var s3 = s2 * s;
+            var h0 = 2 * s3 - 3 * s2 + 1;
+            var h1 = -2 * s3 + 3 * s2;
+            var h2 = s3 - 2 * s2 + s;
+            var h3 = s3 - s2;
+            return p0 * h0 + p1 * h1 + t0 * h2 + t1 * h3;
+        },
+
         /**
          * @function
          * @name pc.CurveIterator#time
@@ -174,7 +184,7 @@ Object.assign(pc, (function () {
                     result = pc.math.lerp(this.p0, this.p1, t * t * (3 - 2 * t));
                 } else {
                     // curve
-                    result = curve._interpolateHermite(this.p0, this.p1, this.m0, this.m1, t);
+                    result = this._evaluateHermite(this.p0, this.p1, this.m0, this.m1, t);
                 }
             }
             return result;
@@ -215,33 +225,7 @@ Object.assign(pc, (function () {
         }
     });
 
-    // dummy iterator for testing the legacy curve evaluation
-    var DummyIterator = function (curve, time) {
-        this.curve = curve;
-        this.time_ = time || 0;
-    };
-
-    Object.assign(DummyIterator.prototype, {
-        reset: function (time) {
-            this.time_ = time;
-        },
-        time: function () {
-            return this.time_;
-        },
-        evaluate: function () {
-            return this.curve.value(this.time_);
-        },
-        advance: function (amount) {
-            this.time_ += amount;
-        },
-        value: function (time) {
-            this.reset(time);
-            return this.evaluate();
-        }
-    });
-
     return {
-        CurveIterator: CurveIterator,
-        DummyIterator: DummyIterator
+        CurveIterator: CurveIterator
     };
 }()));
