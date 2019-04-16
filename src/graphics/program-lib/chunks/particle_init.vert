@@ -1,4 +1,7 @@
 attribute vec4 particle_vertexData; // XYZ = particle position, W = particle ID + random factor
+#ifdef USE_MESH
+attribute vec2 particle_uv;         // mesh UV
+#endif
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;

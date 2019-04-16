@@ -96,7 +96,7 @@ Object.assign(pc, function () {
 
         // start listening for element events
         element.on('resize', this._onParentResize, this);
-        this._element.on('set:screen', this._onScreenChange, this);
+        element.on('set:screen', this._onScreenChange, this);
         element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
         element.on('set:draworder', this._onDrawOrderChange, this);
         element.on('set:pivot', this._onPivotChange, this);
