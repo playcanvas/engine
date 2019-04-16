@@ -64,6 +64,9 @@ void main(void)
     vec3 inPos = particlePos;
     vec3 vertPos = particle_vertexData3.xyz;
     vec3 inVel = vec3(particle_vertexData2.w, particle_vertexData3.w, particle_vertexData4.x);
+#ifdef LOCAL_SPACE
+    inVel = mat3(matrix_model) * inVel;
+#endif
     vec2 velocityV = normalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
 
     vec2 quadXY = vertPos.xy;

@@ -57,7 +57,9 @@ void main(void) {
     float uv = id / numParticlesPot;
     readInput(uv);
 
-
+#ifdef LOCAL_SPACE
+    inVel = mat3(matrix_model) * inVel;
+#endif
     vec2 velocityV = normalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
     float particleLifetime = lifetime;
 

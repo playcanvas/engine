@@ -29,6 +29,7 @@ pc.programlib.particle = {
         }
         vshader += "#define VERTEXSHADER\n";
         if (options.mesh) vshader += "#define USE_MESH\n";
+        if (options.localSpace) vshader += "#define LOCAL_SPACE\n";
 
         if (options.animTex) vshader += "\nuniform vec4 animTexParams;\n";
         if (options.normal == 2) vshader += "\nvarying mat3 ParticleMat;\n";
