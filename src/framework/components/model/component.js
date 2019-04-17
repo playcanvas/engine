@@ -266,7 +266,10 @@ Object.assign(pc, function () {
             }
 
             if (this._batchGroupId >= 0) {
-                app.batcher.insert(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
+                if (this._model)
+                    app.batcher.insert(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
+                else
+                    app.batcher.register(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
             }
         },
 
@@ -281,7 +284,10 @@ Object.assign(pc, function () {
             }
 
             if (this._batchGroupId >= 0) {
-                app.batcher.remove(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
+                if (this._model)
+                    app.batcher.remove(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
+                else
+                    app.batcher.unregister(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
             }
 
             if (this._model) {
@@ -608,8 +614,13 @@ Object.assign(pc, function () {
                 return;
             }
 
+            var batcher = this.system.app.batcher;
             if (this._model) {
-                this.removeModelFromLayers(this._model);
+                if (this._batchGroupId >= 0) {
+                    batcher.remove(pc.BatchGroup.MODEL, _batchGroupId, this.entity);
+                } else {
+                    this.removeModelFromLayers(this._model);
+                }
                 this.entity.removeChild(this._model.getGraph());
                 delete this._model._entity;
 
@@ -635,7 +646,11 @@ Object.assign(pc, function () {
                 this.entity.addChild(this._model.graph);
 
                 if (this.enabled && this.entity.enabled) {
-                    this.addModelToLayers();
+                    if (this._batchGroupId >= 0) {
+                        batcher.insert(pc.BatchGroup.MODEL, this._batchGroupId, this.entity);
+                    } else {
+                        this.addModelToLayers();
+                    }
                 }
 
                 // Store the entity that owns this model
@@ -838,10 +853,16 @@ Object.assign(pc, function () {
 
             var batcher = this.system.app.batcher;
             if (this.entity.enabled && this._batchGroupId >= 0) {
-                batcher.remove(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
+                if (this._model)
+                    batcher.remove(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
+                else
+                    batcher.unregister(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
             }
             if (this.entity.enabled && value >= 0) {
-                batcher.insert(pc.BatchGroup.MODEL, value, this.entity);
+                if (this._model)
+                    batcher.insert(pc.BatchGroup.MODEL, value, this.entity);
+                else
+                    batcher.register(pc.BatchGroup.MODEL, value, this.entity);
             }
 
             if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
