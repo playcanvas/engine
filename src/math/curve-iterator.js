@@ -71,7 +71,8 @@ Object.assign(pc, (function () {
                     }
                     this.left = keys[index][0];
                     this.right = keys[index + 1][0];
-                    this.recip = 1.0 / (this.right - this.left);
+                    var diff = 1.0 / (this.right - this.left);
+                    this.recip = (isFinite(diff) ? diff : 0);
                     this.p0 = keys[index][1];
                     this.p1 = keys[index + 1][1];
                     if (this._isHermite()) {
@@ -117,8 +118,8 @@ Object.assign(pc, (function () {
                 var s1_ = 2 * (c[0] - b[0]) / (c[0] - a[0]);
                 var s2_ = 2 * (c[0] - b[0]) / (d[0] - b[0]);
 
-                this.m0 = tension * s1_ * (c[1] - a[1]);
-                this.m1 = tension * s2_ * (d[1] - b[1]);
+                this.m0 = tension * (isFinite(s1_) ? s1_ : 0) * (c[1] - a[1]);
+                this.m1 = tension * (isFinite(s2_) ? s2_ : 0) * (d[1] - b[1]);
             } else {
                 if (this.curve.type === pc.CURVE_CATMULL) {
                     tension = 0.5;
@@ -128,8 +129,8 @@ Object.assign(pc, (function () {
                 var s1 = (c[0] - b[0]) / (b[0] - a[0]);
                 var s2 = (c[0] - b[0]) / (d[0] - c[0]);
 
-                var a_ = b[1] + (a[1] - b[1]) * s1;
-                var d_ = c[1] + (d[1] - c[1]) * s2;
+                var a_ = b[1] + (a[1] - b[1]) * (isFinite(s1) ? s1 : 0);
+                var d_ = c[1] + (d[1] - c[1]) * (isFinite(s2) ? s2 : 0);
 
                 this.m0 = tension * (c[1] - a_);
                 this.m1 = tension * (d_ - b[1]);
@@ -175,7 +176,6 @@ Object.assign(pc, (function () {
                 if (this.recip !== 0) {
                     t = (this.time_ - this.left) * this.recip;
                 }
-
                 if (curve.type === pc.CURVE_LINEAR) {
                     // linear
                     result = pc.math.lerp(this.p0, this.p1, t);
