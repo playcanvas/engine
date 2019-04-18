@@ -72,14 +72,12 @@
 
   app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-  var entity, light, camera;
-
 
   var parser = new pc.SceneParser(app);
   var templateRoot = parser.parse(boxJson);
   app.root.addChild(templateRoot);
 
-
+  var entity;
   // Load a model file and create a Entity with a model component
   var url = "../assets/statue/Statue_1.json";
   app.assets.loadFromUrl(url, "model", function (err, asset) {
@@ -114,11 +112,7 @@
   light.translate(5, 0, 15);
   app.root.addChild(light);
 
-  app.on("update", function (dt) {
-    if (entity) {
-      entity.rotate(0,10*dt,0);
-    }
-  });
+
 </script>
 </body>
 </html>
