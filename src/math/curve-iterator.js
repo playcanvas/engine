@@ -66,7 +66,7 @@ Object.assign(pc, (function () {
                     // be more efficient to perform a binary search here instead. Which is
                     // straight forward thanks to the sorted list of knots).
                     var index = 0;
-                    while (this.time_ > keys[index + 1][0]) {
+                    while (this.time_ >= keys[index + 1][0]) {
                         index++;
                     }
                     this.left = keys[index][0];
@@ -216,7 +216,7 @@ Object.assign(pc, (function () {
          * @returns {Number} The curve value at the given time
          */
         value: function (time) {
-            if (time < this.left || time > this.right) {
+            if (time < this.left || time >= this.right) {
                 this.reset(time);
             } else {
                 this.time_ = time;
