@@ -73,25 +73,22 @@
   app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
 
-  var parser = new pc.SceneParser(app);
-  var templateRoot = parser.parse(boxJson);
-  app.root.addChild(templateRoot);
+ //  var parser = new pc.SceneParser(app);
+  // var templateRoot = parser.parse(boxJson);
+  // app.root.addChild(templateRoot);
 
-  var entity;
-  // Load a model file and create a Entity with a model component
-  var url = "../assets/statue/Statue_1.json";
-  app.assets.loadFromUrl(url, "model", function (err, asset) {
 
-    return;
+  var url = "../assets/template_assets/cube_template.json";
 
-    entity = new pc.Entity();
-    entity.addComponent("model", {
-      type: "asset",
-      asset: asset,
-      castShadows: true
-    });
-    app.root.addChild(entity);
+  app.assets.loadFromUrl(url, 'template', function (err, asset) {
+
+      var entity = asset.resource.instantiate();
+      // var parser = new pc.SceneParser(app);
+      // var templateRoot = parser.parse(boxJson);
+     app.root.addChild(entity);
+
   });
+
 
   // Create an Entity with a camera component
   var camera = new pc.Entity();

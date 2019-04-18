@@ -483,6 +483,7 @@ Object.assign(pc, function () {
         this.loader.addHandler("binary", new pc.BinaryHandler());
         this.loader.addHandler("textureatlas", new pc.TextureAtlasHandler(this.loader));
         this.loader.addHandler("sprite", new pc.SpriteHandler(this.assets, this.graphicsDevice));
+        this.loader.addHandler("template", new pc.TemplateHandler(this));
 
         this.systems = new pc.ComponentSystemRegistry();
         this.systems.add(new pc.RigidBodyComponentSystem(this));
