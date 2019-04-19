@@ -30,7 +30,7 @@
 
     app.assets.loadFromUrl(url, 'template', function (err, asset) {
         for (var i = 0; i < 2; i++) {
-            var entity = asset.resource.instantiate(app);
+            var entity = asset.resource.instantiate();
 
             app.root.addChild(entity);
         }
