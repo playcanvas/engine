@@ -29,17 +29,12 @@
     var url = "../assets/template_assets/cube_template.json";
 
     app.assets.loadFromUrl(url, 'template', function (err, asset) {
+        for (var i = 0; i < 3; i++) {
+            var entity = asset.resource.instantiate(app);
 
-        var entity = asset.resource.instantiate(app);
-        app.root.addChild(entity);
-
-
-        entity = asset.resource.instantiate(app);
-        app.root.addChild(entity);
-
-        entity = asset.resource.instantiate(app);
-        app.root.addChild(entity);
-
+            app.root.addChild(entity);
+        }
+        
         moveInstancesAtRuntime(asset);
     });
 
