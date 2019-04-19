@@ -4,12 +4,18 @@ Object.assign(pc, function () {
         var parser = new pc.SceneParser(app);
 
         this._templateRoot = parser.parse(json);
+
+        this._instanceGuids = [];
     };
 
     Template.prototype.instantiate = function () {
-        return this._templateRoot.clone();
-    };
+        var instance = this._templateRoot.clone();
 
+        this._instanceGuids.push(instance.getGuid());
+
+        return instance;
+    };
+    
     return {
         Template: Template
     };

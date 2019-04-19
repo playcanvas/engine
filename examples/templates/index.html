@@ -82,18 +82,26 @@
 
     app.assets.loadFromUrl(url, 'template', function (err, asset) {
 
-        var entity = asset.resource.instantiate();
+        var entity = asset.resource.instantiate(app);
         app.root.addChild(entity);
-        entity.translate(5,0,0);
+        //entity.translate(5,0,0);
 
 
-        entity = asset.resource.instantiate();
+        entity = asset.resource.instantiate(app);
         app.root.addChild(entity);
-        entity.translate(0,5,0);
+       // entity.translate(0,5,0);
 
-        entity = asset.resource.instantiate();
+        entity = asset.resource.instantiate(app);
         app.root.addChild(entity);
-        entity.translate(-5,0,0);
+      //  entity.translate(-5,0,0);
+
+        var instanceGuids = asset.resource._instanceGuids;
+
+        app.root.findByGuid(instanceGuids[0]).translate(5,0,0);
+
+        app.root.findByGuid(instanceGuids[1]).translate(0,5,0);
+
+        app.root.findByGuid(instanceGuids[2]).translate(-5,0,0);
     });
 
 
