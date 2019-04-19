@@ -7,7 +7,7 @@ Object.assign(pc, function () {
     };
 
     Template.prototype.instantiate = function () {
-        return this._templateRoot;
+        return this._templateRoot.clone();
     };
 
     return {
