@@ -24,7 +24,6 @@ Object.assign(pc, (function () {
     };
 
     var DEFAULT_LOCALE = 'en-US';
-    var DEFAULT_PLURAL_FN = PLURALS[getLang(DEFAULT_LOCALE)];
 
     // default locale fallbacks if a specific locale
     // was not found. E.g. if the desired locale is en-AS but we
@@ -39,11 +38,6 @@ Object.assign(pc, (function () {
         'it': 'it-IT',
         'ru': 'ru-RU',
         'ja': 'ja-JP'
-    };
-
-    // Gets the function that converts to plural for a language
-    var getPluralFn = function (lang) {
-        return PLURALS[lang] || DEFAULT_PLURAL_FN;
     };
 
     // Only OTHER
@@ -138,6 +132,13 @@ Object.assign(pc, (function () {
 
         return 5; // other
     });
+
+    var DEFAULT_PLURAL_FN = PLURALS[getLang(DEFAULT_LOCALE)];
+
+    // Gets the function that converts to plural for a language
+    var getPluralFn = function (lang) {
+        return PLURALS[lang] || DEFAULT_PLURAL_FN;
+    };
 
     /**
      * @private
@@ -250,7 +251,7 @@ Object.assign(pc, (function () {
             translations = this._translations[locale];
         }
 
-        if (translations && translations[key]) {
+        if (translations && translations[key] && pluralFn) {
             var index = pluralFn(n);
             result = translations[key][index] || key;
         }

@@ -138,8 +138,10 @@ Object.assign(pc, function () {
             }
 
             if (shouldForceSetAnchor) {
+                /* eslint-disable no-self-assign */
                 // force update
                 component.anchor = component.anchor;
+                /* eslint-enable no-self-assign */
             }
 
             if (data.enabled !== undefined) {
@@ -208,7 +210,12 @@ Object.assign(pc, function () {
                     if (!data.lineHeight) component.lineHeight = data.fontSize;
                 }
                 if (data.lineHeight !== undefined) component.lineHeight = data.lineHeight;
+                if (data.maxLines !== undefined) component.maxLines = data.maxLines;
                 if (data.wrapLines !== undefined) component.wrapLines = data.wrapLines;
+                if (data.minFontSize !== undefined) component.minFontSize = data.minFontSize;
+                if (data.maxFontSize !== undefined) component.maxFontSize = data.maxFontSize;
+                if (data.autoFitWidth) component.autoFitWidth = data.autoFitWidth;
+                if (data.autoFitHeight) component.autoFitHeight = data.autoFitHeight;
                 if (data.fontAsset !== undefined) component.fontAsset = data.fontAsset;
                 if (data.font !== undefined) component.font = data.font;
                 if (data.alignment !== undefined) component.alignment = data.alignment;
@@ -273,6 +280,11 @@ Object.assign(pc, function () {
                 wrapLines: source.wrapLines,
                 layers: source.layers,
                 fontSize: source.fontSize,
+                minFontSize: source.minFontSize,
+                maxFontSize: source.maxFontSize,
+                autoFitWidth: source.autoFitWidth,
+                autoFitHeight: source.autoFitHeight,
+                maxLines: source.maxLines,
                 fontAsset: source.fontAsset,
                 font: source.font,
                 useInput: source.useInput,
