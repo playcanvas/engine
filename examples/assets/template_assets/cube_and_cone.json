@@ -1,0 +1,91 @@
+{
+  "entities" : {
+    "e7d00523-5be1-11e9-b7c6-8c8590702577" : {
+      "position" : [
+        0,
+        0.5,
+        0
+      ],
+      "scale" : [
+        1,
+        1,
+        1
+      ],
+      "name" : "Box",
+      "parent" : null,
+      "resource_id" : "e7d00523-5be1-11e9-b7c6-8c8590702577",
+      "components" : {
+        "model" : {
+          "layers" : [
+            0
+          ],
+          "isStatic" : false,
+          "castShadows" : true,
+          "castShadowsLightmap" : true,
+          "lightmapped" : false,
+          "materialAsset" : null,
+          "receiveShadows" : true,
+          "enabled" : true,
+          "castShadowsLightMap" : false,
+          "asset" : null,
+          "type" : "box",
+          "lightmapSizeMultiplier" : 1,
+          "batchGroupId" : null
+        }
+      },
+      "rotation" : [
+        0,
+        0,
+        0
+      ],
+      "tags" : [],
+      "enabled" : true,
+      "children" : [
+        "5a341a19-0de9-4688-9f46-f5ebc361099d"
+      ]
+    },
+    "5a341a19-0de9-4688-9f46-f5ebc361099d" : {
+      "name" : "Cone",
+      "tags" : [],
+      "enabled" : true,
+      "resource_id" : "5a341a19-0de9-4688-9f46-f5ebc361099d",
+      "parent" : "e7d00523-5be1-11e9-b7c6-8c8590702577",
+      "children" : [],
+      "position" : [
+        0,
+        1.07061147689819,
+        0
+      ],
+      "rotation" : [
+        0,
+        0,
+        0
+      ],
+      "scale" : [
+        0.5,
+        0.5,
+        1
+      ],
+      "components" : {
+        "model" : {
+          "enabled" : true,
+          "type" : "cone",
+          "asset" : null,
+          "materialAsset" : null,
+          "castShadows" : true,
+          "castShadowsLightmap" : true,
+          "lightmapped" : false,
+          "lightmapSizeMultiplier" : 1,
+          "castShadowsLightMap" : true,
+          "lightMapped" : false,
+          "lightMapSizeMultiplier" : 1,
+          "isStatic" : false,
+          "layers" : [
+            0
+          ],
+          "batchGroupId" : null
+        }
+      }
+    }
+  }
+}

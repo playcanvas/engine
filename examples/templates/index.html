@@ -26,15 +26,15 @@
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
 
-    var url = "../assets/template_assets/cube_template.json";
+    var url = "../assets/template_assets/cube_and_cone.json";
 
     app.assets.loadFromUrl(url, 'template', function (err, asset) {
-        for (var i = 0; i < 3; i++) {
+        for (var i = 0; i < 2; i++) {
             var entity = asset.resource.instantiate(app);
 
             app.root.addChild(entity);
         }
-        
+
         moveInstancesAtRuntime(asset);
     });
 
