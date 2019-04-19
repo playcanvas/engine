@@ -44,13 +44,9 @@
     });
 
     function moveInstancesAtRuntime(asset) {
-        var instanceGuids = asset.resource._instanceGuids; // todo use accessor
-
-        app.root.findByGuid(instanceGuids[0]).translate(5,0,0);
-
-        app.root.findByGuid(instanceGuids[1]).translate(0,5,0);
-
-        app.root.findByGuid(instanceGuids[2]).translate(-5,0,0);
+        asset.resource.applyToInstances(function(entity, index, guid) {
+            entity.translate(0, 5 + index * 5, 0);
+        });
     }
 
     // Create an Entity with a camera component

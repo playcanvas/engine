@@ -1,6 +1,8 @@
 Object.assign(pc, function () {
 
     var Template = function Template(app, json) {
+        this._app = app;
+
         var parser = new pc.SceneParser(app);
 
         this._templateRoot = parser.parse(json);
@@ -15,7 +17,17 @@ Object.assign(pc, function () {
 
         return instance;
     };
-    
+
+    Template.prototype.applyToInstances = function (callback) {
+        for (var i = 0; i < this._instanceGuids.length; i++) {
+            var guid = this._instanceGuids[i];
+
+            var entity = this._app.root.findByGuid(guid);
+
+            callback(entity, i, guid);
+        }
+    };
+
     return {
         Template: Template
     };
