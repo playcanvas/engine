@@ -38,6 +38,11 @@ Object.assign(pc, function () {
         },
 
         _createEntity: function (data) {
+            if (data.collapsed_template) {
+                // get asset by item_id
+                data = pc.Template.expand(data);
+            }
+
             var entity = new pc.Entity();
 
             var p = data.position;
@@ -50,7 +55,7 @@ Object.assign(pc, function () {
             entity.setLocalEulerAngles(r[0], r[1], r[2]);
             entity.setLocalScale(s[0], s[1], s[2]);
             entity._enabled = data.enabled !== undefined ? data.enabled : true;
-            entity._enabledInHierarchy = entity._enabled;
+            //entity._enabledInHierarchy = entity._enabled; // disable for all
             entity.template = data.template;
 
             if (data.tags) {

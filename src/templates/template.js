@@ -3,6 +3,8 @@ Object.assign(pc, function () {
     var Template = function Template(app, json) {
         this._app = app;
 
+        this.origJson = json;
+
         var parser = new pc.SceneParser(app);
 
         this._templateRoot = parser.parse(json);
@@ -26,6 +28,16 @@ Object.assign(pc, function () {
 
             callback(entity, i, guid);
         }
+    };
+
+    Template.expand = function (data) {
+        var template = this._app.assets.get(data.template_id);
+
+        // todo: replace this with an actual traversal-based tree-copy
+
+        var h = JSON.parse(JSON.stringify(template.resource.origJson));
+
+
     };
 
     return {
