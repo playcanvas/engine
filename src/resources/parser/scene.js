@@ -39,8 +39,7 @@ Object.assign(pc, function () {
 
         _createEntity: function (data) {
             if (data.collapsed_template) {
-                // get asset by item_id
-                data = pc.Template.expand(data);
+                data = pc.Template.expand(this._app, data);
             }
 
             var entity = new pc.Entity();
