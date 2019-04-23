@@ -255,7 +255,7 @@ Object.assign(pc, (function () {
             translations = this._translations[locale];
         }
 
-        if (translations && translations.hasOwnProperty(key) && pluralFn) {
+        if (translations && translations[key] && pluralFn) {
             var index = pluralFn(n);
             result = translations[key][index];
 

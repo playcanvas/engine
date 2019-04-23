@@ -176,6 +176,32 @@ describe('I18n tests', function () {
         });
     });
 
+    it('getPluralText() returns key is translation is null', function () {
+        addText('en-US', 'key', [null, null]);
+        expect(app.i18n.getPluralText('key', 0)).to.equal('key');
+        expect(app.i18n.getPluralText('key', 1)).to.equal('key');
+        expect(app.i18n.getPluralText('key', 2)).to.equal('key');
+
+        ['no-NO', 'ar'].forEach(function (locale) {
+            expect(app.i18n.getPluralText('key', 0, locale)).to.equal('key');
+            expect(app.i18n.getPluralText('key', 1, locale)).to.equal('key');
+            expect(app.i18n.getPluralText('key', 2, locale)).to.equal('key');
+            app.i18n.locale = locale;
+            expect(app.i18n.getPluralText('key', 0)).to.equal('key');
+            expect(app.i18n.getPluralText('key', 1)).to.equal('key');
+            expect(app.i18n.getPluralText('key', 2)).to.equal('key');
+
+            addText(locale, 'key', [null, null, null]);
+
+            expect(app.i18n.getPluralText('key', 0)).to.equal('key');
+            expect(app.i18n.getPluralText('key', 1)).to.equal('key');
+            expect(app.i18n.getPluralText('key', 2)).to.equal('key');
+        });
+
+        addText('es-ES', 'key', null);
+        expect(app.i18n.getPluralText('key', 2, 'es-ES')).to.equal('key');
+    });
+
     it('getPluralText() should fall back to default locale for that language if the specific locale does not exist', function () {
         var lang;
         for (lang in DEFAULT_LOCALE_FALLBACKS) {
