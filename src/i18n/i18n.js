@@ -247,6 +247,7 @@ Object.assign(pc, (function () {
         var translations = this._translations[locale];
         if (!translations) {
             locale = this._findFallbackLocale(lang);
+            lang = getLang(locale);
             pluralFn = getPluralFn(lang);
             translations = this._translations[locale];
         }
