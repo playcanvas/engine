@@ -130,6 +130,13 @@ describe('I18n tests', function () {
         expect(app.i18n.getPluralText('key', 1)).to.equal('english one');
     });
 
+    it('getPluralText() should return en-US plural form if the desired locale does not exist', function () {
+        addText('en-US', 'key', ['english one', 'english other']);
+        expect(app.i18n.getPluralText('key', 1, 'ar')).to.equal('english one');
+        app.i18n.locale = 'ar';
+        expect(app.i18n.getPluralText('key', 1)).to.equal('english one');
+    });
+
     it('getPluralText() should fall back to default locale for that language if the specific locale does not exist', function () {
         var lang;
         for (lang in DEFAULT_LOCALE_FALLBACKS) {
