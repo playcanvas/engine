@@ -51,7 +51,6 @@ Object.assign(pc, function () {
         this.name = name;
         this.layers = layers === undefined ? [pc.LAYERID_WORLD] : layers;
         this._ui = false;
-        this._deferred = 0; // async models loading counter
         this._obj = {
             model: [],
             element: [],
@@ -316,15 +315,8 @@ Object.assign(pc, function () {
         if (group) {
             if (group._obj[type].indexOf(node) < 0) {
                 group._obj[type].push(node);
-            } else {
-                group._deferred--;
-                // #ifdef DEBUG
-                if (group._deferred < 0)
-                    console.error('Invalid batch' + groupId + ' async loading counter');
-                // #endif
-            }
-            if (group._deferred == 0)
                 this.markGroupDirty(groupId);
+            }
         } else {
             // #ifdef DEBUG
             console.warn('Invalid batch ' + groupId + ' insertion');
@@ -338,51 +330,11 @@ Object.assign(pc, function () {
             var idx = group._obj[type].indexOf(node);
             if (idx >= 0) {
                 group._obj[type].splice(idx, 1);
-                if (group._deferred == 0)
-                    this.markGroupDirty(groupId);
+                this.markGroupDirty(groupId);
             }
         } else {
             // #ifdef DEBUG
             console.warn('Invalid batch ' + groupId + ' insertion');
-            // #endif
-        }
-    };
-
-    BatchManager.prototype.register = function (type, groupId, node) {
-        var group = this._batchGroups[groupId];
-        if (group) {
-            if (group._obj[type].indexOf(node) < 0) {
-                group._deferred++;
-                group._obj[type].push(node);
-                var idx = this._dirtyGroups.indexOf(groupId);
-                if (idx >= 0) {
-                    this._dirtyGroups.splice(idx, 1);
-                }
-            }
-        } else {
-            // #ifdef DEBUG
-            console.warn('Invalid batch ' + groupId + ' register');
-            // #endif
-        }
-    };
-
-    BatchManager.prototype.unregister = function (type, groupId, node) {
-        var group = this._batchGroups[groupId];
-        if (group) {
-            var idx = group._obj[type].indexOf(node);
-            if (idx >= 0) {
-                group._obj[type].splice(idx, 1);
-                group._deferred--;
-                // #ifdef DEBUG
-                if (group._deferred < 0)
-                    console.error('Invalid batch' + groupId + ' async loading counter');
-                // #endif
-            }
-            if (group._deferred == 0)
-                this.markGroupDirty(groupId);
-        } else {
-            // #ifdef DEBUG
-            console.warn('Invalid batch ' + groupId + ' unregister');
             // #endif
         }
     };
