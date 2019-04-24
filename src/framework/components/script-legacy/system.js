@@ -501,7 +501,10 @@ Object.assign(pc, function () {
             } else if (attribute.type === 'curve' || attribute.type === 'colorcurve') {
                 var curveType = attribute.value.keys[0] instanceof Array ? pc.CurveSet : pc.Curve;
                 attribute.value = new curveType(attribute.value.keys);
+
+                /* eslint-disable no-self-assign */
                 attribute.value.type = attribute.value.type;
+                /* eslint-enable no-self-assign */
             }
         }
     });

@@ -92,14 +92,18 @@ Object.assign(pc, function () {
     var localVelocityVec = new pc.Vec3();
     var velocityVec2 = new pc.Vec3();
     var localVelocityVec2 = new pc.Vec3();
+    var radialVelocityVec = new pc.Vec3();
     var rndFactor3Vec = new pc.Vec3();
     var particlePosPrev = new pc.Vec3();
     var particlePos = new pc.Vec3();
     var particleFinalPos = new pc.Vec3();
     var moveDirVec = new pc.Vec3();
     var rotMat = new pc.Mat4();
+    var rotMatInv = new pc.Mat4();
     var spawnMatrix3 = new pc.Mat3();
+    var extentsInnerRatioUniform = new Float32Array(3);
     var emitterMatrix3 = new pc.Mat3();
+    var emitterMatrix3Inv = new pc.Mat3();
     var uniformScale = 1;
     var nonUniformScale;
     var spawnMatrix = new pc.Mat4();
@@ -162,6 +166,17 @@ Object.assign(pc, function () {
         return colors;
     }
 
+    function packTexture2Floats(qA, qB) {
+        var colors = new Array(qA.length * 4);
+        for (var i = 0; i < qA.length; i++) {
+            colors[i * 4] = qA[i];
+            colors[i * 4 + 1] = qB[i];
+            colors[i * 4 + 2] = 0;
+            colors[i * 4 + 3] = 0;
+        }
+        return colors;
+    }
+
     var ParticleEmitter = function (graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
         var gd = graphicsDevice;
@@ -208,7 +223,9 @@ Object.assign(pc, function () {
         setProperty("rate2", this.rate);
         setProperty("lifetime", 50);                             // Particle lifetime
         setProperty("emitterExtents", new pc.Vec3(0, 0, 0));        // Spawn point divergence
+        setProperty("emitterExtentsInner", new pc.Vec3(0, 0, 0));   // Volume inside emitterExtents to exclude from reneration
         setProperty("emitterRadius", 0);
+        setProperty("emitterRadiusInner", 0);                       // Same as ExtentsInner but for spherical volume
         setProperty("emitterShape", pc.EMITTERSHAPE_BOX);
         setProperty("initialVelocity", 1);
         setProperty("wrap", false);
@@ -227,8 +244,11 @@ Object.assign(pc, function () {
         setProperty("stretch", 0.0);
         setProperty("alignToMotion", false);
         setProperty("depthSoftening", 0);
-        setProperty("mesh", null);                               // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
-                                                                 // Leave undefined to use simple quads
+        setProperty("mesh", null);                              // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
+                                                                // Leave undefined to use simple quads
+        setProperty("particleNormal", new pc.Vec3(0, 1, 0));
+        setProperty("orientation", pc.PARTICLEORIENTATION_SCREEN);
+
         setProperty("depthWrite", false);
         setProperty("noFog", false);
         setProperty("blendType", pc.BLEND_NORMAL);
@@ -266,13 +286,18 @@ Object.assign(pc, function () {
         setProperty("rotationSpeedGraph", default0Curve);
         setProperty("rotationSpeedGraph2", this.rotationSpeedGraph);
 
+        setProperty("radialSpeedGraph", default0Curve);
+        setProperty("radialSpeedGraph2", this.radialSpeedGraph);
+
         // Particle updater constants
         this.constantParticleTexIN = gd.scope.resolve("particleTexIN");
         this.constantParticleTexOUT = gd.scope.resolve("particleTexOUT");
         this.constantEmitterPos = gd.scope.resolve("emitterPos");
         this.constantEmitterScale = gd.scope.resolve("emitterScale");
         this.constantSpawnBounds = gd.scope.resolve("spawnBounds");
+        this.constantSpawnPosInnerRatio = gd.scope.resolve("spawnPosInnerRatio");
         this.constantSpawnBoundsSphere = gd.scope.resolve("spawnBoundsSphere");
+        this.constantSpawnBoundsSphereInnerRatio = gd.scope.resolve("spawnBoundsSphereInnerRatio");
         this.constantInitialVelocity = gd.scope.resolve("initialVelocity");
         this.constantFrameRandom = gd.scope.resolve("frameRandom");
         this.constantDelta = gd.scope.resolve("delta");
@@ -285,7 +310,9 @@ Object.assign(pc, function () {
         this.constantInternalTex0 = gd.scope.resolve("internalTex0");
         this.constantInternalTex1 = gd.scope.resolve("internalTex1");
         this.constantInternalTex2 = gd.scope.resolve("internalTex2");
+        this.constantInternalTex3 = gd.scope.resolve("internalTex3");
         this.constantEmitterMatrix = gd.scope.resolve("emitterMatrix");
+        this.constantEmitterMatrixInv = gd.scope.resolve("emitterMatrixInv");
         this.constantNumParticles = gd.scope.resolve("numParticles");
         this.constantNumParticlesPot = gd.scope.resolve("numParticlesPot");
         this.constantLocalVelocityDivMult = gd.scope.resolve("localVelocityDivMult");
@@ -299,6 +326,8 @@ Object.assign(pc, function () {
         this.constantInBoundsSize = gd.scope.resolve("inBoundsSize");
         this.constantInBoundsCenter = gd.scope.resolve("inBoundsCenter");
         this.constantMaxVel = gd.scope.resolve("maxVel");
+        this.constantFaceTangent = gd.scope.resolve("faceTangent");
+        this.constantFaceBinorm = gd.scope.resolve("faceBinorm");
 
         this.lightCube = new Float32Array(6 * 3);
         this.lightCubeDir = new Array(6);
@@ -314,7 +343,7 @@ Object.assign(pc, function () {
         this.internalTex0 = null;
         this.internalTex1 = null;
         this.internalTex2 = null;
-        this.internalTex3 = null;
+        this.colorParam = null;
 
         this.vbToSort = null;
         this.vbOld = null;
@@ -452,20 +481,20 @@ Object.assign(pc, function () {
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
 
-            this.worldBoundsNoTrail.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
+            this.worldBoundsNoTrail.setFromTransformedAabb(
+                this.localBounds, this.localSpace ? pc.Mat4.IDENTITY : this.node.getWorldTransform());
+
             this.worldBoundsTrail[0].add(this.worldBoundsNoTrail);
+            this.worldBoundsTrail[1].add(this.worldBoundsNoTrail);
 
             var now = this.simTimeTotal;
             if (now > this.timeToSwitchBounds) {
-                var tmp = this.worldBoundsTrail[0];
-                this.worldBoundsTrail[0] = this.worldBoundsTrail[1];
-                this.worldBoundsTrail[1] = tmp;
-                this.worldBoundsTrail[0].copy(this.worldBoundsNoTrail);
+                this.worldBoundsTrail[0].copy(this.worldBoundsTrail[1]);
+                this.worldBoundsTrail[1].copy(this.worldBoundsNoTrail);
                 this.timeToSwitchBounds = now + this.lifetime;
             }
 
             this.worldBounds.copy(this.worldBoundsTrail[0]);
-            this.worldBounds.add(this.worldBoundsTrail[1]);
 
             this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
 
@@ -482,12 +511,14 @@ Object.assign(pc, function () {
             var maxx = -Number.MAX_VALUE;
             var maxy = -Number.MAX_VALUE;
             var maxz = -Number.MAX_VALUE;
+            var maxR = 0;
             var maxScale = 0;
             var stepWeight = this.lifetime / this.precision;
             var vels = [this.qVelocity, this.qVelocity2, this.qLocalVelocity, this.qLocalVelocity2];
             var accumX = [0, 0, 0, 0];
             var accumY = [0, 0, 0, 0];
             var accumZ = [0, 0, 0, 0];
+            var accumR = [0, 0];
             var i, j;
             var index;
             var x, y, z;
@@ -509,6 +540,10 @@ Object.assign(pc, function () {
                     accumY[j] = y;
                     accumZ[j] = z;
                 }
+                accumR[0] += this.qRadialSpeed[index] * stepWeight;
+                accumR[1] += this.qRadialSpeed2[index] * stepWeight;
+                maxR = Math.max(maxR, Math.max(Math.abs(accumR[0]), Math.abs(accumR[1])));
+
                 maxScale = Math.max(maxScale, this.qScale[index]);
             }
 
@@ -516,36 +551,18 @@ Object.assign(pc, function () {
                 x = this.emitterExtents.x * 0.5;
                 y = this.emitterExtents.y * 0.5;
                 z = this.emitterExtents.z * 0.5;
-                if (maxx < x) maxx = x;
-                if (maxy < y) maxy = y;
-                if (maxz < z) maxz = z;
-                x = -x;
-                y = -y;
-                z = -z;
-                if (minx > x) minx = x;
-                if (miny > y) miny = y;
-                if (minz > z) minz = z;
             } else {
                 x = this.emitterRadius;
                 y = this.emitterRadius;
                 z = this.emitterRadius;
-                if (maxx < x) maxx = x;
-                if (maxy < y) maxy = y;
-                if (maxz < z) maxz = z;
-                x = -x;
-                y = -y;
-                z = -z;
-                if (minx > x) minx = x;
-                if (miny > y) miny = y;
-                if (minz > z) minz = z;
             }
 
-            bMin.x = minx - maxScale;
-            bMin.y = miny - maxScale;
-            bMin.z = minz - maxScale;
-            bMax.x = maxx + maxScale;
-            bMax.y = maxy + maxScale;
-            bMax.z = maxz + maxScale;
+            bMin.x = minx - maxScale - x - maxR;
+            bMin.y = miny - maxScale - y - maxR;
+            bMin.z = minz - maxScale - z - maxR;
+            bMax.x = maxx + maxScale + x + maxR;
+            bMax.y = maxy + maxScale + y + maxR;
+            bMax.z = maxz + maxScale + z + maxR;
             this.localBounds.setMinMax(bMin, bMax);
         },
 
@@ -584,7 +601,9 @@ Object.assign(pc, function () {
             this.calculateLocalBounds();
             if (this.node) {
                 // this.prevPos.copy(this.node.getPosition());
-                this.worldBounds.setFromTransformedAabb(this.localBounds, this.node.getWorldTransform());
+                this.worldBounds.setFromTransformedAabb(
+                    this.localBounds, this.localSpace ? pc.Mat4.IDENTITY : this.node.getWorldTransform());
+
                 this.worldBoundsTrail[0].copy(this.worldBounds);
                 this.worldBoundsTrail[1].copy(this.worldBounds);
 
@@ -605,11 +624,14 @@ Object.assign(pc, function () {
             this.particleTex = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
             var emitterPos = (this.node === null || this.localSpace) ? pc.Vec3.ZERO : this.node.getPosition();
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
-                if (this.node === null){
+                if (this.node === null || this.localSpace){
                     spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
                 } else {
                     spawnMatrix.setTRS(pc.Vec3.ZERO, this.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.node.localScale));
                 }
+                extentsInnerRatioUniform[0] = this.emitterExtents.x != 0 ? this.emitterExtentsInner.x / this.emitterExtents.x : 0;
+                extentsInnerRatioUniform[1] = this.emitterExtents.y != 0 ? this.emitterExtentsInner.y / this.emitterExtents.y : 0;
+                extentsInnerRatioUniform[2] = this.emitterExtents.z != 0 ? this.emitterExtentsInner.z / this.emitterExtents.z : 0;
             }
             for (i = 0; i < this.numParticles; i++) {
                 this.calcSpawnPosition(emitterPos, i);
@@ -640,7 +662,7 @@ Object.assign(pc, function () {
             }
 
             var chunks = pc.shaderChunks;
-            var shaderCodeStart = chunks.particleUpdaterInitPS +
+            var shaderCodeStart = (this.localSpace ? '#define LOCAL_SPACE\n' : '') + chunks.particleUpdaterInitPS +
             (this.pack8 ? (chunks.particleInputRgba8PS + chunks.particleOutputRgba8PS) :
                 (chunks.particleInputFloatPS + chunks.particleOutputFloatPS)) +
             (this.emitterShape === pc.EMITTERSHAPE_BOX ? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
@@ -669,7 +691,8 @@ Object.assign(pc, function () {
             mesh.primitive[0].indexed = true;
 
             this.material = new pc.Material();
-            this.material.cullMode = pc.CULLFACE_NONE;
+            this.material.name = this.node.name;
+            this.material.cull = pc.CULLFACE_NONE;
             this.material.alphaWrite = false;
             this.material.blend = true;
             this.material.blendType = this.blendType;
@@ -692,7 +715,7 @@ Object.assign(pc, function () {
 
             this._initializeTextures();
 
-            this.addTime(0); // fill dynamic textures and constants with initial data
+            this.addTime(0, false); // fill dynamic textures and constants with initial data
             if (this.preWarm) this.prewarm(this.lifetime);
 
             this.resetTime();
@@ -721,10 +744,30 @@ Object.assign(pc, function () {
             randomPos.z = rZ - 0.5;
 
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
-                randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
+                var max = Math.max(Math.abs(randomPos.x), Math.max(Math.abs(randomPos.y), Math.abs(randomPos.z)));
+
+                // let's find a contour sourface level coresponding to max random component
+                // and translate 2 other random components to that surface
+                // edge = (1.0 - extentsInnerRatioUniform) * max + 0.5 * extentsInnerRatioUniform;
+                var edgeX = max + (0.5 - max) * extentsInnerRatioUniform[0];
+                var edgeY = max + (0.5 - max) * extentsInnerRatioUniform[1];
+                var edgeZ = max + (0.5 - max) * extentsInnerRatioUniform[2];
+                randomPos.x = edgeX * (max == Math.abs(randomPos.x) ? Math.sign(randomPos.x) : 2 * randomPos.x);
+                randomPos.y = edgeY * (max == Math.abs(randomPos.y) ? Math.sign(randomPos.y) : 2 * randomPos.y);
+                randomPos.z = edgeZ * (max == Math.abs(randomPos.z) ? Math.sign(randomPos.z) : 2 * randomPos.z);
+
+                if (!this.localSpace)
+                    randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
+                else
+                    randomPosTformed.copy( spawnMatrix.transformPoint(randomPos) );
             } else {
                 randomPos.normalize();
-                randomPosTformed.copy(emitterPos).add( randomPos.scale(rW * this.spawnBounds) );
+                var spawnBoundsSphereInnerRatio = this.emitterRadiusInner / this.emitterRadius;
+                var r = rW * (1.0 - spawnBoundsSphereInnerRatio) + spawnBoundsSphereInnerRatio;
+                if (!this.localSpace)
+                    randomPosTformed.copy(emitterPos).add( randomPos.scale(r * this.emitterRadius) );
+                else
+                    randomPosTformed.copy( randomPos.scale(r * this.emitterRadius) );
             }
 
             var particleRate, startSpawnTime;
@@ -789,6 +832,7 @@ Object.assign(pc, function () {
             this.qRotSpeed =      this.rotationSpeedGraph.quantize(precision);
             this.qScale =         this.scaleGraph.quantize(precision);
             this.qAlpha =         this.alphaGraph.quantize(precision);
+            this.qRadialSpeed =   this.radialSpeedGraph.quantize(precision);
 
             this.qLocalVelocity2 = this.localVelocityGraph2.quantize(precision);
             this.qVelocity2 = this.velocityGraph2.quantize(precision);
@@ -796,6 +840,7 @@ Object.assign(pc, function () {
             this.qRotSpeed2 =      this.rotationSpeedGraph2.quantize(precision);
             this.qScale2 =         this.scaleGraph2.quantize(precision);
             this.qAlpha2 =         this.alphaGraph2.quantize(precision);
+            this.qRadialSpeed2 =   this.radialSpeedGraph2.quantize(precision);
 
             for (i = 0; i < precision; i++) {
                 this.qRotSpeed[i] *= pc.math.DEG_TO_RAD;
@@ -808,12 +853,14 @@ Object.assign(pc, function () {
             this.rotSpeedUMax = [0];
             this.scaleUMax =    [0];
             this.alphaUMax =    [0];
+            this.radialSpeedUMax = [0];
             this.qLocalVelocityDiv = divGraphFrom2Curves(this.qLocalVelocity, this.qLocalVelocity2, this.localVelocityUMax);
             this.qVelocityDiv =      divGraphFrom2Curves(this.qVelocity, this.qVelocity2, this.velocityUMax);
             this.qColorDiv =         divGraphFrom2Curves(this.qColor, this.qColor2, this.colorUMax);
             this.qRotSpeedDiv =      divGraphFrom2Curves(this.qRotSpeed, this.qRotSpeed2, this.rotSpeedUMax);
             this.qScaleDiv =         divGraphFrom2Curves(this.qScale, this.qScale2, this.scaleUMax);
             this.qAlphaDiv =         divGraphFrom2Curves(this.qAlpha, this.qAlpha2, this.alphaUMax);
+            this.qRadialSpeedDiv =   divGraphFrom2Curves(this.qRadialSpeed, this.qRadialSpeed2, this.radialSpeedUMax);
 
             if (this.pack8) {
                 var umax = [0, 0, 0];
@@ -825,6 +872,11 @@ Object.assign(pc, function () {
                 maxUnsignedGraphValue(this.qLocalVelocity, lumax);
                 var lumax2 = [0, 0, 0];
                 maxUnsignedGraphValue(this.qLocalVelocity2, lumax2);
+
+                var rumax = [0];
+                maxUnsignedGraphValue(this.qRadialSpeed, rumax);
+                var rumax2 = [0];
+                maxUnsignedGraphValue(this.qRadialSpeed2, rumax2);
 
                 var maxVel = Math.max(umax[0], umax2[0]);
                 maxVel = Math.max(maxVel, umax[1]);
@@ -838,7 +890,9 @@ Object.assign(pc, function () {
                 lmaxVel = Math.max(lmaxVel, lumax[2]);
                 lmaxVel = Math.max(lmaxVel, lumax2[2]);
 
-                this.maxVel = maxVel + lmaxVel;
+                var maxRad = Math.max(rumax[0], rumax2[0]);
+
+                this.maxVel = maxVel + lmaxVel + maxRad;
             }
 
 
@@ -846,8 +900,9 @@ Object.assign(pc, function () {
                 this.internalTex0 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qLocalVelocity, this.qLocalVelocityDiv));
                 this.internalTex1 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qVelocity, this.qVelocityDiv));
                 this.internalTex2 = _createTexture(gd, precision, 1, packTexture5Floats(this.qRotSpeed, this.qScale, this.qScaleDiv, this.qRotSpeedDiv, this.qAlphaDiv));
+                this.internalTex3 = _createTexture(gd, precision, 1, packTexture2Floats(this.qRadialSpeed, this.qRadialSpeedDiv));
             }
-            this.internalTex3 = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
+            this.colorParam = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), pc.PIXELFORMAT_R8_G8_B8_A8, 1.0, true);
         },
 
         _initializeTextures: function () {
@@ -901,7 +956,8 @@ Object.assign(pc, function () {
                     blend: this.blendType,
                     animTex: this.emitter._isAnimated(),
                     animTexLoop: this.emitter.animLoop,
-                    pack8: this.emitter.pack8
+                    pack8: this.emitter.pack8,
+                    customFace: this.emitter.orientation != pc.PARTICLEORIENTATION_SCREEN
                 });
                 this.shader = shader;
             };
@@ -920,8 +976,9 @@ Object.assign(pc, function () {
                 material.setParameter('internalTex0', this.internalTex0);
                 material.setParameter('internalTex1', this.internalTex1);
                 material.setParameter('internalTex2', this.internalTex2);
+                material.setParameter('internalTex3', this.internalTex3);
             }
-            material.setParameter('internalTex3', this.internalTex3);
+            material.setParameter('colorParam', this.colorParam);
 
             material.setParameter('numParticles', this.numParticles);
             material.setParameter('numParticlesPot', this.numParticlesPot);
@@ -931,6 +988,7 @@ Object.assign(pc, function () {
             material.setParameter('seed', this.seed);
             material.setParameter('scaleDivMult', this.scaleUMax[0]);
             material.setParameter('alphaDivMult', this.alphaUMax[0]);
+            material.setParameter('radialSpeedDivMult', this.radialSpeedUMax[0]);
             material.setParameter("graphNumSamples", this.precision);
             material.setParameter("graphSampleSize", 1.0 / this.precision);
             material.setParameter("emitterScale", new Float32Array([1, 1, 1]));
@@ -967,6 +1025,34 @@ Object.assign(pc, function () {
                 material.setParameter('softening', 1.0 / (this.depthSoftening * this.depthSoftening * 100)); // remap to more perceptually linear
             }
             if (this.stretch > 0.0) material.cull = pc.CULLFACE_NONE;
+
+            this._compParticleFaceParams();
+        },
+
+        _compParticleFaceParams: function () {
+            var tangent, binormal;
+            if (this.orientation == pc.PARTICLEORIENTATION_SCREEN) {
+                tangent = new Float32Array([1, 0, 0]);
+                binormal = new Float32Array([0, 0, 1]);
+            } else {
+                var n;
+                if (this.orientation == pc.PARTICLEORIENTATION_WORLD) {
+                    n = this.particleNormal.normalize();
+                } else {
+                    var emitterMat = this.node === null ?
+                        pc.Mat4.IDENTITY : this.node.getWorldTransform();
+                    n = emitterMat.transformVector(this.particleNormal).normalize();
+                }
+                var t = new pc.Vec3(1, 0, 0);
+                if (Math.abs(t.dot(n)) == 1)
+                    t.set(0, 0, 1);
+                var b = new pc.Vec3().cross(n, t).normalize();
+                t.cross(b, n).normalize();
+                tangent = new Float32Array([t.x, t.y, t.z]);
+                binormal = new Float32Array([b.x, b.y, b.z]);
+            }
+            this.material.setParameter("faceTangent", tangent);
+            this.material.setParameter("faceBinorm", binormal);
         },
 
 
@@ -986,6 +1072,13 @@ Object.assign(pc, function () {
                         components: 4,
                         type: pc.TYPE_FLOAT32
                     }];
+                    if (this.useMesh) {
+                        elements.push({
+                            semantic: pc.SEMANTIC_ATTR1,
+                            components: 2,
+                            type: pc.TYPE_FLOAT32
+                        });
+                    }
                     particleFormat = new pc.VertexFormat(this.graphicsDevice, elements);
 
                     this.vertexBuffer = new pc.VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, pc.BUFFER_DYNAMIC);
@@ -1005,7 +1098,7 @@ Object.assign(pc, function () {
                         type: pc.TYPE_FLOAT32
                     }, {
                         semantic: pc.SEMANTIC_ATTR3,
-                        components: 2,
+                        components: this.useMesh ? 4 : 2,
                         type: pc.TYPE_FLOAT32
                     }];
                     particleFormat = new pc.VertexFormat(this.graphicsDevice, elements);
@@ -1016,10 +1109,16 @@ Object.assign(pc, function () {
 
                 // Fill the vertex buffer
                 var data = new Float32Array(this.vertexBuffer.lock());
-                var meshData, stride;
+                var meshData, stride, texCoordOffset;
                 if (this.useMesh) {
                     meshData = new Float32Array(this.mesh.vertexBuffer.lock());
                     stride = meshData.length / this.mesh.vertexBuffer.numVertices;
+                    for (var elem = 0; elem < this.mesh.vertexBuffer.format.elements.length; elem++) {
+                        if (this.mesh.vertexBuffer.format.elements[elem].name === pc.SEMANTIC_TEXCOORD0) {
+                            texCoordOffset = this.mesh.vertexBuffer.format.elements[elem].offset / 4;
+                            break;
+                        }
+                    }
                 }
 
                 var id;
@@ -1030,14 +1129,16 @@ Object.assign(pc, function () {
                         data[i * 4] = particleVerts[vertID][0];
                         data[i * 4 + 1] = particleVerts[vertID][1];
                         data[i * 4 + 2] = 0;
+                        data[i * 4 + 3] = id;
                     } else {
                         var vert = i % this.numParticleVerts;
-                        data[i * 4] = meshData[vert * stride];
-                        data[i * 4 + 1] = meshData[vert * stride + 1];
-                        data[i * 4 + 2] = meshData[vert * stride + 2];
+                        data[i * 6] = meshData[vert * stride];
+                        data[i * 6 + 1] = meshData[vert * stride + 1];
+                        data[i * 6 + 2] = meshData[vert * stride + 2];
+                        data[i * 6 + 3] = id;
+                        data[i * 6 + 4] = meshData[vert * stride + texCoordOffset + 0];
+                        data[i * 6 + 5] = meshData[vert * stride + texCoordOffset + 1];
                     }
-
-                    data[i * 4 + 3] = id;
                 }
 
                 if (this.useCpu) {
@@ -1088,7 +1189,7 @@ Object.assign(pc, function () {
             this.resetTime();
             var origLoop =  this.loop;
             this.loop = true;
-            this.addTime(0);
+            this.addTime(0, false);
             this.loop = origLoop;
             if (this.preWarm) {
                 this.prewarm(this.lifetime);
@@ -1100,7 +1201,7 @@ Object.assign(pc, function () {
             var iterations = Math.min(Math.floor(lifetimeFraction * this.precision), this.precision);
             var stepDelta = time / iterations;
             for (var i = 0; i < iterations; i++) {
-                this.addTime(stepDelta);
+                this.addTime(stepDelta, false);
             }
         },
 
@@ -1110,6 +1211,17 @@ Object.assign(pc, function () {
 
         finishFrame: function () {
             if (this.useCpu) this.vertexBuffer.unlock();
+        },
+
+        _setInputBounds: function () {
+            this.inBoundsSizeUniform[0] = this.prevWorldBoundsSize.x;
+            this.inBoundsSizeUniform[1] = this.prevWorldBoundsSize.y;
+            this.inBoundsSizeUniform[2] = this.prevWorldBoundsSize.z;
+            this.constantInBoundsSize.setValue(this.inBoundsSizeUniform);
+            this.inBoundsCenterUniform[0] = this.prevWorldBoundsCenter.x;
+            this.inBoundsCenterUniform[1] = this.prevWorldBoundsCenter.y;
+            this.inBoundsCenterUniform[2] = this.prevWorldBoundsCenter.z;
+            this.constantInBoundsCenter.setValue(this.inBoundsCenterUniform);
         },
 
         addTime: function (delta, isOnStop) {
@@ -1140,6 +1252,9 @@ Object.assign(pc, function () {
             }
 
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
+                extentsInnerRatioUniform[0] = this.emitterExtents.x != 0 ? this.emitterExtentsInner.x / this.emitterExtents.x : 0;
+                extentsInnerRatioUniform[1] = this.emitterExtents.y != 0 ? this.emitterExtentsInner.y / this.emitterExtents.y : 0;
+                extentsInnerRatioUniform[2] = this.emitterExtents.z != 0 ? this.emitterExtentsInner.z / this.emitterExtents.z : 0;
                 if (this.meshInstance.node === null){
                     spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.emitterExtents);
                 } else {
@@ -1161,6 +1276,8 @@ Object.assign(pc, function () {
                 this.material.setParameter("emitterPos", this.emitterPosUniform);
             }
 
+            this._compParticleFaceParams();
+
             if (!this.useCpu) {
                 device.setBlending(false);
                 device.setColorWrite(true, true, true, true);
@@ -1179,6 +1296,7 @@ Object.assign(pc, function () {
                 this.constantInternalTex0.setValue(this.internalTex0);
                 this.constantInternalTex1.setValue(this.internalTex1);
                 this.constantInternalTex2.setValue(this.internalTex2);
+                this.constantInternalTex3.setValue(this.internalTex3);
 
                 if (this.pack8) {
                     this.worldBoundsMulUniform[0] = this.worldBoundsMul.x;
@@ -1189,14 +1307,8 @@ Object.assign(pc, function () {
                     this.worldBoundsAddUniform[1] = this.worldBoundsAdd.y;
                     this.worldBoundsAddUniform[2] = this.worldBoundsAdd.z;
                     this.constantOutBoundsAdd.setValue(this.worldBoundsAddUniform);
-                    this.inBoundsSizeUniform[0] = this.prevWorldBoundsSize.x;
-                    this.inBoundsSizeUniform[1] = this.prevWorldBoundsSize.y;
-                    this.inBoundsSizeUniform[2] = this.prevWorldBoundsSize.z;
-                    this.constantInBoundsSize.setValue(this.inBoundsSizeUniform);
-                    this.inBoundsCenterUniform[0] = this.prevWorldBoundsCenter.x;
-                    this.inBoundsCenterUniform[1] = this.prevWorldBoundsCenter.y;
-                    this.inBoundsCenterUniform[2] = this.prevWorldBoundsCenter.z;
-                    this.constantInBoundsCenter.setValue(this.inBoundsCenterUniform);
+
+                    this._setInputBounds();
 
                     var maxVel = this.maxVel * Math.max(Math.max(emitterScale.x, emitterScale.y), emitterScale.z);
                     maxVel = Math.max(maxVel, 1);
@@ -1208,12 +1320,15 @@ Object.assign(pc, function () {
                 if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                     mat4ToMat3(spawnMatrix, spawnMatrix3);
                     this.constantSpawnBounds.setValue(spawnMatrix3.data);
+                    this.constantSpawnPosInnerRatio.setValue(extentsInnerRatioUniform);
                 } else {
                     this.constantSpawnBoundsSphere.setValue(this.emitterRadius);
+                    this.constantSpawnBoundsSphereInnerRatio.setValue(this.emitterRadiusInner / this.emitterRadius);
                 }
                 this.constantInitialVelocity.setValue(this.initialVelocity);
 
                 mat4ToMat3(emitterMatrix, emitterMatrix3);
+                emitterMatrix.invertTo3x3(emitterMatrix3Inv);
                 this.emitterPosUniform[0] = emitterPos.x;
                 this.emitterPosUniform[1] = emitterPos.y;
                 this.emitterPosUniform[2] = emitterPos.z;
@@ -1232,6 +1347,7 @@ Object.assign(pc, function () {
                 this.emitterScaleUniform[2] = emitterScale.z;
                 this.constantEmitterScale.setValue(this.emitterScaleUniform);
                 this.constantEmitterMatrix.setValue(emitterMatrix3.data);
+                this.constantEmitterMatrixInv.setValue(emitterMatrix3Inv.data);
 
                 this.constantLocalVelocityDivMult.setValue(this.localVelocityUMax);
                 this.constantVelocityDivMult.setValue(this.velocityUMax);
@@ -1256,6 +1372,11 @@ Object.assign(pc, function () {
 
                 device.setDepthTest(true);
                 device.setDepthWrite(true);
+
+                this.prevWorldBoundsSize.copy(this.worldBoundsSize);
+                this.prevWorldBoundsCenter.copy(this.worldBounds.center);
+                if (this.pack8)
+                    this._setInputBounds();
             } else {
                 var data = new Float32Array(this.vertexBuffer.lock());
                 if (this.meshInstance.node) {
@@ -1263,6 +1384,8 @@ Object.assign(pc, function () {
                     for (j = 0; j < 12; j++) {
                         rotMat.data[j] = fullMat.data[j];
                     }
+                    rotMatInv.copy(rotMat);
+                    rotMatInv.invert();
                     nonUniformScale = this.meshInstance.node.localScale;
                     uniformScale = Math.max(Math.max(nonUniformScale.x, nonUniformScale.y), nonUniformScale.z);
                 }
@@ -1271,13 +1394,13 @@ Object.assign(pc, function () {
                 emitterPos = (this.meshInstance.node === null || this.localSpace) ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
                 var posCam = this.camera ? this.camera._node.getPosition() : pc.Vec3.ZERO;
 
-                var vertSize = 14;
+                var vertSize = !this.useMesh ? 14 : 16;
                 var cf, cc;
-                var rotSpeed, rotSpeed2, scale2, alpha, alpha2;
+                var rotSpeed, rotSpeed2, scale2, alpha, alpha2, radialSpeed, radialSpeed2;
                 var precision1 = this.precision - 1;
 
                 for (i = 0; i < this.numParticles; i++) {
-                    var id = Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3]);
+                    var id = Math.floor(this.vbCPU[i * this.numParticleVerts * (this.useMesh ? 6 : 4) + 3]);
 
                     var rndFactor = this.particleTex[id * particleTexChannels + 0 + this.numParticlesPot * 2 * particleTexChannels];
                     rndFactor3Vec.x = rndFactor;
@@ -1331,6 +1454,26 @@ Object.assign(pc, function () {
                         a = this.qAlpha2[cf];
                         b = this.qAlpha2[cc];
                         alpha2 = a + (b - a) * c;
+
+                        // var radialSpeed =        tex1D(this.qRadialSpeed, nlife);
+                        a = this.qRadialSpeed[cf];
+                        b = this.qRadialSpeed[cc];
+                        radialSpeed = a + (b - a) * c;
+                        // var radialSpeed2 =       tex1D(this.qRadialSpeed2, nlife);
+                        a = this.qRadialSpeed2[cf];
+                        b = this.qRadialSpeed2[cc];
+                        radialSpeed2 = a + (b - a) * c;
+                        radialSpeed += (radialSpeed2 - radialSpeed) * ((rndFactor * 100.0) % 1.0);
+
+                        particlePosPrev.x = this.particleTex[id * particleTexChannels];
+                        particlePosPrev.y = this.particleTex[id * particleTexChannels + 1];
+                        particlePosPrev.z = this.particleTex[id * particleTexChannels + 2];
+
+                        if (!this.localSpace)
+                            radialVelocityVec.copy(particlePosPrev).sub(emitterPos);
+                        else
+                            radialVelocityVec.copy(particlePosPrev);
+                        radialVelocityVec.normalize().scale(radialSpeed);
 
                         cf *= 3;
                         cc *= 3;
@@ -1401,14 +1544,25 @@ Object.assign(pc, function () {
                         alphaDiv = (alpha2 - alpha) * ((rndFactor * 1000.0) % 1.0);
 
                         if (this.meshInstance.node) {
-                            rotMat.transformPoint(localVelocityVec, localVelocityVec);
+                            if (!this.localSpace) {
+                                rotMat.transformPoint(localVelocityVec, localVelocityVec);
+                            } else {
+                                localVelocityVec.x /= nonUniformScale.x;
+                                localVelocityVec.y /= nonUniformScale.y;
+                                localVelocityVec.z /= nonUniformScale.z;
+                            }
+
                         }
-                        localVelocityVec.add(velocityVec.mul(nonUniformScale));
+                        if (!this.localSpace) {
+                            localVelocityVec.add(velocityVec.mul(nonUniformScale));
+                            localVelocityVec.add(radialVelocityVec.mul(nonUniformScale));
+                        } else {
+                            rotMatInv.transformPoint(velocityVec, velocityVec);
+                            localVelocityVec.add(velocityVec).add(radialVelocityVec);
+                        }
+
                         moveDirVec.copy(localVelocityVec);
 
-                        particlePosPrev.x = this.particleTex[id * particleTexChannels];
-                        particlePosPrev.y = this.particleTex[id * particleTexChannels + 1];
-                        particlePosPrev.z = this.particleTex[id * particleTexChannels + 2];
                         particlePos.copy(particlePosPrev).add(localVelocityVec.scale(delta));
                         particleFinalPos.copy(particlePos);
 
@@ -1418,11 +1572,13 @@ Object.assign(pc, function () {
                         this.particleTex[id * particleTexChannels + 3] += rotSpeed * delta;
 
                         if (this.wrap && this.wrapBounds) {
-                            particleFinalPos.sub(emitterPos);
+                            if (!this.localSpace)
+                                particleFinalPos.sub(emitterPos);
                             particleFinalPos.x = glMod(particleFinalPos.x, this.wrapBounds.x) - this.wrapBounds.x * 0.5;
                             particleFinalPos.y = glMod(particleFinalPos.y, this.wrapBounds.y) - this.wrapBounds.y * 0.5;
                             particleFinalPos.z = glMod(particleFinalPos.z, this.wrapBounds.z) - this.wrapBounds.z * 0.5;
-                            particleFinalPos.add(emitterPos);
+                            if (!this.localSpace)
+                                particleFinalPos.add(emitterPos);
                         }
 
                         if (this.sort > 0) {
@@ -1463,9 +1619,10 @@ Object.assign(pc, function () {
                     this.particleTex[id * particleTexChannels + 3 + this.numParticlesPot * particleTexChannels] = life;
 
                     for (var v = 0; v < this.numParticleVerts; v++) {
-                        var quadX = this.vbCPU[i * this.numParticleVerts * 4 + v * 4];
-                        var quadY = this.vbCPU[i * this.numParticleVerts * 4 + v * 4 + 1];
-                        var quadZ = this.vbCPU[i * this.numParticleVerts * 4 + v * 4 + 2];
+                        var vbOffset = (i * this.numParticleVerts + v) * (this.useMesh ? 6 : 4);
+                        var quadX = this.vbCPU[vbOffset];
+                        var quadY = this.vbCPU[vbOffset + 1];
+                        var quadZ = this.vbCPU[vbOffset + 2];
                         if (!particleEnabled) {
                             quadX = quadY = quadZ = 0;
                         }
@@ -1484,16 +1641,21 @@ Object.assign(pc, function () {
                         data[w + 10] = quadZ;
                         data[w + 11] = moveDirVec.y;
                         data[w + 12] = moveDirVec.z;
-                        // 13 is particle id
+                        data[w + 13] = this.vbCPU[vbOffset + 3];
+                        if (this.useMesh) {
+                            data[w + 14] = this.vbCPU[vbOffset + 4];
+                            data[w + 15] = this.vbCPU[vbOffset + 5];
+                        }
                     }
                 }
 
                 // Particle sorting
                 // TODO: optimize
                 if (this.sort > pc.PARTICLESORT_NONE && this.camera) {
+                    var vbStride = this.useMesh ? 6 : 4;
                     var particleDistance = this.particleDistance;
                     for (i = 0; i < this.numParticles; i++) {
-                        this.vbToSort[i] = [i, particleDistance[Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3])]]; // particle id
+                        this.vbToSort[i] = [i, particleDistance[Math.floor(this.vbCPU[i * this.numParticleVerts * vbStride + 3])]]; // particle id
                     }
 
                     this.vbOld.set(this.vbCPU);
@@ -1503,9 +1665,9 @@ Object.assign(pc, function () {
                     });
 
                     for (i = 0; i < this.numParticles; i++) {
-                        var src = this.vbToSort[i][0] * this.numParticleVerts * 4;
-                        var dest = i * this.numParticleVerts * 4;
-                        for (j = 0; j < this.numParticleVerts * 4; j++) {
+                        var src = this.vbToSort[i][0] * this.numParticleVerts * vbStride;
+                        var dest = i * this.numParticleVerts * vbStride;
+                        for (j = 0; j < this.numParticleVerts * vbStride; j++) {
                             this.vbCPU[dest + j] = this.vbOld[src + j];
                         }
                     }
@@ -1570,6 +1732,11 @@ Object.assign(pc, function () {
             if (this.internalTex3) {
                 this.internalTex3.destroy();
                 this.internalTex3 = null;
+            }
+
+            if (this.colorParam) {
+                this.colorParam.destroy();
+                this.colorParam = null;
             }
 
             if (this.vertexBuffer) {

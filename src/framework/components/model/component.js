@@ -268,6 +268,10 @@ Object.assign(pc, function () {
                     }
                 }
             }
+
+            if (this._batchGroupId >= 0) {
+                app.batcher.insert(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
+            }
         },
 
         onDisable: function () {
@@ -280,8 +284,8 @@ Object.assign(pc, function () {
                 scene.layers.off("remove", this.onLayerRemoved, this);
             }
 
-            if (this.batchGroupId >= 0) {
-                app.batcher.markGroupDirty(this.batchGroupId);
+            if (this._batchGroupId >= 0) {
+                app.batcher.remove(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
             }
 
             if (this._model) {
@@ -837,8 +841,12 @@ Object.assign(pc, function () {
             if (this._batchGroupId === value) return;
 
             var batcher = this.system.app.batcher;
-            if (this._batchGroupId >= 0) batcher.markGroupDirty(this._batchGroupId);
-            if (value >= 0) batcher.markGroupDirty(value);
+            if (this.entity.enabled && this._batchGroupId >= 0) {
+                batcher.remove(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
+            }
+            if (this.entity.enabled && value >= 0) {
+                batcher.insert(pc.BatchGroup.MODEL, value, this.entity);
+            }
 
             if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching

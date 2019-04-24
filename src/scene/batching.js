@@ -50,7 +50,17 @@ Object.assign(pc, function () {
         this.id = id;
         this.name = name;
         this.layers = layers === undefined ? [pc.LAYERID_WORLD] : layers;
+        this._ui = false;
+        this._obj = {
+            model: [],
+            element: [],
+            sprite: []
+        };
     };
+
+    BatchGroup.MODEL = 'model';
+    BatchGroup.ELEMENT = 'element';
+    BatchGroup.SPRITE = 'sprite';
 
     // Modified SkinInstance for batching
     // Doesn't contain bind matrices, simplier
@@ -91,7 +101,7 @@ Object.assign(pc, function () {
     };
 
     Object.assign(SkinBatchInstance.prototype, {
-        updateMatrices: function () {
+        updateMatrices: function (rootNode) {
         },
 
         updateMatrixPalette: function () {
@@ -300,102 +310,128 @@ Object.assign(pc, function () {
         }
     };
 
+    BatchManager.prototype.insert = function (type, groupId, node) {
+        var group = this._batchGroups[groupId];
+        if (group) {
+            if (group._obj[type].indexOf(node) < 0) {
+                group._obj[type].push(node);
+                this.markGroupDirty(groupId);
+            }
+        } else {
+            // #ifdef DEBUG
+            console.warn('Invalid batch ' + groupId + ' insertion');
+            // #endif
+        }
+    };
+
+    BatchManager.prototype.remove = function (type, groupId, node) {
+        var group = this._batchGroups[groupId];
+        if (group) {
+            var idx = group._obj[type].indexOf(node);
+            if (idx >= 0) {
+                group._obj[type].splice(idx, 1);
+                this.markGroupDirty(groupId);
+            }
+        } else {
+            // #ifdef DEBUG
+            console.warn('Invalid batch ' + groupId + ' insertion');
+            // #endif
+        }
+    };
+
+    BatchManager.prototype._extractModel = function (node, arr, group, groupMeshInstances) {
+        if (!node.model || !node.model.model) return arr;
+
+        var i;
+        if (node.model.isStatic) {
+            // static mesh instances can be in both drawCall array with _staticSource linking to original
+            // and in the original array as well, if no triangle splitting was done
+            var drawCalls = this.scene.drawCalls;
+            var nodeMeshInstances = node.model.meshInstances;
+            for (i = 0; i < drawCalls.length; i++) {
+                if (!drawCalls[i]._staticSource) continue;
+                if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
+                arr.push(drawCalls[i]);
+            }
+            for (i = 0; i < nodeMeshInstances.length; i++) {
+                if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
+                    arr.push(nodeMeshInstances[i]);
+                }
+            }
+        } else {
+            arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
+        }
+
+        node.model.removeModelFromLayers(node.model.model);
+
+        // #ifdef DEBUG
+        node.model._batchGroup = group;
+        // #endif
+        return arr;
+    };
+
+    BatchManager.prototype._extractElement = function (node, arr, group) {
+        if (!node.element) return;
+        var valid = false;
+        if (node.element._text && node.element._text._model.meshInstances.length > 0) {
+            arr.push(node.element._text._model.meshInstances[0]);
+            node.element.removeModelFromLayers(node.element._text._model);
+
+            valid = true;
+        } else if (node.element._image) {
+            arr.push(node.element._image._renderable.meshInstance);
+            node.element.removeModelFromLayers(node.element._image._renderable.model);
+
+            if (node.element._image._renderable.unmaskMeshInstance) {
+                arr.push(node.element._image._renderable.unmaskMeshInstance);
+                if (!node.element._image._renderable.unmaskMeshInstance.stencilFront ||
+                    !node.element._image._renderable.unmaskMeshInstance.stencilBack) {
+                    node.element._dirtifyMask();
+                    node.element._onPrerender();
+                }
+            }
+
+            valid = true;
+        }
+
+        if (valid) {
+            group._ui = true;
+            // #ifdef DEBUG
+            node.element._batchGroup = group;
+            // #endif
+        }
+    };
+
     // traverse scene hierarchy down from `node` and collect all components that are marked
     // with a batch group id. Remove from layers any models that these components contains.
     // Fill the `groupMeshInstances` with all the mesh instances to be included in the batch groups,
     // indexed by batch group id.
-    BatchManager.prototype._collectAndRemoveModels = function (node, groupMeshInstances, groupIds) {
-        if (!node.enabled) return;
+    BatchManager.prototype._collectAndRemoveModels = function (groupMeshInstances, groupIds) {
+        var node, group, arr, id;
+        for (var g = 0; g < groupIds.length; g++) {
+            id = groupIds[g];
+            group = this._batchGroups[id];
+            if (!group) continue;
+            arr = groupMeshInstances[id];
+            if (!arr) arr = groupMeshInstances[id] = [];
 
-        var i, arr;
-        if (node.model && node.model.batchGroupId >= 0 && node.model.model && node.model.enabled) {
-            if (!groupIds || (groupIds && groupIds.indexOf(node.model.batchGroupId) >= 0)) {
-                arr = groupMeshInstances[node.model.batchGroupId];
-                if (!arr) arr = groupMeshInstances[node.model.batchGroupId] = [];
-
-                if (node.model.isStatic) {
-                    // static mesh instances can be in both drawCall array with _staticSource linking to original
-                    // and in the original array as well, if no triangle splitting was done
-                    var drawCalls = this.scene.drawCalls;
-                    var nodeMeshInstances = node.model.meshInstances;
-                    for (i = 0; i < drawCalls.length; i++) {
-                        if (!drawCalls[i]._staticSource) continue;
-                        if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
-                        groupMeshInstances[node.model.batchGroupId].push(drawCalls[i]);
-                    }
-                    for (i = 0; i < nodeMeshInstances.length; i++) {
-                        if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
-                            groupMeshInstances[node.model.batchGroupId].push(nodeMeshInstances[i]);
-                        }
-                    }
-                } else {
-                    groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
-                }
-
-                node.model.removeModelFromLayers(node.model.model);
-
-                // #ifdef DEBUG
-                node.model._batchGroup = this._batchGroups[node.model.batchGroupId];
-                // #endif
+            for (var m = 0; m < group._obj.model.length; m++) {
+                arr = this._extractModel(group._obj.model[m], arr, group, groupMeshInstances);
             }
-        }
 
-        if (node.element && node.element.batchGroupId >= 0 && node.element.enabled) {
-            if (!groupIds || (groupIds && groupIds.indexOf(node.element.batchGroupId) >= 0)) {
-                arr = groupMeshInstances[node.element.batchGroupId];
-                if (!arr) arr = groupMeshInstances[node.element.batchGroupId] = [];
-                var valid = false;
-                if (node.element._text) {
-                    groupMeshInstances[node.element.batchGroupId].push(node.element._text._model.meshInstances[0]);
-
-                    node.element.removeModelFromLayers(node.element._text._model);
-
-                    valid = true;
-                } else if (node.element._image) {
-                    groupMeshInstances[node.element.batchGroupId].push(node.element._image._model.meshInstances[0]);
-
-                    node.element.removeModelFromLayers(node.element._image._model);
-
-                    valid = true;
-                }
-                // #ifdef DEBUG
-                if (valid) {
-                    node.element._batchGroup = this._batchGroups[node.element.batchGroupId];
-                }
-                // #endif
+            for (var e = 0; e < group._obj.element.length; e++) {
+                this._extractElement(group._obj.element[e], arr, group);
             }
-        }
 
-        if (node.sprite && node.sprite.batchGroupId >= 0 && node.sprite.enabled) {
-            if (!groupIds || (groupIds && groupIds.indexOf(node.sprite.batchGroupId) >= 0)) {
-                arr = groupMeshInstances[node.sprite.batchGroupId];
-                if (!arr) arr = groupMeshInstances[node.sprite.batchGroupId] = [];
-                if (node.sprite._meshInstance) {
-                    groupMeshInstances[node.sprite.batchGroupId].push(node.sprite._meshInstance);
+            for (var s = 0; s < group._obj.sprite.length; s++) {
+                node = group._obj.sprite[s];
+                if (node.sprite && node.sprite._meshInstance) {
+                    arr.push(node.sprite._meshInstance);
                     this.scene.removeModel(node.sprite._model);
-                    node.sprite._batchGroup = this._batchGroups[node.sprite.batchGroupId];
+                    node.sprite._batchGroup = group;
                 }
             }
         }
-
-        for (i = 0; i < node._children.length; i++) {
-            this._collectAndRemoveModels(node._children[i], groupMeshInstances, groupIds);
-        }
-    };
-
-    BatchManager.prototype._registerEntities = function (batch, meshInstances) {
-        var node;
-        var ents = [];
-        for (var i = 0; i < meshInstances.length; i++) {
-            node = meshInstances[i].node;
-            while (!node._app && node._parent) {
-                node = node._parent;
-            }
-            if (!node._app) continue;
-            // node is entity
-            ents.push(node);
-        }
-        this.register(batch, ents);
     };
 
     /**
@@ -410,42 +446,31 @@ Object.assign(pc, function () {
 
         if (!groupIds) {
             // Full scene
+            groupIds = Object.keys(this._batchGroups);
+        }
 
-            // delete old batches
-            for (i = 0; i < this._batchList.length; i++) {
-                this.destroy(this._batchList[i]);
+        // delete old batches with matching batchGroupId
+        var newBatchList = [];
+        for (i = 0; i < this._batchList.length; i++) {
+            if (groupIds.indexOf(this._batchList[i].batchGroupId) < 0) {
+                newBatchList.push(this._batchList[i]);
+                continue;
             }
-            this._batchList.length = 0;
+            this.destroy(this._batchList[i]);
+        }
+        this._batchList = newBatchList;
 
-            // collect
-            this._collectAndRemoveModels(this.rootNode, groupMeshInstances);
+        // collect
+        this._collectAndRemoveModels(groupMeshInstances, groupIds);
+
+        if (groupIds === this._dirtyGroups) {
             this._dirtyGroups.length = 0;
         } else {
-            // Selected groups
-
-            // delete old batches with matching batchGroupId
-            var newBatchList = [];
-            for (i = 0; i < this._batchList.length; i++) {
-                if (groupIds.indexOf(this._batchList[i].batchGroupId) < 0) {
-                    newBatchList.push(this._batchList[i]);
-                    continue;
-                }
-                this.destroy(this._batchList[i]);
+            var newDirtyGroups = [];
+            for (i = 0; i < this._dirtyGroups.length; i++) {
+                if (groupIds.indexOf(this._dirtyGroups[i]) < 0) newDirtyGroups.push(this._dirtyGroups[i]);
             }
-            this._batchList = newBatchList;
-
-            // collect
-            this._collectAndRemoveModels(this.rootNode, groupMeshInstances, groupIds);
-
-            if (groupIds === this._dirtyGroups) {
-                this._dirtyGroups.length = 0;
-            } else {
-                var newDirtyGroups = [];
-                for (i = 0; i < this._dirtyGroups.length; i++) {
-                    if (groupIds.indexOf(this._dirtyGroups[i]) < 0) newDirtyGroups.push(this._dirtyGroups[i]);
-                }
-                this._dirtyGroups = newDirtyGroups;
-            }
+            this._dirtyGroups = newDirtyGroups;
         }
 
         var group, lists, groupData, batch;
@@ -461,13 +486,13 @@ Object.assign(pc, function () {
                 continue;
             }
 
-            lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize);
+            lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize, groupData._ui);
             for (i = 0; i < lists.length; i++) {
                 batch = this.create(lists[i], groupData.dynamic, parseInt(groupId, 10));
+                if (!batch) continue;
                 for (j = 0; j < groupData.layers.length; j++) {
                     this.scene.layers.getLayerById(groupData.layers[j]).addMeshInstances(batch.model.meshInstances);
                 }
-                this._registerEntities(batch, lists[i]);
             }
         }
     };
@@ -488,6 +513,32 @@ Object.assign(pc, function () {
         return false;
     }
 
+    function equalParamSets(params1, params2) {
+        var param;
+        for (param in params1) { // compare A -> B
+            if (params1.hasOwnProperty(param) && !paramsIdentical(params1[param], params2[param]))
+                return false;
+        }
+        for (param in params2) { // compare B -> A
+            if (params2.hasOwnProperty(param) && !paramsIdentical(params2[param], params1[param]))
+                return false;
+        }
+        return true;
+    }
+
+    function equalLightLists(lightList1, lightList2) {
+        var k;
+        for (k = 0; k < lightList1.length; k++) {
+            if (lightList2.indexOf(lightList1[k]) < 0)
+                return false;
+        }
+        for (k = 0; k < lightList2.length; k++) {
+            if (lightList1.indexOf(lightList2[k]) < 0)
+                return false;
+        }
+        return  true;
+    }
+
     /**
      * @function
      * @name pc.BatchManager#prepare
@@ -504,136 +555,118 @@ Object.assign(pc, function () {
      * @param {Array} meshInstances Input list of mesh instances
      * @param {Boolean} dynamic Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
      * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
+     * @param {Boolean} isUI Are we batching UI elements
      * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
      * @returns {Array} An array of arrays of mesh instances, each valid to pass to {@link pc.BatchManager#create}.
      */
-    BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize) {
+    BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize, isUI) {
         if (meshInstances.length === 0) return [];
         if (maxAabbSize === undefined) maxAabbSize = Number.POSITIVE_INFINITY;
         var halfMaxAabbSize = maxAabbSize * 0.5;
         var maxInstanceCount = this.device.supportsBoneTextures ? 1024 : this.device.boneLimit;
 
         var i;
-        var material, layer, vertCount, params, params2, param, paramFailed, lightList, defs;
+        var material, layer, vertCount, params, lightList, defs, stencil, staticLights;
         var aabb = new pc.BoundingBox();
         var testAabb = new pc.BoundingBox();
+        var skipUIAabb = null;
 
         var lists = [];
         var j = 0;
+        if (isUI) {
+            meshInstances.sort(function (a, b) {
+                return a.drawOrder - b.drawOrder;
+            });
+        }
         var meshInstancesLeftA = meshInstances;
         var meshInstancesLeftB;
 
-        var k;
+        var skipMesh = isUI ? function (mi) {
+            if (skipUIAabb) {
+                skipUIAabb.add(mi.aabb);
+            } else {
+                skipUIAabb = mi.aabb.clone();
+            }
+            meshInstancesLeftB.push(mi);
+        } : function (mi) {
+            meshInstancesLeftB.push(mi);
+        };
+
+        var mi, sf;
 
         while (meshInstancesLeftA.length > 0) {
-            lists[j] = [];
+            lists[j] = [meshInstancesLeftA[0]];
             meshInstancesLeftB = [];
             material = meshInstancesLeftA[0].material;
             layer = meshInstancesLeftA[0].layer;
             defs = meshInstancesLeftA[0]._shaderDefs;
             params = meshInstancesLeftA[0].parameters;
+            stencil = meshInstancesLeftA[0].stencilFront;
             lightList = meshInstancesLeftA[0]._staticLightList;
             vertCount = meshInstancesLeftA[0].mesh.vertexBuffer.getNumVertices();
             aabb.copy(meshInstancesLeftA[0].aabb);
+            skipUIAabb = null;
 
-            for (i = 0; i < meshInstancesLeftA.length; i++) {
-
-                if (i > 0) {
-                    // Split by material
-                    if (material !== meshInstancesLeftA[i].material) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by layer (legacy)
-                    if (layer !== meshInstancesLeftA[i].layer) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by shader defines
-                    if (defs !== meshInstancesLeftA[i]._shaderDefs) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by static source
-                    // Split by vert count
-                    if (vertCount + meshInstancesLeftA[i].mesh.vertexBuffer.getNumVertices() > 0xFFFF) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by AABB
-                    testAabb.copy(aabb);
-                    testAabb.add(meshInstancesLeftA[i].aabb);
-                    if (testAabb.halfExtents.x > halfMaxAabbSize ||
-                        testAabb.halfExtents.y > halfMaxAabbSize ||
-                        testAabb.halfExtents.z > halfMaxAabbSize) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by parameters
-                    params2 = meshInstancesLeftA[i].parameters;
-                    paramFailed = false;
-                    for (param in params) { // compare A -> B
-                        if (!params.hasOwnProperty(param)) continue;
-                        if (!paramsIdentical(params[param], params2[param])) {
-                            paramFailed = true;
-                            break;
-                        }
-                    }
-                    if (!paramFailed) {
-                        for (param in params2) { // compare B -> A
-                            if (!params2.hasOwnProperty(param)) continue;
-                            if (!paramsIdentical(params2[param], params[param])) {
-                                paramFailed = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (paramFailed) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by static/non static
-                    params2 = meshInstancesLeftA[i]._staticLightList;
-                    if ((lightList && !params2) || (!lightList && params2)) {
-                        meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                        continue;
-                    }
-                    // Split by static light list
-                    if (lightList && params2) {
-                        paramFailed = false;
-                        for (k = 0; k < lightList.length; k++) {
-                            if (params2.indexOf(lightList[k]) < 0) {
-                                paramFailed = true;
-                                break;
-                            }
-                        }
-                        for (k = 0; k < params2.length; k++) {
-                            if (lightList.indexOf(params2[k]) < 0) {
-                                paramFailed = true;
-                                break;
-                            }
-                        }
-                        if (paramFailed) {
-                            meshInstancesLeftB.push(meshInstancesLeftA[i]);
-                            continue;
-                        }
-                    }
-                }
-
-                aabb.add(meshInstancesLeftA[i].aabb);
-                vertCount += meshInstancesLeftA[i].mesh.vertexBuffer.getNumVertices();
-                lists[j].push(meshInstancesLeftA[i]);
+            for (i = 1; i < meshInstancesLeftA.length; i++) {
+                mi = meshInstancesLeftA[i];
 
                 // Split by instance number
-                if (dynamic && lists[j].length === maxInstanceCount) {
-                    if (i === meshInstancesLeftA.length) {
-                        meshInstancesLeftB = [];
-                    } else {
-                        meshInstancesLeftB = meshInstancesLeftA.slice(i + 1);
-                    }
+                if (dynamic && lists[j].length >= maxInstanceCount) {
+                    meshInstancesLeftB = meshInstancesLeftB.concat(meshInstancesLeftA.slice(i));
                     break;
                 }
+
+                // Split by material, layer (legacy), shader defines, static source, vert count, overlaping UI
+                if ((material !== mi.material) ||
+                    (layer !== mi.layer) ||
+                    (defs !== mi._shaderDefs) ||
+                    (vertCount + mi.mesh.vertexBuffer.getNumVertices() > 0xFFFF)) {
+                    skipMesh(mi);
+                    continue;
+                }
+                // Split by AABB
+                testAabb.copy(aabb);
+                testAabb.add(mi.aabb);
+                if (testAabb.halfExtents.x > halfMaxAabbSize ||
+                    testAabb.halfExtents.y > halfMaxAabbSize ||
+                    testAabb.halfExtents.z > halfMaxAabbSize) {
+                    skipMesh(mi);
+                    continue;
+                }
+                // Split stencil mask (UI elements), both front and back expected to be the same
+                if (stencil) {
+                    if (!(sf = mi.stencilFront) || stencil.func != sf.func || stencil.zpass != sf.zpass) {
+                        skipMesh(mi);
+                        continue;
+                    }
+                }
+                // Split by parameters
+                if (!equalParamSets(params, mi.parameters)) {
+                    skipMesh(mi);
+                    continue;
+                }
+                // Split by static light list
+                staticLights = mi._staticLightList;
+                if (lightList && staticLights) {
+                    if (!equalLightLists(lightList, staticLights)) {
+                        skipMesh(mi);
+                        continue;
+                    }
+                } else if (lightList || staticLights) { // Split by static/non static
+                    skipMesh(mi);
+                    continue;
+                }
+
+                if (isUI && skipUIAabb && skipUIAabb.intersects(mi.aabb)) {
+                    skipMesh(mi);
+                    continue;
+                }
+
+                aabb.add(mi.aabb);
+                vertCount += mi.mesh.vertexBuffer.getNumVertices();
+                lists[j].push(mi);
             }
+
             j++;
             meshInstancesLeftA = meshInstancesLeftB;
         }
@@ -666,8 +699,6 @@ Object.assign(pc, function () {
         }
 
         var i, j;
-        var batch = new pc.Batch(meshInstances, dynamic, batchGroupId);
-        this._batchList.push(batch);
 
         // Check which vertex format and buffer size are needed, find out material
         var material = null;
@@ -675,7 +706,13 @@ Object.assign(pc, function () {
         var hasPos, hasNormal, hasUv, hasUv2, hasTangent, hasColor;
         var batchNumVerts = 0;
         var batchNumIndices = 0;
+        var visibleMeshInstanceCount = 0;
         for (i = 0; i < meshInstances.length; i++) {
+            if (!meshInstances[i].visible)
+                continue;
+
+            visibleMeshInstanceCount++;
+
             if (!material) {
                 material = meshInstances[i].material;
             } else {
@@ -707,12 +744,20 @@ Object.assign(pc, function () {
             }
             batchNumIndices += mesh.primitive[0].count;
         }
+
+        if (!visibleMeshInstanceCount) {
+            return;
+        }
+
         if (!hasPos) {
             // #ifdef DEBUG
             console.error("BatchManager.create: no position");
             // #endif
             return;
         }
+
+        var batch = new pc.Batch(meshInstances, dynamic, batchGroupId);
+        this._batchList.push(batch);
 
         // Create buffers
         var entityIndexSizeF = dynamic ? 1 : 0;
@@ -738,12 +783,12 @@ Object.assign(pc, function () {
         var indexOffset = 0;
         var vbOffset = 0;
         var offsetPF, offsetNF, offsetUF, offsetU2F, offsetTF, offsetCF;
-        var transform, vec;
-        if (!dynamic) {
-            vec = new pc.Vec3();
-        }
+        var transform, vec =  new pc.Vec3();
 
         for (i = 0; i < meshInstances.length; i++) {
+            if (!meshInstances[i].visible)
+                continue;
+
             mesh = meshInstances[i].mesh;
             elems = mesh.vertexBuffer.format.elements;
             numVerts = mesh.vertexBuffer.numVertices;
@@ -766,85 +811,56 @@ Object.assign(pc, function () {
             }
             data = new Float32Array(mesh.vertexBuffer.storage);
             data8 = new Uint8Array(mesh.vertexBuffer.storage);
-            if (dynamic) {
-                // Dynamic: store mesh instances without transformation (will be applied later in the shader)
-                for (j = 0; j < numVerts; j++) {
-                    batchData[j * batchVertSizeF + vbOffset] =     data[j * vertSizeF + offsetPF];
-                    batchData[j * batchVertSizeF + vbOffset + 1] = data[j * vertSizeF + offsetPF + 1];
-                    batchData[j * batchVertSizeF + vbOffset + 2] = data[j * vertSizeF + offsetPF + 2];
 
-                    if (hasNormal) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF] =     data[j * vertSizeF + offsetNF];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 1] = data[j * vertSizeF + offsetNF + 1];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 2] = data[j * vertSizeF + offsetNF + 2];
-                    }
-                    if (hasUv) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF] =     data[j * vertSizeF + offsetUF];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF + 1] = data[j * vertSizeF + offsetUF + 1];
-                    }
-                    if (hasUv2) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F] =     data[j * vertSizeF + offsetU2F];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F + 1] = data[j * vertSizeF + offsetU2F + 1];
-                    }
-                    if (hasTangent) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF] =     data[j * vertSizeF + offsetTF];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 1] = data[j * vertSizeF + offsetTF + 1];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 2] = data[j * vertSizeF + offsetTF + 2];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 3] = data[j * vertSizeF + offsetTF + 3];
-                    }
-                    if (hasColor) {
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4] =     data8[j * vertSizeF * 4 + offsetCF * 4];
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 1] = data8[j * vertSizeF * 4 + offsetCF * 4 + 1];
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 2] = data8[j * vertSizeF * 4 + offsetCF * 4 + 2];
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 3] = data8[j * vertSizeF * 4 + offsetCF * 4 + 3];
-                    }
-                    batchData[j * batchVertSizeF + batchOffsetEF + vbOffset] = i;
-                }
-            } else {
-                // Static: pre-transform vertices
-                transform = meshInstances[i].node.getWorldTransform();
-                for (j = 0; j < numVerts; j++) {
-                    vec.set(data[j * vertSizeF + offsetPF],
-                            data[j * vertSizeF + offsetPF + 1],
-                            data[j * vertSizeF + offsetPF + 2]);
+            // Static: pre-transform vertices
+            transform = meshInstances[i].node.getWorldTransform();
+
+            for (j = 0; j < numVerts; j++) {
+                vec.set(data[j * vertSizeF + offsetPF],
+                        data[j * vertSizeF + offsetPF + 1],
+                        data[j * vertSizeF + offsetPF + 2]);
+                if (!dynamic)
                     transform.transformPoint(vec, vec);
-                    batchData[j * batchVertSizeF + vbOffset] =     vec.x;
-                    batchData[j * batchVertSizeF + vbOffset + 1] = vec.y;
-                    batchData[j * batchVertSizeF + vbOffset + 2] = vec.z;
-                    if (hasNormal) {
-                        vec.set(data[j * vertSizeF + offsetNF],
-                                data[j * vertSizeF + offsetNF + 1],
-                                data[j * vertSizeF + offsetNF + 2]);
+                batchData[j * batchVertSizeF + vbOffset] =     vec.x;
+                batchData[j * batchVertSizeF + vbOffset + 1] = vec.y;
+                batchData[j * batchVertSizeF + vbOffset + 2] = vec.z;
+                if (hasNormal) {
+                    vec.set(data[j * vertSizeF + offsetNF],
+                            data[j * vertSizeF + offsetNF + 1],
+                            data[j * vertSizeF + offsetNF + 2]);
+                    if (!dynamic)
                         transform.transformVector(vec, vec);
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF] =    vec.x;
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 1] = vec.y;
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 2] = vec.z;
-                    }
-                    if (hasUv) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF] =     data[j * vertSizeF + offsetUF];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetUF + 1] = data[j * vertSizeF + offsetUF + 1];
-                    }
-                    if (hasUv2) {
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F] =     data[j * vertSizeF + offsetU2F];
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F + 1] = data[j * vertSizeF + offsetU2F + 1];
-                    }
-                    if (hasTangent) {
-                        vec.set(data[j * vertSizeF + offsetTF],
-                                data[j * vertSizeF + offsetTF + 1],
-                                data[j * vertSizeF + offsetTF + 2]);
-                        transform.transformVector(vec, vec);
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF] =    vec.x;
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 1] = vec.y;
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 2] = vec.z;
-                        batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 3] = data[j * vertSizeF + offsetTF + 3];
-                    }
-                    if (hasColor) {
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4] =     data8[j * vertSizeF * 4 + offsetCF * 4];
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 1] = data8[j * vertSizeF * 4 + offsetCF * 4 + 1];
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 2] = data8[j * vertSizeF * 4 + offsetCF * 4 + 2];
-                        batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 3] = data8[j * vertSizeF * 4 + offsetCF * 4 + 3];
-                    }
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetNF] =    vec.x;
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 1] = vec.y;
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetNF + 2] = vec.z;
                 }
+                if (hasUv) {
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetUF] =     data[j * vertSizeF + offsetUF];
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetUF + 1] = data[j * vertSizeF + offsetUF + 1];
+                }
+                if (hasUv2) {
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F] =     data[j * vertSizeF + offsetU2F];
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetU2F + 1] = data[j * vertSizeF + offsetU2F + 1];
+                }
+                if (hasTangent) {
+                    vec.set(data[j * vertSizeF + offsetTF],
+                            data[j * vertSizeF + offsetTF + 1],
+                            data[j * vertSizeF + offsetTF + 2]);
+                    if (!dynamic)
+                        transform.transformVector(vec, vec);
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetTF] =    vec.x;
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 1] = vec.y;
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 2] = vec.z;
+                    batchData[j * batchVertSizeF + vbOffset + batchOffsetTF + 3] = data[j * vertSizeF + offsetTF + 3];
+                }
+                if (hasColor) {
+                    batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4] =     data8[j * vertSizeF * 4 + offsetCF * 4];
+                    batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 1] = data8[j * vertSizeF * 4 + offsetCF * 4 + 1];
+                    batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 2] = data8[j * vertSizeF * 4 + offsetCF * 4 + 2];
+                    batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 3] = data8[j * vertSizeF * 4 + offsetCF * 4 + 3];
+                }
+                if (dynamic)
+                    batchData[j * batchVertSizeF + batchOffsetEF + vbOffset] = i;
             }
 
             indexBase = mesh.primitive[0].base;
@@ -969,6 +985,9 @@ Object.assign(pc, function () {
         }
 
         meshInstance._updateAabb = false;
+        meshInstance.drawOrder = batch.origMeshInstances[0].drawOrder;
+        meshInstance.stencilFront = batch.origMeshInstances[0].stencilFront;
+        meshInstance.stencilBack = batch.origMeshInstances[0].stencilBack;
         batch.meshInstance = meshInstance;
         this.update(batch);
 
@@ -994,8 +1013,8 @@ Object.assign(pc, function () {
      */
     BatchManager.prototype.update = function (batch) {
         batch._aabb.copy(batch.origMeshInstances[0].aabb);
-        for (var i = 0; i < batch.origMeshInstances.length; i++) {
-            if (i > 0) batch._aabb.add(batch.origMeshInstances[i].aabb); // this is the slowest part
+        for (var i = 1; i < batch.origMeshInstances.length; i++) {
+            batch._aabb.add(batch.origMeshInstances[i].aabb); // this is the slowest part
         }
         batch.meshInstance.aabb = batch._aabb;
         batch._aabb._radiusVer = -1;
@@ -1079,6 +1098,8 @@ Object.assign(pc, function () {
      */
     BatchManager.prototype.destroy = function (batch) {
         batch.refCounter = 0;
+        if (!batch.model)
+            return;
         var layers = this._batchGroups[batch.batchGroupId].layers;
         for (var i = 0; i < layers.length; i++) {
             this.scene.layers.getLayerById(layers[i]).removeMeshInstances(batch.model.meshInstances);
@@ -1097,25 +1118,6 @@ Object.assign(pc, function () {
         batch.refCounter--;
         if (batch.refCounter === 0) {
             this.destroy(batch);
-        }
-    };
-
-    /**
-     * @function
-     * @name pc.BatchManager#register
-     * @description Registers entities as used inside the batch, and sets batch's reference counter to entity count.
-     * If these entities are destroyed, {@link pc.BatchManager#destroy} will be called on the batch.
-     * @param {pc.Batch} batch A batch object
-     * @param {Array} entities An array of pc.Entity
-     */
-    BatchManager.prototype.register = function (batch, entities) {
-        batch.refCounter = entities.length;
-        var self = this;
-        var callback = function () {
-            self.decrement(batch);
-        };
-        for (var i = 0; i < entities.length; i++) {
-            entities[i].once('destroy', callback);
         }
     };
 

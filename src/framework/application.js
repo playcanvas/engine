@@ -149,6 +149,7 @@ Object.assign(pc, function () {
         // Store application instance
         Application._applications[canvas.id] = this;
         Application._currentApplication = this;
+        pc.app = this;
 
         this._time = 0;
         this.timeScale = 1;
@@ -380,7 +381,7 @@ Object.assign(pc, function () {
             name: "UI",
             id: pc.LAYERID_UI,
             transparentSortMode: pc.SORTMODE_MANUAL,
-            passThrough: true
+            passThrough: false
         });
         this.defaultLayerImmediate = new pc.Layer({
             enabled: true,
@@ -538,7 +539,6 @@ Object.assign(pc, function () {
     Application.getApplication = function (id) {
         return id ? Application._applications[id] : Application._currentApplication;
     };
-
 
     // Mini-object used to measure progress of loading sets
     var Progress = function (length) {

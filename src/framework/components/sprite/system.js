@@ -99,8 +99,11 @@ Object.assign(pc, function () {
                 } else {
                     component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
                 }
+
+                /* eslint-disable no-self-assign */
                 // force update
                 component.color = component.color;
+                /* eslint-enable no-self-assign */
             }
 
             if (data.opacity !== undefined) {
