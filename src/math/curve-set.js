@@ -106,6 +106,24 @@ Object.assign(pc, (function () {
             }
 
             return values;
+        },
+
+        /**
+         * @function
+         * @name pc.CurveSet#quantizeClamped
+         * @description This function will sample the curveset at regular intervals
+         * over the range [0..1] and clamp the result to min and max.
+         * @param {Number} precision The number of samples to return.
+         * @param {Number} min The minimum output value.
+         * @param {Number} max The maximum output value.
+         * @returns {Array} The set of quantized values.
+         */
+        quantizeClamped: function (precision, min, max) {
+            var result = this.quantize(precision);
+            for (var i = 0; i < result.length; ++i) {
+                result[i] = Math.min(max, Math.max(min, result[i]));
+            }
+            return result;
         }
     });
 
