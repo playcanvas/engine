@@ -110,41 +110,37 @@ Object.assign(pc, (function () {
                 d = keys[index + 2];
             }
 
-            // tension
-            var tension = this.curve.tension;
-
             if (this.curve.type === pc.CURVE_CARDINAL_STABLE) {
-                // tangent scale (due to non-uniform knot spacing)
+                // calculate tangent scale (due to non-uniform knot spacing)
                 var s1_ = 2 * (c[0] - b[0]) / (c[0] - a[0]);
                 var s2_ = 2 * (c[0] - b[0]) / (d[0] - b[0]);
 
-                this.m0 = tension * (isFinite(s1_) ? s1_ : 0) * (c[1] - a[1]);
-                this.m1 = tension * (isFinite(s2_) ? s2_ : 0) * (d[1] - b[1]);
+                this.m0 = this.curve.tension * (isFinite(s1_) ? s1_ : 0) * (c[1] - a[1]);
+                this.m1 = this.curve.tension * (isFinite(s2_) ? s2_ : 0) * (d[1] - b[1]);
             } else {
-                if (this.curve.type === pc.CURVE_CATMULL) {
-                    tension = 0.5;
-                }
-
-                // original cardinal tangent calc
+                // original tangent scale calc
                 var s1 = (c[0] - b[0]) / (b[0] - a[0]);
                 var s2 = (c[0] - b[0]) / (d[0] - c[0]);
 
                 var a_ = b[1] + (a[1] - b[1]) * (isFinite(s1) ? s1 : 0);
                 var d_ = c[1] + (d[1] - c[1]) * (isFinite(s2) ? s2 : 0);
 
+                var tension = (this.curve.type === pc.CURVE_CATMULL) ? 0.5 : this.curve.tension;
+
                 this.m0 = tension * (c[1] - a_);
                 this.m1 = tension * (d_ - b[1]);
             }
         },
 
-        _evaluateHermite: function (p0, p1, t0, t1, s) {
-            var s2 = s * s;
-            var s3 = s2 * s;
-            var h0 = 2 * s3 - 3 * s2 + 1;
-            var h1 = -2 * s3 + 3 * s2;
-            var h2 = s3 - 2 * s2 + s;
-            var h3 = s3 - s2;
-            return p0 * h0 + p1 * h1 + t0 * h2 + t1 * h3;
+        _evaluateHermite: function (p0, p1, m0, m1, t) {
+            var t2 = t * t;
+            var twot = t + t;
+            var omt = 1 - t;
+            var omt2 = omt * omt;
+            return p0 * ((1 + twot) * omt2) +
+                   m0 * (t * omt2) +
+                   p1 * (t2 * (3 - twot)) +
+                   m1 * (t2 * (t - 1));
         },
 
         /**
@@ -172,10 +168,8 @@ Object.assign(pc, (function () {
                 result = this.p0;
             } else {
                 // calculate normalized t
-                var t = 0;
-                if (this.recip !== 0) {
-                    t = (this.time_ - this.left) * this.recip;
-                }
+                var t = (this.recip === 0) ? 0 : (this.time_ - this.left) * this.recip;
+
                 if (curve.type === pc.CURVE_LINEAR) {
                     // linear
                     result = pc.math.lerp(this.p0, this.p1, t);
@@ -184,7 +178,7 @@ Object.assign(pc, (function () {
                     result = pc.math.lerp(this.p0, this.p1, t * t * (3 - 2 * t));
                 } else {
                     // curve
-                    result = this._evaluateHermite(this.p0, this.p1, this.m0, this.m1, t);
+                    result = this._evaluateHermite2(this.p0, this.p1, this.m0, this.m1, t);
                 }
             }
             return result;
