@@ -178,7 +178,7 @@ Object.assign(pc, (function () {
                     result = pc.math.lerp(this.p0, this.p1, t * t * (3 - 2 * t));
                 } else {
                     // curve
-                    result = this._evaluateHermite2(this.p0, this.p1, this.m0, this.m1, t);
+                    result = this._evaluateHermite(this.p0, this.p1, this.m0, this.m1, t);
                 }
             }
             return result;
