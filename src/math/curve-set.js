@@ -99,9 +99,9 @@ Object.assign(pc, (function () {
             var step = 1.0 / (precision - 1);
 
             for (var c = 0; c < numCurves; c++) {
-                var it = new pc.CurveIterator(this.curves[c]);
+                var ev = new pc.CurveEvaluator(this.curves[c]);
                 for (var i = 0; i < precision; i++) { // quantize graph to table of interpolated values
-                    values[i * numCurves + c] = it.value(step * i);
+                    values[i * numCurves + c] = ev.evaluate(step * i);
                 }
             }
 

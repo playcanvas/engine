@@ -52,7 +52,7 @@ Object.assign(pc, (function () {
         this.keys = [];
         this.type = CURVE_SMOOTHSTEP;
         this.tension = 0.5; // used for CURVE_CARDINAL
-        this.it = new pc.CurveIterator(this);
+        this._eval = new pc.CurveEvaluator(this);
 
         if (data) {
             for (var i = 0; i < data.length - 1; i += 2) {
@@ -118,10 +118,9 @@ Object.assign(pc, (function () {
          * @returns {Number} The interpolated value
          */
         value: function (time) {
-            // we must reset here as the key data may have changed since the last iterator
-            // evaluate
-            this.it.reset(time);
-            return this.it.evaluate();
+            // we for the evaluation because keys may have changed since the last evaluate
+            // (we can't know)
+            return this._eval.evaluate(time, true);
         },
 
         closest: function (time) {
@@ -157,16 +156,23 @@ Object.assign(pc, (function () {
             return result;
         },
 
+        /**
+         * @function
+         * @name pc.Curve#quantize
+         * @description Sample the curve at regular intervals over the range [0..1]
+         * @param {Number} precision The number of samples to return.
+         * @returns {Array} The set of quantized values.
+         */
         quantize: function (precision) {
             precision = Math.max(precision, 2);
 
             var values = new Float32Array(precision);
             var step = 1.0 / (precision - 1);
-            var it = new pc.CurveIterator(this);
 
             // quantize graph to table of interpolated values
-            for (var i = 0; i < precision; i++) {
-                values[i] = it.value(step * i);
+            values[0] = this._eval.evaluate(0, true);
+            for (var i = 1; i < precision; i++) {
+                values[i] = this._eval.evaluate(step * i);
             }
 
             return values;
@@ -175,8 +181,8 @@ Object.assign(pc, (function () {
         /**
          * @function
          * @name pc.Curve#quantizeClamped
-         * @description This function will sample the curve at regular intervals over
-         * range [0..1] and clamp the result to min and max.
+         * @description Sample the curve at regular intervals over the range [0..1]
+         * and clamp the resulting samples to [min..max].
          * @param {Number} precision The number of samples to return.
          * @param {Number} min The minimum output value.
          * @param {Number} max The maximum output value.

@@ -28,7 +28,7 @@
 ../src/math/quat.js
 ../src/math/curve.js
 ../src/math/curve-set.js
-../src/math/curve-iterator.js
+../src/math/curve-evaluator.js
 ../src/shape/bounding-box.js
 ../src/shape/bounding-sphere.js
 ../src/shape/frustum.js
