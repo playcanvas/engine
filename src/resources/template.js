@@ -14,13 +14,14 @@ Object.assign(pc, function () {
                 };
             }
 
-            pc.http.get(url.load, function (err, response) {
-                if (!err) {
-                    callback(null, response);
-                } else {
-                    callback("Error requesting template: " + url.original);
-                }
+            var app = this._app;
 
+            pc.http.get(url.load, function (err, response) {
+                if (err) {
+                    callback("Error requesting template: " + url.original);
+                } else {
+                    new pc.LoadDependencies(app, response, callback).run();
+                }
             });
         },
 
