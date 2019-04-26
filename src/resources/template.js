@@ -14,13 +14,13 @@ Object.assign(pc, function () {
                 };
             }
 
-            var app = this._app;
+            var that = this;
 
             pc.http.get(url.load, function (err, response) {
                 if (err) {
                     callback("Error requesting template: " + url.original);
                 } else {
-                    new pc.LoadDependencies(app, response, callback).run();
+                    that._waitForDependencies(response, callback);
                 }
             });
         },
@@ -29,6 +29,14 @@ Object.assign(pc, function () {
         // returned by app.assets.loadFromUrl
         open: function (url, data) {
             return new pc.Template(this._app, data);
+        },
+
+        _waitForDependencies: function(response, callback) {
+            var templateIds = pc.TemplateUtils.extractTemplateIds(response.entities);
+
+            new pc.LoadDependencies(this._app, templateIds, function () {
+                callback(null, response);
+            }).run();
         }
     });
 
