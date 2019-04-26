@@ -339,7 +339,7 @@ Object.assign(pc, function () {
         var values = A.length / chans;
         for (i = 0; i < values; i++) {
             for (j = 0; j < chans; j++) {
-                A[i * chans + j] /= uMax[j];
+                A[i * chans + j] /= (uMax[j] === 0 ? 1 : uMax[j]);
                 A[i * chans + j] *= 0.5;
                 A[i * chans + j] += 0.5;
             }
