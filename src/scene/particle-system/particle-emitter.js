@@ -513,9 +513,7 @@ Object.assign(pc, function () {
             this.vbToSort = new Array(this.numParticles);
             this.particleDistance = new Float32Array(this.numParticles);
 
-            this.frameRandomUniform[0] = Math.random();
-            this.frameRandomUniform[1] = Math.random();
-            this.frameRandomUniform[2] = Math.random();
+            this._gpuUpdater.randomize();
 
             this.particleTex = new Float32Array(this.numParticlesPot * particleTexHeight * particleTexChannels);
             var emitterPos = (this.node === null || this.localSpace) ? pc.Vec3.ZERO : this.node.getPosition();
@@ -1016,7 +1014,6 @@ Object.assign(pc, function () {
         },
 
         addTime: function (delta, isOnStop) {
-            var a, b, c, i, j;
             var device = this.graphicsDevice;
 
             // #ifdef PROFILER
@@ -1073,7 +1070,7 @@ Object.assign(pc, function () {
                 this._gpuUpdater.update(device, spawnMatrix, extentsInnerRatioUniform, delta, isOnStop);
             } else {
                 var data = new Float32Array(this.vertexBuffer.lock());
-                this._cpuUpdater.update(data, this.vbToSort, this.particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos);
+                this._cpuUpdater.update(data, this.vbToSort, this.particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, delta, isOnStop);
                 // this.vertexBuffer.unlock();
             }
 

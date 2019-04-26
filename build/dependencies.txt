@@ -78,7 +78,9 @@
 ../src/scene/skin-partition.js
 ../src/scene/morph.js
 ../src/scene/model.js
-../src/scene/particle-emitter.js
+../src/scene/particle-system/particle-emitter.js
+../src/scene/particle-system/cpu-updater.js
+../src/scene/particle-system/gpu-updater.js
 ../src/scene/pick.js
 ../src/scene/procedural.js
 ../src/scene/materials/default-material.js

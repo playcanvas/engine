@@ -154,7 +154,7 @@ Object.assign(pc, function () {
     };
 
     // This should only change emitter state via in-params like data, vbToSort, etc.
-    ParticleCPUUpdater.prototype.update = function (data, vbToSort, particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos) {
+    ParticleCPUUpdater.prototype.update = function (data, vbToSort, particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, delta, isOnStop) {
         var a, b, c, i, j;
         var emitter = this._emitter;
 
@@ -371,7 +371,7 @@ Object.assign(pc, function () {
                     }
                 }
             } else {
-                emitter.calcSpawnPosition(particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, id);
+                this.calcSpawnPosition(particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, id);
             }
 
             if (isOnStop) {

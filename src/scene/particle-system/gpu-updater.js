@@ -80,58 +80,64 @@ Object.assign(pc, function () {
         this.constantInBoundsCenter.setValue(this.inBoundsCenterUniform);
     };
 
+    ParticleGPUUpdater.prototype.randomize = function () {
+        this.frameRandomUniform[0] = Math.random();
+        this.frameRandomUniform[1] = Math.random();
+        this.frameRandomUniform[2] = Math.random();
+    };
+
     // This shouldn't change emitter state, only read from it
     ParticleGPUUpdater.prototype.update = function (device, spawnMatrix, extentsInnerRatioUniform, delta, isOnStop) {
+        var emitter = this._emitter;
+
         device.setBlending(false);
         device.setColorWrite(true, true, true, true);
         device.setCullMode(pc.CULLFACE_NONE);
         device.setDepthTest(false);
         device.setDepthWrite(false);
 
-        this.frameRandomUniform[0] = Math.random();
-        this.frameRandomUniform[1] = Math.random();
-        this.frameRandomUniform[2] = Math.random();
+        this.randomize();
 
-        this.constantGraphSampleSize.setValue(1.0 / this._emitter.precision);
-        this.constantGraphNumSamples.setValue(this._emitter.precision);
-        this.constantNumParticles.setValue(this._emitter.numParticles);
-        this.constantNumParticlesPot.setValue(this._emitter.numParticlesPot);
-        this.constantInternalTex0.setValue(this._emitter.internalTex0);
-        this.constantInternalTex1.setValue(this._emitter.internalTex1);
-        this.constantInternalTex2.setValue(this._emitter.internalTex2);
-        this.constantInternalTex3.setValue(this._emitter.internalTex3);
+        this.constantGraphSampleSize.setValue(1.0 / emitter.precision);
+        this.constantGraphNumSamples.setValue(emitter.precision);
+        this.constantNumParticles.setValue(emitter.numParticles);
+        this.constantNumParticlesPot.setValue(emitter.numParticlesPot);
+        this.constantInternalTex0.setValue(emitter.internalTex0);
+        this.constantInternalTex1.setValue(emitter.internalTex1);
+        this.constantInternalTex2.setValue(emitter.internalTex2);
+        this.constantInternalTex3.setValue(emitter.internalTex3);
 
-        var node = this._emitter.meshInstance.node;
+        var node = emitter.meshInstance.node;
         var emitterScale = node === null ? pc.Vec3.ONE : node.localScale;
 
-        if (this._emitter.pack8) {
-            this.worldBoundsMulUniform[0] = this._emitter.worldBoundsMul.x;
-            this.worldBoundsMulUniform[1] = this._emitter.worldBoundsMul.y;
-            this.worldBoundsMulUniform[2] = this._emitter.worldBoundsMul.z;
+        if (emitter.pack8) {
+            this.worldBoundsMulUniform[0] = emitter.worldBoundsMul.x;
+            this.worldBoundsMulUniform[1] = emitter.worldBoundsMul.y;
+            this.worldBoundsMulUniform[2] = emitter.worldBoundsMul.z;
             this.constantOutBoundsMul.setValue(this.worldBoundsMulUniform);
-            this.worldBoundsAddUniform[0] = this._emitter.worldBoundsAdd.x;
-            this.worldBoundsAddUniform[1] = this._emitter.worldBoundsAdd.y;
-            this.worldBoundsAddUniform[2] = this._emitter.worldBoundsAdd.z;
+            this.worldBoundsAddUniform[0] = emitter.worldBoundsAdd.x;
+            this.worldBoundsAddUniform[1] = emitter.worldBoundsAdd.y;
+            this.worldBoundsAddUniform[2] = emitter.worldBoundsAdd.z;
             this.constantOutBoundsAdd.setValue(this.worldBoundsAddUniform);
 
             this._setInputBounds();
 
-            var maxVel = this._emitter.maxVel * Math.max(Math.max(emitterScale.x, emitterScale.y), emitterScale.z);
+            var maxVel = emitter.maxVel * Math.max(Math.max(emitterScale.x, emitterScale.y), emitterScale.z);
             maxVel = Math.max(maxVel, 1);
             this.constantMaxVel.setValue(maxVel);
         }
 
-        var emitterPos = (node === null || this._emitter.localSpace) ? pc.Vec3.ZERO : node.getPosition();
+        var emitterPos = (node === null || emitter.localSpace) ? pc.Vec3.ZERO : node.getPosition();
         var emitterMatrix = node === null ? pc.Mat4.IDENTITY : node.getWorldTransform();
-        if (this._emitter.emitterShape === pc.EMITTERSHAPE_BOX) {
+        if (emitter.emitterShape === pc.EMITTERSHAPE_BOX) {
             mat4ToMat3(spawnMatrix, spawnMatrix3);
             this.constantSpawnBounds.setValue(spawnMatrix3.data);
             this.constantSpawnPosInnerRatio.setValue(extentsInnerRatioUniform);
         } else {
-            this.constantSpawnBoundsSphere.setValue(this._emitter.emitterRadius);
-            this.constantSpawnBoundsSphereInnerRatio.setValue(this._emitter.emitterRadiusInner / this._emitter.emitterRadius);
+            this.constantSpawnBoundsSphere.setValue(emitter.emitterRadius);
+            this.constantSpawnBoundsSphereInnerRatio.setValue(emitter.emitterRadiusInner / emitter.emitterRadius);
         }
-        this.constantInitialVelocity.setValue(this._emitter.initialVelocity);
+        this.constantInitialVelocity.setValue(emitter.initialVelocity);
 
         mat4ToMat3(emitterMatrix, emitterMatrix3);
         emitterMatrix.invertTo3x3(emitterMatrix3Inv);
@@ -141,13 +147,13 @@ Object.assign(pc, function () {
         this.constantEmitterPos.setValue(this.emitterPosUniform);
         this.constantFrameRandom.setValue(this.frameRandomUniform);
         this.constantDelta.setValue(delta);
-        this.constantRate.setValue(this._emitter.rate);
-        this.constantRateDiv.setValue(this._emitter.rate2 - this._emitter.rate);
-        this.constantStartAngle.setValue(this._emitter.startAngle * pc.math.DEG_TO_RAD);
-        this.constantStartAngle2.setValue(this._emitter.startAngle2 * pc.math.DEG_TO_RAD);
+        this.constantRate.setValue(emitter.rate);
+        this.constantRateDiv.setValue(emitter.rate2 - emitter.rate);
+        this.constantStartAngle.setValue(emitter.startAngle * pc.math.DEG_TO_RAD);
+        this.constantStartAngle2.setValue(emitter.startAngle2 * pc.math.DEG_TO_RAD);
 
-        this.constantSeed.setValue(this._emitter.seed);
-        this.constantLifetime.setValue(this._emitter.lifetime);
+        this.constantSeed.setValue(emitter.seed);
+        this.constantLifetime.setValue(emitter.lifetime);
         this.emitterScaleUniform[0] = emitterScale.x;
         this.emitterScaleUniform[1] = emitterScale.y;
         this.emitterScaleUniform[2] = emitterScale.z;
@@ -155,39 +161,39 @@ Object.assign(pc, function () {
         this.constantEmitterMatrix.setValue(emitterMatrix3.data);
         this.constantEmitterMatrixInv.setValue(emitterMatrix3Inv.data);
 
-        this.constantLocalVelocityDivMult.setValue(this._emitter.localVelocityUMax);
-        this.constantVelocityDivMult.setValue(this._emitter.velocityUMax);
-        this.constantRotSpeedDivMult.setValue(this._emitter.rotSpeedUMax[0]);
+        this.constantLocalVelocityDivMult.setValue(emitter.localVelocityUMax);
+        this.constantVelocityDivMult.setValue(emitter.velocityUMax);
+        this.constantRotSpeedDivMult.setValue(emitter.rotSpeedUMax[0]);
 
-        var texIN = this._emitter.swapTex ? this._emitter.particleTexOUT : this._emitter.particleTexIN;
-        texIN = this._emitter.beenReset ? this._emitter.particleTexStart : texIN;
-        var texOUT = this._emitter.swapTex ? this._emitter.particleTexIN : this._emitter.particleTexOUT;
+        var texIN = emitter.swapTex ? emitter.particleTexOUT : emitter.particleTexIN;
+        texIN = emitter.beenReset ? emitter.particleTexStart : texIN;
+        var texOUT = emitter.swapTex ? emitter.particleTexIN : emitter.particleTexOUT;
         this.constantParticleTexIN.setValue(texIN);
         if (!isOnStop) {
             pc.drawQuadWithShader(
                 device,
-                this._emitter.swapTex ? this._emitter.rtParticleTexIN : this._emitter.rtParticleTexOUT,
-                this._emitter.loop ? this._emitter.shaderParticleUpdateRespawn : this._emitter.shaderParticleUpdateNoRespawn);
+                emitter.swapTex ? emitter.rtParticleTexIN : emitter.rtParticleTexOUT,
+                emitter.loop ? emitter.shaderParticleUpdateRespawn : emitter.shaderParticleUpdateNoRespawn);
         } else {
             pc.drawQuadWithShader(
                 device,
-                this._emitter.swapTex ? this._emitter.rtParticleTexIN : this._emitter.rtParticleTexOUT,
-                this._emitter.shaderParticleUpdateOnStop);
+                emitter.swapTex ? emitter.rtParticleTexIN : emitter.rtParticleTexOUT,
+                emitter.shaderParticleUpdateOnStop);
         }
         this.constantParticleTexOUT.setValue(texOUT);
 
-        this._emitter.material.setParameter("particleTexOUT", texIN);// OUT);
-        this._emitter.material.setParameter("particleTexIN", texOUT);// IN);
-        this._emitter.beenReset = false;
+        emitter.material.setParameter("particleTexOUT", texIN);// OUT);
+        emitter.material.setParameter("particleTexIN", texOUT);// IN);
+        emitter.beenReset = false;
 
-        this._emitter.swapTex = !this._emitter.swapTex;
+        emitter.swapTex = !emitter.swapTex;
 
         device.setDepthTest(true);
         device.setDepthWrite(true);
 
-        this._emitter.prevWorldBoundsSize.copy(this.worldBoundsSize);
-        this._emitter.prevWorldBoundsCenter.copy(this.worldBounds.center);
-        if (this._emitter.pack8)
+        emitter.prevWorldBoundsSize.copy(emitter.worldBoundsSize);
+        emitter.prevWorldBoundsCenter.copy(emitter.worldBounds.center);
+        if (emitter.pack8)
             this._setInputBounds();
     };
 
