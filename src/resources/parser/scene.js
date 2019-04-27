@@ -38,10 +38,10 @@ Object.assign(pc, function () {
         },
 
         _createEntity: function (data) {
-            if (data.collapsed_template) { // todo: rename the flag to collapsed_in_asset
-                data = pc.Template.expand(this._app, data);
+            if (data.collapsed_template) { // todo: rename the flag to collapsed_template_in_asset
+                data = pc.Template.expand_entity(this._app, data);
 
-            } else if (data.collapsed_in_scene) {
+            } else if (data.collapsed_template_in_scene) {
                 new pc.AsyncTemplateLoad(this._app, data).run();
 
                 return;

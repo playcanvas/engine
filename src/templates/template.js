@@ -30,7 +30,7 @@ Object.assign(pc, function () {
         }
     };
 
-    Template.expand = function (app, data) {
+    Template.expand_entity = function (app, data) {
         var template = app.assets.get(data.template_id);
 
         // todo: replace this with an actual traversal-based tree-copy
