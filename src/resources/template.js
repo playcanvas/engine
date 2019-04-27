@@ -25,8 +25,6 @@ Object.assign(pc, function () {
             });
         },
 
-        // what this returns becomes .resource of the asset
-        // returned by app.assets.loadFromUrl
         open: function (url, data) {
             return new pc.Template(this._app, data);
         },
