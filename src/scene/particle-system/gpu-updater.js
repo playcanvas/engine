@@ -180,7 +180,7 @@ Object.assign(pc, function () {
                 emitter.swapTex ? emitter.rtParticleTexIN : emitter.rtParticleTexOUT,
                 emitter.shaderParticleUpdateOnStop);
         }
-        this.constantParticleTexOUT.setValue(texOUT);
+        // this.constantParticleTexOUT.setValue(texOUT);
 
         emitter.material.setParameter("particleTexOUT", texIN);// OUT);
         emitter.material.setParameter("particleTexIN", texOUT);// IN);

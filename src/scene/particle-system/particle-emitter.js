@@ -272,10 +272,8 @@ Object.assign(pc, function () {
         this.worldBoundsNoTrail = new pc.BoundingBox();
         this.worldBoundsTrail = [new pc.BoundingBox(), new pc.BoundingBox()];
         this.worldBounds = new pc.BoundingBox();
-        this.inBoundsCenterUniform = new Float32Array(3);
 
         this.worldBoundsSize = new pc.Vec3();
-        this.inBoundsSizeUniform = new Float32Array(3);
 
         this.prevWorldBoundsSize = new pc.Vec3();
         this.prevWorldBoundsCenter = new pc.Vec3();
@@ -384,7 +382,7 @@ Object.assign(pc, function () {
             this.worldBoundsTrail[1].add(this.worldBoundsNoTrail);
 
             var now = this.simTimeTotal;
-            if (now > this.timeToSwitchBounds) {
+            if (now >= this.timeToSwitchBounds) {
                 this.worldBoundsTrail[0].copy(this.worldBoundsTrail[1]);
                 this.worldBoundsTrail[1].copy(this.worldBoundsNoTrail);
                 this.timeToSwitchBounds = now + this.lifetime;
@@ -398,6 +396,25 @@ Object.assign(pc, function () {
             this.meshInstance._aabbVer = 1 - this.meshInstance._aabbVer;
 
             if (this.pack8) this.calculateBoundsMad();
+        },
+
+        resetWorldBounds: function () {
+            if (!this.node) return;
+
+            this.worldBoundsNoTrail.setFromTransformedAabb(
+                this.localBounds, this.localSpace ? pc.Mat4.IDENTITY : this.node.getWorldTransform());
+
+            this.worldBoundsTrail[0].copy(this.worldBoundsNoTrail);
+            this.worldBoundsTrail[1].copy(this.worldBoundsNoTrail);
+
+            this.worldBounds.copy(this.worldBoundsTrail[0]);
+            this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
+
+            this.prevWorldBoundsSize.copy(this.worldBoundsSize);
+            this.prevWorldBoundsCenter.copy(this.worldBounds.center);
+
+            this.simTimeTotal = 0;
+            this.timeToSwitchBounds = 0;
         },
 
         calculateLocalBounds: function () {
@@ -495,6 +512,8 @@ Object.assign(pc, function () {
             this.numParticlesPot = pc.math.nextPowerOfTwo(this.numParticles);
             this.rebuildGraphs();
             this.calculateLocalBounds();
+            this.resetWorldBounds();
+
             if (this.node) {
                 // this.prevPos.copy(this.node.getPosition());
                 this.worldBounds.setFromTransformedAabb(
@@ -609,10 +628,10 @@ Object.assign(pc, function () {
 
             this._initializeTextures();
 
+            this.resetTime();
+
             this.addTime(0, false); // fill dynamic textures and constants with initial data
             if (this.preWarm) this.prewarm(this.lifetime);
-
-            this.resetTime();
         },
 
         _isAnimated: function () {
@@ -794,14 +813,9 @@ Object.assign(pc, function () {
             material.setParameter("emitterScale", new Float32Array([1, 1, 1]));
 
             if (this.pack8) {
-                this.inBoundsSizeUniform[0] = this.worldBoundsSize.x;
-                this.inBoundsSizeUniform[1] = this.worldBoundsSize.y;
-                this.inBoundsSizeUniform[2] = this.worldBoundsSize.z;
-                material.setParameter("inBoundsSize", this.inBoundsSizeUniform);
-                this.inBoundsCenterUniform[0] = this.worldBounds.center.x;
-                this.inBoundsCenterUniform[1] = this.worldBounds.center.y;
-                this.inBoundsCenterUniform[2] = this.worldBounds.center.z;
-                material.setParameter("inBoundsCenter", this.inBoundsCenterUniform);
+                this._gpuUpdater._setInputBounds();
+                material.setParameter("inBoundsSize", this._gpuUpdater.inBoundsSizeUniform);
+                material.setParameter("inBoundsCenter", this._gpuUpdater.inBoundsCenterUniform);
                 material.setParameter("maxVel", this.maxVel);
             }
 
@@ -986,6 +1000,7 @@ Object.assign(pc, function () {
             } else {
                 this._initializeTextures();
             }
+            this.resetWorldBounds();
             this.resetTime();
             var origLoop =  this.loop;
             this.loop = true;
