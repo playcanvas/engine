@@ -954,6 +954,12 @@ Object.assign(pc, function () {
                 asset.preload = data.preload ? data.preload : false;
                 // tags
                 asset.tags.add(data.tags);
+                // i18n
+                if (data.i18n) {
+                    for (var locale in data.i18n) {
+                        asset.addLocalizedAssetId(locale, data.i18n[locale]);
+                    }
+                }
                 // registry
                 this.assets.add(asset);
             }
