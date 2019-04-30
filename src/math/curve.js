@@ -192,7 +192,7 @@ Object.assign(pc, (function () {
          * @param {Number} max The maximum output value.
          * @returns {Array} The set of quantized values.
          */
-        quantizeClamped: function (precision) {
+        quantizeClamped: function (precision, min, max) {
             var result = this.quantize(precision);
             for (var i = 0; i < result.length; ++i) {
                 result[i] = Math.min(max, Math.max(min, result[i]));
