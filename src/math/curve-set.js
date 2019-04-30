@@ -109,6 +109,7 @@ Object.assign(pc, (function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.CurveSet#quantizeClamped
          * @description This function will sample the curveset at regular intervals
