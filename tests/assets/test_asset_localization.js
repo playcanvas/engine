@@ -68,7 +68,7 @@ describe('pc.LocalizedAsset', function () {
         expect(asset.hasEvent('remove')).to.equal(false);
     });
 
-    it('no events are added to the asset when autoLoad is false', function () {
+    it('no load and change events are added to the asset when autoLoad is false', function () {
         var asset = new pc.Asset("Default Asset", "texture");
 
         app.assets.add(asset);
@@ -78,10 +78,9 @@ describe('pc.LocalizedAsset', function () {
 
         expect(asset.hasEvent('load')).to.equal(false);
         expect(asset.hasEvent('change')).to.equal(false);
-        expect(asset.hasEvent('remove')).to.equal(false);
     });
 
-    it('events are added to the asset when autoLoad is true', function () {
+    it('load, change and remove events are added to the asset when autoLoad is true', function () {
         var asset = new pc.Asset("Default Asset", "texture");
 
         app.assets.add(asset);
@@ -163,12 +162,16 @@ describe('pc.LocalizedAsset', function () {
         expect(asset.hasEvent('load')).to.equal(true);
         expect(asset.hasEvent('change')).to.equal(true);
         expect(asset.hasEvent('remove')).to.equal(true);
+        // there should be 2 remove events one for the defaultAsset
+        // and one for the localizedAsset
+        expect(asset._callbacks['remove'].length).to.equal(2);
 
         app.i18n.locale = 'fr';
 
         expect(asset.hasEvent('load')).to.equal(false);
         expect(asset.hasEvent('change')).to.equal(false);
-        expect(asset.hasEvent('remove')).to.equal(false);
+        // there should now be only 1 remove event for the defaultAsset
+        expect(asset._callbacks['remove'].length).to.equal(1);
 
         expect(asset2.hasEvent('load')).to.equal(true);
         expect(asset2.hasEvent('change')).to.equal(true);
@@ -200,9 +203,9 @@ describe('pc.LocalizedAsset', function () {
             removeFired = true;
         });
 
-        asset.fire('load');
-        asset.fire('change');
-        asset.fire('remove');
+        asset.fire('load', asset);
+        asset.fire('change', asset);
+        asset.fire('remove', asset);
 
         expect(loadFired).to.equal(true);
         expect(changeFired).to.equal(true);
@@ -323,7 +326,7 @@ describe('pc.LocalizedAsset', function () {
     });
 
 
-    it.only('removing a localized asset from the registry makes the pc.LocalizedAsset switch to the defaultAsset', function () {
+    it('removing a localized asset from the registry makes the pc.LocalizedAsset switch to the defaultAsset', function () {
         var asset = new pc.Asset("Default Asset", "texture");
         app.assets.add(asset);
         var asset2 = new pc.Asset("Localized Asset", "texture");
@@ -341,7 +344,7 @@ describe('pc.LocalizedAsset', function () {
         expect(la.localizedAsset).to.equal(asset.id);
     });
 
-    it.only('removing the defaultAsset from the registry keeps same localizedAsset and adds "add" event handler', function () {
+    it('removing the defaultAsset from the registry keeps same localizedAsset and adds "add" event handler', function () {
         var asset = new pc.Asset("Default Asset", "texture");
         app.assets.add(asset);
         var asset2 = new pc.Asset("Localized Asset", "texture");
