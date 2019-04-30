@@ -2,7 +2,6 @@ Object.assign(pc, function () {
     var _tempScrollValue = new pc.Vec2();
 
     /**
-     * @private
      * @component
      * @name pc.ScrollViewComponent
      * @description Create a new ScrollViewComponent
@@ -650,7 +649,6 @@ Object.assign(pc, function () {
 }());
 
 /**
- * @private
  * @event
  * @name pc.ScrollViewComponent#set:scroll
  * @description Fired whenever the scroll position changes.

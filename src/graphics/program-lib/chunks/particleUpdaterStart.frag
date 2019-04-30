@@ -60,7 +60,7 @@ void main(void)
 #else
     vec3 radialVel = radialSpeed * normalize(inPos);
 #endif
-    radialVel += (2.0 * radialSpeedDiv - 1.0) * radialSpeedDivMult * rndFactor.z;
+    radialVel += (radialSpeedDiv * vec3(2.0) - vec3(1.0)) * radialSpeedDivMult * rndFactor.xyz;
 
     localVelocity +=    (localVelocityDiv * vec3(2.0) - vec3(1.0)) * localVelocityDivMult * rndFactor.xyz;
     velocity +=         (velocityDiv * vec3(2.0) - vec3(1.0)) * velocityDivMult * rndFactor.xyz;
@@ -71,7 +71,7 @@ void main(void)
 #ifndef LOCAL_SPACE
     outVel = emitterMatrix * localVelocity + (radialVel + velocity) * emitterScale;
 #else
-    outVel = localVelocity / emitterScale + emitterMatrixInv * (radialVel + velocity);
+    outVel = (localVelocity + radialVel) / emitterScale + emitterMatrixInv * velocity;
 #endif
     outPos = inPos + outVel * delta;
     outAngle = inAngle + rotSpeed * delta;

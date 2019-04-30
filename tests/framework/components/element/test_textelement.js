@@ -1497,4 +1497,16 @@ describe("pc.TextElement", function () {
         // now it should wrap
         assertLineContents(['abcd', 'e']);
     });
+
+    it('text element removes i18n event listeners on destroy', function () {
+        expect(app.i18n.hasEvent('set:locale')).to.equal(true);
+        expect(app.i18n.hasEvent('data:add')).to.equal(true);
+        expect(app.i18n.hasEvent('data:remove')).to.equal(true);
+
+        element.entity.destroy();
+
+        expect(app.i18n.hasEvent('set:locale')).to.equal(false);
+        expect(app.i18n.hasEvent('data:add')).to.equal(false);
+        expect(app.i18n.hasEvent('data:remove')).to.equal(false);
+    });
 });

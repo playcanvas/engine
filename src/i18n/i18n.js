@@ -180,6 +180,7 @@ Object.assign(pc, (function () {
      * var localizedFrench = this.app.i18n.getText('localization-key', 'fr-FR');
      */
     I18n.prototype.getText = function (key, locale) {
+        // default translation is the key
         var result = key;
 
         var lang;
@@ -198,15 +199,16 @@ Object.assign(pc, (function () {
             translations = this._translations[locale];
         }
 
-        if (translations) {
+        if (translations && translations.hasOwnProperty(key)) {
             result = translations[key];
-            if (result) {
-                // if this is a plural key then return the first entry in the array
-                if (Array.isArray(result)) {
-                    result = result[0] || "";
-                }
-            } else {
-                // if translation was not found then return the key
+
+            // if this is a plural key then return the first entry in the array
+            if (Array.isArray(result)) {
+                result = result[0];
+            }
+
+            // if null or undefined switch back to the key (empty string is allowed)
+            if (result === null || result === undefined) {
                 result = key;
             }
         }
@@ -230,6 +232,7 @@ Object.assign(pc, (function () {
      * var localized = this.app.i18n.getPluralText('{number} apples', number).replace("{number}", number);
      */
     I18n.prototype.getPluralText = function (key, n, locale) {
+        // default translation is the key
         var result = key;
 
         var pluralFn;
@@ -247,13 +250,19 @@ Object.assign(pc, (function () {
         var translations = this._translations[locale];
         if (!translations) {
             locale = this._findFallbackLocale(lang);
+            lang = getLang(locale);
             pluralFn = getPluralFn(lang);
             translations = this._translations[locale];
         }
 
         if (translations && translations[key] && pluralFn) {
             var index = pluralFn(n);
-            result = translations[key][index] || key;
+            result = translations[key][index];
+
+            // if null or undefined switch back to the key (empty string is allowed)
+            if (result === null || result === undefined) {
+                result = key;
+            }
         }
 
         return result;
