@@ -99,7 +99,7 @@ Object.assign(pc, (function () {
         _isHermite: function () {
             return this._curve.type === pc.CURVE_CATMULL ||
                    this._curve.type === pc.CURVE_CARDINAL ||
-                   this._curve.type === pc.CURVE_CARDINAL_STABLE;
+                   this._curve.type === pc.CURVE_SPLINE;
         },
 
         // calculate tangents for the hermite curve
@@ -123,7 +123,7 @@ Object.assign(pc, (function () {
                 d = keys[index + 2];
             }
 
-            if (this._curve.type === pc.CURVE_CARDINAL_STABLE) {
+            if (this._curve.type === pc.CURVE_SPLINE) {
                 // calculate tangent scale (due to non-uniform knot spacing)
                 var s1_ = 2 * (c[0] - b[0]) / (c[0] - a[0]);
                 var s2_ = 2 * (c[0] - b[0]) / (d[0] - b[0]);

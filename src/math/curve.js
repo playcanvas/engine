@@ -14,27 +14,29 @@ Object.assign(pc, (function () {
      */
     var CURVE_SMOOTHSTEP = 1;
     /**
+     * @deprecated
      * @enum pc.CURVE
      * @name pc.CURVE_CATMULL
-     * @description A Catmull-Rom spline interpolation scheme.
+     * @description A Catmull-Rom spline interpolation scheme. This interpolation scheme is deprecated. Use CURVE_SPLINE instead.
      */
     var CURVE_CATMULL = 2;
     /**
+     * @deprecated
      * @enum pc.CURVE
      * @name pc.CURVE_CARDINAL
-     * @description A cardinal spline interpolation scheme.
+     * @description A cardinal spline interpolation scheme. This interpolation scheme is deprecated. Use CURVE_SPLINE instead.
      */
     var CURVE_CARDINAL = 3;
     /**
      * @enum pc.CURVE
-     * @name pc.CURVE_CARDINAL_STABLE
-     * @description Variation on the cardinal spline which uses stable knot tangents
+     * @name pc.CURVE_SPLINE
+     * @description Cardinal spline interpolation scheme. For Catmull-Rom, specify curve tension 0.5.
      */
-    var CURVE_CARDINAL_STABLE = 4;
+    var CURVE_SPLINE = 4;
     /**
      * @enum pc.CURVE
      * @name pc.CURVE_STEP
-     * @description A stepped interpolater, free from the shackles of blending
+     * @description A stepped interpolater, free from the shackles of blending.
      */
     var CURVE_STEP = 5;
 
@@ -157,6 +159,7 @@ Object.assign(pc, (function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Curve#quantize
          * @description Sample the curve at regular intervals over the range [0..1]
@@ -179,6 +182,7 @@ Object.assign(pc, (function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Curve#quantizeClamped
          * @description Sample the curve at regular intervals over the range [0..1]
@@ -209,7 +213,7 @@ Object.assign(pc, (function () {
         CURVE_SMOOTHSTEP: CURVE_SMOOTHSTEP,
         CURVE_CATMULL: CURVE_CATMULL,
         CURVE_CARDINAL: CURVE_CARDINAL,
-        CURVE_STEP: CURVE_STEP,
-        CURVE_CARDINAL_STABLE: CURVE_CARDINAL_STABLE
+        CURVE_SPLINE: CURVE_SPLINE,
+        CURVE_STEP: CURVE_STEP
     };
 }()));

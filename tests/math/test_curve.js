@@ -92,7 +92,7 @@ describe("pc.Curve", function () {
                     pc.CURVE_SMOOTHSTEP, 
                     pc.CURVE_CATMULL, 
                     pc.CURVE_CARDINAL, 
-                    pc.CURVE_CARDINAL_STABLE, 
+                    pc.CURVE_SPLINE, 
                     pc.CURVE_STEP];
         var sampleRange = [-5, 5];
         var sampleStep = 0.1;
