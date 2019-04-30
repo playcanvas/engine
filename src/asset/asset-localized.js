@@ -31,6 +31,7 @@ Object.assign(pc, function (){
 
         asset.off('add:localized', this._onLocaleAdd, this);
         asset.off('remove:localized', this._onLocaleRemove, this);
+        asset.off('remove', this._onDefaultAssetRemove, this);
     };
 
     LocalizedAsset.prototype._onDefaultAssetAdd = function (asset) {
