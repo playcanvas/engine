@@ -126,6 +126,10 @@ Object.assign(pc, function () {
                 // font data present in font but not in asset
                 asset.data = font.data;
             }
+
+            if (asset.data) {
+                asset.data = upgradeDataSchema(asset.data);
+            }
         }
     });
 
