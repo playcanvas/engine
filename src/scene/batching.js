@@ -340,7 +340,8 @@ Object.assign(pc, function () {
     };
 
     BatchManager.prototype._extractModel = function (node, arr, group, groupMeshInstances) {
-        if (!node.model) return arr;
+        if (!node.model || !node.model.model) return arr;
+
         var i;
         if (node.model.isStatic) {
             // static mesh instances can be in both drawCall array with _staticSource linking to original
@@ -698,8 +699,6 @@ Object.assign(pc, function () {
         }
 
         var i, j;
-        var batch = new pc.Batch(meshInstances, dynamic, batchGroupId);
-        this._batchList.push(batch);
 
         // Check which vertex format and buffer size are needed, find out material
         var material = null;
@@ -707,9 +706,12 @@ Object.assign(pc, function () {
         var hasPos, hasNormal, hasUv, hasUv2, hasTangent, hasColor;
         var batchNumVerts = 0;
         var batchNumIndices = 0;
+        var visibleMeshInstanceCount = 0;
         for (i = 0; i < meshInstances.length; i++) {
             if (!meshInstances[i].visible)
                 continue;
+
+            visibleMeshInstanceCount++;
 
             if (!material) {
                 material = meshInstances[i].material;
@@ -742,12 +744,20 @@ Object.assign(pc, function () {
             }
             batchNumIndices += mesh.primitive[0].count;
         }
+
+        if (!visibleMeshInstanceCount) {
+            return;
+        }
+
         if (!hasPos) {
             // #ifdef DEBUG
             console.error("BatchManager.create: no position");
             // #endif
             return;
         }
+
+        var batch = new pc.Batch(meshInstances, dynamic, batchGroupId);
+        this._batchList.push(batch);
 
         // Create buffers
         var entityIndexSizeF = dynamic ? 1 : 0;

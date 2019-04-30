@@ -1,4 +1,7 @@
 attribute vec4 particle_vertexData; // XYZ = particle position, W = particle ID + random factor
+#ifdef USE_MESH
+attribute vec2 particle_uv;         // mesh UV
+#endif
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
@@ -15,7 +18,7 @@ uniform float graphSampleSize;
 uniform float graphNumSamples;
 uniform float stretch;
 uniform vec3 wrapBounds;
-uniform vec3 emitterScale, emitterPos;
+uniform vec3 emitterScale, emitterPos, faceTangent, faceBinorm;
 uniform float rate, rateDiv, lifetime, deltaRandomnessStatic, scaleDivMult, alphaDivMult, seed, delta;
 uniform sampler2D particleTexOUT, particleTexIN;
 uniform sampler2D internalTex0;

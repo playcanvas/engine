@@ -18,10 +18,10 @@ Object.assign(pc, function () {
     ];
 
     /**
-     * @private
+     * @constructor
      * @name pc.ButtonComponentSystem
-     * @description Create a new ButtonComponentSystem
      * @classdesc Manages creation of {@link pc.ButtonComponent}s.
+     * @description Create a new ButtonComponentSystem
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */

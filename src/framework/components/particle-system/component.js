@@ -4,10 +4,13 @@ Object.assign(pc, function () {
     var SIMPLE_PROPERTIES = [
         'emitterExtents',
         'emitterRadius',
+        'emitterExtentsInner',
+        'emitterRadiusInner',
         'loop',
         'initialVelocity',
         'animSpeed',
-        'normalMap'
+        'normalMap',
+        'particleNormal'
     ];
 
     // properties that need rebuilding the particle system
@@ -35,7 +38,8 @@ Object.assign(pc, function () {
         'animNumFrames',
         'animLoop',
         'colorMap',
-        'localSpace'
+        'localSpace',
+        'orientation'
     ];
 
     var GRAPH_PROPERTIES = [
@@ -55,7 +59,10 @@ Object.assign(pc, function () {
         'localVelocityGraph2',
 
         'rotationSpeedGraph',
-        'rotationSpeedGraph2'
+        'rotationSpeedGraph2',
+
+        'radialSpeedGraph',
+        'radialSpeedGraph2'
     ];
 
     var ASSET_PROPERTIES = [
@@ -89,6 +96,7 @@ Object.assign(pc, function () {
      * @property {Boolean} alignToMotion Orient particles in their direction of motion.
      * @property {Boolean} depthWrite If enabled, the particles will write to the depth buffer. If disabled, the depth buffer is left unchanged and particles will be guaranteed to overwrite one another in the order in which they are rendered.
      * @property {Boolean} noFog Disable fogging
+     * @property {Boolean} localSpace Binds particles to emitter transformation rather then world space.
      * @property {Number} numParticles Maximum number of simulated particles.
      * @property {Number} rate Minimal interval in seconds between particle births.
      * @property {Number} rate2 Maximal interval in seconds between particle births.
@@ -105,7 +113,9 @@ Object.assign(pc, function () {
      * @property {Number} depthSoftening Controls fading of particles near their intersections with scene geometry. This effect, when it's non-zero, requires scene depth map to be rendered. Multiple depth-dependent effects can share the same map, but if you only use it for particles, bear in mind that it can double engine draw calls.
      * @property {Number} initialVelocity Defines magnitude of the initial emitter velocity. Direction is given by emitter shape.
      * @property {pc.Vec3} emitterExtents (Only for EMITTERSHAPE_BOX) The extents of a local space bounding box within which particles are spawned at random positions.
+     * @property {pc.Vec3} emitterExtentsInner (Only for EMITTERSHAPE_BOX) The exception of extents of a local space bounding box within which particles are not spawned. Aligned to the center of EmitterExtents.
      * @property {Number} emitterRadius (Only for EMITTERSHAPE_SPHERE) The radius within which particles are spawned at random positions.
+     * @property {Number} emitterRadiusInner (Only for EMITTERSHAPE_SPHERE) The inner radius within which particles are not spawned.
      * @property {pc.Vec3} wrapBounds The half extents of a world space box volume centered on the owner entity's position. If a particle crosses the boundary of one side of the volume, it teleports to the opposite side.
      * @property {pc.Asset} colorMapAsset The {@link pc.Asset} used to set the colorMap.
      * @property {pc.Asset} normalMapAsset The {@link pc.Asset} used to set the normalMap.
@@ -126,6 +136,13 @@ Object.assign(pc, function () {
      * </ul>
      * @property {pc.Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
      * @property {pc.BLEND} blend Blending mode.
+     * @property {pc.PARTICLEORIENTATION} orientation Sorting mode. Forces CPU simulation, so be careful.
+     * <ul>
+     * <li><strong>{@link pc.PARTICLEORIENTATION_SCREEN}</strong>: Particles are facing camera.</li>
+     * <li><strong>{@link pc.PARTICLEORIENTATION_WORLD}</strong>: User defines world space normal (particleNormal) to set planes orientation.</li>
+     * <li><strong>{@link pc.PARTICLEORIENTATION_EMITTER}</strong>: Similar to previous, but the normal is affected by emitter(entity) transformation.</li>
+     * </ul>
+     * @property {pc.Vec3} particleNormal (Only for PARTICLEORIENTATION_WORLD and PARTICLEORIENTATION_EMITTER) The exception of extents of a local space bounding box within which particles are not spawned. Aligned to the center of EmitterExtents.
      * @property {pc.CurveSet} localVelocityGraph Velocity relative to emitter over lifetime.
      * @property {pc.CurveSet} localVelocityGraph2 If not null, particles pick random values between localVelocityGraph and localVelocityGraph2.
      * @property {pc.CurveSet} velocityGraph World-space velocity over lifetime.
@@ -133,6 +150,8 @@ Object.assign(pc, function () {
      * @property {pc.CurveSet} colorGraph Color over lifetime.
      * @property {pc.Curve} rotationSpeedGraph Rotation speed over lifetime.
      * @property {pc.Curve} rotationSpeedGraph2 If not null, particles pick random values between rotationSpeedGraph and rotationSpeedGraph2.
+     * @property {pc.Curve} radialSpeedGraph Radial speed over lifetime, velocity vector points from emitter origin to particle pos.
+     * @property {pc.Curve} radialSpeedGraph2 If not null, particles pick random values between radialSpeedGraph and radialSpeedGraph2.
      * @property {pc.Curve} scaleGraph Scale over lifetime.
      * @property {pc.Curve} scaleGraph2 If not null, particles pick random values between scaleGraph and scaleGraph2.
      * @property {pc.Curve} alphaGraph Alpha over lifetime.
@@ -534,7 +553,9 @@ Object.assign(pc, function () {
                 this.emitter = new pc.ParticleEmitter(this.system.app.graphicsDevice, {
                     numParticles: data.numParticles,
                     emitterExtents: data.emitterExtents,
+                    emitterExtentsInner: data.emitterExtentsInner,
                     emitterRadius: data.emitterRadius,
+                    emitterRadiusInner: data.emitterRadiusInner,
                     emitterShape: data.emitterShape,
                     initialVelocity: data.initialVelocity,
                     wrap: data.wrap,
@@ -543,6 +564,9 @@ Object.assign(pc, function () {
                     lifetime: data.lifetime,
                     rate: data.rate,
                     rate2: data.rate2,
+
+                    orientation: data.orientation,
+                    particleNormal: data.particleNormal,
 
                     animTilesX: data.animTilesX,
                     animTilesY: data.animTilesY,
@@ -570,6 +594,9 @@ Object.assign(pc, function () {
 
                     rotationSpeedGraph: data.rotationSpeedGraph,
                     rotationSpeedGraph2: data.rotationSpeedGraph2,
+
+                    radialSpeedGraph: data.radialSpeedGraph,
+                    radialSpeedGraph2: data.radialSpeedGraph2,
 
                     colorMap: data.colorMap,
                     normalMap: data.normalMap,

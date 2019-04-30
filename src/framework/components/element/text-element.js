@@ -101,7 +101,7 @@ Object.assign(pc, function () {
 
         // start listening for element events
         element.on('resize', this._onParentResize, this);
-        this._element.on('set:screen', this._onScreenChange, this);
+        element.on('set:screen', this._onScreenChange, this);
         element.on('screen:set:screenspace', this._onScreenSpaceChange, this);
         element.on('set:draworder', this._onDrawOrderChange, this);
         element.on('set:pivot', this._onPivotChange, this);
@@ -133,6 +133,10 @@ Object.assign(pc, function () {
             this._element.off('screen:set:screenspace', this._onScreenSpaceChange, this);
             this._element.off('set:draworder', this._onDrawOrderChange, this);
             this._element.off('set:pivot', this._onPivotChange, this);
+
+            this._system.app.i18n.off('set:locale', this._resetLocalizedText, this);
+            this._system.app.i18n.off('data:add', this._onLocalizationData, this);
+            this._system.app.i18n.off('data:remove', this._onLocalizationData, this);
         },
 
         _onParentResize: function (width, height) {

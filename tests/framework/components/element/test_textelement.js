@@ -1214,4 +1214,16 @@ describe("pc.TextElement", function () {
 
         expect(assets.font2.hasEvent('load')).to.equal(false);
     });
+
+    it('text element removes i18n event listeners on destroy', function () {
+        expect(app.i18n.hasEvent('set:locale')).to.equal(true);
+        expect(app.i18n.hasEvent('data:add')).to.equal(true);
+        expect(app.i18n.hasEvent('data:remove')).to.equal(true);
+
+        element.entity.destroy();
+
+        expect(app.i18n.hasEvent('set:locale')).to.equal(false);
+        expect(app.i18n.hasEvent('data:add')).to.equal(false);
+        expect(app.i18n.hasEvent('data:remove')).to.equal(false);
+    });
 });
