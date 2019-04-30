@@ -647,15 +647,15 @@ Object.assign(pc, function () {
 
             this.qLocalVelocity = this.localVelocityGraph.quantize(precision);
             this.qVelocity = this.velocityGraph.quantize(precision);
-            this.qColor =         this.colorGraph.quantize(precision);
+            this.qColor =         this.colorGraph.quantizeClamped(precision, 0, 1);
             this.qRotSpeed =      this.rotationSpeedGraph.quantize(precision);
             this.qScale =         this.scaleGraph.quantize(precision);
             this.qAlpha =         this.alphaGraph.quantize(precision);
             this.qRadialSpeed =   this.radialSpeedGraph.quantize(precision);
 
             this.qLocalVelocity2 = this.localVelocityGraph2.quantize(precision);
-            this.qVelocity2 = this.velocityGraph2.quantize(precision);
-            this.qColor2 =         this.colorGraph2.quantize(precision);
+            this.qVelocity2 =      this.velocityGraph2.quantize(precision);
+            this.qColor2 =         this.colorGraph2.quantizeClamped(precision, 0, 1);
             this.qRotSpeed2 =      this.rotationSpeedGraph2.quantize(precision);
             this.qScale2 =         this.scaleGraph2.quantize(precision);
             this.qAlpha2 =         this.alphaGraph2.quantize(precision);

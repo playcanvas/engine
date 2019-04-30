@@ -97,20 +97,34 @@ Object.assign(pc, (function () {
             var numCurves = this.curves.length;
             var values = new Float32Array(precision * numCurves);
             var step = 1.0 / (precision - 1);
-            var temp = [];
 
-            for (var i = 0; i < precision; i++) { // quantize graph to table of interpolated values
-                var value = this.value(step * i, temp);
-                if (numCurves == 1) {
-                    values[i] = value[0];
-                } else {
-                    for (var j = 0; j < numCurves; j++) {
-                        values[i * numCurves + j] = value[j];
-                    }
+            for (var c = 0; c < numCurves; c++) {
+                var ev = new pc.CurveEvaluator(this.curves[c]);
+                for (var i = 0; i < precision; i++) { // quantize graph to table of interpolated values
+                    values[i * numCurves + c] = ev.evaluate(step * i);
                 }
             }
 
             return values;
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.CurveSet#quantizeClamped
+         * @description This function will sample the curveset at regular intervals
+         * over the range [0..1] and clamp the result to min and max.
+         * @param {Number} precision The number of samples to return.
+         * @param {Number} min The minimum output value.
+         * @param {Number} max The maximum output value.
+         * @returns {Array} The set of quantized values.
+         */
+        quantizeClamped: function (precision, min, max) {
+            var result = this.quantize(precision);
+            for (var i = 0; i < result.length; ++i) {
+                result[i] = Math.min(max, Math.max(min, result[i]));
+            }
+            return result;
         }
     });
 
