@@ -196,8 +196,13 @@ Object.assign(pc, function () {
             var scale = 0;
             var alphaDiv = 0;
             var angle = 0;
-            var particleEnabled = life > 0.0 && life < particleLifetime;
 
+            var respawn = (life - delta) <= 0.0 || life >= particleLifetime;
+            if (respawn) {
+                this.calcSpawnPosition(particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, id);
+            }
+
+            var particleEnabled = life > 0.0 && life < particleLifetime;
             if (particleEnabled) {
                 c = nlife * precision1;
                 cf = Math.floor(c);
@@ -370,8 +375,6 @@ Object.assign(pc, function () {
                         emitter.particleDistance[id] = -life;
                     }
                 }
-            } else {
-                this.calcSpawnPosition(particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, id);
             }
 
             if (isOnStop) {
