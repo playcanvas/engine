@@ -392,7 +392,10 @@ Object.assign(pc, function () {
 
             this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
 
-            this.meshInstance.mesh.aabb = this.worldBounds;
+            this.meshInstance.aabb.setFromTransformedAabb(
+                this.worldBounds, this.localSpace ? this.node.getWorldTransform() : pc.Mat4.IDENTITY);
+            this.meshInstance.mesh.aabb.setFromTransformedAabb(
+                this.worldBounds, this.localSpace ? this.node.getWorldTransform() : pc.Mat4.IDENTITY);
             this.meshInstance._aabbVer = 1 - this.meshInstance._aabbVer;
 
             if (this.pack8) this.calculateBoundsMad();
@@ -632,7 +635,8 @@ Object.assign(pc, function () {
             this.meshInstance.updateKey(); // shouldn't be here?
             this.meshInstance.cull = true;
             this.meshInstance._noDepthDrawGl1 = true;
-            this.meshInstance.aabb = this.worldBounds;
+            this.meshInstance.aabb.setFromTransformedAabb(
+                this.worldBounds, this.localSpace ? this.node.getWorldTransform() : pc.Mat4.IDENTITY);
             this.meshInstance._updateAabb = false;
             this.meshInstance.visible = wasVisible;
 
