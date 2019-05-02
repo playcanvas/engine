@@ -68,6 +68,9 @@ Object.assign(pc, function () {
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
          * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
          * Otherwise, by default, the data is sent as form-urlencoded.
+         * @param {Boolean} [options.retryable] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retryable is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retryable is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
@@ -100,6 +103,9 @@ Object.assign(pc, function () {
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
          * @param {String} [options.responseType] Override the response type
+         * @param {Boolean} [options.retryable] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retryable is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retryable is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
@@ -129,6 +135,9 @@ Object.assign(pc, function () {
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
          * @param {String} [options.responseType] Override the response type
+         * @param {Boolean} [options.retryable] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retryable is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retryable is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
@@ -158,6 +167,9 @@ Object.assign(pc, function () {
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
          * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
          * Otherwise, by default, the data is sent as form-urlencoded.
+         * @param {Boolean} [options.retryable] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retryable is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retryable is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
