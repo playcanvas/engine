@@ -15,7 +15,10 @@ Object.assign(pc, function () {
             }
 
             // if this a blob URL we need to set the response type as json
-            var options = {};
+            var options = {
+                retryable: true
+            };
+
             if (url.load.startsWith('blob:')) {
                 options.responseType = pc.Http.ResponseType.JSON;
             }

@@ -14,7 +14,9 @@ Object.assign(pc, function () {
                 };
             }
 
-            pc.http.get(url.load, function (err, response) {
+            pc.http.get(url.load, {
+                retryable: true
+            }, function (err, response) {
                 if (!err) {
                     callback(null, response);
                 } else {

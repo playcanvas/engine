@@ -14,7 +14,10 @@ Object.assign(pc, function () {
                 };
             }
 
-            pc.http.get(url.load, { responseType: pc.Http.ResponseType.ARRAY_BUFFER }, function (err, response) {
+            pc.http.get(url.load, {
+                responseType: pc.Http.ResponseType.ARRAY_BUFFER,
+                retryable: true
+            }, function (err, response) {
                 if (!err) {
                     callback(null, response);
                 } else {

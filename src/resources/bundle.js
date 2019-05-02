@@ -24,7 +24,8 @@ Object.assign(pc, function () {
             var self = this;
 
             pc.http.get(url.load, {
-                responseType: pc.Http.ResponseType.ARRAY_BUFFER
+                responseType: pc.Http.ResponseType.ARRAY_BUFFER,
+                retryable: true
             }, function (err, response) {
                 if (! err) {
                     try {

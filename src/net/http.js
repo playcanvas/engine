@@ -45,6 +45,8 @@ Object.assign(pc, function () {
         '.dds'
     ];
 
+    Http.retryDelay = 100;
+
     Object.assign(Http.prototype, {
 
         ContentType: Http.ContentType,
@@ -180,6 +182,9 @@ Object.assign(pc, function () {
          * @param {Boolean} [options.async] Make the request asynchronously. Defaults to true.
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
+         * @param {Boolean} [options.retryable] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retryable is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retryable is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {String} [options.responseType] Override the response type
          * @param {Document|Object} [options.postdata] Data to send in the body of the request.
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
@@ -197,6 +202,16 @@ Object.assign(pc, function () {
             if (typeof options === "function") {
                 callback = options;
                 options = {};
+            }
+
+            // if retryable we are going to store new properties
+            // in the options so create a new copy to not affect
+            // the original
+            if (options.retryable) {
+                options = Object.assign({
+                    retries: 0,
+                    maxRetries: 5
+                }, options);
             }
 
             // store callback
@@ -257,10 +272,6 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (!xhr) {
-                xhr = new XMLHttpRequest();
-            }
-
             if (options.cache === false) {
                 // Add timestamp to url to prevent browser caching file
                 timestamp = pc.time.now();
@@ -281,6 +292,7 @@ Object.assign(pc, function () {
                 url = uri.toString();
             }
 
+            xhr = new XMLHttpRequest();
             xhr.open(method, url, options.async);
             xhr.withCredentials = options.withCredentials !== undefined ? options.withCredentials : false;
             xhr.responseType = options.responseType || this._guessResponseType(url);
@@ -414,7 +426,25 @@ Object.assign(pc, function () {
         },
 
         _onError: function (method, url, options, xhr) {
-            options.callback(xhr.status, null);
+            if (options.retrying) {
+                return;
+            }
+
+            // retry if necessary
+            if (options.retryable && options.retries < options.maxRetries) {
+                options.retries++;
+                options.retrying = true; // used to stop retrying when both onError and xhr.onerror are called
+                var retryDelay = pc.math.clamp(Math.pow(2, options.retries) * Http.retryDelay, 0, options.maxRetryDelay || 5000);
+                console.log(method + ': ' + url + ' - Error ' + xhr.status + '. Retrying in ' + retryDelay + ' ms');
+
+                setTimeout(function () {
+                    options.retrying = false;
+                    this.request(method, url, options, options.callback);
+                }.bind(this), retryDelay);
+            } else {
+                // no more retries or not retryable so just fail
+                options.callback(xhr.status === 0 ? 'Network error' : xhr.status, null);
+            }
         }
     });
 
