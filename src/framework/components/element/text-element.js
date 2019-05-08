@@ -13,6 +13,8 @@ Object.assign(pc, function () {
         this.normals = [];
         // float array for UVs
         this.uvs = [];
+        // float array for vertex colors
+        this.colors = [];
         // float array for indices
         this.indices = [];
         // pc.MeshInstance created from this MeshInfo
@@ -37,7 +39,6 @@ Object.assign(pc, function () {
         this._font = null;
 
         this._color = new pc.Color(1, 1, 1, 1);
-        this._colorUniform = new Float32Array(3);
 
         this._spacing = 1;
         this._fontSize = 32;
@@ -226,6 +227,12 @@ Object.assign(pc, function () {
             if (text === undefined) text = this._text;
 
             var symbols = pc.string.getSymbols(text);
+            var tags = [];
+            var markup = pc.EvaluateMarkup(symbols);
+            if (markup.success) {
+                symbols = markup.symbols;
+                tags = markup.tags;
+            }
 
             if (this.rtlReorder) {
                 var rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
@@ -291,6 +298,7 @@ Object.assign(pc, function () {
                     meshInfo.positions.length = meshInfo.normals.length = l * 3 * 4;
                     meshInfo.indices.length = l * 3 * 2;
                     meshInfo.uvs.length = l * 2 * 4;
+                    meshInfo.colors.length = l * 4 * 4;
 
                     // destroy old mesh
                     if (meshInfo.meshInstance) {
@@ -332,7 +340,7 @@ Object.assign(pc, function () {
                         meshInfo.normals[v * 4 * 3 + 11] = -1;
                     }
 
-                    var mesh = pc.createMesh(this._system.app.graphicsDevice, meshInfo.positions, { uvs: meshInfo.uvs, normals: meshInfo.normals, indices: meshInfo.indices });
+                    var mesh = pc.createMesh(this._system.app.graphicsDevice, meshInfo.positions, { uvs: meshInfo.uvs, normals: meshInfo.normals, colors: meshInfo.colors, indices: meshInfo.indices });
 
                     var mi = new pc.MeshInstance(this._node, mesh, this._material);
                     mi.name = "Text Element: " + this._entity.name;
@@ -348,10 +356,6 @@ Object.assign(pc, function () {
                     }
 
                     this._setTextureParams(mi, this._font.textures[i]);
-                    this._colorUniform[0] = this._color.r;
-                    this._colorUniform[1] = this._color.g;
-                    this._colorUniform[2] = this._color.b;
-                    mi.setParameter("material_emissive", this._colorUniform);
                     mi.setParameter("material_opacity", this._color.a);
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
@@ -391,7 +395,7 @@ Object.assign(pc, function () {
                 this._element.addModelToLayers(this._model);
             }
 
-            this._updateMeshes(symbols);
+            this._updateMeshes(symbols, tags);
         },
 
         _removeMeshInstance: function (meshInstance) {
@@ -456,7 +460,7 @@ Object.assign(pc, function () {
             }
         },
 
-        _updateMeshes: function (symbols) {
+        _updateMeshes: function (symbols, tags) {
             var json = this._font.data;
             var self = this;
 
@@ -814,6 +818,51 @@ Object.assign(pc, function () {
                     meshInfo.uvs[quad * 4 * 2 + 6] = uv[0];
                     meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
 
+                    // get markup coloring
+                    var color = [
+                        this._color.r * 255,
+                        this._color.g * 255,
+                        this._color.b * 255
+                    ];
+                    if (tags.length > 0) {
+                        var tag = pc.GetMarkupTag(tags, i);
+                        if (tag.color && tag.color.value) {
+                            var tagColor = tag.color.value;
+                            if (tagColor[0] === "#") {
+                                // hex color
+                                var hex = tagColor.substring(1).toLowerCase();
+                                if (/^([0-9a-f]{2}){3}$/.test(hex)) {
+                                    color = [
+                                        parseInt(hex.substring(0, 2), 16),
+                                        parseInt(hex.substring(2, 4), 16),
+                                        parseInt(hex.substring(4, 6), 16)
+                                    ];
+                                }
+                            }
+                        }
+                    }
+
+                    // set per-vertex color
+                    meshInfo.colors[quad * 4 * 4 + 0] = color[0];
+                    meshInfo.colors[quad * 4 * 4 + 1] = color[1];
+                    meshInfo.colors[quad * 4 * 4 + 2] = color[2];
+                    meshInfo.colors[quad * 4 * 4 + 3] = 255;
+
+                    meshInfo.colors[quad * 4 * 4 + 4] = color[0];
+                    meshInfo.colors[quad * 4 * 4 + 5] = color[1];
+                    meshInfo.colors[quad * 4 * 4 + 6] = color[2];
+                    meshInfo.colors[quad * 4 * 4 + 7] = 255;
+
+                    meshInfo.colors[quad * 4 * 4 + 8] = color[0];
+                    meshInfo.colors[quad * 4 * 4 + 9] = color[1];
+                    meshInfo.colors[quad * 4 * 4 + 10] = color[2];
+                    meshInfo.colors[quad * 4 * 4 + 11] = 255;
+
+                    meshInfo.colors[quad * 4 * 4 + 12] = color[0];
+                    meshInfo.colors[quad * 4 * 4 + 13] = color[1];
+                    meshInfo.colors[quad * 4 * 4 + 14] = color[2];
+                    meshInfo.colors[quad * 4 * 4 + 15] = 255;
+
                     meshInfo.quad++;
                 }
 
@@ -891,9 +940,14 @@ Object.assign(pc, function () {
                         // clear unused vertices
                         it.element[pc.SEMANTIC_POSITION].set(0, 0, 0);
                         it.element[pc.SEMANTIC_TEXCOORD0].set(0, 0);
+                        it.element[pc.SEMANTIC_COLOR].set(0, 0, 0, 0);
                     } else {
                         it.element[pc.SEMANTIC_POSITION].set(this._meshInfo[i].positions[v * 3 + 0], this._meshInfo[i].positions[v * 3 + 1], this._meshInfo[i].positions[v * 3 + 2]);
                         it.element[pc.SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v * 2 + 0], this._meshInfo[i].uvs[v * 2 + 1]);
+                        it.element[pc.SEMANTIC_COLOR].set(this._meshInfo[i].colors[v * 4 + 0],
+                                                          this._meshInfo[i].colors[v * 4 + 1],
+                                                          this._meshInfo[i].colors[v * 4 + 2],
+                                                          this._meshInfo[i].colors[v * 4 + 3]);
                     }
                     it.next();
                 }
@@ -1100,15 +1154,9 @@ Object.assign(pc, function () {
             this._color.g = g;
             this._color.b = b;
 
-            if (this._model) {
-                this._colorUniform[0] = this._color.r;
-                this._colorUniform[1] = this._color.g;
-                this._colorUniform[2] = this._color.b;
-
-                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
-                    var mi = this._model.meshInstances[i];
-                    mi.setParameter('material_emissive', this._colorUniform);
-                }
+            // color is baked into vertices, update text
+            if (this._font) {
+                this._updateText();
             }
         }
     });

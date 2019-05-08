@@ -322,6 +322,7 @@ Object.assign(pc, function () {
                         this.defaultScreenSpaceTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                         this.defaultScreenSpaceTextMaterial.depthWrite = false;
                         this.defaultScreenSpaceTextMaterial.depthTest = false;
+                        this.defaultScreenSpaceTextMaterial.emissiveVertexColor = true;
                         this.defaultScreenSpaceTextMaterial.update();
                     }
                     return this.defaultScreenSpaceTextMaterial;
@@ -343,6 +344,7 @@ Object.assign(pc, function () {
                     this.defaultScreenSpaceBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                     this.defaultScreenSpaceBitmapTextMaterial.depthWrite = false;
                     this.defaultScreenSpaceBitmapTextMaterial.depthTest = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.emissiveVertexColor = true;
                     this.defaultScreenSpaceBitmapTextMaterial.update();
                 }
                 return this.defaultScreenSpaceBitmapTextMaterial;
@@ -362,6 +364,7 @@ Object.assign(pc, function () {
                     this.defaultTextMaterial.opacity = 0.5;
                     this.defaultTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                     this.defaultTextMaterial.depthWrite = false;
+                    this.defaultTextMaterial.emissiveVertexColor = true;
                     this.defaultTextMaterial.update();
                 }
                 return this.defaultTextMaterial;
@@ -382,6 +385,7 @@ Object.assign(pc, function () {
                 this.defaultBitmapTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
                 this.defaultBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                 this.defaultBitmapTextMaterial.depthWrite = false;
+                this.defaultBitmapTextMaterial.emissiveVertexColor = true;
                 this.defaultBitmapTextMaterial.update();
             }
             return this.defaultBitmapTextMaterial;
