@@ -194,6 +194,8 @@ Object.assign(pc, function () {
             // ensure we send cookies if we load images.
             this.crossOrigin = 'anonymous';
         }
+
+        this.retryRequests = false;
     };
 
     Object.assign(TextureHandler.prototype, {
@@ -214,7 +216,7 @@ Object.assign(pc, function () {
                 var options = {
                     cache: true,
                     responseType: "arraybuffer",
-                    retryable: true
+                    retryable: this.retryRequests
                 };
 
                 pc.http.get(url.load, options, function (err, response) {
@@ -259,6 +261,7 @@ Object.assign(pc, function () {
             var retries = 0;
             var maxRetries = 5;
             var retryTimeout;
+            var retryRequests = this.retryRequests;
 
             // Call success callback after opening Texture
             image.onload = function () {
@@ -269,7 +272,7 @@ Object.assign(pc, function () {
                 // Retry a few times before failing
                 if (retryTimeout) return;
 
-                if (++retries <= maxRetries) {
+                if (retryRequests && ++retries <= maxRetries) {
                     var retryDelay = Math.pow(2, retries) * 100;
                     console.log(pc.string.format("Error loading Texture from: '{0}' - Retrying in {1}ms...", originalUrl, retryDelay));
 

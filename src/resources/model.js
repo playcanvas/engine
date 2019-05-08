@@ -11,6 +11,7 @@ Object.assign(pc, function () {
         this._device = device;
         this._parsers = [];
         this._defaultMaterial = defaultMaterial;
+        this.retryRequests = false;
 
         this.addParser(new pc.JsonModelParser(this._device), function (url, data) {
             return (pc.path.getExtension(url) === '.json');
@@ -38,7 +39,7 @@ Object.assign(pc, function () {
 
             // we need to specify JSON for blob URLs
             var options = {
-                retryable: true
+                retryable: this.retryRequests
             };
 
             if (url.load.startsWith('blob:')) {

@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     var BinaryHandler = function () {
-
+        this.retryRequests = false;
     };
 
     Object.assign(BinaryHandler.prototype, {
@@ -16,7 +16,7 @@ Object.assign(pc, function () {
 
             pc.http.get(url.load, {
                 responseType: pc.Http.ResponseType.ARRAY_BUFFER,
-                retryable: true
+                retryable: this.retryRequests
             }, function (err, response) {
                 if (!err) {
                     callback(null, response);

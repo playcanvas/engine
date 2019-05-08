@@ -3,6 +3,7 @@ Object.assign(pc, function () {
 
     var HierarchyHandler = function (app) {
         this._app = app;
+        this.retryRequests = false;
     };
 
     Object.assign(HierarchyHandler.prototype, {
@@ -15,7 +16,7 @@ Object.assign(pc, function () {
             }
 
             pc.http.get(url.load, {
-                retryable: true
+                retryable: this.retryRequests
             }, function (err, response) {
                 if (!err) {
                     callback(null, response);

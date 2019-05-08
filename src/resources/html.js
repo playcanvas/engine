@@ -1,7 +1,9 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var HtmlHandler = function () {};
+    var HtmlHandler = function () {
+        this.retryRequests = false;
+    };
 
     Object.assign(HtmlHandler.prototype, {
         load: function (url, callback) {
@@ -13,7 +15,7 @@ Object.assign(pc, function () {
             }
 
             pc.http.get(url.load, {
-                retryable: true
+                retryable: this.retryRequests
             }, function (err, response) {
                 if (!err) {
                     callback(null, response);

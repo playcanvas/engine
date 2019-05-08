@@ -2,6 +2,7 @@ Object.assign(pc, function () {
     var SpriteHandler = function (assets, device) {
         this._assets = assets;
         this._device = device;
+        this.retryRequests = false;
     };
 
     // The scope of this function is the sprite asset
@@ -30,7 +31,7 @@ Object.assign(pc, function () {
             // if given a json file (probably engine-only use case)
             if (pc.path.getExtension(url.original) === '.json') {
                 pc.http.get(url.load, {
-                    retryable: true
+                    retryable: this.retryRequests
                 }, function (err, response) {
                     if (!err) {
                         callback(null, response);

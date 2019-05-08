@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     var JsonHandler = function () {
-
+        this.retryRequests = false;
     };
 
     Object.assign(JsonHandler.prototype, {
@@ -16,7 +16,7 @@ Object.assign(pc, function () {
 
             // if this a blob URL we need to set the response type as json
             var options = {
-                retryable: true
+                retryable: this.retryRequests
             };
 
             if (url.load.startsWith('blob:')) {

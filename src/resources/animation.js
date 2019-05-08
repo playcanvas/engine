@@ -2,6 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     var AnimationHandler = function () {
+        this.retryRequests = false;
     };
 
     Object.assign(AnimationHandler.prototype, {
@@ -15,7 +16,7 @@ Object.assign(pc, function () {
 
             // we need to specify JSON for blob URLs
             var options = {
-                retryable: true
+                retryable: this.retryRequests
             };
 
             if (url.load.startsWith('blob:')) {

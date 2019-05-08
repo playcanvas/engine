@@ -1457,6 +1457,19 @@ Object.assign(pc, function () {
             }
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.Application#toggleRequestRetrying
+         * @description Enables or disables retrying of failed requests when loading assets.
+         * @param {Boolean} retry Whether to enable or disable retrying of requests.
+         */
+        toggleRequestRetrying: function (retry) {
+            for (var key in this.loader._handlers) {
+                this.loader._handlers[key].retryRequests = retry;
+            }
+        },
+
         _onVrChange: function (enabled) {
             if (enabled) {
                 if (!this.vr) {
