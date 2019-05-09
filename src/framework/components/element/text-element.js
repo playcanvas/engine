@@ -97,6 +97,8 @@ Object.assign(pc, function () {
         this._shadowOffset = new pc.Vec2(0, 0);
         this._shadowOffsetUniform = new Float32Array(2);
 
+        this._enableMarkup = false;
+
         // initialize based on screen
         this._onScreenChange(this._element.screen);
 
@@ -227,12 +229,6 @@ Object.assign(pc, function () {
             if (text === undefined) text = this._text;
 
             var symbols = pc.string.getSymbols(text);
-            var tags = [];
-            var markup = pc.EvaluateMarkup(symbols);
-            if (markup.success) {
-                symbols = markup.symbols;
-                tags = markup.tags;
-            }
 
             if (this.rtlReorder) {
                 var rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
@@ -243,20 +239,31 @@ Object.assign(pc, function () {
                 }
             }
 
-            var textLength = symbols.length;
-
             // handle null string
-            if (textLength === 0) {
-                textLength = 1;
-                text = " ";
-                symbols = [text];
+            if (symbols.length === 0) {
+                symbols = [" "];
+            }
+
+            // extract markup
+            if (this._enableMarkup) {
+                symbols = pc.EvaluateMarkup(symbols, {
+                    "red": "#ff0000",
+                    "green": "#00ff00",
+                    "blue": "#0000ff",
+                    "white": "#ffffff"
+                });
+            } else {
+                // markup processing is disabled, create empty markup structure
+                symbols = symbols.map(function (v) {
+                    return { char: v, tags: { } };
+                } );
             }
 
             var charactersPerTexture = {};
 
             var char, info, map;
-            for (i = 0; i < textLength; i++) {
-                char = symbols[i];
+            for (i = 0; i < symbols.length; i++) {
+                char = symbols[i].char;
                 info = this._font.data.chars[char];
                 // if char is missing use 'space' or first char in map
                 if (!info) {
@@ -395,7 +402,7 @@ Object.assign(pc, function () {
                 this._element.addModelToLayers(this._model);
             }
 
-            this._updateMeshes(symbols, tags);
+            this._updateMeshes(symbols);
         },
 
         _removeMeshInstance: function (meshInstance) {
@@ -460,7 +467,7 @@ Object.assign(pc, function () {
             }
         },
 
-        _updateMeshes: function (symbols, tags) {
+        _updateMeshes: function (symbols) {
             var json = this._font.data;
             var self = this;
 
@@ -498,7 +505,7 @@ Object.assign(pc, function () {
             var fontMaxY = 0;
             var scale = 1;
 
-            var char, data, i, j, quad;
+            var char, tags, data, i, j, quad;
 
             function breakLine(lineBreakIndex, lineBreakX) {
                 self._lineWidths.push(Math.abs(lineBreakX));
@@ -594,7 +601,7 @@ Object.assign(pc, function () {
                     // start from the end and go backwards until we find
                     // a line break
                     for (i = l - 1; i >= 0; i--) {
-                        if (!LINE_BREAK_CHAR.test(symbols[i])) continue;
+                        if (!LINE_BREAK_CHAR.test(symbols[i].char)) continue;
 
                         // allocate new symbols array
                         // now that we know it's needed
@@ -632,7 +639,8 @@ Object.assign(pc, function () {
                 // In right-to-left mode we loop through the symbols from end to the beginning
                 // in order to wrap lines in the correct order
                 for (i = (rtl ? l - 1 : 0); (rtl ? i >= 0 : i < l); (rtl ? i-- : i++)) {
-                    char = symbols[i];
+                    char = symbols[i].char;
+                    tags = symbols[i].tags;
 
                     var x = 0;
                     var y = 0;
@@ -705,7 +713,7 @@ Object.assign(pc, function () {
                                     var backtrackStart = rtl ? i + 1 : wordStartIndex;
                                     var backtrackEnd = rtl ? wordStartIndex + 1 : i;
                                     for (j = backtrackStart; j < backtrackEnd; j++) {
-                                        var backChar = symbols[j];
+                                        var backChar = symbols[j].char;
                                         var backCharData = json.chars[backChar];
                                         var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
                                         backMeshInfo.lines[lines - 1] -= 1;
@@ -824,20 +832,17 @@ Object.assign(pc, function () {
                         this._color.g * 255,
                         this._color.b * 255
                     ];
-                    if (tags.length > 0) {
-                        var tag = pc.GetMarkupTag(tags, i);
-                        if (tag.color && tag.color.value) {
-                            var tagColor = tag.color.value;
-                            if (tagColor[0] === "#") {
-                                // hex color
-                                var hex = tagColor.substring(1).toLowerCase();
-                                if (/^([0-9a-f]{2}){3}$/.test(hex)) {
-                                    color = [
-                                        parseInt(hex.substring(0, 2), 16),
-                                        parseInt(hex.substring(2, 4), 16),
-                                        parseInt(hex.substring(4, 6), 16)
-                                    ];
-                                }
+                    if (tags.color && tags.color.value) {
+                        var tagColor = tags.color.value;
+                        if (tagColor[0] === "#") {
+                            // hex color
+                            var hex = tagColor.substring(1).toLowerCase();
+                            if (/^([0-9a-f]{2}){3}$/.test(hex)) {
+                                color = [
+                                    parseInt(hex.substring(0, 2), 16),
+                                    parseInt(hex.substring(2, 4), 16),
+                                    parseInt(hex.substring(4, 6), 16)
+                                ];
                             }
                         }
                     }
@@ -1678,6 +1683,21 @@ Object.assign(pc, function () {
         }
     });
 
+    Object.defineProperty(TextElement.prototype, 'enableMarkup', {
+        get: function () {
+            return this._enableMarkup;
+        },
+        set: function (value) {
+            value = !!value;
+            if (this._enableMarkup === value) return;
+
+            this._enableMarkup = value;
+
+            if (this.font) {
+                this._updateText();
+            }
+        }
+    });
 
     return {
         TextElement: TextElement

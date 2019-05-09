@@ -29,6 +29,19 @@ Object.assign(pc, function () {
             return token;
         },
 
+
+        // returns the buffer for the last returned token
+        buf: function () {
+            return this._buf;
+        },
+
+        // returns a string describing the current context (useful when providing error messages)
+        getContext: function () {
+            if (this._index < this._symbols.length) {
+                return "#" + this._index.toString();
+            }
+        },
+
         // read the next token from the input stream and return the token
         _read: function () {
             this._buf = [];
@@ -36,11 +49,6 @@ Object.assign(pc, function () {
                 return this.EOF_TOKEN;
             }
             return (this._mode === "text") ? this._text() : this._tag();
-        },
-
-        // returns the buffer for the last returned token
-        buf: function () {
-            return this._buf;
         },
 
         // read text block until eof or start of tag
@@ -262,7 +270,7 @@ Object.assign(pc, function () {
         }
     });
 
-    function debugPrintScanner (scanner) {
+    function debugPrintScanner(scanner) {
         var tokenStrings = ["EOF", "ERROR", "TEXT", "OPEN_BRACKET", "CLOSE_BRACKET", "EQUALS", "STRING", "IDENTIFIER", "WHITESPACE"];
         var token = scanner.read();
         var result = "";
@@ -278,52 +286,77 @@ Object.assign(pc, function () {
         console.info(result);
     }
 
-    // evaluates the list of symbols, extracts the markup tags and returns a
-    // structure containing the output symbols (free from markup) and the tag
-    // information required to calculate per-symbol styling.
-    var EvaluateMarkup = function (symbols) {
-        // log scanner output
-        // debugPrintScanner(new Scanner(symbols));
-
-        var result = {
-            symbols: [],
-            tags: [],
-            success: true
-        };
-
-        result.success = Parser.prototype.parse(new Scanner(symbols), result.symbols, result.tags);
-
-        // debug print result
-        /*
-        console.info(markup.symbols);
-        console.info(markup.tags);
-        for (var index = 0; index < markup.symbols.length; ++index) {
-            console.info({
-                symbol: markup.symbols[index],
-                tags: pc.GetMarkupTag(markup.tags, index)
-            });
+    // copy the contents of source into target and map the values with the
+    // provided mapping table.
+    function MapAndMerge(target, source, mappings) {
+        for (var key in source) {
+            if (!source.hasOwnProperty(key)) {
+                continue;
+            }
+            var value = source[key];
+            if (value instanceof Object) {
+                if (!target.hasOwnProperty(key)) {
+                    target[key] = { };
+                }
+                MapAndMerge(target[key], source[key], mappings);
+            } else {
+                target[key] = mappings.hasOwnProperty(value) ? mappings[value] : value;
+            }
         }
-        //*/
-
-        return result;
-    };
+    }
 
     // get the markup tags for the given symbol
-    var GetMarkupTag = function (tags, symbolIndex) {
+    function GetMarkupTags(tags, mappings, symbolIndex) {
         var result = { };
         for (var index = 0; index < tags.length; ++index) {
             var tag = tags[index];
             if (tag.start <= symbolIndex &&
                 (tag.end === null || tag.end > symbolIndex)) {
-                // TODO: the code below should merge the two sets of tags, not overwrite them
-                result[tag.name] = { value: tag.value, attributes: tag.attributes };
+                var tmp = { };
+                tmp[tag.name] = { value: tag.value, attributes: tag.attributes };
+                MapAndMerge(result, tmp, mappings);
             }
         }
         return result;
-    };
+    }
+
+    // evaluate the list of symbols, extract the markup tags and return a
+    // structure containing an array of symbol and tags
+    function EvaluateMarkup(symbols, mappings) {
+        // log scanner output
+        // debugPrintScanner(new Scanner(symbols));
+
+        var scanner = new Scanner(symbols);
+        var symbols_out = [];
+        var tags = [];
+
+        if (!Parser.prototype.parse(scanner, symbols_out, tags)) {
+            console.warn("Markup error at " + scanner.getContext());
+        }
+
+        // debug print result
+        /*
+        console.info(symbols_out);
+        console.info(tags);
+        for (var index = 0; index < symbols_out.length; ++index) {
+            console.info({
+                symbol: symbols_out[index],
+                tags: GetMarkupTag(tags, index)
+            });
+        }
+        //*/
+
+        var result = [];
+        for (var index = 0; index < symbols_out.length; ++index) {
+            result.push( {
+                char: symbols_out[index],
+                tags: GetMarkupTags(tags, mappings, index)
+            });
+        }
+        return result;
+    }
 
     return {
-        EvaluateMarkup: EvaluateMarkup,
-        GetMarkupTag: GetMarkupTag
+        EvaluateMarkup: EvaluateMarkup
     };
 }());

@@ -223,6 +223,7 @@ Object.assign(pc, function () {
                 if (data.outlineThickness !== undefined) component.outlineThickness = data.outlineThickness;
                 if (data.shadowColor !== undefined) component.shadowColor = data.shadowColor;
                 if (data.shadowOffset !== undefined) component.shadowOffset = data.shadowOffset;
+                if (data.enableMarkup !== undefined) component.enableMarkup = data.enableMarkup;
             } else {
                 // group
             }
@@ -293,7 +294,8 @@ Object.assign(pc, function () {
                 outlineColor: source.outlineColor && source.outlineColor.clone() || source.outlineColor,
                 outlineThickness: source.outlineThickness,
                 shadowColor: source.shadowColor && source.shadowColor.clone() || source.shadowColor,
-                shadowOffset: source.shadowOffset && source.shadowOffset.clone() || source.shadowOffset
+                shadowOffset: source.shadowOffset && source.shadowOffset.clone() || source.shadowOffset,
+                enableMarkup: source.enableMarkup
             };
 
             if (source.key !== undefined && source.key !== null) {
