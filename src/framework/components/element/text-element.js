@@ -524,14 +524,16 @@ Object.assign(pc, function () {
                 if (numBreaksThisLine) {
                     var i = chars.length;
                     while (i-- && numBreaksThisLine > 0)  {
-                        if (LINE_BREAK_CHAR.test(chars[i])) {
+                        if (LINE_BREAK_CHAR.test(chars[i].char)) {
                             chars.splice(i, 1);
                             numBreaksThisLine--;
                         }
                     }
                 }
 
-                var substring = chars.join('');
+                var substring = chars.map(function (v) {
+                    return v.char;
+                } ).join('');
 
                 self._lineContents.push(substring);
 
