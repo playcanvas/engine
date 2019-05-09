@@ -38,7 +38,7 @@ Object.assign(pc, function () {
             // load json data then load texture of same name
             if (pc.path.getExtension(url.original) === '.json') {
                 pc.http.get(url.load, {
-                    retryable: this.retryRequests
+                    retry: this.retryRequests
                 }, function (err, response) {
                     if (!err) {
                         // load texture

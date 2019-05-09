@@ -102,7 +102,7 @@ Object.assign(pc, function () {
 
             // if this is a blob URL we need to set the response type to arraybuffer
             var options = {
-                retryable: this.retryRequests
+                retry: this.retryRequests
             };
 
             if (url.startsWith('blob:')) {

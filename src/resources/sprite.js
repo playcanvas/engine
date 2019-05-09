@@ -31,7 +31,7 @@ Object.assign(pc, function () {
             // if given a json file (probably engine-only use case)
             if (pc.path.getExtension(url.original) === '.json') {
                 pc.http.get(url.load, {
-                    retryable: this.retryRequests
+                    retry: this.retryRequests
                 }, function (err, response) {
                     if (!err) {
                         callback(null, response);

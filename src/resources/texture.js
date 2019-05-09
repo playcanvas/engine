@@ -216,7 +216,7 @@ Object.assign(pc, function () {
                 var options = {
                     cache: true,
                     responseType: "arraybuffer",
-                    retryable: this.retryRequests
+                    retry: this.retryRequests
                 };
 
                 pc.http.get(url.load, options, function (err, response) {

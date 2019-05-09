@@ -16,7 +16,7 @@ Object.assign(pc, function () {
 
             // we need to specify JSON for blob URLs
             var options = {
-                retryable: this.retryRequests
+                retry: this.retryRequests
             };
 
             if (url.load.startsWith('blob:')) {

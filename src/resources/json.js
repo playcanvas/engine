@@ -16,7 +16,7 @@ Object.assign(pc, function () {
 
             // if this a blob URL we need to set the response type as json
             var options = {
-                retryable: this.retryRequests
+                retry: this.retryRequests
             };
 
             if (url.load.startsWith('blob:')) {

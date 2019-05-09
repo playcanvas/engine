@@ -68,9 +68,9 @@ Object.assign(pc, function () {
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
          * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
          * Otherwise, by default, the data is sent as form-urlencoded.
-         * @param {Boolean} [options.retryable] If true then if the request fails it will be retried with an exponential backoff.
-         * @param {Number} [options.maxRetries] If options.retryable is true this specifies the maximum number of retries. Defaults to 5.
-         * @param {Number} [options.maxRetryDelay] If options.retryable is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
+         * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
@@ -103,9 +103,9 @@ Object.assign(pc, function () {
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
          * @param {String} [options.responseType] Override the response type
-         * @param {Boolean} [options.retryable] If true then if the request fails it will be retried with an exponential backoff.
-         * @param {Number} [options.maxRetries] If options.retryable is true this specifies the maximum number of retries. Defaults to 5.
-         * @param {Number} [options.maxRetryDelay] If options.retryable is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
+         * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
@@ -135,9 +135,9 @@ Object.assign(pc, function () {
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
          * @param {String} [options.responseType] Override the response type
-         * @param {Boolean} [options.retryable] If true then if the request fails it will be retried with an exponential backoff.
-         * @param {Number} [options.maxRetries] If options.retryable is true this specifies the maximum number of retries. Defaults to 5.
-         * @param {Number} [options.maxRetryDelay] If options.retryable is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
+         * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
@@ -167,9 +167,9 @@ Object.assign(pc, function () {
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
          * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
          * Otherwise, by default, the data is sent as form-urlencoded.
-         * @param {Boolean} [options.retryable] If true then if the request fails it will be retried with an exponential backoff.
-         * @param {Number} [options.maxRetries] If options.retryable is true this specifies the maximum number of retries. Defaults to 5.
-         * @param {Number} [options.maxRetryDelay] If options.retryable is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
+         * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
@@ -194,9 +194,9 @@ Object.assign(pc, function () {
          * @param {Boolean} [options.async] Make the request asynchronously. Defaults to true.
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
-         * @param {Boolean} [options.retryable] If true then if the request fails it will be retried with an exponential backoff.
-         * @param {Number} [options.maxRetries] If options.retryable is true this specifies the maximum number of retries. Defaults to 5.
-         * @param {Number} [options.maxRetryDelay] If options.retryable is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
+         * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {String} [options.responseType] Override the response type
          * @param {Document|Object} [options.postdata] Data to send in the body of the request.
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
@@ -219,7 +219,7 @@ Object.assign(pc, function () {
             // if retryable we are going to store new properties
             // in the options so create a new copy to not affect
             // the original
-            if (options.retryable) {
+            if (options.retry) {
                 options = Object.assign({
                     retries: 0,
                     maxRetries: 5
@@ -443,7 +443,7 @@ Object.assign(pc, function () {
             }
 
             // retry if necessary
-            if (options.retryable && options.retries < options.maxRetries) {
+            if (options.retry && options.retries < options.maxRetries) {
                 options.retries++;
                 options.retrying = true; // used to stop retrying when both onError and xhr.onerror are called
                 var retryDelay = pc.math.clamp(Math.pow(2, options.retries) * Http.retryDelay, 0, options.maxRetryDelay || 5000);
@@ -454,7 +454,7 @@ Object.assign(pc, function () {
                     this.request(method, url, options, options.callback);
                 }.bind(this), retryDelay);
             } else {
-                // no more retries or not retryable so just fail
+                // no more retries or not retry so just fail
                 options.callback(xhr.status === 0 ? 'Network error' : xhr.status, null);
             }
         }

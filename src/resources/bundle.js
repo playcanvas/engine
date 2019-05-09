@@ -26,7 +26,7 @@ Object.assign(pc, function () {
 
             pc.http.get(url.load, {
                 responseType: pc.Http.ResponseType.ARRAY_BUFFER,
-                retryable: this.retryRequests
+                retry: this.retryRequests
             }, function (err, response) {
                 if (! err) {
                     try {

@@ -36,7 +36,7 @@ Object.assign(pc, function () {
 
             // Loading from URL (engine-only)
             pc.http.get(url.load, {
-                retryable: this.retryRequests
+                retry: this.retryRequests
             }, function (err, response) {
                 if (!err) {
                     if (callback) {

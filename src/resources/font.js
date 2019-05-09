@@ -43,7 +43,7 @@ Object.assign(pc, function () {
             if (pc.path.getExtension(url.original) === '.json') {
                 // load json data then load texture of same name
                 pc.http.get(url.load, {
-                    retryable: this.retryRequests
+                    retry: this.retryRequests
                 }, function (err, response) {
                     // update asset data
                     var data = upgradeDataSchema(response);

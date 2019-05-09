@@ -1,4 +1,4 @@
-describe('pc.Http', function () {
+describe.only('pc.Http', function () {
     var retryDelay;
     var xhr;
     beforeEach(function () {
@@ -23,7 +23,7 @@ describe('pc.Http', function () {
         });
     });
 
-    it('get() does not retry if retryable is false', function (done) {
+    it('get() does not retry if retry is false', function (done) {
         sinon.spy(pc.http, 'request');
         pc.http.get('/someurl.json', function (err, data) {
             expect(err).to.equal(404);
@@ -35,7 +35,7 @@ describe('pc.Http', function () {
     it('get() retries resource and returns 404 in the end if not found', function (done) {
         sinon.spy(pc.http, 'request');
         pc.http.get('/someurl.json', {
-            retryable: true,
+            retry: true,
             maxRetries: 2
         }, function (err) {
             expect(err).to.equal(404);
@@ -47,7 +47,7 @@ describe('pc.Http', function () {
     it('get() retries resource 5 times by default', function (done) {
         sinon.spy(pc.http, 'request');
         pc.http.get('/someurl.json', {
-            retryable: true
+            retry: true
         }, function (err) {
             expect(pc.http.request.callCount).to.equal(6);
             done();
@@ -74,7 +74,7 @@ describe('pc.Http', function () {
         };
 
         pc.http.get('/someurl.json', {
-            retryable: true,
+            retry: true,
             maxRetries: 2
         }, function (err, data) {
             expect(err).to.equal(null);
