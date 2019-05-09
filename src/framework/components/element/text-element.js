@@ -230,7 +230,7 @@ Object.assign(pc, function () {
 
             var symbols = pc.string.getSymbols(text);
 
-            if (this.rtlReorder) {
+            if (false && this.rtlReorder) {
                 var rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
                 if (rtlReorderFunc) {
                     symbols = rtlReorderFunc(symbols);
@@ -482,7 +482,7 @@ Object.assign(pc, function () {
 
             var MAGIC = 32;
             var l = symbols.length;
-            var rtl = this._rtlReorder;
+            var rtl = false && this._rtlReorder;
             var _x = 0; // cursors
             var _y = 0;
             var _z = 0;
@@ -933,6 +933,26 @@ Object.assign(pc, function () {
                         this._meshInfo[i].positions[quad * 4 * 3 + 4] += voffset;
                         this._meshInfo[i].positions[quad * 4 * 3 + 7] += voffset;
                         this._meshInfo[i].positions[quad * 4 * 3 + 10] += voffset;
+                    }
+
+                    // post reorder
+                    if (this._rtlReorder) {
+                        for (quad = prevQuad; quad <= index; quad++) {
+                            var idx = quad * 4 * 3;
+
+                            // flip the entire line horizontally
+                            for (var vert = 0; vert < 4; ++vert) {
+                                this._meshInfo[i].positions[idx + vert * 3] = -(lw + this._meshInfo[i].positions[idx + vert * 3]);
+                            }
+
+                            // flip the character horizontally
+                            var tmp0 = this._meshInfo[i].positions[idx + 3];
+                            var tmp1 = this._meshInfo[i].positions[idx + 6];
+                            this._meshInfo[i].positions[idx + 3] = this._meshInfo[i].positions[idx + 0];
+                            this._meshInfo[i].positions[idx + 6] = this._meshInfo[i].positions[idx + 9];
+                            this._meshInfo[i].positions[idx + 0] = tmp0;
+                            this._meshInfo[i].positions[idx + 9] = tmp1;
+                        }
                     }
 
                     prevQuad = index + 1;
