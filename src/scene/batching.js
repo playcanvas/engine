@@ -427,7 +427,7 @@ Object.assign(pc, function () {
                 node = group._obj.sprite[s];
                 if (node.sprite && node.sprite._meshInstance) {
                     arr.push(node.sprite._meshInstance);
-                    this.scene.removeModel(node.sprite._model);
+                    node.sprite.removeModelFromLayers();
                     node.sprite._batchGroup = group;
                 }
             }
@@ -491,7 +491,9 @@ Object.assign(pc, function () {
                 batch = this.create(lists[i], groupData.dynamic, parseInt(groupId, 10));
                 if (!batch) continue;
                 for (j = 0; j < groupData.layers.length; j++) {
-                    this.scene.layers.getLayerById(groupData.layers[j]).addMeshInstances(batch.model.meshInstances);
+                    var layer = this.scene.layers.getLayerById(groupData.layers[j]);
+                    if (layer)
+                        layer.addMeshInstances(batch.model.meshInstances);
                 }
             }
         }
@@ -790,6 +792,9 @@ Object.assign(pc, function () {
                 continue;
 
             mesh = meshInstances[i].mesh;
+            if (!mesh.indexBuffer[0])
+                continue;
+
             elems = mesh.vertexBuffer.format.elements;
             numVerts = mesh.vertexBuffer.numVertices;
             vertSize = mesh.vertexBuffer.format.size;
@@ -1102,7 +1107,9 @@ Object.assign(pc, function () {
             return;
         var layers = this._batchGroups[batch.batchGroupId].layers;
         for (var i = 0; i < layers.length; i++) {
-            this.scene.layers.getLayerById(layers[i]).removeMeshInstances(batch.model.meshInstances);
+            var layer = this.scene.layers.getLayerById(layers[i]);
+            if (layer)
+                layer.removeMeshInstances(batch.model.meshInstances);
         }
         batch.model.destroy();
     };
