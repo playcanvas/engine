@@ -543,6 +543,7 @@ Object.assign(pc, function () {
 
             // Dynamic simulation data
             this.vbToSort = new Array(this.numParticles);
+            for (var iSort = 0; iSort < this.numParticles; iSort++) this.vbToSort[iSort] = [0, 0];
             this.particleDistance = new Float32Array(this.numParticles);
 
             this._gpuUpdater.randomize();
