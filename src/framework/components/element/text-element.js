@@ -230,7 +230,7 @@ Object.assign(pc, function () {
 
             var symbols = pc.string.getSymbols(text);
 
-            if (false && this.rtlReorder) {
+            if (this.rtlReorder) {
                 var rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
                 if (rtlReorderFunc) {
                     symbols = rtlReorderFunc(symbols);
@@ -482,7 +482,7 @@ Object.assign(pc, function () {
 
             var MAGIC = 32;
             var l = symbols.length;
-            var rtl = false && this._rtlReorder;
+            var rtl = this._rtlReorder;
             var _x = 0; // cursors
             var _y = 0;
             var _z = 0;
@@ -936,7 +936,7 @@ Object.assign(pc, function () {
                     }
 
                     // post reorder
-                    if (this._rtlReorder) {
+                    if (false && this._rtlReorder) {
                         for (quad = prevQuad; quad <= index; quad++) {
                             var idx = quad * 4 * 3;
 
