@@ -76,9 +76,9 @@ void main(void)
     outPos = inPos + outVel * delta;
     outAngle = inAngle + rotSpeed * delta;
 
-    bool respawn = outLife <= 0.0 || outLife >= lifetime;
-    outPos = respawn? calcSpawnPosition(rndFactor.xyz, rndFactor.x) : outPos;
-    outAngle = respawn? mix(startAngle, startAngle2, rndFactor.x) : outAngle;
-    outVel = respawn? vec3(0.0) : outVel;
+    bool respawn = inLife <= 0.0 || outLife >= lifetime;
+    outPos = respawn ? calcSpawnPosition(rndFactor.xyz, rndFactor.x) : outPos;
+    outAngle = respawn ? mix(startAngle, startAngle2, rndFactor.x) : outAngle;
+    outVel = respawn ? vec3(0.0) : outVel;
 
 
