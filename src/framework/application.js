@@ -1457,19 +1457,6 @@ Object.assign(pc, function () {
             }
         },
 
-        /**
-         * @private
-         * @function
-         * @name pc.Application#setRetryRequests
-         * @description Enables or disables retrying of failed requests when loading assets.
-         * @param {Boolean} retry Whether to enable or disable retrying of requests.
-         */
-        setRetryRequests: function (retry) {
-            for (var key in this.loader._handlers) {
-                this.loader._handlers[key].retryRequests = retry;
-            }
-        },
-
         _onVrChange: function (enabled) {
             if (enabled) {
                 if (!this.vr) {
