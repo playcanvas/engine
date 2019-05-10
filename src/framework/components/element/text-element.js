@@ -230,15 +230,6 @@ Object.assign(pc, function () {
 
             var symbols = pc.string.getSymbols(text);
 
-            if (this.rtlReorder) {
-                var rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
-                if (rtlReorderFunc) {
-                    symbols = rtlReorderFunc(symbols);
-                } else {
-                    console.warn('Element created with rtlReorder option but no rtlReorder function registered');
-                }
-            }
-
             // handle null string
             if (symbols.length === 0) {
                 symbols = [" "];
@@ -257,6 +248,27 @@ Object.assign(pc, function () {
                 symbols = symbols.map(function (v) {
                     return { char: v, tags: { } };
                 } );
+            }
+
+            // handle ordering of RTL text
+            if (this.rtlReorder) {
+                var rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
+                if (rtlReorderFunc) {
+                    // build symbols
+                    var syms = symbols.map(function (c) {
+                        return c.char;
+                    } );
+                    var mapping = rtlReorderFunc(syms);
+
+                    // reorder symbols according to syms
+                    var target = [];
+                    for (i = 0; i < symbols.length; ++i) {
+                        target.push(symbols[mapping[i]]);
+                    }
+                    symbols = target;
+                } else {
+                    console.warn('Element created with rtlReorder option but no rtlReorder function registered');
+                }
             }
 
             var charactersPerTexture = {};
@@ -482,7 +494,7 @@ Object.assign(pc, function () {
 
             var MAGIC = 32;
             var l = symbols.length;
-            var rtl = this._rtlReorder;
+            var rtl = false && this._rtlReorder;
             var _x = 0; // cursors
             var _y = 0;
             var _z = 0;
@@ -933,6 +945,26 @@ Object.assign(pc, function () {
                         this._meshInfo[i].positions[quad * 4 * 3 + 4] += voffset;
                         this._meshInfo[i].positions[quad * 4 * 3 + 7] += voffset;
                         this._meshInfo[i].positions[quad * 4 * 3 + 10] += voffset;
+                    }
+
+                    // post reorder
+                    if (this._rtlReorder) {
+                        for (quad = prevQuad; quad <= index; quad++) {
+                            var idx = quad * 4 * 3;
+
+                            // flip the entire line horizontally
+                            for (var vert = 0; vert < 4; ++vert) {
+                                this._meshInfo[i].positions[idx + vert * 3] = -(lw + this._meshInfo[i].positions[idx + vert * 3]);
+                            }
+
+                            // flip the character horizontally
+                            var tmp0 = this._meshInfo[i].positions[idx + 3];
+                            var tmp1 = this._meshInfo[i].positions[idx + 6];
+                            this._meshInfo[i].positions[idx + 3] = this._meshInfo[i].positions[idx + 0];
+                            this._meshInfo[i].positions[idx + 6] = this._meshInfo[i].positions[idx + 9];
+                            this._meshInfo[i].positions[idx + 0] = tmp0;
+                            this._meshInfo[i].positions[idx + 9] = tmp1;
+                        }
                     }
 
                     prevQuad = index + 1;
