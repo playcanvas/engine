@@ -18,7 +18,7 @@ Object.assign(pc, function () {
                 if (!err) {
                     callback(null, response);
                 } else {
-                    callback("Error requesting scene: " + url.original);
+                    callback("Error requesting scene: " + url.original + ", " + err);
                 }
 
             });
