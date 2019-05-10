@@ -251,7 +251,7 @@ Object.assign(pc, function () {
             }
 
             // handle ordering of RTL text
-            if (this.rtlReorder) {
+            if (this._rtlReorder) {
                 var rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
                 if (rtlReorderFunc) {
                     // build symbols
