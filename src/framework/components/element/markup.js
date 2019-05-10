@@ -10,6 +10,7 @@ Object.assign(pc, function () {
     };
 
     Object.assign(Scanner.prototype, {
+        // list of scanner tokens
         EOF_TOKEN: 0,
         ERROR_TOKEN: 1,
         TEXT_TOKEN: 2,
@@ -305,8 +306,9 @@ Object.assign(pc, function () {
         }
     }
 
-    // get the markup tags for the given symbol
-    function GetMarkupTags(tags, mappings, symbolIndex) {
+    // get the markup tags which apply to the given symbol. all tags overlapping the
+    // symbol must be composed into a single structure.
+    function ResolveMarkupTags(tags, mappings, symbolIndex) {
         var result = { };
         for (var index = 0; index < tags.length; ++index) {
             var tag = tags[index];
@@ -350,7 +352,7 @@ Object.assign(pc, function () {
         for (var index = 0; index < symbols_out.length; ++index) {
             result.push( {
                 char: symbols_out[index],
-                tags: GetMarkupTags(tags, mappings, index)
+                tags: ResolveMarkupTags(tags, mappings, index)
             });
         }
         return result;

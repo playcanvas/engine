@@ -935,26 +935,6 @@ Object.assign(pc, function () {
                         this._meshInfo[i].positions[quad * 4 * 3 + 10] += voffset;
                     }
 
-                    // post reorder
-                    if (false && this._rtlReorder) {
-                        for (quad = prevQuad; quad <= index; quad++) {
-                            var idx = quad * 4 * 3;
-
-                            // flip the entire line horizontally
-                            for (var vert = 0; vert < 4; ++vert) {
-                                this._meshInfo[i].positions[idx + vert * 3] = -(lw + this._meshInfo[i].positions[idx + vert * 3]);
-                            }
-
-                            // flip the character horizontally
-                            var tmp0 = this._meshInfo[i].positions[idx + 3];
-                            var tmp1 = this._meshInfo[i].positions[idx + 6];
-                            this._meshInfo[i].positions[idx + 3] = this._meshInfo[i].positions[idx + 0];
-                            this._meshInfo[i].positions[idx + 6] = this._meshInfo[i].positions[idx + 9];
-                            this._meshInfo[i].positions[idx + 0] = tmp0;
-                            this._meshInfo[i].positions[idx + 9] = tmp1;
-                        }
-                    }
-
                     prevQuad = index + 1;
                 }
 
