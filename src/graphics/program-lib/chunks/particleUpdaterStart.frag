@@ -55,6 +55,11 @@ void main(void)
     vec3 radialParams = tex1Dlod_lerp(internalTex3, vec2(nlife, 0), paramDiv);
     float radialSpeed = radialParams.x;
     float radialSpeedDiv = radialParams.y;
+
+    bool respawn = inLife <= 0.0 || outLife >= lifetime;
+    inPos = respawn ? calcSpawnPosition(rndFactor.xyz, rndFactor.x) : inPos;
+    inAngle = respawn ? mix(startAngle, startAngle2, rndFactor.x) : inAngle;
+
 #ifndef LOCAL_SPACE
     vec3 radialVel = radialSpeed * normalize(inPos - emitterPos);
 #else
@@ -73,12 +78,6 @@ void main(void)
 #else
     outVel = (localVelocity + radialVel) / emitterScale + emitterMatrixInv * velocity;
 #endif
+
     outPos = inPos + outVel * delta;
     outAngle = inAngle + rotSpeed * delta;
-
-    bool respawn = outLife <= 0.0 || outLife >= lifetime;
-    outPos = respawn? calcSpawnPosition(rndFactor.xyz, rndFactor.x) : outPos;
-    outAngle = respawn? mix(startAngle, startAngle2, rndFactor.x) : outAngle;
-    outVel = respawn? vec3(0.0) : outVel;
-
-

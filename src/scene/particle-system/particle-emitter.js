@@ -375,8 +375,12 @@ Object.assign(pc, function () {
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
 
-            this.worldBoundsNoTrail.setFromTransformedAabb(
-                this.localBounds, this.localSpace ? pc.Mat4.IDENTITY : this.node.getWorldTransform());
+            var nodeWT = this.node.getWorldTransform();
+            if (this.localSpace) {
+                this.worldBoundsNoTrail.copy(this.localBounds);
+            } else {
+                this.worldBoundsNoTrail.setFromTransformedAabb(this.localBounds, nodeWT);
+            }
 
             this.worldBoundsTrail[0].add(this.worldBoundsNoTrail);
             this.worldBoundsTrail[1].add(this.worldBoundsNoTrail);
@@ -392,7 +396,13 @@ Object.assign(pc, function () {
 
             this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
 
-            this.meshInstance.mesh.aabb = this.worldBounds;
+            if (this.localSpace) {
+                this.meshInstance.aabb.setFromTransformedAabb(this.worldBounds, nodeWT);
+                this.meshInstance.mesh.aabb.setFromTransformedAabb(this.worldBounds, nodeWT);
+            } else {
+                this.meshInstance.aabb.copy(this.worldBounds);
+                this.meshInstance.mesh.aabb.copy(this.worldBounds);
+            }
             this.meshInstance._aabbVer = 1 - this.meshInstance._aabbVer;
 
             if (this.pack8) this.calculateBoundsMad();
@@ -427,32 +437,41 @@ Object.assign(pc, function () {
             var maxR = 0;
             var maxScale = 0;
             var stepWeight = this.lifetime / this.precision;
-            var vels = [this.qVelocity, this.qVelocity2, this.qLocalVelocity, this.qLocalVelocity2];
-            var accumX = [0, 0, 0, 0];
-            var accumY = [0, 0, 0, 0];
-            var accumZ = [0, 0, 0, 0];
+            var wVels = [this.qVelocity, this.qVelocity2];
+            var lVels = [this.qLocalVelocity, this.qLocalVelocity2];
+            var accumX = [0, 0];
+            var accumY = [0, 0];
+            var accumZ = [0, 0];
             var accumR = [0, 0];
+            var accumW = [0, 0];
             var i, j;
             var index;
             var x, y, z;
             for (i = 0; i < this.precision + 1; i++) { // take extra step to prevent position glitches
                 index = Math.min(i, this.precision - 1);
-                for (j = 0; j < 4; j++) {
-                    x = vels[j][index * 3] * stepWeight + accumX[j];
-                    y = vels[j][index * 3 + 1] * stepWeight + accumY[j];
-                    z = vels[j][index * 3 + 2] * stepWeight + accumZ[j];
+                for (j = 0; j < 2; j++) {
+                    x = lVels[j][index * 3 + 0] * stepWeight + accumX[j];
+                    y = lVels[j][index * 3 + 1] * stepWeight + accumY[j];
+                    z = lVels[j][index * 3 + 2] * stepWeight + accumZ[j];
 
-                    if (minx > x) minx = x;
-                    if (miny > y) miny = y;
-                    if (minz > z) minz = z;
-                    if (maxx < x) maxx = x;
-                    if (maxy < y) maxy = y;
-                    if (maxz < z) maxz = z;
+                    minx = Math.min(x, minx);
+                    miny = Math.min(y, miny);
+                    minz = Math.min(z, minz);
+                    maxx = Math.max(x, maxx);
+                    maxy = Math.max(y, maxy);
+                    maxz = Math.max(z, maxz);
 
                     accumX[j] = x;
                     accumY[j] = y;
                     accumZ[j] = z;
                 }
+                for (j = 0; j < 2; j++) {
+                    accumW[j] += stepWeight * Math.sqrt(
+                        wVels[j][index * 3 + 0] * wVels[j][index * 3 + 0] +
+                        wVels[j][index * 3 + 1] * wVels[j][index * 3 + 1] +
+                        wVels[j][index * 3 + 2] * wVels[j][index * 3 + 2]);
+                }
+
                 accumR[0] += this.qRadialSpeed[index] * stepWeight;
                 accumR[1] += this.qRadialSpeed2[index] * stepWeight;
                 maxR = Math.max(maxR, Math.max(Math.abs(accumR[0]), Math.abs(accumR[1])));
@@ -470,12 +489,13 @@ Object.assign(pc, function () {
                 z = this.emitterRadius;
             }
 
-            bMin.x = minx - maxScale - x - maxR;
-            bMin.y = miny - maxScale - y - maxR;
-            bMin.z = minz - maxScale - z - maxR;
-            bMax.x = maxx + maxScale + x + maxR;
-            bMax.y = maxy + maxScale + y + maxR;
-            bMax.z = maxz + maxScale + z + maxR;
+            var w = Math.max(accumW[0], accumW[1]);
+            bMin.x = minx - maxScale - x - maxR - w;
+            bMin.y = miny - maxScale - y - maxR - w;
+            bMin.z = minz - maxScale - z - maxR - w;
+            bMax.x = maxx + maxScale + x + maxR + w;
+            bMax.y = maxy + maxScale + y + maxR + w;
+            bMax.z = maxz + maxScale + z + maxR + w;
             this.localBounds.setMinMax(bMin, bMax);
         },
 
@@ -530,6 +550,7 @@ Object.assign(pc, function () {
 
             // Dynamic simulation data
             this.vbToSort = new Array(this.numParticles);
+            for (var iSort = 0; iSort < this.numParticles; iSort++) this.vbToSort[iSort] = [0, 0];
             this.particleDistance = new Float32Array(this.numParticles);
 
             this._gpuUpdater.randomize();
@@ -622,7 +643,11 @@ Object.assign(pc, function () {
             this.meshInstance.updateKey(); // shouldn't be here?
             this.meshInstance.cull = true;
             this.meshInstance._noDepthDrawGl1 = true;
-            this.meshInstance.aabb = this.worldBounds;
+            if (this.localSpace) {
+                this.meshInstance.aabb.setFromTransformedAabb(this.worldBounds, this.node.getWorldTransform());
+            } else {
+                this.meshInstance.aabb.copy(this.worldBounds);
+            }
             this.meshInstance._updateAabb = false;
             this.meshInstance.visible = wasVisible;
 
