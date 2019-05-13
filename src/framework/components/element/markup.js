@@ -4,9 +4,11 @@ Object.assign(pc, function () {
     var Scanner = function (symbols) {
         this._symbols = symbols;
         this._index = 0;
+        this._last = 0;
         this._cur = (this._symbols.length > 0) ? this._symbols[0] : null;
         this._buf = [];
         this._mode = "text";
+        this._error = null;
     };
 
     Object.assign(Scanner.prototype, {
@@ -27,20 +29,42 @@ Object.assign(pc, function () {
             while (token === this.WHITESPACE_TOKEN) {
                 token = this._read();
             }
+            if (token !== this.EOF_TOKEN && token !== this.ERROR_TOKEN) {
+                this._last = this._index;
+            }
             return token;
         },
-
 
         // returns the buffer for the last returned token
         buf: function () {
             return this._buf;
         },
 
-        // returns a string describing the current context (useful when providing error messages)
-        getContext: function () {
-            if (this._index < this._symbols.length) {
-                return "#" + this._index.toString();
+        // returns the index of end of the last successful token extraction
+        last: function () {
+            return this._last;
+        },
+
+        // return the error message
+        error: function () {
+            return this._error;
+        },
+
+        // print the scanner output
+        debugPrint: function () {
+            var tokenStrings = ["EOF", "ERROR", "TEXT", "OPEN_BRACKET", "CLOSE_BRACKET", "EQUALS", "STRING", "IDENTIFIER", "WHITESPACE"];
+            var token = this.read();
+            var result = "";
+            while (true) {
+                result += (result.length > 0 ? "\n" : "") +
+                            tokenStrings[token] +
+                            " '" + this.buf().join("") + "'";
+                if (token === this.EOF_TOKEN || token === this.ERROR_TOKEN) {
+                    break;
+                }
+                token = this.read();
             }
+            return result;
         },
 
         // read the next token from the input stream and return the token
@@ -89,7 +113,8 @@ Object.assign(pc, function () {
             while (true) {
                 switch (this._cur) {
                     case null:
-                        return this.ERROR_TOKEN;     // tag block wasn't closed
+                        this._error = "unexpected end of input reading tag";
+                        return this.ERROR_TOKEN;
                     case "[":
                         this._store();
                         return this.OPEN_BRACKET_TOKEN;
@@ -110,7 +135,11 @@ Object.assign(pc, function () {
                     case "\"":
                         return this._string();
                     default:
-                        return this._isIdentifierSymbol(this._cur) ? this._identifier() : this.ERROR_TOKEN;
+                        if (!this._isIdentifierSymbol(this._cur)) {
+                            this._error = "unrecognized character";
+                            return this.ERROR_TOKEN;
+                        }
+                        return this._identifier();
                 }
             }
         },
@@ -128,6 +157,7 @@ Object.assign(pc, function () {
             while (true) {
                 switch (this._cur) {
                     case null:
+                        this._error = "unexpected end of input reading string";
                         return this.ERROR_TOKEN;
                     case "\"":
                         this._next();           // skip "
@@ -175,23 +205,25 @@ Object.assign(pc, function () {
     });
 
     // markup parser
-    var Parser = function () {
+    var Parser = function (scanner) {
+        this._scanner = scanner;
+        this._error = null;
     };
 
     Object.assign(Parser.prototype, {
-        parse: function (scanner, symbols, tags) {
+        parse: function (symbols, tags) {
             while (true) {
-                var token = scanner.read();
+                var token = this._scanner.read();
                 switch (token) {
-                    case scanner.EOF_TOKEN:
+                    case this._scanner.EOF_TOKEN:
                         return true;
-                    case scanner.ERROR_TOKEN:
+                    case this._scanner.ERROR_TOKEN:
                         return false;
-                    case scanner.TEXT_TOKEN:
-                        Array.prototype.push.apply(symbols, scanner.buf());
+                    case this._scanner.TEXT_TOKEN:
+                        Array.prototype.push.apply(symbols, this._scanner.buf());
                         break;
-                    case scanner.OPEN_BRACKET_TOKEN:
-                        if (!Parser.prototype._parseTag(scanner, symbols, tags)) {
+                    case this._scanner.OPEN_BRACKET_TOKEN:
+                        if (!this._parseTag(symbols, tags)) {
                             return false;
                         }
                         break;
@@ -202,25 +234,34 @@ Object.assign(pc, function () {
             }
         },
 
-        _parseTag: function (scanner, symbols, tags) {
+        error: function () {
+            return this._scanner.error() || this._error;
+        },
+
+        _parseTag: function (symbols, tags) {
             // first token after [ must be an identifier
-            var token = scanner.read();
-            if (token !== scanner.IDENTIFIER_TOKEN) {
+            var token = this._scanner.read();
+            if (token !== this._scanner.IDENTIFIER_TOKEN) {
+                this._error = "expected identifier";
                 return false;
             }
 
-            var name = scanner.buf().join("");
+            var name = this._scanner.buf().join("");
 
             // handle close tags
             if (name[0] === "/") {
                 for (var index = tags.length - 1; index >= 0; --index) {
                     if (name === "/" + tags[index].name && tags[index].end === null) {
                         tags[index].end = symbols.length;
-                        token = scanner.read();
-                        return token === scanner.CLOSE_BRACKET_TOKEN;
+                        token = this._scanner.read();
+                        if (token !== this._scanner.CLOSE_BRACKET_TOKEN) {
+                            this._error = "expected close bracket";
+                            return false;
+                        }
+                        return true;
                     }
                 }
-                // matching open tag not found
+                this._error = "failed to find matching tag";
                 return false;
             }
 
@@ -234,62 +275,50 @@ Object.assign(pc, function () {
             };
 
             // read optional tag value
-            token = scanner.read();
-            if (token === scanner.EQUALS_TOKEN) {
-                token = scanner.read();
-                if (token !== scanner.STRING_TOKEN) {
+            token = this._scanner.read();
+            if (token === this._scanner.EQUALS_TOKEN) {
+                token = this._scanner.read();
+                if (token !== this._scanner.STRING_TOKEN) {
+                    this._error = "expected string";
                     return false;
                 }
-                tag.value = scanner.buf().join("");
-                token = scanner.read();
+                tag.value = this._scanner.buf().join("");
+                token = this._scanner.read();
             }
 
             // read optional tag attributes
             while (true) {
                 switch (token) {
-                    case scanner.CLOSE_BRACKET_TOKEN:
+                    case this._scanner.CLOSE_BRACKET_TOKEN:
                         tags.push(tag);
                         return true;
-                    case scanner.IDENTIFIER_TOKEN:
-                        var identifier = scanner.buf().join("");
-                        token = scanner.read();
-                        if (token !== scanner.EQUALS_TOKEN) {
+                    case this._scanner.IDENTIFIER_TOKEN:
+                        var identifier = this._scanner.buf().join("");
+                        token = this._scanner.read();
+                        if (token !== this._scanner.EQUALS_TOKEN) {
+                            this._error = "expected equals";
                             return false;
                         }
-                        token = scanner.read();
-                        if (token !== scanner.STRING_TOKEN) {
+                        token = this._scanner.read();
+                        if (token !== this._scanner.STRING_TOKEN) {
+                            this._error = "expected string";
                             return false;
                         }
-                        var value = scanner.buf().join("");
+                        var value = this._scanner.buf().join("");
                         tag.attributes[identifier] = value;
                         break;
                     default:
+                        this._error = "expected close bracket or identifier";
                         return false;
                 }
-                token = scanner.read();
+                token = this._scanner.read();
             }
         }
     });
 
-    function debugPrintScanner(scanner) {
-        var tokenStrings = ["EOF", "ERROR", "TEXT", "OPEN_BRACKET", "CLOSE_BRACKET", "EQUALS", "STRING", "IDENTIFIER", "WHITESPACE"];
-        var token = scanner.read();
-        var result = "";
-        while (true) {
-            result += (result.length > 0 ? "\n" : "") +
-                        tokenStrings[token] +
-                        " '" + scanner.buf().join("") + "'";
-            if (token === scanner.EOF_TOKEN || token === scanner.ERROR_TOKEN) {
-                break;
-            }
-            token = scanner.read();
-        }
-        console.info(result);
-    }
-
     // copy the contents of source into target and map the values with the
     // provided mapping table.
-    function MapAndMerge(target, source, mappings) {
+    function mapAndMerge(target, source, mappings) {
         for (var key in source) {
             if (!source.hasOwnProperty(key)) {
                 continue;
@@ -299,7 +328,7 @@ Object.assign(pc, function () {
                 if (!target.hasOwnProperty(key)) {
                     target[key] = { };
                 }
-                MapAndMerge(target[key], source[key], mappings);
+                mapAndMerge(target[key], source[key], mappings);
             } else {
                 target[key] = mappings.hasOwnProperty(value) ? mappings[value] : value;
             }
@@ -308,7 +337,7 @@ Object.assign(pc, function () {
 
     // get the markup tags which apply to the given symbol. all tags overlapping the
     // symbol must be composed into a single structure.
-    function ResolveMarkupTags(tags, mappings, symbolIndex) {
+    function resolveMarkupTags(tags, mappings, symbolIndex) {
         var result = { };
         for (var index = 0; index < tags.length; ++index) {
             var tag = tags[index];
@@ -316,49 +345,39 @@ Object.assign(pc, function () {
                 (tag.end === null || tag.end > symbolIndex)) {
                 var tmp = { };
                 tmp[tag.name] = { value: tag.value, attributes: tag.attributes };
-                MapAndMerge(result, tmp, mappings);
+                mapAndMerge(result, tmp, mappings);
             }
         }
         return result;
     }
 
-    // evaluate the list of symbols, extract the markup tags and return a
-    // structure containing an array of symbol and tags
-    function EvaluateMarkup(symbols, mappings) {
+    // evaluate the list of symbols, extract the markup tags and return an
+    // array of symbol and tag pairs
+    function evaluateMarkup(symbols, mappings) {
         // log scanner output
-        // debugPrintScanner(new Scanner(symbols));
+        // console.info((new Scanner(symbols)).debugPrint());
 
         var scanner = new Scanner(symbols);
-        var symbols_out = [];
+        var parser = new Parser(scanner);
+        var stripped_symbols = [];
         var tags = [];
 
-        if (!Parser.prototype.parse(scanner, symbols_out, tags)) {
-            console.warn("Markup error at " + scanner.getContext());
+        if (!parser.parse(stripped_symbols, tags)) {
+            console.warn("Error evaluating markup at #" + scanner.last().toString() +
+                         " (" + parser.error() + ")");
         }
-
-        // debug print result
-        /*
-        console.info(symbols_out);
-        console.info(tags);
-        for (var index = 0; index < symbols_out.length; ++index) {
-            console.info({
-                symbol: symbols_out[index],
-                tags: GetMarkupTag(tags, index)
-            });
-        }
-        //*/
 
         var result = [];
-        for (var index = 0; index < symbols_out.length; ++index) {
+        for (var index = 0; index < stripped_symbols.length; ++index) {
             result.push( {
-                char: symbols_out[index],
-                tags: ResolveMarkupTags(tags, mappings, index)
+                char: stripped_symbols[index],
+                tags: resolveMarkupTags(tags, mappings, index)
             });
         }
         return result;
     }
 
     return {
-        EvaluateMarkup: EvaluateMarkup
+        evaluateMarkup: evaluateMarkup
     };
 }());

@@ -237,7 +237,7 @@ Object.assign(pc, function () {
 
             // extract markup
             if (this._enableMarkup) {
-                symbols = pc.EvaluateMarkup(symbols, {
+                symbols = pc.evaluateMarkup(symbols, {
                     "red": "#ff0000",
                     "green": "#00ff00",
                     "blue": "#0000ff",
@@ -258,7 +258,9 @@ Object.assign(pc, function () {
                     var syms = symbols.map(function (c) {
                         return c.char;
                     } );
-                    var mapping = rtlReorderFunc(syms);
+                    var result = rtlReorderFunc(syms);
+                    var mapping = result.mapping;
+                    this._isrtl = result.isrtl;
 
                     // reorder symbols according to mapping
                     var target = [];
@@ -948,7 +950,7 @@ Object.assign(pc, function () {
                     }
 
                     // post reorder
-                    if (this._rtlReorder) {
+                    if (this._isrtl) {
                         for (quad = prevQuad; quad <= index; quad++) {
                             var idx = quad * 4 * 3;
 
