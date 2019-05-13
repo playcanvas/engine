@@ -433,12 +433,12 @@ Object.assign(pc, function () {
         }
 
         // Particle sorting
-        // TODO: optimize
         if (emitter.sort > pc.PARTICLESORT_NONE && emitter.camera) {
             var vbStride = emitter.useMesh ? 6 : 4;
             var particleDistance = emitter.particleDistance;
             for (i = 0; i < emitter.numParticles; i++) {
-                vbToSort[i] = [i, particleDistance[Math.floor(emitter.vbCPU[i * emitter.numParticleVerts * vbStride + 3])]]; // particle id
+                vbToSort[i][0] = i;
+                vbToSort[i][1] = particleDistance[Math.floor(emitter.vbCPU[i * emitter.numParticleVerts * vbStride + 3])]; // particle id
             }
 
             emitter.vbOld.set(emitter.vbCPU);
