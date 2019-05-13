@@ -956,7 +956,7 @@ Object.assign(pc, function () {
 
                             // flip the entire line horizontally
                             for (var vert = 0; vert < 4; ++vert) {
-                                this._meshInfo[i].positions[idx + vert * 3] = -(lw + this._meshInfo[i].positions[idx + vert * 3]);
+                                this._meshInfo[i].positions[idx + vert * 3] = -(this._element.calculatedWidth + this._meshInfo[i].positions[idx + vert * 3]);
                             }
 
                             // flip the character horizontally
