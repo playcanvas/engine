@@ -260,7 +260,7 @@ Object.assign(pc, function () {
                     } );
                     var mapping = rtlReorderFunc(syms);
 
-                    // reorder symbols according to syms
+                    // reorder symbols according to mapping
                     var target = [];
                     for (i = 0; i < symbols.length; ++i) {
                         target.push(symbols[mapping[i]]);
