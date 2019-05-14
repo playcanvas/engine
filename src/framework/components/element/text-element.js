@@ -228,7 +228,9 @@ Object.assign(pc, function () {
 
             if (text === undefined) text = this._text;
 
+            var result_pack;
             var symbols = pc.string.getSymbols(text);
+            var tags = null;
 
             // handle null string
             if (symbols.length === 0) {
@@ -237,37 +239,33 @@ Object.assign(pc, function () {
 
             // extract markup
             if (this._enableMarkup) {
-                symbols = pc.evaluateMarkup(symbols, {
+                result_pack = pc.evaluateMarkup(symbols, {
                     "red": "#ff0000",
                     "green": "#00ff00",
                     "blue": "#0000ff",
                     "white": "#ffffff"
                 });
-            } else {
-                // markup processing is disabled, create empty markup structure
-                symbols = symbols.map(function (v) {
-                    return { char: v, tags: { } };
-                } );
+                symbols = result_pack.symbols;
+                tags = result_pack.tags;
             }
 
             // handle ordering of RTL text
             if (this._rtlReorder) {
                 var rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
                 if (rtlReorderFunc) {
-                    // build symbols
-                    var syms = symbols.map(function (c) {
-                        return c.char;
-                    } );
-                    var result = rtlReorderFunc(syms);
-                    var mapping = result.mapping;
-                    this._isrtl = result.isrtl;
+                    result_pack = rtlReorderFunc(symbols);
 
-                    // reorder symbols according to mapping
-                    var target = [];
-                    for (i = 0; i < symbols.length; ++i) {
-                        target.push(symbols[mapping[i]]);
+                    this._isrtl = result_pack.isrtl;
+
+                    // reorder symbols and tags according to unicode reorder mapping
+                    symbols = result_pack.mapping.map(function (v) {
+                        return symbols[v];
+                    });
+                    if (tags) {
+                        tags = result_pack.mapping.map(function (v) {
+                            return tags[v];
+                        });
                     }
-                    symbols = target;
                 } else {
                     console.warn('Element created with rtlReorder option but no rtlReorder function registered');
                 }
@@ -277,7 +275,7 @@ Object.assign(pc, function () {
 
             var char, info, map;
             for (i = 0; i < symbols.length; i++) {
-                char = symbols[i].char;
+                char = symbols[i];
                 info = this._font.data.chars[char];
                 // if char is missing use 'space' or first char in map
                 if (!info) {
@@ -416,7 +414,7 @@ Object.assign(pc, function () {
                 this._element.addModelToLayers(this._model);
             }
 
-            this._updateMeshes(symbols);
+            this._updateMeshes(symbols, tags);
         },
 
         _removeMeshInstance: function (meshInstance) {
@@ -481,7 +479,7 @@ Object.assign(pc, function () {
             }
         },
 
-        _updateMeshes: function (symbols) {
+        _updateMeshes: function (symbols, tags) {
             var json = this._font.data;
             var self = this;
 
@@ -496,15 +494,14 @@ Object.assign(pc, function () {
 
             var MAGIC = 32;
             var l = symbols.length;
-            var rtl = false && this._rtlReorder;
             var _x = 0; // cursors
             var _y = 0;
             var _z = 0;
             var _xMinusTrailingWhitespace = 0;
             var lines = 1;
             var wordStartX = 0;
-            var wordStartIndex = rtl ? l - 1 : 0;
-            var lineStartIndex = rtl ? l - 1 : 0;
+            var wordStartIndex = 0;
+            var lineStartIndex = 0;
             var numWordsThisLine = 0;
             var numCharsThisLine = 0;
             var numBreaksThisLine = 0;
@@ -519,7 +516,7 @@ Object.assign(pc, function () {
             var fontMaxY = 0;
             var scale = 1;
 
-            var char, tags, data, i, j, quad;
+            var char, data, i, j, quad;
 
             function breakLine(lineBreakIndex, lineBreakX) {
                 self._lineWidths.push(Math.abs(lineBreakX));
@@ -538,18 +535,14 @@ Object.assign(pc, function () {
                 if (numBreaksThisLine) {
                     var i = chars.length;
                     while (i-- && numBreaksThisLine > 0)  {
-                        if (LINE_BREAK_CHAR.test(chars[i].char)) {
+                        if (LINE_BREAK_CHAR.test(chars[i])) {
                             chars.splice(i, 1);
                             numBreaksThisLine--;
                         }
                     }
                 }
 
-                var substring = chars.map(function (v) {
-                    return v.char;
-                } ).join('');
-
-                self._lineContents.push(substring);
+                self._lineContents.push(chars.join(''));
 
                 _x = 0;
                 _y -= self._scaledLineHeight;
@@ -585,8 +578,8 @@ Object.assign(pc, function () {
 
                 lines = 1;
                 wordStartX = 0;
-                wordStartIndex = rtl ? l - 1 : 0;
-                lineStartIndex = rtl ? l - 1 : 0;
+                wordStartIndex = 0;
+                lineStartIndex = 0;
                 numWordsThisLine = 0;
                 numCharsThisLine = 0;
                 numBreaksThisLine = 0;
@@ -602,61 +595,11 @@ Object.assign(pc, function () {
                     this._meshInfo[i].lines = {};
                 }
 
-                // if right-to-left we need to check if there are
-                // any line breaks in the symbols array. If there are
-                // then we need to reverse the order of phrases between line breaks
-                // because we will be parsing the symbols array in the opposite order
-                // and if we do not reorder then the phrases will end up being rendered
-                // in the opposite order. This is a more efficient way of doing something like
-                // symbols.join('').split('\n').reverse().join('\n').split('');
-                if (rtl) {
-                    var newSymbols;
-                    var newIdx = 0;
-                    var lastBreakIdx = l;
-
-                    // start from the end and go backwards until we find
-                    // a line break
-                    for (i = l - 1; i >= 0; i--) {
-                        if (!LINE_BREAK_CHAR.test(symbols[i].char)) continue;
-
-                        // allocate new symbols array
-                        // now that we know it's needed
-                        if (!newSymbols) {
-                            newSymbols = new Array(l);
-                        }
-
-                        // copy the phrase from the line break up to the previous
-                        // line break
-                        for (j = i + 1; j < lastBreakIdx; j++) {
-                            newSymbols[newIdx++] = symbols[j];
-                        }
-
-                        // add the current line break to the end
-                        newSymbols[newIdx++] = symbols[i];
-
-                        // remember the line break index for the next phrase
-                        lastBreakIdx = i;
-                    }
-
-                    // if we ended up reordering stuff then copy
-                    // anything that's left from the beginning of the symbols
-                    // up to the last line break to the end
-                    if (newSymbols) {
-                        for (j = 0; j < lastBreakIdx; j++) {
-                            newSymbols[newIdx++] = symbols[j];
-                        }
-
-                        // use the new symbols array
-                        symbols = newSymbols;
-                    }
-                }
-
                 // In left-to-right mode we loop through the symbols from start to end.
                 // In right-to-left mode we loop through the symbols from end to the beginning
                 // in order to wrap lines in the correct order
-                for (i = (rtl ? l - 1 : 0); (rtl ? i >= 0 : i < l); (rtl ? i-- : i++)) {
-                    char = symbols[i].char;
-                    tags = symbols[i].tags;
+                for (i = 0; i < l; i++) {
+                    char = symbols[i];
 
                     var x = 0;
                     var y = 0;
@@ -695,8 +638,8 @@ Object.assign(pc, function () {
                         numBreaksThisLine++;
                         if (this._maxLines < 0 || lines < this._maxLines) {
                             breakLine(i, _xMinusTrailingWhitespace);
-                            wordStartIndex = rtl ? i - 1 : i + 1;
-                            lineStartIndex = rtl ? i - 1 : i + 1;
+                            wordStartIndex = i + 1;
+                            lineStartIndex = i + 1;
                         }
 
                         continue;
@@ -706,7 +649,7 @@ Object.assign(pc, function () {
 
                     var meshInfo = this._meshInfo[(data && data.map) || 0];
 
-                    var candidateLineWidth = rtl ? Math.abs(_x - this._spacing * advance) : _x + this._spacing * advance;
+                    var candidateLineWidth = _x + this._spacing * advance;
 
                     // If we've exceeded the maximum line width, move everything from the beginning of
                     // the current word onwards down onto a new line.
@@ -719,17 +662,17 @@ Object.assign(pc, function () {
                                 breakLine(i, _xMinusTrailingWhitespace);
                             } else {
                                 // Move back to the beginning of the current word.
-                                var backtrack = rtl ? Math.max(wordStartIndex - i, 0) : Math.max(i - wordStartIndex, 0);
+                                var backtrack = Math.max(i - wordStartIndex, 0);
                                 if (this._meshInfo.length <= 1) {
                                     meshInfo.lines[lines - 1] -= backtrack;
                                     meshInfo.quad -= backtrack;
                                 } else {
                                     // We should only backtrack the quads that were in the word from this same texture
                                     // We will have to update N number of mesh infos as a result (all textures used in the word in question)
-                                    var backtrackStart = rtl ? i + 1 : wordStartIndex;
-                                    var backtrackEnd = rtl ? wordStartIndex + 1 : i;
+                                    var backtrackStart = wordStartIndex;
+                                    var backtrackEnd = i;
                                     for (j = backtrackStart; j < backtrackEnd; j++) {
-                                        var backChar = symbols[j].char;
+                                        var backChar = symbols[j];
                                         var backCharData = json.chars[backChar];
                                         var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
                                         backMeshInfo.lines[lines - 1] -= 1;
@@ -737,11 +680,7 @@ Object.assign(pc, function () {
                                     }
                                 }
 
-                                if (rtl) {
-                                    i += backtrack + 1;
-                                } else {
-                                    i -= backtrack + 1;
-                                }
+                                i -= backtrack + 1;
 
                                 breakLine(wordStartIndex, wordStartX);
                                 continue;
@@ -753,10 +692,6 @@ Object.assign(pc, function () {
                     meshInfo.lines[lines - 1] = quad;
 
                     var left = _x - x;
-                    if (rtl) {
-                        left -= this._spacing * advance;
-                    }
-
                     var right = left + quadsize;
                     var bottom = _y - y;
                     var top = bottom + quadsize;
@@ -805,7 +740,7 @@ Object.assign(pc, function () {
                     }
 
                     // advance cursor (for RTL we move left)
-                    _x += rtl ? -this._spacing * advance : this._spacing * advance;
+                    _x += this._spacing * advance;
 
                     // For proper alignment handling when a line wraps _on_ a whitespace character,
                     // we need to keep track of the width of the line without any trailing whitespace
@@ -819,11 +754,7 @@ Object.assign(pc, function () {
                     if (isWordBoundary) { // char is space, tab, or dash
                         numWordsThisLine++;
                         wordStartX = _xMinusTrailingWhitespace;
-                        if (rtl) {
-                            wordStartIndex = i - 1;
-                        } else {
-                            wordStartIndex = i + 1;
-                        }
+                        wordStartIndex = i + 1;
                     }
 
                     numCharsThisLine++;
@@ -848,8 +779,8 @@ Object.assign(pc, function () {
                         this._color.g * 255,
                         this._color.b * 255
                     ];
-                    if (tags.color && tags.color.value) {
-                        var tagColor = tags.color.value;
+                    if (tags && tags[i].color && tags[i].color.value) {
+                        var tagColor = tags[i].color.value;
                         if (tagColor[0] === "#") {
                             // hex color
                             var hex = tagColor.substring(1).toLowerCase();
@@ -894,17 +825,9 @@ Object.assign(pc, function () {
                 // As we only break lines when the text becomes too wide for the container,
                 // there will almost always be some leftover text on the final line which has
                 // not yet been pushed to _lineContents.
-                if (rtl) {
-                    if (lineStartIndex >= 0) {
-                        breakLine(-1, _x);
-                    }
-                } else {
-                    if (lineStartIndex < l) {
-                        breakLine(l, _x);
-                    }
+                if (lineStartIndex < l) {
+                    breakLine(l, _x);
                 }
-
-
             }
 
             // force autoWidth / autoHeight change to update width/height of element
@@ -927,14 +850,6 @@ Object.assign(pc, function () {
                     var index = this._meshInfo[i].lines[line];
                     var lw = this._lineWidths[parseInt(line, 10)];
                     var hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw);
-
-                    if (rtl) {
-                        // for rtl we render characters from right to left going from 0 all the way to the
-                        // negative width of each line so we need to add the line width to bring the line
-                        // back to its right place
-                        hoffset += lw;
-                    }
-
                     var voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
 
                     for (quad = prevQuad; quad <= index; quad++) {

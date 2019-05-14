@@ -359,22 +359,26 @@ Object.assign(pc, function () {
 
         var scanner = new Scanner(symbols);
         var parser = new Parser(scanner);
+
         var stripped_symbols = [];
         var tags = [];
-
         if (!parser.parse(stripped_symbols, tags)) {
             console.warn("Error evaluating markup at #" + scanner.last().toString() +
                          " (" + parser.error() + ")");
         }
 
-        var result = [];
-        for (var index = 0; index < stripped_symbols.length; ++index) {
-            result.push( {
-                char: stripped_symbols[index],
-                tags: resolveMarkupTags(tags, mappings, index)
-            });
+        var resolved_tags = null;
+        if (tags.length > 0) {
+            resolved_tags = [];
+            for (var index = 0; index < stripped_symbols.length; ++index) {
+                resolved_tags.push(resolveMarkupTags(tags, mappings, index));
+            }
         }
-        return result;
+
+        return {
+            symbols: stripped_symbols,
+            tags: resolved_tags
+        };
     }
 
     return {
