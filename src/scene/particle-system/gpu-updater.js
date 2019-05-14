@@ -176,7 +176,7 @@ Object.assign(pc, function () {
                 (emitter.loop ? emitter.shaderParticleUpdateRespawn : emitter.shaderParticleUpdateNoRespawn) :
                 emitter.shaderParticleUpdateOnStop);
 
-        this.constantParticleTexOUT.setValue(texOUT);
+        // this.constantParticleTexOUT.setValue(texOUT);
 
         emitter.material.setParameter("particleTexOUT", texIN);// OUT);
         emitter.material.setParameter("particleTexIN", texOUT);// IN);
