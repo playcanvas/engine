@@ -85,16 +85,14 @@ describe("pc.TextElement", function () {
     };
 
     var registerRtlHandler = function (lineBreakChar) {
-        // splits into phrases based on lineBreakChar
-        // and reverses each character in each phrase
         app.systems.element.registerRtlReorder(function (symbols) {
-            var result = symbols
-                .join('')
-                .split(lineBreakChar || '\n')
-                .map(function (str) { return str.split('').reverse().join(''); })
-                .join(lineBreakChar || '\n')
-                .split('');
-            return result;
+            var mapping = symbols.map(function (s, i) {
+                return i;
+            });
+            return {
+                mapping: mapping,
+                isrtl: true
+            };
         });
     };
 
@@ -349,9 +347,9 @@ describe("pc.TextElement", function () {
 
         element.text = "abcde fghij klmno pqrst uvwxyz";
         assertLineContents([
-            " jihgf edcba",
-            " tsrqp onmlk",
-            "zyxwvu"
+            "abcde fghij ",
+            "klmno pqrst ",
+            "uvwxyz"
         ]);
     });
 
@@ -363,8 +361,8 @@ describe("pc.TextElement", function () {
 
         element.text = "abcdefghijklmnopqrstuvwxyz";
         assertLineContents([
-            'mlkjihgfedcba',
-            'yxwvutsrqpon',
+            'abcdefghijklm',
+            'nopqrstuvwxy',
             'z'
         ]);
     });
@@ -376,9 +374,9 @@ describe("pc.TextElement", function () {
 
         element.text = "abcdefgh ijklmnopqrstuvwxyz";
         assertLineContents([
-            ' hgfedcba',
-            'utsrqponmlkji',
-            'zyxwv'
+            'abcdefgh ',
+            'ijklmnopqrstu',
+            'vwxyz'
         ]);
     });
 
@@ -395,7 +393,7 @@ describe("pc.TextElement", function () {
             "c",
             "d",
             "e",
-            " f",
+            "f ",
             "g",
             "h",
             "i",
@@ -412,7 +410,7 @@ describe("pc.TextElement", function () {
 
         element.text = "abcdefgh        i";
         assertLineContents([
-            "        hgfedcba",
+            "abcdefgh        ",
             "i"
         ]);
     });
@@ -424,9 +422,9 @@ describe("pc.TextElement", function () {
 
         element.text = "abcde fghij-klm nopqr stuvwxyz";
         assertLineContents([
-            "-jihgf edcba",
-            " rqpon mlk",
-            "zyxwvuts"
+            "abcde fghij-",
+            "klm nopqr ",
+            "stuvwxyz"
         ]);
     });
 
@@ -438,10 +436,10 @@ describe("pc.TextElement", function () {
         element.width = 150;
         element.text = "abcde fghij-klm nopqr stuvwxyz";
         assertLineContents([
-            " edcba",
-            " mlk-jihgf",
-            " rqpon",
-            "zyxwvuts"
+            "abcde ",
+            "fghij-klm ",
+            "nopqr ",
+            "stuvwxyz"
         ]);
     });
 
@@ -452,8 +450,8 @@ describe("pc.TextElement", function () {
 
         element.text = "abcde\nfghij";
         assertLineContents([
-            "edcba",
-            "jihgf"
+            "abcde",
+            "fghij"
         ]);
     });
 
@@ -464,8 +462,8 @@ describe("pc.TextElement", function () {
 
         element.text = "abcde\rfghij";
         assertLineContents([
-            "edcba",
-            "jihgf"
+            "abcde",
+            "fghij"
         ]);
     });
 
@@ -476,11 +474,11 @@ describe("pc.TextElement", function () {
 
         element.text = "abcde\n\n\nfg\nhij";
         assertLineContents([
-            "edcba",
+            "abcde",
             "",
             "",
-            "gf",
-            "jih"
+            "fg",
+            "hij"
         ]);
     });
 
@@ -492,36 +490,36 @@ describe("pc.TextElement", function () {
         element.text = "abcde fghij klmno pqrst uvwxyz";
         // long contents
         assertLineContents([
-            "zyxwvu tsrqp onmlk jihgf edcba"
+            "abcde fghij klmno pqrst uvwxyz"
         ]);
         // multiple new lines
         element.text = "abcde\n\n\nfg\nhij";
         assertLineContents([
-            "jihgfedcba"
+            "abcdefghij"
         ]);
         // \r chars
         registerRtlHandler('\r');
         element.text = "abcde\rfghij";
         assertLineContents([
-            "jihgfedcba"
+            "abcdefghij"
         ]);
 
         registerRtlHandler('\n');
         // hyphens
         element.text = "abcde fghij-klm nopqr stuvwxyz";
         assertLineContents([
-            "zyxwvuts rqpon mlk-jihgf edcba"
+            "abcde fghij-klm nopqr stuvwxyz"
         ]);
         // whitespace at end of line
         element.text = "abcdefgh        i";
         assertLineContents([
-            "i        hgfedcba"
+            "abcdefgh        i"
         ]);
         // individual characters
         element.width = 1;
         element.text = "abcdef ghijkl";
         assertLineContents([
-            "lkjihg fedcba"
+            "abcdef ghijkl"
         ]);
     });
 
@@ -533,33 +531,33 @@ describe("pc.TextElement", function () {
         element.text = "abcde fghij klmno pqrst uvwxyz";
         // long contents
         assertLineContents([
-            ' jihgf edcba',
-            'zyxwvu tsrqp onmlk'
+            "abcde fghij ",
+            "klmno pqrst uvwxyz"
         ]);
         // multiple new lines
         element.text = "abcde\n\n\nfg\nhij";
         assertLineContents([
-            "edcba",
-            "jihgf"
+            "abcde",
+            "fghij"
         ]);
         // \r chars
         registerRtlHandler('\r');
         element.text = "abcde\rfghij";
         assertLineContents([
-            "edcba",
-            "jihgf"
+            "abcde",
+            "fghij"
         ]);
         // hyphens
         registerRtlHandler('\n');
         element.text = "abcde fghij-klm nopqr stuvwxyz";
         assertLineContents([
-            "-jihgf edcba",
-            "zyxwvuts rqpon mlk"
+            "abcde fghij-",
+            "klm nopqr stuvwxyz"
         ]);
         // whitespace at end of line
         element.text = "abcdefgh        i";
         assertLineContents([
-            "        hgfedcba",
+            "abcdefgh        ",
             "i"
         ]);
         // individual characters
@@ -567,7 +565,7 @@ describe("pc.TextElement", function () {
         element.text = "abcdef ghijkl";
         assertLineContents([
             "a",
-            "lkjihg fedcb"
+            "bcdef ghijkl"
         ]);
     });
 
