@@ -27,7 +27,9 @@ Object.assign(pc, function () {
         this._entity = element.entity;
 
         // public
-        this._text = "";
+        this._text = "";            // the original user-defined text
+        this._symbols = [];         // array of visible symbols with unicode processing and markup removed
+        this._colors = null;        // per-symbol colors. non-null only with presence per-symbol coloring
         this._i18nKey = null;
 
         this._fontAsset = new pc.LocalizedAsset(this._system.app);
@@ -65,7 +67,6 @@ Object.assign(pc, function () {
         this.width = 0;
         this.height = 0;
 
-
         // private
         this._node = new pc.GraphNode();
         this._model = new pc.Model();
@@ -85,6 +86,7 @@ Object.assign(pc, function () {
 
         this._rtlReorder = false;
         this._unicodeConverter = false;
+        this._rtl = false;              // true when the current text is RTL
 
         this._outlineColor = new pc.Color(0, 0, 0, 1);
         this._outlineColorUniform = new Float32Array(4);
@@ -144,7 +146,7 @@ Object.assign(pc, function () {
 
         _onParentResize: function (width, height) {
             if (this._noResize) return;
-            if (this._font) this._updateText(this._text);
+            if (this._font) this._updateText();
         },
 
         _onScreenChange: function (screen) {
@@ -225,42 +227,39 @@ Object.assign(pc, function () {
         _updateText: function (text) {
             var i;
             var len;
+            var result_pack;
+            var tags;
 
             if (text === undefined) text = this._text;
 
-            var result_pack;
-            var symbols = pc.string.getSymbols(text);
-            var tags = null;
+            // get the list of symbols
+            this._symbols = pc.string.getSymbols(text);
 
             // handle null string
-            if (symbols.length === 0) {
-                symbols = [" "];
+            if (this._symbols.length === 0) {
+                this._symbols = [" "];
             }
 
             // extract markup
             if (this._enableMarkup) {
-                result_pack = pc.evaluateMarkup(symbols, {
-                    "red": "#ff0000",
-                    "green": "#00ff00",
-                    "blue": "#0000ff",
-                    "white": "#ffffff"
-                });
-                symbols = result_pack.symbols;
+                result_pack = pc.evaluateMarkup(this._symbols);
+                this._symbols = result_pack.symbols;
                 tags = result_pack.tags;
             }
 
-            // handle ordering of RTL text
+            // handle LTR vs RTL ordering
             if (this._rtlReorder) {
                 var rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
                 if (rtlReorderFunc) {
-                    result_pack = rtlReorderFunc(symbols);
+                    result_pack = rtlReorderFunc(this._symbols);
 
-                    this._isrtl = result_pack.isrtl;
+                    this._rtl = result_pack.rtl;
 
                     // reorder symbols and tags according to unicode reorder mapping
-                    symbols = result_pack.mapping.map(function (v) {
-                        return symbols[v];
-                    });
+                    this._symbols = result_pack.mapping.map(function (v) {
+                        return this._symbols[v];
+                    }, this);
+
                     if (tags) {
                         tags = result_pack.mapping.map(function (v) {
                             return tags[v];
@@ -269,13 +268,64 @@ Object.assign(pc, function () {
                 } else {
                     console.warn('Element created with rtlReorder option but no rtlReorder function registered');
                 }
+            } else {
+                this._rtl = false;
+            }
+
+            // resolve color tags
+            if (tags) {
+                var fallbackColor = [
+                    this._color.r * 255,
+                    this._color.g * 255,
+                    this._color.b * 255
+                ];
+
+                // temp - color dictionary
+                var dict = {
+                    "red": "#ff0000",
+                    "green": "#00ff00",
+                    "blue": "#0000ff",
+                    "white": "#ffffff"
+                };
+
+                this._colors = [];
+                for (i = 0; i < this._symbols.length; ++i) {
+                    var tag = tags[i];
+
+                    // get markup coloring
+                    var color = null;
+
+                    if (tag.color && tag.color.value) {
+                        var c = tag.color.value;
+
+                        if (dict.hasOwnProperty(c)) {
+                            c = dict[c];
+                        }
+
+                        if (c[0] === "#") {
+                            // convert hex color
+                            var hex = c.substring(1).toLowerCase();
+                            if (/^([0-9a-f]{2}){3}$/.test(hex)) {
+                                color = [
+                                    parseInt(hex.substring(0, 2), 16),
+                                    parseInt(hex.substring(2, 4), 16),
+                                    parseInt(hex.substring(4, 6), 16)
+                                ];
+                            }
+                        }
+                    }
+                    this._colors.push(color || fallbackColor);
+                }
+            } else {
+                // no tags therefore no per-symbol colors
+                this._colors = null;
             }
 
             var charactersPerTexture = {};
 
             var char, info, map;
-            for (i = 0; i < symbols.length; i++) {
-                char = symbols[i];
+            for (i = 0; i < this._symbols.length; i++) {
+                char = this._symbols[i];
                 info = this._font.data.chars[char];
                 // if char is missing use 'space' or first char in map
                 if (!info) {
@@ -414,7 +464,7 @@ Object.assign(pc, function () {
                 this._element.addModelToLayers(this._model);
             }
 
-            this._updateMeshes(symbols, tags);
+            this._updateMeshes();
         },
 
         _removeMeshInstance: function (meshInstance) {
@@ -479,7 +529,7 @@ Object.assign(pc, function () {
             }
         },
 
-        _updateMeshes: function (symbols, tags) {
+        _updateMeshes: function () {
             var json = this._font.data;
             var self = this;
 
@@ -493,7 +543,7 @@ Object.assign(pc, function () {
             }
 
             var MAGIC = 32;
-            var l = symbols.length;
+            var l = this._symbols.length;
             var _x = 0; // cursors
             var _y = 0;
             var _z = 0;
@@ -518,7 +568,7 @@ Object.assign(pc, function () {
 
             var char, data, i, j, quad;
 
-            function breakLine(lineBreakIndex, lineBreakX) {
+            function breakLine(symbols, lineBreakIndex, lineBreakX) {
                 self._lineWidths.push(Math.abs(lineBreakX));
                 // in rtl mode lineStartIndex will usually be larger than lineBreakIndex and we will
                 // need to adjust the start / end indices when calling symbols.slice()
@@ -595,11 +645,17 @@ Object.assign(pc, function () {
                     this._meshInfo[i].lines = {};
                 }
 
+                var color = [
+                    this._color.r * 255,
+                    this._color.g * 255,
+                    this._color.b * 255
+                ];
+
                 // In left-to-right mode we loop through the symbols from start to end.
                 // In right-to-left mode we loop through the symbols from end to the beginning
                 // in order to wrap lines in the correct order
                 for (i = 0; i < l; i++) {
-                    char = symbols[i];
+                    char = this._symbols[i];
 
                     var x = 0;
                     var y = 0;
@@ -637,7 +693,7 @@ Object.assign(pc, function () {
                     if (isLineBreak) {
                         numBreaksThisLine++;
                         if (this._maxLines < 0 || lines < this._maxLines) {
-                            breakLine(i, _xMinusTrailingWhitespace);
+                            breakLine(this._symbols, i, _xMinusTrailingWhitespace);
                             wordStartIndex = i + 1;
                             lineStartIndex = i + 1;
                         }
@@ -659,7 +715,7 @@ Object.assign(pc, function () {
                             // broken onto multiple lines.
                             if (numWordsThisLine === 0) {
                                 wordStartIndex = i;
-                                breakLine(i, _xMinusTrailingWhitespace);
+                                breakLine(this._symbols, i, _xMinusTrailingWhitespace);
                             } else {
                                 // Move back to the beginning of the current word.
                                 var backtrack = Math.max(i - wordStartIndex, 0);
@@ -672,7 +728,7 @@ Object.assign(pc, function () {
                                     var backtrackStart = wordStartIndex;
                                     var backtrackEnd = i;
                                     for (j = backtrackStart; j < backtrackEnd; j++) {
-                                        var backChar = symbols[j];
+                                        var backChar = this._symbols[j];
                                         var backCharData = json.chars[backChar];
                                         var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
                                         backMeshInfo.lines[lines - 1] -= 1;
@@ -682,7 +738,7 @@ Object.assign(pc, function () {
 
                                 i -= backtrack + 1;
 
-                                breakLine(wordStartIndex, wordStartX);
+                                breakLine(this._symbols, wordStartIndex, wordStartX);
                                 continue;
                             }
                         }
@@ -773,25 +829,9 @@ Object.assign(pc, function () {
                     meshInfo.uvs[quad * 4 * 2 + 6] = uv[0];
                     meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
 
-                    // get markup coloring
-                    var color = [
-                        this._color.r * 255,
-                        this._color.g * 255,
-                        this._color.b * 255
-                    ];
-                    if (tags && tags[i].color && tags[i].color.value) {
-                        var tagColor = tags[i].color.value;
-                        if (tagColor[0] === "#") {
-                            // hex color
-                            var hex = tagColor.substring(1).toLowerCase();
-                            if (/^([0-9a-f]{2}){3}$/.test(hex)) {
-                                color = [
-                                    parseInt(hex.substring(0, 2), 16),
-                                    parseInt(hex.substring(2, 4), 16),
-                                    parseInt(hex.substring(4, 6), 16)
-                                ];
-                            }
-                        }
+                    // fetch per-symbol color if it exists
+                    if (this._colors) {
+                        color = this._colors[i];
                     }
 
                     // set per-vertex color
@@ -826,7 +866,7 @@ Object.assign(pc, function () {
                 // there will almost always be some leftover text on the final line which has
                 // not yet been pushed to _lineContents.
                 if (lineStartIndex < l) {
-                    breakLine(l, _x);
+                    breakLine(this._symbols, l, _x);
                 }
             }
 
@@ -864,8 +904,8 @@ Object.assign(pc, function () {
                         this._meshInfo[i].positions[quad * 4 * 3 + 10] += voffset;
                     }
 
-                    // post reorder
-                    if (this._isrtl) {
+                    // flip characters when rendering RTL text
+                    if (this._rtl) {
                         for (quad = prevQuad; quad <= index; quad++) {
                             var idx = quad * 4 * 3;
 
@@ -1647,6 +1687,24 @@ Object.assign(pc, function () {
             if (this.font) {
                 this._updateText();
             }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'symbols', {
+        get: function () {
+            return this._symbols;
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'colors', {
+        get: function () {
+            return this._colors;
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'rtl', {
+        get: function () {
+            return this._rtl;
         }
     });
 

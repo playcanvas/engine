@@ -57,6 +57,11 @@ describe("pc.TextElement", function () {
         expect(element.lines).to.deep.equal(expectedLineContents);
     };
 
+    var assertLineColors = function (expectedLineColors) {
+        expect(element.colors.length).to.equal(expectedLineColors.length);
+        expect(element.colors).to.deep.equal(expectedLineColors);
+    };
+
     // Creates data for a single translation as if it was a whole asset
     var createTranslation = function (locale, key, translations) {
         var messages = {};
@@ -1577,5 +1582,70 @@ describe("pc.TextElement", function () {
         expect(app.i18n.hasEvent('set:locale')).to.equal(false);
         expect(app.i18n.hasEvent('data:add')).to.equal(false);
         expect(app.i18n.hasEvent('data:remove')).to.equal(false);
+    });
+
+    it('text markup color tag', function () {
+        registerRtlHandler('\r');
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+
+        element.text = "text element [color=\"#ff0000\"]in red[/color] or not";
+        assertLineContents([
+            "text element in red or not"
+        ]);
+
+        var w = [255, 255, 255];
+        var r = [255, 0, 0];
+        assertLineColors([
+            w, w, w, w, w, w, w, w, w, w, w, w, w, r, r, r, r, r, r, w, w, w, w, w, w, w
+        ]);
+    });
+
+    it('text markup color without closing tag', function () {
+        element.fontAsset = fontAsset;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+
+        element.text = "text element [color=\"#ff0000\"]in red or not";
+        assertLineContents([
+            "text element in red or not"
+        ]);
+
+        var w = [255, 255, 255];
+        var r = [255, 0, 0];
+        assertLineColors([
+            w, w, w, w, w, w, w, w, w, w, w, w, w, r, r, r, r, r, r, r, r, r, r, r, r, r
+        ]);
+    });
+
+    it('text markup with escaping open bracket', function () {
+        element.fontAsset = fontAsset;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+
+        element.text = "text element \\[color=\"#ff0000\"]in red or not";
+        assertLineContents([
+            "text element [color=\"#ff0000\"]in red or not"
+        ]);
+
+        expect(element.colors).to.equal(null);
+    });
+
+    it('text markup with attributes', function () {
+        element.fontAsset = fontAsset;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+
+        element.text = "abcd efgh [tag attr1=\"1\" attr2=\"2\"]ijkl[/tag] mnop";
+        assertLineContents([
+            "abcd efgh ijkl mnop"
+        ]);
+
+        var w = [255, 255, 255];
+        assertLineColors([
+            w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w
+        ]);
     });
 });

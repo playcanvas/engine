@@ -318,7 +318,7 @@ Object.assign(pc, function () {
 
     // copy the contents of source into target and map the values with the
     // provided mapping table.
-    function mapAndMerge(target, source, mappings) {
+    function mapAndMerge(target, source) {
         for (var key in source) {
             if (!source.hasOwnProperty(key)) {
                 continue;
@@ -328,16 +328,16 @@ Object.assign(pc, function () {
                 if (!target.hasOwnProperty(key)) {
                     target[key] = { };
                 }
-                mapAndMerge(target[key], source[key], mappings);
+                mapAndMerge(target[key], source[key]);
             } else {
-                target[key] = mappings.hasOwnProperty(value) ? mappings[value] : value;
+                target[key] = value;
             }
         }
     }
 
     // get the markup tags which apply to the given symbol. all tags overlapping the
     // symbol must be composed into a single structure.
-    function resolveMarkupTags(tags, mappings, symbolIndex) {
+    function resolveMarkupTags(tags, symbolIndex) {
         var result = { };
         for (var index = 0; index < tags.length; ++index) {
             var tag = tags[index];
@@ -345,7 +345,7 @@ Object.assign(pc, function () {
                 (tag.end === null || tag.end > symbolIndex)) {
                 var tmp = { };
                 tmp[tag.name] = { value: tag.value, attributes: tag.attributes };
-                mapAndMerge(result, tmp, mappings);
+                mapAndMerge(result, tmp);
             }
         }
         return result;
@@ -353,7 +353,7 @@ Object.assign(pc, function () {
 
     // evaluate the list of symbols, extract the markup tags and return an
     // array of symbol and tag pairs
-    function evaluateMarkup(symbols, mappings) {
+    function evaluateMarkup(symbols) {
         // log scanner output
         // console.info((new Scanner(symbols)).debugPrint());
 
@@ -371,7 +371,7 @@ Object.assign(pc, function () {
         if (tags.length > 0) {
             resolved_tags = [];
             for (var index = 0; index < stripped_symbols.length; ++index) {
-                resolved_tags.push(resolveMarkupTags(tags, mappings, index));
+                resolved_tags.push(resolveMarkupTags(tags, index));
             }
         }
 
