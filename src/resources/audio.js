@@ -58,8 +58,11 @@ Object.assign(pc, function () {
                 callback(null, new pc.Sound(resource));
             };
 
-            var error = function (msg) {
-                msg = msg || 'Error loading audio url: ' + url.original;
+            var error = function (err) {
+                var msg = 'Error loading audio url: ' + url.original;
+                if (err) {
+                    msg += ': ' + (err.message || err);
+                }
                 console.warn(msg);
                 callback(msg);
             };

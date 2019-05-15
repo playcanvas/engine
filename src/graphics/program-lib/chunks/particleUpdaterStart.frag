@@ -61,10 +61,11 @@ void main(void)
     inAngle = respawn ? mix(startAngle, startAngle2, rndFactor.x) : inAngle;
 
 #ifndef LOCAL_SPACE
-    vec3 radialVel = radialSpeed * normalize(inPos - emitterPos);
+    vec3 radialVel = inPos - emitterPos;
 #else
-    vec3 radialVel = radialSpeed * normalize(inPos);
+    vec3 radialVel = inPos;
 #endif
+    radialVel = (dot(radialVel, radialVel) > 1.0E-8) ? radialSpeed * normalize(radialVel) : vec3(0.0);
     radialVel += (radialSpeedDiv * vec3(2.0) - vec3(1.0)) * radialSpeedDivMult * rndFactor.xyz;
 
     localVelocity +=    (localVelocityDiv * vec3(2.0) - vec3(1.0)) * localVelocityDivMult * rndFactor.xyz;

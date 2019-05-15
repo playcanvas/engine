@@ -43,7 +43,6 @@ Object.assign(pc, function () {
         this.constantRate = gd.scope.resolve("rate");
         this.constantRateDiv = gd.scope.resolve("rateDiv");
         this.constantLifetime = gd.scope.resolve("lifetime");
-        this.constantLightCube = gd.scope.resolve("lightCube[0]");
         this.constantGraphSampleSize = gd.scope.resolve("graphSampleSize");
         this.constantGraphNumSamples = gd.scope.resolve("graphNumSamples");
         this.constantInternalTex0 = gd.scope.resolve("internalTex0");
@@ -135,7 +134,7 @@ Object.assign(pc, function () {
             this.constantSpawnPosInnerRatio.setValue(extentsInnerRatioUniform);
         } else {
             this.constantSpawnBoundsSphere.setValue(emitter.emitterRadius);
-            this.constantSpawnBoundsSphereInnerRatio.setValue(emitter.emitterRadiusInner / emitter.emitterRadius);
+            this.constantSpawnBoundsSphereInnerRatio.setValue((emitter.emitterRadius === 0) ? 0 : emitter.emitterRadiusInner / emitter.emitterRadius);
         }
         this.constantInitialVelocity.setValue(emitter.initialVelocity);
 
@@ -169,17 +168,13 @@ Object.assign(pc, function () {
         texIN = emitter.beenReset ? emitter.particleTexStart : texIN;
         var texOUT = emitter.swapTex ? emitter.particleTexIN : emitter.particleTexOUT;
         this.constantParticleTexIN.setValue(texIN);
-        if (!isOnStop) {
-            pc.drawQuadWithShader(
-                device,
-                emitter.swapTex ? emitter.rtParticleTexIN : emitter.rtParticleTexOUT,
-                emitter.loop ? emitter.shaderParticleUpdateRespawn : emitter.shaderParticleUpdateNoRespawn);
-        } else {
-            pc.drawQuadWithShader(
-                device,
-                emitter.swapTex ? emitter.rtParticleTexIN : emitter.rtParticleTexOUT,
+        pc.drawQuadWithShader(
+            device,
+            emitter.swapTex ? emitter.rtParticleTexIN : emitter.rtParticleTexOUT,
+            !isOnStop ?
+                (emitter.loop ? emitter.shaderParticleUpdateRespawn : emitter.shaderParticleUpdateNoRespawn) :
                 emitter.shaderParticleUpdateOnStop);
-        }
+
         // this.constantParticleTexOUT.setValue(texOUT);
 
         emitter.material.setParameter("particleTexOUT", texIN);// OUT);
