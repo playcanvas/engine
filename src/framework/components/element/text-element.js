@@ -42,6 +42,7 @@ Object.assign(pc, function () {
         this._font = null;
 
         this._color = new pc.Color(1, 1, 1, 1);
+        this._colorUniform = new Float32Array(3);
 
         this._spacing = 1;
         this._fontSize = 32;
@@ -285,15 +286,15 @@ Object.assign(pc, function () {
                     black: "#000000",
                     gray: "#808080"
                 };
+                var paletteMap = { };
 
+                // store fallback color in the palette
                 this._colorPalette = [
                     Math.round(this._color.r * 255),
                     Math.round(this._color.g * 255),
                     Math.round(this._color.b * 255)
                 ];
                 this._colors = [];
-
-                var paletteMap = { };
                 paletteMap[this._color.toString(false).toLowerCase()] = 0;
 
                 for (i = 0; i < this._symbols.length; ++i) {
@@ -439,6 +440,17 @@ Object.assign(pc, function () {
                     }
 
                     this._setTextureParams(mi, this._font.textures[i]);
+                    if (this._colors) {
+                        // when per-vertex coloring is present, disable material emissive color
+                        this._colorUniform[0] = 1;
+                        this._colorUniform[1] = 1;
+                        this._colorUniform[2] = 1;
+                    } else {
+                        this._colorUniform[0] = this._color.r;
+                        this._colorUniform[1] = this._color.g;
+                        this._colorUniform[2] = this._color.b;
+                    }
+                    mi.setParameter("material_emissive", this._colorUniform);
                     mi.setParameter("material_opacity", this._color.a);
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
                     mi.setParameter("font_pxrange", this._getPxRange(this._font));
@@ -659,10 +671,9 @@ Object.assign(pc, function () {
                     this._meshInfo[i].lines = {};
                 }
 
+                // per-vertex color
                 var color = [
-                    Math.round(this._color.r * 255),
-                    Math.round(this._color.g * 255),
-                    Math.round(this._color.b * 255)
+                    255, 255, 255
                 ];
 
                 // In left-to-right mode we loop through the symbols from start to end.
@@ -843,12 +854,11 @@ Object.assign(pc, function () {
                     meshInfo.uvs[quad * 4 * 2 + 6] = uv[0];
                     meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
 
-                    // fetch per-symbol color if it exists
+                    // set per-vertex color
                     if (this._colors) {
                         color = this._colorPalette.slice(this._colors[i] * 3, this._colors[i] * 3 + 3);
                     }
 
-                    // set per-vertex color
                     meshInfo.colors[quad * 4 * 4 + 0] = color[0];
                     meshInfo.colors[quad * 4 * 4 + 1] = color[1];
                     meshInfo.colors[quad * 4 * 4 + 2] = color[2];
@@ -1164,9 +1174,20 @@ Object.assign(pc, function () {
             this._color.g = g;
             this._color.b = b;
 
-            // color is baked into vertices, update text
-            if (this._font) {
-                this._updateText();
+            if (this._colors) {
+                // color is baked into vertices, update text
+                if (this._font) {
+                    this._updateText();
+                }
+            } else {
+                this._colorUniform[0] = this._color.r;
+                this._colorUniform[1] = this._color.g;
+                this._colorUniform[2] = this._color.b;
+
+                for (var i = 0, len = this._model.meshInstances.length; i < len; i++) {
+                    var mi = this._model.meshInstances[i];
+                    mi.setParameter('material_emissive', this._colorUniform);
+                }
             }
         }
     });
