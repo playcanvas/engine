@@ -96,7 +96,7 @@ Object.assign(pc, function () {
                 randomPosTformed.copy( spawnMatrix.transformPoint(randomPos) );
         } else {
             randomPos.normalize();
-            var spawnBoundsSphereInnerRatio = emitter.emitterRadiusInner / emitter.emitterRadius;
+            var spawnBoundsSphereInnerRatio = (emitter.emitterRadius === 0) ? 0 : emitter.emitterRadiusInner / emitter.emitterRadius;
             var r = rW * (1.0 - spawnBoundsSphereInnerRatio) + spawnBoundsSphereInnerRatio;
             if (!emitter.localSpace)
                 randomPosTformed.copy(emitterPos).add( randomPos.scale(r * emitter.emitterRadius) );
