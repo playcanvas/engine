@@ -1,7 +1,9 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var ShaderHandler = function () {};
+    var ShaderHandler = function () {
+        this.retryRequests = false;
+    };
 
     Object.assign(ShaderHandler.prototype, {
         load: function (url, callback) {
@@ -12,7 +14,9 @@ Object.assign(pc, function () {
                 };
             }
 
-            pc.http.get(url.load, function (err, response) {
+            pc.http.get(url.load, {
+                retry: this.retryRequests
+            }, function (err, response) {
                 if (!err) {
                     callback(null, response);
                 } else {
