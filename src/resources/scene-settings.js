@@ -18,7 +18,17 @@ Object.assign(pc, function () {
                 if (!err) {
                     callback(null, response);
                 } else {
-                    callback("Error requesting scene: " + url.original + ", " + err);
+                    var errMsg = 'Error while loading scene ' + url.original;
+                    if (err.message) {
+                        errMsg += ': ' + err.message;
+                        if (err.stack) {
+                            errMsg += '\n' + err.stack;
+                        }
+                    } else {
+                        errMsg += ': ' + err;
+                    }
+
+                    callback(errMsg);
                 }
             });
         },
