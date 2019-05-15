@@ -30,7 +30,7 @@ Object.assign(pc, function () {
         this._text = "";            // the original user-defined text
         this._symbols = [];         // array of visible symbols with unicode processing and markup removed
         this._colorPalette = [];    // per-symbol color palette
-        this._colors = null;        // per-symbol color indexes. only set for text with markup.
+        this._symbolColors = null;  // per-symbol color indexes. only set for text with markup.
         this._i18nKey = null;
 
         this._fontAsset = new pc.LocalizedAsset(this._system.app);
@@ -294,7 +294,7 @@ Object.assign(pc, function () {
                     Math.round(this._color.g * 255),
                     Math.round(this._color.b * 255)
                 ];
-                this._colors = [];
+                this._symbolColors = [];
                 paletteMap[this._color.toString(false).toLowerCase()] = 0;
 
                 for (i = 0; i < this._symbols.length; ++i) {
@@ -315,9 +315,11 @@ Object.assign(pc, function () {
                             var hex = c.substring(1).toLowerCase();
 
                             if (paletteMap.hasOwnProperty(hex)) {
+                                // color is already in the palette
                                 color = paletteMap[hex];
                             } else {
                                 if (/^([0-9a-f]{2}){3}$/.test(hex)) {
+                                    // new color
                                     color = this._colorPalette.length / 3;
                                     paletteMap[hex] = color;
                                     this._colorPalette.push(parseInt(hex.substring(0, 2), 16));
@@ -328,12 +330,12 @@ Object.assign(pc, function () {
                         }
                     }
 
-                    this._colors.push(color);
+                    this._symbolColors.push(color);
                 }
             } else {
-                // no tags therefore no per-symbol colors
+                // no tags, therefore no per-symbol colors
                 this._colorPalette = [];
-                this._colors = null;
+                this._symbolColors = null;
             }
 
             var charactersPerTexture = {};
@@ -440,7 +442,7 @@ Object.assign(pc, function () {
                     }
 
                     this._setTextureParams(mi, this._font.textures[i]);
-                    if (this._colors) {
+                    if (this._symbolColors) {
                         // when per-vertex coloring is present, disable material emissive color
                         this._colorUniform[0] = 1;
                         this._colorUniform[1] = 1;
@@ -855,8 +857,8 @@ Object.assign(pc, function () {
                     meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
 
                     // set per-vertex color
-                    if (this._colors) {
-                        color = this._colorPalette.slice(this._colors[i] * 3, this._colors[i] * 3 + 3);
+                    if (this._symbolColors) {
+                        color = this._colorPalette.slice(this._symbolColors[i] * 3, this._symbolColors[i] * 3 + 3);
                     }
 
                     meshInfo.colors[quad * 4 * 4 + 0] = color[0];
@@ -1174,7 +1176,7 @@ Object.assign(pc, function () {
             this._color.g = g;
             this._color.b = b;
 
-            if (this._colors) {
+            if (this._symbolColors) {
                 // color is baked into vertices, update text
                 if (this._font) {
                     this._updateText();
@@ -1731,12 +1733,12 @@ Object.assign(pc, function () {
         }
     });
 
-    Object.defineProperty(TextElement.prototype, 'colors', {
+    Object.defineProperty(TextElement.prototype, 'symbolColors', {
         get: function () {
-            if (this._colors === null) {
+            if (this._symbolColors === null) {
                 return null;
             }
-            return this._colors.map(function (c) {
+            return this._symbolColors.map(function (c) {
                 return this._colorPalette.slice(c * 3, c * 3 + 3);
             }, this);
         }

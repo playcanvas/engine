@@ -58,8 +58,8 @@ describe("pc.TextElement", function () {
     };
 
     var assertLineColors = function (expectedLineColors) {
-        expect(element._text.colors.length).to.equal(expectedLineColors.length);
-        expect(element._text.colors).to.deep.equal(expectedLineColors);
+        expect(element._text.symbolColors.length).to.equal(expectedLineColors.length);
+        expect(element._text.symbolColors).to.deep.equal(expectedLineColors);
     };
 
     // Creates data for a single translation as if it was a whole asset
@@ -1614,7 +1614,7 @@ describe("pc.TextElement", function () {
             "text element [color=\"#ff0000\"]in red or not"
         ]);
 
-        expect(element._text.colors).to.equal(null);
+        expect(element._text.symbolColors).to.equal(null);
     });
 
     it('text markup with escaping open bracket', function () {
@@ -1627,7 +1627,7 @@ describe("pc.TextElement", function () {
             "text element [color=\"#ff0000\"]in red or not"
         ]);
 
-        expect(element._text.colors).to.equal(null);
+        expect(element._text.symbolColors).to.equal(null);
     });
 
     it('text markup with attributes', function () {
