@@ -58,8 +58,8 @@ describe("pc.TextElement", function () {
     };
 
     var assertLineColors = function (expectedLineColors) {
-        expect(element.colors.length).to.equal(expectedLineColors.length);
-        expect(element.colors).to.deep.equal(expectedLineColors);
+        expect(element._text.colors.length).to.equal(expectedLineColors.length);
+        expect(element._text.colors).to.deep.equal(expectedLineColors);
     };
 
     // Creates data for a single translation as if it was a whole asset
@@ -1592,6 +1592,7 @@ describe("pc.TextElement", function () {
         element.autoWidth = true;
 
         element.text = "text element [color=\"#ff0000\"]in red[/color] or not";
+
         assertLineContents([
             "text element in red or not"
         ]);
@@ -1610,14 +1611,10 @@ describe("pc.TextElement", function () {
 
         element.text = "text element [color=\"#ff0000\"]in red or not";
         assertLineContents([
-            "text element in red or not"
+            "text element [color=\"#ff0000\"]in red or not"
         ]);
 
-        var w = [255, 255, 255];
-        var r = [255, 0, 0];
-        assertLineColors([
-            w, w, w, w, w, w, w, w, w, w, w, w, w, r, r, r, r, r, r, r, r, r, r, r, r, r
-        ]);
+        expect(element._text.colors).to.equal(null);
     });
 
     it('text markup with escaping open bracket', function () {
@@ -1630,7 +1627,7 @@ describe("pc.TextElement", function () {
             "text element [color=\"#ff0000\"]in red or not"
         ]);
 
-        expect(element.colors).to.equal(null);
+        expect(element._text.colors).to.equal(null);
     });
 
     it('text markup with attributes', function () {

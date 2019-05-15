@@ -1536,9 +1536,6 @@ Object.assign(pc, function () {
     _define("shadowColor");
     _define("shadowOffset");
     _define("enableMarkup");
-    _define("symbols");
-    _define("colors");
-    _define("rtl");
 
     return {
         ElementComponent: ElementComponent

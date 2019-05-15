@@ -205,12 +205,24 @@ Object.assign(pc, function () {
     });
 
     // markup parser
-    var Parser = function (scanner) {
-        this._scanner = scanner;
+    var Parser = function (symbols) {
+        this._scanner = new Scanner(symbols);
         this._error = null;
     };
 
     Object.assign(Parser.prototype, {
+        // parse the incoming symbols placing resulting symbols in symbols
+        // and tags in tags
+        // tags is an array of the following structure:
+        // {
+        //     name: string;                    // tag name, for example 'color'
+        //     value: string;                   // optional tag value, for example '#ff0000'
+        //     attributes: {                    // list of attributes
+        //         key: value;                  // optional key/value pairs
+        //     }
+        //     start: int;                      // first symbol to which this tag applies
+        //     end: int;                        // last symbol to which this tag applies
+        // }
         parse: function (symbols, tags) {
             while (true) {
                 var token = this._scanner.read();
@@ -234,8 +246,10 @@ Object.assign(pc, function () {
             }
         },
 
+        // access an error message if the parser failed
         error: function () {
-            return this._scanner.error() || this._error;
+            return "Error evaluating markup at #" + this._scanner.last().toString() +
+                    " (" + (this._scanner.error() || this._error) + ")";
         },
 
         _parseTag: function (symbols, tags) {
@@ -357,16 +371,32 @@ Object.assign(pc, function () {
         // log scanner output
         // console.info((new Scanner(symbols)).debugPrint());
 
-        var scanner = new Scanner(symbols);
-        var parser = new Parser(scanner);
-
+        var parser = new Parser(symbols);
         var stripped_symbols = [];
         var tags = [];
+
         if (!parser.parse(stripped_symbols, tags)) {
-            console.warn("Error evaluating markup at #" + scanner.last().toString() +
-                         " (" + parser.error() + ")");
+            console.warn(parser.error());
+            return {
+                symbols: symbols,
+                tags: null
+            };
         }
 
+        // if any tags were not correctly closed, return failure
+        var invalidTag = tags.find(function (t) {
+            return t.end === null;
+        });
+
+        if (invalidTag) {
+            console.warn("Markup error: found unclosed tag='" + invalidTag.name + "'");
+            return {
+                symbols: symbols,
+                tags: null
+            };
+        }
+
+        // revolve tags per-character
         var resolved_tags = null;
         if (tags.length > 0) {
             resolved_tags = [];

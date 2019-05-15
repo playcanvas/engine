@@ -29,7 +29,8 @@ Object.assign(pc, function () {
         // public
         this._text = "";            // the original user-defined text
         this._symbols = [];         // array of visible symbols with unicode processing and markup removed
-        this._colors = null;        // per-symbol colors. non-null only with presence per-symbol coloring
+        this._colorPalette = [];    // per-symbol color palette
+        this._colors = null;        // per-symbol color indexes. only set for text with markup.
         this._i18nKey = null;
 
         this._fontAsset = new pc.LocalizedAsset(this._system.app);
@@ -227,7 +228,7 @@ Object.assign(pc, function () {
         _updateText: function (text) {
             var i;
             var len;
-            var result_pack;
+            var results;
             var tags;
 
             if (text === undefined) text = this._text;
@@ -242,26 +243,27 @@ Object.assign(pc, function () {
 
             // extract markup
             if (this._enableMarkup) {
-                result_pack = pc.evaluateMarkup(this._symbols);
-                this._symbols = result_pack.symbols;
-                tags = result_pack.tags;
+                results = pc.evaluateMarkup(this._symbols);
+                this._symbols = results.symbols;
+                tags = results.tags;
             }
 
             // handle LTR vs RTL ordering
             if (this._rtlReorder) {
                 var rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
                 if (rtlReorderFunc) {
-                    result_pack = rtlReorderFunc(this._symbols);
+                    results = rtlReorderFunc(this._symbols);
 
-                    this._rtl = result_pack.rtl;
+                    this._rtl = results.rtl;
 
-                    // reorder symbols and tags according to unicode reorder mapping
-                    this._symbols = result_pack.mapping.map(function (v) {
+                    // reorder symbols according to unicode reorder mapping
+                    this._symbols = results.mapping.map(function (v) {
                         return this._symbols[v];
                     }, this);
 
+                    // reorder tags if they exist, according to unicode reorder mapping
                     if (tags) {
-                        tags = result_pack.mapping.map(function (v) {
+                        tags = results.mapping.map(function (v) {
                             return tags[v];
                         });
                     }
@@ -274,50 +276,62 @@ Object.assign(pc, function () {
 
             // resolve color tags
             if (tags) {
-                var fallbackColor = [
-                    this._color.r * 255,
-                    this._color.g * 255,
-                    this._color.b * 255
-                ];
-
-                // temp - color dictionary
+                // color dictionary - temp
                 var dict = {
-                    "red": "#ff0000",
-                    "green": "#00ff00",
-                    "blue": "#0000ff",
-                    "white": "#ffffff"
+                    red: "#ff0000",
+                    green: "#00ff00",
+                    blue: "#0000ff",
+                    white: "#ffffff",
+                    black: "#000000",
+                    gray: "#808080"
                 };
 
+                this._colorPalette = [
+                    Math.round(this._color.r * 255),
+                    Math.round(this._color.g * 255),
+                    Math.round(this._color.b * 255)
+                ];
                 this._colors = [];
+
+                var paletteMap = { };
+                paletteMap[this._color.toString(false).toLowerCase()] = 0;
+
                 for (i = 0; i < this._symbols.length; ++i) {
                     var tag = tags[i];
+                    var color = 0;
 
                     // get markup coloring
-                    var color = null;
-
                     if (tag.color && tag.color.value) {
                         var c = tag.color.value;
 
+                        // resolve color dictionary names
                         if (dict.hasOwnProperty(c)) {
                             c = dict[c];
                         }
 
-                        if (c[0] === "#") {
-                            // convert hex color
+                        // convert hex color
+                        if (c.length === 7 && c[0] === "#") {
                             var hex = c.substring(1).toLowerCase();
-                            if (/^([0-9a-f]{2}){3}$/.test(hex)) {
-                                color = [
-                                    parseInt(hex.substring(0, 2), 16),
-                                    parseInt(hex.substring(2, 4), 16),
-                                    parseInt(hex.substring(4, 6), 16)
-                                ];
+
+                            if (paletteMap.hasOwnProperty(hex)) {
+                                color = paletteMap[hex];
+                            } else {
+                                if (/^([0-9a-f]{2}){3}$/.test(hex)) {
+                                    color = this._colorPalette.length / 3;
+                                    paletteMap[hex] = color;
+                                    this._colorPalette.push(parseInt(hex.substring(0, 2), 16));
+                                    this._colorPalette.push(parseInt(hex.substring(2, 4), 16));
+                                    this._colorPalette.push(parseInt(hex.substring(4, 6), 16));
+                                }
                             }
                         }
                     }
-                    this._colors.push(color || fallbackColor);
+
+                    this._colors.push(color);
                 }
             } else {
                 // no tags therefore no per-symbol colors
+                this._colorPalette = [];
                 this._colors = null;
             }
 
@@ -646,9 +660,9 @@ Object.assign(pc, function () {
                 }
 
                 var color = [
-                    this._color.r * 255,
-                    this._color.g * 255,
-                    this._color.b * 255
+                    Math.round(this._color.r * 255),
+                    Math.round(this._color.g * 255),
+                    Math.round(this._color.b * 255)
                 ];
 
                 // In left-to-right mode we loop through the symbols from start to end.
@@ -831,7 +845,7 @@ Object.assign(pc, function () {
 
                     // fetch per-symbol color if it exists
                     if (this._colors) {
-                        color = this._colors[i];
+                        color = this._colorPalette.slice(this._colors[i] * 3, this._colors[i] * 3 + 3);
                     }
 
                     // set per-vertex color
@@ -1698,7 +1712,12 @@ Object.assign(pc, function () {
 
     Object.defineProperty(TextElement.prototype, 'colors', {
         get: function () {
-            return this._colors;
+            if (this._colors === null) {
+                return null;
+            }
+            return this._colors.map(function (c) {
+                return this._colorPalette.slice(c * 3, c * 3 + 3);
+            }, this);
         }
     });
 
