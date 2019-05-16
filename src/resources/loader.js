@@ -193,6 +193,30 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @function
+         * @name pc.ResourceLoader#enableRetry
+         * @description Enables retrying of failed requests when loading assets.
+         */
+        enableRetry: function () {
+            for (var key in this._handlers) {
+                this._handlers[key].retryRequests = true;
+            }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.ResourceLoader#disableRetry
+         * @description Disables retrying of failed requests when loading assets.
+         */
+        disableRetry: function () {
+            for (var key in this._handlers) {
+                this._handlers[key].retryRequests = false;
+            }
+        },
+
+        /**
          * @function
          * @name pc.ResourceLoader#destroy
          * @description Destroys the resource loader.
