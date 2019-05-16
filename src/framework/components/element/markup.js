@@ -22,6 +22,8 @@ Object.assign(pc, function () {
         STRING_TOKEN: 6,
         IDENTIFIER_TOKEN: 7,
         WHITESPACE_TOKEN: 8,
+        WHITESPACE_CHARS: " \t\n\r\v\f",
+        IDENTIFIER_REGEX: /[A-Z|a-z|0-9|_|-|/]/,
 
         // read the next token, ignore whitespace
         read: function () {
@@ -146,7 +148,7 @@ Object.assign(pc, function () {
 
         _whitespace: function () {
             this._store();
-            while (" \t\n\r\v\f".indexOf(this._cur) !== -1) {
+            while (this.WHITESPACE_CHARS.indexOf(this._cur) !== -1) {
                 this._store();
             }
             return this.WHITESPACE_TOKEN;
@@ -179,7 +181,7 @@ Object.assign(pc, function () {
         },
 
         _isIdentifierSymbol: function (s) {
-            return s.length === 1 && (s.match(/[A-Z|a-z|0-9|_|-|/]/) !== null);
+            return s.length === 1 && (s.match(this.IDENTIFIER_REGEX) !== null);
         },
 
         _eof: function () {
@@ -330,9 +332,9 @@ Object.assign(pc, function () {
         }
     });
 
-    // copy the contents of source into target and map the values with the
-    // provided mapping table.
-    function mapAndMerge(target, source) {
+    // copy the contents of source object into target object (like a deep version
+    // of assign)
+    function merge(target, source) {
         for (var key in source) {
             if (!source.hasOwnProperty(key)) {
                 continue;
@@ -342,31 +344,128 @@ Object.assign(pc, function () {
                 if (!target.hasOwnProperty(key)) {
                     target[key] = { };
                 }
-                mapAndMerge(target[key], source[key]);
+                merge(target[key], source[key]);
             } else {
                 target[key] = value;
             }
         }
     }
 
-    // get the markup tags which apply to the given symbol. all tags overlapping the
-    // symbol must be composed into a single structure.
-    function resolveMarkupTags(tags, symbolIndex) {
+    function combineTags(tags) {
+        if (tags.length === 0) {
+            return null;
+        }
         var result = { };
         for (var index = 0; index < tags.length; ++index) {
             var tag = tags[index];
-            if (tag.start <= symbolIndex &&
-                (tag.end === null || tag.end > symbolIndex)) {
-                var tmp = { };
-                tmp[tag.name] = { value: tag.value, attributes: tag.attributes };
-                mapAndMerge(result, tmp);
-            }
+            var tmp = { };
+            tmp[tag.name] = { value: tag.value, attributes: tag.attributes };
+            merge(result, tmp);
         }
         return result;
     }
 
+    // this function performs a simple task, but tries to do so in a relatively
+    // efficient manner. given the list of tags extracted from the text and
+    // ordered by start position, it calculates for each output symbol, the
+    // resulting effective tags.
+    // to do this we must determine which tags overlap each character and merge the
+    // tags together (since tags found later in the text can override the values of
+    // tags found earlier).
+    // returns an array containing the tag structure (or null) for each symbol
+    function resolveMarkupTags(tags, numSymbols) {
+        var index;
+
+        if (tags.length === 0) {
+            return null;
+        }
+
+        // make list of tag start/end edges
+        var edges = { };
+        for (index = 0; index < tags.length; ++index) {
+            var tag = tags[index];
+            if (!edges.hasOwnProperty(tag.start)) {
+                edges[tag.start] = { open: [tag], close: null };
+            } else {
+                if (edges[tag.start].open === null) {
+                    edges[tag.start].open = [tag];
+                } else {
+                    edges[tag.start].open.push(tag);
+                }
+            }
+
+            if (!edges.hasOwnProperty(tag.end)) {
+                edges[tag.end] = { open: null, close: [tag] };
+            } else {
+                if (edges[tag.end].close === null) {
+                    edges[tag.end].close = [tag];
+                } else {
+                    edges[tag.end].close.push(tag);
+                }
+            }
+        }
+
+        // build tag instances from open/close edges
+        var tagStack = [];
+
+        function removeTags(tags) {
+            tagStack = tagStack.filter( function (tag) {
+                return tags.find(function (t) {
+                    return t === tag;
+                }) === undefined;
+            });
+        }
+
+        function addTags(tags) {
+            for (var index = 0; index < tags.length; ++index) {
+                tagStack.push(tags[index]);
+            }
+        }
+
+        var edgeKeys = Object.keys(edges).sort( function (a, b) {
+            return a - b;
+        });
+
+        var resolvedTags = [];
+        for (index = 0; index < edgeKeys.length; ++index) {
+            var edge = edges[edgeKeys[index]];
+
+            // remove close tags
+            if (edge.close !== null) {
+                removeTags(edge.close);
+            }
+
+            // add open tags
+            if (edge.open !== null) {
+                addTags(edge.open);
+            }
+
+            // store the resolved tags
+            resolvedTags.push( {
+                start: edgeKeys[index],
+                tags: combineTags(tagStack)
+            } );
+        }
+
+        // assign the resolved tags per-character
+        var result = [];
+        var prevTag = null;
+        for (index = 0; index < resolvedTags.length; ++index) {
+            var resolvedTag = resolvedTags[index];
+            while (result.length < resolvedTag.start) {
+                result.push(prevTag ? prevTag.tags : null);
+            }
+            prevTag = resolvedTag;
+        }
+        while (result.length < numSymbols) {
+            result.push(null);
+        }
+
+        return result;
+    }
+
     // evaluate the list of symbols, extract the markup tags and return an
-    // array of symbol and tag pairs
+    // array of symbols and an array of symbol tags
     function evaluateMarkup(symbols) {
         // log scanner output
         // console.info((new Scanner(symbols)).debugPrint());
@@ -397,13 +496,7 @@ Object.assign(pc, function () {
         }
 
         // revolve tags per-character
-        var resolved_tags = null;
-        if (tags.length > 0) {
-            resolved_tags = [];
-            for (var index = 0; index < stripped_symbols.length; ++index) {
-                resolved_tags.push(resolveMarkupTags(tags, index));
-            }
-        }
+        var resolved_tags = resolveMarkupTags(tags, stripped_symbols.length);
 
         return {
             symbols: stripped_symbols,
@@ -411,7 +504,13 @@ Object.assign(pc, function () {
         };
     }
 
+    var Markup = function () { };
+
+    Markup.evaluate = function (symbols) {
+        return evaluateMarkup(symbols);
+    };
+
     return {
-        evaluateMarkup: evaluateMarkup
+        Markup: Markup
     };
 }());

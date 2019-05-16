@@ -244,7 +244,7 @@ Object.assign(pc, function () {
 
             // extract markup
             if (this._enableMarkup) {
-                results = pc.evaluateMarkup(this._symbols);
+                results = pc.Markup.evaluate(this._symbols);
                 this._symbols = results.symbols;
                 tags = results.tags;
             }
@@ -277,15 +277,6 @@ Object.assign(pc, function () {
 
             // resolve color tags
             if (tags) {
-                // color dictionary - temp
-                var dict = {
-                    red: "#ff0000",
-                    green: "#00ff00",
-                    blue: "#0000ff",
-                    white: "#ffffff",
-                    black: "#000000",
-                    gray: "#808080"
-                };
                 var paletteMap = { };
 
                 // store fallback color in the palette
@@ -297,18 +288,19 @@ Object.assign(pc, function () {
                 this._symbolColors = [];
                 paletteMap[this._color.toString(false).toLowerCase()] = 0;
 
-                for (i = 0; i < this._symbols.length; ++i) {
+                for (i = 0, len = this._symbols.length; i < len; ++i) {
                     var tag = tags[i];
                     var color = 0;
 
                     // get markup coloring
-                    if (tag.color && tag.color.value) {
+                    if (tag && tag.color && tag.color.value) {
                         var c = tag.color.value;
 
                         // resolve color dictionary names
-                        if (dict.hasOwnProperty(c)) {
-                            c = dict[c];
-                        }
+                        // TODO: implement the dictionary of colors
+                        // if (colorDict.hasOwnProperty(c)) {
+                        //    c = dict[c];
+                        // }
 
                         // convert hex color
                         if (c.length === 7 && c[0] === "#") {
@@ -341,7 +333,7 @@ Object.assign(pc, function () {
             var charactersPerTexture = {};
 
             var char, info, map;
-            for (i = 0; i < this._symbols.length; i++) {
+            for (i = 0, len = this._symbols.length; i < len; i++) {
                 char = this._symbols[i];
                 info = this._font.data.chars[char];
                 // if char is missing use 'space' or first char in map
@@ -426,7 +418,14 @@ Object.assign(pc, function () {
                         meshInfo.normals[v * 4 * 3 + 11] = -1;
                     }
 
-                    var mesh = pc.createMesh(this._system.app.graphicsDevice, meshInfo.positions, { uvs: meshInfo.uvs, normals: meshInfo.normals, colors: meshInfo.colors, indices: meshInfo.indices });
+                    var mesh = pc.createMesh(this._system.app.graphicsDevice,
+                                             meshInfo.positions,
+                                             {
+                                                 uvs: meshInfo.uvs,
+                                                 normals: meshInfo.normals,
+                                                 colors: meshInfo.colors,
+                                                 indices: meshInfo.indices
+                                             });
 
                     var mi = new pc.MeshInstance(this._node, mesh, this._material);
                     mi.name = "Text Element: " + this._entity.name;
@@ -674,9 +673,9 @@ Object.assign(pc, function () {
                 }
 
                 // per-vertex color
-                var color = [
-                    255, 255, 255
-                ];
+                var color_r = 255;
+                var color_g = 255;
+                var color_b = 255;
 
                 // In left-to-right mode we loop through the symbols from start to end.
                 // In right-to-left mode we loop through the symbols from end to the beginning
@@ -858,27 +857,30 @@ Object.assign(pc, function () {
 
                     // set per-vertex color
                     if (this._symbolColors) {
-                        color = this._colorPalette.slice(this._symbolColors[i] * 3, this._symbolColors[i] * 3 + 3);
+                        var colorIdx = this._symbolColors[i] * 3;
+                        color_r = this._colorPalette[colorIdx];
+                        color_g = this._colorPalette[colorIdx + 1];
+                        color_b = this._colorPalette[colorIdx + 2];
                     }
 
-                    meshInfo.colors[quad * 4 * 4 + 0] = color[0];
-                    meshInfo.colors[quad * 4 * 4 + 1] = color[1];
-                    meshInfo.colors[quad * 4 * 4 + 2] = color[2];
+                    meshInfo.colors[quad * 4 * 4 + 0] = color_r;
+                    meshInfo.colors[quad * 4 * 4 + 1] = color_g;
+                    meshInfo.colors[quad * 4 * 4 + 2] = color_b;
                     meshInfo.colors[quad * 4 * 4 + 3] = 255;
 
-                    meshInfo.colors[quad * 4 * 4 + 4] = color[0];
-                    meshInfo.colors[quad * 4 * 4 + 5] = color[1];
-                    meshInfo.colors[quad * 4 * 4 + 6] = color[2];
+                    meshInfo.colors[quad * 4 * 4 + 4] = color_r;
+                    meshInfo.colors[quad * 4 * 4 + 5] = color_g;
+                    meshInfo.colors[quad * 4 * 4 + 6] = color_b;
                     meshInfo.colors[quad * 4 * 4 + 7] = 255;
 
-                    meshInfo.colors[quad * 4 * 4 + 8] = color[0];
-                    meshInfo.colors[quad * 4 * 4 + 9] = color[1];
-                    meshInfo.colors[quad * 4 * 4 + 10] = color[2];
+                    meshInfo.colors[quad * 4 * 4 + 8] = color_r;
+                    meshInfo.colors[quad * 4 * 4 + 9] = color_g;
+                    meshInfo.colors[quad * 4 * 4 + 10] = color_b;
                     meshInfo.colors[quad * 4 * 4 + 11] = 255;
 
-                    meshInfo.colors[quad * 4 * 4 + 12] = color[0];
-                    meshInfo.colors[quad * 4 * 4 + 13] = color[1];
-                    meshInfo.colors[quad * 4 * 4 + 14] = color[2];
+                    meshInfo.colors[quad * 4 * 4 + 12] = color_r;
+                    meshInfo.colors[quad * 4 * 4 + 13] = color_g;
+                    meshInfo.colors[quad * 4 * 4 + 14] = color_b;
                     meshInfo.colors[quad * 4 * 4 + 15] = 255;
 
                     meshInfo.quad++;
