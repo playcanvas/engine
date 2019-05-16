@@ -952,7 +952,7 @@ Object.assign(pc, function () {
                 var asset = new pc.Asset(data.name, data.type, data.file, data.data);
                 asset.id = parseInt(data.id, 10);
                 asset.preload = data.preload ? data.preload : false;
-                asset.loaded = data.type === 'script' && data.data && data.data.loadType > 0;
+                asset.loaded = data.type === 'script' && data.data && data.data.loadingType > 0;
                 // tags
                 asset.tags.add(data.tags);
                 // i18n
