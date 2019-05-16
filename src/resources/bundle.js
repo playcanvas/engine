@@ -10,6 +10,7 @@ Object.assign(pc, function () {
     var BundleHandler = function (assets) {
         this._assets = assets;
         this._worker = null;
+        this.retryRequests = false;
     };
 
     Object.assign(BundleHandler.prototype, {
@@ -24,7 +25,8 @@ Object.assign(pc, function () {
             var self = this;
 
             pc.http.get(url.load, {
-                responseType: pc.Http.ResponseType.ARRAY_BUFFER
+                responseType: pc.Http.ResponseType.ARRAY_BUFFER,
+                retry: this.retryRequests
             }, function (err, response) {
                 if (! err) {
                     try {
