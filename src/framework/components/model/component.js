@@ -12,11 +12,12 @@ Object.assign(pc, function () {
      * @property {String} type The type of the model, which can be one of the following values:
      * <ul>
      *     <li>asset: The component will render a model asset</li>
-     *     <li>box: The component will render a box</li>
-     *     <li>capsule: The component will render a capsule</li>
-     *     <li>cone: The component will render a cone</li>
-     *     <li>cylinder: The component will render a cylinder</li>
-     *     <li>sphere: The component will render a sphere</li>
+     *     <li>box: The component will render a box (1 unit in each dimension)</li>
+     *     <li>capsule: The component will render a capsule (radius 0.5, height 2)</li>
+     *     <li>cone: The component will render a cone (radius 0.5, height 1)</li>
+     *     <li>cylinder: The component will render a cylinder (radius 0.5, height 1)</li>
+     *     <li>plane: The component will render a plane (1 unit in each dimension)</li>
+     *     <li>sphere: The component will render a sphere (radius 0.5)</li>
      * </ul>
      * @property {pc.Asset} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.

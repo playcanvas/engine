@@ -27,6 +27,7 @@ Object.assign(pc, function () {
 
     var FontHandler = function (loader) {
         this._loader = loader;
+        this.retryRequests = false;
     };
 
     Object.assign(FontHandler.prototype, {
@@ -41,7 +42,9 @@ Object.assign(pc, function () {
             var self = this;
             if (pc.path.getExtension(url.original) === '.json') {
                 // load json data then load texture of same name
-                pc.http.get(url.load, function (err, response) {
+                pc.http.get(url.load, {
+                    retry: this.retryRequests
+                }, function (err, response) {
                     // update asset data
                     var data = upgradeDataSchema(response);
                     if (!err) {
