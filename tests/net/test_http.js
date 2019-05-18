@@ -1,4 +1,4 @@
-describe.only('pc.Http', function () {
+describe('pc.Http', function () {
     var retryDelay;
     var xhr;
     beforeEach(function () {
