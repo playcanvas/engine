@@ -1596,23 +1596,9 @@ Object.assign(pc, function () {
                         device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
 
                         if (camera._cullFaces) {
-                            var flipFaces = 1;
-
-                            if (material.cull > pc.CULLFACE_NONE && material.cull < pc.CULLFACE_FRONTANDBACK) {
-                                if (camera._flipFaces)
-                                    flipFaces *= -1;
-
-                                var wt = drawCall.node.worldTransform;
-                                wt.getX(worldMatX);
-                                wt.getY(worldMatY);
-                                wt.getZ(worldMatZ);
-                                worldMatX.cross(worldMatX, worldMatY);
-                                if (worldMatX.dot(worldMatZ) < 0)
-                                    flipFaces *= -1;
-                            }
-
-                            if (flipFaces < 0) {
-                                device.setCullMode(material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT);
+                            if (camera._flipFaces) {
+                                device.setCullMode(material.cull > 0 ?
+                                    (material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT) : 0);
                             } else {
                                 device.setCullMode(material.cull);
                             }
