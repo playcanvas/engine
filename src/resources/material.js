@@ -22,6 +22,7 @@ Object.assign(pc, function () {
         this._placeholderTextures = null;
 
         this._parser = new pc.JsonStandardMaterialParser();
+        this.retryRequests = false;
     };
 
     Object.assign(MaterialHandler.prototype, {
@@ -34,7 +35,9 @@ Object.assign(pc, function () {
             }
 
             // Loading from URL (engine-only)
-            pc.http.get(url.load, function (err, response) {
+            pc.http.get(url.load, {
+                retry: this.retryRequests
+            }, function (err, response) {
                 if (!err) {
                     if (callback) {
                         response._engine = true;

@@ -194,6 +194,8 @@ Object.assign(pc, function () {
             // ensure we send cookies if we load images.
             this.crossOrigin = 'anonymous';
         }
+
+        this.retryRequests = false;
     };
 
     Object.assign(TextureHandler.prototype, {
@@ -206,7 +208,6 @@ Object.assign(pc, function () {
             }
 
             var self = this;
-            var image;
 
             var urlWithoutParams = url.original.indexOf('?') >= 0 ? url.original.split('?')[0] : url.original;
 
@@ -214,7 +215,8 @@ Object.assign(pc, function () {
             if (ext === '.dds' || ext === '.ktx') {
                 var options = {
                     cache: true,
-                    responseType: "arraybuffer"
+                    responseType: "arraybuffer",
+                    retry: this.retryRequests
                 };
 
                 pc.http.get(url.load, options, function (err, response) {
@@ -225,42 +227,20 @@ Object.assign(pc, function () {
                     }
                 });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
-                image = new Image();
+                var crossOrigin;
                 // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
                 if (self.crossOrigin !== undefined && pc.ABSOLUTE_URL.test(url.original)) {
-                    image.crossOrigin = self.crossOrigin;
+                    crossOrigin = self.crossOrigin;
                 }
 
-                // Call success callback after opening Texture
-                image.onload = function () {
-                    callback(null, image);
-                };
-
-                // Call error callback with details.
-                image.onerror = function (event) {
-                    callback(pc.string.format("Error loading Texture from: '{0}'", url.original));
-                };
-
-                image.src = url.load;
+                self._loadImage(url.load, url.original, crossOrigin, callback);
             } else {
                 var blobStart = urlWithoutParams.indexOf("blob:");
                 if (blobStart >= 0) {
                     urlWithoutParams = urlWithoutParams.substr(blobStart);
                     url = urlWithoutParams;
 
-                    image = new Image();
-
-                    // Call success callback after opening Texture
-                    image.onload = function () {
-                        callback(null, image);
-                    };
-
-                    // Call error callback with details.
-                    image.onerror = function (event) {
-                        callback(pc.string.format("Error loading Texture from: '{0}'", url));
-                    };
-
-                    image.src = url;
+                    self._loadImage(url, url, null, callback);
                 } else {
                     // Unsupported texture extension
                     // Use timeout because asset events can be hooked up after load gets called in some
@@ -270,6 +250,48 @@ Object.assign(pc, function () {
                     }, 0);
                 }
             }
+        },
+
+        _loadImage: function (url, originalUrl, crossOrigin, callback) {
+            var image = new Image();
+            if (crossOrigin) {
+                image.crossOrigin = crossOrigin;
+            }
+
+            var retries = 0;
+            var maxRetries = 5;
+            var retryTimeout;
+            var retryRequests = this.retryRequests;
+
+            // Call success callback after opening Texture
+            image.onload = function () {
+                callback(null, image);
+            };
+
+            image.onerror = function () {
+                // Retry a few times before failing
+                if (retryTimeout) return;
+
+                if (retryRequests && ++retries <= maxRetries) {
+                    var retryDelay = Math.pow(2, retries) * 100;
+                    console.log(pc.string.format("Error loading Texture from: '{0}' - Retrying in {1}ms...", originalUrl, retryDelay));
+
+                    var idx = url.indexOf('?');
+                    var separator = idx >= 0 ? '&' : '?';
+
+                    retryTimeout = setTimeout(function () {
+                        // we need to add a cache busting argument if we are trying to re-load an image element
+                        // with the same URL
+                        image.src = url + separator + 'retry=' + Date.now();
+                        retryTimeout = null;
+                    }, retryDelay);
+                } else {
+                    // Call error callback with details.
+                    callback(pc.string.format("Error loading Texture from: '{0}'", originalUrl));
+                }
+            };
+
+            image.src = url;
         },
 
         open: function (url, data) {

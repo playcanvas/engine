@@ -43,7 +43,6 @@ Object.assign(pc, function () {
         this.constantRate = gd.scope.resolve("rate");
         this.constantRateDiv = gd.scope.resolve("rateDiv");
         this.constantLifetime = gd.scope.resolve("lifetime");
-        this.constantLightCube = gd.scope.resolve("lightCube[0]");
         this.constantGraphSampleSize = gd.scope.resolve("graphSampleSize");
         this.constantGraphNumSamples = gd.scope.resolve("graphNumSamples");
         this.constantInternalTex0 = gd.scope.resolve("internalTex0");

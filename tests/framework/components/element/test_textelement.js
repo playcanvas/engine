@@ -57,6 +57,11 @@ describe("pc.TextElement", function () {
         expect(element.lines).to.deep.equal(expectedLineContents);
     };
 
+    var assertLineColors = function (expectedLineColors) {
+        expect(element._text.symbolColors.length).to.equal(expectedLineColors.length);
+        expect(element._text.symbolColors).to.deep.equal(expectedLineColors);
+    };
+
     // Creates data for a single translation as if it was a whole asset
     var createTranslation = function (locale, key, translations) {
         var messages = {};
@@ -85,16 +90,14 @@ describe("pc.TextElement", function () {
     };
 
     var registerRtlHandler = function (lineBreakChar) {
-        // splits into phrases based on lineBreakChar
-        // and reverses each character in each phrase
         app.systems.element.registerRtlReorder(function (symbols) {
-            var result = symbols
-                .join('')
-                .split(lineBreakChar || '\n')
-                .map(function (str) { return str.split('').reverse().join(''); })
-                .join(lineBreakChar || '\n')
-                .split('');
-            return result;
+            var mapping = symbols.map(function (s, i) {
+                return i;
+            });
+            return {
+                mapping: mapping,
+                isrtl: true
+            };
         });
     };
 
@@ -349,9 +352,9 @@ describe("pc.TextElement", function () {
 
         element.text = "abcde fghij klmno pqrst uvwxyz";
         assertLineContents([
-            " jihgf edcba",
-            " tsrqp onmlk",
-            "zyxwvu"
+            "abcde fghij ",
+            "klmno pqrst ",
+            "uvwxyz"
         ]);
     });
 
@@ -363,8 +366,8 @@ describe("pc.TextElement", function () {
 
         element.text = "abcdefghijklmnopqrstuvwxyz";
         assertLineContents([
-            'mlkjihgfedcba',
-            'yxwvutsrqpon',
+            'abcdefghijklm',
+            'nopqrstuvwxy',
             'z'
         ]);
     });
@@ -376,9 +379,9 @@ describe("pc.TextElement", function () {
 
         element.text = "abcdefgh ijklmnopqrstuvwxyz";
         assertLineContents([
-            ' hgfedcba',
-            'utsrqponmlkji',
-            'zyxwv'
+            'abcdefgh ',
+            'ijklmnopqrstu',
+            'vwxyz'
         ]);
     });
 
@@ -395,7 +398,7 @@ describe("pc.TextElement", function () {
             "c",
             "d",
             "e",
-            " f",
+            "f ",
             "g",
             "h",
             "i",
@@ -412,7 +415,7 @@ describe("pc.TextElement", function () {
 
         element.text = "abcdefgh        i";
         assertLineContents([
-            "        hgfedcba",
+            "abcdefgh        ",
             "i"
         ]);
     });
@@ -424,9 +427,9 @@ describe("pc.TextElement", function () {
 
         element.text = "abcde fghij-klm nopqr stuvwxyz";
         assertLineContents([
-            "-jihgf edcba",
-            " rqpon mlk",
-            "zyxwvuts"
+            "abcde fghij-",
+            "klm nopqr ",
+            "stuvwxyz"
         ]);
     });
 
@@ -438,10 +441,10 @@ describe("pc.TextElement", function () {
         element.width = 150;
         element.text = "abcde fghij-klm nopqr stuvwxyz";
         assertLineContents([
-            " edcba",
-            " mlk-jihgf",
-            " rqpon",
-            "zyxwvuts"
+            "abcde ",
+            "fghij-klm ",
+            "nopqr ",
+            "stuvwxyz"
         ]);
     });
 
@@ -452,8 +455,8 @@ describe("pc.TextElement", function () {
 
         element.text = "abcde\nfghij";
         assertLineContents([
-            "edcba",
-            "jihgf"
+            "abcde",
+            "fghij"
         ]);
     });
 
@@ -464,8 +467,8 @@ describe("pc.TextElement", function () {
 
         element.text = "abcde\rfghij";
         assertLineContents([
-            "edcba",
-            "jihgf"
+            "abcde",
+            "fghij"
         ]);
     });
 
@@ -476,11 +479,11 @@ describe("pc.TextElement", function () {
 
         element.text = "abcde\n\n\nfg\nhij";
         assertLineContents([
-            "edcba",
+            "abcde",
             "",
             "",
-            "gf",
-            "jih"
+            "fg",
+            "hij"
         ]);
     });
 
@@ -492,36 +495,36 @@ describe("pc.TextElement", function () {
         element.text = "abcde fghij klmno pqrst uvwxyz";
         // long contents
         assertLineContents([
-            "zyxwvu tsrqp onmlk jihgf edcba"
+            "abcde fghij klmno pqrst uvwxyz"
         ]);
         // multiple new lines
         element.text = "abcde\n\n\nfg\nhij";
         assertLineContents([
-            "jihgfedcba"
+            "abcdefghij"
         ]);
         // \r chars
         registerRtlHandler('\r');
         element.text = "abcde\rfghij";
         assertLineContents([
-            "jihgfedcba"
+            "abcdefghij"
         ]);
 
         registerRtlHandler('\n');
         // hyphens
         element.text = "abcde fghij-klm nopqr stuvwxyz";
         assertLineContents([
-            "zyxwvuts rqpon mlk-jihgf edcba"
+            "abcde fghij-klm nopqr stuvwxyz"
         ]);
         // whitespace at end of line
         element.text = "abcdefgh        i";
         assertLineContents([
-            "i        hgfedcba"
+            "abcdefgh        i"
         ]);
         // individual characters
         element.width = 1;
         element.text = "abcdef ghijkl";
         assertLineContents([
-            "lkjihg fedcba"
+            "abcdef ghijkl"
         ]);
     });
 
@@ -533,33 +536,33 @@ describe("pc.TextElement", function () {
         element.text = "abcde fghij klmno pqrst uvwxyz";
         // long contents
         assertLineContents([
-            ' jihgf edcba',
-            'zyxwvu tsrqp onmlk'
+            "abcde fghij ",
+            "klmno pqrst uvwxyz"
         ]);
         // multiple new lines
         element.text = "abcde\n\n\nfg\nhij";
         assertLineContents([
-            "edcba",
-            "jihgf"
+            "abcde",
+            "fghij"
         ]);
         // \r chars
         registerRtlHandler('\r');
         element.text = "abcde\rfghij";
         assertLineContents([
-            "edcba",
-            "jihgf"
+            "abcde",
+            "fghij"
         ]);
         // hyphens
         registerRtlHandler('\n');
         element.text = "abcde fghij-klm nopqr stuvwxyz";
         assertLineContents([
-            "-jihgf edcba",
-            "zyxwvuts rqpon mlk"
+            "abcde fghij-",
+            "klm nopqr stuvwxyz"
         ]);
         // whitespace at end of line
         element.text = "abcdefgh        i";
         assertLineContents([
-            "        hgfedcba",
+            "abcdefgh        ",
             "i"
         ]);
         // individual characters
@@ -567,7 +570,7 @@ describe("pc.TextElement", function () {
         element.text = "abcdef ghijkl";
         assertLineContents([
             "a",
-            "lkjihg fedcb"
+            "bcdef ghijkl"
         ]);
     });
 
@@ -1579,5 +1582,67 @@ describe("pc.TextElement", function () {
         expect(app.i18n.hasEvent('set:locale')).to.equal(false);
         expect(app.i18n.hasEvent('data:add')).to.equal(false);
         expect(app.i18n.hasEvent('data:remove')).to.equal(false);
+    });
+
+    it('text markup color tag', function () {
+        registerRtlHandler('\r');
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+
+        element.text = "text element [color=\"#ff0000\"]in red[/color] or not";
+
+        assertLineContents([
+            "text element in red or not"
+        ]);
+
+        var w = [255, 255, 255];
+        var r = [255, 0, 0];
+        assertLineColors([
+            w, w, w, w, w, w, w, w, w, w, w, w, w, r, r, r, r, r, r, w, w, w, w, w, w, w
+        ]);
+    });
+
+    it('text markup color without closing tag', function () {
+        element.fontAsset = fontAsset;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+
+        element.text = "text element [color=\"#ff0000\"]in red or not";
+        assertLineContents([
+            "text element [color=\"#ff0000\"]in red or not"
+        ]);
+
+        expect(element._text.symbolColors).to.equal(null);
+    });
+
+    it('text markup with escaping open bracket', function () {
+        element.fontAsset = fontAsset;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+
+        element.text = "text element \\[color=\"#ff0000\"]in red or not";
+        assertLineContents([
+            "text element [color=\"#ff0000\"]in red or not"
+        ]);
+
+        expect(element._text.symbolColors).to.equal(null);
+    });
+
+    it('text markup with attributes', function () {
+        element.fontAsset = fontAsset;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+
+        element.text = "abcd efgh [tag attr1=\"1\" attr2=\"2\"]ijkl[/tag] mnop";
+        assertLineContents([
+            "abcd efgh ijkl mnop"
+        ]);
+
+        var w = [255, 255, 255];
+        assertLineColors([
+            w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w
+        ]);
     });
 });

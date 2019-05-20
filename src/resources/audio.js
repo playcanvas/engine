@@ -23,6 +23,7 @@ Object.assign(pc, function () {
 
     var AudioHandler = function (manager) {
         this.manager = manager;
+        this.retryRequests = false;
     };
 
     Object.assign(AudioHandler.prototype, {
@@ -103,7 +104,10 @@ Object.assign(pc, function () {
             }
 
             // if this is a blob URL we need to set the response type to arraybuffer
-            var options = {};
+            var options = {
+                retry: this.retryRequests
+            };
+
             if (url.startsWith('blob:')) {
                 options.responseType = pc.Http.ResponseType.ARRAY_BUFFER;
             }
