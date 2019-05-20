@@ -18,7 +18,7 @@ Object.assign(pc, function () {
                 if (!err) {
                     callback(null, response);
                 } else {
-                    var errMsg = 'Error while loading scene ' + url.original;
+                    var errMsg = 'Error while loading scene settings ' + url.original;
                     if (err.message) {
                         errMsg += ': ' + err.message;
                         if (err.stack) {
