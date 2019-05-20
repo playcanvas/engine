@@ -46,6 +46,10 @@ Object.assign(pc, function () {
     var viewProjMatL = new pc.Mat4();
     var viewProjMatR = new pc.Mat4();
 
+    var worldMatX = new pc.Vec3();
+    var worldMatY = new pc.Vec3();
+    var worldMatZ = new pc.Vec3();
+
     var frustumDiagonal = new pc.Vec3();
     var tempSphere = { center: null, radius: 0 };
     var meshPos;
@@ -1590,10 +1594,25 @@ Object.assign(pc, function () {
                             }
                         }
                         device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
+
                         if (camera._cullFaces) {
-                            if (camera._flipFaces) {
-                                device.setCullMode(material.cull > 0 ?
-                                    (material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT) : 0);
+                            var flipFaces = 1;
+
+                            if (material.cull > pc.CULLFACE_NONE && material.cull < pc.CULLFACE_FRONTANDBACK) {
+                                if (camera._flipFaces)
+                                    flipFaces *= -1;
+
+                                var wt = drawCall.node.worldTransform;
+                                wt.getX(worldMatX);
+                                wt.getY(worldMatY);
+                                wt.getZ(worldMatZ);
+                                worldMatX.cross(worldMatX, worldMatY);
+                                if (worldMatX.dot(worldMatZ) < 0)
+                                    flipFaces *= -1;
+                            }
+
+                            if (flipFaces < 0) {
+                                device.setCullMode(material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT);
                             } else {
                                 device.setCullMode(material.cull);
                             }
