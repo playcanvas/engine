@@ -29,7 +29,7 @@ Object.assign(pc, function () {
             callback(entity, i, guid);
         }
     };
-    
+
     return {
         Template: Template
     };
