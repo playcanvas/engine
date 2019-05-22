@@ -3,53 +3,60 @@ Object.assign(pc, function () {
 
     var SceneParser = function (app) {
         this._app = app;
+        this.entities = {};
+        this.parent = null;
     };
 
     Object.assign(SceneParser.prototype, {
         parse: function (data) {
-            var entities = {};
-            var id, i;
-            var parent = null;
+            this._createAllEntities(data);
 
-            // instantiate entities
-            for (id in data.entities) {
-                var entity = this._createEntity(data.entities[id]);
-                if (entity) {
-                    entities[id] = entity;
-                    if (data.entities[id].parent === null) {
-                        parent = entity;
-                    }
-                }
+            for (var id in data.entities) {
+                this._addChildren(id, data.entities[id].children);
             }
 
-            // put entities into hierarchy
-            for (id in data.entities) {
-                var l = data.entities[id].children.length;
-                for (i = 0; i < l; i++) {
-                    // pop resource id off the end of the array
-                    var resource_id = data.entities[id].children[i];
-                    if (entities[resource_id]) {
-                        // push entity on the front of the array
-                        entities[id].addChild(entities[resource_id]);
-                    }
-                }
-            }
+            this._openComponentData(this.parent, data.entities);
 
-            this._openComponentData(parent, data.entities);
-
-            return parent;
+            return this.parent;
         },
 
-        _createEntity: function (data) {
-            if (data.collapsed_template) { // todo: rename the flag to collapsed_template_in_asset
-                data = pc.TemplateUtils.expandEntity(this._app, data);
+        _createAllEntities: function(data) {
+            var ids = Object.keys(data.entities);
 
-            } else if (data.collapsed_template_in_scene) {
-                new pc.AsyncTemplateLoad(this._app, data).run();
+            for (var i = 0; i < ids.length; i++) {
+                var id = ids[i];
+
+                var entity = this._handleEntityJson(id, data);
+
+                if (entity) {
+                    this.entities[id] = entity;
+
+                    if (data.entities[id].parent === null) {
+                        this.parent = entity;
+                    }
+                }
+            }
+        },
+
+        _handleEntityJson: function(id, data) {
+            var h = data.entities[id];
+
+            if (h.collapsed_template_in_scene) {
+                delete data.entities[id];
+
+                new pc.AsyncTemplateLoad(this._app, h).run();
 
                 return null;
             }
 
+            if (h.collapsed_template) {// todo: rename the flag to collapsed_template_in_asset
+                data.entities[id] = pc.TemplateUtils.expandEntity(this._app, h);
+            }
+
+            return this._createEntity(data.entities[id]);
+        },
+
+        _createEntity: function (data) {
             var entity = new pc.Entity();
 
             var p = data.position;
@@ -78,6 +85,16 @@ Object.assign(pc, function () {
             }
 
             return entity;
+        },
+
+        _addChildren: function(id, children) {
+            for (var i = 0; i < children.length; i++) {
+                var chId = children[i];
+
+                if (this.entities[chId]) {
+                    this.entities[id].addChild(this.entities[chId]);
+                }
+            }
         },
 
         _openComponentData: function (entity, entities) {

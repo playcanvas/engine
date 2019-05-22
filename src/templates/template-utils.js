@@ -30,15 +30,15 @@ Object.assign(pc, function () {
 
             var templId = Object.keys(h.entities)[0];
 
-            Object.assign(data, h.entities[templId]);
+            var result = Object.assign({}, data, h.entities[templId]);
 
-            data.resource_id = instId;
+            result.resource_id = instId;
 
-            data.parent = parent;
+            result.parent = parent;
 
-            data.collapsed_template = false;
+            result.collapsed_template = false;
 
-            return data;
+            return result;
         }
     };
 
