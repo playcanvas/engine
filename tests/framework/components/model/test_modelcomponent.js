@@ -282,6 +282,75 @@ describe("pc.ModelComponent", function () {
         });
     });
 
+    it("Materials applied when added later", function (done) {
+        var boxAsset = new pc.Asset("Box", "model", {
+            url: "base/tests/test-assets/box/box.json"
+        });
+
+        var materialAsset = new pc.Asset("Box Material", "material",  {
+            url: "base/tests/test-assets/box/1/Box Material.json"
+        });
+
+        app.assets.add(boxAsset);
+        app.assets.load(boxAsset);
+
+        boxAsset.on("load", function () {
+            var e = new pc.Entity();
+            e.addComponent('model', {
+                asset: boxAsset
+            });
+            app.root.addChild(e);
+            e.model.materialAsset = materialAsset;
+
+            expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.true;
+
+            materialAsset.on('load', function () {
+                // do checks after the 'load' handler on the asset has been executed
+                // by other engine event handlers
+                setTimeout(function () {
+                    expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.false;
+                    expect(e.model.material).to.not.be.null;
+                    expect(e.model.material).to.equal(materialAsset.resource);
+                    done();
+                });
+            });
+
+            app.assets.add(materialAsset);
+        });
+    });
+
+    it("Material add events unbound on destroy", function (done) {
+        var boxAsset = new pc.Asset("Box", "model", {
+            url: "base/tests/test-assets/box/box.json"
+        });
+
+        var materialAsset = new pc.Asset("Box Material", "material",  {
+            url: "base/tests/test-assets/box/1/Box Material.json"
+        });
+
+        app.assets.add(boxAsset);
+        app.assets.load(boxAsset);
+
+        boxAsset.on("load", function () {
+            var e = new pc.Entity();
+            e.addComponent('model', {
+                asset: boxAsset
+            });
+            app.root.addChild(e);
+            e.model.materialAsset = materialAsset;
+
+            expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.true;
+
+            e.destroy();
+
+            expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.false;
+
+            done();
+
+            app.assets.add(materialAsset);
+        });
+    });
+
     it("Layers are initialized before model is set", function () {
         var e = new pc.Entity();
         e.addComponent("model", {
