@@ -13,9 +13,12 @@ Object.assign(pc, function () {
 
             // instantiate entities
             for (id in data.entities) {
-                entities[id] = this._createEntity(data.entities[id]);
-                if (data.entities[id].parent === null) {
-                    parent = entities[id];
+                var entity = this._createEntity(data.entities[id]);
+                if (entity) {
+                    entities[id] = entity;
+                    if (data.entities[id].parent === null) {
+                        parent = entity;
+                    }
                 }
             }
 
@@ -44,7 +47,7 @@ Object.assign(pc, function () {
             } else if (data.collapsed_template_in_scene) {
                 new pc.AsyncTemplateLoad(this._app, data).run();
 
-                return;
+                return null;
             }
 
             var entity = new pc.Entity();
