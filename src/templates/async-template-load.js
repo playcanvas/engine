@@ -26,7 +26,7 @@ Object.assign(pc, function () {
 
     AsyncTemplateLoad.prototype._expandAll = function () {
         for (var guid in this._entities) {
-            this._expanded[guid] = pc.Template.expand_entity(
+            this._expanded[guid] = pc.TemplateUtils.expandEntity(
                 this._app, this._entities[guid]);
         }
     };

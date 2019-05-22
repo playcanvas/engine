@@ -29,31 +29,7 @@ Object.assign(pc, function () {
             callback(entity, i, guid);
         }
     };
-
-    Template.expand_entity = function (app, data) {
-        var template = app.assets.get(data.template_id);
-
-        // todo: replace this with an actual traversal-based tree-copy
-
-        var h = JSON.parse(JSON.stringify(template.resource.origJson));
-
-        var instId = data.resource_id;
-
-        var parent = data.parent;
-
-        var templId = Object.keys(h.entities)[0];
-
-        Object.assign(data, h.entities[templId]);
-
-        data.resource_id = instId;
-
-        data.parent = parent;
-
-        data.collapsed_template = false;
-
-        return data;
-    };
-
+    
     return {
         Template: Template
     };
