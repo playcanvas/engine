@@ -62,7 +62,6 @@ describe("pc.ModelComponent", function () {
         expect(e.model.lightmapSizeMultiplier).to.equal(1);
         expect(e.model.isStatic).to.equal(false);
         expect(e.model.model).to.equal(null);
-        // expect(e.model.material).to.equal(app.systems.model.defaultMaterial);
         expect(e.model.mapping).to.be.empty;
         expect(e.model.layers).to.contain(pc.LAYERID_WORLD);
         expect(e.model.batchGroupId).to.equal(-1);
