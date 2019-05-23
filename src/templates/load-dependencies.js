@@ -27,6 +27,8 @@ Object.assign(pc, function () {
         } else if (!asset.resource) {
             this._app.assets.on('load:' + id, this._onAssetLoad.bind(this));
 
+            this._app.assets.load(asset);
+
             this._numNeeded++;
         }
     };
