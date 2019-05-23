@@ -5,6 +5,7 @@ Object.assign(pc, function () {
         this._app = app;
         this.entities = {};
         this.parent = null;
+        this._delayedEntities = [];
     };
 
     Object.assign(SceneParser.prototype, {
@@ -16,6 +17,8 @@ Object.assign(pc, function () {
             }
 
             this._openComponentData(this.parent, data.entities);
+
+            this._delayedEntities.forEach(this._startDelayed, this);
 
             return this.parent;
         },
@@ -42,9 +45,9 @@ Object.assign(pc, function () {
             var h = data.entities[id];
 
             if (h.collapsed_template_in_scene) {
-                delete data.entities[id];
+                this._delayedEntities.push(h);
 
-                new pc.AsyncTemplateLoad(this._app, h).run();
+                delete data.entities[id];
 
                 return null;
             }
@@ -119,6 +122,12 @@ Object.assign(pc, function () {
             }
 
             return entity;
+        },
+
+        _startDelayed: function(h) {
+            var p = this.entities[h.parent];
+
+            new pc.AsyncTemplateLoad(this._app, h, p).run();
         }
     });
 
