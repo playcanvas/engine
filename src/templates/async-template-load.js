@@ -1,8 +1,9 @@
 Object.assign(pc, function () {
 
-    var AsyncTemplateLoad = function AsyncTemplateLoad(app, json) {
+    var AsyncTemplateLoad = function AsyncTemplateLoad(app, json, parent) {
         this._app = app;
         this._json = json;
+        this._parent = parent;
 
         this._entities = json.instance_entities; // moved here from the scene by collapse
         this._expanded = {};
@@ -19,9 +20,7 @@ Object.assign(pc, function () {
 
         var root = this._callParser();
 
-        var parent = this._app.root.findByGuid(this._json.parent);
-
-        parent.addChild(root);
+        this._parent.addChild(root);
     };
 
     AsyncTemplateLoad.prototype._expandAll = function () {
