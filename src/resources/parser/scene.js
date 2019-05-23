@@ -5,7 +5,6 @@ Object.assign(pc, function () {
         this._app = app;
         this.entities = {};
         this.parent = null;
-        this._delayedEntities = [];
     };
 
     Object.assign(SceneParser.prototype, {
@@ -18,7 +17,9 @@ Object.assign(pc, function () {
 
             this._openComponentData(this.parent, data.entities);
 
-            this._delayedEntities.forEach(this._startDelayed, this);
+            if (data.collapsedInstances) {
+                data.collapsedInstances.forEach(this._startDelayed, this);
+            }
 
             return this.parent;
         },
@@ -44,15 +45,7 @@ Object.assign(pc, function () {
         _handleEntityJson: function(id, data) {
             var h = data.entities[id];
 
-            if (h.collapsed_template_in_scene) {
-                this._delayedEntities.push(h);
-
-                delete data.entities[id];
-
-                return null;
-            }
-
-            if (h.collapsed_template) {// todo: rename the flag to collapsed_template_in_asset
+            if (h.collapsed_template) {
                 data.entities[id] = pc.TemplateUtils.expandEntity(this._app, h);
             }
 

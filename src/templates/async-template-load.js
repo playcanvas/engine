@@ -31,7 +31,7 @@ Object.assign(pc, function () {
                 pc.TemplateUtils.expandEntity(this._app, h) : h;
         }
     };
-    
+
     AsyncTemplateLoad.prototype._callParser = function () {
         var h = { entities: this._expanded };
 
