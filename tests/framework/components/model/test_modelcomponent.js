@@ -62,7 +62,6 @@ describe("pc.ModelComponent", function () {
         expect(e.model.lightmapSizeMultiplier).to.equal(1);
         expect(e.model.isStatic).to.equal(false);
         expect(e.model.model).to.equal(null);
-        // expect(e.model.material).to.equal(app.systems.model.defaultMaterial);
         expect(e.model.mapping).to.be.empty;
         expect(e.model.layers).to.contain(pc.LAYERID_WORLD);
         expect(e.model.batchGroupId).to.equal(-1);
@@ -279,6 +278,75 @@ describe("pc.ModelComponent", function () {
             expect(app.assets.hasEvent('load:'+materialAsset.id)).to.be.true;
 
             done();
+        });
+    });
+
+    it("Materials applied when added later", function (done) {
+        var boxAsset = new pc.Asset("Box", "model", {
+            url: "base/tests/test-assets/box/box.json"
+        });
+
+        var materialAsset = new pc.Asset("Box Material", "material",  {
+            url: "base/tests/test-assets/box/1/Box Material.json"
+        });
+
+        app.assets.add(boxAsset);
+        app.assets.load(boxAsset);
+
+        boxAsset.on("load", function () {
+            var e = new pc.Entity();
+            e.addComponent('model', {
+                asset: boxAsset
+            });
+            app.root.addChild(e);
+            e.model.materialAsset = materialAsset;
+
+            expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.true;
+
+            materialAsset.on('load', function () {
+                // do checks after the 'load' handler on the asset has been executed
+                // by other engine event handlers
+                setTimeout(function () {
+                    expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.false;
+                    expect(e.model.material).to.not.be.null;
+                    expect(e.model.material).to.equal(materialAsset.resource);
+                    done();
+                });
+            });
+
+            app.assets.add(materialAsset);
+        });
+    });
+
+    it("Material add events unbound on destroy", function (done) {
+        var boxAsset = new pc.Asset("Box", "model", {
+            url: "base/tests/test-assets/box/box.json"
+        });
+
+        var materialAsset = new pc.Asset("Box Material", "material",  {
+            url: "base/tests/test-assets/box/1/Box Material.json"
+        });
+
+        app.assets.add(boxAsset);
+        app.assets.load(boxAsset);
+
+        boxAsset.on("load", function () {
+            var e = new pc.Entity();
+            e.addComponent('model', {
+                asset: boxAsset
+            });
+            app.root.addChild(e);
+            e.model.materialAsset = materialAsset;
+
+            expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.true;
+
+            e.destroy();
+
+            expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.false;
+
+            done();
+
+            app.assets.add(materialAsset);
         });
     });
 

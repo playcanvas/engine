@@ -869,7 +869,7 @@ Object.assign(pc, function () {
 
             if (_id !== this._materialAsset) {
                 if (this._materialAsset) {
-                    assets.off('add:' + this._materialAsset, this._onMaterialAdded, this);
+                    assets.off('add:' + this._materialAsset, this._onMaterialAssetAdd, this);
                     var _prev = assets.get(this._materialAsset);
                     if (_prev) {
                         this._unbindMaterialAsset(_prev);
@@ -882,7 +882,7 @@ Object.assign(pc, function () {
                     var asset = assets.get(this._materialAsset);
                     if (!asset) {
                         this.material = this.system.defaultMaterial;
-                        assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
+                        assets.on('add:' + this._materialAsset, this._onMaterialAssetAdd, this);
                     } else {
                         this._bindMaterialAsset(asset);
                     }
