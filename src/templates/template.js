@@ -1,3 +1,17 @@
+/**
+ * Create a Template resource from raw database data.
+ *
+ * This is called by TemplateHandler after all assets referenced
+ * by template_id in entities here have been loaded.
+ * Therefore entities can be expanded right away.
+ *
+ * Calling SceneParser requires script assets referenced in components
+ * to be loaded. We do it when 'instantiate' is called for the first
+ * time, after the scene has been parsed, which in turn happens
+ * after all scripts are loaded.
+ *
+ */
+
 Object.assign(pc, function () {
 
     var Template = function Template(app, data) {

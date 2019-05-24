@@ -1,3 +1,12 @@
+/**
+ * Handle a collapsed template instance from a scene.
+ *
+ * Load all template assets referenced, expand all entities,
+ * call SceneParser to create a tree of instance entities and
+ * add it to the 'parent' entity.
+ *
+ */
+
 Object.assign(pc, function () {
 
     var AsyncTemplateLoad = function AsyncTemplateLoad(app, instanceData, parent) {
