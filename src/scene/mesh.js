@@ -144,6 +144,8 @@ Object.assign(pc, function () {
 
         this.stencilFront = null;
         this.stencilBack = null;
+        // Negative scale batching support
+        this.flipFaces = false;
     };
 
     Object.defineProperty(MeshInstance.prototype, 'mesh', {

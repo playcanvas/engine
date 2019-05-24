@@ -13,6 +13,8 @@ Object.assign(pc, function () {
         this.normals = [];
         // float array for UVs
         this.uvs = [];
+        // float array for vertex colors
+        this.colors = [];
         // float array for indices
         this.indices = [];
         // pc.MeshInstance created from this MeshInfo
@@ -25,7 +27,10 @@ Object.assign(pc, function () {
         this._entity = element.entity;
 
         // public
-        this._text = "";
+        this._text = "";            // the original user-defined text
+        this._symbols = [];         // array of visible symbols with unicode processing and markup removed
+        this._colorPalette = [];    // per-symbol color palette
+        this._symbolColors = null;  // per-symbol color indexes. only set for text with markup.
         this._i18nKey = null;
 
         this._fontAsset = new pc.LocalizedAsset(this._system.app);
@@ -64,7 +69,6 @@ Object.assign(pc, function () {
         this.width = 0;
         this.height = 0;
 
-
         // private
         this._node = new pc.GraphNode();
         this._model = new pc.Model();
@@ -84,6 +88,7 @@ Object.assign(pc, function () {
 
         this._rtlReorder = false;
         this._unicodeConverter = false;
+        this._rtl = false;              // true when the current text is RTL
 
         this._outlineColor = new pc.Color(0, 0, 0, 1);
         this._outlineColorUniform = new Float32Array(4);
@@ -95,6 +100,8 @@ Object.assign(pc, function () {
         this._shadowOffsetScale = 0.005; // maps the editor scale value to shader scale
         this._shadowOffset = new pc.Vec2(0, 0);
         this._shadowOffsetUniform = new Float32Array(2);
+
+        this._enableMarkup = false;
 
         // initialize based on screen
         this._onScreenChange(this._element.screen);
@@ -134,14 +141,14 @@ Object.assign(pc, function () {
             this._element.off('set:draworder', this._onDrawOrderChange, this);
             this._element.off('set:pivot', this._onPivotChange, this);
 
-            this._system.app.i18n.off('set:locale', this._resetLocalizedText, this);
+            this._system.app.i18n.off('set:locale', this._onLocaleSet, this);
             this._system.app.i18n.off('data:add', this._onLocalizationData, this);
             this._system.app.i18n.off('data:remove', this._onLocalizationData, this);
         },
 
         _onParentResize: function (width, height) {
             if (this._noResize) return;
-            if (this._font) this._updateText(this._text);
+            if (this._font) this._updateText();
         },
 
         _onScreenChange: function (screen) {
@@ -222,34 +229,112 @@ Object.assign(pc, function () {
         _updateText: function (text) {
             var i;
             var len;
+            var results;
+            var tags;
 
             if (text === undefined) text = this._text;
 
-            var symbols = pc.string.getSymbols(text);
+            // get the list of symbols
+            this._symbols = pc.string.getSymbols(text);
 
-            if (this.rtlReorder) {
+            // handle null string
+            if (this._symbols.length === 0) {
+                this._symbols = [" "];
+            }
+
+            // extract markup
+            if (this._enableMarkup) {
+                results = pc.Markup.evaluate(this._symbols);
+                this._symbols = results.symbols;
+                tags = results.tags;
+            }
+
+            // handle LTR vs RTL ordering
+            if (this._rtlReorder) {
                 var rtlReorderFunc = this._system.app.systems.element.getRtlReorder();
                 if (rtlReorderFunc) {
-                    symbols = rtlReorderFunc(symbols);
+                    results = rtlReorderFunc(this._symbols);
+
+                    this._rtl = results.rtl;
+
+                    // reorder symbols according to unicode reorder mapping
+                    this._symbols = results.mapping.map(function (v) {
+                        return this._symbols[v];
+                    }, this);
+
+                    // reorder tags if they exist, according to unicode reorder mapping
+                    if (tags) {
+                        tags = results.mapping.map(function (v) {
+                            return tags[v];
+                        });
+                    }
                 } else {
                     console.warn('Element created with rtlReorder option but no rtlReorder function registered');
                 }
+            } else {
+                this._rtl = false;
             }
 
-            var textLength = symbols.length;
+            // resolve color tags
+            if (tags) {
+                var paletteMap = { };
 
-            // handle null string
-            if (textLength === 0) {
-                textLength = 1;
-                text = " ";
-                symbols = [text];
+                // store fallback color in the palette
+                this._colorPalette = [
+                    Math.round(this._color.r * 255),
+                    Math.round(this._color.g * 255),
+                    Math.round(this._color.b * 255)
+                ];
+                this._symbolColors = [];
+                paletteMap[this._color.toString(false).toLowerCase()] = 0;
+
+                for (i = 0, len = this._symbols.length; i < len; ++i) {
+                    var tag = tags[i];
+                    var color = 0;
+
+                    // get markup coloring
+                    if (tag && tag.color && tag.color.value) {
+                        var c = tag.color.value;
+
+                        // resolve color dictionary names
+                        // TODO: implement the dictionary of colors
+                        // if (colorDict.hasOwnProperty(c)) {
+                        //    c = dict[c];
+                        // }
+
+                        // convert hex color
+                        if (c.length === 7 && c[0] === "#") {
+                            var hex = c.substring(1).toLowerCase();
+
+                            if (paletteMap.hasOwnProperty(hex)) {
+                                // color is already in the palette
+                                color = paletteMap[hex];
+                            } else {
+                                if (/^([0-9a-f]{2}){3}$/.test(hex)) {
+                                    // new color
+                                    color = this._colorPalette.length / 3;
+                                    paletteMap[hex] = color;
+                                    this._colorPalette.push(parseInt(hex.substring(0, 2), 16));
+                                    this._colorPalette.push(parseInt(hex.substring(2, 4), 16));
+                                    this._colorPalette.push(parseInt(hex.substring(4, 6), 16));
+                                }
+                            }
+                        }
+                    }
+
+                    this._symbolColors.push(color);
+                }
+            } else {
+                // no tags, therefore no per-symbol colors
+                this._colorPalette = [];
+                this._symbolColors = null;
             }
 
             var charactersPerTexture = {};
 
             var char, info, map;
-            for (i = 0; i < textLength; i++) {
-                char = symbols[i];
+            for (i = 0, len = this._symbols.length; i < len; i++) {
+                char = this._symbols[i];
                 info = this._font.data.chars[char];
                 // if char is missing use 'space' or first char in map
                 if (!info) {
@@ -291,6 +376,7 @@ Object.assign(pc, function () {
                     meshInfo.positions.length = meshInfo.normals.length = l * 3 * 4;
                     meshInfo.indices.length = l * 3 * 2;
                     meshInfo.uvs.length = l * 2 * 4;
+                    meshInfo.colors.length = l * 4 * 4;
 
                     // destroy old mesh
                     if (meshInfo.meshInstance) {
@@ -332,7 +418,14 @@ Object.assign(pc, function () {
                         meshInfo.normals[v * 4 * 3 + 11] = -1;
                     }
 
-                    var mesh = pc.createMesh(this._system.app.graphicsDevice, meshInfo.positions, { uvs: meshInfo.uvs, normals: meshInfo.normals, indices: meshInfo.indices });
+                    var mesh = pc.createMesh(this._system.app.graphicsDevice,
+                                             meshInfo.positions,
+                                             {
+                                                 uvs: meshInfo.uvs,
+                                                 normals: meshInfo.normals,
+                                                 colors: meshInfo.colors,
+                                                 indices: meshInfo.indices
+                                             });
 
                     var mi = new pc.MeshInstance(this._node, mesh, this._material);
                     mi.name = "Text Element: " + this._entity.name;
@@ -348,9 +441,16 @@ Object.assign(pc, function () {
                     }
 
                     this._setTextureParams(mi, this._font.textures[i]);
-                    this._colorUniform[0] = this._color.r;
-                    this._colorUniform[1] = this._color.g;
-                    this._colorUniform[2] = this._color.b;
+                    if (this._symbolColors) {
+                        // when per-vertex coloring is present, disable material emissive color
+                        this._colorUniform[0] = 1;
+                        this._colorUniform[1] = 1;
+                        this._colorUniform[2] = 1;
+                    } else {
+                        this._colorUniform[0] = this._color.r;
+                        this._colorUniform[1] = this._color.g;
+                        this._colorUniform[2] = this._color.b;
+                    }
                     mi.setParameter("material_emissive", this._colorUniform);
                     mi.setParameter("material_opacity", this._color.a);
                     mi.setParameter("font_sdfIntensity", this._font.intensity);
@@ -391,7 +491,7 @@ Object.assign(pc, function () {
                 this._element.addModelToLayers(this._model);
             }
 
-            this._updateMeshes(symbols);
+            this._updateMeshes();
         },
 
         _removeMeshInstance: function (meshInstance) {
@@ -456,7 +556,7 @@ Object.assign(pc, function () {
             }
         },
 
-        _updateMeshes: function (symbols) {
+        _updateMeshes: function () {
             var json = this._font.data;
             var self = this;
 
@@ -470,11 +570,11 @@ Object.assign(pc, function () {
             }
 
             var MAGIC = 32;
-            var l = symbols.length;
+            var l = this._symbols.length;
             var _x = 0; // cursors
-            var _xMinusTrailingWhitespace = 0;
             var _y = 0;
             var _z = 0;
+            var _xMinusTrailingWhitespace = 0;
             var lines = 1;
             var wordStartX = 0;
             var wordStartIndex = 0;
@@ -493,11 +593,15 @@ Object.assign(pc, function () {
             var fontMaxY = 0;
             var scale = 1;
 
-            var char, data, i, quad;
+            var char, data, i, j, quad;
 
-            function breakLine(lineBreakIndex, lineBreakX) {
-                self._lineWidths.push(lineBreakX);
-                var chars = symbols.slice(lineStartIndex, lineBreakIndex);
+            function breakLine(symbols, lineBreakIndex, lineBreakX) {
+                self._lineWidths.push(Math.abs(lineBreakX));
+                // in rtl mode lineStartIndex will usually be larger than lineBreakIndex and we will
+                // need to adjust the start / end indices when calling symbols.slice()
+                var sliceStart = lineStartIndex > lineBreakIndex ? lineBreakIndex + 1 : lineStartIndex;
+                var sliceEnd = lineStartIndex > lineBreakIndex ? lineStartIndex + 1 : lineBreakIndex;
+                var chars = symbols.slice(sliceStart, sliceEnd);
 
                 // Remove line breaks from line.
                 // Line breaks would only be there for the final line
@@ -515,9 +619,7 @@ Object.assign(pc, function () {
                     }
                 }
 
-                var substring = chars.join('');
-
-                self._lineContents.push(substring);
+                self._lineContents.push(chars.join(''));
 
                 _x = 0;
                 _y -= self._scaledLineHeight;
@@ -547,9 +649,9 @@ Object.assign(pc, function () {
                 this._lineContents = [];
 
                 _x = 0;
-                _xMinusTrailingWhitespace = 0;
                 _y = 0;
                 _z = 0;
+                _xMinusTrailingWhitespace = 0;
 
                 lines = 1;
                 wordStartX = 0;
@@ -570,15 +672,21 @@ Object.assign(pc, function () {
                     this._meshInfo[i].lines = {};
                 }
 
+                // per-vertex color
+                var color_r = 255;
+                var color_g = 255;
+                var color_b = 255;
+
+                // In left-to-right mode we loop through the symbols from start to end.
+                // In right-to-left mode we loop through the symbols from end to the beginning
+                // in order to wrap lines in the correct order
                 for (i = 0; i < l; i++) {
-                    char = symbols[i];
+                    char = this._symbols[i];
 
                     var x = 0;
                     var y = 0;
                     var advance = 0;
                     var quadsize = 1;
-                    var glyphMinX = 0;
-                    var glyphWidth = 0;
                     var dataScale, size;
 
                     data = json.chars[char];
@@ -602,14 +710,6 @@ Object.assign(pc, function () {
                         advance = data.xadvance * scale;
                         x = data.xoffset * scale;
                         y = data.yoffset * scale;
-
-                        if (data.bounds) {
-                            glyphWidth = (data.bounds[2] - data.bounds[0]) * scale;
-                            glyphMinX = data.bounds[0] * scale;
-                        } else {
-                            glyphWidth = x;
-                            glyphMinX = 0;
-                        }
                     } else {
                         console.error("Couldn't substitute missing character: '" + char + "'");
                     }
@@ -619,7 +719,7 @@ Object.assign(pc, function () {
                     if (isLineBreak) {
                         numBreaksThisLine++;
                         if (this._maxLines < 0 || lines < this._maxLines) {
-                            breakLine(i, _xMinusTrailingWhitespace);
+                            breakLine(this._symbols, i, _xMinusTrailingWhitespace);
                             wordStartIndex = i + 1;
                             lineStartIndex = i + 1;
                         }
@@ -630,17 +730,18 @@ Object.assign(pc, function () {
                     var isWhitespace = WHITESPACE_CHAR.test(char);
 
                     var meshInfo = this._meshInfo[(data && data.map) || 0];
-                    var candidateLineWidth = _x + glyphWidth + glyphMinX;
+
+                    var candidateLineWidth = _x + this._spacing * advance;
 
                     // If we've exceeded the maximum line width, move everything from the beginning of
                     // the current word onwards down onto a new line.
-                    if (candidateLineWidth >= maxLineWidth && numCharsThisLine > 0 && !isWhitespace) {
+                    if (candidateLineWidth > maxLineWidth && numCharsThisLine > 0 && !isWhitespace) {
                         if (this._maxLines < 0 || lines < this._maxLines) {
                             // Handle the case where a line containing only a single long word needs to be
                             // broken onto multiple lines.
                             if (numWordsThisLine === 0) {
                                 wordStartIndex = i;
-                                breakLine(i, _xMinusTrailingWhitespace);
+                                breakLine(this._symbols, i, _xMinusTrailingWhitespace);
                             } else {
                                 // Move back to the beginning of the current word.
                                 var backtrack = Math.max(i - wordStartIndex, 0);
@@ -650,17 +751,20 @@ Object.assign(pc, function () {
                                 } else {
                                     // We should only backtrack the quads that were in the word from this same texture
                                     // We will have to update N number of mesh infos as a result (all textures used in the word in question)
-                                    for (var j = wordStartIndex; j < i; j++) {
-                                        var backChar = symbols[j];
+                                    var backtrackStart = wordStartIndex;
+                                    var backtrackEnd = i;
+                                    for (j = backtrackStart; j < backtrackEnd; j++) {
+                                        var backChar = this._symbols[j];
                                         var backCharData = json.chars[backChar];
                                         var backMeshInfo = this._meshInfo[(backCharData && backCharData.map) || 0];
                                         backMeshInfo.lines[lines - 1] -= 1;
                                         backMeshInfo.quad -= 1;
                                     }
                                 }
+
                                 i -= backtrack + 1;
 
-                                breakLine(wordStartIndex, wordStartX);
+                                breakLine(this._symbols, wordStartIndex, wordStartX);
                                 continue;
                             }
                         }
@@ -669,24 +773,28 @@ Object.assign(pc, function () {
                     quad = meshInfo.quad;
                     meshInfo.lines[lines - 1] = quad;
 
-                    meshInfo.positions[quad * 4 * 3 + 0] = _x - x;
-                    meshInfo.positions[quad * 4 * 3 + 1] = _y - y;
+                    var left = _x - x;
+                    var right = left + quadsize;
+                    var bottom = _y - y;
+                    var top = bottom + quadsize;
+
+                    meshInfo.positions[quad * 4 * 3 + 0] = left;
+                    meshInfo.positions[quad * 4 * 3 + 1] = bottom;
                     meshInfo.positions[quad * 4 * 3 + 2] = _z;
 
-                    meshInfo.positions[quad * 4 * 3 + 3] = _x - x + quadsize;
-                    meshInfo.positions[quad * 4 * 3 + 4] = _y - y;
+                    meshInfo.positions[quad * 4 * 3 + 3] = right;
+                    meshInfo.positions[quad * 4 * 3 + 4] = bottom;
                     meshInfo.positions[quad * 4 * 3 + 5] = _z;
 
-                    meshInfo.positions[quad * 4 * 3 + 6] = _x - x + quadsize;
-                    meshInfo.positions[quad * 4 * 3 + 7] = _y - y + quadsize;
+                    meshInfo.positions[quad * 4 * 3 + 6] = right;
+                    meshInfo.positions[quad * 4 * 3 + 7] = top;
                     meshInfo.positions[quad * 4 * 3 + 8] = _z;
 
-                    meshInfo.positions[quad * 4 * 3 + 9]  = _x - x;
-                    meshInfo.positions[quad * 4 * 3 + 10] = _y - y + quadsize;
+                    meshInfo.positions[quad * 4 * 3 + 9]  = left;
+                    meshInfo.positions[quad * 4 * 3 + 10] = top;
                     meshInfo.positions[quad * 4 * 3 + 11] = _z;
 
-
-                    this.width = Math.max(this.width, _x + glyphWidth + glyphMinX);
+                    this.width = Math.max(this.width, candidateLineWidth);
 
                     // scale font size if autoFitWidth is true and the width is larger than the calculated width
                     var fontSize;
@@ -713,8 +821,8 @@ Object.assign(pc, function () {
                         }
                     }
 
-                    // advance cursor
-                    _x += (this._spacing * advance);
+                    // advance cursor (for RTL we move left)
+                    _x += this._spacing * advance;
 
                     // For proper alignment handling when a line wraps _on_ a whitespace character,
                     // we need to keep track of the width of the line without any trailing whitespace
@@ -747,6 +855,34 @@ Object.assign(pc, function () {
                     meshInfo.uvs[quad * 4 * 2 + 6] = uv[0];
                     meshInfo.uvs[quad * 4 * 2 + 7] = uv[3];
 
+                    // set per-vertex color
+                    if (this._symbolColors) {
+                        var colorIdx = this._symbolColors[i] * 3;
+                        color_r = this._colorPalette[colorIdx];
+                        color_g = this._colorPalette[colorIdx + 1];
+                        color_b = this._colorPalette[colorIdx + 2];
+                    }
+
+                    meshInfo.colors[quad * 4 * 4 + 0] = color_r;
+                    meshInfo.colors[quad * 4 * 4 + 1] = color_g;
+                    meshInfo.colors[quad * 4 * 4 + 2] = color_b;
+                    meshInfo.colors[quad * 4 * 4 + 3] = 255;
+
+                    meshInfo.colors[quad * 4 * 4 + 4] = color_r;
+                    meshInfo.colors[quad * 4 * 4 + 5] = color_g;
+                    meshInfo.colors[quad * 4 * 4 + 6] = color_b;
+                    meshInfo.colors[quad * 4 * 4 + 7] = 255;
+
+                    meshInfo.colors[quad * 4 * 4 + 8] = color_r;
+                    meshInfo.colors[quad * 4 * 4 + 9] = color_g;
+                    meshInfo.colors[quad * 4 * 4 + 10] = color_b;
+                    meshInfo.colors[quad * 4 * 4 + 11] = 255;
+
+                    meshInfo.colors[quad * 4 * 4 + 12] = color_r;
+                    meshInfo.colors[quad * 4 * 4 + 13] = color_g;
+                    meshInfo.colors[quad * 4 * 4 + 14] = color_b;
+                    meshInfo.colors[quad * 4 * 4 + 15] = 255;
+
                     meshInfo.quad++;
                 }
 
@@ -758,9 +894,8 @@ Object.assign(pc, function () {
                 // there will almost always be some leftover text on the final line which has
                 // not yet been pushed to _lineContents.
                 if (lineStartIndex < l) {
-                    breakLine(l, _x);
+                    breakLine(this._symbols, l, _x);
                 }
-
             }
 
             // force autoWidth / autoHeight change to update width/height of element
@@ -781,7 +916,8 @@ Object.assign(pc, function () {
                 var prevQuad = 0;
                 for (var line in this._meshInfo[i].lines) {
                     var index = this._meshInfo[i].lines[line];
-                    var hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - this._lineWidths[parseInt(line, 10)]);
+                    var lw = this._lineWidths[parseInt(line, 10)];
+                    var hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw);
                     var voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
 
                     for (quad = prevQuad; quad <= index; quad++) {
@@ -796,6 +932,26 @@ Object.assign(pc, function () {
                         this._meshInfo[i].positions[quad * 4 * 3 + 10] += voffset;
                     }
 
+                    // flip characters when rendering RTL text
+                    if (this._rtl) {
+                        for (quad = prevQuad; quad <= index; quad++) {
+                            var idx = quad * 4 * 3;
+
+                            // flip the entire line horizontally
+                            for (var vert = 0; vert < 4; ++vert) {
+                                this._meshInfo[i].positions[idx + vert * 3] = -(this._element.calculatedWidth + this._meshInfo[i].positions[idx + vert * 3]);
+                            }
+
+                            // flip the character horizontally
+                            var tmp0 = this._meshInfo[i].positions[idx + 3];
+                            var tmp1 = this._meshInfo[i].positions[idx + 6];
+                            this._meshInfo[i].positions[idx + 3] = this._meshInfo[i].positions[idx + 0];
+                            this._meshInfo[i].positions[idx + 6] = this._meshInfo[i].positions[idx + 9];
+                            this._meshInfo[i].positions[idx + 0] = tmp0;
+                            this._meshInfo[i].positions[idx + 9] = tmp1;
+                        }
+                    }
+
                     prevQuad = index + 1;
                 }
 
@@ -808,9 +964,14 @@ Object.assign(pc, function () {
                         // clear unused vertices
                         it.element[pc.SEMANTIC_POSITION].set(0, 0, 0);
                         it.element[pc.SEMANTIC_TEXCOORD0].set(0, 0);
+                        it.element[pc.SEMANTIC_COLOR].set(0, 0, 0, 0);
                     } else {
                         it.element[pc.SEMANTIC_POSITION].set(this._meshInfo[i].positions[v * 3 + 0], this._meshInfo[i].positions[v * 3 + 1], this._meshInfo[i].positions[v * 3 + 2]);
                         it.element[pc.SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v * 2 + 0], this._meshInfo[i].uvs[v * 2 + 1]);
+                        it.element[pc.SEMANTIC_COLOR].set(this._meshInfo[i].colors[v * 4 + 0],
+                                                          this._meshInfo[i].colors[v * 4 + 1],
+                                                          this._meshInfo[i].colors[v * 4 + 2],
+                                                          this._meshInfo[i].colors[v * 4 + 3]);
                     }
                     it.next();
                 }
@@ -1017,7 +1178,12 @@ Object.assign(pc, function () {
             this._color.g = g;
             this._color.b = b;
 
-            if (this._model) {
+            if (this._symbolColors) {
+                // color is baked into vertices, update text
+                if (this._font) {
+                    this._updateText();
+                }
+            } else {
                 this._colorUniform[0] = this._color.r;
                 this._colorUniform[1] = this._color.g;
                 this._colorUniform[2] = this._color.b;
@@ -1547,6 +1713,44 @@ Object.assign(pc, function () {
         }
     });
 
+    Object.defineProperty(TextElement.prototype, 'enableMarkup', {
+        get: function () {
+            return this._enableMarkup;
+        },
+        set: function (value) {
+            value = !!value;
+            if (this._enableMarkup === value) return;
+
+            this._enableMarkup = value;
+
+            if (this.font) {
+                this._updateText();
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'symbols', {
+        get: function () {
+            return this._symbols;
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'symbolColors', {
+        get: function () {
+            if (this._symbolColors === null) {
+                return null;
+            }
+            return this._symbolColors.map(function (c) {
+                return this._colorPalette.slice(c * 3, c * 3 + 3);
+            }, this);
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'rtl', {
+        get: function () {
+            return this._rtl;
+        }
+    });
 
     return {
         TextElement: TextElement

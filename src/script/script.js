@@ -145,6 +145,7 @@ Object.assign(pc, function () {
      * @param {Number} [args.min] Minimum value for type 'number', if max and min defined, slider will be rendered in Editor's UI
      * @param {Number} [args.max] Maximum value for type 'number', if max and min defined, slider will be rendered in Editor's UI
      * @param {Number} [args.precision] Level of precision for field type 'number' with floating values
+     * @param {Number} [args.step] Step value for type 'number'. The amount used to increment the value when using the arrow keys in the Editor's UI.
      * @param {String} [args.assetType] Name of asset type to be used in 'asset' type attribute picker in Editor's UI, defaults to '*' (all)
      * @param {String[]} [args.curves] List of names for Curves for field type 'curve'
      * @param {String} [args.color] String of color channels for Curves for field type 'curve', can be any combination of `rgba` characters.
