@@ -29,7 +29,7 @@ Object.assign(pc, function () {
             return new pc.Template(this._app, data);
         },
 
-        _waitForDependencies: function(response, callback) {
+        _waitForDependencies: function (response, callback) {
             var templateIds = pc.TemplateUtils.extractTemplateIds(response.entities);
 
             new pc.LoadDependencies(this._app, templateIds, function () {

@@ -39,7 +39,7 @@ Object.assign(pc, function () {
 
         return new pc.SceneParser(this._app).parse(h);
     };
-    
+
     return {
         AsyncTemplateLoad: AsyncTemplateLoad
     };

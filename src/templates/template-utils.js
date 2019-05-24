@@ -1,7 +1,7 @@
 Object.assign(pc, function () {
 
     var TemplateUtils = {
-        extractTemplateIds: function(entities) {
+        extractTemplateIds: function (entities) {
             var templateIds = [];
 
             for (var guid in entities) {
@@ -15,7 +15,7 @@ Object.assign(pc, function () {
             return templateIds;
         },
 
-        expandTemplateEntities: function(app, entities) {
+        expandTemplateEntities: function (app, entities) {
             var result = {};
 
             for (var guid in entities) {
