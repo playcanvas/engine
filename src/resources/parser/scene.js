@@ -54,7 +54,6 @@ Object.assign(pc, function () {
             entity.setLocalEulerAngles(r[0], r[1], r[2]);
             entity.setLocalScale(s[0], s[1], s[2]);
             entity._enabled = data.enabled !== undefined ? data.enabled : true;
-            //entity._enabledInHierarchy = entity._enabled;
             entity.template = data.template;
 
             if (data.tags) {
