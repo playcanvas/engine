@@ -17,6 +17,7 @@ describe('pc.AssetReference', function () {
 
     afterEach(function () {
         this.app.destroy();
+        sinon.restore();
     });
 
     it('pc.AssetReference, load callback', function (done) {

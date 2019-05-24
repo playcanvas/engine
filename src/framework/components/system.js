@@ -29,6 +29,9 @@ Object.assign(pc, function () {
 
         postInitialize: function (root) {
             this._helper(this._postInit, root);
+
+            // temp, this is for internal use on entity-references until a better system is found
+            this.fire('postinitialize', root);
         },
 
         // Update all ComponentSystems

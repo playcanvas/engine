@@ -131,6 +131,13 @@ Object.assign(pc, function () {
      * }
      */
 
+     /**
+     * @private
+     * @name pc.Application#i18n
+     * @type {pc.I18n}
+     * @description Handles localization
+     */
+
     var Application = function (canvas, options) {
         options = options || {};
 
@@ -142,6 +149,7 @@ Object.assign(pc, function () {
         // Store application instance
         Application._applications[canvas.id] = this;
         Application._currentApplication = this;
+        pc.app = this;
 
         this._time = 0;
         this.timeScale = 1;
@@ -167,7 +175,7 @@ Object.assign(pc, function () {
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this._audioManager = new pc.SoundManager(options);
-        this.loader = new pc.ResourceLoader();
+        this.loader = new pc.ResourceLoader(this);
 
         // stores all entities that have been created
         // for this app by guid
@@ -180,8 +188,15 @@ Object.assign(pc, function () {
         this._enableList.size = 0;
         this.assets = new pc.AssetRegistry(this.loader);
         if (options.assetPrefix) this.assets.prefix = options.assetPrefix;
+        this.bundles = new pc.BundleRegistry(this.assets);
+        // set this to false if you want to run without using bundles
+        // We set it to true only if TextDecoder is available because we currently
+        // rely on it for untarring.
+        this.enableBundles = (typeof TextDecoder !== 'undefined');
         this.scriptsOrder = options.scriptsOrder || [];
         this.scripts = new pc.ScriptRegistry(this);
+
+        this.i18n = new pc.I18n(this);
 
         this._sceneRegistry = new pc.SceneRegistry(this);
 
@@ -366,7 +381,7 @@ Object.assign(pc, function () {
             name: "UI",
             id: pc.LAYERID_UI,
             transparentSortMode: pc.SORTMODE_MANUAL,
-            passThrough: true
+            passThrough: false
         });
         this.defaultLayerImmediate = new pc.Layer({
             enabled: true,
@@ -443,6 +458,10 @@ Object.assign(pc, function () {
         this._skyboxLast = 0;
 
         this._scriptPrefix = options.scriptPrefix || '';
+
+        if (this.enableBundles) {
+            this.loader.addHandler("bundle", new pc.BundleHandler(this.assets));
+        }
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice, this.scene.defaultMaterial));
@@ -521,7 +540,6 @@ Object.assign(pc, function () {
         return id ? Application._applications[id] : Application._currentApplication;
     };
 
-
     // Mini-object used to measure progress of loading sets
     var Progress = function (length) {
         this.length = length;
@@ -577,6 +595,7 @@ Object.assign(pc, function () {
          */
         preload: function (callback) {
             var self = this;
+            var i, total;
 
             self.fire("preload:start");
 
@@ -604,12 +623,11 @@ Object.assign(pc, function () {
             };
 
             // totals loading progress of assets
-            var total = assets.length;
+            total = assets.length;
             var count = function () {
                 return _assets.count;
             };
 
-            var i;
             if (_assets.length) {
                 var onAssetLoad = function (asset) {
                     _assets.inc();
@@ -824,6 +842,11 @@ Object.assign(pc, function () {
 
             }
 
+            // set localization assets
+            if (props.i18nAssets) {
+                this.i18n.assets = props.i18nAssets;
+            }
+
             this._loadLibraries(props.libraries, callback);
         },
 
@@ -872,7 +895,8 @@ Object.assign(pc, function () {
             var i, id;
             var list = [];
 
-            var scriptsIndex = { };
+            var scriptsIndex = {};
+            var bundlesIndex = {};
 
             if (!pc.script.legacy) {
                 // add scripts in order of loading first
@@ -885,16 +909,42 @@ Object.assign(pc, function () {
                     list.push(assets[id]);
                 }
 
+                // then add bundles
+                if (this.enableBundles) {
+                    for (id in assets) {
+                        if (assets[id].type === 'bundle') {
+                            bundlesIndex[id] = true;
+                            list.push(assets[id]);
+                        }
+                    }
+                }
+
                 // then add rest of assets
                 for (id in assets) {
-                    if (scriptsIndex[id])
+                    if (scriptsIndex[id] || bundlesIndex[id])
                         continue;
 
                     list.push(assets[id]);
                 }
             } else {
-                for (id in assets)
+                if (this.enableBundles) {
+                    // add bundles
+                    for (id in assets) {
+                        if (assets[id].type === 'bundle') {
+                            bundlesIndex[id] = true;
+                            list.push(assets[id]);
+                        }
+                    }
+                }
+
+
+                // then add rest of assets
+                for (id in assets) {
+                    if (bundlesIndex[id])
+                        continue;
+
                     list.push(assets[id]);
+                }
             }
 
             for (i = 0; i < list.length; i++) {
@@ -904,6 +954,12 @@ Object.assign(pc, function () {
                 asset.preload = data.preload ? data.preload : false;
                 // tags
                 asset.tags.add(data.tags);
+                // i18n
+                if (data.i18n) {
+                    for (var locale in data.i18n) {
+                        asset.addLocalizedAssetId(locale, data.i18n[locale]);
+                    }
+                }
                 // registry
                 this.assets.add(asset);
             }
@@ -1511,6 +1567,14 @@ Object.assign(pc, function () {
                 assets[i].off();
             }
             this.assets.off();
+
+
+            // destroy bundle registry
+            this.bundles.destroy();
+            this.bundles = null;
+
+            this.i18n.destroy();
+            this.i18n = null;
 
             for (var key in this.loader.getHandler('script')._cache) {
                 var element = this.loader.getHandler('script')._cache[key];

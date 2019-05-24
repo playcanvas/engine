@@ -2,7 +2,6 @@ Object.assign(pc, function () {
     var _tempScrollValue = new pc.Vec2();
 
     /**
-     * @private
      * @component
      * @name pc.ScrollViewComponent
      * @description Create a new ScrollViewComponent
@@ -73,8 +72,6 @@ Object.assign(pc, function () {
         _toggleLifecycleListeners: function (onOrOff, system) {
             this[onOrOff]('set_horizontal', this._onSetHorizontalScrollingEnabled, this);
             this[onOrOff]('set_vertical', this._onSetVerticalScrollingEnabled, this);
-
-            pc.ComponentSystem[onOrOff]('update', this._onUpdate, this);
 
             system.app.systems.element[onOrOff]('add', this._onElementComponentAdd, this);
             system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemove, this);
@@ -443,8 +440,8 @@ Object.assign(pc, function () {
             }
         },
 
-        _onUpdate: function () {
-            if (this._contentReference.entity && this.enabled && this.entity.enabled) {
+        onUpdate: function () {
+            if (this._contentReference.entity) {
                 this._updateVelocity();
                 this._syncScrollbarEnabledState(pc.ORIENTATION_HORIZONTAL);
                 this._syncScrollbarEnabledState(pc.ORIENTATION_VERTICAL);
@@ -652,7 +649,6 @@ Object.assign(pc, function () {
 }());
 
 /**
- * @private
  * @event
  * @name pc.ScrollViewComponent#set:scroll
  * @description Fired whenever the scroll position changes.

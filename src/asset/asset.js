@@ -14,6 +14,15 @@ Object.assign(pc, function () {
         'i' // non case-sensitive flag
     );
 
+    var VARIANT_SUPPORT = {
+        pvr: 'extCompressedTexturePVRTC',
+        dxt: 'extCompressedTextureS3TC',
+        etc2: 'extCompressedTextureETC',
+        etc1: 'extCompressedTextureETC1'
+    };
+
+    var VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1'];
+
     /**
      * @constructor
      * @name pc.Asset
@@ -70,6 +79,10 @@ Object.assign(pc, function () {
         // This is where the loaded resource(s) will be
         this._resources = [];
 
+        // a string-assetId dictionary that maps
+        // locale to asset id
+        this._i18n = {};
+
         // Is resource loaded
         this.loaded = false;
         this.loading = false;
@@ -113,6 +126,22 @@ Object.assign(pc, function () {
      * @param {*} oldValue The old property value
      */
 
+    /**
+     * @event
+     * @name pc.Asset#add:localized
+     * @description Fired when we add a new localized asset id to the asset.
+     * @param {String} locale The locale
+     * @param {Number} assetId The asset id we added.
+     */
+
+    /**
+     * @event
+     * @name pc.Asset#remove:localized
+     * @description Fired when we remove a localized asset id from the asset.
+     * @param {String} locale The locale
+     * @param {Number} assetId The asset id we removed.
+     */
+
     Object.assign(Asset.prototype, {
         /**
          * @name pc.Asset#getFileUrl
@@ -147,21 +176,80 @@ Object.assign(pc, function () {
             if (!this.file)
                 return null;
 
-            if (this.type === 'texture' || this.type === 'textureatlas') {
-                var device = this.registry._loader.getHandler('texture')._device;
+            if (this.type === 'texture' || this.type === 'textureatlas' || this.type === 'bundle') {
+                var app = this.registry._loader._app;
+                var device = app.graphicsDevice;
 
-                if (this.variants.pvr && device.extCompressedTexturePVRTC) {
-                    return this.variants.pvr;
-                } else if (this.variants.dxt && device.extCompressedTextureS3TC) {
-                    return this.variants.dxt;
-                } else if (this.variants.etc2 && device.extCompressedTextureETC) {
-                    return this.variants.etc2;
-                } else if (this.variants.etc1 && device.extCompressedTextureETC1) {
-                    return this.variants.etc1;
+                for (var i = 0, len = VARIANT_DEFAULT_PRIORITY.length; i < len; i++) {
+                    var variant = VARIANT_DEFAULT_PRIORITY[i];
+                    // if the device supports the variant
+                    if (! device[VARIANT_SUPPORT[variant]]) continue;
+
+                    // if the variant exists in the asset then just return it
+                    if (this.file.variants[variant]) {
+                        return this.file.variants[variant];
+                    }
+
+                    // if the variant does not exist but the asset is in a bundle
+                    // and the bundle contain assets with this variant then return the default
+                    // file for the asset
+                    if (app.enableBundles) {
+                        var bundles = app.bundles.listBundlesForAsset(this);
+                        if (! bundles) continue;
+
+                        for (var j = 0, len2 = bundles.length; j < len2; j++) {
+                            if (bundles[j].file && bundles[j].file.variants && bundles[j].file.variants[variant]) {
+                                return this.file;
+                            }
+                        }
+                    }
                 }
             }
 
             return this.file;
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Asset#getLocalizedAssetId
+         * @param {String} locale The desired locale e.g. ar-AR.
+         * @description Returns the asset id of the asset that corresponds to the specified locale.
+         * @returns {Number} An asset id or null if there is no asset specified for the desired locale.
+         */
+        getLocalizedAssetId: function (locale) {
+            // tries to find either the desired locale or a fallback locale
+            locale = pc.I18n.findAvailableLocale(locale, this._i18n);
+            return this._i18n[locale] || null;
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Asset#addLocalizedAssetId
+         * @param {String} locale The locale e.g. ar-AR.
+         * @param {Number} assetId The asset id
+         * @description Adds a replacement asset id for the specified locale. When the locale in {@link pc.Application#i18n} changes then
+         * references to this asset will be replaced with the specified asset id. (Currently only supported by the {@link pc.ElementComponent}).
+         */
+        addLocalizedAssetId: function (locale, assetId) {
+            this._i18n[locale] = assetId;
+            this.fire('add:localized', locale, assetId);
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Asset#removeLocalizedAssetId
+         * @param {String} locale The locale e.g. ar-AR.
+         * @description Removes a localized asset
+         */
+        removeLocalizedAssetId: function (locale) {
+            var assetId = this._i18n[locale];
+            if (assetId) {
+                delete this._i18n[locale];
+                this.fire('remove:localized', locale, assetId);
+            }
         },
 
         /**

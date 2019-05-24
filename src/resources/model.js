@@ -11,6 +11,7 @@ Object.assign(pc, function () {
         this._device = device;
         this._parsers = [];
         this._defaultMaterial = defaultMaterial;
+        this.retryRequests = false;
 
         this.addParser(new pc.JsonModelParser(this._device), function (url, data) {
             return (pc.path.getExtension(url) === '.json');
@@ -29,14 +30,30 @@ Object.assign(pc, function () {
          * successfully loaded.
          */
         load: function (url, callback) {
-            pc.http.get(url, function (err, response) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
+            // we need to specify JSON for blob URLs
+            var options = {
+                retry: this.retryRequests
+            };
+
+            if (url.load.startsWith('blob:')) {
+                options.responseType = pc.Http.ResponseType.JSON;
+            }
+
+            pc.http.get(url.load, options, function (err, response) {
                 if (!callback)
                     return;
 
                 if (!err) {
                     callback(null, response);
                 } else {
-                    callback(pc.string.format("Error loading model: {0} [{1}]", url, err));
+                    callback(pc.string.format("Error loading model: {0} [{1}]", url.original, err));
                 }
             });
         },

@@ -138,8 +138,10 @@ Object.assign(pc, function () {
             }
 
             if (shouldForceSetAnchor) {
+                /* eslint-disable no-self-assign */
                 // force update
                 component.anchor = component.anchor;
+                /* eslint-enable no-self-assign */
             }
 
             if (data.enabled !== undefined) {
@@ -187,7 +189,11 @@ Object.assign(pc, function () {
                 if (data.autoHeight !== undefined) component.autoHeight = data.autoHeight;
                 if (data.rtlReorder !== undefined) component.rtlReorder = data.rtlReorder;
                 if (data.unicodeConverter !== undefined) component.unicodeConverter = data.unicodeConverter;
-                if (data.text !== undefined) component.text = data.text;
+                if (data.text !== null && data.text !== undefined) {
+                    component.text = data.text;
+                } else if (data.key !== null && data.key !== undefined) {
+                    component.key = data.key;
+                }
                 if (data.color !== undefined) {
                     color = data.color;
                     if (! (color instanceof pc.Color)) {
@@ -204,10 +210,20 @@ Object.assign(pc, function () {
                     if (!data.lineHeight) component.lineHeight = data.fontSize;
                 }
                 if (data.lineHeight !== undefined) component.lineHeight = data.lineHeight;
+                if (data.maxLines !== undefined) component.maxLines = data.maxLines;
                 if (data.wrapLines !== undefined) component.wrapLines = data.wrapLines;
+                if (data.minFontSize !== undefined) component.minFontSize = data.minFontSize;
+                if (data.maxFontSize !== undefined) component.maxFontSize = data.maxFontSize;
+                if (data.autoFitWidth) component.autoFitWidth = data.autoFitWidth;
+                if (data.autoFitHeight) component.autoFitHeight = data.autoFitHeight;
                 if (data.fontAsset !== undefined) component.fontAsset = data.fontAsset;
                 if (data.font !== undefined) component.font = data.font;
                 if (data.alignment !== undefined) component.alignment = data.alignment;
+                if (data.outlineColor !== undefined) component.outlineColor = data.outlineColor;
+                if (data.outlineThickness !== undefined) component.outlineThickness = data.outlineThickness;
+                if (data.shadowColor !== undefined) component.shadowColor = data.shadowColor;
+                if (data.shadowOffset !== undefined) component.shadowOffset = data.shadowOffset;
+                if (data.enableMarkup !== undefined) component.enableMarkup = data.enableMarkup;
             } else {
                 // group
             }
@@ -236,7 +252,7 @@ Object.assign(pc, function () {
         cloneComponent: function (entity, clone) {
             var source = entity.element;
 
-            return this.addComponent(clone, {
+            var data = {
                 enabled: source.enabled,
                 width: source.width,
                 height: source.height,
@@ -260,18 +276,35 @@ Object.assign(pc, function () {
                 sprite: source.sprite,
                 spriteFrame: source.spriteFrame,
                 pixelsPerUnit: source.pixelsPerUnit,
-                text: source.text,
                 spacing: source.spacing,
                 lineHeight: source.lineHeight,
                 wrapLines: source.wrapLines,
                 layers: source.layers,
                 fontSize: source.fontSize,
+                minFontSize: source.minFontSize,
+                maxFontSize: source.maxFontSize,
+                autoFitWidth: source.autoFitWidth,
+                autoFitHeight: source.autoFitHeight,
+                maxLines: source.maxLines,
                 fontAsset: source.fontAsset,
                 font: source.font,
                 useInput: source.useInput,
                 batchGroupId: source.batchGroupId,
-                mask: source.mask
-            });
+                mask: source.mask,
+                outlineColor: source.outlineColor && source.outlineColor.clone() || source.outlineColor,
+                outlineThickness: source.outlineThickness,
+                shadowColor: source.shadowColor && source.shadowColor.clone() || source.shadowColor,
+                shadowOffset: source.shadowOffset && source.shadowOffset.clone() || source.shadowOffset,
+                enableMarkup: source.enableMarkup
+            };
+
+            if (source.key !== undefined && source.key !== null) {
+                data.key = source.key;
+            } else {
+                data.text = source.text;
+            }
+
+            return this.addComponent(clone, data);
         },
 
         getTextElementMaterial: function (screenSpace, msdf) {
@@ -291,6 +324,7 @@ Object.assign(pc, function () {
                         this.defaultScreenSpaceTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                         this.defaultScreenSpaceTextMaterial.depthWrite = false;
                         this.defaultScreenSpaceTextMaterial.depthTest = false;
+                        this.defaultScreenSpaceTextMaterial.emissiveVertexColor = true;
                         this.defaultScreenSpaceTextMaterial.update();
                     }
                     return this.defaultScreenSpaceTextMaterial;
@@ -312,6 +346,7 @@ Object.assign(pc, function () {
                     this.defaultScreenSpaceBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                     this.defaultScreenSpaceBitmapTextMaterial.depthWrite = false;
                     this.defaultScreenSpaceBitmapTextMaterial.depthTest = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.emissiveVertexColor = true;
                     this.defaultScreenSpaceBitmapTextMaterial.update();
                 }
                 return this.defaultScreenSpaceBitmapTextMaterial;
@@ -331,6 +366,7 @@ Object.assign(pc, function () {
                     this.defaultTextMaterial.opacity = 0.5;
                     this.defaultTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                     this.defaultTextMaterial.depthWrite = false;
+                    this.defaultTextMaterial.emissiveVertexColor = true;
                     this.defaultTextMaterial.update();
                 }
                 return this.defaultTextMaterial;
@@ -351,6 +387,7 @@ Object.assign(pc, function () {
                 this.defaultBitmapTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
                 this.defaultBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                 this.defaultBitmapTextMaterial.depthWrite = false;
+                this.defaultBitmapTextMaterial.emissiveVertexColor = true;
                 this.defaultBitmapTextMaterial.update();
             }
             return this.defaultBitmapTextMaterial;

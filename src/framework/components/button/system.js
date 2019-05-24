@@ -18,10 +18,10 @@ Object.assign(pc, function () {
     ];
 
     /**
-     * @private
+     * @constructor
      * @name pc.ButtonComponentSystem
-     * @description Create a new ButtonComponentSystem
      * @classdesc Manages creation of {@link pc.ButtonComponent}s.
+     * @description Create a new ButtonComponentSystem
      * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
      */
@@ -37,6 +37,8 @@ Object.assign(pc, function () {
         this.schema = _schema;
 
         this.on('beforeremove', this._onRemoveComponent, this);
+
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     ButtonComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     ButtonComponentSystem.prototype.constructor = ButtonComponentSystem;
@@ -46,6 +48,18 @@ Object.assign(pc, function () {
     Object.assign(ButtonComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
+        },
+
+        onUpdate: function (dt) {
+            var components = this.store;
+
+            for (var id in components) {
+                var entity = components[id].entity;
+                var component = entity.button;
+                if (component.enabled && entity.enabled) {
+                    component.onUpdate();
+                }
+            }
         },
 
         _onRemoveComponent: function (entity, component) {

@@ -54,6 +54,7 @@ Object.assign(pc, function () {
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
+        this.app.on("prerender", this.onPrerender, this);
 
         pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
@@ -178,6 +179,12 @@ Object.assign(pc, function () {
                         }
                     }
                 }
+            }
+        },
+
+        onPrerender: function () {
+            for (var i = 0, len = this.cameras.length; i < len; i++) {
+                this.cameras[i].onPrerender();
             }
         },
 

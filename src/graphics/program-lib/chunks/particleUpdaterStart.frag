@@ -52,20 +52,33 @@ void main(void)
     float rotSpeed = params.x;
     float rotSpeedDiv = paramDiv.y;
 
+    vec3 radialParams = tex1Dlod_lerp(internalTex3, vec2(nlife, 0), paramDiv);
+    float radialSpeed = radialParams.x;
+    float radialSpeedDiv = radialParams.y;
+
+    bool respawn = inLife <= 0.0 || outLife >= lifetime;
+    inPos = respawn ? calcSpawnPosition(rndFactor.xyz, rndFactor.x) : inPos;
+    inAngle = respawn ? mix(startAngle, startAngle2, rndFactor.x) : inAngle;
+
+#ifndef LOCAL_SPACE
+    vec3 radialVel = inPos - emitterPos;
+#else
+    vec3 radialVel = inPos;
+#endif
+    radialVel = (dot(radialVel, radialVel) > 1.0E-8) ? radialSpeed * normalize(radialVel) : vec3(0.0);
+    radialVel += (radialSpeedDiv * vec3(2.0) - vec3(1.0)) * radialSpeedDivMult * rndFactor.xyz;
+
     localVelocity +=    (localVelocityDiv * vec3(2.0) - vec3(1.0)) * localVelocityDivMult * rndFactor.xyz;
     velocity +=         (velocityDiv * vec3(2.0) - vec3(1.0)) * velocityDivMult * rndFactor.xyz;
     rotSpeed +=         (rotSpeedDiv * 2.0 - 1.0) * rotSpeedDivMult * rndFactor.y;
 
     addInitialVelocity(localVelocity, rndFactor.xyz);
 
+#ifndef LOCAL_SPACE
+    outVel = emitterMatrix * localVelocity + (radialVel + velocity) * emitterScale;
+#else
+    outVel = (localVelocity + radialVel) / emitterScale + emitterMatrixInv * velocity;
+#endif
 
-    outVel = emitterMatrix * localVelocity.xyz + velocity.xyz * emitterScale;
     outPos = inPos + outVel * delta;
     outAngle = inAngle + rotSpeed * delta;
-
-    bool respawn = outLife <= 0.0 || outLife >= lifetime;
-    outPos = respawn? calcSpawnPosition(rndFactor.xyz, rndFactor.x) : outPos;
-    outAngle = respawn? mix(startAngle, startAngle2, rndFactor.x) : outAngle;
-    outVel = respawn? vec3(0.0) : outVel;
-
-

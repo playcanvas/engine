@@ -30,7 +30,8 @@ Object.assign(pc, function () {
         TEXT: 'text',
         ARRAY_BUFFER: 'arraybuffer',
         BLOB: 'blob',
-        DOCUMENT: 'document'
+        DOCUMENT: 'document',
+        JSON: 'json'
     };
 
     Http.binaryExtensions = [
@@ -43,6 +44,8 @@ Object.assign(pc, function () {
         '.aac',
         '.dds'
     ];
+
+    Http.retryDelay = 100;
 
     Object.assign(Http.prototype, {
 
@@ -65,6 +68,9 @@ Object.assign(pc, function () {
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
          * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
          * Otherwise, by default, the data is sent as form-urlencoded.
+         * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
@@ -97,6 +103,9 @@ Object.assign(pc, function () {
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
          * @param {String} [options.responseType] Override the response type
+         * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
@@ -126,6 +135,9 @@ Object.assign(pc, function () {
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
          * @param {String} [options.responseType] Override the response type
+         * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
@@ -155,6 +167,9 @@ Object.assign(pc, function () {
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
          * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
          * Otherwise, by default, the data is sent as form-urlencoded.
+         * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {Function} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
@@ -179,6 +194,9 @@ Object.assign(pc, function () {
          * @param {Boolean} [options.async] Make the request asynchronously. Defaults to true.
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
          * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
+         * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
+         * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
+         * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
          * @param {String} [options.responseType] Override the response type
          * @param {Document|Object} [options.postdata] Data to send in the body of the request.
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
@@ -196,6 +214,16 @@ Object.assign(pc, function () {
             if (typeof options === "function") {
                 callback = options;
                 options = {};
+            }
+
+            // if retryable we are going to store new properties
+            // in the options so create a new copy to not affect
+            // the original
+            if (options.retry) {
+                options = Object.assign({
+                    retries: 0,
+                    maxRetries: 5
+                }, options);
             }
 
             // store callback
@@ -256,10 +284,6 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (!xhr) {
-                xhr = new XMLHttpRequest();
-            }
-
             if (options.cache === false) {
                 // Add timestamp to url to prevent browser caching file
                 timestamp = pc.time.now();
@@ -280,6 +304,7 @@ Object.assign(pc, function () {
                 url = uri.toString();
             }
 
+            xhr = new XMLHttpRequest();
             xhr.open(method, url, options.async);
             xhr.withCredentials = options.withCredentials !== undefined ? options.withCredentials : false;
             xhr.responseType = options.responseType || this._guessResponseType(url);
@@ -342,10 +367,13 @@ Object.assign(pc, function () {
             if (xhr.readyState === 4) {
                 switch (xhr.status) {
                     case 0: {
+
                         // If this is a local resource then continue (IOS) otherwise the request
                         // didn't complete, possibly an exception or attempt to do cross-domain request
                         if (url[0] != '/') {
                             this._onSuccess(method, url, options, xhr);
+                        } else {
+                            this._onError(method, url, options, xhr);
                         }
 
                         break;
@@ -376,32 +404,59 @@ Object.assign(pc, function () {
                 parts = header.split(";");
                 contentType = parts[0].trim();
             }
-            // Check the content type to see if we want to parse it
-            if (contentType === this.ContentType.JSON || url.split('?')[0].endsWith(".json")) {
-                // It's a JSON response
-                response = JSON.parse(xhr.responseText);
-            } else if (this._isBinaryContentType(contentType)) {
-                response = xhr.response;
-            } else {
-                if (xhr.responseType === Http.ResponseType.ARRAY_BUFFER) {
-                    logWARNING(pc.string.format('responseType: {0} being served with Content-Type: {1}', Http.ResponseType.ARRAY_BUFFER, contentType));
+            try {
+                // Check the content type to see if we want to parse it
+                if (contentType === this.ContentType.JSON || url.split('?')[0].endsWith(".json")) {
+                    // It's a JSON response
+                    response = JSON.parse(xhr.responseText);
+                } else if (this._isBinaryContentType(contentType)) {
                     response = xhr.response;
                 } else {
-                    if (xhr.responseType === Http.ResponseType.DOCUMENT || contentType === this.ContentType.XML) {
-                        // It's an XML response
-                        response = xhr.responseXML;
+                    if (contentType) {
+                        logWARNING(pc.string.format('responseType: {0} being served with Content-Type: {1}', xhr.responseType, contentType));
+                    }
+
+                    if (xhr.responseType === Http.ResponseType.ARRAY_BUFFER) {
+                        response = xhr.response;
+                    } else if (xhr.responseType === Http.ResponseType.BLOB || xhr.responseType === Http.ResponseType.JSON) {
+                        response = xhr.response;
                     } else {
-                        // It's raw data
-                        response = xhr.responseText;
+                        if (xhr.responseType === Http.ResponseType.DOCUMENT || contentType === this.ContentType.XML) {
+                            // It's an XML response
+                            response = xhr.responseXML;
+                        } else {
+                            // It's raw data
+                            response = xhr.responseText;
+                        }
                     }
                 }
-            }
 
-            options.callback(null, response);
+                options.callback(null, response);
+            } catch (err) {
+                options.callback(err);
+            }
         },
 
         _onError: function (method, url, options, xhr) {
-            options.callback(xhr.status, null);
+            if (options.retrying) {
+                return;
+            }
+
+            // retry if necessary
+            if (options.retry && options.retries < options.maxRetries) {
+                options.retries++;
+                options.retrying = true; // used to stop retrying when both onError and xhr.onerror are called
+                var retryDelay = pc.math.clamp(Math.pow(2, options.retries) * Http.retryDelay, 0, options.maxRetryDelay || 5000);
+                console.log(method + ': ' + url + ' - Error ' + xhr.status + '. Retrying in ' + retryDelay + ' ms');
+
+                setTimeout(function () {
+                    options.retrying = false;
+                    this.request(method, url, options, options.callback);
+                }.bind(this), retryDelay);
+            } else {
+                // no more retries or not retry so just fail
+                options.callback(xhr.status === 0 ? 'Network error' : xhr.status, null);
+            }
         }
     });
 

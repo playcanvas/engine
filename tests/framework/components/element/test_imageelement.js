@@ -422,32 +422,6 @@ describe('pc.ImageElement', function () {
         expect(spy.notCalled).to.equal(true);
     });
 
-    it('Image element calls _updateMesh if only rect passed in data', function () {
-        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
-
-        var rect = [1, 1, 1, 1];
-
-        var e = new pc.Entity();
-        e.addComponent('element', {
-            type: 'image',
-            rect: rect
-        });
-        app.root.addChild(e);
-
-        expect(spy.calledTwice).to.equal(true);
-
-        expect(e.element._image._uvs).to.deep.equal([
-            rect[0],
-            rect[1],
-            rect[0] + rect[2],
-            rect[1],
-            rect[0] + rect[2],
-            rect[1] + rect[3],
-            rect[0],
-            rect[1] + rect[3]
-        ]);
-    });
-
     it('Image element calls _updateMesh once at the start and once at the end when all properties that call it are passed into the data', function () {
         var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
 
@@ -1010,11 +984,6 @@ describe('pc.ImageElement', function () {
             url: 'base/tests/test-assets/sprite/red-atlas.json'
         });
 
-        app.assets.add(spriteAsset);
-        app.assets.add(textureAtlasAsset);
-
-        expect(app.assets.hasEvent('load:' + textureAtlasAsset.id)).to.be.false;
-
         if (spriteAsset.resource) {
             fail("spriteAsset should not be loaded at this stage");
         }
@@ -1031,6 +1000,11 @@ describe('pc.ImageElement', function () {
 
             done();
         });
+
+        app.assets.add(spriteAsset);
+        app.assets.add(textureAtlasAsset);
+
+        expect(app.assets.hasEvent('load:' + textureAtlasAsset.id)).to.be.false;
 
         var e = new pc.Entity();
         e.addComponent('element', {

@@ -28,6 +28,7 @@
 ../src/math/quat.js
 ../src/math/curve.js
 ../src/math/curve-set.js
+../src/math/curve-evaluator.js
 ../src/shape/bounding-box.js
 ../src/shape/bounding-sphere.js
 ../src/shape/frustum.js
@@ -78,7 +79,9 @@
 ../src/scene/skin-partition.js
 ../src/scene/morph.js
 ../src/scene/model.js
-../src/scene/particle-emitter.js
+../src/scene/particle-system/particle-emitter.js
+../src/scene/particle-system/cpu-updater.js
+../src/scene/particle-system/gpu-updater.js
 ../src/scene/pick.js
 ../src/scene/procedural.js
 ../src/scene/materials/default-material.js
@@ -109,6 +112,10 @@
 ../src/net/http.js
 ../src/script/script-registry.js
 ../src/script/script.js
+../src/bundles/bundle.js
+../src/bundles/bundle-registry.js
+../src/i18n/i18n-parser.js
+../src/i18n/i18n.js
 ../src/framework/script.js
 ../src/framework/application.js
 ../src/framework/stats.js
@@ -171,6 +178,7 @@
 ../src/framework/components/element/data.js
 ../src/framework/components/element/image-element.js
 ../src/framework/components/element/text-element.js
+../src/framework/components/element/markup.js
 ../src/framework/components/element/element-drag-helper.js
 ../src/framework/components/button/constants.js
 ../src/framework/components/button/component.js
@@ -200,6 +208,8 @@
 ../src/framework/utils/entity-reference.js
 ../src/framework/utils/sorted-loop-array.js
 ../src/resources/loader.js
+../src/resources/bundle.js
+../src/resources/untar.js
 ../src/resources/animation.js
 ../src/resources/audio.js
 ../src/resources/cubemap.js
@@ -229,6 +239,7 @@
 ../src/asset/asset-variants.js
 ../src/asset/asset-registry.js
 ../src/asset/asset-reference.js
+../src/asset/asset-localized.js
 ../src/asset/asset-list-loader.js
 ../src/backwards-compatibility.js
 ../src/scene/immediate.js

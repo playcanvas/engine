@@ -81,6 +81,35 @@ Object.assign(pc, (function () {
             return this;
         },
 
+
+        /**
+         * @function
+         * @name pc.Color#lerp
+         * @description Returns the result of a linear interpolation between two specified colors
+         * @param {pc.Color} lhs The color to interpolate from
+         * @param {pc.Color} rhs The color to interpolate to.
+         * @param {Number} alpha The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
+         * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
+         * a ray extrapolated from this line.
+         * @returns {pc.Color} Self for chaining.
+         * @example
+         * var a = new pc.Color(0, 0, 0);
+         * var b = new pc.Color(1, 1, 0.5);
+         * var r = new pc.Color();
+         *
+         * r.lerp(a, b, 0);   // r is equal to a
+         * r.lerp(a, b, 0.5); // r is 0.5, 0.5, 0.25
+         * r.lerp(a, b, 1);   // r is equal to b
+         */
+        lerp: function (lhs, rhs, alpha) {
+            this.r = lhs.r + alpha * (rhs.r - lhs.r);
+            this.g = lhs.g + alpha * (rhs.g - lhs.g);
+            this.b = lhs.b + alpha * (rhs.b - lhs.b);
+            this.a = lhs.a + alpha * (rhs.a - lhs.a);
+
+            return this;
+        },
+
         /**
          * @function
          * @name pc.Color#fromString
