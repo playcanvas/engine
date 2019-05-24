@@ -35,7 +35,7 @@ Object.assign(pc, function () {
 
             // todo: code below is only for testing, replace this with an actual traversal-based tree-copy
 
-            var h = JSON.parse(JSON.stringify(template.resource.templateData));
+            var h = JSON.parse(JSON.stringify(template.resource.getExpandedData()));
 
             var instId = data.resource_id;
 

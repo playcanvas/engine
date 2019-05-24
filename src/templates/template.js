@@ -3,12 +3,11 @@ Object.assign(pc, function () {
     var Template = function Template(app, data) {
         this._app = app;
 
-        this._instanceGuids = [];
+        this._data = data;
 
-        // accessed outside
-        this.templateData = {
-            entities: pc.TemplateUtils.expandTemplateEntities(app, data.entities)
-        };
+        this._expandedData = {};
+
+        this._instanceGuids = [];
     };
 
     Template.prototype.instantiate = function (saveGuid) {
@@ -25,10 +24,19 @@ Object.assign(pc, function () {
         return instance;
     };
 
+    Template.prototype.getExpandedData = function () {
+        if (!this._expandedData.entities) {
+            this._expandedData.entities = pc.TemplateUtils.expandTemplateEntities(
+                this._app, this._data.entities);
+        }
+
+        return this._expandedData;
+    };
+
     Template.prototype._parseTemplate = function () {
         var parser = new pc.SceneParser(this._app);
 
-        this._templateRoot = parser.parse(this.templateData);
+        this._templateRoot = parser.parse(this.getExpandedData());
     };
 
     Template.prototype.applyToInstances = function (callback) {
