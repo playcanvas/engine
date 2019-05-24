@@ -529,10 +529,6 @@ Object.assign(pc, function () {
             this.boneLimit = 34;
         }
 
-        if (this.unmaskedRenderer === 'Apple A8 GPU') {
-            this.forceCpuParticles = true;
-        }
-
         // Profiler stats
         this._drawCallsPerFrame = 0;
         this._shaderSwitchesPerFrame = 0;
