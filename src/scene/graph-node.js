@@ -35,6 +35,8 @@ Object.assign(pc, function () {
         this._dirtyLocal = false;
         this._aabbVer = 0;
 
+        this._frozen = false;
+
         this.worldTransform = new pc.Mat4();
         this._dirtyWorld = false;
 
@@ -911,12 +913,27 @@ Object.assign(pc, function () {
             }
         },
 
+        _unfreezeParentToRoot: function () {
+            var p = this._parent;
+            while (p) {
+                p._frozen = false;
+                p = p._parent;
+            }
+        },
+
         _dirtifyWorld: function () {
+            if (!this._dirtyWorld)
+                this._unfreezeParentToRoot();
+            this._dirtifyWorldInternal();
+        },
+
+        _dirtifyWorldInternal: function () {
             if (!this._dirtyWorld) {
+                this._frozen = false;
                 this._dirtyWorld = true;
                 for (var i = 0; i < this._children.length; i++) {
                     if (!this._children[i]._dirtyWorld)
-                        this._children[i]._dirtifyWorld();
+                        this._children[i]._dirtifyWorldInternal();
                 }
             }
             this._dirtyNormal = true;
@@ -1318,6 +1335,10 @@ Object.assign(pc, function () {
         syncHierarchy: function () {
             if (!this._enabled)
                 return;
+
+            if (this._frozen)
+                return;
+            this._frozen = true;
 
             if (this._dirtyLocal || this._dirtyWorld) {
                 this._sync();
