@@ -15,12 +15,25 @@ Object.assign(pc, function () {
             return templateIds;
         },
 
+        expandTemplateEntities: function(app, entities) {
+            var result = {};
+
+            for (var guid in entities) {
+                var h = entities[guid];
+
+                result[guid] = h.collapsed_template ?
+                    pc.TemplateUtils.expandEntity(app, h) : h;
+            }
+
+            return result;
+        },
+
         // todo: return a new object, not 'data', which will not have 'collapsed' flags
         // todo: replace this with an actual traversal-based tree-copy
         expandEntity: function (app, data) {
             var template = app.assets.get(data.template_id);
 
-            // todo: replace this with an actual traversal-based tree-copy
+            // todo: code below is only for testing, replace this with an actual traversal-based tree-copy
 
             var h = JSON.parse(JSON.stringify(template.resource.origTemplateData));
 
