@@ -3,43 +3,42 @@ Object.assign(pc, function () {
 
     var SceneParser = function (app) {
         this._app = app;
-        this.entities = {};
-        this.parent = null;
     };
 
     Object.assign(SceneParser.prototype, {
         parse: function (data) {
-            this._createAllEntities(data);
+            var entities = {};
+            var id, i;
+            var parent = null;
 
-            for (var id in data.entities) {
-                this._addChildren(id, data.entities[id].children);
+            // instantiate entities
+            for (id in data.entities) {
+                entities[id] = this._createEntity(data.entities[id]);
+                if (data.entities[id].parent === null) {
+                    parent = entities[id];
+                }
             }
 
-            this._openComponentData(this.parent, data.entities);
-
-            if (data.collapsedInstances) {
-                data.collapsedInstances.forEach(this._startDelayed, this);
-            }
-
-            return this.parent;
-        },
-
-        _createAllEntities: function(data) {
-            var ids = Object.keys(data.entities);
-
-            for (var i = 0; i < ids.length; i++) {
-                var id = ids[i];
-
-                var entity = this._createEntity(data.entities[id]);
-
-                if (entity) {
-                    this.entities[id] = entity;
-
-                    if (data.entities[id].parent === null) {
-                        this.parent = entity;
+            // put entities into hierarchy
+            for (id in data.entities) {
+                var l = data.entities[id].children.length;
+                for (i = 0; i < l; i++) {
+                    // pop resource id off the end of the array
+                    var resource_id = data.entities[id].children[i];
+                    if (entities[resource_id]) {
+                        // push entity on the front of the array
+                        entities[id].addChild(entities[resource_id]);
                     }
                 }
             }
+
+            this._openComponentData(parent, data.entities);
+
+            if (data.collapsedInstances) {
+                this._handleCollapsedInstances(this._app, data, entities);
+            }
+
+            return parent;
         },
 
         _createEntity: function (data) {
@@ -55,7 +54,7 @@ Object.assign(pc, function () {
             entity.setLocalEulerAngles(r[0], r[1], r[2]);
             entity.setLocalScale(s[0], s[1], s[2]);
             entity._enabled = data.enabled !== undefined ? data.enabled : true;
-            //entity._enabledInHierarchy = entity._enabled; // disable for all
+            //entity._enabledInHierarchy = entity._enabled;
             entity.template = data.template;
 
             if (data.tags) {
@@ -71,16 +70,6 @@ Object.assign(pc, function () {
             }
 
             return entity;
-        },
-
-        _addChildren: function(id, children) {
-            for (var i = 0; i < children.length; i++) {
-                var chId = children[i];
-
-                if (this.entities[chId]) {
-                    this.entities[id].addChild(this.entities[chId]);
-                }
-            }
         },
 
         _openComponentData: function (entity, entities) {
@@ -107,10 +96,12 @@ Object.assign(pc, function () {
             return entity;
         },
 
-        _startDelayed: function(h) {
-            var p = this.entities[h.parent];
+        _handleCollapsedInstances: function (app, data, entities) {
+            data.collapsedInstances.forEach(function (h) {
+                var p = entities[h.parent];
 
-            new pc.AsyncTemplateLoad(this._app, h, p).run();
+                new pc.AsyncTemplateLoad(app, h, p).run();
+            });
         }
     });
 
