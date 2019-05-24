@@ -30,7 +30,7 @@ Object.assign(pc, function () {
             for (var i = 0; i < ids.length; i++) {
                 var id = ids[i];
 
-                var entity = this._handleEntityJson(id, data);
+                var entity = this._createEntity(data.entities[id]);
 
                 if (entity) {
                     this.entities[id] = entity;
@@ -40,16 +40,6 @@ Object.assign(pc, function () {
                     }
                 }
             }
-        },
-
-        _handleEntityJson: function(id, data) {
-            var h = data.entities[id];
-
-            if (h.collapsed_template) {
-                data.entities[id] = pc.TemplateUtils.expandEntity(this._app, h);
-            }
-
-            return this._createEntity(data.entities[id]);
         },
 
         _createEntity: function (data) {

@@ -3,19 +3,24 @@ Object.assign(pc, function () {
     var Template = function Template(app, data) {
         this._app = app;
 
-        this.origTemplateData = data; // accessed outside
-
         this._instanceGuids = [];
+
+        // accessed outside
+        this.templateData = {
+            entities: pc.TemplateUtils.expandTemplateEntities(app, data.entities)
+        };
     };
 
-    Template.prototype.instantiate = function () {
+    Template.prototype.instantiate = function (saveGuid) {
         if (!this._templateRoot) { // at first use, after scripts are loaded
             this._parseTemplate();
         }
 
         var instance = this._templateRoot.clone();
 
-        this._instanceGuids.push(instance.getGuid());
+        if (saveGuid) {
+            this._instanceGuids.push(instance.getGuid());
+        }
 
         return instance;
     };
@@ -23,7 +28,7 @@ Object.assign(pc, function () {
     Template.prototype._parseTemplate = function () {
         var parser = new pc.SceneParser(this._app);
 
-        this._templateRoot = parser.parse(this.origTemplateData);
+        this._templateRoot = parser.parse(this.templateData);
     };
 
     Template.prototype.applyToInstances = function (callback) {
