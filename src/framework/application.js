@@ -514,18 +514,20 @@ Object.assign(pc, function () {
 
         // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
         // in this._hiddenAttr.
-        if (document.hidden !== undefined) {
-            this._hiddenAttr = 'hidden';
-            document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
-        } else if (document.mozHidden !== undefined) {
-            this._hiddenAttr = 'mozHidden';
-            document.addEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
-        } else if (document.msHidden !== undefined) {
-            this._hiddenAttr = 'msHidden';
-            document.addEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
-        } else if (document.webkitHidden !== undefined) {
-            this._hiddenAttr = 'webkitHidden';
-            document.addEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+        if (typeof document === 'object') {
+            if (document.hidden !== undefined) {
+                this._hiddenAttr = 'hidden';
+                document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
+            } else if (document.mozHidden !== undefined) {
+                this._hiddenAttr = 'mozHidden';
+                document.addEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
+            } else if (document.msHidden !== undefined) {
+                this._hiddenAttr = 'msHidden';
+                document.addEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
+            } else if (document.webkitHidden !== undefined) {
+                this._hiddenAttr = 'webkitHidden';
+                document.addEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+            }
         }
 
         // bind tick function to current scope
