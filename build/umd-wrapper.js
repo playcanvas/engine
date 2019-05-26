@@ -5,9 +5,10 @@
         module.exports = factory();
     } else {
         root.pc = factory();
-  }
+    }
 }(this, function () {
-  %output%
 
-  return pc;
+%output%
+
+return pc;
 }));
