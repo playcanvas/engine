@@ -730,9 +730,9 @@ Object.assign(pc, function () {
                 }
             } else {
                 // check if source is valid type of element
-                if (!(typeof HTMLImageElement !== 'undefined' && source instanceof HTMLImageElement) ||
-                     (typeof HTMLCanvasElement !== 'undefined' && source instanceof HTMLCanvasElement) ||
-                     (typeof HTMLVideoElement !== 'undefined' && source instanceof HTMLVideoElement))
+                if (!((typeof HTMLImageElement !== 'undefined' && source instanceof HTMLImageElement) ||
+                      (typeof HTMLCanvasElement !== 'undefined' && source instanceof HTMLCanvasElement) ||
+                      (typeof HTMLVideoElement !== 'undefined' && source instanceof HTMLVideoElement)))
                     invalid = true;
 
                 if (!invalid) {
