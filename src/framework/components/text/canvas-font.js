@@ -187,7 +187,7 @@ Object.assign(pc, function () {
         this.color.a = a;
 
         var TEXT_ALIGN = 'center';
-        var TEXT_BASELINE = 'bottom';
+        var TEXT_BASELINE = 'alphabetic';
 
         var ctx = this._getAndClearContext(canvas, transparent);
 
@@ -236,7 +236,7 @@ Object.assign(pc, function () {
                 width = this.fontSize;
             }
 
-            this.renderCharacter(ctx, ch, _x, _y, color);
+            this.renderCharacter(ctx, ch, _x, _y - maxDescent, color);
 
             var xoffset = (sx - width) / 2;
             var yoffset = metrics[ch].descent - maxDescent;
