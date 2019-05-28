@@ -11,7 +11,7 @@ Object.assign(pc, function () {
 
     var AsyncTemplateLoad = function AsyncTemplateLoad(app, instanceData, parent) {
         this._app = app;
-        this._instanceData = instanceData;
+        this._entities = instanceData.instanceEntities;
         this._parent = parent;
     };
 
@@ -27,7 +27,7 @@ Object.assign(pc, function () {
 
     AsyncTemplateLoad.prototype._onLoad = function () {
         var expanded = pc.TemplateUtils.expandTemplateEntities(
-            this._app, this._instanceData.instanceEntities);
+            this._app, this._entities);
 
         var root = this._callParser(expanded);
 
