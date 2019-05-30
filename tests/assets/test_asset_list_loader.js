@@ -119,7 +119,7 @@ describe('pc.AssetListLoader', function () {
     });
 
 
-    it.only('calls ready with correct scope', function (done) {
+    it('calls ready with correct scope', function (done) {
         assetList.forEach(function (a) {
             expect(a.loaded).to.be.false;
         });

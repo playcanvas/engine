@@ -63,8 +63,6 @@ Object.assign(pc, function () {
      *
      */
     AssetListLoader.prototype.load = function (done, scope) {
-        var self = this;
-
         var i = 0;
         var l = this._assets.length;
         var asset;
@@ -186,8 +184,6 @@ Object.assign(pc, function () {
     };
 
     AssetListLoader.prototype._waitForAsset = function (assetId) {
-        var self = this;
-
         this._waitingAssets.push(assetId);
         this._registry.once('add:' + assetId, this._onAddAsset, this);
     };
