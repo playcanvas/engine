@@ -116,6 +116,26 @@ describe('pc.AssetListLoader', function () {
                 done();
             });
         }, 50);
+    });
+
+
+    it.only('calls ready with correct scope', function (done) {
+        assetList.forEach(function (a) {
+            expect(a.loaded).to.be.false;
+        });
+
+        var loader = new pc.AssetListLoader(assetList, app.assets);
+
+        loader.load()
+
+        var obj = {};
+        setTimeout(function () {
+            loader.ready(function () {
+                expect(this).to.be.equal(obj);
+
+                done();
+            }, obj);
+        }, 50);
 
     });
 
