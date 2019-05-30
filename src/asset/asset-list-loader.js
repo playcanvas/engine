@@ -1,19 +1,58 @@
 Object.assign(pc, function () {
     /**
+     * @private
      * @constructor
      * @name pc.AssetListLoader
      * @classdesc Used to load a group of assets and fires a callback when all assets are loaded
-     * @param {pc.Asset[]} assetList An array of pc.Asset objects to load
+     * @param {pc.Asset[] | Number[]} assetList An array of pc.Asset objects to load or an array of Asset IDs to load
      * @param {pc.AssetRegistry} assetRegistry The application's asset registry
      */
     var AssetListLoader = function (assetList, assetRegistry) {
-        this._assets = assetList;
+        this._assets = [];
         this._registry = assetRegistry;
         this._loaded = false;
+        this._count = 0; // running count of successfully loaded assets
+        this._total = 0; // total assets loader is expecting to load
+        this._failed = []; // list of assets that failed to load
+
+        this._waitingAssets = [];
+
+        if (assetList.length && assetList[0] instanceof pc.Asset) {
+            // list of pc.Asset
+            this._assets = assetList;
+        } else {
+            // list of Asset IDs
+            for (var i = 0; i < assetList.length; i++) {
+                var asset = assetRegistry.get(assetList[i]);
+                if (asset) {
+                    this._assets.push(asset);
+                } else {
+                    this._waitForAsset(assetList[i]);
+                    this._total++;
+                }
+
+            }
+        }
+
 
         pc.events.attach(this);
     };
 
+    AssetListLoader.prototype.destroy = function () {
+        // remove any outstanding listeners
+
+        var self = this;
+
+        this._registry.off("load", this._onLoad);
+        this._registry.off("error", this._onError);
+
+        this._waitingAssets.forEach(function (id) {
+            self_registry.off("add:" + id, this._onAddAsset);
+        });
+
+        this.off("progress");
+        this.off("load");
+    };
 
     /**
      * @function
@@ -22,79 +61,31 @@ Object.assign(pc, function () {
      * @param {Function} done Callback called when all assets in the list are loaded. Passed (err, failed) where err is the undefined if no errors are encountered and failed contains a list of assets that failed to load
      *
      */
-    AssetListLoader.prototype.load = function (done) {
+    AssetListLoader.prototype.load = function (done, scope) {
         var self = this;
 
         var i = 0;
         var l = this._assets.length;
         var asset;
 
-        var total = 0;
-        var count = 0;
-        var failed = [];
+        // this._total = l;
+        this._count = 0;
+        this._failed = [];
+        this._callback = done;
+        this._scope = scope;
 
-        /* eslint-disable no-use-before-define */
-        var _done = function (failed) {
-            self._loaded = true;
-            self._registry.off("load", _onLoad, this);
-            self._registry.off("error", _onError, this);
-
-            if (failed && failed.length) {
-                if (done) {
-                    done("Failed to load some assets", failed);
-                }
-                self.fire("error", failed);
-            } else {
-                if (done) done();
-                self.fire("load", this._assets);
-            }
-        };
-        /* eslint-enable no-use-before-define */
-
-        var _onLoad = function (asset) {
-            if (self._assets.indexOf(asset) >= 0) {
-                count++;
-            }
-
-            if (count === total) {
-                // call next tick because we want
-                // this to be fired after any other
-                // asset load events
-                setTimeout(function () {
-                    _done(failed);
-                }, 0);
-            }
-        };
-
-        var _onError = function (err, asset) {
-            if (self._assets.indexOf(asset) >= 0) {
-                count++;
-                failed.push(asset);
-            }
-
-            if (count === total) {
-                // call next tick because we want
-                // this to be fired after any other
-                // asset load events
-                setTimeout(function () {
-                    _done(failed);
-                }, 0);
-            }
-        };
-
-        this._registry.on("load", _onLoad, this);
-        this._registry.on("error", _onError, this);
+        this._registry.on("load", this._onLoad, this);
+        this._registry.on("error", this._onError, this);
 
         for (i = 0; i < l; i++) {
             asset = this._assets[i];
 
             if (!asset.loading && !asset.loaded) {
                 this._registry.load(asset);
-                total++;
+                this._total++;
             }
         }
     };
-
 
     /**
      * @function
@@ -112,6 +103,92 @@ Object.assign(pc, function () {
                 done.call(scope, assets);
             });
         }
+    };
+
+    // called when all assets are loaded
+    AssetListLoader.prototype._loadingComplete = function () {
+        this._loaded = true;
+        this._registry.off("load", this._onLoad, this);
+        this._registry.off("error", this._onError, this);
+
+        if (this._failed && this._failed.length) {
+            if (this._callback) {
+                this._callback.call(this._scope, "Failed to load some assets", this._failed);
+            }
+            this.fire("error", this._failed);
+        } else {
+            if (this._callback) {
+                this._callback.call(this._scope);
+            }
+            this.fire("load", this._assets);
+        }
+    };
+
+    // called when an (any) asset is loaded
+    AssetListLoader.prototype._onLoad = function (asset) {
+        var self = this;
+
+        // check this is an asset we care about
+        if (this._assets.indexOf(asset) >= 0) {
+            this._count++;
+            this.fire("progress", asset);
+        }
+
+        if (this._count === this._total) {
+            // call next tick because we want
+            // this to be fired after any other
+            // asset load events
+            setTimeout(function () {
+                self._loadingComplete(self._failed);
+            }, 0);
+        }
+    };
+
+    // called when an asset fails to load
+    AssetListLoader.prototype._onError = function (err, asset) {
+        var self = this;
+
+        // check this is an asset we care about
+        if (this._assets.indexOf(asset) >= 0) {
+            this._count++;
+            this._failed.push(asset);
+        }
+
+        if (this._count === this._total) {
+            // call next tick because we want
+            // this to be fired after any other
+            // asset load events
+            setTimeout(function () {
+                self._loadingComplete(self._failed);
+            }, 0);
+        }
+    };
+
+    // called when a expected asset is added to the asset registry
+    AssetListLoader.prototype._onAddAsset = function (asset) {
+        // remove from waiting list
+        var index = this._waitingAssets.indexOf(asset);
+        if (index >= 0) {
+            this._waitingAssets.splice(index, 1);
+        }
+
+        this._assets.push(asset);
+        var i;
+        var l = this._assets.length;
+        for (i = 0; i < l; i++) {
+            asset = this._assets[i];
+
+            if (!asset.loading && !asset.loaded) {
+                this._registry.load(asset);
+            }
+        }
+    };
+
+    AssetListLoader.prototype._waitForAsset = function (assetId) {
+        var self = this;
+
+        this._waitingAssets.push(assetId);
+        this._registry.once('add:' + assetId, this._onAddAsset, this);
     };
 
     return {
