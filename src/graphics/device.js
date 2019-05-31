@@ -1516,35 +1516,70 @@ Object.assign(pc, function () {
         // This is to overcome an issue where iphone xr and xs ignores further updates to the mip data
         // after invoking gl.generateMipmap on the texture (which was the previous method of ensuring
         // the texture's full mip chain was complete).
-        // NOTE: this function copies texture data from the previous mip level instead of downsampling it.
+        // NOTE: this function only resamples RGBA8 and RGBAFloat32 data.
         _completePartialMipmapChain: function (texture) {
 
             var requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
 
-            if (texture._levels.length === 1 ||
-                texture._levels.length === requiredMipLevels ||
-                !(texture._levels[0] instanceof Array) ||
-                texture._compressed ||
-                texture._volume) {
+            var isHtmlElement = function (object) {
+                return (object instanceof HTMLCanvasElement) ||
+                       (object instanceof HTMLImageElement) ||
+                       (object instanceof HTMLVideoElement);
+            };
+
+            if (!(texture._format === pc.PIXELFORMAT_R8_G8_B8_A8 ||
+                  texture._format === pc.PIXELFORMAT_RGBA32F) ||
+                  texture._volume ||
+                  texture._compressed ||
+                  texture._levels.length === 1 ||
+                  texture._levels.length === requiredMipLevels ||
+                  isHtmlElement(texture._cubemap ? texture._levels[0][0] : texture._levels[0])) {
                 return;
             }
 
+            var downsample = function (width, height, data) {
+                var sampledWidth = Math.max(1, width >> 1);
+                var sampledHeight = Math.max(1, height >> 1);
+                var sampledData = data.subarray(0, sampledWidth * sampledHeight * 4).map(function (v) {
+                    return 0;
+                });
+
+                var xs = Math.floor(width / sampledWidth);
+                var ys = Math.floor(height / sampledHeight);
+                var xsys = xs * ys;
+
+                for (var y = 0; y < sampledHeight; ++y) {
+                    for (var x = 0; x < sampledWidth; ++x) {
+                        for (var e = 0; e < 4; ++e) {
+                            var sum = 0;
+                            for (var sy = 0; sy < ys; ++sy) {
+                                for (var sx = 0; sx < xs; ++sx) {
+                                    sum += data[(x * xs + sx + (y * ys + sy) * width) * 4 + e];
+                                }
+                            }
+                            sampledData[(x + y * sampledWidth) * 4 + e] = sum / xsys;
+                        }
+                    }
+                }
+
+                return sampledData;
+            };
+
             // step through levels
-            var elementsPerPixel = (texture._cubemap ? texture._levels[0][0] : texture._levels[0]).length / (texture._width * texture._height);
             for (var level = texture._levels.length; level < requiredMipLevels; ++level) {
-                var width = Math.max(1, texture._width >> level);
-                var height = Math.max(1, texture._height >> level);
-                var size = Math.floor(width * height * elementsPerPixel);
+                var width = Math.max(1, texture._width >> (level - 1));
+                var height = Math.max(1, texture._height >> (level - 1));
                 if (texture._cubemap) {
                     var mips = [];
                     for (var face = 0; face < 6; ++face) {
-                        mips.push(texture._levels[level - 1][face].subarray(0, size));
+                        mips.push(downsample(width, height, texture._levels[level - 1][face]));
                     }
                     texture._levels.push(mips);
                 } else {
-                    texture._levels.push(texture._levels[level - 1].subarray(0, size));
+                    texture._levels.push(downsample(width, height, texture._levels[level - 1]));
                 }
             }
+
             texture._levelsUpdated = texture._cubemap ? [[true, true, true, true, true, true]] : [true];
         },
 
@@ -1560,6 +1595,8 @@ Object.assign(pc, function () {
 
             this._completePartialMipmapChain(texture);
 
+            var requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
+
             while (texture._levels[mipLevel] || mipLevel === 0) {
                 // Upload all existing mip levels. Initialize 0 mip anyway.
 
@@ -1571,6 +1608,14 @@ Object.assign(pc, function () {
                 }
 
                 mipObject = texture._levels[mipLevel];
+
+                if (mipLevel == 1 && !texture._compressed && texture._levels.length < requiredMipLevels) {
+                    // We have more than one mip levels we want to assign, but we need all mips to make
+                    // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
+                    // (this implies the call to _completePartialMipLevels above was unsuccessful)
+                    gl.generateMipmap(texture._glTarget);
+                    texture._mipmapsUploaded = true;
+                }
 
                 if (texture._cubemap) {
                     // ----- CUBEMAP -----
