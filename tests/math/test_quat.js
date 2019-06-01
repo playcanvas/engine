@@ -339,9 +339,9 @@ describe("pc.Quat", function () {
     });
 
     it("slerp: identical input quaternions", function () {
-        qr = new pc.Quat();
-        q1 = new pc.Quat().setFromEulerAngles(10, 20, 30);
-        q2 = new pc.Quat().setFromEulerAngles(10, 20, 30);
+        var qr = new pc.Quat();
+        var q1 = new pc.Quat().setFromEulerAngles(10, 20, 30);
+        var q2 = new pc.Quat().setFromEulerAngles(10, 20, 30);
 
         qr.slerp(q1, q2, 0);
         equal(qr.x, q1.x);
@@ -363,9 +363,9 @@ describe("pc.Quat", function () {
     });
 
     it("slerp: different input quaternions", function () {
-        qr = new pc.Quat();
-        q1 = new pc.Quat().setFromEulerAngles(10, 20, 30);
-        q2 = new pc.Quat().setFromEulerAngles(40, 50, 60);
+        var qr = new pc.Quat();
+        var q1 = new pc.Quat().setFromEulerAngles(10, 20, 30);
+        var q2 = new pc.Quat().setFromEulerAngles(40, 50, 60);
 
         qr.slerp(q1, q2, 0);
         close(qr.x, q1.x, 0.0001);
@@ -380,5 +380,20 @@ describe("pc.Quat", function () {
         close(qr.w, q2.w, 0.0001);
     });
 
-});
+    it("setFromMat4 from a zero-scale matrix doesn't change the quaternion", function () {
+        var m4 = new pc.Mat4().setTRS(
+            new pc.Vec3(0, 1, 2),
+            new pc.Quat(0, 0, 0, 1),
+            new pc.Vec3(0, 0, 0));
 
+        var quat = new pc.Quat().setFromEulerAngles(30, 45, 0);
+        var q = quat.clone();
+        q.setFromMat4(m4);
+
+        equal(quat.x, q.x);
+        equal(quat.y, q.y);
+        equal(quat.z, q.z);
+        equal(quat.w, q.w);
+    });
+
+});

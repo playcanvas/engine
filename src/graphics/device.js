@@ -529,10 +529,6 @@ Object.assign(pc, function () {
             this.boneLimit = 34;
         }
 
-        if (this.unmaskedRenderer === 'Apple A8 GPU') {
-            this.forceCpuParticles = true;
-        }
-
         // Profiler stats
         this._drawCallsPerFrame = 0;
         this._shaderSwitchesPerFrame = 0;
@@ -1515,6 +1511,43 @@ Object.assign(pc, function () {
             }
         },
 
+        // In the case where a texture has more than 1 level of mip data specified, but doesn't have
+        // the full mip chain, we generate the missing levels here.
+        // This is to overcome an issue where iphone xr and xs ignores further updates to the mip data
+        // after invoking gl.generateMipmap on the texture (which was the previous method of ensuring
+        // the texture's full mip chain was complete).
+        // NOTE: this function copies texture data from the previous mip level instead of downsampling it.
+        _completePartialMipmapChain: function (texture) {
+
+            var requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
+
+            if (texture._levels.length === 1 ||
+                texture._levels.length === requiredMipLevels ||
+                !(texture._levels[0] instanceof Array) ||
+                texture._compressed ||
+                texture._volume) {
+                return;
+            }
+
+            // step through levels
+            var elementsPerPixel = (texture._cubemap ? texture._levels[0][0] : texture._levels[0]).length / (texture._width * texture._height);
+            for (var level = texture._levels.length; level < requiredMipLevels; ++level) {
+                var width = Math.max(1, texture._width >> level);
+                var height = Math.max(1, texture._height >> level);
+                var size = Math.floor(width * height * elementsPerPixel);
+                if (texture._cubemap) {
+                    var mips = [];
+                    for (var face = 0; face < 6; ++face) {
+                        mips.push(texture._levels[level - 1][face].subarray(0, size));
+                    }
+                    texture._levels.push(mips);
+                } else {
+                    texture._levels.push(texture._levels[level - 1].subarray(0, size));
+                }
+            }
+            texture._levelsUpdated = texture._cubemap ? [[true, true, true, true, true, true]] : [true];
+        },
+
         uploadTexture: function (texture) {
             var gl = this.gl;
 
@@ -1524,6 +1557,8 @@ Object.assign(pc, function () {
             var mipLevel = 0;
             var mipObject;
             var resMult;
+
+            this._completePartialMipmapChain(texture);
 
             while (texture._levels[mipLevel] || mipLevel === 0) {
                 // Upload all existing mip levels. Initialize 0 mip anyway.
@@ -1536,13 +1571,6 @@ Object.assign(pc, function () {
                 }
 
                 mipObject = texture._levels[mipLevel];
-
-                if (mipLevel == 1 && !texture._compressed) {
-                    // We have more than one mip levels we want to assign, but we need all mips to make
-                    // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
-                    gl.generateMipmap(texture._glTarget);
-                    texture._mipmapsUploaded = true;
-                }
 
                 if (texture._cubemap) {
                     // ----- CUBEMAP -----

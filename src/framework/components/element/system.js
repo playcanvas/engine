@@ -223,6 +223,7 @@ Object.assign(pc, function () {
                 if (data.outlineThickness !== undefined) component.outlineThickness = data.outlineThickness;
                 if (data.shadowColor !== undefined) component.shadowColor = data.shadowColor;
                 if (data.shadowOffset !== undefined) component.shadowOffset = data.shadowOffset;
+                if (data.enableMarkup !== undefined) component.enableMarkup = data.enableMarkup;
             } else {
                 // group
             }
@@ -293,7 +294,8 @@ Object.assign(pc, function () {
                 outlineColor: source.outlineColor && source.outlineColor.clone() || source.outlineColor,
                 outlineThickness: source.outlineThickness,
                 shadowColor: source.shadowColor && source.shadowColor.clone() || source.shadowColor,
-                shadowOffset: source.shadowOffset && source.shadowOffset.clone() || source.shadowOffset
+                shadowOffset: source.shadowOffset && source.shadowOffset.clone() || source.shadowOffset,
+                enableMarkup: source.enableMarkup
             };
 
             if (source.key !== undefined && source.key !== null) {
@@ -322,6 +324,7 @@ Object.assign(pc, function () {
                         this.defaultScreenSpaceTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                         this.defaultScreenSpaceTextMaterial.depthWrite = false;
                         this.defaultScreenSpaceTextMaterial.depthTest = false;
+                        this.defaultScreenSpaceTextMaterial.emissiveVertexColor = true;
                         this.defaultScreenSpaceTextMaterial.update();
                     }
                     return this.defaultScreenSpaceTextMaterial;
@@ -343,6 +346,7 @@ Object.assign(pc, function () {
                     this.defaultScreenSpaceBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                     this.defaultScreenSpaceBitmapTextMaterial.depthWrite = false;
                     this.defaultScreenSpaceBitmapTextMaterial.depthTest = false;
+                    this.defaultScreenSpaceBitmapTextMaterial.emissiveVertexColor = true;
                     this.defaultScreenSpaceBitmapTextMaterial.update();
                 }
                 return this.defaultScreenSpaceBitmapTextMaterial;
@@ -362,6 +366,7 @@ Object.assign(pc, function () {
                     this.defaultTextMaterial.opacity = 0.5;
                     this.defaultTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                     this.defaultTextMaterial.depthWrite = false;
+                    this.defaultTextMaterial.emissiveVertexColor = true;
                     this.defaultTextMaterial.update();
                 }
                 return this.defaultTextMaterial;
@@ -382,6 +387,7 @@ Object.assign(pc, function () {
                 this.defaultBitmapTextMaterial.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
                 this.defaultBitmapTextMaterial.blendType = pc.BLEND_PREMULTIPLIED;
                 this.defaultBitmapTextMaterial.depthWrite = false;
+                this.defaultBitmapTextMaterial.emissiveVertexColor = true;
                 this.defaultBitmapTextMaterial.update();
             }
             return this.defaultBitmapTextMaterial;
