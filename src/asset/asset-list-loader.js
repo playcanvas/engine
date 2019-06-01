@@ -47,7 +47,7 @@ Object.assign(pc, function () {
         this._registry.off("error", this._onError);
 
         this._waitingAssets.forEach(function (id) {
-            self_registry.off("add:" + id, this._onAddAsset);
+            self._registry.off("add:" + id, this._onAddAsset);
         });
 
         this.off("progress");
