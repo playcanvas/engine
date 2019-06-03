@@ -107,7 +107,11 @@ Object.assign(pc, function () {
         },
 
         onRemove: function () {
-            this.asset = null;
+            if (this.type === 'asset') {
+                this.asset = null;
+            } else {
+                this.model = null;
+            }
             this.materialAsset = null;
             this._unsetMaterialEvents();
         },
