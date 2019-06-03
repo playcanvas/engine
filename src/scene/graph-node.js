@@ -1144,6 +1144,9 @@ Object.assign(pc, function () {
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node._dirtifyWorld();
+            // node might be already marked as dirty, in that case the whole chain stays frozen, so let's enforce unfreeze
+            if (this._frozen)
+                node._unfreezeParentToRoot();
 
             // alert an entity that it has been inserted
             if (node.fire) node.fire('insert', this);
