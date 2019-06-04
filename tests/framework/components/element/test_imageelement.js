@@ -972,7 +972,7 @@ describe('pc.ImageElement', function () {
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
     });
 
-    it('TextureAtlas asset events are unbound if sprite is changed while loading', function (done) {
+    it.skip('TextureAtlas asset events are unbound if sprite is changed while loading', function (done) {
         app.assets.list().forEach(function (asset) {
             asset.unload();
         });
