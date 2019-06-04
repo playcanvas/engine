@@ -116,6 +116,9 @@ Object.assign(pc, function () {
         this._system.app.i18n.on('set:locale', this._onLocaleSet, this);
         this._system.app.i18n.on('data:add', this._onLocalizationData, this);
         this._system.app.i18n.on('data:remove', this._onLocalizationData, this);
+
+        // substring render
+        this._renderRange = { start: 0, end: 0 };
     };
 
     var LINE_BREAK_CHAR = /^[\r\n]$/;
@@ -330,28 +333,7 @@ Object.assign(pc, function () {
                 this._symbolColors = null;
             }
 
-            var charactersPerTexture = {};
-
-            var char, info, map;
-            for (i = 0, len = this._symbols.length; i < len; i++) {
-                char = this._symbols[i];
-                info = this._font.data.chars[char];
-                // if char is missing use 'space' or first char in map
-                if (!info) {
-                    if (this._font.data.chars[' ']) {
-                        info = this._font.data.chars[' '];
-                    } else {
-                        info = this._font.data.chars[Object.keys(this._font.data.chars)[0]];
-                    }
-                }
-
-                map = info.map;
-
-                if (!charactersPerTexture[map])
-                    charactersPerTexture[map] = 0;
-
-                charactersPerTexture[map]++;
-            }
+            var charactersPerTexture = this._calculateCharsPerTexture();
 
             var removedModel = false;
 
@@ -492,6 +474,11 @@ Object.assign(pc, function () {
             }
 
             this._updateMeshes();
+
+            // update render range
+            this._renderRange.start = 0;
+            this._renderRange.end = this._symbols.length;
+            this._updateRenderRange();
         },
 
         _removeMeshInstance: function (meshInstance) {
@@ -1120,6 +1107,53 @@ Object.assign(pc, function () {
         _shouldAutoFit: function () {
             return this._autoFitWidth && !this._autoWidth ||
                    this._autoFitHeight && !this._autoHeight;
+        },
+
+        // calculate the number of characters per texture up to, but not including
+        // the specified symbolIndex
+        _calculateCharsPerTexture: function (symbolIndex) {
+            var charactersPerTexture = {};
+
+            if (symbolIndex === undefined) {
+                symbolIndex = this._symbols.length;
+            }
+
+            var i, len, char, info, map;
+            for (i = 0, len = symbolIndex; i < len; i++) {
+                char = this._symbols[i];
+                info = this._font.data.chars[char];
+                if (!info) {
+                    // if char is missing use 'space' or first char in map
+                    info = this._font.data.chars[' '];
+                    if (!info) {
+                        // otherwise if space is also not present use the first character in the
+                        // set
+                        info = this._font.data.chars[Object.keys(this._font.data.chars)[0]];
+                    }
+                }
+
+                map = info.map;
+                if (!charactersPerTexture[map]) {
+                    charactersPerTexture[map] = 1;
+                } else {
+                    charactersPerTexture[map]++;
+                }
+            }
+            return charactersPerTexture;
+        },
+
+        _updateRenderRange: function () {
+            var startChars = this._renderRange.start === 0 ? 0 : this._calculateCharsPerTexture(this._renderRange.start);
+            var endChars = this._renderRange.end === 0 ? 0 : this._calculateCharsPerTexture(this._renderRange.end);
+
+            var i, len;
+            for (i = 0, len = this._meshInfo.length; i < len; i++) {
+                var start = startChars[i] || 0;
+                var end = endChars[i] || 0;
+                var mesh = this._meshInfo[i].meshInstance.mesh;
+                mesh.primitive[0].base = start * 3 * 2;
+                mesh.primitive[0].count = (end - start) * 3 * 2;
+            }
         }
     });
 
@@ -1749,6 +1783,23 @@ Object.assign(pc, function () {
     Object.defineProperty(TextElement.prototype, 'rtl', {
         get: function () {
             return this._rtl;
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'renderRange', {
+        get: function () {
+            return this._renderRange;
+        },
+        set: function (range) {
+            var len = this._symbols.length;
+            var start = Math.max(0, Math.min(range.start, len));
+            var end = Math.max(start, Math.min(range.end, len));
+
+            if (start !== this._renderRange.start || end !== this._renderRange.end) {
+                this._renderRange.start = start;
+                this._renderRange.end = end;
+                this._updateRenderRange();
+            }
         }
     });
 
