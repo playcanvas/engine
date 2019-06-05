@@ -117,8 +117,9 @@ Object.assign(pc, function () {
         this._system.app.i18n.on('data:add', this._onLocalizationData, this);
         this._system.app.i18n.on('data:remove', this._onLocalizationData, this);
 
-        // substring render
-        this._renderRange = { start: 0, end: 0 };
+        // substring render range
+        this._rangeStart = 0;
+        this._rangeEnd = 0;
     };
 
     var LINE_BREAK_CHAR = /^[\r\n]$/;
@@ -476,8 +477,8 @@ Object.assign(pc, function () {
             this._updateMeshes();
 
             // update render range
-            this._renderRange.start = 0;
-            this._renderRange.end = this._symbols.length;
+            this._rangeStart = 0;
+            this._rangeEnd = this._symbols.length;
             this._updateRenderRange();
         },
 
@@ -1143,8 +1144,8 @@ Object.assign(pc, function () {
         },
 
         _updateRenderRange: function () {
-            var startChars = this._renderRange.start === 0 ? 0 : this._calculateCharsPerTexture(this._renderRange.start);
-            var endChars = this._renderRange.end === 0 ? 0 : this._calculateCharsPerTexture(this._renderRange.end);
+            var startChars = this._rangeStart === 0 ? 0 : this._calculateCharsPerTexture(this._rangeStart);
+            var endChars = this._rangeEnd === 0 ? 0 : this._calculateCharsPerTexture(this._rangeEnd);
 
             var i, len;
             for (i = 0, len = this._meshInfo.length; i < len; i++) {
@@ -1786,18 +1787,29 @@ Object.assign(pc, function () {
         }
     });
 
-    Object.defineProperty(TextElement.prototype, 'renderRange', {
+    Object.defineProperty(TextElement.prototype, 'rangeStart', {
         get: function () {
-            return this._renderRange;
+            return this._rangeStart;
         },
-        set: function (range) {
-            var len = this._symbols.length;
-            var start = Math.max(0, Math.min(range.start, len));
-            var end = Math.max(start, Math.min(range.end, len));
+        set: function (rangeStart) {
+            rangeStart = Math.max(0, Math.min(rangeStart, this._symbols.length));
 
-            if (start !== this._renderRange.start || end !== this._renderRange.end) {
-                this._renderRange.start = start;
-                this._renderRange.end = end;
+            if (rangeStart !== this._rangeStart) {
+                this._rangeStart = rangeStart;
+                this._updateRenderRange();
+            }
+        }
+    });
+
+    Object.defineProperty(TextElement.prototype, 'rangeEnd', {
+        get: function () {
+            return this._rangeEnd;
+        },
+        set: function (rangeEnd) {
+            rangeEnd = Math.max(this._rangeStart, Math.min(rangeEnd, this._symbols.length));
+
+            if (rangeEnd !== this._rangeEnd) {
+                this._rangeEnd = rangeEnd;
                 this._updateRenderRange();
             }
         }
