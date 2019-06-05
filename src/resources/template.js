@@ -32,9 +32,13 @@ Object.assign(pc, function () {
         _waitForDependencies: function (response, callback) {
             var templateIds = pc.TemplateUtils.extractTemplateIds(response.entities);
 
-            new pc.LoadDependencies(this._app, templateIds, function () {
+            var loader = new pc.AssetListLoader(templateIds, this._app.assets);
+
+            loader.load(function (err) {
+                // todo: handle err
+
                 callback(null, response);
-            }).run();
+            });
         }
     });
 
