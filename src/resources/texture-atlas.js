@@ -18,6 +18,7 @@ Object.assign(pc, function () {
 
     var TextureAtlasHandler = function (loader) {
         this._loader = loader;
+        this.retryRequests = false;
     };
 
     Object.assign(TextureAtlasHandler.prototype, {
@@ -36,7 +37,9 @@ Object.assign(pc, function () {
             // if supplied with a json file url (probably engine-only)
             // load json data then load texture of same name
             if (pc.path.getExtension(url.original) === '.json') {
-                pc.http.get(url.load, function (err, response) {
+                pc.http.get(url.load, {
+                    retry: this.retryRequests
+                }, function (err, response) {
                     if (!err) {
                         // load texture
                         var textureUrl = url.original.replace('.json', '.png');
