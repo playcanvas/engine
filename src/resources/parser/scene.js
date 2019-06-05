@@ -11,6 +11,10 @@ Object.assign(pc, function () {
             var id, i;
             var parent = null;
 
+            if (data.collapsedInstances) {
+                this._addCollapsedToEntities(this._app, data);
+            }
+
             // instantiate entities
             for (id in data.entities) {
                 entities[id] = this._createEntity(data.entities[id]);
@@ -33,10 +37,6 @@ Object.assign(pc, function () {
             }
 
             this._openComponentData(parent, data.entities);
-
-            if (data.collapsedInstances) {
-                this._handleCollapsedInstances(this._app, data, entities);
-            }
 
             return parent;
         },
@@ -95,11 +95,12 @@ Object.assign(pc, function () {
             return entity;
         },
 
-        _handleCollapsedInstances: function (app, data, entities) {
+        _addCollapsedToEntities: function (app, data) {
             data.collapsedInstances.forEach(function (h) {
-                var p = entities[h.parent];
+                var expanded = pc.TemplateUtils.expandTemplateEntities(
+                    app, h.instanceEntities);
 
-                new pc.AsyncTemplateLoad(app, h, p).run();
+                Object.assign(data.entities, expanded);
             });
         }
     });
