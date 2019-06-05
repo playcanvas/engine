@@ -15,11 +15,16 @@ Object.assign(pc, function () {
                 };
             }
 
+            var assets = this._app.assets;
+
             pc.http.get(url.load, {
                 retry: this.retryRequests
             }, function (err, response) {
                 if (!err) {
-                    callback(null, response);
+                    pc.TemplateUtils.waitForTemplatesInScene(
+                        response,
+                        assets,
+                        callback);
                 } else {
                     var errMsg = 'Error while loading scene ' + url.original;
                     if (err.message) {

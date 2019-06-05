@@ -1,7 +1,41 @@
 Object.assign(pc, function () {
 
     var TemplateUtils = {
-        extractTemplateIds: function (entities) {
+        waitForTemplatesInScene: function(data, assets, callback) {
+            if (data.collapsedInstances) {
+                var entities = pc.TemplateUtils._getAllCollapsedEntities(data);
+
+                pc.TemplateUtils.waitForTemplateAssets(
+                    entities,
+                    assets,
+                    callback,
+                    data);
+            } else {
+                callback(null, response);
+            }
+        },
+
+        waitForTemplateAssets: function(entities, assets, callback, response) {
+            var templateIds = pc.TemplateUtils._extractTemplateIds(entities);
+
+            var loader = new pc.AssetListLoader(templateIds, assets);
+
+            loader.load(function (err) {
+                callback(err, response);
+            });
+        },
+
+        _getAllCollapsedEntities: function(data) {
+            var entities = {};
+
+            data.collapsedInstances.forEach(function (h) {
+                Object.assign(entities, h.instanceEntities);
+            });
+
+            return entities;
+        },
+
+        _extractTemplateIds: function (entities) {
             var templateIds = [];
 
             for (var guid in entities) {

@@ -14,29 +14,23 @@ Object.assign(pc, function () {
                 };
             }
 
-            var that = this;
+            var assets = this._app.assets;
 
             pc.http.get(url.load, function (err, response) {
                 if (err) {
                     callback("Error requesting template: " + url.original);
                 } else {
-                    that._waitForDependencies(response, callback);
+                    pc.TemplateUtils.waitForTemplateAssets(
+                        response.entities,
+                        assets,
+                        callback,
+                        response);
                 }
             });
         },
 
         open: function (url, data) {
             return new pc.Template(this._app, data);
-        },
-
-        _waitForDependencies: function (response, callback) {
-            var templateIds = pc.TemplateUtils.extractTemplateIds(response.entities);
-
-            var loader = new pc.AssetListLoader(templateIds, this._app.assets);
-
-            loader.load(function (err) {
-                callback(err, response);
-            });
         }
     });
 
