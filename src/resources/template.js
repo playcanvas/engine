@@ -35,9 +35,7 @@ Object.assign(pc, function () {
             var loader = new pc.AssetListLoader(templateIds, this._app.assets);
 
             loader.load(function (err) {
-                // todo: handle err
-
-                callback(null, response);
+                callback(err, response);
             });
         }
     });
