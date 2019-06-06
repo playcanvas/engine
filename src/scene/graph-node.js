@@ -206,6 +206,8 @@ Object.assign(pc, function () {
         _onHierarchyStateChanged: function (enabled) {
             // Override in derived classes
             this._enabledInHierarchy = enabled;
+            if (enabled && !this._frozen)
+                this._unfreezeParentToRoot();
         },
 
         _cloneInternal: function (clone) {
