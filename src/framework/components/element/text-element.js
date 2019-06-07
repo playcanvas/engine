@@ -1144,9 +1144,6 @@ Object.assign(pc, function () {
         },
 
         _updateRenderRange: function () {
-            if (!this._meshInfo) {
-                return;
-            }
             var startChars = this._rangeStart === 0 ? 0 : this._calculateCharsPerTexture(this._rangeStart);
             var endChars = this._rangeEnd === 0 ? 0 : this._calculateCharsPerTexture(this._rangeEnd);
 
@@ -1154,9 +1151,14 @@ Object.assign(pc, function () {
             for (i = 0, len = this._meshInfo.length; i < len; i++) {
                 var start = startChars[i] || 0;
                 var end = endChars[i] || 0;
-                var mesh = this._meshInfo[i].meshInstance.mesh;
-                mesh.primitive[0].base = start * 3 * 2;
-                mesh.primitive[0].count = (end - start) * 3 * 2;
+                var instance = this._meshInfo[i].meshInstance;
+                if (instance) {
+                    var mesh = instance.mesh;
+                    if (mesh) {
+                        mesh.primitive[0].base = start * 3 * 2;
+                        mesh.primitive[0].count = (end - start) * 3 * 2;
+                    }
+                }
             }
         }
     });
