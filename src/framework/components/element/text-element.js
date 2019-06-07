@@ -1144,6 +1144,9 @@ Object.assign(pc, function () {
         },
 
         _updateRenderRange: function () {
+            if (!this._meshInfo) {
+                return;
+            }
             var startChars = this._rangeStart === 0 ? 0 : this._calculateCharsPerTexture(this._rangeStart);
             var endChars = this._rangeEnd === 0 ? 0 : this._calculateCharsPerTexture(this._rangeEnd);
 
