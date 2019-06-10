@@ -215,6 +215,7 @@ Object.assign(pc, function () {
         this._gpuUpdater = new pc.ParticleGPUUpdater(this, gd);
         this._cpuUpdater = new pc.ParticleCPUUpdater(this);
 
+        this.constantLightCube = gd.scope.resolve("lightCube[0]");
         this.emitterPosUniform = new Float32Array(3);
         this.wrapBoundsUniform = new Float32Array(3);
         this.emitterScaleUniform = new Float32Array([1, 1, 1]);
@@ -375,8 +376,12 @@ Object.assign(pc, function () {
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
 
-            this.worldBoundsNoTrail.setFromTransformedAabb(
-                this.localBounds, this.localSpace ? pc.Mat4.IDENTITY : this.node.getWorldTransform());
+            var nodeWT = this.node.getWorldTransform();
+            if (this.localSpace) {
+                this.worldBoundsNoTrail.copy(this.localBounds);
+            } else {
+                this.worldBoundsNoTrail.setFromTransformedAabb(this.localBounds, nodeWT);
+            }
 
             this.worldBoundsTrail[0].add(this.worldBoundsNoTrail);
             this.worldBoundsTrail[1].add(this.worldBoundsNoTrail);
@@ -392,7 +397,13 @@ Object.assign(pc, function () {
 
             this.worldBoundsSize.copy(this.worldBounds.halfExtents).scale(2);
 
-            this.meshInstance.mesh.aabb = this.worldBounds;
+            if (this.localSpace) {
+                this.meshInstance.aabb.setFromTransformedAabb(this.worldBounds, nodeWT);
+                this.meshInstance.mesh.aabb.setFromTransformedAabb(this.worldBounds, nodeWT);
+            } else {
+                this.meshInstance.aabb.copy(this.worldBounds);
+                this.meshInstance.mesh.aabb.copy(this.worldBounds);
+            }
             this.meshInstance._aabbVer = 1 - this.meshInstance._aabbVer;
 
             if (this.pack8) this.calculateBoundsMad();
@@ -540,6 +551,7 @@ Object.assign(pc, function () {
 
             // Dynamic simulation data
             this.vbToSort = new Array(this.numParticles);
+            for (var iSort = 0; iSort < this.numParticles; iSort++) this.vbToSort[iSort] = [0, 0];
             this.particleDistance = new Float32Array(this.numParticles);
 
             this._gpuUpdater.randomize();
@@ -632,7 +644,11 @@ Object.assign(pc, function () {
             this.meshInstance.updateKey(); // shouldn't be here?
             this.meshInstance.cull = true;
             this.meshInstance._noDepthDrawGl1 = true;
-            this.meshInstance.aabb = this.worldBounds;
+            if (this.localSpace) {
+                this.meshInstance.aabb.setFromTransformedAabb(this.worldBounds, this.node.getWorldTransform());
+            } else {
+                this.meshInstance.aabb.copy(this.worldBounds);
+            }
             this.meshInstance._updateAabb = false;
             this.meshInstance.visible = wasVisible;
 

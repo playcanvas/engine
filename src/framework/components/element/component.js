@@ -102,6 +102,9 @@ Object.assign(pc, function () {
      * @property {Number} batchGroupId Assign element to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
+     * @property {Boolean} enableMarkup Flag for enabling markup processing. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Number} rangeStart Index of the first character to render. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
+     * @property {Number} rangeEnd Index of the last character to render. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
      */
     var ElementComponent = function ElementComponent(system, entity) {
         pc.Component.call(this, system, entity);
@@ -1534,6 +1537,9 @@ Object.assign(pc, function () {
     _define("outlineThickness");
     _define("shadowColor");
     _define("shadowOffset");
+    _define("enableMarkup");
+    _define("rangeStart");
+    _define("rangeEnd");
 
     return {
         ElementComponent: ElementComponent

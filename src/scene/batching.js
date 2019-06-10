@@ -541,6 +541,18 @@ Object.assign(pc, function () {
         return  true;
     }
 
+    var worldMatX = new pc.Vec3();
+    var worldMatY = new pc.Vec3();
+    var worldMatZ = new pc.Vec3();
+    function getScaleSign(mi) {
+        var wt = mi.node.worldTransform;
+        wt.getX(worldMatX);
+        wt.getY(worldMatY);
+        wt.getZ(worldMatZ);
+        worldMatX.cross(worldMatX, worldMatY);
+        return worldMatX.dot(worldMatZ) >= 0 ? 1 : -1;
+    }
+
     /**
      * @function
      * @name pc.BatchManager#prepare
@@ -568,7 +580,7 @@ Object.assign(pc, function () {
         var maxInstanceCount = this.device.supportsBoneTextures ? 1024 : this.device.boneLimit;
 
         var i;
-        var material, layer, vertCount, params, lightList, defs, stencil, staticLights;
+        var material, layer, vertCount, params, lightList, defs, stencil, staticLights, scaleSign;
         var aabb = new pc.BoundingBox();
         var testAabb = new pc.BoundingBox();
         var skipUIAabb = null;
@@ -607,6 +619,7 @@ Object.assign(pc, function () {
             lightList = meshInstancesLeftA[0]._staticLightList;
             vertCount = meshInstancesLeftA[0].mesh.vertexBuffer.getNumVertices();
             aabb.copy(meshInstancesLeftA[0].aabb);
+            scaleSign = getScaleSign(meshInstancesLeftA[0]);
             skipUIAabb = null;
 
             for (i = 1; i < meshInstancesLeftA.length; i++) {
@@ -641,6 +654,11 @@ Object.assign(pc, function () {
                         skipMesh(mi);
                         continue;
                     }
+                }
+                // Split by negavive scale
+                if (scaleSign != getScaleSign(mi)) {
+                    skipMesh(mi);
+                    continue;
                 }
                 // Split by parameters
                 if (!equalParamSets(params, mi.parameters)) {
@@ -993,6 +1011,7 @@ Object.assign(pc, function () {
         meshInstance.drawOrder = batch.origMeshInstances[0].drawOrder;
         meshInstance.stencilFront = batch.origMeshInstances[0].stencilFront;
         meshInstance.stencilBack = batch.origMeshInstances[0].stencilBack;
+        meshInstance.flipFaces = getScaleSign(batch.origMeshInstances[0]) < 0;
         batch.meshInstance = meshInstance;
         this.update(batch);
 

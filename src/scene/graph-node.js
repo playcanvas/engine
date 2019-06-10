@@ -35,6 +35,11 @@ Object.assign(pc, function () {
         this._dirtyLocal = false;
         this._aabbVer = 0;
 
+        // _frozen flag marks the node to ignore hierarchy sync etirely (including children nodes)
+        // engine code automatically freezes and unfreezes objects whenever required
+        // segrigating dynamic and stationary nodes into subhierarchies allows to reduce sync time significantly
+        this._frozen = false;
+
         this.worldTransform = new pc.Mat4();
         this._dirtyWorld = false;
 
@@ -201,6 +206,8 @@ Object.assign(pc, function () {
         _onHierarchyStateChanged: function (enabled) {
             // Override in derived classes
             this._enabledInHierarchy = enabled;
+            if (enabled && !this._frozen)
+                this._unfreezeParentToRoot();
         },
 
         _cloneInternal: function (clone) {
@@ -911,12 +918,27 @@ Object.assign(pc, function () {
             }
         },
 
+        _unfreezeParentToRoot: function () {
+            var p = this._parent;
+            while (p) {
+                p._frozen = false;
+                p = p._parent;
+            }
+        },
+
         _dirtifyWorld: function () {
+            if (!this._dirtyWorld)
+                this._unfreezeParentToRoot();
+            this._dirtifyWorldInternal();
+        },
+
+        _dirtifyWorldInternal: function () {
             if (!this._dirtyWorld) {
+                this._frozen = false;
                 this._dirtyWorld = true;
                 for (var i = 0; i < this._children.length; i++) {
                     if (!this._children[i]._dirtyWorld)
-                        this._children[i]._dirtifyWorld();
+                        this._children[i]._dirtifyWorldInternal();
                 }
             }
             this._dirtyNormal = true;
@@ -1124,6 +1146,9 @@ Object.assign(pc, function () {
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node._dirtifyWorld();
+            // node might be already marked as dirty, in that case the whole chain stays frozen, so let's enforce unfreeze
+            if (this._frozen)
+                node._unfreezeParentToRoot();
 
             // alert an entity that it has been inserted
             if (node.fire) node.fire('insert', this);
@@ -1318,6 +1343,10 @@ Object.assign(pc, function () {
         syncHierarchy: function () {
             if (!this._enabled)
                 return;
+
+            if (this._frozen)
+                return;
+            this._frozen = true;
 
             if (this._dirtyLocal || this._dirtyWorld) {
                 this._sync();

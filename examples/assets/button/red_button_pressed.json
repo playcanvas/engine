@@ -1,0 +1,6 @@
+{
+    "renderMode": 1,
+    "pixelsPerUnit": 1,
+    "textureAtlasAsset": "../assets/button/red_button_atlas.json",
+    "frameKeys": [2]
+}

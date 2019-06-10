@@ -529,10 +529,6 @@ Object.assign(pc, function () {
             this.boneLimit = 34;
         }
 
-        if (this.unmaskedRenderer === 'Apple A8 GPU') {
-            this.forceCpuParticles = true;
-        }
-
         // Profiler stats
         this._drawCallsPerFrame = 0;
         this._shaderSwitchesPerFrame = 0;
@@ -1525,6 +1521,8 @@ Object.assign(pc, function () {
             var mipObject;
             var resMult;
 
+            var requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
+
             while (texture._levels[mipLevel] || mipLevel === 0) {
                 // Upload all existing mip levels. Initialize 0 mip anyway.
 
@@ -1537,9 +1535,10 @@ Object.assign(pc, function () {
 
                 mipObject = texture._levels[mipLevel];
 
-                if (mipLevel == 1 && !texture._compressed) {
+                if (mipLevel == 1 && !texture._compressed && texture._levels.length < requiredMipLevels) {
                     // We have more than one mip levels we want to assign, but we need all mips to make
                     // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
+                    // (this implies the call to _completePartialMipLevels above was unsuccessful)
                     gl.generateMipmap(texture._glTarget);
                     texture._mipmapsUploaded = true;
                 }

@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.10.0-dev",
+  "version": "1.22.0-dev",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -28,10 +28,10 @@
   ],
   "devDependencies": {
     "chai": "^4.2.0",
-    "eslint": "^5.15.1",
+    "eslint": "^5.16.0",
     "eslint-config-playcanvas": "^1.1.0",
     "fs-extra": "^3.0.1",
-    "google-closure-compiler": "^20180204.0.0",
+    "google-closure-compiler": "^20190513.0.0",
     "http-server": "^0.11.1",
     "karma": "^4.0.1",
     "karma-chrome-launcher": "^2.2.0",
@@ -40,15 +40,15 @@
     "mocha": "^5.2.0",
     "preprocessor": "^1.4.0",
     "sinon": "^5.1.1",
-    "uglify-js": "^3.4.9"
+    "uglify-js": "^3.5.15"
   },
   "optionalDependencies": {
-    "jsdom": "^11.12.0"
+    "jsdom": "^15.1.0"
   },
   "scripts": {
     "build": "cd build && node build.js -o output/playcanvas-latest.js",
     "build:debug": "cd build && node build.js -d -o output/playcanvas-latest.dbg.js",
-    "build:profiler": "cd build && node build.js -d -p -o output/playcanvas-latest.prf.js",
+    "build:profiler": "cd build && node build.js -p -o output/playcanvas-latest.prf.js",
     "build:min": "cd build && node build.js -l 1 -o output/playcanvas-latest.min.js",
     "serve": "npm run build; ./node_modules/.bin/http-server build/output -a localhost -p 51000",
     "closure": "java -jar node_modules/google-closure-compiler/compiler.jar --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=checkTypes --externs build/externs.js --language_in=ECMASCRIPT5_STRICT --js build/output/playcanvas-latest.js --js_output_file build/output/playcanvas.min.js",

@@ -23,6 +23,7 @@ Object.assign(pc, function () {
 
     var AudioHandler = function (manager) {
         this.manager = manager;
+        this.retryRequests = false;
     };
 
     Object.assign(AudioHandler.prototype, {
@@ -57,8 +58,11 @@ Object.assign(pc, function () {
                 callback(null, new pc.Sound(resource));
             };
 
-            var error = function (msg) {
-                msg = msg || 'Error loading audio url: ' + url.original;
+            var error = function (err) {
+                var msg = 'Error loading audio url: ' + url.original;
+                if (err) {
+                    msg += ': ' + (err.message || err);
+                }
                 console.warn(msg);
                 callback(msg);
             };
@@ -100,7 +104,10 @@ Object.assign(pc, function () {
             }
 
             // if this is a blob URL we need to set the response type to arraybuffer
-            var options = {};
+            var options = {
+                retry: this.retryRequests
+            };
+
             if (url.startsWith('blob:')) {
                 options.responseType = pc.Http.ResponseType.ARRAY_BUFFER;
             }

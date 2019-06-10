@@ -14,23 +14,11 @@ var _typeLookup = function () {
     return result;
 }();
 
-// ESLint disabled here due to ifdef comments interleaved with block comment.
-/* eslint-disable multiline-comment-style */
 /**
  * @name pc
  * @namespace
  * @description Root namespace for the PlayCanvas Engine
- * @preserve PlayCanvas Engine v__CURRENT_SDK_VERSION__ revision __REVISION__
- * http://playcanvas.com
- * Copyright 2011-2018 PlayCanvas Ltd. All rights reserved.
-// #ifdef DEBUG
- * DEBUG BUILD
-// #endif
-// #ifdef PROFILER
- * PROFILER BUILD
-// #endif
  */
-/* eslint-enable multiline-comment-style */
 var pc = {
     version: "__CURRENT_SDK_VERSION__",
     revision: "__REVISION__",
