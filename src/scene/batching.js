@@ -51,6 +51,7 @@ Object.assign(pc, function () {
         this.name = name;
         this.layers = layers === undefined ? [pc.LAYERID_WORLD] : layers;
         this._ui = false;
+        this._sprite = false;
         this._obj = {
             model: [],
             element: [],
@@ -428,6 +429,7 @@ Object.assign(pc, function () {
                 if (node.sprite && node.sprite._meshInstance) {
                     arr.push(node.sprite._meshInstance);
                     node.sprite.removeModelFromLayers();
+                    this._sprite = true;
                     node.sprite._batchGroup = group;
                 }
             }
@@ -486,7 +488,7 @@ Object.assign(pc, function () {
                 continue;
             }
 
-            lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize, groupData._ui);
+            lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize, groupData._ui || groupData._sprite);
             for (i = 0; i < lists.length; i++) {
                 batch = this.create(lists[i], groupData.dynamic, parseInt(groupId, 10));
                 if (!batch) continue;
@@ -569,11 +571,11 @@ Object.assign(pc, function () {
      * @param {Array} meshInstances Input list of mesh instances
      * @param {Boolean} dynamic Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
      * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
-     * @param {Boolean} isUI Are we batching UI elements
+     * @param {Boolean} translucent Are we batching UI elements or sprites
      * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
      * @returns {Array} An array of arrays of mesh instances, each valid to pass to {@link pc.BatchManager#create}.
      */
-    BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize, isUI) {
+    BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize, translucent) {
         if (meshInstances.length === 0) return [];
         if (maxAabbSize === undefined) maxAabbSize = Number.POSITIVE_INFINITY;
         var halfMaxAabbSize = maxAabbSize * 0.5;
@@ -583,11 +585,11 @@ Object.assign(pc, function () {
         var material, layer, vertCount, params, lightList, defs, stencil, staticLights, scaleSign;
         var aabb = new pc.BoundingBox();
         var testAabb = new pc.BoundingBox();
-        var skipUIAabb = null;
+        var skipTranslucentAabb = null;
 
         var lists = [];
         var j = 0;
-        if (isUI) {
+        if (translucent) {
             meshInstances.sort(function (a, b) {
                 return a.drawOrder - b.drawOrder;
             });
@@ -595,11 +597,11 @@ Object.assign(pc, function () {
         var meshInstancesLeftA = meshInstances;
         var meshInstancesLeftB;
 
-        var skipMesh = isUI ? function (mi) {
-            if (skipUIAabb) {
-                skipUIAabb.add(mi.aabb);
+        var skipMesh = translucent ? function (mi) {
+            if (skipTranslucentAabb) {
+                skipTranslucentAabb.add(mi.aabb);
             } else {
-                skipUIAabb = mi.aabb.clone();
+                skipTranslucentAabb = mi.aabb.clone();
             }
             meshInstancesLeftB.push(mi);
         } : function (mi) {
@@ -620,7 +622,7 @@ Object.assign(pc, function () {
             vertCount = meshInstancesLeftA[0].mesh.vertexBuffer.getNumVertices();
             aabb.copy(meshInstancesLeftA[0].aabb);
             scaleSign = getScaleSign(meshInstancesLeftA[0]);
-            skipUIAabb = null;
+            skipTranslucentAabb = null;
 
             for (i = 1; i < meshInstancesLeftA.length; i++) {
                 mi = meshInstancesLeftA[i];
@@ -677,7 +679,7 @@ Object.assign(pc, function () {
                     continue;
                 }
 
-                if (isUI && skipUIAabb && skipUIAabb.intersects(mi.aabb)) {
+                if (translucent && skipTranslucentAabb && skipTranslucentAabb.intersects(mi.aabb)) {
                     skipMesh(mi);
                     continue;
                 }
