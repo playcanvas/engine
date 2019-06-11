@@ -764,7 +764,8 @@ Object.assign(pc, function () {
                     hasColor = true;
                 }
             }
-            batchNumIndices += mesh.primitive[0].count;
+            batchNumIndices += mesh.primitive[0].indexed ? mesh.primitive[0].count :
+                (mesh.primitive[0].count === 4 ? 6 : 0);
         }
 
         if (!visibleMeshInstanceCount) {
@@ -812,8 +813,6 @@ Object.assign(pc, function () {
                 continue;
 
             mesh = meshInstances[i].mesh;
-            if (!mesh.indexBuffer[0])
-                continue;
 
             elems = mesh.vertexBuffer.format.elements;
             numVerts = mesh.vertexBuffer.numVertices;
@@ -890,7 +889,17 @@ Object.assign(pc, function () {
 
             indexBase = mesh.primitive[0].base;
             numIndices = mesh.primitive[0].count;
-            indexData = new Uint16Array(mesh.indexBuffer[0].storage);
+            if (mesh.primitive[0].indexed) {
+                indexData = new Uint16Array(mesh.indexBuffer[0].storage);
+            } else if (numIndices === 4) {
+                // Special case for UI image elements (pc.PRIMITIVE_TRIFAN)
+                indexBase = 0;
+                numIndices = 6;
+                indexData = [0, 1, 3, 2, 3, 1];
+            } else {
+                numIndices = 0;
+                continue;
+            }
             for (j = 0; j < numIndices; j++) {
                 batchIndexData[j + indexOffset] = indexData[indexBase + j] + verticesOffset;
             }
@@ -975,7 +984,7 @@ Object.assign(pc, function () {
         mesh = new pc.Mesh();
         mesh.vertexBuffer = vertexBuffer;
         mesh.indexBuffer[0] = indexBuffer;
-        mesh.primitive[0].type = batch.origMeshInstances[0].mesh.primitive[0].type;
+        mesh.primitive[0].type = pc.PRIMITIVE_TRIANGLES; // Doesn't support any other primitive types batch.origMeshInstances[0].mesh.primitive[0].type;
         mesh.primitive[0].base = 0;
         mesh.primitive[0].count = batchNumIndices;
         mesh.primitive[0].indexed = true;
