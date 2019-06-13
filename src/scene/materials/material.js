@@ -62,6 +62,7 @@ Object.assign(pc, function () {
         this._shader = null;
         this.variants = {};
         this.parameters = {};
+        this._customParameters = {};
 
         // Render states
         this.alphaTest = 0;
@@ -277,6 +278,16 @@ Object.assign(pc, function () {
         clone.greenWrite = this.greenWrite;
         clone.blueWrite = this.blueWrite;
         clone.alphaWrite = this.alphaWrite;
+
+        for (var p in this._customParameters) {
+            var cloneFn = this._customParameters[p];
+            var param = this.parameters[p];
+            if (cloneFn === null) {
+                clone.addCustomParameter(p, param.data);
+            } else {
+                clone.addCustomParameter(p, cloneFn(param.data), cloneFn, param.passFlags);
+            }
+        }
     };
 
     Material.prototype.clone = function () {
@@ -342,8 +353,22 @@ Object.assign(pc, function () {
 
     /**
      * @function
+     * @name pc.Material#addCustomParameter
+     * @description Adds a user-defined shader property on a material. This starts internal parameter tracking.
+     * @param {String} name The name of the parameter to set.
+     * @param {Number|Array|pc.Texture} data The value for the specified parameter.
+     * @param {Function} cloneFn Custom clone function for the new parameter, otherwise _cloneInternal does ref copy. The function takes original data reference and produces new.
+     * @param {Number} [passFlags] Mask describing which passes the material should be included in.
+     */
+    Material.prototype.addCustomParameter = function (name, data, cloneFn, passFlags) {
+        this._customParameters[name] = cloneFn || null;
+        this.setParameter(name, data, passFlags);
+    };
+
+    /**
+     * @function
      * @name pc.Material#setParameter
-     * @description Sets a shader parameter on a material.
+     * @description Sets a shader parameter on a material. For user-defined parameters do 'addCustomParameter' first to support correct clone functionality.
      * @param {String} name The name of the parameter to set.
      * @param {Number|Array|pc.Texture} data The value for the specified parameter.
      * @param {Number} [passFlags] Mask describing which passes the material should be included in.
