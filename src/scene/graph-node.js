@@ -5,6 +5,8 @@ Object.assign(pc, function () {
     var scaleCompensateRot2 = new pc.Quat();
     var scaleCompensateScale = new pc.Vec3();
     var scaleCompensateScaleForParent = new pc.Vec3();
+    var tmpMat4 = new pc.Mat4();
+    var tmpQuat = new pc.Quat();
 
     /**
      * @constructor
@@ -1094,13 +1096,8 @@ Object.assign(pc, function () {
             if (current)
                 current.removeChild(node);
 
-            if (this.tmpMat4 === undefined) {
-                this.tmpMat4 = new pc.Mat4();
-                this.tmpQuat = new pc.Quat();
-            }
-
-            node.setPosition(this.tmpMat4.copy(this.worldTransform).invert().transformPoint(wPos));
-            node.setRotation(this.tmpQuat.copy(this.getRotation()).invert().mul(wRot));
+            node.setPosition(tmpMat4.copy(this.worldTransform).invert().transformPoint(wPos));
+            node.setRotation(tmpQuat.copy(this.getRotation()).invert().mul(wRot));
 
             this._children.push(node);
 
