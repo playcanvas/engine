@@ -1658,7 +1658,13 @@ Object.assign(pc, function () {
             // have current application pointer in pc
             pc.app = app;
 
-            var now = timestamp || pc.now();
+            // preUpdateHook
+            var frameState = {
+                timestamp: timestamp
+            };
+            app.fire("preUpdateHook", frameState);
+
+            var now = frameState.timestamp || pc.now();
             var ms = now - (app._time || now);
             var dt = ms / 1000.0;
             dt = pc.math.clamp(dt, 0, app.maxDeltaTime);
