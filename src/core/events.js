@@ -147,7 +147,7 @@ pc.events = {
      */
     /* eslint-enable valid-jsdoc */
     fire: function (name, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
-        if (!name || !this._callbacks || !this._callbacks[name])
+        if (!name || !this._callbacks[name])
             return this;
 
         var callbacks;
