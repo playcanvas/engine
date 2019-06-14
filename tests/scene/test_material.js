@@ -31,4 +31,21 @@ describe('pc.GraphNode', function () {
         notEqual(m1.parameters["str-value"].data, m2.parameters["str-value"].data);
         equal(m2.parameters["str-value"].data, "42");
     });
+
+    it('Material: vector type custom parameter support', function () {
+        var m1 = new pc.Material();
+        var vec = new Float32Array([1, 2, 3]);
+        m1.addCustomParameter("vec-value", vec, function (v) {
+            return new Float32Array(v);
+        });
+
+        var m2 = m1.clone();
+
+        notEqual(m1.parameters["vec-value"].data, m2.parameters["vec-value"].data);
+
+        vec[0] = 42;
+
+        equal(m1.parameters["vec-value"].data[0], 42);
+        equal(m2.parameters["vec-value"].data[0], 1);
+    });
 });
