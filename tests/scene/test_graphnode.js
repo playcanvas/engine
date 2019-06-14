@@ -368,5 +368,17 @@ describe('pc.GraphNode', function () {
 
     });
 
+    it('GraphNode: frozen flag after reparent and sync for world-dirty node', function () {
+        var p = new pc.GraphNode('parent');
+        p.syncHierarchy();
+
+        var c = new pc.GraphNode('child');
+        c._dirtifyWorld();
+
+        p.addChild(c);
+        p.syncHierarchy();
+
+        equal(c._frozen, true);
+    });
 
 });
