@@ -439,6 +439,15 @@ Object.assign(pc, function () {
             layer.removeMeshInstances([this._meshInstance]);
         },
 
+        removeModelFromLayers: function () {
+            var layer;
+            for (var i = 0; i < this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances([this._meshInstance]);
+            }
+        },
+
         /**
          * @function
          * @name pc.SpriteComponent#addClip

@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     var TextHandler = function () {
-
+        this.retryRequests = false;
     };
 
     Object.assign(TextHandler.prototype, {
@@ -14,7 +14,9 @@ Object.assign(pc, function () {
                 };
             }
 
-            pc.http.get(url.load, function (err, response) {
+            pc.http.get(url.load, {
+                retry: this.retryRequests
+            }, function (err, response) {
                 if (!err) {
                     callback(null, response);
                 } else {

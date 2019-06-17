@@ -181,6 +181,24 @@ var preprocess = function (dependencies) {
     return dependenciesOut;
 };
 
+var getCopyrightNotice = function (ver, rev) {
+    var buildOptions = "";
+    if (debug || profiler) {
+        if (profiler && !debug) {
+            buildOptions += " (PROFILER)";
+        } else if (debug) {
+            buildOptions += " (DEBUG PROFILER)";
+        }
+    }
+    return [
+        "/*",
+        " * PlayCanvas Engine v" + ver + " revision " + rev + buildOptions,
+        " * Copyright 2011-" + new Date().getFullYear() + " PlayCanvas Ltd. All rights reserved.",
+        " */",
+        ""
+    ].join("\n");
+};
+
 // insert version and revision into output source file
 var insertVersions = function (filepath, callback) {
     getRevision(function (err, rev) {
@@ -192,6 +210,7 @@ var insertVersions = function (filepath, callback) {
 
                 var content = buffer.toString();
 
+                content = getCopyrightNotice(ver, rev) + content;
                 content = replaceAll(content, "__CURRENT_SDK_VERSION__", ver);
                 content = replaceAll(content, "__REVISION__", rev);
 

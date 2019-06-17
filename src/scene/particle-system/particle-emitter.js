@@ -215,6 +215,7 @@ Object.assign(pc, function () {
         this._gpuUpdater = new pc.ParticleGPUUpdater(this, gd);
         this._cpuUpdater = new pc.ParticleCPUUpdater(this);
 
+        this.constantLightCube = gd.scope.resolve("lightCube[0]");
         this.emitterPosUniform = new Float32Array(3);
         this.wrapBoundsUniform = new Float32Array(3);
         this.emitterScaleUniform = new Float32Array([1, 1, 1]);

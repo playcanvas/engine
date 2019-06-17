@@ -1,10 +1,10 @@
-../src/core/core.js
 ../src/polyfill/fullscreen.js
 ../src/polyfill/math-log2.js
 ../src/polyfill/object-assign.js
 ../src/polyfill/pointer-lock.js
 ../src/polyfill/request-animation-frame.js
 ../src/polyfill/string.js
+../src/core/core.js
 ../src/core/color.js
 ../src/core/guid.js
 ../src/core/time.js
@@ -178,6 +178,7 @@
 ../src/framework/components/element/data.js
 ../src/framework/components/element/image-element.js
 ../src/framework/components/element/text-element.js
+../src/framework/components/element/markup.js
 ../src/framework/components/element/element-drag-helper.js
 ../src/framework/components/button/constants.js
 ../src/framework/components/button/component.js
@@ -239,6 +240,7 @@
 ../src/asset/asset-registry.js
 ../src/asset/asset-reference.js
 ../src/asset/asset-localized.js
+../src/asset/asset-list-loader.js
 ../src/backwards-compatibility.js
 ../src/scene/immediate.js
 ../src/scene/lightmapper.js

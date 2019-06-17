@@ -35,6 +35,8 @@ Object.assign(pc, function () {
         options.screenSpace = objDefs && (objDefs & pc.SHADERDEF_SCREENSPACE) !== 0;
         options.skin = objDefs && (objDefs & pc.SHADERDEF_SKIN) !== 0;
         options.useInstancing = objDefs && (objDefs & pc.SHADERDEF_INSTANCING) !== 0;
+
+        options.nineSlicedMode = stdMat.nineSlicedMode || 0;
     };
 
     StandardMaterialOptionsBuilder.prototype._updateUVOptions = function (options, stdMat, objDefs, minimalOptions) {
@@ -113,7 +115,6 @@ Object.assign(pc, function () {
         options.msdf = !!stdMat.msdfMap;
         options.twoSidedLighting = stdMat.twoSidedLighting;
         options.pixelSnap = stdMat.pixelSnap;
-        options.nineSlicedMode = stdMat.nineSlicedMode || 0;
         options.aoMapUv = stdMat.aoUvSet; // backwards componen
     };
 
