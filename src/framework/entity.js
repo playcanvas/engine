@@ -60,6 +60,7 @@ Object.assign(pc, function () {
         }
 
         this._guid = null;
+        this._request = null;
 
         // used by component systems to speed up destruction
         this._destroying = false;
