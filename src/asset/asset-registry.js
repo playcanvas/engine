@@ -19,7 +19,7 @@ Object.assign(pc, function () {
 
         this.prefix = null;
 
-        Object.assign(this, pc.events);
+        pc.events.attach(this);
     };
 
     /**
