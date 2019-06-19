@@ -1509,6 +1509,10 @@ Object.assign(pc, function () {
             this.batcher.generate();
         },
 
+        _processTimestamp: function (timestamp) {
+            return timestamp;
+        },
+
         /**
          * @function
          * @name pc.Application#destroy
@@ -1661,13 +1665,7 @@ Object.assign(pc, function () {
             // have current application pointer in pc
             pc.app = app;
 
-            // preUpdateHook
-            var frameState = {
-                timestamp: timestamp
-            };
-            app.fire("preUpdateHook", frameState);
-
-            var now = frameState.timestamp || pc.now();
+            var now = app._processTimestamp(timestamp) || pc.now();
             var ms = now - (app._time || now);
             var dt = ms / 1000.0;
             dt = pc.math.clamp(dt, 0, app.maxDeltaTime);
