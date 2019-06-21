@@ -27,18 +27,18 @@ Object.assign(pc, function () {
         this._defaultMaterial = pc.getDefaultMaterial();
     };
 
-    Object.assign(JsonModelParser.prototype, {
-        parse: function (data) {
+    JsonModelParser.prototype.parse = function (data) {
+        return new Promise(function (resolve, reject) {
             var modelData = data.model;
             if (!modelData) {
-                return null;
+                resolve(null);
             }
 
             if (modelData.version <= 1) {
                 // #ifdef DEBUG
                 console.warn("JsonModelParser#parse: Trying to parse unsupported model format.");
                 // #endif
-                return null;
+                resolve(null);
             }
 
             // NODE HIERARCHY
@@ -71,9 +71,11 @@ Object.assign(pc, function () {
             model.morphInstances = morphs.instances;
             model.getGraph().syncHierarchy();
 
-            return model;
-        },
+            resolve(model);
+        }.bind(this));
+    };
 
+    Object.assign(JsonModelParser.prototype, {
         _parseNodes: function (data) {
             var modelData = data.model;
             var nodes = [];

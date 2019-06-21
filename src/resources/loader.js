@@ -76,47 +76,50 @@ Object.assign(pc, function () {
                 // new request
                 this._requests[key] = [callback];
 
+                var loader = this;
                 var handleLoad = function (err, urlObj) {
                     if (err) {
                         console.error(err);
-                        if (this._requests[key]) {
-                            for (var i = 0, len = this._requests[key].length; i < len; i++) {
-                                this._requests[key][i](err);
+                        if (loader._requests[key]) {
+                            for (var i = 0, len = loader._requests[key].length; i < len; i++) {
+                                loader._requests[key][i](err);
                             }
                         }
-                        delete this._requests[key];
+                        delete loader._requests[key];
                         return;
                     }
 
                     handler.load(urlObj, function (err, data, extra) {
                         // make sure key exists because loader
                         // might have been destroyed by now
-                        if (!this._requests[key])
+                        if (!loader._requests[key])
                             return;
 
-                        var i, len = this._requests[key].length;
-
-                        var resource;
-                        if (! err) {
-                            try {
-                                resource = handler.open(urlObj.original, data, asset);
-                            } catch (ex) {
-                                err = ex;
-                            }
-                        }
-
                         if (!err) {
-                            this._cache[key] = resource;
-                            for (i = 0; i < len; i++)
-                                this._requests[key][i](null, resource, extra);
-                        } else {
-                            console.error(err);
-                            for (i = 0; i < len; i++)
-                                this._requests[key][i](err);
+                            new Promise(function (resolve, reject) {
+                                if (handler.openAsync) {
+                                    handler.openAsync(urlObj.original, data, asset).then(function (res) {
+                                        resolve(res);
+                                    });
+                                } else {
+                                    resolve(handler.open(urlObj.original, data, asset));
+                                }
+                            }).catch(function (ex) {
+                                var err = ex;
+                                console.error(err);
+                                for (var i = 0; i < loader._requests[key].length; i++)
+                                    loader._requests[key][i](err);
+                            }).then(function (resource) {
+                                if (resource) {
+                                    loader._cache[key] = resource;
+                                    for (var i = 0; i < loader._requests[key].length; i++)
+                                        loader._requests[key][i](null, resource, extra);
+                                }
+                                delete loader._requests[key];
+                            });
                         }
-                        delete this._requests[key];
-                    }.bind(this), asset);
-                }.bind(this);
+                    }, asset);
+                };
 
                 var normalizedUrl = url.split('?')[0];
                 if (this._app.enableBundles && this._app.bundles.hasUrl(normalizedUrl)) {
