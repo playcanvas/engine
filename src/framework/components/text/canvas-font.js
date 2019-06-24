@@ -1,3 +1,4 @@
+
 Object.assign(pc, function () {
     var MAX_TEXTURE_SIZE = 4096;
     var DEFAULT_TEXTURE_SIZE = 512;
@@ -54,6 +55,9 @@ Object.assign(pc, function () {
 
         this.chars = "";
         this.data = {};
+
+        // extra padding added around each glyph
+        this.padding = 0;
 
         pc.events.attach(this);
     };
@@ -213,11 +217,12 @@ Object.assign(pc, function () {
 
         this.glyphSize = Math.max(this.glyphSize, maxHeight);
 
-        var sx = this.glyphSize;
-        var sy = this.glyphSize;
-        var halfWidth = sx / 2;
-        var _x = halfWidth;
-        var _y = sy;
+        var sx = this.glyphSize + this.padding * 2;
+        var sy = this.glyphSize + this.padding * 2;
+        var _xOffset = this.glyphSize / 2 + this.padding;
+        var _yOffset = sy - maxDescent - this.padding;
+        var _x = 0;
+        var _y = 0;
 
         for (i = 0; i < symbols.length; i++) {
             ch = symbols[i];
@@ -236,26 +241,26 @@ Object.assign(pc, function () {
                 width = this.fontSize;
             }
 
-            this.renderCharacter(ctx, ch, _x, _y - maxDescent, color);
+            this.renderCharacter(ctx, ch, _x + _xOffset, _y + _yOffset, color);
 
-            var xoffset = (sx - width) / 2;
-            var yoffset = metrics[ch].descent - maxDescent;
+            var xoffset = this.padding + (this.glyphSize - width) / 2;
+            var yoffset = -this.padding + metrics[ch].descent - maxDescent;
             var xadvance = width;
 
-            this._addChar(this.data, ch, code, _x - halfWidth, _y - sy, sx, sy, xoffset, yoffset, xadvance, numTextures - 1, w, h);
+            this._addChar(this.data, ch, code, _x, _y, sx, sy, xoffset, yoffset, xadvance, numTextures - 1, w, h);
 
             _x += sx;
-            if (_x + halfWidth > w) {
+            if (_x + sx > w) {
                 // Wrap to the next row of this canvas if the right edge of the next glyph would overflow
-                _x = halfWidth;
+                _x = 0;
                 _y += sy;
-                if (_y > h) {
+                if (_y + sy > h) {
                     // We ran out of space on this texture!
                     // Copy the canvas into the texture and upload it
                     this.textures[numTextures - 1].upload();
                     // Create a new texture (if needed) and continue on
                     numTextures++;
-                    _y = sy;
+                    _y = 0;
                     if (numTextures > prevNumTextures) {
                         canvas = document.createElement('canvas');
                         canvas.height = h;
