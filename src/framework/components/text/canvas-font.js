@@ -15,6 +15,7 @@ Object.assign(pc, function () {
      * @param {pc.Color} [options.color] The color the font will be rendered into the texture atlas as, defaults to white
      * @param {Number} [options.width] The width of each texture atlas, defaults to 512
      * @param {Number} [options.height] The height of each texture atlas, defaults to 512
+     * @param {Number} [options.padding] Amount of glyph padding added to each glyph in the atlas
      */
     var CanvasFont = function (app, options) {
         this.type = "bitmap";
@@ -29,6 +30,7 @@ Object.assign(pc, function () {
         this.glyphSize = this.fontSize;
         this.fontName = options.fontName || 'Arial';
         this.color = options.color || new pc.Color(1, 1, 1);
+        this.padding = options.padding || 0;
 
         var w = options.width > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.width || DEFAULT_TEXTURE_SIZE);
         var h = options.height > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.height || DEFAULT_TEXTURE_SIZE);
@@ -213,11 +215,12 @@ Object.assign(pc, function () {
 
         this.glyphSize = Math.max(this.glyphSize, maxHeight);
 
-        var sx = this.glyphSize;
-        var sy = this.glyphSize;
-        var halfWidth = sx / 2;
-        var _x = halfWidth;
-        var _y = sy;
+        var sx = this.glyphSize + this.padding * 2;
+        var sy = this.glyphSize + this.padding * 2;
+        var _xOffset = this.glyphSize / 2 + this.padding;
+        var _yOffset = sy - maxDescent - this.padding;
+        var _x = 0;
+        var _y = 0;
 
         for (i = 0; i < symbols.length; i++) {
             ch = symbols[i];
@@ -236,26 +239,26 @@ Object.assign(pc, function () {
                 width = this.fontSize;
             }
 
-            this.renderCharacter(ctx, ch, _x, _y - maxDescent, color);
+            this.renderCharacter(ctx, ch, _x + _xOffset, _y + _yOffset, color);
 
-            var xoffset = (sx - width) / 2;
-            var yoffset = metrics[ch].descent - maxDescent;
+            var xoffset = this.padding + (this.glyphSize - width) / 2;
+            var yoffset = -this.padding + metrics[ch].descent - maxDescent;
             var xadvance = width;
 
-            this._addChar(this.data, ch, code, _x - halfWidth, _y - sy, sx, sy, xoffset, yoffset, xadvance, numTextures - 1, w, h);
+            this._addChar(this.data, ch, code, _x, _y, sx, sy, xoffset, yoffset, xadvance, numTextures - 1, w, h);
 
             _x += sx;
-            if (_x + halfWidth > w) {
+            if (_x + sx > w) {
                 // Wrap to the next row of this canvas if the right edge of the next glyph would overflow
-                _x = halfWidth;
+                _x = 0;
                 _y += sy;
-                if (_y > h) {
+                if (_y + sy > h) {
                     // We ran out of space on this texture!
                     // Copy the canvas into the texture and upload it
                     this.textures[numTextures - 1].upload();
                     // Create a new texture (if needed) and continue on
                     numTextures++;
-                    _y = sy;
+                    _y = 0;
                     if (numTextures > prevNumTextures) {
                         canvas = document.createElement('canvas');
                         canvas.height = h;
