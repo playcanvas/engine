@@ -16,6 +16,7 @@ Object.assign(pc, function () {
      * @param {pc.Color} [options.color] The color the font will be rendered into the texture atlas as, defaults to white
      * @param {Number} [options.width] The width of each texture atlas, defaults to 512
      * @param {Number} [options.height] The height of each texture atlas, defaults to 512
+     * @param {Number} [options.padding] Amount of glyph padding added to each glyph in the atlas
      */
     var CanvasFont = function (app, options) {
         this.type = "bitmap";
@@ -30,6 +31,7 @@ Object.assign(pc, function () {
         this.glyphSize = this.fontSize;
         this.fontName = options.fontName || 'Arial';
         this.color = options.color || new pc.Color(1, 1, 1);
+        this.padding = options.padding || 0;
 
         var w = options.width > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.width || DEFAULT_TEXTURE_SIZE);
         var h = options.height > MAX_TEXTURE_SIZE ? MAX_TEXTURE_SIZE : (options.height || DEFAULT_TEXTURE_SIZE);
@@ -55,9 +57,6 @@ Object.assign(pc, function () {
 
         this.chars = "";
         this.data = {};
-
-        // extra padding added around each glyph
-        this.padding = 0;
 
         pc.events.attach(this);
     };
