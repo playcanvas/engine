@@ -96,27 +96,17 @@ Object.assign(pc, function () {
                             return;
 
                         if (!err) {
-                            new Promise(function (resolve, reject) {
+                            try {
                                 if (handler.openAsync) {
-                                    handler.openAsync(urlObj.original, data, asset).then(function (res) {
-                                        resolve(res);
-                                    });
+                                    handler.openAsync(urlObj.original, data, asset,
+                                                      loader._onLoaded.bind(loader, key, extra),
+                                                      loader._onLoadFailed.bind(loader, key));
                                 } else {
-                                    resolve(handler.open(urlObj.original, data, asset));
+                                    loader._onLoaded(key, extra, handler.open(urlObj.original, data, asset));
                                 }
-                            }).catch(function (ex) {
-                                var err = ex;
-                                console.error(err);
-                                for (var i = 0; i < loader._requests[key].length; i++)
-                                    loader._requests[key][i](err);
-                            }).then(function (resource) {
-                                if (resource) {
-                                    loader._cache[key] = resource;
-                                    for (var i = 0; i < loader._requests[key].length; i++)
-                                        loader._requests[key][i](null, resource, extra);
-                                }
-                                delete loader._requests[key];
-                            });
+                            } catch (ex) {
+                                loader._onLoadFailed(key, ex);
+                            }
                         }
                     }, asset);
                 };
@@ -136,6 +126,20 @@ Object.assign(pc, function () {
                 }
 
             }
+        },
+
+        _onLoaded: function (key, extra, resource) {
+            this._cache[key] = resource;
+            for (var i = 0; i < this._requests[key].length; i++)
+                this._requests[key][i](null, resource, extra);
+            delete this._requests[key];
+        },
+
+        _onLoadFailed: function (key, err) {
+            console.error(err);
+            for (var i = 0; i < this._requests[key].length; i++)
+                this._requests[key][i](err);
+            delete this._requests[key];
         },
 
         /**
