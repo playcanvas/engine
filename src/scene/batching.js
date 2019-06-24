@@ -429,7 +429,7 @@ Object.assign(pc, function () {
                 if (node.sprite && node.sprite._meshInstance) {
                     arr.push(node.sprite._meshInstance);
                     node.sprite.removeModelFromLayers();
-                    this._sprite = true;
+                    group._sprite = true;
                     node.sprite._batchGroup = group;
                 }
             }
