@@ -1,4 +1,3 @@
-
 Object.assign(pc, function () {
     var MAX_TEXTURE_SIZE = 4096;
     var DEFAULT_TEXTURE_SIZE = 512;
