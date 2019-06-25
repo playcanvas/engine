@@ -8,7 +8,7 @@ Object.assign(pc, function () {
     };
 
     Object.assign(GLBModelParser.prototype, {
-        parse: function (glb) {
+        parse: function (glb, onLoaded, onFailed) {
             var dataView = new DataView(glb);
 
             // Read header
@@ -52,12 +52,10 @@ Object.assign(pc, function () {
             }
 
             var options = { buffers: buffers };
-            var resources = loadGltf(gltf, options);
-
-            return resources;
+            this.loadGltf(gltf, options, onLoaded, onFailed);
         },
 
-        loadGltf: function (gltf, options) {
+        loadGltf: function (gltf, options, onLoaded, onFailed) {
             var buffers = (options && options.hasOwnProperty('buffers')) ? options.buffers : undefined;
             var basePath = (options && options.hasOwnProperty('basePath')) ? options.basePath : undefined;
             var processUri = (options && options.hasOwnProperty('processUri')) ? options.processUri : undefined;
@@ -65,17 +63,17 @@ Object.assign(pc, function () {
             var processMaterialExtras = (options && options.hasOwnProperty('processMaterialExtras')) ? options.processMaterialExtras : undefined;
             var processGlobalExtras = (options && options.hasOwnProperty('processGlobalExtras')) ? options.processGlobalExtras : undefined;
 
-            var context = new LoaderContext(this._device);
+            var context = new LoaderContext(this._device, onLoaded, onFailed);
             Object.assign(context, {
                 basePath: basePath,
                 buffers: buffers,
                 defaultMaterial: this._defaultMaterial,
                 gltf: gltf,
-                imagesLoaded: 0,
                 nodeCounter: 0,
                 processUri: processUri,
                 processAnimationExtras: processAnimationExtras,
-                processMaterialExtras: processMaterialExtras
+                processMaterialExtras: processMaterialExtras,
+                processGlobalExtras: processGlobalExtras
             });
 
             if (gltf.hasOwnProperty('extensionsUsed')) {
@@ -84,75 +82,49 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (!context.loadBuffers() || !context.parseAll())
-                return [];
-
-            if (gltf.hasOwnProperty('extras') && processGlobalExtras)
-                processGlobalExtras(gltf.extras);
-
-            context.buildHierarchy();
-            context.createModel();
-
-            if (gltf.hasOwnProperty('extensionsUsed')) {
-                if (gltf.extensionsUsed.indexOf('KHR_draco_mesh_compression') !== -1) {
-                    context.decoderModule = null;
-                }
-            }
-
-            return [context.model].concat(context.materials).concat(context.textures).concat(context.animations);
+            context.loadBuffers();
         }
     });
 
-    function LoaderContext(device) {
+    function LoaderContext(device, onLoaded, onFailed) {
         this._device = device;
+        this._onLoaded = onLoaded;
+        this._onFailed = onFailed;
     }
 
     LoaderContext.prototype.loadBuffers = function () {
-        // buffers already loaded so early out
-        if (this.buffers) {
-            return true;
-        }
-
-        this.buffers = [];
-
-        if (!gltf.hasOwnProperty('buffers'))
-            return false;
-
-        for (var buffer, idx = 0; idx < this.gltf.buffers.length; idx++) {
-            buffer = this.gltf.buffers[idx];
-            if (buffer.hasOwnProperty('uri')) {
-                if (isDataURI(buffer.uri)) {
-                    // convert base64 to raw binary data held in a string
-                    // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
-                    var byteString = atob(buffer.uri.split(',')[1]);
-
-                    // write the bytes of the string to an ArrayBuffer
-                    this.buffers[idx] = new ArrayBuffer(byteString.length);
-
-                    // create a view into the buffer
-                    var uint8Array = new Uint8Array(this.buffers[idx]);
-
-                    // set the bytes of the buffer to the correct values
-                    for (var i = 0; i < byteString.length; i++) {
-                        uint8Array[i] = byteString.charCodeAt(i);
-                    }
-                }
-            }
-        }
-        return true;
+        new GLBHelpers.BuffersLoader(this, this.parseAll.bind(this)).load();
     };
 
     LoaderContext.prototype.parseAll = function () {
         this.parse('textures', this.translateTexture);
-        if (this.parse('images', this.translateImage)) {
+
+        var imgLoader = GLBHelpers.ImageLoader(this, function () {
             this.parse('materials', this.translateMaterial);
             this.parse('meshes', this.translateMesh);
             this.parse('nodes', this.translateNode);
             this.parse('skins', this.translateSkin);
             this.parse('animations', this.translateAnimation);
-            return true;
+
+            this.finalize();
+        }.bind(this));
+        this.parse('images', imgLoader.translate.bind(imgLoader));
+    };
+
+    LoaderContext.prototype.finalize = function () {
+        if (this.gltf.hasOwnProperty('extras') && this.processGlobalExtras)
+            this.processGlobalExtras(gltf.extras);
+
+        this.buildHierarchy();
+        this.createModel();
+
+        this._onLoaded([context.model].concat(context.materials).concat(context.textures).concat(context.animations));
+
+        if (gltf.hasOwnProperty('extensionsUsed')) {
+            if (gltf.extensionsUsed.indexOf('KHR_draco_mesh_compression') !== -1) {
+                this.decoderModule = null;
+            }
         }
-        return false;
     };
 
     LoaderContext.prototype.buildHierarchy = function (resources) {
@@ -262,23 +234,13 @@ Object.assign(pc, function () {
     };
 
     LoaderContext.prototype.parse = function (property, translator) {
-        if (success) {
-            if (!this.gltf.hasOwnProperty(property)) {
-                success();
-                return;
-            }
-
-            if (this.gltf[property].length === 0) {
-                success();
-                return;
-            }
-        }
-
         if (this.gltf.hasOwnProperty(property)) {
-            this[property] = this.gltf[property].map(translator);
-            return true;
+            var arr = this._context.gltf[property];
+            this[property] = new Array(arr.length);
+            for (var idx = 0; idx < arr.length; idx++) {
+                this[property][idx] = translator(this, arr[idx]);
+            }
         }
-        return false;
     };
 
     function decodeBinaryUtf8(array) {
