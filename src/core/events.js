@@ -1,8 +1,7 @@
 /**
  * @name pc.events
  * @namespace
- * @description global namespace that allows to extend other objects with events
- * Additionally it can handle global events it self.
+ * @description Namespace for event functions. Use these functions to attach events to a Javascript object.
  * @example
  * var obj = { };
  * pc.events.attach(obj);

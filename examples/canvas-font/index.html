@@ -34,15 +34,35 @@
 
         <script>
             // Create a canvas font asset
-            const size = 64;
+            const size = 32;
             const elSize = 32;
             var cf = new pc.CanvasFont(app, {
                 color: new pc.Color(1, 1, 1), // white
                 fontName: "Arial",
                 fontSize: size,
                 width: 256,
-                height: 256
+                height: 400
             });
+            cf.glyphSize = 64;
+
+            cf.renderCharacter_ = function (ctx, char, x, y, color) {
+                // set drop shadow
+                ctx.shadowColor = '#00dd00';
+                ctx.shadowOffsetX = 5;
+                ctx.shadowOffsetY = 20;
+
+                // render character
+                ctx.fillStyle = color;
+                ctx.fillText(char, x, y);
+
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                // render outline
+                // ctx.lineWidth = 2;
+                // ctx.strokeStyle = '#00ff00';
+                // ctx.strokeText(char, x, y);
+            };
 
             var asset = new pc.Asset("CanvasFont", "font", {});
             app.assets.add(asset);
