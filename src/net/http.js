@@ -42,7 +42,8 @@ Object.assign(pc, function () {
         '.mp4',
         '.m4a',
         '.aac',
-        '.dds'
+        '.dds',
+        '.glb'
     ];
 
     Http.retryDelay = 100;

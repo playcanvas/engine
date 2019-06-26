@@ -69,7 +69,6 @@ Object.assign(pc, function () {
                 buffers: buffers,
                 defaultMaterial: this._defaultMaterial,
                 gltf: gltf,
-                nodeCounter: 0,
                 processUri: processUri,
                 processAnimationExtras: processAnimationExtras,
                 processMaterialExtras: processMaterialExtras,
@@ -93,18 +92,19 @@ Object.assign(pc, function () {
     }
 
     LoaderContext.prototype.loadBuffers = function () {
-        new GLBHelpers.BuffersLoader(this, this.parseAll.bind(this)).load();
+        new pc.GLBHelpers.BuffersLoader(this, this.parseAll.bind(this)).load();
     };
 
     LoaderContext.prototype.parseAll = function () {
-        this.parse('textures', this.translateTexture);
+        this.parse('textures', pc.GLBHelpers.translateTexture);
 
-        var imgLoader = GLBHelpers.ImageLoader(this, function () {
-            this.parse('materials', this.translateMaterial);
-            this.parse('meshes', this.translateMesh);
-            this.parse('nodes', this.translateNode);
-            this.parse('skins', this.translateSkin);
-            this.parse('animations', this.translateAnimation);
+        var imgLoader = pc.GLBHelpers.ImageLoader(this, function () {
+            this.parse('materials', pc.GLBHelpers.translateMaterial);
+            this.parse('meshes', pc.GLBHelpers.translateMesh);
+            var nodeLoader = pc.GLBHelpers.NodeLoader();
+            this.parse('nodes', nodeLoader.translate.bind(nodeLoader));
+            this.parse('skins', pc.GLBHelpers.translateSkin);
+            // this.parse('animations', pc.GLBHelpers.translateAnimation);
 
             this.finalize();
         }.bind(this));
@@ -118,7 +118,7 @@ Object.assign(pc, function () {
         this.buildHierarchy();
         this.createModel();
 
-        this._onLoaded([context.model].concat(context.materials).concat(context.textures).concat(context.animations));
+        this._onLoaded([context.model].concat(context.materials).concat(context.textures));//.concat(context.animations));
 
         if (gltf.hasOwnProperty('extensionsUsed')) {
             if (gltf.extensionsUsed.indexOf('KHR_draco_mesh_compression') !== -1) {
@@ -235,7 +235,7 @@ Object.assign(pc, function () {
 
     LoaderContext.prototype.parse = function (property, translator) {
         if (this.gltf.hasOwnProperty(property)) {
-            var arr = this._context.gltf[property];
+            var arr = this.gltf[property];
             this[property] = new Array(arr.length);
             for (var idx = 0; idx < arr.length; idx++) {
                 this[property][idx] = translator(this, arr[idx]);
