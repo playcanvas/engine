@@ -3,12 +3,13 @@ Object.assign(pc, function () {
 
     /**
      * @component
+     * @constructor
      * @name pc.ScrollViewComponent
-     * @description Create a new ScrollViewComponent
+     * @extends pc.Component
      * @classdesc A ScrollViewComponent enables a group of entities to behave like a masked scrolling area, with optional horizontal and vertical scroll bars.
+     * @description Create a new ScrollViewComponent.
      * @param {pc.ScrollViewComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.Component
      * @property {Boolean} horizontal Whether to enable horizontal scrolling.
      * @property {Boolean} vertical Whether to enable vertical scrolling.
      * @property {pc.SCROLL_MODE} scrollMode Specifies how the scroll view should behave when the user scrolls past the end of the content. Modes are defined as follows:

@@ -334,7 +334,7 @@ Object.assign(pc, function () {
             "height": h,
             "xadvance": xadvance / scale,
             "xoffset": xoffset / scale,
-            "yoffset": yoffset / scale,
+            "yoffset": yoffset / scale + this.padding,
             "scale": scale,
             "range": 1,
             "map": mapNum,
