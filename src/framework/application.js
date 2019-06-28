@@ -877,6 +877,7 @@ Object.assign(pc, function () {
                     this.loader.load(url, 'script', onLoad);
                 }
             } else {
+                self.onLibrariesLoaded();
                 callback(null);
             }
         },
