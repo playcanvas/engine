@@ -96,19 +96,27 @@ Object.assign(pc, function () {
     };
 
     LoaderContext.prototype.parseAll = function () {
-        this.parse('textures', pc.GLBHelpers.translateTexture);
+        try {
+            this.parse('textures', pc.GLBHelpers.translateTexture);
 
-        var imgLoader = pc.GLBHelpers.ImageLoader(this, function () {
-            this.parse('materials', pc.GLBHelpers.translateMaterial);
-            this.parse('meshes', pc.GLBHelpers.translateMesh);
-            var nodeLoader = pc.GLBHelpers.NodeLoader();
-            this.parse('nodes', nodeLoader.translate.bind(nodeLoader));
-            this.parse('skins', pc.GLBHelpers.translateSkin);
-            // this.parse('animations', pc.GLBHelpers.translateAnimation);
+            var imgLoader = new pc.GLBHelpers.ImageLoader(this, function () {
+                try {
+                    this.parse('materials', pc.GLBHelpers.translateMaterial);
+                    this.parse('meshes', pc.GLBHelpers.translateMesh);
+                    var nodeLoader = new pc.GLBHelpers.NodeLoader();
+                    this.parse('nodes', nodeLoader.translate.bind(nodeLoader));
+                    this.parse('skins', pc.GLBHelpers.translateSkin);
+                    // this.parse('animations', pc.GLBHelpers.translateAnimation);
 
-            this.finalize();
-        }.bind(this));
-        this.parse('images', imgLoader.translate.bind(imgLoader));
+                    this.finalize();
+                } catch (err) {
+                    this._onFailed(err);
+                }
+            }.bind(this));
+            this.parse('images', imgLoader.translate.bind(imgLoader));
+        } catch (err) {
+            this._onFailed(err);
+        }
     };
 
     LoaderContext.prototype.finalize = function () {

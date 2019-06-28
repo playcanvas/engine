@@ -115,7 +115,8 @@ Object.assign(pc, function () {
         return canvas.toDataURL();
     }
 
-    GLBHelpers.ImageLoader.prototype.onLoad = function (image) {
+    GLBHelpers.ImageLoader.prototype.onLoad = function (event) {
+        var image = event.srcElement;
         image.removeEventListener('load', this.onLoad, false);
 
         var gltf = this._context.gltf;
@@ -726,6 +727,9 @@ Object.assign(pc, function () {
                     var uint8Buffer = new Int8Array(arrayBuffer, byteOffset, bufferView.byteLength);
 
                     var decoderModule = context.decoderModule;
+                    if (!decoderModule) {
+                        throw new Error('KHR_draco_mesh_compression extension requires decoder module');
+                    }
                     var buffer = new decoderModule.DecoderBuffer();
                     buffer.Init(uint8Buffer, uint8Buffer.length);
 
