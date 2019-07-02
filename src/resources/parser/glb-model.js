@@ -121,15 +121,15 @@ Object.assign(pc, function () {
 
     LoaderContext.prototype.finalize = function () {
         if (this.gltf.hasOwnProperty('extras') && this.processGlobalExtras)
-            this.processGlobalExtras(gltf.extras);
+            this.processGlobalExtras(this.gltf.extras);
 
         this.buildHierarchy();
         this.createModel();
 
-        this._onLoaded([context.model].concat(context.materials).concat(context.textures));//.concat(context.animations));
+        this._onLoaded([this.model].concat(this.materials).concat(this.textures));// .concat(this.animations));
 
-        if (gltf.hasOwnProperty('extensionsUsed')) {
-            if (gltf.extensionsUsed.indexOf('KHR_draco_mesh_compression') !== -1) {
+        if (this.gltf.hasOwnProperty('extensionsUsed')) {
+            if (this.gltf.extensionsUsed.indexOf('KHR_draco_mesh_compression') !== -1) {
                 this.decoderModule = null;
             }
         }
@@ -139,14 +139,13 @@ Object.assign(pc, function () {
         for (var node, idx = 0; idx < this.gltf.nodes.length; idx++) {
             node = this.gltf.nodes[idx];
             if (node.hasOwnProperty('children')) {
-                var context = this;
                 for (var child, childIdx = 0; childIdx < node.children.length; childIdx++) {
-                    child = context.nodes[childIdx];
+                    child = this.nodes[node.children[childIdx]];
                     // If this triggers, a node in the glTF has more than one parent which is wrong
                     if (child.parent) {
                         child.parent.removeChild(child);
                     }
-                    var parent = context.nodes[idx];
+                    var parent = this.nodes[idx];
                     parent.addChild(child);
                 }
             }
@@ -171,7 +170,7 @@ Object.assign(pc, function () {
         return rootNodes;
     };
 
-    LoaderContext.prototype._createMeshInstance = function (mesh) {
+    LoaderContext.prototype._createMeshInstance = function (mesh, nodeIdx) {
         var material;
         if (mesh.materialIndex === undefined) {
             material = this.defaultMaterial;
@@ -179,7 +178,7 @@ Object.assign(pc, function () {
             material = this.materials[mesh.materialIndex];
         }
 
-        var meshInstance = new pc.MeshInstance(this.nodes[nodeIndex], mesh, material);
+        var meshInstance = new pc.MeshInstance(this.nodes[nodeIdx], mesh, material);
         this._meshInstances.push(meshInstance);
 
         if (mesh.morph) {
@@ -189,14 +188,15 @@ Object.assign(pc, function () {
             // in the engine. This is a private function and will be removed!
             morphInstance.updateBounds(meshInstance.mesh);
             if (mesh.weights) {
-                mesh.weights.forEach(function (weight, weightIndex) {
-                    morphInstance.setWeight(weightIndex, weight);
-                });
+                for (var wi = 0; wi < mesh.weights.length; wi++) {
+                    morphInstance.setWeight(wi, mesh.weights[wi]);
+                }
             }
 
             this._morphInstances.push(morphInstance);
         }
 
+        var node = this.gltf.nodes[nodeIdx];
         if (node.hasOwnProperty('skin')) {
             var skin = this.skins[node.skin];
             mesh.skin = skin;
@@ -216,13 +216,15 @@ Object.assign(pc, function () {
         this._skinInstances = [];
         this._morphInstances = [];
 
-        var context = this;
-        gltf.nodes.forEach(function (node, nodeIndex) {
+        for (var node, i = 0; i < gltf.nodes.length; i++) {
+            node = gltf.nodes[i];
             if (node.hasOwnProperty('mesh')) {
-                var meshGroup = context.meshes[node.mesh];
-                meshGroup.forEach(context._createMeshInstance);
+                var meshGroup = this.meshes[node.mesh];
+                for (var mi = 0; mi < meshGroup.length; mi++) {
+                    this._createMeshInstance(meshGroup[mi], i);
+                }
             }
-        });
+        }
 
         var model = new pc.Model();
         var roots = this._getRoots();
@@ -230,13 +232,13 @@ Object.assign(pc, function () {
             model.graph = roots[0];
         } else {
             model.graph = new pc.GraphNode();
-            roots.forEach(function (root) {
-                model.graph.addChild(root);
-            });
+            for (var ri = 0; ri < roots.length; ri++) {
+                model.graph.addChild(roots[ri]);
+            }
         }
-        model.meshInstances = this.meshInstances;
-        model.morphInstances = this.morphInstances;
-        model.skinInstances = this.skinInstances;
+        model.meshInstances = this._meshInstances;
+        model.morphInstances = this._morphInstances;
+        model.skinInstances = this._skinInstances;
 
         this.model = model;
     };

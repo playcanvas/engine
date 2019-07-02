@@ -85,7 +85,7 @@ Object.assign(pc, function () {
         this._continuation = continuation;
         this._imagesLoaded = 0;
 
-        if (!this._context.gltf.hasOwnProperty("images") || this._context.gltf["images"].length === 0) {
+        if (!this._context.gltf.hasOwnProperty("images") || this._context.gltf.images.length === 0) {
             this._continuation();
         }
     };
@@ -930,7 +930,6 @@ Object.assign(pc, function () {
                 copyAttr4(attr.offset, attr.stride, joints, vertexDataU8, numVertices);
             }
 
-            copyAttr4(dstOffset, dstStride, src, dst, num);
             if (weights !== null) {
                 attr = getAttribute(vertexFormat.elements, pc.SEMANTIC_BLENDWEIGHT);
                 copyAttr4(attr.offset / 4, attr.stride / 4, weights, vertexDataF32, numVertices);
@@ -1012,7 +1011,7 @@ Object.assign(pc, function () {
 
     // Specification:
     //   https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#node
-    GLBHelpers.NodeLoader.translate = function (context, data) {
+    GLBHelpers.NodeLoader.prototype.translate = function (context, data) {
         var entity = new pc.GraphNode();
 
         if (data.hasOwnProperty('name')) {
@@ -1143,6 +1142,133 @@ Object.assign(pc, function () {
     // Specification:
     //   https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#animation
     GLBHelpers.translateAnimation = function (context, data) {
+        var anim = new pc.Animation();
+        clip.loop = true;
+        if (data.hasOwnProperty('name'))
+            clip.name = data.name;
+
+        var gltf = context.gltf;
+
+        for (var channel, idx = 0; idx < data.channels.length; idx++) {
+            channel = data.channels[idx];
+
+            var sampler = data.samplers[channel.sampler];
+            var times = getAccessorData(gltf, gltf.accessors[sampler.input], context.buffers);
+            var values = getAccessorData(gltf, gltf.accessors[sampler.output], context.buffers);
+            var time, value, inTangent, outTangent;
+
+            var target = channel.target;
+            var path = target.path;
+            var curve, keyType;
+            var i, j;
+
+            // Animation for the same root, organized in one AnimationComponent
+            var entity = context.nodes[target.node];
+
+            if (path === 'weights') {
+                var numCurves = values.length / times.length;
+                for (i = 0; i < numCurves; i++) {
+                    curve = new AnimationCurve();
+                    keyType = AnimationKeyableType.NUM;
+                    curve.keyableType = keyType;
+                    curve.addTarget("model", path, i);
+                    if (sampler.interpolation === "CUBIC")
+                        curve.type = AnimationCurveType.CUBIC;
+                    else if (sampler.interpolation === "STEP")
+                        curve.type = AnimationCurveType.STEP;
+
+                    for (j = 0; j < times.length; j++) {
+                        time = times[j];
+                        value = values[numCurves * j + i];
+                        curve.insertKey(keyType, time, value);
+                    }
+                    clip.addCurve(curve);
+                }
+            } else {
+                // translation, rotation or scale
+                keyType = AnimationKeyableType.NUM;
+                var targetPath = path;
+                switch (path) {
+                    case "translation":
+                        keyType = AnimationKeyableType.VEC;
+                        targetPath = "localPosition";
+                        break;
+                    case "scale":
+                        keyType = AnimationKeyableType.VEC;
+                        targetPath = "localScale";
+                        break;
+                    case "rotation":
+                        keyType = AnimationKeyableType.QUAT;
+                        targetPath = "localRotation";
+                        break;
+                }
+                curve = new AnimationCurve();
+                curve.keyableType = keyType;
+                curve.setTarget(entity, targetPath);
+                if (sampler.interpolation === "CUBIC")
+                    curve.type = AnimationCurveType.CUBIC;
+                else if (sampler.interpolation === "STEP")
+                    curve.type = AnimationCurveType.STEP;
+                else if (sampler.interpolation === "CUBICSPLINE")
+                    curve.type = AnimationCurveType.CUBICSPLINE_GLTF;
+
+                // glTF animation keys can be assumed to be serialized in time
+                // order so no need to use AnimationCurve#insertKey (which does
+                // extra work to insert a key at the correct index).
+                var keyable, keyables = [];
+
+                if (sampler.interpolation === "CUBICSPLINE") {
+                    for (i = 0; i < times.length; i++) {
+                        time = times[i];
+                        if ((path === 'translation') || (path === 'scale')) {
+                            inTangent = new pc.Vec3(values[9 * i + 0], values[9 * i + 1], values[9 * i + 2]);
+                            value = new pc.Vec3(values[9 * i + 3], values[9 * i + 4], values[9 * i + 5]);
+                            outTangent = new pc.Vec3(values[9 * i + 6], values[9 * i + 7], values[9 * i + 8]);
+                        } else if (path === 'rotation') {
+                            inTangent = new pc.Quat(values[12 * i + 0], values[12 * i + 1], values[12 * i + 2], values[12 * i + 3]);
+                            value = new pc.Quat(values[12 * i + 4], values[12 * i + 5], values[12 * i + 6], values[12 * i + 7]);
+                            outTangent = new pc.Quat(values[12 * i + 8], values[12 * i + 9], values[12 * i + 10], values[12 * i + 11]);
+                        } else {
+                            inTangent = values[3 * i];
+                            value = values[3 * i + 1];
+                            outTangent = values[3 * i + 2];
+                        }
+
+                        keyable = new AnimationKeyable(keyType, time, value);
+                        keyable.inTangent = inTangent;
+                        keyable.outTangent = outTangent;
+                        keyables.push(keyable);
+                    }
+                } else {
+                    for (i = 0; i < times.length; i++) {
+                        time = times[i];
+                        if ((path === 'translation') || (path === 'scale'))
+                            value = new pc.Vec3(values[3 * i + 0], values[3 * i + 1], values[3 * i + 2]);
+                        else if (path === 'rotation')
+                            value = new pc.Quat(values[4 * i + 0], values[4 * i + 1], values[4 * i + 2], values[4 * i + 3]);
+                        else // AnimationKeyableType.NUM
+                            value = values[i];
+
+                        keyable = new AnimationKeyable(keyType, time, value);
+                        keyables.push(keyable);
+                    }
+                }
+
+                curve.animKeys = keyables;
+                curve.duration = time;
+                clip.addCurve(curve);
+            }
+        }
+
+        if (data.hasOwnProperty('extras') && context.processAnimationExtras) {
+            context.processAnimationExtras(clip, data.extras);
+        }
+
+        return clip;
+    };
+
+    // New animatoin system API (WIP) implementation, support depends on the integration
+    GLBHelpers.translateAnimation_new_api = function (context, data) {
         var clip = new AnimationClip();
         clip.loop = true;
         if (data.hasOwnProperty('name'))
