@@ -41,6 +41,9 @@ Object.assign(pc, function () {
 
         this.graph = null;
 
+        this._offset = 0;
+        this._interpKey = null;
+
         var self = this;
 
         function addInterpolatedKeys(node) {
@@ -48,7 +51,7 @@ Object.assign(pc, function () {
             interpKey._name = node.name;
             self._interpolatedKeys.push(interpKey);
             self._interpolatedKeyDict[node.name] = interpKey;
-            self._currKeyIndices[node.name] = 0;
+            self._currKeyIndices[node.name] = [0, 0, 0];
 
             for (var i = 0; i < node._children.length; i++)
                 addInterpolatedKeys(node._children[i]);
@@ -71,8 +74,7 @@ Object.assign(pc, function () {
         if (this._animation !== null) {
             var i;
             var node, nodeName;
-            var keys, interpKey;
-            var k1, k2, alpha;
+            var keys, keyIndices, interpKey;
             var nodes = this._animation._nodes;
             var duration = this._animation.duration;
 
@@ -85,18 +87,22 @@ Object.assign(pc, function () {
             this._time += delta;
 
             if (this._time > duration) {
-                this._time = this.looping ? 0.0 : duration;
+                this._time = this.looping ? (this._time - duration) : duration;
                 for (i = 0; i < nodes.length; i++) {
                     node = nodes[i];
                     nodeName = node._name;
-                    this._currKeyIndices[nodeName] = 0;
+                    this._currKeyIndices[nodeName] = [0, 0, 0];
                 }
             } else if (this._time < 0) {
                 this._time = this.looping ? duration : 0.0;
                 for (i = 0; i < nodes.length; i++) {
                     node = nodes[i];
                     nodeName = node._name;
-                    this._currKeyIndices[nodeName] = node._keys.length - 2;
+                    this._currKeyIndices[nodeName] = [
+                        node._keys[pc.CKey.POS].length - 2,
+                        node._keys[pc.CKey.ROT].length - 2,
+                        node._keys[pc.CKey.SCL].length - 2
+                    ];
                 }
             }
 
@@ -104,52 +110,63 @@ Object.assign(pc, function () {
             // For each animated node...
 
             // keys index offset
-            var offset = (delta >= 0 ? 1 : -1);
+            this._offset = (delta >= 0 ? 1 : -1);
 
-            var foundKey;
             for (i = 0; i < nodes.length; i++) {
                 node = nodes[i];
                 nodeName = node._name;
                 keys = node._keys;
+                keyIndices = this._currKeyIndices[nodeName];
 
                 // Determine the interpolated keyframe for this animated node
-                interpKey = this._interpolatedKeyDict[nodeName];
-                if (interpKey === undefined) {
+                this._interpKey = this._interpolatedKeyDict[nodeName];
+                if (this._interpKey === undefined) {
                     // #ifdef DEBUG
                     console.warn('Unknown skeleton node name: ' + nodeName);
                     // #endif
                     continue;
                 }
                 // If there's only a single key, just copy the key to the interpolated key...
-                foundKey = false;
-                if (keys.length !== 1) {
-                    // Otherwise, find the keyframe pair for this node
-                    for (var currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length - 1 && currKeyIndex >= 0; currKeyIndex += offset) {
-                        k1 = keys[currKeyIndex];
-                        k2 = keys[currKeyIndex + 1];
+                keyIndices[pc.CKey.POS] = this._interpolate(this._interpKey._pos, "lerp",
+                                                            keys[pc.CKey.POS],
+                                                            keyIndices[pc.CKey.POS]);
+                keyIndices[pc.CKey.ROT] = this._interpolate(this._interpKey._quat, "slerp",
+                                                            keys[pc.CKey.ROT],
+                                                            keyIndices[pc.CKey.ROT]);
+                keyIndices[pc.CKey.SCL] = this._interpolate(this._interpKey._scale, "lerp",
+                                                            keys[pc.CKey.SCL],
+                                                            keyIndices[pc.CKey.SCL]);
+            }
+        }
+    };
 
-                        if ((k1.time <= this._time) && (k2.time >= this._time)) {
-                            alpha = (this._time - k1.time) / (k2.time - k1.time);
+    Skeleton.prototype._interpolate = function (target, op, keys, currKey) {
+        var k1, k2, alpha;
+        var foundKey = false;
+        var newKeyIdx = 0;
+        if (keys.length !== 1) {
+            // Otherwise, find the keyframe pair for this node
+            for (var currKeyIndex = currKey; currKeyIndex < keys.length - 1 && currKeyIndex >= 0; currKeyIndex += this._offset) {
+                k1 = keys[currKeyIndex];
+                k2 = keys[currKeyIndex + 1];
 
-                            interpKey._pos.lerp(k1.position, k2.position, alpha);
-                            interpKey._quat.slerp(k1.rotation, k2.rotation, alpha);
-                            interpKey._scale.lerp(k1.scale, k2.scale, alpha);
-                            interpKey._written = true;
+                if ((k1.time <= this._time) && (k2.time >= this._time)) {
+                    alpha = (this._time - k1.time) / (k2.time - k1.time);
 
-                            this._currKeyIndices[nodeName] = currKeyIndex;
-                            foundKey = true;
-                            break;
-                        }
-                    }
-                }
-                if (keys.length === 1 || (!foundKey && this._time === 0.0 && this.looping)) {
-                    interpKey._pos.copy(keys[0].position);
-                    interpKey._quat.copy(keys[0].rotation);
-                    interpKey._scale.copy(keys[0].scale);
-                    interpKey._written = true;
+                    target[op](k1.value, k2.value, alpha);
+                    this._interpKey._written = true;
+                    newKeyIdx = currKeyIndex;
+
+                    foundKey = true;
+                    break;
                 }
             }
         }
+        if (keys.length === 1 || (!foundKey && this._time === 0.0 && this.looping)) {
+            target.copy(keys[0].value);
+            this._interpKey._written = true;
+        }
+        return newKeyIdx;
     };
 
     /**
@@ -231,7 +248,7 @@ Object.assign(pc, function () {
             for (var i = 0; i < numNodes; i++) {
                 var node = this._interpolatedKeys[i];
                 var nodeName = node._name;
-                this._currKeyIndices[nodeName] = 0;
+                this._currKeyIndices[nodeName] = [0, 0, 0];
             }
 
             this.addTime(0);

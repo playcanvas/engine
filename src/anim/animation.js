@@ -6,6 +6,15 @@ Object.assign(pc, function () {
         this.scale = scale;
     };
 
+    var CKey = function CKey(time, value) {
+        this.time = time;
+        this.value = value;
+    };
+
+    CKey.POS = 0;
+    CKey.ROT = 1;
+    CKey.SCL = 2;
+
     /**
      * @constructor
      * @name pc.Node
@@ -14,7 +23,7 @@ Object.assign(pc, function () {
      */
     var Node = function Node() {
         this._name = "";
-        this._keys = [];
+        this._keys = [[], [], []];
     };
 
     /**
@@ -129,6 +138,7 @@ Object.assign(pc, function () {
     return {
         Animation: Animation,
         Key: Key,
+        CKey: CKey,
         Node: Node
     };
 }());
