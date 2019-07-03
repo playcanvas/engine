@@ -49,6 +49,10 @@ Object.assign(pc, function () {
                 var n = animData.nodes[i];
                 node._name = n.name;
 
+                var posKeys = node._keys[pc.CKey.POS];
+                var rotKeys = node._keys[pc.CKey.ROT];
+                var sclKeys = node._keys[pc.CKey.SCL];
+
                 for (var j = 0; j < n.keys.length; j++) {
                     var k = n.keys[j];
 
@@ -60,9 +64,12 @@ Object.assign(pc, function () {
                     var rot = new pc.Quat().setFromEulerAngles(r[0], r[1], r[2]);
                     var scl = new pc.Vec3(s[0], s[1], s[2]);
 
-                    var key = new pc.Key(t, pos, rot, scl);
-
-                    node._keys.push(key);
+                    if (j === 0 || !posKeys[posKeys.length - 1].value.equals(pos))
+                        posKeys.push(new pc.CKey(t, pos));
+                    if (j === 0 || !rotKeys[rotKeys.length - 1].value.equals(rot))
+                        rotKeys.push(new pc.CKey(t, rot));
+                    if (j === 0 || !sclKeys[sclKeys.length - 1].value.equals(scl))
+                        sclKeys.push(new pc.CKey(t, scl));
                 }
 
                 anim.addNode(node);
@@ -88,6 +95,10 @@ Object.assign(pc, function () {
                 var defRot = n.defaults.r;
                 var defScl = n.defaults.s;
 
+                var posKeys = node._keys[pc.CKey.POS];
+                var rotKeys = node._keys[pc.CKey.ROT];
+                var sclKeys = node._keys[pc.CKey.SCL];
+
                 for (var j = 0; j < n.keys.length; j++) {
                     var k = n.keys[j];
 
@@ -99,9 +110,12 @@ Object.assign(pc, function () {
                     var rot = new pc.Quat().setFromEulerAngles(r[0], r[1], r[2]);
                     var scl = new pc.Vec3(s[0], s[1], s[2]);
 
-                    var key = new pc.Key(t, pos, rot, scl);
-
-                    node._keys.push(key);
+                    if (j === 0 || !posKeys[posKeys.length - 1].value.equals(pos))
+                        posKeys.push(new pc.CKey(t, pos));
+                    if (j === 0 || !rotKeys[rotKeys.length - 1].value.equals(rot))
+                        rotKeys.push(new pc.CKey(t, rot));
+                    if (j === 0 || !sclKeys[sclKeys.length - 1].value.equals(scl))
+                        sclKeys.push(new pc.CKey(t, scl));
                 }
 
                 anim.addNode(node);
