@@ -3,6 +3,7 @@ Object.assign(pc, function () {
 
     var AnimationHandler = function () {
         this.retryRequests = false;
+        this._glbParser = new pc.GLBAnimationsParser();
     };
 
     Object.assign(AnimationHandler.prototype, {
@@ -36,6 +37,14 @@ Object.assign(pc, function () {
             return this["_parseAnimationV" + data.animation.version](data);
         },
 
+        openAsync: function (url, data, asset, onLoaded, onFailed) {
+            if (pc.path.getExtension(url) === '.glb') {
+                this._glbParser.parse(data, onLoaded, onFailed);
+            } else {
+                onLoaded(this["_parseAnimationV" + data.animation.version](data));
+            }
+        },
+
         _parseAnimationV3: function (data) {
             var animData = data.animation;
 
@@ -53,6 +62,8 @@ Object.assign(pc, function () {
                 var rotKeys = node._keys[pc.CKey.ROT];
                 var sclKeys = node._keys[pc.CKey.SCL];
 
+                var posSkip = null, rotSkip = null, sclSkip = null;
+
                 for (var j = 0; j < n.keys.length; j++) {
                     var k = n.keys[j];
 
@@ -64,12 +75,9 @@ Object.assign(pc, function () {
                     var rot = new pc.Quat().setFromEulerAngles(r[0], r[1], r[2]);
                     var scl = new pc.Vec3(s[0], s[1], s[2]);
 
-                    if (j === 0 || !posKeys[posKeys.length - 1].value.equals(pos))
-                        posKeys.push(new pc.CKey(t, pos));
-                    if (j === 0 || !rotKeys[rotKeys.length - 1].value.equals(rot))
-                        rotKeys.push(new pc.CKey(t, rot));
-                    if (j === 0 || !sclKeys[sclKeys.length - 1].value.equals(scl))
-                        sclKeys.push(new pc.CKey(t, scl));
+                    posSkip = this._insert(new pc.CKey(t, pos), j, posKeys, posSkip);
+                    rotSkip = this._insert(new pc.CKey(t, rot), j, rotKeys, rotSkip);
+                    sclSkip = this._insert(new pc.CKey(t, scl), j, sclKeys, sclSkip);
                 }
 
                 anim.addNode(node);
@@ -99,6 +107,8 @@ Object.assign(pc, function () {
                 var rotKeys = node._keys[pc.CKey.ROT];
                 var sclKeys = node._keys[pc.CKey.SCL];
 
+                var posSkip = null, rotSkip = null, sclSkip = null;
+
                 for (var j = 0; j < n.keys.length; j++) {
                     var k = n.keys[j];
 
@@ -110,18 +120,30 @@ Object.assign(pc, function () {
                     var rot = new pc.Quat().setFromEulerAngles(r[0], r[1], r[2]);
                     var scl = new pc.Vec3(s[0], s[1], s[2]);
 
-                    if (j === 0 || !posKeys[posKeys.length - 1].value.equals(pos))
-                        posKeys.push(new pc.CKey(t, pos));
-                    if (j === 0 || !rotKeys[rotKeys.length - 1].value.equals(rot))
-                        rotKeys.push(new pc.CKey(t, rot));
-                    if (j === 0 || !sclKeys[sclKeys.length - 1].value.equals(scl))
-                        sclKeys.push(new pc.CKey(t, scl));
+                    posSkip = this._insert(new pc.CKey(t, pos), j, posKeys, posSkip);
+                    rotSkip = this._insert(new pc.CKey(t, rot), j, rotKeys, rotSkip);
+                    sclSkip = this._insert(new pc.CKey(t, scl), j, sclKeys, sclSkip);
                 }
 
                 anim.addNode(node);
             }
 
             return anim;
+        },
+
+        _insert: function (newKey, idx, keys, skip) {
+            if (idx === 0) {
+                keys.push(newKey);
+            } else if (keys[keys.length - 1].value.equals(newKey.value)) {
+                skip = newKey;
+            } else {
+                if (skip) {
+                    keys.push(skip);
+                }
+                skip = null;
+                keys.push(newKey);
+            }
+            return skip;
         }
     });
 

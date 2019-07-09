@@ -8,6 +8,75 @@ Object.assign(pc, function () {
     var GLBHelpers = {};
 
     // ----------------------------------------------------------------------
+    // GLTF decoding
+    GLBHelpers.GLTFDecoder = function (glb, onFailed) {
+        this._onFailed = onFailed;
+        this._glb = glb;
+        this._data = new DataView(glb);
+        this._length = 0;
+        this._chunkLength = 0;
+        this._chunkType = 0;
+    };
+
+    function decodeBinaryUtf8(array) {
+        if (typeof TextDecoder !== 'undefined') {
+            return new TextDecoder().decode(array);
+        }
+
+        var str = "";
+        for (var i = 0, len = array.length; i < len; i++) {
+            str += String.fromCharCode(array[i]);
+        }
+
+        return decodeURIComponent(escape(str));
+    }
+
+    GLBHelpers.GLTFDecoder.prototype.parseGLTF = function () {
+        // Read header
+        var magic = this._data.getUint32(0, true);
+        if (magic !== 0x46546C67) {
+            this._onFailed("Invalid magic number found in glb header. Expected 0x46546C67, found 0x" + magic.toString(16));
+            return null;
+        }
+        var version = this._data.getUint32(4, true);
+        if (version !== 2) {
+            this._onFailed("Invalid version number found in glb header. Expected 2, found " + version);
+            return null;
+        }
+        this._length = this._data.getUint32(8, true);
+
+        // Read JSON chunk
+        this._chunkLength = this._data.getUint32(12, true);
+        this._chunkType = this._data.getUint32(16, true);
+        if (this._chunkType !== 0x4E4F534A) {
+            this._onFailed("Invalid chunk type found in glb file. Expected 0x4E4F534A, found 0x" + this._chunkType.toString(16));
+            return null;
+        }
+        var jsonData = new Uint8Array(this._glb, 20, this._chunkLength);
+        var gltf = JSON.parse(decodeBinaryUtf8(jsonData));
+        return gltf;
+    };
+
+    GLBHelpers.GLTFDecoder.prototype.extractBuffers = function () {
+        var buffers = [];
+        var byteOffset = 20 + this._chunkLength;
+        while (byteOffset < this._length) {
+            this._chunkLength = this._data.getUint32(byteOffset, true);
+            this._chunkType = this._data.getUint32(byteOffset + 4, true);
+            if (this._chunkType !== 0x004E4942) {
+                this._onFailed("Invalid chunk type found in glb file. Expected 0x004E4942, found 0x" + this._chunkType.toString(16));
+                return null;
+            }
+
+            var buffer = this._glb.slice(byteOffset + 8, byteOffset + 8 + this._chunkLength);
+            buffers.push(buffer);
+
+            byteOffset += this._chunkLength + 8;
+        }
+        return buffers;
+    };
+
+    // ----------------------------------------------------------------------
     // Buffers loading
     GLBHelpers.BuffersLoader = function (context, continuation) {
         this._context = context;
@@ -1138,16 +1207,71 @@ Object.assign(pc, function () {
 
     // ----------------------------------------------------------------------
     // Animations parsing
+    var _insertKey = function (key, idx, keys, skip) {
+        if (idx === 0) {
+            keys.push(key);
+        } else if (keys[keys.length - 1].value.equals(key.value)) {
+            skip = key;
+        } else {
+            if (skip) {
+                keys.push(skip);
+            }
+            skip = null;
+            keys.push(key);
+        }
+        return skip;
+    };
+
+    var _insertKeysVec3 = function (keys, interpolation, times, values) {
+        var time, value, i;
+        var skip = null;
+        if (interpolation === "CUBICSPLINE") {
+            for (i = 0; i < times.length; i++) {
+                time = times[i];
+                value = new pc.Vec3(values[9 * i + 3], values[9 * i + 4], values[9 * i + 5]);
+                skip = _insertKey(new pc.CKey(time, value), i, keys, skip);
+            }
+        } else {
+            for (i = 0; i < times.length; i++) {
+                time = times[i];
+                value = new pc.Vec3(values[3 * i + 0], values[3 * i + 1], values[3 * i + 2]);
+                skip = _insertKey(new pc.CKey(time, value), i, keys, skip);
+            }
+        }
+    };
+
+    var _insertKeysQuat = function (keys, interpolation, times, values) {
+        var time, value, i;
+        var skip = null;
+        if (interpolation === "CUBICSPLINE") {
+            for (i = 0; i < times.length; i++) {
+                time = times[i];
+                value = new pc.Quat(values[12 * i + 4], values[12 * i + 5], values[12 * i + 6], values[12 * i + 7]);
+                skip = _insertKey(new pc.CKey(time, value), i, keys, skip);
+            }
+        } else {
+            for (i = 0; i < times.length; i++) {
+                time = times[i];
+                value = new pc.Quat(values[4 * i + 0], values[4 * i + 1], values[4 * i + 2], values[4 * i + 3]);
+                skip = _insertKey(new pc.CKey(time, value), i, keys, skip);
+            }
+        }
+    };
 
     // Specification:
     //   https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#animation
-    GLBHelpers.translateAnimation = function (context, data) {
+    GLBHelpers.AnimationLoader = function () {
+        this._id = 0;
+    };
+
+    GLBHelpers.AnimationLoader.prototype.translate = function (context, data) {
         var anim = new pc.Animation();
-        clip.loop = true;
-        if (data.hasOwnProperty('name'))
-            clip.name = data.name;
+        anim.loop = true;
+        anim.setName(data.hasOwnProperty('name') ? data.name : ("animation_" + this._id));
 
         var gltf = context.gltf;
+        var nodesMap = {};
+        var node = null;
 
         for (var channel, idx = 0; idx < data.channels.length; idx++) {
             channel = data.channels[idx];
@@ -1155,116 +1279,40 @@ Object.assign(pc, function () {
             var sampler = data.samplers[channel.sampler];
             var times = getAccessorData(gltf, gltf.accessors[sampler.input], context.buffers);
             var values = getAccessorData(gltf, gltf.accessors[sampler.output], context.buffers);
-            var time, value, inTangent, outTangent;
 
             var target = channel.target;
             var path = target.path;
-            var curve, keyType;
-            var i, j;
 
-            // Animation for the same root, organized in one AnimationComponent
-            var entity = context.nodes[target.node];
+            node = nodesMap[target.node];
+            if (!node) {
+                node = new pc.Node();
+                var entity = context.nodes[target.node];
+                node._name = entity.name;
+                anim.addNode(node);
+                nodesMap[target.node] = node;
+            }
 
-            if (path === 'weights') {
-                var numCurves = values.length / times.length;
-                for (i = 0; i < numCurves; i++) {
-                    curve = new AnimationCurve();
-                    keyType = AnimationKeyableType.NUM;
-                    curve.keyableType = keyType;
-                    curve.addTarget("model", path, i);
-                    if (sampler.interpolation === "CUBIC")
-                        curve.type = AnimationCurveType.CUBIC;
-                    else if (sampler.interpolation === "STEP")
-                        curve.type = AnimationCurveType.STEP;
-
-                    for (j = 0; j < times.length; j++) {
-                        time = times[j];
-                        value = values[numCurves * j + i];
-                        curve.insertKey(keyType, time, value);
-                    }
-                    clip.addCurve(curve);
-                }
-            } else {
-                // translation, rotation or scale
-                keyType = AnimationKeyableType.NUM;
-                var targetPath = path;
-                switch (path) {
-                    case "translation":
-                        keyType = AnimationKeyableType.VEC;
-                        targetPath = "localPosition";
-                        break;
-                    case "scale":
-                        keyType = AnimationKeyableType.VEC;
-                        targetPath = "localScale";
-                        break;
-                    case "rotation":
-                        keyType = AnimationKeyableType.QUAT;
-                        targetPath = "localRotation";
-                        break;
-                }
-                curve = new AnimationCurve();
-                curve.keyableType = keyType;
-                curve.setTarget(entity, targetPath);
-                if (sampler.interpolation === "CUBIC")
-                    curve.type = AnimationCurveType.CUBIC;
-                else if (sampler.interpolation === "STEP")
-                    curve.type = AnimationCurveType.STEP;
-                else if (sampler.interpolation === "CUBICSPLINE")
-                    curve.type = AnimationCurveType.CUBICSPLINE_GLTF;
-
-                // glTF animation keys can be assumed to be serialized in time
-                // order so no need to use AnimationCurve#insertKey (which does
-                // extra work to insert a key at the correct index).
-                var keyable, keyables = [];
-
-                if (sampler.interpolation === "CUBICSPLINE") {
-                    for (i = 0; i < times.length; i++) {
-                        time = times[i];
-                        if ((path === 'translation') || (path === 'scale')) {
-                            inTangent = new pc.Vec3(values[9 * i + 0], values[9 * i + 1], values[9 * i + 2]);
-                            value = new pc.Vec3(values[9 * i + 3], values[9 * i + 4], values[9 * i + 5]);
-                            outTangent = new pc.Vec3(values[9 * i + 6], values[9 * i + 7], values[9 * i + 8]);
-                        } else if (path === 'rotation') {
-                            inTangent = new pc.Quat(values[12 * i + 0], values[12 * i + 1], values[12 * i + 2], values[12 * i + 3]);
-                            value = new pc.Quat(values[12 * i + 4], values[12 * i + 5], values[12 * i + 6], values[12 * i + 7]);
-                            outTangent = new pc.Quat(values[12 * i + 8], values[12 * i + 9], values[12 * i + 10], values[12 * i + 11]);
-                        } else {
-                            inTangent = values[3 * i];
-                            value = values[3 * i + 1];
-                            outTangent = values[3 * i + 2];
-                        }
-
-                        keyable = new AnimationKeyable(keyType, time, value);
-                        keyable.inTangent = inTangent;
-                        keyable.outTangent = outTangent;
-                        keyables.push(keyable);
-                    }
-                } else {
-                    for (i = 0; i < times.length; i++) {
-                        time = times[i];
-                        if ((path === 'translation') || (path === 'scale'))
-                            value = new pc.Vec3(values[3 * i + 0], values[3 * i + 1], values[3 * i + 2]);
-                        else if (path === 'rotation')
-                            value = new pc.Quat(values[4 * i + 0], values[4 * i + 1], values[4 * i + 2], values[4 * i + 3]);
-                        else // AnimationKeyableType.NUM
-                            value = values[i];
-
-                        keyable = new AnimationKeyable(keyType, time, value);
-                        keyables.push(keyable);
-                    }
-                }
-
-                curve.animKeys = keyables;
-                curve.duration = time;
-                clip.addCurve(curve);
+            switch (path) {
+                case "translation":
+                    _insertKeysVec3(node._keys[pc.CKey.POS], sampler.interpolation, times, values);
+                    break;
+                case "scale":
+                    _insertKeysVec3(node._keys[pc.CKey.SCL], sampler.interpolation, times, values);
+                    break;
+                case "rotation":
+                    _insertKeysQuat(node._keys[pc.CKey.ROT], sampler.interpolation, times, values);
+                    break;
+                case 'weights':
+                    // console.log("GLB animations for weights not supported");
+                    break;
             }
         }
 
         if (data.hasOwnProperty('extras') && context.processAnimationExtras) {
-            context.processAnimationExtras(clip, data.extras);
+            context.processAnimationExtras(anim, data.extras);
         }
-
-        return clip;
+        this._id++;
+        return anim;
     };
 
     // New animatoin system API (WIP) implementation, support depends on the integration

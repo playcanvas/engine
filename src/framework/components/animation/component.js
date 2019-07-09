@@ -113,7 +113,13 @@ Object.assign(pc, function () {
             var i, l = ids.length;
 
             var onAssetReady = function (asset) {
-                self.animations[asset.name] = asset.resource;
+                if (asset.resources.length > 1) {
+                    for (var i = 0; i < asset.resources.length; i++) {
+                        self.animations[asset.resources[i].name] = asset.resources[i];
+                    }
+                } else {
+                    self.animations[asset.name] = asset.resource;
+                }
                 self.animationsIndex[asset.id] = asset.name;
                 /* eslint-disable no-self-assign */
                 self.animations = self.animations; // assigning ensures set_animations event is fired
@@ -147,19 +153,35 @@ Object.assign(pc, function () {
         },
 
         onAssetChanged: function (asset, attribute, newValue, oldValue) {
+            var i;
             if (attribute === 'resource') {
                 // replace old animation with new one
                 if (newValue) {
-                    this.animations[asset.name] = newValue;
+                    if (asset.resources.length > 1) {
+                        for (i = 0; i < asset.resources.length; i++) {
+                            delete this.animations[asset.resources[i].name];
+                        }
+                        for (i = 0; i < newValue.length; i++) {
+                            this.animations[newValue[i].name] = newValue[i];
+                        }
+                    } else {
+                        this.animations[asset.name] = newValue;
+                    }
                     this.animationsIndex[asset.id] = asset.name;
 
-                    if (this.data.currAnim === asset.name) {
+                    if (this.data.currAnim === asset.resource.name) {
                         // restart animation
                         if (this.data.playing && this.data.enabled && this.entity.enabled)
                             this.play(asset.name, 0);
                     }
                 } else {
-                    delete this.animations[asset.name];
+                    if (asset.resources.length > 1) {
+                        for (i = 0; i < asset.resources.length; i++) {
+                            delete this.animations[asset.resources[i].name];
+                        }
+                    } else {
+                        delete this.animations[asset.name];
+                    }
                     delete this.animationsIndex[asset.id];
                 }
             }
@@ -168,8 +190,14 @@ Object.assign(pc, function () {
         onAssetRemoved: function (asset) {
             asset.off('remove', this.onAssetRemoved, this);
 
-            if (this.animations && this.animations[asset.name]) {
-                delete this.animations[asset.name];
+            if (this.animations) {
+                if (asset.resources.length > 1) {
+                    for (var i = 0; i < asset.resources.length; i++) {
+                        delete this.animations[asset.resources[i].name];
+                    }
+                } else {
+                    delete this.animations[asset.name];
+                }
                 delete this.animationsIndex[asset.id];
 
                 if (this.data.currAnim === asset.name)

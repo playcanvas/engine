@@ -107,6 +107,8 @@ Object.assign(pc, function () {
                             } catch (ex) {
                                 loader._onLoadFailed(key, ex);
                             }
+                        } else {
+                            loader._onLoadFailed(key, err);
                         }
                     }, asset);
                 };
