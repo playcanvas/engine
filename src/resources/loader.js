@@ -97,11 +97,10 @@ Object.assign(pc, function () {
 
                         if (!err) {
                             try {
-                                if (handler.openAsync) {
-                                    handler.openAsync(urlObj.original, data, asset,
-                                                      loader._onLoaded.bind(loader, key, extra),
-                                                      loader._onLoadFailed.bind(loader, key));
-                                } else {
+                                if (!handler.openAsync ||
+                                    !handler.openAsync(urlObj.original, data, asset,
+                                                       loader._onLoaded.bind(loader, key, extra),
+                                                       loader._onLoadFailed.bind(loader, key))) {
                                     loader._onLoaded(key, extra, handler.open(urlObj.original, data, asset));
                                 }
                             } catch (ex) {

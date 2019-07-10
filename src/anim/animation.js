@@ -1,3 +1,10 @@
+Object.assign(pc, {
+    // animation key channels
+    KEYTYPE_POS: 0,
+    KEYTYPE_ROT: 1,
+    KEYTYPE_SCL: 2
+});
+
 Object.assign(pc, function () {
     var Key = function Key(time, position, rotation, scale) {
         this.time = time;
@@ -6,14 +13,10 @@ Object.assign(pc, function () {
         this.scale = scale;
     };
 
-    var CKey = function CKey(time, value) {
+    var Keyframe = function Keyframe(time, value) {
         this.time = time;
         this.value = value;
     };
-
-    CKey.POS = 0;
-    CKey.ROT = 1;
-    CKey.SCL = 2;
 
     /**
      * @constructor
@@ -138,7 +141,7 @@ Object.assign(pc, function () {
     return {
         Animation: Animation,
         Key: Key,
-        CKey: CKey,
+        Keyframe: Keyframe,
         Node: Node
     };
 }());

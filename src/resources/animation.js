@@ -43,6 +43,7 @@ Object.assign(pc, function () {
             } else {
                 onLoaded(this["_parseAnimationV" + data.animation.version](data));
             }
+            return true;
         },
 
         _parseAnimationV3: function (data) {
@@ -58,9 +59,9 @@ Object.assign(pc, function () {
                 var n = animData.nodes[i];
                 node._name = n.name;
 
-                var posKeys = node._keys[pc.CKey.POS];
-                var rotKeys = node._keys[pc.CKey.ROT];
-                var sclKeys = node._keys[pc.CKey.SCL];
+                var posKeys = node._keys[pc.KEYTYPE_POS];
+                var rotKeys = node._keys[pc.KEYTYPE_ROT];
+                var sclKeys = node._keys[pc.KEYTYPE_SCL];
 
                 var posSkip = null, rotSkip = null, sclSkip = null;
 
@@ -75,9 +76,9 @@ Object.assign(pc, function () {
                     var rot = new pc.Quat().setFromEulerAngles(r[0], r[1], r[2]);
                     var scl = new pc.Vec3(s[0], s[1], s[2]);
 
-                    posSkip = this._insert(new pc.CKey(t, pos), j, posKeys, posSkip);
-                    rotSkip = this._insert(new pc.CKey(t, rot), j, rotKeys, rotSkip);
-                    sclSkip = this._insert(new pc.CKey(t, scl), j, sclKeys, sclSkip);
+                    posSkip = this._insert(new pc.Keyframe(t, pos), j, posKeys, posSkip);
+                    rotSkip = this._insert(new pc.Keyframe(t, rot), j, rotKeys, rotSkip);
+                    sclSkip = this._insert(new pc.Keyframe(t, scl), j, sclKeys, sclSkip);
                 }
 
                 anim.addNode(node);
@@ -103,9 +104,9 @@ Object.assign(pc, function () {
                 var defRot = n.defaults.r;
                 var defScl = n.defaults.s;
 
-                var posKeys = node._keys[pc.CKey.POS];
-                var rotKeys = node._keys[pc.CKey.ROT];
-                var sclKeys = node._keys[pc.CKey.SCL];
+                var posKeys = node._keys[pc.KEYTYPE_POS];
+                var rotKeys = node._keys[pc.KEYTYPE_ROT];
+                var sclKeys = node._keys[pc.KEYTYPE_SCL];
 
                 var posSkip = null, rotSkip = null, sclSkip = null;
 
@@ -120,9 +121,9 @@ Object.assign(pc, function () {
                     var rot = new pc.Quat().setFromEulerAngles(r[0], r[1], r[2]);
                     var scl = new pc.Vec3(s[0], s[1], s[2]);
 
-                    posSkip = this._insert(new pc.CKey(t, pos), j, posKeys, posSkip);
-                    rotSkip = this._insert(new pc.CKey(t, rot), j, rotKeys, rotSkip);
-                    sclSkip = this._insert(new pc.CKey(t, scl), j, sclKeys, sclSkip);
+                    posSkip = this._insert(new pc.Keyframe(t, pos), j, posKeys, posSkip);
+                    rotSkip = this._insert(new pc.Keyframe(t, rot), j, rotKeys, rotSkip);
+                    sclSkip = this._insert(new pc.Keyframe(t, scl), j, sclKeys, sclSkip);
                 }
 
                 anim.addNode(node);

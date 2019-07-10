@@ -99,9 +99,9 @@ Object.assign(pc, function () {
                     node = nodes[i];
                     nodeName = node._name;
                     this._currKeyIndices[nodeName] = [
-                        node._keys[pc.CKey.POS].length - 2,
-                        node._keys[pc.CKey.ROT].length - 2,
-                        node._keys[pc.CKey.SCL].length - 2
+                        node._keys[pc.KEYTYPE_POS].length - 2,
+                        node._keys[pc.KEYTYPE_ROT].length - 2,
+                        node._keys[pc.KEYTYPE_SCL].length - 2
                     ];
                 }
             }
@@ -127,15 +127,15 @@ Object.assign(pc, function () {
                     continue;
                 }
                 // If there's only a single key, just copy the key to the interpolated key...
-                keyIndices[pc.CKey.POS] = this._interpolate(this._interpKey._pos, "lerp",
-                                                            keys[pc.CKey.POS],
-                                                            keyIndices[pc.CKey.POS]);
-                keyIndices[pc.CKey.ROT] = this._interpolate(this._interpKey._quat, "slerp",
-                                                            keys[pc.CKey.ROT],
-                                                            keyIndices[pc.CKey.ROT]);
-                keyIndices[pc.CKey.SCL] = this._interpolate(this._interpKey._scale, "lerp",
-                                                            keys[pc.CKey.SCL],
-                                                            keyIndices[pc.CKey.SCL]);
+                keyIndices[pc.KEYTYPE_POS] = this._interpolate(this._interpKey._pos, "lerp",
+                                                               keys[pc.KEYTYPE_POS],
+                                                               keyIndices[pc.KEYTYPE_POS]);
+                keyIndices[pc.KEYTYPE_ROT] = this._interpolate(this._interpKey._quat, "slerp",
+                                                               keys[pc.KEYTYPE_ROT],
+                                                               keyIndices[pc.KEYTYPE_ROT]);
+                keyIndices[pc.KEYTYPE_SCL] = this._interpolate(this._interpKey._scale, "lerp",
+                                                               keys[pc.KEYTYPE_SCL],
+                                                               keyIndices[pc.KEYTYPE_SCL]);
             }
         }
     };

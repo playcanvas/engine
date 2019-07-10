@@ -1,10 +1,6 @@
 Object.assign(pc, function () {
     'use strict';
 
-    function isDataURI(uri) {
-        return /^data:.*,.*$/i.test(uri);
-    }
-
     var GLBHelpers = {};
 
     // ----------------------------------------------------------------------
@@ -100,6 +96,10 @@ Object.assign(pc, function () {
         loader._context.buffers[idx] = this.response;
         loader.progressLoading();
     };
+
+    function isDataURI(uri) {
+        return /^data:.*,.*$/i.test(uri);
+    }
 
     GLBHelpers.BuffersLoader.prototype.load = function () {
         // buffers already loaded so early out
@@ -1115,41 +1115,6 @@ Object.assign(pc, function () {
             entity.setLocalScale(s[0], s[1], s[2]);
         }
 
-        // TODO: The loader has been temporarily switch from using Entities to GraphNodes
-        // in the hierarchy. Therefore, camera loading is disabled for now.
-
-        // if (data.hasOwnProperty('camera')) {
-        //     var gltf = context.gltf;
-        //     var camera = gltf.cameras[data.camera];
-        //     var options = {};
-        //     if (camera.type === 'perspective') {
-        //         options.type = pc.PROJECTION_PERSPECTIVE;
-        //         if (camera.hasOwnProperty('perspective')) {
-        //             var perspective = camera.perspective;
-        //             if (perspective.hasOwnProperty('aspectRatio')) {
-        //                 options.aspectRatio = perspective.aspectRatio;
-        //             }
-        //             options.fov = perspective.yfov;
-        //             if (perspective.hasOwnProperty('zfar')) {
-        //                 options.farClip = perspective.zfar;
-        //             }
-        //             options.nearClip = perspective.znear;
-        //         }
-        //     } else if (camera.type === 'orthographic') {
-        //         options.type = pc.PROJECTION_ORTHOGRAPHIC;
-        //         if (camera.hasOwnProperty('orthographic')) {
-        //             var orthographic = camera.orthographic;
-        //             options.aspectRatio = orthographic.xmag / orthographic.ymag;
-        //             options.orthoHeight = orthographic.ymag * 0.5;
-        //             options.farClip = orthographic.zfar;
-        //             options.nearClip = orthographic.znear;
-        //         }
-        //     }
-        //     entity.addComponent('camera', options);
-        //     // Diable loaded cameras by default and leave it to the application to enable them
-        //     entity.camera.enabled = false;
-        // }
-
         this._nodeCounter++;
 
         return entity;
@@ -1229,13 +1194,13 @@ Object.assign(pc, function () {
             for (i = 0; i < times.length; i++) {
                 time = times[i];
                 value = new pc.Vec3(values[9 * i + 3], values[9 * i + 4], values[9 * i + 5]);
-                skip = _insertKey(new pc.CKey(time, value), i, keys, skip);
+                skip = _insertKey(new pc.Keyframe(time, value), i, keys, skip);
             }
         } else {
             for (i = 0; i < times.length; i++) {
                 time = times[i];
                 value = new pc.Vec3(values[3 * i + 0], values[3 * i + 1], values[3 * i + 2]);
-                skip = _insertKey(new pc.CKey(time, value), i, keys, skip);
+                skip = _insertKey(new pc.Keyframe(time, value), i, keys, skip);
             }
         }
     };
@@ -1247,13 +1212,13 @@ Object.assign(pc, function () {
             for (i = 0; i < times.length; i++) {
                 time = times[i];
                 value = new pc.Quat(values[12 * i + 4], values[12 * i + 5], values[12 * i + 6], values[12 * i + 7]);
-                skip = _insertKey(new pc.CKey(time, value), i, keys, skip);
+                skip = _insertKey(new pc.Keyframe(time, value), i, keys, skip);
             }
         } else {
             for (i = 0; i < times.length; i++) {
                 time = times[i];
                 value = new pc.Quat(values[4 * i + 0], values[4 * i + 1], values[4 * i + 2], values[4 * i + 3]);
-                skip = _insertKey(new pc.CKey(time, value), i, keys, skip);
+                skip = _insertKey(new pc.Keyframe(time, value), i, keys, skip);
             }
         }
     };
@@ -1294,13 +1259,13 @@ Object.assign(pc, function () {
 
             switch (path) {
                 case "translation":
-                    _insertKeysVec3(node._keys[pc.CKey.POS], sampler.interpolation, times, values);
+                    _insertKeysVec3(node._keys[pc.KEYTYPE_POS], sampler.interpolation, times, values);
                     break;
                 case "scale":
-                    _insertKeysVec3(node._keys[pc.CKey.SCL], sampler.interpolation, times, values);
+                    _insertKeysVec3(node._keys[pc.KEYTYPE_SCL], sampler.interpolation, times, values);
                     break;
                 case "rotation":
-                    _insertKeysQuat(node._keys[pc.CKey.ROT], sampler.interpolation, times, values);
+                    _insertKeysQuat(node._keys[pc.KEYTYPE_ROT], sampler.interpolation, times, values);
                     break;
                 case 'weights':
                     // console.log("GLB animations for weights not supported");
@@ -1313,133 +1278,6 @@ Object.assign(pc, function () {
         }
         this._id++;
         return anim;
-    };
-
-    // New animatoin system API (WIP) implementation, support depends on the integration
-    GLBHelpers.translateAnimation_new_api = function (context, data) {
-        var clip = new AnimationClip();
-        clip.loop = true;
-        if (data.hasOwnProperty('name'))
-            clip.name = data.name;
-
-        var gltf = context.gltf;
-
-        for (var channel, idx = 0; idx < data.channels.length; idx++) {
-            channel = data.channels[idx];
-
-            var sampler = data.samplers[channel.sampler];
-            var times = getAccessorData(gltf, gltf.accessors[sampler.input], context.buffers);
-            var values = getAccessorData(gltf, gltf.accessors[sampler.output], context.buffers);
-            var time, value, inTangent, outTangent;
-
-            var target = channel.target;
-            var path = target.path;
-            var curve, keyType;
-            var i, j;
-
-            // Animation for the same root, organized in one AnimationComponent
-            var entity = context.nodes[target.node];
-
-            if (path === 'weights') {
-                var numCurves = values.length / times.length;
-                for (i = 0; i < numCurves; i++) {
-                    curve = new AnimationCurve();
-                    keyType = AnimationKeyableType.NUM;
-                    curve.keyableType = keyType;
-                    curve.addTarget("model", path, i);
-                    if (sampler.interpolation === "CUBIC")
-                        curve.type = AnimationCurveType.CUBIC;
-                    else if (sampler.interpolation === "STEP")
-                        curve.type = AnimationCurveType.STEP;
-
-                    for (j = 0; j < times.length; j++) {
-                        time = times[j];
-                        value = values[numCurves * j + i];
-                        curve.insertKey(keyType, time, value);
-                    }
-                    clip.addCurve(curve);
-                }
-            } else {
-                // translation, rotation or scale
-                keyType = AnimationKeyableType.NUM;
-                var targetPath = path;
-                switch (path) {
-                    case "translation":
-                        keyType = AnimationKeyableType.VEC;
-                        targetPath = "localPosition";
-                        break;
-                    case "scale":
-                        keyType = AnimationKeyableType.VEC;
-                        targetPath = "localScale";
-                        break;
-                    case "rotation":
-                        keyType = AnimationKeyableType.QUAT;
-                        targetPath = "localRotation";
-                        break;
-                }
-                curve = new AnimationCurve();
-                curve.keyableType = keyType;
-                curve.setTarget(entity, targetPath);
-                if (sampler.interpolation === "CUBIC")
-                    curve.type = AnimationCurveType.CUBIC;
-                else if (sampler.interpolation === "STEP")
-                    curve.type = AnimationCurveType.STEP;
-                else if (sampler.interpolation === "CUBICSPLINE")
-                    curve.type = AnimationCurveType.CUBICSPLINE_GLTF;
-
-                // glTF animation keys can be assumed to be serialized in time
-                // order so no need to use AnimationCurve#insertKey (which does
-                // extra work to insert a key at the correct index).
-                var keyable, keyables = [];
-
-                if (sampler.interpolation === "CUBICSPLINE") {
-                    for (i = 0; i < times.length; i++) {
-                        time = times[i];
-                        if ((path === 'translation') || (path === 'scale')) {
-                            inTangent = new pc.Vec3(values[9 * i + 0], values[9 * i + 1], values[9 * i + 2]);
-                            value = new pc.Vec3(values[9 * i + 3], values[9 * i + 4], values[9 * i + 5]);
-                            outTangent = new pc.Vec3(values[9 * i + 6], values[9 * i + 7], values[9 * i + 8]);
-                        } else if (path === 'rotation') {
-                            inTangent = new pc.Quat(values[12 * i + 0], values[12 * i + 1], values[12 * i + 2], values[12 * i + 3]);
-                            value = new pc.Quat(values[12 * i + 4], values[12 * i + 5], values[12 * i + 6], values[12 * i + 7]);
-                            outTangent = new pc.Quat(values[12 * i + 8], values[12 * i + 9], values[12 * i + 10], values[12 * i + 11]);
-                        } else {
-                            inTangent = values[3 * i];
-                            value = values[3 * i + 1];
-                            outTangent = values[3 * i + 2];
-                        }
-
-                        keyable = new AnimationKeyable(keyType, time, value);
-                        keyable.inTangent = inTangent;
-                        keyable.outTangent = outTangent;
-                        keyables.push(keyable);
-                    }
-                } else {
-                    for (i = 0; i < times.length; i++) {
-                        time = times[i];
-                        if ((path === 'translation') || (path === 'scale'))
-                            value = new pc.Vec3(values[3 * i + 0], values[3 * i + 1], values[3 * i + 2]);
-                        else if (path === 'rotation')
-                            value = new pc.Quat(values[4 * i + 0], values[4 * i + 1], values[4 * i + 2], values[4 * i + 3]);
-                        else // AnimationKeyableType.NUM
-                            value = values[i];
-
-                        keyable = new AnimationKeyable(keyType, time, value);
-                        keyables.push(keyable);
-                    }
-                }
-
-                curve.animKeys = keyables;
-                curve.duration = time;
-                clip.addCurve(curve);
-            }
-        }
-
-        if (data.hasOwnProperty('extras') && context.processAnimationExtras) {
-            context.processAnimationExtras(clip, data.extras);
-        }
-
-        return clip;
     };
 
     return {
