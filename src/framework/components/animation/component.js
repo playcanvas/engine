@@ -154,30 +154,59 @@ Object.assign(pc, function () {
 
         onAssetChanged: function (asset, attribute, newValue, oldValue) {
             var i;
-            if (attribute === 'resource') {
+            if (attribute === 'resource' || attribute === 'resources') {
                 // replace old animation with new one
                 if (newValue) {
-                    if (asset.resources.length > 1) {
-                        for (i = 0; i < asset.resources.length; i++) {
-                            delete this.animations[asset.resources[i].name];
+                    var restarted = false;
+                    if (newValue.length > 1) {
+                        if (oldValue.length > 1) {
+                            for (i = 0; i < oldValue.length; i++) {
+                                delete this.animations[oldValue[i].name];
+                            }
+                        } else {
+                            delete this.animations[asset.name];
                         }
+                        restarted = false;
                         for (i = 0; i < newValue.length; i++) {
                             this.animations[newValue[i].name] = newValue[i];
+
+                            if (!restarted && this.data.currAnim === newValue[i].name) {
+                                // restart animation
+                                if (this.data.playing && this.data.enabled && this.entity.enabled) {
+                                    restarted = true;
+                                    this.play(newValue[i].name, 0);
+                                }
+                            }
+                        }
+                        if (!restarted) {
+                            this._stopCurrentAnimation();
+                            this.onSetAnimations();
                         }
                     } else {
-                        this.animations[asset.name] = newValue;
+                        if (oldValue.length > 1) {
+                            for (i = 0; i < oldValue.length; i++) {
+                                delete this.animations[oldValue[i].name];
+                            }
+                        }
+                        this.animations[asset.name] = newValue[0] || newValue;
+                        restarted = false;
+                        if (this.data.currAnim === asset.name) {
+                            // restart animation
+                            if (this.data.playing && this.data.enabled && this.entity.enabled) {
+                                restarted = true;
+                                this.play(asset.name, 0);
+                            }
+                        }
+                        if (!restarted) {
+                            this._stopCurrentAnimation();
+                            this.onSetAnimations();
+                        }
                     }
                     this.animationsIndex[asset.id] = asset.name;
-
-                    if (this.data.currAnim === asset.resource.name) {
-                        // restart animation
-                        if (this.data.playing && this.data.enabled && this.entity.enabled)
-                            this.play(asset.name, 0);
-                    }
                 } else {
-                    if (asset.resources.length > 1) {
-                        for (i = 0; i < asset.resources.length; i++) {
-                            delete this.animations[asset.resources[i].name];
+                    if (oldValue.length > 1) {
+                        for (i = 0; i < oldValue.length; i++) {
+                            delete this.animations[oldValue[i].name];
                         }
                     } else {
                         delete this.animations[asset.name];
@@ -194,14 +223,15 @@ Object.assign(pc, function () {
                 if (asset.resources.length > 1) {
                     for (var i = 0; i < asset.resources.length; i++) {
                         delete this.animations[asset.resources[i].name];
+                        if (this.data.currAnim === asset.resources[i].name)
+                            this._stopCurrentAnimation();
                     }
                 } else {
                     delete this.animations[asset.name];
+                    if (this.data.currAnim === asset.name)
+                        this._stopCurrentAnimation();
                 }
                 delete this.animationsIndex[asset.id];
-
-                if (this.data.currAnim === asset.name)
-                    this._stopCurrentAnimation();
             }
         },
 

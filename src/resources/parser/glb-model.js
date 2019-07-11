@@ -93,7 +93,7 @@ Object.assign(pc, function () {
         this.buildHierarchy();
         this.createModel();
 
-        this._onLoaded([this.model].concat(this.materials).concat(this.textures).concat(this.animations));
+        this._onLoaded([this.model].concat(this.materials || []).concat(this.textures || []).concat(this.animations || []));
 
         if (this.gltf.hasOwnProperty('extensionsUsed')) {
             if (this.gltf.extensionsUsed.indexOf('KHR_draco_mesh_compression') !== -1) {

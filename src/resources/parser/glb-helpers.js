@@ -678,7 +678,7 @@ Object.assign(pc, function () {
     }
 
     var getAttribute = function (elements, semantic) {
-        for (i = 0; i < elements.length; i++) {
+        for (var i = 0; i < elements.length; i++) {
             if (elements[i].name === semantic) {
                 return elements[i];
             }
@@ -732,6 +732,7 @@ Object.assign(pc, function () {
     };
 
     var copyAttr2 = function (dstOffset, dstStride, src, dst, num) {
+        var dstIndex, srcIndex;
         for (var i = 0; i < num; i++) {
             dstIndex = dstOffset + i * dstStride;
             srcIndex = i * 2;
@@ -741,6 +742,7 @@ Object.assign(pc, function () {
     };
 
     var copyAttr3 = function (dstOffset, dstStride, src, dst, num) {
+        var dstIndex, srcIndex;
         for (var i = 0; i < num; i++) {
             dstIndex = dstOffset + i * dstStride;
             srcIndex = i * 3;
@@ -751,6 +753,7 @@ Object.assign(pc, function () {
     };
 
     var copyAttr4 = function (dstOffset, dstStride, src, dst, num) {
+        var dstIndex, srcIndex;
         for (var i = 0; i < num; i++) {
             dstIndex = dstOffset + i * dstStride;
             srcIndex = i * 4;

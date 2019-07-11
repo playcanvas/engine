@@ -6,6 +6,7 @@ Object.assign(pc, {
 });
 
 Object.assign(pc, function () {
+    // depricated class - use Keyframe instead
     var Key = function Key(time, position, rotation, scale) {
         this.time = time;
         this.position = position;

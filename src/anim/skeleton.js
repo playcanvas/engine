@@ -74,7 +74,7 @@ Object.assign(pc, function () {
         if (this._animation !== null) {
             var i;
             var node, nodeName;
-            var keys, keyIndices, interpKey;
+            var keys, keyIndices;
             var nodes = this._animation._nodes;
             var duration = this._animation.duration;
 
@@ -141,10 +141,14 @@ Object.assign(pc, function () {
     };
 
     Skeleton.prototype._interpolate = function (target, op, keys, currKey) {
+        if (keys.length === 0)
+            return 0;
+
         var k1, k2, alpha;
         var foundKey = false;
         var newKeyIdx = 0;
-        if (keys.length !== 1) {
+
+        if (keys.length > 1) {
             // Otherwise, find the keyframe pair for this node
             for (var currKeyIndex = currKey; currKeyIndex < keys.length - 1 && currKeyIndex >= 0; currKeyIndex += this._offset) {
                 k1 = keys[currKeyIndex];
