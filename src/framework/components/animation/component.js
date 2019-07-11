@@ -159,7 +159,7 @@ Object.assign(pc, function () {
                 if (newValue) {
                     var restarted = false;
                     if (newValue.length > 1) {
-                        if (oldValue.length > 1) {
+                        if (oldValue && oldValue.length > 1) {
                             for (i = 0; i < oldValue.length; i++) {
                                 delete this.animations[oldValue[i].name];
                             }
@@ -183,7 +183,7 @@ Object.assign(pc, function () {
                             this.onSetAnimations();
                         }
                     } else {
-                        if (oldValue.length > 1) {
+                        if (oldValue && oldValue.length > 1) {
                             for (i = 0; i < oldValue.length; i++) {
                                 delete this.animations[oldValue[i].name];
                             }
