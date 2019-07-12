@@ -14,7 +14,10 @@ describe("pc.TextElement", function () {
 
 
     afterEach(function () {
-        fontAsset.unload();
+        for (var key in assets) {
+            assets[key].unload();
+        }
+
         fontAsset = null;
         app.destroy();
         app = null;
@@ -54,6 +57,11 @@ describe("pc.TextElement", function () {
         expect(element.lines).to.deep.equal(expectedLineContents);
     };
 
+    var assertLineColors = function (expectedLineColors) {
+        expect(element._text.symbolColors.length).to.equal(expectedLineColors.length);
+        expect(element._text.symbolColors).to.deep.equal(expectedLineColors);
+    };
+
     // Creates data for a single translation as if it was a whole asset
     var createTranslation = function (locale, key, translations) {
         var messages = {};
@@ -79,6 +87,18 @@ describe("pc.TextElement", function () {
         var data = createTranslation(locale, key, translations);
         app.i18n.addData(data);
         return data;
+    };
+
+    var registerRtlHandler = function (lineBreakChar) {
+        app.systems.element.registerRtlReorder(function (symbols) {
+            var mapping = symbols.map(function (s, i) {
+                return i;
+            });
+            return {
+                mapping: mapping,
+                isrtl: true
+            };
+        });
     };
 
     it("does not break onto multiple lines if the text is short enough", function () {
@@ -322,6 +342,329 @@ describe("pc.TextElement", function () {
             "a",
             "bcdef ghijkl"
         ]);
+    });
+
+    it("rtl - breaks onto multiple lines if individual lines are too long", function () {
+        registerRtlHandler();
+
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcde fghij klmno pqrst uvwxyz";
+        assertLineContents([
+            "abcde fghij ",
+            "klmno pqrst ",
+            "uvwxyz"
+        ]);
+    });
+
+    it("rtl - breaks individual words if they are too long to fit onto a line by themselves (single word case)", function () {
+        registerRtlHandler();
+
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcdefghijklmnopqrstuvwxyz";
+        assertLineContents([
+            'abcdefghijklm',
+            'nopqrstuvwxy',
+            'z'
+        ]);
+    });
+
+    it("rtl - breaks individual words if they are too long to fit onto a line by themselves (multi word case)", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcdefgh ijklmnopqrstuvwxyz";
+        assertLineContents([
+            'abcdefgh ',
+            'ijklmnopqrstu',
+            'vwxyz'
+        ]);
+    });
+
+    it("rtl - breaks individual characters onto separate lines if the width is really constrained", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.width = 1;
+        element.text = "abcdef ghijkl";
+        assertLineContents([
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f ",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l"
+        ]);
+    });
+
+    it("rtl - does not include whitespace at the end of a line in width calculations", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcdefgh        i";
+        assertLineContents([
+            "abcdefgh        ",
+            "i"
+        ]);
+    });
+
+    it("rtl - breaks words on hypens", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcde fghij-klm nopqr stuvwxyz";
+        assertLineContents([
+            "abcde fghij-",
+            "klm nopqr ",
+            "stuvwxyz"
+        ]);
+    });
+
+    it("rtl - keeps hyphenated word segments together when wrapping them", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.width = 150;
+        element.text = "abcde fghij-klm nopqr stuvwxyz";
+        assertLineContents([
+            "abcde ",
+            "fghij-klm ",
+            "nopqr ",
+            "stuvwxyz"
+        ]);
+    });
+
+    it("rtl - splits lines on \\n", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcde\nfghij";
+        assertLineContents([
+            "abcde",
+            "fghij"
+        ]);
+    });
+
+    it("rtl - splits lines on \\r", function () {
+        registerRtlHandler('\r');
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcde\rfghij";
+        assertLineContents([
+            "abcde",
+            "fghij"
+        ]);
+    });
+
+    it("rtl - splits lines on multiple \\n", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = "abcde\n\n\nfg\nhij";
+        assertLineContents([
+            "abcde",
+            "",
+            "",
+            "fg",
+            "hij"
+        ]);
+    });
+
+    it("rtl - does not break beyond 1 line if maxLines is equal to 1", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+        element.maxLines = 1;
+        element.text = "abcde fghij klmno pqrst uvwxyz";
+        // long contents
+        assertLineContents([
+            "abcde fghij klmno pqrst uvwxyz"
+        ]);
+        // multiple new lines
+        element.text = "abcde\n\n\nfg\nhij";
+        assertLineContents([
+            "abcdefghij"
+        ]);
+        // \r chars
+        registerRtlHandler('\r');
+        element.text = "abcde\rfghij";
+        assertLineContents([
+            "abcdefghij"
+        ]);
+
+        registerRtlHandler('\n');
+        // hyphens
+        element.text = "abcde fghij-klm nopqr stuvwxyz";
+        assertLineContents([
+            "abcde fghij-klm nopqr stuvwxyz"
+        ]);
+        // whitespace at end of line
+        element.text = "abcdefgh        i";
+        assertLineContents([
+            "abcdefgh        i"
+        ]);
+        // individual characters
+        element.width = 1;
+        element.text = "abcdef ghijkl";
+        assertLineContents([
+            "abcdef ghijkl"
+        ]);
+    });
+
+    it("rtl breaks remaining text in last line when maxLines limit is reached", function () {
+        registerRtlHandler();
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+        element.maxLines = 2;
+        element.text = "abcde fghij klmno pqrst uvwxyz";
+        // long contents
+        assertLineContents([
+            "abcde fghij ",
+            "klmno pqrst uvwxyz"
+        ]);
+        // multiple new lines
+        element.text = "abcde\n\n\nfg\nhij";
+        assertLineContents([
+            "abcde",
+            "fghij"
+        ]);
+        // \r chars
+        registerRtlHandler('\r');
+        element.text = "abcde\rfghij";
+        assertLineContents([
+            "abcde",
+            "fghij"
+        ]);
+        // hyphens
+        registerRtlHandler('\n');
+        element.text = "abcde fghij-klm nopqr stuvwxyz";
+        assertLineContents([
+            "abcde fghij-",
+            "klm nopqr stuvwxyz"
+        ]);
+        // whitespace at end of line
+        element.text = "abcdefgh        i";
+        assertLineContents([
+            "abcdefgh        ",
+            "i"
+        ]);
+        // individual characters
+        element.width = 1;
+        element.text = "abcdef ghijkl";
+        assertLineContents([
+            "a",
+            "bcdef ghijkl"
+        ]);
+    });
+
+    it("rtl and ltr text end up with the same width", function () {
+        element.fontAsset = fontAsset;
+        element.autoWidth = true;
+        element.wrapLines = false;
+
+        var ltrWidths = {
+            oneLine: 0,
+            spaces: 0,
+            newLines: 0
+        };
+
+        var rtlWidths = Object.assign({}, ltrWidths);
+
+        // new lines
+        element.text = 'abcdefghij';
+        ltrWidths.oneLine = element.width;
+
+        element.text = 'abcde\nfghij';
+        ltrWidths.newLines = element.width;
+
+        element.text = '   abcdefghij   ';
+        ltrWidths.spaces = element.width;
+
+        element.text = '';
+
+        registerRtlHandler();
+        element.rtlReorder = true;
+
+        element.text = 'abcdefghij';
+        rtlWidths.oneLine = element.width;
+
+        element.text = 'abcde\nfghij';
+        rtlWidths.newLines = element.width;
+
+        element.text = '   abcdefghij   ';
+        rtlWidths.spaces = element.width;
+
+        for (var key in ltrWidths) {
+            expect(ltrWidths[key]).to.equal(rtlWidths[key]);
+        }
+    });
+
+    it("rtl and ltr text in one line using CanvasFont ends up with the same width", function () {
+        var cf = new pc.CanvasFont(app, {
+            fontName: 'Arial',
+            fontSize: 64,
+            width: 1024,
+            height: 1024
+        });
+
+        cf.createTextures('abcdefghij');
+
+        element.font = cf;
+        element.autoWidth = true;
+        element.wrapLines = false;
+
+        var ltrWidths = {
+            oneLine: 0,
+            spaces: 0,
+            newLines: 0
+        };
+
+        var rtlWidths = Object.assign({}, ltrWidths);
+
+        // new lines
+        element.text = 'abcdefghij';
+        ltrWidths.oneLine = element.width;
+
+        element.text = 'abcde\nfghij';
+        ltrWidths.newLines = element.width;
+
+        element.text = '   abcdefghij   ';
+        ltrWidths.spaces = element.width;
+
+        element.text = '';
+
+        registerRtlHandler();
+        element.rtlReorder = true;
+
+        element.text = 'abcdefghij';
+        rtlWidths.oneLine = element.width;
+
+        element.text = 'abcde\nfghij';
+        rtlWidths.newLines = element.width;
+
+        element.text = '   abcdefghij   ';
+        rtlWidths.spaces = element.width;
+
+        for (var key in ltrWidths) {
+            expect(ltrWidths[key]).to.equal(rtlWidths[key]);
+        }
     });
 
     it("reduces font size when width is larger then the element width and autoFitWidth is true", function () {
@@ -811,20 +1154,19 @@ describe("pc.TextElement", function () {
 
         var clone = e.clone();
 
-
         expect(e.element.fontAsset).to.be.ok;
 
-        expect(clone.text).to.equal(e.text);
-        expect(clone.fontAsset).to.equal(e.fontAsset);
-        expect(clone.font).to.equal(e.font);
-        expect(clone.color).to.deep.equal(e.color);
-        expect(clone.spacing).to.equal(e.spacing);
-        expect(clone.fontSize).to.equal(e.fontSize);
-        expect(clone.lineHeight).to.equal(e.lineHeight);
-        expect(clone.alignment).to.equal(e.alignment);
-        expect(clone.wrapLine).to.equal(e.wrapLines);
-        expect(clone.autoWidth).to.equal(e.autoWidth);
-        expect(clone.autoHeight).to.equal(e.autoHeight);
+        expect(clone.element.text).to.equal(e.element.text);
+        expect(clone.element.fontAsset).to.equal(e.element.fontAsset);
+        expect(clone.element.font).to.equal(e.element.font);
+        expect(clone.element.color).to.deep.equal(e.element.color);
+        expect(clone.element.spacing).to.equal(e.element.spacing);
+        expect(clone.element.fontSize).to.equal(e.element.fontSize);
+        expect(clone.element.lineHeight).to.equal(e.element.lineHeight);
+        expect(clone.element.alignment).to.deep.equal(e.element.alignment);
+        expect(clone.element.wrapLines).to.equal(e.element.wrapLines);
+        expect(clone.element.autoWidth).to.equal(e.element.autoWidth);
+        expect(clone.element.autoHeight).to.equal(e.element.autoHeight);
     });
 
     it("clears font asset when font is assigned directly", function () {
@@ -1142,5 +1484,165 @@ describe("pc.TextElement", function () {
         var clone = element.entity.clone();
         expect(clone.element.key).to.equal(null);
         expect(clone.element.text).to.equal('text');
+    });
+
+    it('text does not wrap when its width reaches exactly the width of the element', function () {
+        element.fontAsset = fontAsset;
+        element.wrapLines = true;
+        element.autoWidth = true;
+        element.text = 'abcd';
+        assertLineContents(['abcd']);
+
+        element.autoWidth = false;
+        element.text = '';
+        element.text = 'abcd';
+        // should not wrap
+        assertLineContents(['abcd']);
+
+        element.text = 'abcde';
+        // now it should wrap
+        assertLineContents(['abcd', 'e']);
+    });
+
+    it('changing the locale changes the font asset', function (done) {
+        assets.font2 = new pc.Asset("Arial2", "font", {
+            url: "base/examples/assets/Arial/Arial2.json"
+        });
+
+        app.assets.add(assets.font2);
+
+        assets.font2.on('load', function () {
+            setTimeout(function () {
+                expect(element.fontAsset).to.equal(assets.font2.id);
+                expect(element.font).to.equal(assets.font2.resource);
+                done();
+            });
+        });
+
+        fontAsset.addLocalizedAssetId('fr', assets.font2.id);
+
+        addText('en-US', 'key', 'translation');
+        addText('fr', 'key', 'french translation');
+        element.fontAsset = fontAsset;
+        element.key = "key";
+
+        app.i18n.locale = 'fr';
+    });
+
+    it('text element that does not use localization uses the default font asset not its localized variant', function (done) {
+        assets.font2 = new pc.Asset("Arial2", "font", {
+            url: "base/examples/assets/Arial/Arial2.json"
+        });
+
+        app.assets.add(assets.font2);
+        app.assets.load(assets.font2);
+
+        assets.font2.on('load', function () {
+            app.i18n.locale = 'fr';
+            setTimeout(function () {
+                expect(element.font).to.equal(assets.font.resource);
+                expect(element.fontAsset).to.equal(assets.font.id);
+                done();
+            });
+        });
+
+        fontAsset.addLocalizedAssetId('fr', assets.font2.id);
+        element.fontAsset = fontAsset;
+        element.text = 'text';
+    });
+
+    it('if text element is disabled it does not automatically load localizedAssets', function () {
+        assets.font2 = new pc.Asset("Arial2", "font", {
+            url: "base/examples/assets/Arial/Arial2.json"
+        });
+
+        app.assets.add(assets.font2);
+
+        fontAsset.addLocalizedAssetId('fr', assets.font2.id);
+
+        addText('en-US', 'key', 'translation');
+        addText('fr', 'key', 'french translation');
+        element.fontAsset = fontAsset;
+        element.key = "key";
+
+        entity.element.enabled = false;
+
+        app.i18n.locale = 'fr';
+
+        expect(assets.font2.hasEvent('load')).to.equal(false);
+    });
+
+    it('text element removes i18n event listeners on destroy', function () {
+        expect(app.i18n.hasEvent('set:locale')).to.equal(true);
+        expect(app.i18n.hasEvent('data:add')).to.equal(true);
+        expect(app.i18n.hasEvent('data:remove')).to.equal(true);
+
+        element.entity.destroy();
+
+        expect(app.i18n.hasEvent('set:locale')).to.equal(false);
+        expect(app.i18n.hasEvent('data:add')).to.equal(false);
+        expect(app.i18n.hasEvent('data:remove')).to.equal(false);
+    });
+
+    it('text markup color tag', function () {
+        registerRtlHandler('\r');
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+
+        element.text = "text element [color=\"#ff0000\"]in red[/color] or not";
+
+        assertLineContents([
+            "text element in red or not"
+        ]);
+
+        var w = [255, 255, 255];
+        var r = [255, 0, 0];
+        assertLineColors([
+            w, w, w, w, w, w, w, w, w, w, w, w, w, r, r, r, r, r, r, w, w, w, w, w, w, w
+        ]);
+    });
+
+    it('text markup color without closing tag', function () {
+        element.fontAsset = fontAsset;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+
+        element.text = "text element [color=\"#ff0000\"]in red or not";
+        assertLineContents([
+            "text element [color=\"#ff0000\"]in red or not"
+        ]);
+
+        expect(element._text.symbolColors).to.equal(null);
+    });
+
+    it('text markup with escaping open bracket', function () {
+        element.fontAsset = fontAsset;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+
+        element.text = "text element \\[color=\"#ff0000\"]in red or not";
+        assertLineContents([
+            "text element [color=\"#ff0000\"]in red or not"
+        ]);
+
+        expect(element._text.symbolColors).to.equal(null);
+    });
+
+    it('text markup with attributes', function () {
+        element.fontAsset = fontAsset;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+
+        element.text = "abcd efgh [tag attr1=\"1\" attr2=\"2\"]ijkl[/tag] mnop";
+        assertLineContents([
+            "abcd efgh ijkl mnop"
+        ]);
+
+        var w = [255, 255, 255];
+        assertLineColors([
+            w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w
+        ]);
     });
 });

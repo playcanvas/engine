@@ -51,6 +51,7 @@ Object.assign(pc, function () {
         this.name = name;
         this.layers = layers === undefined ? [pc.LAYERID_WORLD] : layers;
         this._ui = false;
+        this._sprite = false;
         this._obj = {
             model: [],
             element: [],
@@ -340,7 +341,8 @@ Object.assign(pc, function () {
     };
 
     BatchManager.prototype._extractModel = function (node, arr, group, groupMeshInstances) {
-        if (!node.model) return arr;
+        if (!node.model || !node.model.model) return arr;
+
         var i;
         if (node.model.isStatic) {
             // static mesh instances can be in both drawCall array with _staticSource linking to original
@@ -426,7 +428,8 @@ Object.assign(pc, function () {
                 node = group._obj.sprite[s];
                 if (node.sprite && node.sprite._meshInstance) {
                     arr.push(node.sprite._meshInstance);
-                    this.scene.removeModel(node.sprite._model);
+                    node.sprite.removeModelFromLayers();
+                    group._sprite = true;
                     node.sprite._batchGroup = group;
                 }
             }
@@ -485,12 +488,14 @@ Object.assign(pc, function () {
                 continue;
             }
 
-            lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize, groupData._ui);
+            lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize, groupData._ui || groupData._sprite);
             for (i = 0; i < lists.length; i++) {
                 batch = this.create(lists[i], groupData.dynamic, parseInt(groupId, 10));
                 if (!batch) continue;
                 for (j = 0; j < groupData.layers.length; j++) {
-                    this.scene.layers.getLayerById(groupData.layers[j]).addMeshInstances(batch.model.meshInstances);
+                    var layer = this.scene.layers.getLayerById(groupData.layers[j]);
+                    if (layer)
+                        layer.addMeshInstances(batch.model.meshInstances);
                 }
             }
         }
@@ -538,6 +543,18 @@ Object.assign(pc, function () {
         return  true;
     }
 
+    var worldMatX = new pc.Vec3();
+    var worldMatY = new pc.Vec3();
+    var worldMatZ = new pc.Vec3();
+    function getScaleSign(mi) {
+        var wt = mi.node.worldTransform;
+        wt.getX(worldMatX);
+        wt.getY(worldMatY);
+        wt.getZ(worldMatZ);
+        worldMatX.cross(worldMatX, worldMatY);
+        return worldMatX.dot(worldMatZ) >= 0 ? 1 : -1;
+    }
+
     /**
      * @function
      * @name pc.BatchManager#prepare
@@ -554,25 +571,25 @@ Object.assign(pc, function () {
      * @param {Array} meshInstances Input list of mesh instances
      * @param {Boolean} dynamic Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
      * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
-     * @param {Boolean} isUI Are we batching UI elements
+     * @param {Boolean} translucent Are we batching UI elements or sprites
      * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
      * @returns {Array} An array of arrays of mesh instances, each valid to pass to {@link pc.BatchManager#create}.
      */
-    BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize, isUI) {
+    BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize, translucent) {
         if (meshInstances.length === 0) return [];
         if (maxAabbSize === undefined) maxAabbSize = Number.POSITIVE_INFINITY;
         var halfMaxAabbSize = maxAabbSize * 0.5;
         var maxInstanceCount = this.device.supportsBoneTextures ? 1024 : this.device.boneLimit;
 
         var i;
-        var material, layer, vertCount, params, lightList, defs, stencil, staticLights;
+        var material, layer, vertCount, params, lightList, defs, stencil, staticLights, scaleSign;
         var aabb = new pc.BoundingBox();
         var testAabb = new pc.BoundingBox();
-        var skipUIAabb = null;
+        var skipTranslucentAabb = null;
 
         var lists = [];
         var j = 0;
-        if (isUI) {
+        if (translucent) {
             meshInstances.sort(function (a, b) {
                 return a.drawOrder - b.drawOrder;
             });
@@ -580,11 +597,11 @@ Object.assign(pc, function () {
         var meshInstancesLeftA = meshInstances;
         var meshInstancesLeftB;
 
-        var skipMesh = isUI ? function (mi) {
-            if (skipUIAabb) {
-                skipUIAabb.add(mi.aabb);
+        var skipMesh = translucent ? function (mi) {
+            if (skipTranslucentAabb) {
+                skipTranslucentAabb.add(mi.aabb);
             } else {
-                skipUIAabb = mi.aabb.clone();
+                skipTranslucentAabb = mi.aabb.clone();
             }
             meshInstancesLeftB.push(mi);
         } : function (mi) {
@@ -604,7 +621,8 @@ Object.assign(pc, function () {
             lightList = meshInstancesLeftA[0]._staticLightList;
             vertCount = meshInstancesLeftA[0].mesh.vertexBuffer.getNumVertices();
             aabb.copy(meshInstancesLeftA[0].aabb);
-            skipUIAabb = null;
+            scaleSign = getScaleSign(meshInstancesLeftA[0]);
+            skipTranslucentAabb = null;
 
             for (i = 1; i < meshInstancesLeftA.length; i++) {
                 mi = meshInstancesLeftA[i];
@@ -639,6 +657,11 @@ Object.assign(pc, function () {
                         continue;
                     }
                 }
+                // Split by negavive scale
+                if (scaleSign != getScaleSign(mi)) {
+                    skipMesh(mi);
+                    continue;
+                }
                 // Split by parameters
                 if (!equalParamSets(params, mi.parameters)) {
                     skipMesh(mi);
@@ -656,7 +679,7 @@ Object.assign(pc, function () {
                     continue;
                 }
 
-                if (isUI && skipUIAabb && skipUIAabb.intersects(mi.aabb)) {
+                if (translucent && skipTranslucentAabb && skipTranslucentAabb.intersects(mi.aabb)) {
                     skipMesh(mi);
                     continue;
                 }
@@ -741,7 +764,8 @@ Object.assign(pc, function () {
                     hasColor = true;
                 }
             }
-            batchNumIndices += mesh.primitive[0].count;
+            batchNumIndices += mesh.primitive[0].indexed ? mesh.primitive[0].count :
+                (mesh.primitive[0].count === 4 ? 6 : 0);
         }
 
         if (!visibleMeshInstanceCount) {
@@ -789,6 +813,7 @@ Object.assign(pc, function () {
                 continue;
 
             mesh = meshInstances[i].mesh;
+
             elems = mesh.vertexBuffer.format.elements;
             numVerts = mesh.vertexBuffer.numVertices;
             vertSize = mesh.vertexBuffer.format.size;
@@ -864,7 +889,17 @@ Object.assign(pc, function () {
 
             indexBase = mesh.primitive[0].base;
             numIndices = mesh.primitive[0].count;
-            indexData = new Uint16Array(mesh.indexBuffer[0].storage);
+            if (mesh.primitive[0].indexed) {
+                indexData = new Uint16Array(mesh.indexBuffer[0].storage);
+            } else if (numIndices === 4) {
+                // Special case for UI image elements (pc.PRIMITIVE_TRIFAN)
+                indexBase = 0;
+                numIndices = 6;
+                indexData = [0, 1, 3, 2, 3, 1];
+            } else {
+                numIndices = 0;
+                continue;
+            }
             for (j = 0; j < numIndices; j++) {
                 batchIndexData[j + indexOffset] = indexData[indexBase + j] + verticesOffset;
             }
@@ -949,7 +984,7 @@ Object.assign(pc, function () {
         mesh = new pc.Mesh();
         mesh.vertexBuffer = vertexBuffer;
         mesh.indexBuffer[0] = indexBuffer;
-        mesh.primitive[0].type = batch.origMeshInstances[0].mesh.primitive[0].type;
+        mesh.primitive[0].type = pc.PRIMITIVE_TRIANGLES; // Doesn't support any other primitive types batch.origMeshInstances[0].mesh.primitive[0].type;
         mesh.primitive[0].base = 0;
         mesh.primitive[0].count = batchNumIndices;
         mesh.primitive[0].indexed = true;
@@ -987,6 +1022,7 @@ Object.assign(pc, function () {
         meshInstance.drawOrder = batch.origMeshInstances[0].drawOrder;
         meshInstance.stencilFront = batch.origMeshInstances[0].stencilFront;
         meshInstance.stencilBack = batch.origMeshInstances[0].stencilBack;
+        meshInstance.flipFaces = getScaleSign(batch.origMeshInstances[0]) < 0;
         batch.meshInstance = meshInstance;
         this.update(batch);
 
@@ -1101,7 +1137,9 @@ Object.assign(pc, function () {
             return;
         var layers = this._batchGroups[batch.batchGroupId].layers;
         for (var i = 0; i < layers.length; i++) {
-            this.scene.layers.getLayerById(layers[i]).removeMeshInstances(batch.model.meshInstances);
+            var layer = this.scene.layers.getLayerById(layers[i]);
+            if (layer)
+                layer.removeMeshInstances(batch.model.meshInstances);
         }
         batch.model.destroy();
     };

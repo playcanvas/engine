@@ -40,7 +40,6 @@ Object.assign(pc, function () {
      * @property {Number} frame The frame counter of the sprite. Specifies which frame from the current sprite asset to render.
      * @property {Number} spriteAsset The id of the sprite asset to render. Only works for {@link pc.SPRITETYPE_SIMPLE} types.
      * @property {pc.Sprite} sprite The current sprite.
-     * @property {pc.Sprite} sprite The current sprite.
      * @property {pc.Color} color The color tint of the sprite.
      * @property {Number} opacity The opacity of the sprite.
      * @property {Boolean} flipX Flip the X axis when rendering a sprite.
@@ -437,6 +436,15 @@ Object.assign(pc, function () {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             layer.removeMeshInstances([this._meshInstance]);
+        },
+
+        removeModelFromLayers: function () {
+            var layer;
+            for (var i = 0; i < this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances([this._meshInstance]);
+            }
         },
 
         /**

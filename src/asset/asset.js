@@ -79,6 +79,10 @@ Object.assign(pc, function () {
         // This is where the loaded resource(s) will be
         this._resources = [];
 
+        // a string-assetId dictionary that maps
+        // locale to asset id
+        this._i18n = {};
+
         // Is resource loaded
         this.loaded = false;
         this.loading = false;
@@ -120,6 +124,22 @@ Object.assign(pc, function () {
      * @param {String} property The name of the property that changed
      * @param {*} value The new property value
      * @param {*} oldValue The old property value
+     */
+
+    /**
+     * @event
+     * @name pc.Asset#add:localized
+     * @description Fired when we add a new localized asset id to the asset.
+     * @param {String} locale The locale
+     * @param {Number} assetId The asset id we added.
+     */
+
+    /**
+     * @event
+     * @name pc.Asset#remove:localized
+     * @description Fired when we remove a localized asset id from the asset.
+     * @param {String} locale The locale
+     * @param {Number} assetId The asset id we removed.
      */
 
     Object.assign(Asset.prototype, {
@@ -187,6 +207,49 @@ Object.assign(pc, function () {
             }
 
             return this.file;
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Asset#getLocalizedAssetId
+         * @param {String} locale The desired locale e.g. ar-AR.
+         * @description Returns the asset id of the asset that corresponds to the specified locale.
+         * @returns {Number} An asset id or null if there is no asset specified for the desired locale.
+         */
+        getLocalizedAssetId: function (locale) {
+            // tries to find either the desired locale or a fallback locale
+            locale = pc.I18n.findAvailableLocale(locale, this._i18n);
+            return this._i18n[locale] || null;
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Asset#addLocalizedAssetId
+         * @param {String} locale The locale e.g. ar-AR.
+         * @param {Number} assetId The asset id
+         * @description Adds a replacement asset id for the specified locale. When the locale in {@link pc.Application#i18n} changes then
+         * references to this asset will be replaced with the specified asset id. (Currently only supported by the {@link pc.ElementComponent}).
+         */
+        addLocalizedAssetId: function (locale, assetId) {
+            this._i18n[locale] = assetId;
+            this.fire('add:localized', locale, assetId);
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Asset#removeLocalizedAssetId
+         * @param {String} locale The locale e.g. ar-AR.
+         * @description Removes a localized asset
+         */
+        removeLocalizedAssetId: function (locale) {
+            var assetId = this._i18n[locale];
+            if (assetId) {
+                delete this._i18n[locale];
+                this.fire('remove:localized', locale, assetId);
+            }
         },
 
         /**

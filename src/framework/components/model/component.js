@@ -12,11 +12,12 @@ Object.assign(pc, function () {
      * @property {String} type The type of the model, which can be one of the following values:
      * <ul>
      *     <li>asset: The component will render a model asset</li>
-     *     <li>box: The component will render a box</li>
-     *     <li>capsule: The component will render a capsule</li>
-     *     <li>cone: The component will render a cone</li>
-     *     <li>cylinder: The component will render a cylinder</li>
-     *     <li>sphere: The component will render a sphere</li>
+     *     <li>box: The component will render a box (1 unit in each dimension)</li>
+     *     <li>capsule: The component will render a capsule (radius 0.5, height 2)</li>
+     *     <li>cone: The component will render a cone (radius 0.5, height 1)</li>
+     *     <li>cylinder: The component will render a cylinder (radius 0.5, height 1)</li>
+     *     <li>plane: The component will render a plane (1 unit in each dimension)</li>
+     *     <li>sphere: The component will render a sphere (radius 0.5)</li>
      * </ul>
      * @property {pc.Asset} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
@@ -106,7 +107,11 @@ Object.assign(pc, function () {
         },
 
         onRemove: function () {
-            this.asset = null;
+            if (this.type === 'asset') {
+                this.asset = null;
+            } else {
+                this.model = null;
+            }
             this.materialAsset = null;
             this._unsetMaterialEvents();
         },
@@ -868,7 +873,7 @@ Object.assign(pc, function () {
 
             if (_id !== this._materialAsset) {
                 if (this._materialAsset) {
-                    assets.off('add:' + this._materialAsset, this._onMaterialAdded, this);
+                    assets.off('add:' + this._materialAsset, this._onMaterialAssetAdd, this);
                     var _prev = assets.get(this._materialAsset);
                     if (_prev) {
                         this._unbindMaterialAsset(_prev);
@@ -881,7 +886,7 @@ Object.assign(pc, function () {
                     var asset = assets.get(this._materialAsset);
                     if (!asset) {
                         this.material = this.system.defaultMaterial;
-                        assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
+                        assets.on('add:' + this._materialAsset, this._onMaterialAssetAdd, this);
                     } else {
                         this._bindMaterialAsset(asset);
                     }

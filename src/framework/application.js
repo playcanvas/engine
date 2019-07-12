@@ -877,6 +877,7 @@ Object.assign(pc, function () {
                     this.loader.load(url, 'script', onLoad);
                 }
             } else {
+                self.onLibrariesLoaded();
                 callback(null);
             }
         },
@@ -952,8 +953,17 @@ Object.assign(pc, function () {
                 var asset = new pc.Asset(data.name, data.type, data.file, data.data);
                 asset.id = parseInt(data.id, 10);
                 asset.preload = data.preload ? data.preload : false;
+                // if this is a script asset and has already been embedded in the page then
+                // mark it as loaded
+                asset.loaded = data.type === 'script' && data.data && data.data.loadingType > 0;
                 // tags
                 asset.tags.add(data.tags);
+                // i18n
+                if (data.i18n) {
+                    for (var locale in data.i18n) {
+                        asset.addLocalizedAssetId(locale, data.i18n[locale]);
+                    }
+                }
                 // registry
                 this.assets.add(asset);
             }
@@ -1500,6 +1510,10 @@ Object.assign(pc, function () {
             this.batcher.generate();
         },
 
+        _processTimestamp: function (timestamp) {
+            return timestamp;
+        },
+
         /**
          * @function
          * @name pc.Application#destroy
@@ -1652,7 +1666,7 @@ Object.assign(pc, function () {
             // have current application pointer in pc
             pc.app = app;
 
-            var now = timestamp || pc.now();
+            var now = app._processTimestamp(timestamp) || pc.now();
             var ms = now - (app._time || now);
             var dt = ms / 1000.0;
             dt = pc.math.clamp(dt, 0, app.maxDeltaTime);

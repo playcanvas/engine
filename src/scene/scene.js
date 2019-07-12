@@ -185,6 +185,9 @@
         PARTICLEMODE_CPU: 1,
         EMITTERSHAPE_BOX: 0,
         EMITTERSHAPE_SPHERE: 1,
+        PARTICLEORIENTATION_SCREEN: 0,
+        PARTICLEORIENTATION_WORLD: 1,
+        PARTICLEORIENTATION_EMITTER: 2,
 
         /**
          * @enum pc.PROJECTION
@@ -743,6 +746,7 @@ Object.assign(pc, function () {
         if (this.skyboxModel) {
             this.skyLayer.removeMeshInstances(this.skyboxModel.meshInstances);
             this.skyLayer.enabled = false;
+            this.skyboxModel.destroy();
         }
         this.skyboxModel = null;
         this.updateSkybox = true;

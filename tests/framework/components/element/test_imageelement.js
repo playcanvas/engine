@@ -973,11 +973,9 @@ describe('pc.ImageElement', function () {
     });
 
     it.skip('TextureAtlas asset events are unbound if sprite is changed while loading', function (done) {
-
         app.assets.list().forEach(function (asset) {
             asset.unload();
         });
-
 
         var spriteAsset = new pc.Asset('red-sprite', 'sprite', {
             url: 'base/tests/test-assets/sprite/red-sprite.json'
@@ -985,6 +983,10 @@ describe('pc.ImageElement', function () {
         var textureAtlasAsset = new pc.Asset('red-texture', 'texture', {
             url: 'base/tests/test-assets/sprite/red-atlas.json'
         });
+
+        if (spriteAsset.resource) {
+            fail("spriteAsset should not be loaded at this stage");
+        }
 
         spriteAsset.once("load", function () {
             expect(app.assets.hasEvent('load:' + textureAtlasAsset.id)).to.be.true;

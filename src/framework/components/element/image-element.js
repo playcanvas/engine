@@ -525,28 +525,29 @@ Object.assign(pc, function () {
                 vertexDataF32[24] = 0 - hp * w;
                 vertexDataF32[25] = h - vp * h;
 
-                w = 1;
-                h = 1;
+
+                var atlasTextureWidth = 1;
+                var atlasTextureHeight = 1;
                 var rect = this._rect;
 
                 if (this._sprite && this._sprite.frameKeys[this._spriteFrame] && this._sprite.atlas) {
                     var frame = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
                     if (frame) {
                         rect = frame.rect;
-                        w = this._sprite.atlas.texture.width;
-                        h = this._sprite.atlas.texture.height;
+                        atlasTextureWidth = this._sprite.atlas.texture.width;
+                        atlasTextureHeight = this._sprite.atlas.texture.height;
                     }
                 }
 
                 // Update vertex texture coordinates
-                vertexDataF32[6] = rect.x / w;
-                vertexDataF32[7] = rect.y / h;
-                vertexDataF32[14] = (rect.x + rect.z) / w;
-                vertexDataF32[15] = rect.y / h;
-                vertexDataF32[22] = (rect.x + rect.z) / w;
-                vertexDataF32[23] = (rect.y + rect.w) / h;
-                vertexDataF32[30] = rect.x / w;
-                vertexDataF32[31] = (rect.y + rect.w) / h;
+                vertexDataF32[6] = rect.x / atlasTextureWidth;
+                vertexDataF32[7] = rect.y / atlasTextureHeight;
+                vertexDataF32[14] = (rect.x + rect.z) / atlasTextureWidth;
+                vertexDataF32[15] = rect.y / atlasTextureHeight;
+                vertexDataF32[22] = (rect.x + rect.z) / atlasTextureWidth;
+                vertexDataF32[23] = (rect.y + rect.w) / atlasTextureHeight;
+                vertexDataF32[30] = rect.x / atlasTextureWidth;
+                vertexDataF32[31] = (rect.y + rect.w) / atlasTextureHeight;
 
                 vb.unlock();
 

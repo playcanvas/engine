@@ -3,6 +3,7 @@ Object.assign(pc, function () {
 
     var HierarchyHandler = function (app) {
         this._app = app;
+        this.retryRequests = false;
     };
 
     Object.assign(HierarchyHandler.prototype, {
@@ -14,11 +15,23 @@ Object.assign(pc, function () {
                 };
             }
 
-            pc.http.get(url.load, function (err, response) {
+            pc.http.get(url.load, {
+                retry: this.retryRequests
+            }, function (err, response) {
                 if (!err) {
                     callback(null, response);
                 } else {
-                    callback("Error requesting scene: " + url.original);
+                    var errMsg = 'Error while loading scene ' + url.original;
+                    if (err.message) {
+                        errMsg += ': ' + err.message;
+                        if (err.stack) {
+                            errMsg += '\n' + err.stack;
+                        }
+                    } else {
+                        errMsg += ': ' + err;
+                    }
+
+                    callback(errMsg);
                 }
             });
         },

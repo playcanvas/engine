@@ -4,10 +4,13 @@ Object.assign(pc, function () {
     var SIMPLE_PROPERTIES = [
         'emitterExtents',
         'emitterRadius',
+        'emitterExtentsInner',
+        'emitterRadiusInner',
         'loop',
         'initialVelocity',
         'animSpeed',
-        'normalMap'
+        'normalMap',
+        'particleNormal'
     ];
 
     // properties that need rebuilding the particle system
@@ -35,7 +38,8 @@ Object.assign(pc, function () {
         'animNumFrames',
         'animLoop',
         'colorMap',
-        'localSpace'
+        'localSpace',
+        'orientation'
     ];
 
     var GRAPH_PROPERTIES = [
@@ -55,7 +59,10 @@ Object.assign(pc, function () {
         'localVelocityGraph2',
 
         'rotationSpeedGraph',
-        'rotationSpeedGraph2'
+        'rotationSpeedGraph2',
+
+        'radialSpeedGraph',
+        'radialSpeedGraph2'
     ];
 
     var ASSET_PROPERTIES = [
@@ -89,6 +96,7 @@ Object.assign(pc, function () {
      * @property {Boolean} alignToMotion Orient particles in their direction of motion.
      * @property {Boolean} depthWrite If enabled, the particles will write to the depth buffer. If disabled, the depth buffer is left unchanged and particles will be guaranteed to overwrite one another in the order in which they are rendered.
      * @property {Boolean} noFog Disable fogging
+     * @property {Boolean} localSpace Binds particles to emitter transformation rather then world space.
      * @property {Number} numParticles Maximum number of simulated particles.
      * @property {Number} rate Minimal interval in seconds between particle births.
      * @property {Number} rate2 Maximal interval in seconds between particle births.
@@ -105,7 +113,9 @@ Object.assign(pc, function () {
      * @property {Number} depthSoftening Controls fading of particles near their intersections with scene geometry. This effect, when it's non-zero, requires scene depth map to be rendered. Multiple depth-dependent effects can share the same map, but if you only use it for particles, bear in mind that it can double engine draw calls.
      * @property {Number} initialVelocity Defines magnitude of the initial emitter velocity. Direction is given by emitter shape.
      * @property {pc.Vec3} emitterExtents (Only for EMITTERSHAPE_BOX) The extents of a local space bounding box within which particles are spawned at random positions.
+     * @property {pc.Vec3} emitterExtentsInner (Only for EMITTERSHAPE_BOX) The exception of extents of a local space bounding box within which particles are not spawned. Aligned to the center of EmitterExtents.
      * @property {Number} emitterRadius (Only for EMITTERSHAPE_SPHERE) The radius within which particles are spawned at random positions.
+     * @property {Number} emitterRadiusInner (Only for EMITTERSHAPE_SPHERE) The inner radius within which particles are not spawned.
      * @property {pc.Vec3} wrapBounds The half extents of a world space box volume centered on the owner entity's position. If a particle crosses the boundary of one side of the volume, it teleports to the opposite side.
      * @property {pc.Asset} colorMapAsset The {@link pc.Asset} used to set the colorMap.
      * @property {pc.Asset} normalMapAsset The {@link pc.Asset} used to set the normalMap.
@@ -126,6 +136,13 @@ Object.assign(pc, function () {
      * </ul>
      * @property {pc.Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
      * @property {pc.BLEND} blend Blending mode.
+     * @property {pc.PARTICLEORIENTATION} orientation Sorting mode. Forces CPU simulation, so be careful.
+     * <ul>
+     * <li><strong>{@link pc.PARTICLEORIENTATION_SCREEN}</strong>: Particles are facing camera.</li>
+     * <li><strong>{@link pc.PARTICLEORIENTATION_WORLD}</strong>: User defines world space normal (particleNormal) to set planes orientation.</li>
+     * <li><strong>{@link pc.PARTICLEORIENTATION_EMITTER}</strong>: Similar to previous, but the normal is affected by emitter(entity) transformation.</li>
+     * </ul>
+     * @property {pc.Vec3} particleNormal (Only for PARTICLEORIENTATION_WORLD and PARTICLEORIENTATION_EMITTER) The exception of extents of a local space bounding box within which particles are not spawned. Aligned to the center of EmitterExtents.
      * @property {pc.CurveSet} localVelocityGraph Velocity relative to emitter over lifetime.
      * @property {pc.CurveSet} localVelocityGraph2 If not null, particles pick random values between localVelocityGraph and localVelocityGraph2.
      * @property {pc.CurveSet} velocityGraph World-space velocity over lifetime.
@@ -133,6 +150,8 @@ Object.assign(pc, function () {
      * @property {pc.CurveSet} colorGraph Color over lifetime.
      * @property {pc.Curve} rotationSpeedGraph Rotation speed over lifetime.
      * @property {pc.Curve} rotationSpeedGraph2 If not null, particles pick random values between rotationSpeedGraph and rotationSpeedGraph2.
+     * @property {pc.Curve} radialSpeedGraph Radial speed over lifetime, velocity vector points from emitter origin to particle pos.
+     * @property {pc.Curve} radialSpeedGraph2 If not null, particles pick random values between radialSpeedGraph and radialSpeedGraph2.
      * @property {pc.Curve} scaleGraph Scale over lifetime.
      * @property {pc.Curve} scaleGraph2 If not null, particles pick random values between scaleGraph and scaleGraph2.
      * @property {pc.Curve} alphaGraph Alpha over lifetime.
@@ -230,30 +249,40 @@ Object.assign(pc, function () {
         },
 
         _bindColorMapAsset: function (asset) {
-            asset.once('remove', this._onColorMapRemoved, this);
+            asset.on('load', this._onColorMapAssetLoad, this);
+            asset.on('unload', this._onColorMapAssetUnload, this);
+            asset.on('remove', this._onColorMapAssetRemove, this);
+            asset.on('change', this._onColorMapAssetChange, this);
 
             if (asset.resource) {
-                this.colorMap = asset.resource;
+                this._onColorMapAssetLoad(asset);
             } else {
-                asset.once("load", this._onColorMapLoad, this);
-                if (this.enabled && this.entity.enabled) {
-                    this.system.app.assets.load(asset);
-                }
-
+                // don't trigger an asset load unless the component is enabled
+                if (!this.enabled || !this.entity.enabled) return;
+                this.system.app.assets.load(asset);
             }
         },
 
         _unbindColorMapAsset: function (asset) {
-            asset.off("remove", this._onColorMapRemoved, this);
-            asset.off("load", this._onColorMapLoad, this);
+            asset.off('load', this._onColorMapAssetLoad, this);
+            asset.off('unload', this._onColorMapAssetUnload, this);
+            asset.off('remove', this._onColorMapAssetRemove, this);
+            asset.off('change', this._onColorMapAssetChange, this);
         },
 
-        _onColorMapLoad: function (asset) {
+        _onColorMapAssetLoad: function (asset) {
             this.colorMap = asset.resource;
         },
 
-        _onColorMapRemoved: function (asset) {
-            this.colorMapAsset = null;
+        _onColorMapAssetUnload: function (asset) {
+            this.colorMap = null;
+        },
+
+        _onColorMapAssetRemove: function (asset) {
+            this._onColorMapAssetUnload(asset);
+        },
+
+        _onColorMapAssetChange: function (asset) {
         },
 
         onSetColorMapAsset: function (name, oldValue, newValue) {
@@ -287,30 +316,40 @@ Object.assign(pc, function () {
         },
 
         _bindNormalMapAsset: function (asset) {
-            asset.once('remove', this._onNormalMapRemoved, this);
+            asset.on('load', this._onNormalMapAssetLoad, this);
+            asset.on('unload', this._onNormalMapAssetUnload, this);
+            asset.on('remove', this._onNormalMapAssetRemove, this);
+            asset.on('change', this._onNormalMapAssetChange, this);
 
             if (asset.resource) {
-                this.normalMap = asset.resource;
+                this._onNormalMapAssetLoad(asset);
             } else {
-                asset.once("load", this._onNormalMapLoad, this);
-                if (this.enabled && this.entity.enabled) {
-                    this.system.app.assets.load(asset);
-                }
-
+                // don't trigger an asset load unless the component is enabled
+                if (!this.enabled || !this.entity.enabled) return;
+                this.system.app.assets.load(asset);
             }
         },
 
         _unbindNormalMapAsset: function (asset) {
-            asset.off("remove", this._onNormalMapRemoved, this);
-            asset.off("load", this._onNormalMapLoad, this);
+            asset.off('load', this._onNormalMapAssetLoad, this);
+            asset.off('unload', this._onNormalMapAssetUnload, this);
+            asset.off('remove', this._onNormalMapAssetRemove, this);
+            asset.off('change', this._onNormalMapAssetChange, this);
         },
 
-        _onNormalMapLoad: function (asset) {
+        _onNormalMapAssetLoad: function (asset) {
             this.normalMap = asset.resource;
         },
 
-        _onNormalMapRemoved: function (asset) {
-            this.normalMapAsset = null;
+        _onNormalMapAssetUnload: function (asset) {
+            this.normalMap = null;
+        },
+
+        _onNormalMapAssetRemove: function (asset) {
+            this._onNormalMapAssetUnload(asset);
+        },
+
+        _onNormalMapAssetChange: function (asset) {
         },
 
         onSetNormalMapAsset: function (name, oldValue, newValue) {
@@ -345,17 +384,40 @@ Object.assign(pc, function () {
         },
 
         _bindMeshAsset: function (asset) {
-            asset.on('remove', this._onMeshAssetRemoved, this);
             asset.on('load', this._onMeshAssetLoad, this);
+            asset.on('unload', this._onMeshAssetUnload, this);
+            asset.on('remove', this._onMeshAssetRemove, this);
+            asset.on('change', this._onMeshAssetChange, this);
+
+            if (asset.resource) {
+                this._onMeshAssetLoad(asset);
+            } else {
+                // don't trigger an asset load unless the component is enabled
+                if (!this.enabled || !this.entity.enabled) return;
+                this.system.app.assets.load(asset);
+            }
         },
 
         _unbindMeshAsset: function (asset) {
-            asset.off('remove', this._onMeshAssetRemoved, this);
             asset.off('load', this._onMeshAssetLoad, this);
+            asset.off('unload', this._onMeshAssetUnload, this);
+            asset.off('remove', this._onMeshAssetRemove, this);
+            asset.off('change', this._onMeshAssetChange, this);
         },
 
         _onMeshAssetLoad: function (asset) {
             this._onMeshChanged(asset.resource);
+        },
+
+        _onMeshAssetUnload: function (asset) {
+            this.mesh = null;
+        },
+
+        _onMeshAssetRemove: function (asset) {
+            this._onMeshAssetUnload(asset);
+        },
+
+        _onMeshAssetChange: function (asset) {
         },
 
         onSetMeshAsset: function (name, oldValue, newValue) {
@@ -418,11 +480,6 @@ Object.assign(pc, function () {
                 this.emitter.resetMaterial();
                 this.rebuild();
             }
-        },
-
-        onMeshAssetRemoved: function (asset) {
-            asset.off('remove', this.onMeshAssetRemoved, this);
-            this.mesh = null;
         },
 
         onSetLoop: function (name, oldValue, newValue) {
@@ -534,7 +591,9 @@ Object.assign(pc, function () {
                 this.emitter = new pc.ParticleEmitter(this.system.app.graphicsDevice, {
                     numParticles: data.numParticles,
                     emitterExtents: data.emitterExtents,
+                    emitterExtentsInner: data.emitterExtentsInner,
                     emitterRadius: data.emitterRadius,
+                    emitterRadiusInner: data.emitterRadiusInner,
                     emitterShape: data.emitterShape,
                     initialVelocity: data.initialVelocity,
                     wrap: data.wrap,
@@ -543,6 +602,9 @@ Object.assign(pc, function () {
                     lifetime: data.lifetime,
                     rate: data.rate,
                     rate2: data.rate2,
+
+                    orientation: data.orientation,
+                    particleNormal: data.particleNormal,
 
                     animTilesX: data.animTilesX,
                     animTilesY: data.animTilesY,
@@ -570,6 +632,9 @@ Object.assign(pc, function () {
 
                     rotationSpeedGraph: data.rotationSpeedGraph,
                     rotationSpeedGraph2: data.rotationSpeedGraph2,
+
+                    radialSpeedGraph: data.radialSpeedGraph,
+                    radialSpeedGraph2: data.radialSpeedGraph2,
 
                     colorMap: data.colorMap,
                     normalMap: data.normalMap,
