@@ -410,13 +410,27 @@ Object.assign(pc, function () {
             var vertexFormat = new pc.VertexFormat(device, vertexDesc);
             var vertexBuffer = new pc.VertexBuffer(device, vertexFormat, 4, pc.BUFFER_STATIC, vertexData);
 
+            var indexBuffer = new pc.IndexBuffer(device, pc.INDEXFORMAT_UINT16, 6);
+
+            var indices = new Uint16Array(indexBuffer.lock());
+            indices[0] = 0;
+            indices[1] = 1;
+            indices[2] = 2;
+            indices[3] = 0;
+            indices[4] = 2;
+            indices[5] = 3;
+
+            indexBuffer.unlock();
             var mesh = new pc.Mesh();
             mesh.vertexBuffer = vertexBuffer;
-            mesh.primitive[0].type = pc.PRIMITIVE_TRIFAN;
+            mesh.indexBuffer[0] = indexBuffer;
+            mesh.primitive[0].type = pc.PRIMITIVE_TRIANGLES;
             mesh.primitive[0].base = 0;
             mesh.primitive[0].count = 4;
-            mesh.primitive[0].indexed = false;
+            mesh.primitive[0].indexed = true;
+
             mesh.aabb.setMinMax(pc.Vec3.ZERO, new pc.Vec3(w, h, 0));
+
 
             this._updateMesh(mesh);
 
