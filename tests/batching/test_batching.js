@@ -1,6 +1,7 @@
 describe('pc.Batcher', function () {
     beforeEach(function () {
         this.app = new pc.Application(document.createElement("canvas"));
+
         this.bg = this.app.batcher.addGroup("Test Group", false, 100);
 
     });
@@ -97,5 +98,34 @@ describe('pc.Batcher', function () {
     });
 
 
+    it("batch with all invisible meshinstances works", function () {
+        var e1 = new pc.Entity();
+        e1.name = "e1";
+        e1.addComponent("model", {
+            type: "box",
+            batchGroupId: this.bg.id
+        });
+
+        var e2 = new pc.Entity();
+        e2.name = "e2";
+        e2.addComponent("model", {
+            type: "box",
+            batchGroupId: this.bg.id
+        });
+
+
+        e1.model.model.meshInstances[0].visible = false;
+        e2.model.model.meshInstances[0].visible = false;
+
+        this.app.root.addChild(e1);
+        this.app.root.addChild(e2);
+
+        this.app.batcher.generate();
+
+        var layer = this.app.scene.layers.getLayerById(pc.LAYERID_WORLD);
+
+        expect(this.app.batcher._batchList.length).to.equal(0);
+
+    })
 })
 

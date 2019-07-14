@@ -28,6 +28,7 @@ Object.assign(pc, function () {
     };
 
     ImageRenderable.prototype.destroy = function () {
+        this.setMaterial(null); // clear material references
         this._element.removeModelFromLayers(this.model);
         this.model.destroy();
         this.model = null;
@@ -171,19 +172,19 @@ Object.assign(pc, function () {
         if (!this.meshInstance) return;
         var element = this._element;
 
-        var cullFn = null;
-        if (cull && element._isScreenSpace() && element._isScreenCulled()) {
-            cullFn = function (camera) {
-                return element.isCulled(camera);
+        var visibleFn = null;
+        if (cull && element._isScreenCulled()) {
+            visibleFn = function (camera) {
+                return element.isVisibleForCamera(camera);
             };
         }
 
         this.meshInstance.cull = cull;
-        this.meshInstance.isCulled = cullFn;
+        this.meshInstance.isVisibleFunc = visibleFn;
 
         if (this.unmaskMeshInstance) {
             this.unmaskMeshInstance.cull = cull;
-            this.unmaskMeshInstance.isCulled = cullFn;
+            this.unmaskMeshInstance.isVisibleFunc = visibleFn;
         }
     };
 
@@ -247,12 +248,6 @@ Object.assign(pc, function () {
 
         this._mask = false; // this image element is a mask
         this._maskRef = 0; // id used in stencil buffer to mask
-
-        // private
-        this._positions = [];
-        this._normals = [];
-        this._uvs = [];
-        this._indices = [];
 
         // 9-slicing
         this._outerScale = new pc.Vec2();
@@ -367,52 +362,68 @@ Object.assign(pc, function () {
 
         // build a quad for the image
         _createMesh: function () {
-            var w = this._element.calculatedWidth;
-            var h = this._element.calculatedHeight;
+            var element = this._element;
+            var w = element.calculatedWidth;
+            var h = element.calculatedHeight;
 
-            this._positions[0] = 0;
-            this._positions[1] = 0;
-            this._positions[2] = 0;
-            this._positions[3] = w;
-            this._positions[4] = 0;
-            this._positions[5] = 0;
-            this._positions[6] = w;
-            this._positions[7] = h;
-            this._positions[8] = 0;
-            this._positions[9] = 0;
-            this._positions[10] = h;
-            this._positions[11] = 0;
+            var r = this._rect;
 
-            for (var i = 0; i < 12; i += 3) {
-                this._normals[i] = 0;
-                this._normals[i + 1] = 0;
-                this._normals[i + 2] = 1;
-            }
+            // Note that when creating a typed array, it's initialized to zeros.
+            // Allocate memory for 4 vertices, 8 floats per vertex, 4 bytes per float.
+            var vertexData = new ArrayBuffer(4 * 8 * 4);
+            var vertexDataF32 = new Float32Array(vertexData);
 
-            this._uvs[0] = this._rect.x;
-            this._uvs[1] = this._rect.y;
-            this._uvs[2] = this._rect.x + this._rect.z;
-            this._uvs[3] = this._rect.y;
-            this._uvs[4] = this._rect.x + this._rect.z;
-            this._uvs[5] = this._rect.y + this._rect.w;
-            this._uvs[6] = this._rect.x;
-            this._uvs[7] = this._rect.y + this._rect.w;
+            // Vertex layout is: PX, PY, PZ, NX, NY, NZ, U, V
+            // Since the memory is zeroed, we will only set non-zero elements
 
-            this._indices[0] = 0;
-            this._indices[1] = 1;
-            this._indices[2] = 3;
-            this._indices[3] = 2;
-            this._indices[4] = 3;
-            this._indices[5] = 1;
+            // POS: 0, 0, 0
+            vertexDataF32[5] = 1;          // NZ
+            vertexDataF32[6] = r.x;        // U
+            vertexDataF32[7] = r.y;        // V
 
-            var mesh = pc.createMesh(this._system.app.graphicsDevice, this._positions, { uvs: this._uvs, normals: this._normals, indices: this._indices });
+            // POS: w, 0, 0
+            vertexDataF32[8] = w;          // PX
+            vertexDataF32[13] = 1;         // NZ
+            vertexDataF32[14] = r.x + r.z; // U
+            vertexDataF32[15] = r.y;       // V
+
+            // POS: w, h, 0
+            vertexDataF32[16] = w;         // PX
+            vertexDataF32[17] = h;         // PY
+            vertexDataF32[21] = 1;         // NZ
+            vertexDataF32[22] = r.x + r.z; // U
+            vertexDataF32[23] = r.y + r.w; // V
+
+            // POS: 0, h, 0
+            vertexDataF32[25] = h;         // PY
+            vertexDataF32[29] = 1;         // NZ
+            vertexDataF32[30] = r.x;       // U
+            vertexDataF32[31] = r.y + r.w; // V
+
+            var vertexDesc = [
+                { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 },
+                { semantic: pc.SEMANTIC_NORMAL, components: 3, type: pc.TYPE_FLOAT32 },
+                { semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.TYPE_FLOAT32 }
+            ];
+
+            var device = this._system.app.graphicsDevice;
+            var vertexFormat = new pc.VertexFormat(device, vertexDesc);
+            var vertexBuffer = new pc.VertexBuffer(device, vertexFormat, 4, pc.BUFFER_STATIC, vertexData);
+
+            var mesh = new pc.Mesh();
+            mesh.vertexBuffer = vertexBuffer;
+            mesh.primitive[0].type = pc.PRIMITIVE_TRIFAN;
+            mesh.primitive[0].base = 0;
+            mesh.primitive[0].count = 4;
+            mesh.primitive[0].indexed = false;
+            mesh.aabb.setMinMax(pc.Vec3.ZERO, new pc.Vec3(w, h, 0));
+
             this._updateMesh(mesh);
 
             return mesh;
         },
 
         _updateMesh: function (mesh) {
-            var i;
             var element = this._element;
             var w = element.calculatedWidth;
             var h = element.calculatedHeight;
@@ -483,63 +494,52 @@ Object.assign(pc, function () {
                     this._renderable.node.setLocalPosition((0.5 - element.pivot.x) * w, (0.5 - element.pivot.y) * h, 0);
                 }
             } else {
-                this._positions[0] = 0;
-                this._positions[1] = 0;
-                this._positions[2] = 0;
-                this._positions[3] = w;
-                this._positions[4] = 0;
-                this._positions[5] = 0;
-                this._positions[6] = w;
-                this._positions[7] = h;
-                this._positions[8] = 0;
-                this._positions[9] = 0;
-                this._positions[10] = h;
-                this._positions[11] = 0;
+                var vb = mesh.vertexBuffer;
+                var vertexDataF32 = new Float32Array(vb.lock());
 
                 // offset for pivot
                 var hp = element.pivot.x;
                 var vp = element.pivot.y;
 
-                for (i = 0; i < this._positions.length; i += 3) {
-                    this._positions[i] -= hp * w;
-                    this._positions[i + 1] -= vp * h;
-                }
+                // Update vertex positions, accounting for the pivot offset
+                vertexDataF32[0] = 0 - hp * w;
+                vertexDataF32[1] = 0 - vp * h;
+                vertexDataF32[8] = w - hp * w;
+                vertexDataF32[9] = 0 - vp * h;
+                vertexDataF32[16] = w - hp * w;
+                vertexDataF32[17] = h - vp * h;
+                vertexDataF32[24] = 0 - hp * w;
+                vertexDataF32[25] = h - vp * h;
 
-                w = 1;
-                h = 1;
+
+                var atlasTextureWidth = 1;
+                var atlasTextureHeight = 1;
                 var rect = this._rect;
 
                 if (this._sprite && this._sprite.frameKeys[this._spriteFrame] && this._sprite.atlas) {
                     var frame = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
                     if (frame) {
                         rect = frame.rect;
-                        w = this._sprite.atlas.texture.width;
-                        h = this._sprite.atlas.texture.height;
+                        atlasTextureWidth = this._sprite.atlas.texture.width;
+                        atlasTextureHeight = this._sprite.atlas.texture.height;
                     }
                 }
 
-                this._uvs[0] = rect.x / w;
-                this._uvs[1] = rect.y / h;
-                this._uvs[2] = (rect.x + rect.z) / w;
-                this._uvs[3] = rect.y / h;
-                this._uvs[4] = (rect.x + rect.z) / w;
-                this._uvs[5] = (rect.y + rect.w) / h;
-                this._uvs[6] = rect.x / w;
-                this._uvs[7] = (rect.y + rect.w) / h;
+                // Update vertex texture coordinates
+                vertexDataF32[6] = rect.x / atlasTextureWidth;
+                vertexDataF32[7] = rect.y / atlasTextureHeight;
+                vertexDataF32[14] = (rect.x + rect.z) / atlasTextureWidth;
+                vertexDataF32[15] = rect.y / atlasTextureHeight;
+                vertexDataF32[22] = (rect.x + rect.z) / atlasTextureWidth;
+                vertexDataF32[23] = (rect.y + rect.w) / atlasTextureHeight;
+                vertexDataF32[30] = rect.x / atlasTextureWidth;
+                vertexDataF32[31] = (rect.y + rect.w) / atlasTextureHeight;
 
-                var vb = mesh.vertexBuffer;
-                var it = new pc.VertexIterator(vb);
-                var numVertices = 4;
-                for (i = 0; i < numVertices; i++) {
-                    it.element[pc.SEMANTIC_POSITION].set(this._positions[i * 3 + 0], this._positions[i * 3 + 1], this._positions[i * 3 + 2]);
-                    it.element[pc.SEMANTIC_NORMAL].set(this._normals[i * 3 + 0], this._normals[i * 3 + 1], this._normals[i * 3 + 2]);
-                    it.element[pc.SEMANTIC_TEXCOORD0].set(this._uvs[i * 2 + 0], this._uvs[i * 2 + 1]);
+                vb.unlock();
 
-                    it.next();
-                }
-                it.end();
-
-                mesh.aabb.compute(this._positions);
+                var min = new pc.Vec3(0 - hp * w, 0 - vp * h, 0);
+                var max = new pc.Vec3(w - hp * w, h - vp * h, 0);
+                mesh.aabb.setMinMax(min, max);
 
                 if (this._renderable) {
                     this._renderable.node.setLocalScale(1, 1, 1);
@@ -547,7 +547,6 @@ Object.assign(pc, function () {
 
                     this._renderable.setAabbFunc(null);
                 }
-
             }
 
             this._meshDirty = false;

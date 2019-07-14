@@ -1,15 +1,26 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var HtmlHandler = function () {};
+    var HtmlHandler = function () {
+        this.retryRequests = false;
+    };
 
     Object.assign(HtmlHandler.prototype, {
         load: function (url, callback) {
-            pc.http.get(url, function (err, response) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
+            pc.http.get(url.load, {
+                retry: this.retryRequests
+            }, function (err, response) {
                 if (!err) {
                     callback(null, response);
                 } else {
-                    callback(pc.string.format("Error loading html resource: {0} [{1}]", url, err));
+                    callback(pc.string.format("Error loading html resource: {0} [{1}]", url.original, err));
                 }
             });
         },

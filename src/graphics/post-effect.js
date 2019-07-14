@@ -63,8 +63,10 @@ Object.assign(pc, function () {
     }
 
     function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
+        var oldRt = device.getRenderTarget();
         device.setRenderTarget(target);
         device.updateBegin();
+
         var w = (target !== null) ? target.width : device.width;
         var h = (target !== null) ? target.height : device.height;
         var x = 0;
@@ -77,7 +79,15 @@ Object.assign(pc, function () {
             h *= rect.w;
         }
 
+        var oldVx = device.vx;
+        var oldVy = device.vy;
+        var oldVw = device.vw;
+        var oldVh = device.vh;
         device.setViewport(x, y, w, h);
+        var oldSx = device.sx;
+        var oldSy = device.sy;
+        var oldSw = device.sw;
+        var oldSh = device.sh;
         device.setScissor(x, y, w, h);
 
         var oldBlending = device.getBlending();
@@ -91,17 +101,27 @@ Object.assign(pc, function () {
         device.setBlending(false);
         device.setDepthTest(false);
         device.setDepthWrite(false);
-        device.setCullMode(pc.CULLFACE_BACK);
+        device.setCullMode(pc.CULLFACE_NONE);
         device.setColorWrite(true, true, true, true);
+
         device.setVertexBuffer(vertexBuffer, 0);
         device.setShader(shader);
+
         device.draw(primitive);
+
         device.setBlending(oldBlending);
         device.setDepthTest(oldDepthTest);
         device.setDepthWrite(oldDepthWrite);
         device.setCullMode(oldCullMode);
         device.setColorWrite(oldWR, oldWG, oldWB, oldWA);
+
         device.updateEnd();
+
+        device.setRenderTarget(oldRt);
+        device.updateBegin();
+
+        device.setViewport(oldVx, oldVy, oldVw, oldVh);
+        device.setScissor(oldSx, oldSy, oldSw, oldSh);
     }
 
     return {

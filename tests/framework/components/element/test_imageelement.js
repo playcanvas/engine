@@ -422,32 +422,6 @@ describe('pc.ImageElement', function () {
         expect(spy.notCalled).to.equal(true);
     });
 
-    it('Image element calls _updateMesh if only rect passed in data', function () {
-        var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
-
-        var rect = [1, 1, 1, 1];
-
-        var e = new pc.Entity();
-        e.addComponent('element', {
-            type: 'image',
-            rect: rect
-        });
-        app.root.addChild(e);
-
-        expect(spy.calledTwice).to.equal(true);
-
-        expect(e.element._image._uvs).to.deep.equal([
-            rect[0],
-            rect[1],
-            rect[0] + rect[2],
-            rect[1],
-            rect[0] + rect[2],
-            rect[1] + rect[3],
-            rect[0],
-            rect[1] + rect[3]
-        ]);
-    });
-
     it('Image element calls _updateMesh once at the start and once at the end when all properties that call it are passed into the data', function () {
         var spy = sandbox.spy(pc.ImageElement.prototype, '_updateMesh');
 
@@ -866,21 +840,21 @@ describe('pc.ImageElement', function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
         // move just off screen
         e.translateLocal(canvasWidth+(100/2)+0.001,0,0);
 
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
 
         // move just on screen
         e.translateLocal(-1, 0, 0);
 
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
     });
 
@@ -920,7 +894,7 @@ describe('pc.ImageElement', function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
         // move just off screen
         parent.translateLocal(50, 50, 0);
@@ -929,7 +903,7 @@ describe('pc.ImageElement', function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
     });
 
     it('Offscreen rotated element is culled', function () {
@@ -962,7 +936,7 @@ describe('pc.ImageElement', function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
     });
 
     it('Offscreen rotated out of plane is culled', function () {
@@ -995,21 +969,36 @@ describe('pc.ImageElement', function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
     });
 
-    it('TextureAtlas asset events are unbound if sprite is changed while loading', function (done) {
-
+    it.skip('TextureAtlas asset events are unbound if sprite is changed while loading', function (done) {
         app.assets.list().forEach(function (asset) {
             asset.unload();
         });
-
 
         var spriteAsset = new pc.Asset('red-sprite', 'sprite', {
             url: 'base/tests/test-assets/sprite/red-sprite.json'
         });
         var textureAtlasAsset = new pc.Asset('red-texture', 'texture', {
             url: 'base/tests/test-assets/sprite/red-atlas.json'
+        });
+
+        if (spriteAsset.resource) {
+            fail("spriteAsset should not be loaded at this stage");
+        }
+
+        spriteAsset.once("load", function () {
+            expect(app.assets.hasEvent('load:' + textureAtlasAsset.id)).to.be.true;
+
+            e.element.spriteAsset = null;
+
+            // check that no event listeners come from this image element
+            app.assets._callbacks['load:' + textureAtlasAsset.id].forEach(function (callback) {
+                expect(callback.scope).to.not.equal(e.element._image);
+            });
+
+            done();
         });
 
         app.assets.add(spriteAsset);
@@ -1024,18 +1013,6 @@ describe('pc.ImageElement', function () {
         });
         app.root.addChild(e);
 
-        spriteAsset.once("load", function () {
-            expect(app.assets.hasEvent('load:' + textureAtlasAsset.id)).to.be.true;
-
-            e.element.spriteAsset = null;
-
-            // check that no event listeners come from this image element
-            app.assets._callbacks['load:' + textureAtlasAsset.id].forEach(function (callback) {
-                expect(callback.scope).to.not.equal(e.element._image);
-            });
-
-            done();
-        });
     });
 
     it('Cloning image element with texture works', function () {

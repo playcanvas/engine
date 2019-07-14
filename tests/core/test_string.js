@@ -41,4 +41,13 @@ describe('pc.string', function () {
         expect(false).to.equal(pc.string.toBool(undefined));
     });
 
-})
+
+    it("pc.string.getSymbols", function () {
+        expect(pc.string.getSymbols("ABC").length).to.equal(3);
+        expect(pc.string.getSymbols("A🇺🇸").length).to.equal(2);
+        expect(pc.string.getSymbols("👨🏿").length).to.equal(1);
+        expect(pc.string.getSymbols("👁️‍🗨️").length).to.equal(1);
+        expect(pc.string.getSymbols("3️⃣").length).to.equal(1);
+        expect(pc.string.getSymbols("🏴‍☠️").length).to.equal(1);
+    });
+});

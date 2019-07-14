@@ -32,6 +32,7 @@ Object.assign(pc, function () {
             width: device.width,
             height: device.height
         });
+        tex.name = 'posteffect-pass';
         tex.minFilter = pc.FILTER_NEAREST;
         tex.magFilter = pc.FILTER_NEAREST;
         tex.addressU = pc.ADDRESS_CLAMP_TO_EDGE;

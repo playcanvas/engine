@@ -138,12 +138,14 @@ Object.assign(pc, function () {
         this.visibleThisFrame = 0;
 
         // custom function used to customize culling (e.g. for 2D UI elements)
-        this.isCulled = null;
+        this.isVisibleFunc = null;
 
         this.parameters = {};
 
         this.stencilFront = null;
         this.stencilBack = null;
+        // Negative scale batching support
+        this.flipFaces = false;
     };
 
     Object.defineProperty(MeshInstance.prototype, 'mesh', {

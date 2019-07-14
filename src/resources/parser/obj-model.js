@@ -18,6 +18,7 @@ Object.assign(pc, function () {
     // this.app.assets.load(asset);
     var ObjModelParser = function (device) {
         this._device = device;
+        this._defaultMaterial = pc.getDefaultMaterial();
     };
 
     Object.assign(ObjModelParser.prototype, {
@@ -108,7 +109,7 @@ Object.assign(pc, function () {
                     normals: currentGroup.normals,
                     uvs: currentGroup.uvs
                 });
-                var mi = new pc.MeshInstance(new pc.GraphNode(), mesh, pc.ModelHandler.DEFAULT_MATERIAL);
+                var mi = new pc.MeshInstance(new pc.GraphNode(), mesh, this._defaultMaterial);
                 model.meshInstances.push(mi);
                 root.addChild(mi.node);
             }

@@ -138,34 +138,52 @@ pc.programlib.standard = {
         transformUv1: { n: "transformVS", f: _oldChunkTransformUv1 }
     },
 
-    generateKey: function (device, options) {
-        var prop, props = [];
+    // Shared Sandard Material option structures
+    optionsContext: {},
+    optionsContextMin: {},
+
+    generateKey: function (options) {
+        var buildPropertiesList = function (options) {
+            var props = [];
+            for (var prop in options) {
+                if (options.hasOwnProperty(prop) && prop !== "chunks" && prop !== "lights")
+                    props.push(prop);
+            }
+            return props.sort();
+        };
+        var props;
+        if (options === this.optionsContextMin) {
+            if (!this.propsMin) this.propsMin = buildPropertiesList(options);
+            props = this.propsMin;
+        } else if (options === this.optionsContext) {
+            if (!this.props) this.props = buildPropertiesList(options);
+            props = this.props;
+        } else {
+            props = buildPropertiesList(options);
+        }
+
         var key = "standard";
-        var light;
-        for (prop in options) {
-            if (options.hasOwnProperty(prop)) {
-                if (prop === "chunks") {
-                    for (var p in options[prop]) {
-                        if (options[prop].hasOwnProperty(p)) {
-                            props.push(p + options.chunks[p]);
-                        }
-                    }
-                } else {
-                    if (options[prop]) props.push(prop);
+
+        var i;
+        for (i = 0; i < props.length; i++) {
+            if (options[props[i]])
+                key += props[i] + options[props[i]];
+        }
+
+        if (options.chunks) {
+            var chunks = [];
+            for (var p in options.chunks) {
+                if (options.chunks.hasOwnProperty(p)) {
+                    chunks.push(p + options.chunks[p]);
                 }
             }
-        }
-        props.sort();
-        for (prop in props) {
-            if (props.hasOwnProperty(prop)) {
-                key += props[prop] + options[props[prop]];
-            }
+            chunks.sort();
+            key += chunks;
         }
 
         if (options.lights) {
-            for (var i = 0; i < options.lights.length; i++) {
-                light = options.lights[i];
-                key += light.key;
+            for (i = 0; i < options.lights.length; i++) {
+                key += options.lights[i].key;
             }
         }
 

@@ -191,6 +191,7 @@ Object.assign(pc, function () {
                         width: self.width,
                         height: self.height
                     });
+                    colorBuffer.name = 'pick';
                     colorBuffer.minFilter = pc.FILTER_NEAREST;
                     colorBuffer.magFilter = pc.FILTER_NEAREST;
                     colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
@@ -213,24 +214,6 @@ Object.assign(pc, function () {
                     self.pickColor[2] = (index & 0xff) / 255;
                     pickColorId.setValue(self.pickColor);
                     device.setBlending(false);
-                },
-
-                // could probably move updateCameraFrustum into onLayerPreRender function
-                // and remove everything else
-                onPreCull: function () {
-                    this.oldAspectMode = this.cameras[0].aspectRatioMode;
-                    this.oldAspect = this.cameras[0].aspectRatio;
-                    this.cameras[0].aspectRatioMode = pc.ASPECT_MANUAL;
-                    var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
-                    this.cameras[0].aspectRatio = this.cameras[0].calculateAspectRatio(rt);
-                    self.app.renderer.updateCameraFrustum(this.cameras[0].camera);
-                },
-
-                // could probably remove this because we've moved
-                // prerender/postrender to be outside of renderComposition
-                onPostCull: function () {
-                    this.cameras[0].aspectRatioMode = this.oldAspectMode;
-                    this.cameras[0].aspectRatio = this.oldAspect;
                 }
             });
 
@@ -323,6 +306,7 @@ Object.assign(pc, function () {
         layer.cameras[0].aspectRatioMode = pc.ASPECT_MANUAL;
         var rt = sourceRt ? sourceRt : (sourceLayer ? sourceLayer.renderTarget : null);
         layer.cameras[0].aspectRatio = layer.cameras[0].calculateAspectRatio(rt);
+        this.app.renderer.updateCameraFrustum(layer.cameras[0].camera);
     };
 
     Picker.prototype.onLayerPostRender = function (layer) {

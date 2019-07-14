@@ -37,12 +37,12 @@ Object.assign(pc, function () {
         this.instancesWithToolsUpdate = [];
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        pc.ComponentSystem.on(INITIALIZE, this.onInitialize, this);
-        pc.ComponentSystem.on(POST_INITIALIZE, this.onPostInitialize, this);
-        pc.ComponentSystem.on(UPDATE, this.onUpdate, this);
-        pc.ComponentSystem.on(FIXED_UPDATE, this.onFixedUpdate, this);
-        pc.ComponentSystem.on(POST_UPDATE, this.onPostUpdate, this);
-        pc.ComponentSystem.on(TOOLS_UPDATE, this.onToolsUpdate, this);
+        pc.ComponentSystem.bind(INITIALIZE, this.onInitialize, this);
+        pc.ComponentSystem.bind(POST_INITIALIZE, this.onPostInitialize, this);
+        pc.ComponentSystem.bind(UPDATE, this.onUpdate, this);
+        pc.ComponentSystem.bind(FIXED_UPDATE, this.onFixedUpdate, this);
+        pc.ComponentSystem.bind(POST_UPDATE, this.onPostUpdate, this);
+        pc.ComponentSystem.bind(TOOLS_UPDATE, this.onToolsUpdate, this);
     };
     ScriptLegacyComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     ScriptLegacyComponentSystem.prototype.constructor = ScriptLegacyComponentSystem;
@@ -501,7 +501,10 @@ Object.assign(pc, function () {
             } else if (attribute.type === 'curve' || attribute.type === 'colorcurve') {
                 var curveType = attribute.value.keys[0] instanceof Array ? pc.CurveSet : pc.Curve;
                 attribute.value = new curveType(attribute.value.keys);
+
+                /* eslint-disable no-self-assign */
                 attribute.value.type = attribute.value.type;
+                /* eslint-enable no-self-assign */
             }
         }
     });

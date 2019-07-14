@@ -40,16 +40,8 @@
                 color: new pc.Color(1, 1, 1), // white
                 fontName: "Arial",
                 fontSize: size,
-                width: 128,
-                height: 128,
-                getCharScale: function (code) {
-                    // finger pointing up is a particular long character, use more scaling
-                    if (code === 0x261D) {
-                        return 0.8;
-                    } else {
-                        return -1; // use default scaler
-                    }
-                }
+                width: 256,
+                height: 256
             });
 
             var asset = new pc.Asset("CanvasFont", "font", {});
@@ -94,9 +86,9 @@
             backing.translateLocal(0, -100, 0);
 
             // some sample text
-            var firstline = "ÉÅAå 東京 🐇🔥🂡 font";
-            var secondline = "☝😀😀😀🤢🤥🤝😻👍👨‍🎤😡💪🏿😍🤔💽🦀🍑👻😗😏😒👽👾🎃😺💩😈🤒💑👢🐭🦁🐸🐍🦐🐙";
-            var thirdline = "Testing MSDF font";
+            var firstline = "Flags: 🇺🇸🇩🇪🇮🇪🇮🇹🏴‍☠️🇨🇦";
+            var secondline = "Complex emoji: 👨🏿3️⃣👁️‍🗨️";
+            var thirdline = "Just strings";
 
             cf.createTextures(firstline);
 
@@ -154,9 +146,7 @@
             backing.addChild(msdfElementEntity);
             msdfElementEntity.translateLocal(0, -elSize*3, 0);
 
-            // purely for debugging: do not do this in a real application
-            var showCanvasAtlasForDebug = false;
-            if (showCanvasAtlasForDebug) {
+            function renderAtlases () {
                 var wrapper = document.createElement('div');
                 for (var i = 0; i < cf.textures.length; i++) {
                     var canvas = cf.textures[i].getSource();
@@ -168,6 +158,9 @@
                 wrapper.style.top = '0px';
                 document.body.appendChild(wrapper);
             }
+            // purely for debugging: do not do this in a real application
+            var showCanvasAtlasForDebug = false;
+            renderAtlases();
 
         </script>
     </body>

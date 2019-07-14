@@ -1,8 +1,7 @@
 /**
  * @name pc.events
  * @namespace
- * @description global namespace that allows to extend other objects with events
- * Additionally it can handle global events it self.
+ * @description Namespace for event functions. Use these functions to attach events to an object.
  * @example
  * var obj = { };
  * pc.events.attach(obj);
@@ -33,6 +32,7 @@ pc.events = {
         target.fire = ev.fire;
         target.once = ev.once;
         target.hasEvent = ev.hasEvent;
+        target._callbacks = { };
         target._callbackActive = { };
         return target;
     },
@@ -55,14 +55,8 @@ pc.events = {
         if (!name || typeof name !== 'string' || !callback)
             return this;
 
-        if (!this._callbacks)
-            this._callbacks = { };
-
         if (!this._callbacks[name])
             this._callbacks[name] = [];
-
-        if (!this._callbackActive)
-            this._callbackActive = { };
 
         if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
             this._callbackActive[name] = this._callbackActive[name].slice();
@@ -95,47 +89,43 @@ pc.events = {
      * obj.off('test', handler, this); // Removes all hander functions, called 'test' with scope this
      */
     off: function (name, callback, scope) {
-        if (!this._callbacks)
-            return this;
+        if (name) {
+            if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
+                this._callbackActive[name] = this._callbackActive[name].slice();
+        } else {
+            for (var key in this._callbackActive) {
+                if (!this._callbacks[key])
+                    continue;
 
-        if (this._callbackActive) {
-            if (name) {
-                if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
-                    this._callbackActive[name] = this._callbackActive[name].slice();
-            } else {
-                for (var key in this._callbackActive) {
-                    if (!this._callbacks[key])
-                        continue;
+                if (this._callbacks[key] !== this._callbackActive[key])
+                    continue;
 
-                    if (this._callbacks[key] !== this._callbackActive[key])
-                        continue;
-
-                    this._callbackActive[key] = this._callbackActive[key].slice();
-                }
+                this._callbackActive[key] = this._callbackActive[key].slice();
             }
         }
 
         if (!name) {
-            this._callbacks = null;
+            this._callbacks = { };
         } else if (!callback) {
             if (this._callbacks[name])
-                delete this._callbacks[name];
+                this._callbacks[name] = [];
         } else {
             var events = this._callbacks[name];
             if (!events)
                 return this;
 
-            var i = events.length;
+            var count = events.length;
 
-            while (i--) {
+            for (var i = 0; i < count; i++) {
                 if (events[i].callback !== callback)
                     continue;
 
                 if (scope && events[i].scope !== scope)
                     continue;
 
-                events.splice(i, 1);
+                events[i--] = events[--count];
             }
+            events.length = count;
         }
 
         return this;
@@ -156,13 +146,10 @@ pc.events = {
      */
     /* eslint-enable valid-jsdoc */
     fire: function (name, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
-        if (!name || !this._callbacks || !this._callbacks[name])
+        if (!name || !this._callbacks[name])
             return this;
 
         var callbacks;
-
-        if (!this._callbackActive)
-            this._callbackActive = { };
 
         if (!this._callbackActive[name]) {
             this._callbackActive[name] = this._callbacks[name];
@@ -231,6 +218,6 @@ pc.events = {
      * obj.hasEvent('hello'); // returns false
      */
     hasEvent: function (name) {
-        return (this._callbacks && this._callbacks[name] && this._callbacks[name].length !== 0) || false;
+        return (this._callbacks[name] && this._callbacks[name].length !== 0) || false;
     }
 };

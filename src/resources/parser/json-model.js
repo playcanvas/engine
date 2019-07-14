@@ -24,6 +24,7 @@ Object.assign(pc, function () {
     // Take PlayCanvas JSON model data and create pc.Model
     var JsonModelParser = function (device) {
         this._device = device;
+        this._defaultMaterial = pc.getDefaultMaterial();
     };
 
     Object.assign(JsonModelParser.prototype, {
@@ -668,7 +669,7 @@ Object.assign(pc, function () {
                 var node = nodes[meshInstanceData.node];
                 var mesh = meshes[meshInstanceData.mesh];
 
-                var meshInstance = new pc.MeshInstance(node, mesh, pc.ModelHandler.DEFAULT_MATERIAL);
+                var meshInstance = new pc.MeshInstance(node, mesh, this._defaultMaterial);
 
                 if (mesh.skin) {
                     var skinIndex = skins.indexOf(mesh.skin);

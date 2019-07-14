@@ -18,12 +18,12 @@ Object.assign(pc, function () {
     var DEFAULT_DRAG_THRESHOLD = 10;
 
     /**
-     * @private
+     * @constructor
      * @name pc.ScrollViewComponentSystem
-     * @description Create a new ScrollViewComponentSystem
-     * @classdesc Manages creation of {@link pc.ScrollViewComponent}s.
-     * @param {pc.Application} app The application
      * @extends pc.ComponentSystem
+     * @classdesc Manages creation of {@link pc.ScrollViewComponent}s.
+     * @description Create a new ScrollViewComponentSystem.
+     * @param {pc.Application} app The application
      */
     var ScrollViewComponentSystem = function ScrollViewComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
@@ -37,6 +37,8 @@ Object.assign(pc, function () {
         this.schema = _schema;
 
         this.on('beforeremove', this._onRemoveComponent, this);
+
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     ScrollViewComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     ScrollViewComponentSystem.prototype.constructor = ScrollViewComponentSystem;
@@ -50,6 +52,19 @@ Object.assign(pc, function () {
             }
 
             pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, _schema);
+        },
+
+        onUpdate: function (dt) {
+            var components = this.store;
+
+            for (var id in components) {
+                var entity = components[id].entity;
+                var component = entity.scrollview;
+                if (component.enabled && entity.enabled) {
+                    component.onUpdate();
+                }
+
+            }
         },
 
         _onRemoveComponent: function (entity, component) {

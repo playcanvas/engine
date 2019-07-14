@@ -2,14 +2,14 @@ Object.assign(pc, function () {
     var _tempScrollValue = new pc.Vec2();
 
     /**
-     * @private
      * @component
+     * @constructor
      * @name pc.ScrollViewComponent
-     * @description Create a new ScrollViewComponent
+     * @extends pc.Component
      * @classdesc A ScrollViewComponent enables a group of entities to behave like a masked scrolling area, with optional horizontal and vertical scroll bars.
+     * @description Create a new ScrollViewComponent.
      * @param {pc.ScrollViewComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.Component
      * @property {Boolean} horizontal Whether to enable horizontal scrolling.
      * @property {Boolean} vertical Whether to enable vertical scrolling.
      * @property {pc.SCROLL_MODE} scrollMode Specifies how the scroll view should behave when the user scrolls past the end of the content. Modes are defined as follows:
@@ -73,8 +73,6 @@ Object.assign(pc, function () {
         _toggleLifecycleListeners: function (onOrOff, system) {
             this[onOrOff]('set_horizontal', this._onSetHorizontalScrollingEnabled, this);
             this[onOrOff]('set_vertical', this._onSetVerticalScrollingEnabled, this);
-
-            pc.ComponentSystem[onOrOff]('update', this._onUpdate, this);
 
             system.app.systems.element[onOrOff]('add', this._onElementComponentAdd, this);
             system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemove, this);
@@ -443,8 +441,8 @@ Object.assign(pc, function () {
             }
         },
 
-        _onUpdate: function () {
-            if (this._contentReference.entity && this.enabled && this.entity.enabled) {
+        onUpdate: function () {
+            if (this._contentReference.entity) {
                 this._updateVelocity();
                 this._syncScrollbarEnabledState(pc.ORIENTATION_HORIZONTAL);
                 this._syncScrollbarEnabledState(pc.ORIENTATION_VERTICAL);
@@ -652,7 +650,6 @@ Object.assign(pc, function () {
 }());
 
 /**
- * @private
  * @event
  * @name pc.ScrollViewComponent#set:scroll
  * @description Fired whenever the scroll position changes.

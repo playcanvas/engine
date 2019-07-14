@@ -4,7 +4,6 @@ describe("pc.ModelComponent", function () {
 
     beforeEach(function (done) {
         app = new pc.Application(document.createElement("canvas"));
-
         loadAssets(function () {
             done();
         });
@@ -12,6 +11,7 @@ describe("pc.ModelComponent", function () {
 
     afterEach(function () {
         app.destroy();
+        assets = {};
     });
 
     var loadAssetList = function (list, cb) {
@@ -62,7 +62,6 @@ describe("pc.ModelComponent", function () {
         expect(e.model.lightmapSizeMultiplier).to.equal(1);
         expect(e.model.isStatic).to.equal(false);
         expect(e.model.model).to.equal(null);
-        // expect(e.model.material).to.equal(app.systems.model.defaultMaterial);
         expect(e.model.mapping).to.be.empty;
         expect(e.model.layers).to.contain(pc.LAYERID_WORLD);
         expect(e.model.batchGroupId).to.equal(-1);
@@ -282,6 +281,75 @@ describe("pc.ModelComponent", function () {
         });
     });
 
+    it("Materials applied when added later", function (done) {
+        var boxAsset = new pc.Asset("Box", "model", {
+            url: "base/tests/test-assets/box/box.json"
+        });
+
+        var materialAsset = new pc.Asset("Box Material", "material",  {
+            url: "base/tests/test-assets/box/1/Box Material.json"
+        });
+
+        app.assets.add(boxAsset);
+        app.assets.load(boxAsset);
+
+        boxAsset.on("load", function () {
+            var e = new pc.Entity();
+            e.addComponent('model', {
+                asset: boxAsset
+            });
+            app.root.addChild(e);
+            e.model.materialAsset = materialAsset;
+
+            expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.true;
+
+            materialAsset.on('load', function () {
+                // do checks after the 'load' handler on the asset has been executed
+                // by other engine event handlers
+                setTimeout(function () {
+                    expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.false;
+                    expect(e.model.material).to.not.be.null;
+                    expect(e.model.material).to.equal(materialAsset.resource);
+                    done();
+                });
+            });
+
+            app.assets.add(materialAsset);
+        });
+    });
+
+    it("Material add events unbound on destroy", function (done) {
+        var boxAsset = new pc.Asset("Box", "model", {
+            url: "base/tests/test-assets/box/box.json"
+        });
+
+        var materialAsset = new pc.Asset("Box Material", "material",  {
+            url: "base/tests/test-assets/box/1/Box Material.json"
+        });
+
+        app.assets.add(boxAsset);
+        app.assets.load(boxAsset);
+
+        boxAsset.on("load", function () {
+            var e = new pc.Entity();
+            e.addComponent('model', {
+                asset: boxAsset
+            });
+            app.root.addChild(e);
+            e.model.materialAsset = materialAsset;
+
+            expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.true;
+
+            e.destroy();
+
+            expect(app.assets.hasEvent('add:' + materialAsset.id)).to.be.false;
+
+            done();
+
+            app.assets.add(materialAsset);
+        });
+    });
+
     it("Layers are initialized before model is set", function () {
         var e = new pc.Entity();
         e.addComponent("model", {
@@ -296,5 +364,84 @@ describe("pc.ModelComponent", function () {
         expect(e.model.layers[0]).to.equal(pc.LAYERID_UI);
         expect(e.model.model).to.not.be.null;
 
+    });
+
+    it("Asset materials unbound on destroy", function (done) {
+        var modelAsset = new pc.Asset('Statue_1.json', 'model', {
+            url: 'base/examples/assets/statue/Statue_1.json'
+        }, {
+            mapping: [{
+                material: assets.material.id
+            }]
+        });
+        app.assets.add(modelAsset);
+        app.assets.load(modelAsset);
+
+        modelAsset.ready(function () {
+            var e = new pc.Entity();
+            e.addComponent("model", {
+                asset: modelAsset
+            });
+            app.root.addChild(e);
+
+            expect(app.assets.hasEvent('remove:'+assets.material.id)).to.be.true;
+            expect(e.model._materialEvents[0]['remove:' + assets.material.id]).to.exist;
+
+            e.destroy();
+
+            expect(app.assets.hasEvent('remove:' + assets.material.id)).to.be.false;
+            done();
+        });
+    });
+
+    it("Asset materials unbound on change model", function (done) {
+        var modelAsset = new pc.Asset('Statue_1.json', 'model', {
+            url: 'base/examples/assets/statue/Statue_1.json'
+        }, {
+            mapping: [{
+                material: assets.material.id
+            }]
+        });
+
+        var materialAsset2 = new pc.Asset('material2', 'material', {
+            url: 'base/examples/assets/statue/11268/phong9.json?t=1'
+        });
+
+        var modelAsset2 = new pc.Asset('Statue_2.json', 'model', {
+            url: 'base/examples/assets/statue/Statue_1.json?t=1'
+        }, {
+            mapping: [{
+                material: materialAsset2.id
+            }]
+        });
+
+        app.assets.add(modelAsset);
+        app.assets.load(modelAsset);
+        app.assets.add(modelAsset2);
+        app.assets.load(modelAsset2);
+        app.assets.add(materialAsset2);
+        app.assets.load(materialAsset2);
+
+        materialAsset2.ready(function () {
+            modelAsset.ready(function () {
+                var e = new pc.Entity();
+                e.addComponent("model", {
+                    asset: modelAsset
+                });
+                app.root.addChild(e);
+
+                expect(app.assets.hasEvent('remove:' + assets.material.id)).to.be.true;
+                expect(e.model._materialEvents[0]['remove:' + assets.material.id]).to.exist;
+
+                modelAsset2.ready(function () {
+                    e.model.asset = modelAsset2;
+
+                    expect(app.assets.hasEvent('remove:' + assets.material.id)).to.be.false;
+                    expect(app.assets.hasEvent('remove:' + materialAsset2.id)).to.be.true;
+
+                    done();
+                });
+            });
+        });
     });
 });

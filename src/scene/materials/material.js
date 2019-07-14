@@ -106,11 +106,7 @@ Object.assign(pc, function () {
             return this._shader;
         },
         set: function (shader) {
-            if (this._shader) {
-                this._shader._refCount--;
-            }
             this._shader = shader;
-            if (shader) shader._refCount++;
         }
     });
 
@@ -323,11 +319,6 @@ Object.assign(pc, function () {
 
     Material.prototype.clearVariants = function () {
         var meshInstance;
-        for (var s in this.variants) {
-            if (this.variants.hasOwnProperty(s)) {
-                this.variants[s]._refCount--;
-            }
-        }
         this.variants = {};
         var j;
         for (var i = 0; i < this.meshInstances.length; i++) {
@@ -416,24 +407,6 @@ Object.assign(pc, function () {
      * @description Removes this material from the scene and possibly frees up memory from its shaders (if there are no other materials using it).
      */
     Material.prototype.destroy = function () {
-        if (this.shader) {
-            this.shader._refCount--;
-            if (this.shader._refCount < 1) {
-                this.shader.destroy();
-            }
-        }
-
-        var variant;
-        for (var s in this.variants) {
-            if (this.variants.hasOwnProperty(s)) {
-                variant = this.variants[s];
-                if (variant === this.shader) continue;
-                variant._refCount--;
-                if (variant._refCount < 1) {
-                    variant.destroy();
-                }
-            }
-        }
         this.variants = {};
         this.shader = null;
 
@@ -444,8 +417,9 @@ Object.assign(pc, function () {
                 meshInstance._shader[j] = null;
             }
             meshInstance._material = null;
-            if (this !== pc.Scene.defaultMaterial) {
-                meshInstance.material = pc.Scene.defaultMaterial;
+            var defaultMaterial = pc.getDefaultMaterial();
+            if (this !== defaultMaterial) {
+                meshInstance.material = defaultMaterial;
             }
         }
     };

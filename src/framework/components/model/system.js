@@ -30,7 +30,7 @@ Object.assign(pc, function () {
         this.plane = null;
         this.sphere = null;
 
-        this.defaultMaterial = new pc.StandardMaterial();
+        this.defaultMaterial = app.scene.defaultMaterial;
 
         this.on('beforeremove', this.onRemove, this);
     };
@@ -104,7 +104,7 @@ Object.assign(pc, function () {
 
             var material = entity.model.material;
             if (!material ||
-                material === pc.ModelHandler.DEFAULT_MATERIAL ||
+                material === this.defaultMaterial ||
                 !materialAsset ||
                 material === materialAsset.resource) {
 

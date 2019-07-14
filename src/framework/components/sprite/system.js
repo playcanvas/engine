@@ -31,6 +31,7 @@ Object.assign(pc, function () {
         pixelData[2] = 255.0;
         pixelData[3] = 255.0;
         pixels.set(pixelData);
+        this._defaultTexture.name = 'sprite';
         this._defaultTexture.unlock();
 
         // default material used by sprites
@@ -63,7 +64,7 @@ Object.assign(pc, function () {
         this.default9SlicedMaterialTiledMode.nineSlicedMode = pc.SPRITE_RENDERMODE_TILED;
         this.default9SlicedMaterialTiledMode.update();
 
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
         this.on('beforeremove', this.onBeforeRemove, this);
     };
     SpriteComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
@@ -72,6 +73,11 @@ Object.assign(pc, function () {
     pc.Component._buildAccessors(pc.SpriteComponent.prototype, _schema);
 
     Object.assign(SpriteComponentSystem.prototype, {
+        destroy: function () {
+            this._defaultTexture.destroy();
+            this._defaultTexture = null;
+        },
+
         initializeComponentData: function (component, data, properties) {
             if (data.enabled !== undefined) {
                 component.enabled = data.enabled;
@@ -93,8 +99,11 @@ Object.assign(pc, function () {
                 } else {
                     component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
                 }
+
+                /* eslint-disable no-self-assign */
                 // force update
                 component.color = component.color;
+                /* eslint-enable no-self-assign */
             }
 
             if (data.opacity !== undefined) {

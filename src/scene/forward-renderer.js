@@ -46,6 +46,10 @@ Object.assign(pc, function () {
     var viewProjMatL = new pc.Mat4();
     var viewProjMatR = new pc.Mat4();
 
+    var worldMatX = new pc.Vec3();
+    var worldMatY = new pc.Vec3();
+    var worldMatZ = new pc.Vec3();
+
     var frustumDiagonal = new pc.Vec3();
     var tempSphere = { center: null, radius: 0 };
     var meshPos;
@@ -181,6 +185,7 @@ Object.assign(pc, function () {
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
+        shadowMap.name = 'shadowmap';
 
         if (shadowType === pc.SHADOW_PCF5 || (shadowType === pc.SHADOW_PCF3 && device.webgl2)) {
             shadowMap.compareOnRead = true;
@@ -213,6 +218,7 @@ Object.assign(pc, function () {
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
+        cubemap.name = 'shadowcube';
 
         var targets = [];
         var target;
@@ -505,8 +511,8 @@ Object.assign(pc, function () {
             if (!meshInstance.visible) return false;
 
             // custom visibility method on MeshInstance
-            if (meshInstance.isCulled) {
-                return meshInstance.isCulled(camera);
+            if (meshInstance.isVisibleFunc) {
+                return meshInstance.isVisibleFunc(camera);
             }
 
             meshPos = meshInstance.aabb.center;
@@ -986,6 +992,7 @@ Object.assign(pc, function () {
         cull: function (camera, drawCalls, visibleList) {
             // #ifdef PROFILER
             var cullTime = pc.now();
+            var numDrawCallsCulled = 0;
             // #endif
 
             var visibleLength = 0;
@@ -1021,6 +1028,9 @@ Object.assign(pc, function () {
 
                     if (drawCall.cull) {
                         visible = this._isVisible(camera, drawCall);
+                        // #ifdef PROFILER
+                        numDrawCallsCulled++;
+                        // #endif
                     }
 
                     if (visible) {
@@ -1037,6 +1047,7 @@ Object.assign(pc, function () {
 
             // #ifdef PROFILER
             this._cullTime += pc.now() - cullTime;
+            this._numDrawCallsCulled += numDrawCallsCulled;
             // #endif
 
             return visibleLength;
@@ -1360,6 +1371,8 @@ Object.assign(pc, function () {
                                         parameter.scopeId.setValue(parameter.data);
                                     }
                                 }
+                                this.setCullMode(true, false, meshInstance);
+
                                 // Uniforms II (shadow): meshInstance overrides
                                 parameters = meshInstance.parameters;
                                 for (paramName in parameters) {
@@ -1464,6 +1477,37 @@ Object.assign(pc, function () {
             meshInstance._shader[pass] = meshInstance.material.shader;
         },
 
+        setCullMode: function (cullFaces, flip, drawCall) {
+            var material = drawCall.material;
+            var mode = pc.CULLFACE_NONE;
+            if (cullFaces) {
+                var flipFaces = 1;
+
+                if (material.cull > pc.CULLFACE_NONE && material.cull < pc.CULLFACE_FRONTANDBACK) {
+                    if (drawCall.flipFaces)
+                        flipFaces *= -1;
+
+                    if (flip)
+                        flipFaces *= -1;
+
+                    var wt = drawCall.node.worldTransform;
+                    wt.getX(worldMatX);
+                    wt.getY(worldMatY);
+                    wt.getZ(worldMatZ);
+                    worldMatX.cross(worldMatX, worldMatY);
+                    if (worldMatX.dot(worldMatZ) < 0)
+                        flipFaces *= -1;
+                }
+
+                if (flipFaces < 0) {
+                    mode = material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT;
+                } else {
+                    mode = material.cull;
+                }
+            }
+            this.device.setCullMode(mode);
+        },
+
         renderForward: function (camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer) {
             var device = this.device;
             var scene = this.scene;
@@ -1547,7 +1591,7 @@ Object.assign(pc, function () {
                         // #ifdef DEBUG
                         if (!device.setShader(drawCall._shader[pass])) {
                             console.error('Error in material "' + material.name + '" with flags ' + objDefs);
-                            drawCall.material = pc.Scene.defaultMaterial;
+                            drawCall.material = scene.defaultMaterial;
                         }
                         // #else
                         device.setShader(drawCall._shader[pass]);
@@ -1583,16 +1627,6 @@ Object.assign(pc, function () {
                             }
                         }
                         device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
-                        if (camera._cullFaces) {
-                            if (camera._flipFaces) {
-                                device.setCullMode(material.cull > 0 ?
-                                    (material.cull === pc.CULLFACE_FRONT ? pc.CULLFACE_BACK : pc.CULLFACE_FRONT) : 0);
-                            } else {
-                                device.setCullMode(material.cull);
-                            }
-                        } else {
-                            device.setCullMode(pc.CULLFACE_NONE);
-                        }
                         device.setDepthWrite(material.depthWrite);
                         device.setDepthTest(material.depthTest);
                         device.setAlphaToCoverage(material.alphaToCoverage);
@@ -1604,6 +1638,8 @@ Object.assign(pc, function () {
                             device.setDepthBias(false);
                         }
                     }
+
+                    this.setCullMode(camera._cullFaces, camera._flipFaces, drawCall);
 
                     stencilFront = drawCall.stencilFront || material.stencilFront;
                     stencilBack = drawCall.stencilBack || material.stencilBack;
@@ -2061,7 +2097,6 @@ Object.assign(pc, function () {
         },
 
         updateShaders: function (drawCalls) {
-
             // #ifdef PROFILER
             var time = pc.now();
             // #endif
@@ -2091,6 +2126,31 @@ Object.assign(pc, function () {
             // #endif
         },
 
+        updateLitShaders: function (drawCalls) {
+            // #ifdef PROFILER
+            var time = pc.now();
+            // #endif
+
+            for (var i = 0; i < drawCalls.length; i++) {
+                var drawCall = drawCalls[i];
+                if (drawCall.material !== undefined) {
+                    var mat = drawCall.material;
+                    if (mat.updateShader !== pc.Material.prototype.updateShader) {
+                        if (mat.useLighting === false || (mat.emitter && !mat.emitter.lighting)) {
+                            // skip unlit standard and particles materials
+                            continue;
+                        }
+                        mat.clearVariants();
+                        mat.shader = null;
+                    }
+                }
+            }
+
+            // #ifdef PROFILER
+            this.scene._stats.updateShadersTime += pc.now() - time;
+            // #endif
+        },
+
         beginFrame: function (comp) {
             var device = this.device;
             var scene = this.scene;
@@ -2107,6 +2167,11 @@ Object.assign(pc, function () {
             if (scene.updateShaders) {
                 this.updateShaders(meshInstances);
                 scene.updateShaders = false;
+                scene.updateLitShaders = false;
+                scene._shaderVersion++;
+            } else if (scene.updateLitShaders) {
+                this.updateLitShaders(meshInstances);
+                scene.updateLitShaders = false;
                 scene._shaderVersion++;
             }
 
@@ -2164,6 +2229,16 @@ Object.assign(pc, function () {
                     layer.instances.visibleOpaque[j].done = false;
                     layer.instances.visibleTransparent[j].done = false;
                 }
+
+                // remove visible lists if cameras have been removed, remove one per frame
+                if (layer.cameras.length < layer.instances.visibleOpaque.length) {
+                    layer.instances.visibleOpaque.splice(layer.cameras.length, 1);
+                }
+
+                if (layer.cameras.length < layer.instances.visibleTransparent.length) {
+                    layer.instances.visibleTransparent.splice(layer.cameras.length, 1);
+                }
+
                 // Generate static lighting for meshes in this layer if needed
                 if (layer._needsStaticPrepare && layer._staticLightHash) {
                     // TODO: reuse with the same staticLightHash
@@ -2462,7 +2537,7 @@ Object.assign(pc, function () {
             // Update static layer data, if something's changed
             var updated = comp._update();
             if (updated & pc.COMPUPDATED_LIGHTS) {
-                this.scene.updateShaders = true;
+                this.scene.updateLitShaders = true;
             }
 
             // #ifdef PROFILER

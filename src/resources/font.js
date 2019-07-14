@@ -27,18 +27,28 @@ Object.assign(pc, function () {
 
     var FontHandler = function (loader) {
         this._loader = loader;
+        this.retryRequests = false;
     };
 
     Object.assign(FontHandler.prototype, {
         load: function (url, callback, asset) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             var self = this;
-            if (pc.path.getExtension(url) === '.json') {
+            if (pc.path.getExtension(url.original) === '.json') {
                 // load json data then load texture of same name
-                pc.http.get(url, function (err, response) {
+                pc.http.get(url.load, {
+                    retry: this.retryRequests
+                }, function (err, response) {
                     // update asset data
                     var data = upgradeDataSchema(response);
                     if (!err) {
-                        self._loadTextures(url.replace('.json', '.png'), data, function (err, textures) {
+                        self._loadTextures(url.original.replace('.json', '.png'), data, function (err, textures) {
                             if (err) return callback(err);
 
                             callback(null, {
@@ -47,7 +57,7 @@ Object.assign(pc, function () {
                             });
                         });
                     } else {
-                        callback(pc.string.format("Error loading font resource: {0} [{1}]", url, err));
+                        callback(pc.string.format("Error loading font resource: {0} [{1}]", url.original, err));
                     }
                 });
 
@@ -56,7 +66,7 @@ Object.assign(pc, function () {
                 if (asset && asset.data) {
                     asset.data = upgradeDataSchema(asset.data);
                 }
-                this._loadTextures(url, asset && asset.data, callback);
+                this._loadTextures(url.original, asset && asset.data, callback);
             }
         },
 
@@ -118,6 +128,10 @@ Object.assign(pc, function () {
             } else if (!asset.data && font.data) {
                 // font data present in font but not in asset
                 asset.data = font.data;
+            }
+
+            if (asset.data) {
+                asset.data = upgradeDataSchema(asset.data);
             }
         }
     });

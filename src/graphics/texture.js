@@ -597,7 +597,11 @@ Object.assign(pc, function () {
          * @description Forcibly free up the underlying WebGL resource owned by the texture.
          */
         destroy: function () {
-            this.device.destroyTexture(this);
+            if (this.device) {
+                this.device.destroyTexture(this);
+            }
+            this.device = null;
+            this._levels = null;
         },
 
         // Force a full resubmission of the texture to WebGL (used on a context restore event)

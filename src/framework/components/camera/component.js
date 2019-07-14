@@ -115,8 +115,7 @@ Object.assign(pc, function () {
      */
     Object.defineProperty(CameraComponent.prototype, "viewMatrix", {
         get: function () {
-            var wtm = this.data.camera._node.getWorldTransform();
-            return wtm.clone().invert();
+            return this.data.camera.getViewMatrix();
         }
     });
 
@@ -198,6 +197,11 @@ Object.assign(pc, function () {
         screenToWorld: function (screenx, screeny, cameraz, worldCoord) {
             var device = this.system.app.graphicsDevice;
             return this.data.camera.screenToWorld(screenx, screeny, cameraz, device.clientRect.width, device.clientRect.height, worldCoord);
+        },
+
+        onPrerender: function () {
+            this.data.camera._viewMatDirty = true;
+            this.data.camera._viewProjMatDirty = true;
         },
 
         /**
@@ -401,6 +405,10 @@ Object.assign(pc, function () {
             }
 
             this.system.removeCamera(this);
+        },
+
+        onRemove: function () {
+            this.off();
         },
 
         /**

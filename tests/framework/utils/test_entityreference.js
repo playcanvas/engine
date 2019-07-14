@@ -23,6 +23,7 @@ describe("pc.EntityReference", function () {
 
     afterEach(function () {
         sinon.restore();
+        app.destroy();
     });
 
     // Assertion helpers that rely on checking some private state. Usually I wouldn't do

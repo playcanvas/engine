@@ -43,7 +43,7 @@ Object.assign(pc, function () {
         this._priority = 0;
 
         this._screenSpace = false;
-        this.cull = true;
+        this.cull = this._screenSpace;
         this._screenMatrix = new pc.Mat4();
 
         system.app.graphicsDevice.on("resizecanvas", this._onResize, this);
@@ -71,7 +71,12 @@ Object.assign(pc, function () {
             }
 
             if (e.element) {
+                var prevDrawOrder = e.element.drawOrder;
                 e.element.drawOrder = i++;
+
+                if (e.element._batchGroupId >= 0 && prevDrawOrder != e.element.drawOrder) {
+                    this.system.app.batcher.markGroupDirty(e.element._batchGroupId);
+                }
             }
 
             var children = e.getChildren();
@@ -140,11 +145,7 @@ Object.assign(pc, function () {
             this.fire('remove');
 
             // remove all events used by elements
-            this.off('set:resolution');
-            this.off('set:referenceresolution');
-            this.off('set:scaleblend');
-            this.off('set:screenspace');
-            this.off('remove');
+            this.off();
         }
     });
 
@@ -161,7 +162,8 @@ Object.assign(pc, function () {
 
             this._calcProjectionMatrix();
 
-            this.entity._dirtifyLocal();
+            if (!this.entity._dirtyLocal)
+                this.entity._dirtifyLocal();
 
             this.fire("set:resolution", this._resolution);
         },
@@ -176,7 +178,8 @@ Object.assign(pc, function () {
             this._updateScale();
             this._calcProjectionMatrix();
 
-            this.entity._dirtifyLocal();
+            if (!this.entity._dirtyLocal)
+                this.entity._dirtifyLocal();
 
             this.fire("set:referenceresolution", this._resolution);
         },
@@ -197,7 +200,8 @@ Object.assign(pc, function () {
             }
             this.resolution = this._resolution; // force update either way
 
-            this.entity._dirtifyLocal();
+            if (!this.entity._dirtyLocal)
+                this.entity._dirtifyLocal();
 
             this.fire('set:screenspace', this._screenSpace);
         },
@@ -233,7 +237,8 @@ Object.assign(pc, function () {
             this._updateScale();
             this._calcProjectionMatrix();
 
-            this.entity._dirtifyLocal();
+            if (!this.entity._dirtyLocal)
+                this.entity._dirtifyLocal();
 
             this.fire("set:scaleblend", this._scaleBlend);
         },

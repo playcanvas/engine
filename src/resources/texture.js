@@ -117,6 +117,7 @@ Object.assign(pc, function () {
                 height: 4,
                 format: pc.PIXELFORMAT_R8_G8_B8
             });
+            texture.name = 'dds-legacy-empty';
             return texture;
         }
 
@@ -182,6 +183,78 @@ Object.assign(pc, function () {
         return texture;
     };
 
+    // In the case where a texture has more than 1 level of mip data specified, but not the full
+    // mip chain, we generate the missing levels here.
+    // This is to overcome an issue where iphone xr and xs ignores further updates to the mip data
+    // after invoking gl.generateMipmap on the texture (which was the previous method of ensuring
+    // the texture's full mip chain was complete).
+    // NOTE: this function only resamples RGBA8 and RGBAFloat32 data.
+    var _completePartialMipmapChain = function (texture) {
+
+        var requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
+
+        var isHtmlElement = function (object) {
+            return (object instanceof HTMLCanvasElement) ||
+                   (object instanceof HTMLImageElement) ||
+                   (object instanceof HTMLVideoElement);
+        };
+
+        if (!(texture._format === pc.PIXELFORMAT_R8_G8_B8_A8 ||
+              texture._format === pc.PIXELFORMAT_RGBA32F) ||
+              texture._volume ||
+              texture._compressed ||
+              texture._levels.length === 1 ||
+              texture._levels.length === requiredMipLevels ||
+              isHtmlElement(texture._cubemap ? texture._levels[0][0] : texture._levels[0])) {
+            return;
+        }
+
+        var downsample = function (width, height, data) {
+            var sampledWidth = Math.max(1, width >> 1);
+            var sampledHeight = Math.max(1, height >> 1);
+            var sampledData = data.subarray(0, sampledWidth * sampledHeight * 4).map(function (v) {
+                return 0;
+            });
+
+            var xs = Math.floor(width / sampledWidth);
+            var ys = Math.floor(height / sampledHeight);
+            var xsys = xs * ys;
+
+            for (var y = 0; y < sampledHeight; ++y) {
+                for (var x = 0; x < sampledWidth; ++x) {
+                    for (var e = 0; e < 4; ++e) {
+                        var sum = 0;
+                        for (var sy = 0; sy < ys; ++sy) {
+                            for (var sx = 0; sx < xs; ++sx) {
+                                sum += data[(x * xs + sx + (y * ys + sy) * width) * 4 + e];
+                            }
+                        }
+                        sampledData[(x + y * sampledWidth) * 4 + e] = sum / xsys;
+                    }
+                }
+            }
+
+            return sampledData;
+        };
+
+        // step through levels
+        for (var level = texture._levels.length; level < requiredMipLevels; ++level) {
+            var width = Math.max(1, texture._width >> (level - 1));
+            var height = Math.max(1, texture._height >> (level - 1));
+            if (texture._cubemap) {
+                var mips = [];
+                for (var face = 0; face < 6; ++face) {
+                    mips.push(downsample(width, height, texture._levels[level - 1][face]));
+                }
+                texture._levels.push(mips);
+            } else {
+                texture._levels.push(downsample(width, height, texture._levels[level - 1]));
+            }
+        }
+
+        texture._levelsUpdated = texture._cubemap ? [[true, true, true, true, true, true]] : [true];
+    };
+
     var TextureHandler = function (device, assets, loader) {
         this._device = device;
         this._assets = assets;
@@ -193,23 +266,32 @@ Object.assign(pc, function () {
             // ensure we send cookies if we load images.
             this.crossOrigin = 'anonymous';
         }
+
+        this.retryRequests = false;
     };
 
     Object.assign(TextureHandler.prototype, {
         load: function (url, callback) {
-            var self = this;
-            var image;
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
 
-            var urlWithoutParams = url.indexOf('?') >= 0 ? url.split('?')[0] : url;
+            var self = this;
+
+            var urlWithoutParams = url.original.indexOf('?') >= 0 ? url.original.split('?')[0] : url.original;
 
             var ext = pc.path.getExtension(urlWithoutParams).toLowerCase();
             if (ext === '.dds' || ext === '.ktx') {
                 var options = {
                     cache: true,
-                    responseType: "arraybuffer"
+                    responseType: "arraybuffer",
+                    retry: this.retryRequests
                 };
 
-                pc.http.get(url, options, function (err, response) {
+                pc.http.get(url.load, options, function (err, response) {
                     if (!err) {
                         callback(null, response);
                     } else {
@@ -217,42 +299,20 @@ Object.assign(pc, function () {
                     }
                 });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
-                image = new Image();
+                var crossOrigin;
                 // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
-                if (self.crossOrigin !== undefined && pc.ABSOLUTE_URL.test(url)) {
-                    image.crossOrigin = self.crossOrigin;
+                if (self.crossOrigin !== undefined && pc.ABSOLUTE_URL.test(url.original)) {
+                    crossOrigin = self.crossOrigin;
                 }
 
-                // Call success callback after opening Texture
-                image.onload = function () {
-                    callback(null, image);
-                };
-
-                // Call error callback with details.
-                image.onerror = function (event) {
-                    callback(pc.string.format("Error loading Texture from: '{0}'", url));
-                };
-
-                image.src = url;
+                self._loadImage(url.load, url.original, crossOrigin, callback);
             } else {
                 var blobStart = urlWithoutParams.indexOf("blob:");
                 if (blobStart >= 0) {
                     urlWithoutParams = urlWithoutParams.substr(blobStart);
                     url = urlWithoutParams;
 
-                    image = new Image();
-
-                    // Call success callback after opening Texture
-                    image.onload = function () {
-                        callback(null, image);
-                    };
-
-                    // Call error callback with details.
-                    image.onerror = function (event) {
-                        callback(pc.string.format("Error loading Texture from: '{0}'", url));
-                    };
-
-                    image.src = url;
+                    self._loadImage(url, url, null, callback);
                 } else {
                     // Unsupported texture extension
                     // Use timeout because asset events can be hooked up after load gets called in some
@@ -262,6 +322,48 @@ Object.assign(pc, function () {
                     }, 0);
                 }
             }
+        },
+
+        _loadImage: function (url, originalUrl, crossOrigin, callback) {
+            var image = new Image();
+            if (crossOrigin) {
+                image.crossOrigin = crossOrigin;
+            }
+
+            var retries = 0;
+            var maxRetries = 5;
+            var retryTimeout;
+            var retryRequests = this.retryRequests;
+
+            // Call success callback after opening Texture
+            image.onload = function () {
+                callback(null, image);
+            };
+
+            image.onerror = function () {
+                // Retry a few times before failing
+                if (retryTimeout) return;
+
+                if (retryRequests && ++retries <= maxRetries) {
+                    var retryDelay = Math.pow(2, retries) * 100;
+                    console.log(pc.string.format("Error loading Texture from: '{0}' - Retrying in {1}ms...", originalUrl, retryDelay));
+
+                    var idx = url.indexOf('?');
+                    var separator = idx >= 0 ? '&' : '?';
+
+                    retryTimeout = setTimeout(function () {
+                        // we need to add a cache busting argument if we are trying to re-load an image element
+                        // with the same URL
+                        image.src = url + separator + 'retry=' + Date.now();
+                        retryTimeout = null;
+                    }, retryDelay);
+                } else {
+                    // Call error callback with details.
+                    callback(pc.string.format("Error loading Texture from: '{0}'", originalUrl));
+                }
+            };
+
+            image.src = url;
         },
 
         open: function (url, data) {
@@ -288,6 +390,7 @@ Object.assign(pc, function () {
                     height: img.height,
                     format: format
                 });
+                texture.name = url;
                 texture.setSource(img);
             } else if (data instanceof ArrayBuffer) { // Container format
                 var LEGACY = true;
@@ -313,11 +416,13 @@ Object.assign(pc, function () {
                         // #ifdef DEBUG
                         console.warn("This DDS or KTX pixel format is currently unsupported. Empty texture will be created instead.");
                         // #endif
-                        return new pc.Texture(this._device, {
+                        texture = new pc.Texture(this._device, {
                             width: 4,
                             height: 4,
                             format: pc.PIXELFORMAT_R8_G8_B8
                         });
+                        texture.name = 'unsupported-empty';
+                        return texture;
                     }
 
                     texture = new pc.Texture(this._device, {
@@ -336,8 +441,11 @@ Object.assign(pc, function () {
                     texture.name = url;
                     texture.upload();
                 }
-
             }
+
+            // check if the texture has only a partial mipmap chain specified and generate the
+            // missing levels if possible.
+            _completePartialMipmapChain(texture);
 
             return texture;
         },

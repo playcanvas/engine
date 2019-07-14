@@ -60,6 +60,7 @@ Object.assign(pc, function () {
         }
 
         this._guid = null;
+        this._request = null;
 
         // used by component systems to speed up destruction
         this._destroying = false;
@@ -331,11 +332,7 @@ Object.assign(pc, function () {
         this.fire('destroy', this);
 
         // clear all events
-        if (this._callbacks)
-            this._callbacks = null;
-
-        if (this._callbackActive)
-            this._callbackActive = null;
+        this.off();
 
         // remove from entity index
         if (this._guid) {

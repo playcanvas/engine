@@ -207,6 +207,7 @@ Object.assign(pc, function () {
         this._touchendHandler = this._handleTouchEnd.bind(this);
         this._touchcancelHandler = this._touchendHandler;
         this._touchmoveHandler = this._handleTouchMove.bind(this);
+        this._sortHandler = this._sortElements.bind(this);
 
         this._elements = [];
         this._hoveredElement = null;
@@ -217,7 +218,7 @@ Object.assign(pc, function () {
         this._useMouse = !options || options.useMouse !== false;
         this._useTouch = !options || options.useTouch !== false;
 
-        if ('ontouchstart' in window) {
+        if (pc.platform.touch) {
             this._clickedEntities = {};
         }
 
@@ -248,13 +249,13 @@ Object.assign(pc, function () {
                 window.addEventListener('DOMMouseScroll', this._wheelHandler, { passive: true });
             }
 
-            if (this._useTouch && 'ontouchstart' in window) {
+            if (this._useTouch && pc.platform.touch) {
                 this._target.addEventListener('touchstart', this._touchstartHandler, { passive: true });
                 // Passive is not used for the touchend event because some components need to be
                 // able to call preventDefault(). See notes in button/component.js for more details.
                 this._target.addEventListener('touchend', this._touchendHandler, false);
                 this._target.addEventListener('touchmove', this._touchmoveHandler, false);
-                this._target.addEventListener('touchcancel', this._touchcancelHandler, { passive: true });
+                this._target.addEventListener('touchcancel', this._touchcancelHandler, false);
             }
         },
 
@@ -468,11 +469,11 @@ Object.assign(pc, function () {
         },
 
         _handleTouchMove: function (event) {
-            if (!this._enabled) return;
-
             // call preventDefault to avoid issues in Chrome Android:
             // http://wilsonpage.co.uk/touch-events-in-chrome-android/
             event.preventDefault();
+
+            if (!this._enabled) return;
 
             var newTouchedElements = this._determineTouchedElements(event);
 
@@ -621,6 +622,9 @@ Object.assign(pc, function () {
         },
 
         _sortElements: function (a, b) {
+            var layerOrder = this.app.scene.layers.sortTransparentLayers(a.layers, b.layers);
+            if (layerOrder !== 0) return layerOrder;
+
             if (a.screen && !b.screen)
                 return -1;
             if (!a.screen && b.screen)
@@ -639,7 +643,7 @@ Object.assign(pc, function () {
             var result = null;
 
             // sort elements
-            this._elements.sort(this._sortElements);
+            this._elements.sort(this._sortHandler);
 
             for (var i = 0, len = this._elements.length; i < len; i++) {
                 var element = this._elements[i];

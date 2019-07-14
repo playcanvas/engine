@@ -64,58 +64,54 @@ Object.assign(pc, function () {
         if (!device.textureFloatRenderable)
             return false;
 
-        var gl = device.gl;
         var chunks = pc.shaderChunks;
         var test1 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTestPS, "ptest1");
         var test2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.precisionTest2PS, "ptest2");
-        var size = 1;
 
-        var tex = new pc.Texture(device, {
+        var textureOptions = {
             format: pc.PIXELFORMAT_RGBA32F,
-            width: size,
-            height: size,
+            width: 1,
+            height: 1,
             mipmaps: false,
             minFilter: pc.FILTER_NEAREST,
             magFilter: pc.FILTER_NEAREST
-        });
-        var targ = new pc.RenderTarget(device, tex, {
+        };
+        var tex1 = new pc.Texture(device, textureOptions);
+        tex1.name = 'testFHP';
+        var targ1 = new pc.RenderTarget(device, tex1, {
             depth: false
         });
-        pc.drawQuadWithShader(device, targ, test1);
+        pc.drawQuadWithShader(device, targ1, test1);
 
-        var tex2 = new pc.Texture(device, {
-            format: pc.PIXELFORMAT_R8_G8_B8_A8,
-            width: size,
-            height: size,
-            mipmaps: false,
-            minFilter: pc.FILTER_NEAREST,
-            magFilter: pc.FILTER_NEAREST
-        });
+        textureOptions.format = pc.PIXELFORMAT_R8_G8_B8_A8;
+        var tex2 = new pc.Texture(device, textureOptions);
+        tex2.name = 'testFHP';
         var targ2 = new pc.RenderTarget(device, tex2, {
             depth: false
         });
-        device.constantTexSource.setValue(tex);
+        device.constantTexSource.setValue(tex1);
         pc.drawQuadWithShader(device, targ2, test2);
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, targ2._glFrameBuffer);
+        var prevFramebuffer = device.activeFramebuffer;
+        device.setFramebuffer(targ2._glFrameBuffer);
 
-        var pixels = new Uint8Array(size * size * 4);
-        gl.readPixels(0, 0, size, size, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        var pixels = new Uint8Array(4);
+        device.readPixels(0, 0, 1, 1, pixels);
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, device.activeFramebuffer);
+        device.setFramebuffer(prevFramebuffer);
 
-        var x = pixels[0] / 255.0;
-        var y = pixels[1] / 255.0;
-        var z = pixels[2] / 255.0;
-        var w = pixels[3] / 255.0;
-        var f = x / (256.0 * 256.0 * 256.0) + y / (256.0 * 256.0) + z / 256.0 + w;
+        var x = pixels[0] / 255;
+        var y = pixels[1] / 255;
+        var z = pixels[2] / 255;
+        var w = pixels[3] / 255;
+        var f = x / (256 * 256 * 256) + y / (256 * 256) + z / 256 + w;
 
-        tex.destroy();
-        targ.destroy();
+        tex1.destroy();
+        targ1.destroy();
         tex2.destroy();
         targ2.destroy();
 
-        return f === 0.0;
+        return f === 0;
     }
 
     /**
@@ -195,6 +191,10 @@ Object.assign(pc, function () {
 
         this.updateClientRect();
 
+        // Shader code to WebGL shader cache
+        this.vertexShaderCache = {};
+        this.fragmentShaderCache = {};
+
         // Array of WebGL objects that need to be re-initialized after a context restore event
         this.shaders = [];
         this.buffers = [];
@@ -204,23 +204,26 @@ Object.assign(pc, function () {
         // Add handlers for when the WebGL context is lost or restored
         this.contextLost = false;
 
-        canvas.addEventListener("webglcontextlost", function (event) {
+        this._contextLostHandler = function (event) {
             event.preventDefault();
             this.contextLost = true;
             // #ifdef DEBUG
             console.log('pc.GraphicsDevice: WebGL context lost.');
             // #endif
             this.fire('devicelost');
-        }.bind(this), false);
+        }.bind(this);
 
-        canvas.addEventListener("webglcontextrestored", function () {
+        this._contextRestoredHandler = function () {
             // #ifdef DEBUG
             console.log('pc.GraphicsDevice: WebGL context restored.');
             // #endif
             this.initializeContext();
             this.contextLost = false;
             this.fire('devicerestored');
-        }.bind(this), false);
+        }.bind(this);
+
+        canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
+        canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
 
         // Retrieve the WebGL context
         var preferWebGl2 = (options && options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
@@ -358,6 +361,30 @@ Object.assign(pc, function () {
             gl.UNSIGNED_INT,
             gl.FLOAT
         ];
+
+        this.pcUniformType = {};
+        this.pcUniformType[gl.BOOL]         = pc.UNIFORMTYPE_BOOL;
+        this.pcUniformType[gl.INT]          = pc.UNIFORMTYPE_INT;
+        this.pcUniformType[gl.FLOAT]        = pc.UNIFORMTYPE_FLOAT;
+        this.pcUniformType[gl.FLOAT_VEC2]   = pc.UNIFORMTYPE_VEC2;
+        this.pcUniformType[gl.FLOAT_VEC3]   = pc.UNIFORMTYPE_VEC3;
+        this.pcUniformType[gl.FLOAT_VEC4]   = pc.UNIFORMTYPE_VEC4;
+        this.pcUniformType[gl.INT_VEC2]     = pc.UNIFORMTYPE_IVEC2;
+        this.pcUniformType[gl.INT_VEC3]     = pc.UNIFORMTYPE_IVEC3;
+        this.pcUniformType[gl.INT_VEC4]     = pc.UNIFORMTYPE_IVEC4;
+        this.pcUniformType[gl.BOOL_VEC2]    = pc.UNIFORMTYPE_BVEC2;
+        this.pcUniformType[gl.BOOL_VEC3]    = pc.UNIFORMTYPE_BVEC3;
+        this.pcUniformType[gl.BOOL_VEC4]    = pc.UNIFORMTYPE_BVEC4;
+        this.pcUniformType[gl.FLOAT_MAT2]   = pc.UNIFORMTYPE_MAT2;
+        this.pcUniformType[gl.FLOAT_MAT3]   = pc.UNIFORMTYPE_MAT3;
+        this.pcUniformType[gl.FLOAT_MAT4]   = pc.UNIFORMTYPE_MAT4;
+        this.pcUniformType[gl.SAMPLER_2D]   = pc.UNIFORMTYPE_TEXTURE2D;
+        this.pcUniformType[gl.SAMPLER_CUBE] = pc.UNIFORMTYPE_TEXTURECUBE;
+        if (this.webgl2) {
+            this.pcUniformType[gl.SAMPLER_2D_SHADOW]   = pc.UNIFORMTYPE_TEXTURE2D_SHADOW;
+            this.pcUniformType[gl.SAMPLER_CUBE_SHADOW] = pc.UNIFORMTYPE_TEXTURECUBE_SHADOW;
+            this.pcUniformType[gl.SAMPLER_3D]          = pc.UNIFORMTYPE_TEXTURE3D;
+        }
 
         this.targetToSlot = {};
         this.targetToSlot[gl.TEXTURE_2D] = 0;
@@ -502,10 +529,6 @@ Object.assign(pc, function () {
             this.boneLimit = 34;
         }
 
-        if (this.unmaskedRenderer === 'Apple A8 GPU') {
-            this.forceCpuParticles = true;
-        }
-
         // Profiler stats
         this._drawCallsPerFrame = 0;
         this._shaderSwitchesPerFrame = 0;
@@ -559,7 +582,9 @@ Object.assign(pc, function () {
             this.textureHalfFloatRenderable = false;
         }
 
-        this.textureFloatHighPrecision = testTextureFloatHighPrecision(this);
+        this._textureFloatHighPrecision = undefined;
+
+        this.initializeGrabPassTexture();
     };
 
     Object.assign(GraphicsDevice.prototype, {
@@ -809,7 +834,7 @@ Object.assign(pc, function () {
             // Recompile all shaders (they'll be linked when they're next actually used)
             var i, len;
             for (i = 0, len = this.shaders.length; i < len; i++) {
-                this.shaders[i].compile();
+                this.compileAndLinkShader(this.shaders[i]);
             }
             this.shader = null;
 
@@ -851,6 +876,29 @@ Object.assign(pc, function () {
             this.activeFramebuffer = null;
             this.feedback = null;
             this.transformFeedbackBuffer = null;
+        },
+
+        initializeGrabPassTexture: function () {
+            if (this.grabPassTexture) return;
+
+            var grabPassTexture = new pc.Texture(this, {
+                format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                autoMipmap: false
+            });
+
+            grabPassTexture.minFilter = pc.FILTER_LINEAR;
+            grabPassTexture.magFilter = pc.FILTER_LINEAR;
+            grabPassTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            grabPassTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+
+            grabPassTexture.name = 'texture_grabPass';
+            grabPassTexture.setSource(this.canvas);
+
+            var grabPassTextureId = this.scope.resolve(grabPassTexture.name);
+            grabPassTextureId.setValue(grabPassTexture);
+
+            this.grabPassTextureId = grabPassTextureId;
+            this.grabPassTexture = grabPassTexture;
         },
 
         updateClientRect: function () {
@@ -1473,6 +1521,8 @@ Object.assign(pc, function () {
             var mipObject;
             var resMult;
 
+            var requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
+
             while (texture._levels[mipLevel] || mipLevel === 0) {
                 // Upload all existing mip levels. Initialize 0 mip anyway.
 
@@ -1485,9 +1535,10 @@ Object.assign(pc, function () {
 
                 mipObject = texture._levels[mipLevel];
 
-                if (mipLevel == 1 && !texture._compressed) {
+                if (mipLevel == 1 && !texture._compressed && texture._levels.length < requiredMipLevels) {
                     // We have more than one mip levels we want to assign, but we need all mips to make
                     // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
+                    // (this implies the call to _completePartialMipLevels above was unsuccessful)
                     gl.generateMipmap(texture._glTarget);
                     texture._mipmapsUploaded = true;
                 }
@@ -1801,8 +1852,11 @@ Object.assign(pc, function () {
 
                 if (texture._needsUpload || texture._needsMipmapsUpload) {
                     this.uploadTexture(texture);
-                    texture._needsUpload = false;
-                    texture._needsMipmapsUpload = false;
+
+                    if (texture !== this.grabPassTexture) {
+                        texture._needsUpload = false;
+                        texture._needsMipmapsUpload = false;
+                    }
                 }
             } else {
                 // Ensure the texture is currently bound to the correct target on the specified texture unit.
@@ -2784,6 +2838,201 @@ Object.assign(pc, function () {
             }
         },
 
+        compileShaderSource: function (src, isVertexShader) {
+            var gl = this.gl;
+
+            var glShader = isVertexShader ? this.vertexShaderCache[src] : this.fragmentShaderCache[src];
+
+            if (!glShader) {
+                // #ifdef PROFILER
+                var startTime = pc.now();
+                this.fire('shader:compile:start', {
+                    timestamp: startTime,
+                    target: this
+                });
+                // #endif
+
+                glShader = gl.createShader(isVertexShader ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
+
+                gl.shaderSource(glShader, src);
+                gl.compileShader(glShader);
+
+                // #ifdef PROFILER
+                var endTime = pc.now();
+                this.fire('shader:compile:end', {
+                    timestamp: endTime,
+                    target: this
+                });
+                this._shaderStats.compileTime += endTime - startTime;
+                // #endif
+
+                if (isVertexShader) {
+                    this.vertexShaderCache[src] = glShader;
+                    // #ifdef PROFILER
+                    this._shaderStats.vsCompiled++;
+                    // #endif
+                } else {
+                    this.fragmentShaderCache[src] = glShader;
+                    // #ifdef PROFILER
+                    this._shaderStats.fsCompiled++;
+                    // #endif
+                }
+            }
+
+            return glShader;
+        },
+
+        compileAndLinkShader: function (shader) {
+            var gl = this.gl;
+
+            var definition = shader.definition;
+            var glVertexShader = this.compileShaderSource(definition.vshader, true);
+            var glFragmentShader = this.compileShaderSource(definition.fshader, false);
+
+            var glProgram = gl.createProgram();
+
+            gl.attachShader(glProgram, glVertexShader);
+            gl.attachShader(glProgram, glFragmentShader);
+
+            if (this.webgl2 && definition.useTransformFeedback) {
+                // Collect all "out_" attributes and use them for output
+                var attrs = definition.attributes;
+                var outNames = [];
+                for (var attr in attrs) {
+                    if (attrs.hasOwnProperty(attr)) {
+                        outNames.push("out_" + attr);
+                    }
+                }
+                gl.transformFeedbackVaryings(glProgram, outNames, gl.INTERLEAVED_ATTRIBS);
+            }
+
+            gl.linkProgram(glProgram);
+
+            // Cache the WebGL objects on the shader
+            shader._glVertexShader = glVertexShader;
+            shader._glFragmentShader = glFragmentShader;
+            shader._glProgram = glProgram;
+
+            // #ifdef PROFILER
+            this._shaderStats.linked++;
+            if (definition.tag === pc.SHADERTAG_MATERIAL) {
+                this._shaderStats.materialShaders++;
+            }
+            // #endif
+        },
+
+        createShader: function (shader) {
+            this.compileAndLinkShader(shader);
+
+            this.shaders.push(shader);
+        },
+
+        destroyShader: function (shader) {
+            var idx = this.shaders.indexOf(shader);
+            if (idx !== -1) {
+                this.shaders.splice(idx, 1);
+            }
+
+            if (shader._glProgram) {
+                this.gl.deleteProgram(shader._glProgram);
+                shader._glProgram = null;
+                this.removeShaderFromCache(shader);
+            }
+        },
+
+        _addLineNumbers: function (src) {
+            var lines = src.split("\n");
+
+            // Chrome reports shader errors on lines indexed from 1
+            for (var i = 0, len = lines.length; i < len; i++) {
+                lines[i] = (i + 1) + ":\t" + lines[i];
+            }
+
+            return lines.join( "\n" );
+        },
+
+        postLink: function (shader) {
+            var gl = this.gl;
+
+            var glVertexShader = shader._glVertexShader;
+            var glFragmentShader = shader._glFragmentShader;
+            var glProgram = shader._glProgram;
+
+            var definition = shader.definition;
+
+            // #ifdef PROFILER
+            var startTime = pc.now();
+            this.fire('shader:link:start', {
+                timestamp: startTime,
+                target: this
+            });
+            // #endif
+
+            // Check for errors
+            if (!gl.getShaderParameter(glVertexShader, gl.COMPILE_STATUS)) {
+                console.error("Failed to compile vertex shader:\n\n" + this._addLineNumbers(definition.vshader) + "\n\n" + gl.getShaderInfoLog(glVertexShader));
+                return false;
+            }
+            if (!gl.getShaderParameter(glFragmentShader, gl.COMPILE_STATUS)) {
+                console.error("Failed to compile fragment shader:\n\n" + this._addLineNumbers(definition.fshader) + "\n\n" + gl.getShaderInfoLog(glFragmentShader));
+                return false;
+            }
+            if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
+                console.error("Failed to link shader program. Error: " + gl.getProgramInfoLog(glProgram));
+                return false;
+            }
+
+            var i, info, location, shaderInput;
+
+            // Query the program for each vertex buffer input (GLSL 'attribute')
+            i = 0;
+            var numAttributes = gl.getProgramParameter(glProgram, gl.ACTIVE_ATTRIBUTES);
+            while (i < numAttributes) {
+                info = gl.getActiveAttrib(glProgram, i++);
+                location = gl.getAttribLocation(glProgram, info.name);
+
+                // Check attributes are correctly linked up
+                if (definition.attributes[info.name] === undefined) {
+                    console.error('Vertex shader attribute "' + info.name + '" is not mapped to a semantic in shader definition.');
+                }
+
+                shaderInput = new pc.ShaderInput(this, definition.attributes[info.name], this.pcUniformType[info.type], location);
+
+                shader.attributes.push(shaderInput);
+            }
+
+            // Query the program for each shader state (GLSL 'uniform')
+            i = 0;
+            var numUniforms = gl.getProgramParameter(glProgram, gl.ACTIVE_UNIFORMS);
+            while (i < numUniforms) {
+                info = gl.getActiveUniform(glProgram, i++);
+                location = gl.getUniformLocation(glProgram, info.name);
+
+                shaderInput = new pc.ShaderInput(this, info.name, this.pcUniformType[info.type], location);
+
+                if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
+                    (this.webgl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
+                ) {
+                    shader.samplers.push(shaderInput);
+                } else {
+                    shader.uniforms.push(shaderInput);
+                }
+            }
+
+            shader.ready = true;
+
+            // #ifdef PROFILER
+            var endTime = pc.now();
+            this.fire('shader:link:end', {
+                timestamp: endTime,
+                target: this
+            });
+            this._shaderStats.compileTime += endTime - startTime;
+            // #endif
+
+            return true;
+        },
+
         /**
          * @function
          * @name pc.GraphicsDevice#setShader
@@ -2793,17 +3042,20 @@ Object.assign(pc, function () {
          */
         setShader: function (shader) {
             if (shader !== this.shader) {
-                this.shader = shader;
-
                 if (!shader.ready) {
-                    if (!shader.link()) {
+                    if (!this.postLink(shader)) {
                         return false;
                     }
                 }
 
+                this.shader = shader;
+
                 // Set the active shader
+                this.gl.useProgram(shader._glProgram);
+
+                // #ifdef PROFILER
                 this._shaderSwitchesPerFrame++;
-                this.gl.useProgram(shader.program);
+                // #endif
 
                 this.attributesInvalidated = true;
             }
@@ -2884,6 +3136,17 @@ Object.assign(pc, function () {
          * @description Frees memory from all shaders ever allocated with this device
          */
         clearShaderCache: function () {
+            var gl = this.gl;
+            var shaderSrc;
+            for (shaderSrc in this.fragmentShaderCache) {
+                gl.deleteShader(this.fragmentShaderCache[shaderSrc]);
+                delete this.fragmentShaderCache[shaderSrc];
+            }
+            for (shaderSrc in this.vertexShaderCache) {
+                gl.deleteShader(this.vertexShaderCache[shaderSrc]);
+                delete this.vertexShaderCache[shaderSrc];
+            }
+
             this.programLib.clearCache();
         },
 
@@ -2892,11 +3155,21 @@ Object.assign(pc, function () {
         },
 
         destroy: function () {
+            var gl = this.gl;
+
+            this.grabPassTexture.destroy();
+
             if (this.webgl2 && this.feedback) {
-                this.gl.deleteTransformFeedback(this.feedback);
+                gl.deleteTransformFeedback(this.feedback);
             }
 
             this.clearShaderCache();
+
+            this.canvas.removeEventListener('webglcontextlost', this._contextLostHandler, false);
+            this.canvas.removeEventListener('webglcontextrestored', this._contextRestoredHandler, false);
+
+            this._contextLostHandler = null;
+            this._contextRestoredHandler = null;
 
             this.canvas = null;
             this.gl = null;
@@ -2957,6 +3230,15 @@ Object.assign(pc, function () {
         set: function (ratio) {
             this._maxPixelRatio = ratio;
             this.resizeCanvas(this._width, this._height);
+        }
+    });
+
+    Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
+        get: function () {
+            if (this._textureFloatHighPrecision === undefined) {
+                this._textureFloatHighPrecision = testTextureFloatHighPrecision(this);
+            }
+            return this._textureFloatHighPrecision;
         }
     });
 

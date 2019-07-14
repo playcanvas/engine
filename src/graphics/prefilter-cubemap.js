@@ -41,9 +41,9 @@ Object.assign(pc, (function () {
         var format = sourceCubemap.format;
 
         var cmapsList = [[], options.filteredFixed, options.filteredRgbm, options.filteredFixedRgbm];
-        var gloss = method === 0 ? [0.9, 0.85, 0.7, 0.4, 0.25] : [512, 128, 32, 8, 2]; // TODO: calc more correct values depending on mip
-        var mipSize = [64, 32, 16, 8, 4]; // TODO: make non-static?
-        var numMips = 5;
+        var gloss = method === 0 ? [0.9, 0.85, 0.7, 0.4, 0.25, 0.15, 0.1] : [512, 128, 32, 8, 2, 1, 1]; // TODO: calc more correct values depending on mip
+        var mipSize = [64, 32, 16, 8, 4, 2, 1]; // TODO: make non-static?
+        var numMips = 7;                        // generate all mips down to 1x1
         var targ;
         var i, face, pass;
 
@@ -64,6 +64,7 @@ Object.assign(pc, (function () {
                 height: size,
                 mipmaps: false
             });
+            nextCubemap.name = 'prefiltered-cube';
             for (face = 0; face < 6; face++) {
                 targ = new pc.RenderTarget(device, nextCubemap, {
                     face: face,
@@ -96,6 +97,7 @@ Object.assign(pc, (function () {
                     height: size,
                     mipmaps: false
                 });
+                nextCubemap.name = 'prefiltered-cube';
                 for (face = 0; face < 6; face++) {
                     targ = new pc.RenderTarget(device, nextCubemap, {
                         face: face,
@@ -128,6 +130,7 @@ Object.assign(pc, (function () {
                 height: size,
                 mipmaps: false
             });
+            nextCubemap.name = 'prefiltered-cube';
             for (face = 0; face < 6; face++) {
                 targ = new pc.RenderTarget(device, nextCubemap, {
                     face: face,
@@ -161,6 +164,7 @@ Object.assign(pc, (function () {
                         height: mipSize[i],
                         mipmaps: false
                     });
+                    cmapsList[pass][i].name = 'prefiltered-cube';
                 }
             }
         }
@@ -203,15 +207,7 @@ Object.assign(pc, (function () {
 
         var mips;
         if (cpuSync && options.singleFilteredFixed) {
-            mips = [
-                sourceCubemap,
-                options.filteredFixed[0],
-                options.filteredFixed[1],
-                options.filteredFixed[2],
-                options.filteredFixed[3],
-                options.filteredFixed[4],
-                options.filteredFixed[5]
-            ];
+            mips = [sourceCubemap].concat(options.filteredFixed);
             cubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: rgbmSource,
@@ -222,7 +218,8 @@ Object.assign(pc, (function () {
                 addressU: pc.ADDRESS_CLAMP_TO_EDGE,
                 addressV: pc.ADDRESS_CLAMP_TO_EDGE
             });
-            for (i = 0; i < 6; i++)
+            cubemap.name = 'prefiltered-cube';
+            for (i = 0; i < mips.length; i++)
                 cubemap._levels[i] = mips[i]._levels[0];
 
             cubemap.upload();
@@ -231,15 +228,7 @@ Object.assign(pc, (function () {
         }
 
         if (cpuSync && options.singleFilteredFixedRgbm && options.filteredFixedRgbm) {
-            mips = [
-                sourceCubemapRgbm,
-                options.filteredFixedRgbm[0],
-                options.filteredFixedRgbm[1],
-                options.filteredFixedRgbm[2],
-                options.filteredFixedRgbm[3],
-                options.filteredFixedRgbm[4],
-                options.filteredFixedRgbm[5]
-            ];
+            mips = [sourceCubemapRgbm].concat(options.filteredFixedRgbm);
             cubemap = new pc.Texture(device, {
                 cubemap: true,
                 rgbm: true,
@@ -250,7 +239,8 @@ Object.assign(pc, (function () {
                 addressU: pc.ADDRESS_CLAMP_TO_EDGE,
                 addressV: pc.ADDRESS_CLAMP_TO_EDGE
             });
-            for (i = 0; i < 6; i++) {
+            cubemap.name = 'prefiltered-cube';
+            for (i = 0; i < mips.length; i++) {
                 cubemap._levels[i] = mips[i]._levels[0];
             }
             cubemap.upload();
@@ -325,6 +315,7 @@ Object.assign(pc, (function () {
                         height: cubeSize,
                         mipmaps: false
                     });
+                    tex.name = 'prefiltered-cube';
                     tex._levels[0] = img;
                     tex.upload();
 
@@ -336,6 +327,7 @@ Object.assign(pc, (function () {
                         height: cubeSize,
                         mipmaps: false
                     });
+                    tex2.name = 'prefiltered-cube';
 
                     var targ = new pc.RenderTarget(device, tex2, {
                         depth: false

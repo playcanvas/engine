@@ -25,14 +25,14 @@ Object.assign(pc, function () {
     STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
 
     /**
-     * @private
      * @component
+     * @constructor
      * @name pc.ButtonComponent
-     * @description Create a new ButtonComponent
+     * @extends pc.Component
      * @classdesc A ButtonComponent enables a group of entities to behave like a button, with different visual states for hover and press interactions.
+     * @description Create a new ButtonComponent.
      * @param {pc.ButtonComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.Component
      * @property {Boolean} active If set to false, the button will be visible but will not respond to hover or touch interactions.
      * @property {pc.Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.
      * @property {pc.Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
@@ -86,8 +86,6 @@ Object.assign(pc, function () {
             this[onOrOff]('set_pressedSpriteFrame', this._onSetTransitionValue, this);
             this[onOrOff]('set_inactiveSpriteAsset', this._onSetTransitionValue, this);
             this[onOrOff]('set_inactiveSpriteFrame', this._onSetTransitionValue, this);
-
-            pc.ComponentSystem[onOrOff]('update', this._onUpdate, this);
 
             system.app.systems.element[onOrOff]('add', this._onElementComponentAdd, this);
             system.app.systems.element[onOrOff]('beforeremove', this._onElementComponentRemove, this);
@@ -407,7 +405,7 @@ Object.assign(pc, function () {
                     startTime: pc.now(),
                     from: new pc.Color(color.r, color.g, color.b, opacity),
                     to: tintColor.clone(),
-                    lerpVec: new pc.Vec4()
+                    lerpColor: new pc.Color()
                 };
             }
         },
@@ -418,9 +416,9 @@ Object.assign(pc, function () {
             elapsedProportion = pc.math.clamp(elapsedProportion, 0, 1);
 
             if (Math.abs(elapsedProportion - 1) > 1e-5) {
-                var lerpVec = this._tweenInfo.lerpVec;
-                lerpVec.lerp(this._tweenInfo.from, this._tweenInfo.to, elapsedProportion);
-                this._applyTintImmediately(new pc.Color(lerpVec.x, lerpVec.y, lerpVec.z, lerpVec.w));
+                var lerpColor = this._tweenInfo.lerpColor;
+                lerpColor.lerp(this._tweenInfo.from, this._tweenInfo.to, elapsedProportion);
+                this._applyTintImmediately(new pc.Color(lerpColor.r, lerpColor.g, lerpColor.b, lerpColor.a));
             } else {
                 this._applyTintImmediately(this._tweenInfo.to);
                 this._cancelTween();
@@ -431,7 +429,7 @@ Object.assign(pc, function () {
             delete this._tweenInfo;
         },
 
-        _onUpdate: function () {
+        onUpdate: function () {
             if (this._tweenInfo) {
                 this._updateTintTween();
             }
@@ -464,7 +462,6 @@ Object.assign(pc, function () {
 }());
 
 /**
- * @private
  * @event
  * @name pc.ButtonComponent#mousedown
  * @description Fired when the mouse is pressed while the cursor is on the component.
@@ -472,7 +469,6 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.ButtonComponent#mouseup
  * @description Fired when the mouse is released while the cursor is on the component.
@@ -480,7 +476,6 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.ButtonComponent#mouseenter
  * @description Fired when the mouse cursor enters the component.
@@ -488,7 +483,6 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.ButtonComponent#mouseleave
  * @description Fired when the mouse cursor leaves the component.
@@ -496,7 +490,6 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.ButtonComponent#click
  * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component.
@@ -504,7 +497,6 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.ButtonComponent#touchstart
  * @description Fired when a touch starts on the component.
@@ -512,7 +504,6 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.ButtonComponent#touchend
  * @description Fired when a touch ends on the component.
@@ -520,7 +511,6 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.ButtonComponent#touchcancel
  * @description Fired when a touch is cancelled on the component.
@@ -528,7 +518,6 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.ButtonComponent#touchleave
  * @description Fired when a touch leaves the component.
@@ -536,28 +525,24 @@ Object.assign(pc, function () {
  */
 
 /**
- * @private
  * @event
  * @name pc.ButtonComponent#hoverstart
  * @description Fired when the button changes state to be hovered
  */
 
 /**
- * @private
  * @event
  * @name pc.ButtonComponent#hoverend
  * @description Fired when the button changes state to be not hovered
  */
 
 /**
- * @private
  * @event
  * @name pc.ButtonComponent#pressedstart
  * @description Fired when the button changes state to be pressed
  */
 
 /**
- * @private
  * @event
  * @name pc.ButtonComponent#pressedend
  * @description Fired when the button changes state to be not pressed

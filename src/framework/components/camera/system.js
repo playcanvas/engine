@@ -54,8 +54,9 @@ Object.assign(pc, function () {
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
+        this.app.on("prerender", this.onPrerender, this);
 
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
     CameraComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
     CameraComponentSystem.prototype.constructor = CameraComponentSystem;
@@ -149,6 +150,7 @@ Object.assign(pc, function () {
 
         onBeforeRemove: function (entity, component) {
             this.removeCamera(component);
+            component.onRemove();
         },
 
         onRemove: function (entity, data) {
@@ -177,6 +179,12 @@ Object.assign(pc, function () {
                         }
                     }
                 }
+            }
+        },
+
+        onPrerender: function () {
+            for (var i = 0, len = this.cameras.length; i < len; i++) {
+                this.cameras[i].onPrerender();
             }
         },
 

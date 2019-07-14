@@ -12,11 +12,12 @@ Object.assign(pc, function () {
      * @property {String} type The type of the model, which can be one of the following values:
      * <ul>
      *     <li>asset: The component will render a model asset</li>
-     *     <li>box: The component will render a box</li>
-     *     <li>capsule: The component will render a capsule</li>
-     *     <li>cone: The component will render a cone</li>
-     *     <li>cylinder: The component will render a cylinder</li>
-     *     <li>sphere: The component will render a sphere</li>
+     *     <li>box: The component will render a box (1 unit in each dimension)</li>
+     *     <li>capsule: The component will render a capsule (radius 0.5, height 2)</li>
+     *     <li>cone: The component will render a cone (radius 0.5, height 1)</li>
+     *     <li>cylinder: The component will render a cylinder (radius 0.5, height 1)</li>
+     *     <li>plane: The component will render a plane (1 unit in each dimension)</li>
+     *     <li>sphere: The component will render a sphere (radius 0.5)</li>
      * </ul>
      * @property {pc.Asset} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
@@ -50,7 +51,7 @@ Object.assign(pc, function () {
         this._receiveShadows = true;
 
         this._materialAsset = null;
-        this._material = pc.ModelHandler.DEFAULT_MATERIAL;
+        this._material = system.defaultMaterial;
 
         this._castShadowsLightmap = true;
         this._lightmapped = false;
@@ -106,8 +107,13 @@ Object.assign(pc, function () {
         },
 
         onRemove: function () {
-            this.asset = null;
+            if (this.type === 'asset') {
+                this.asset = null;
+            } else {
+                this.model = null;
+            }
             this.materialAsset = null;
+            this._unsetMaterialEvents();
         },
 
         onLayersChanged: function (oldComp, newComp) {
@@ -201,14 +207,14 @@ Object.assign(pc, function () {
                     meshInstance.material = materialAsset.resource;
 
                     this._setMaterialEvent(index, 'remove', materialAsset.id, function () {
-                        meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                        meshInstance.material = this.system.defaultMaterial;
                     });
                 } else {
                     this._setMaterialEvent(index, 'load', materialAsset.id, function (asset) {
                         meshInstance.material = asset.resource;
 
                         this._setMaterialEvent(index, 'remove', materialAsset.id, function () {
-                            meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                            meshInstance.material = this.system.defaultMaterial;
                         });
                     });
 
@@ -263,6 +269,10 @@ Object.assign(pc, function () {
                     }
                 }
             }
+
+            if (this._batchGroupId >= 0) {
+                app.batcher.insert(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
+            }
         },
 
         onDisable: function () {
@@ -275,8 +285,8 @@ Object.assign(pc, function () {
                 scene.layers.off("remove", this.onLayerRemoved, this);
             }
 
-            if (this.batchGroupId >= 0) {
-                app.batcher.markGroupDirty(this.batchGroupId);
+            if (this._batchGroupId >= 0) {
+                app.batcher.remove(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
             }
 
             if (this._model) {
@@ -370,7 +380,7 @@ Object.assign(pc, function () {
         },
 
         _onMaterialAssetUnload: function (asset) {
-            this.material = pc.ModelHandler.DEFAULT_MATERIAL;
+            this.material = this.system.defaultMaterial;
         },
 
         _onMaterialAssetRemove: function (asset) {
@@ -808,7 +818,7 @@ Object.assign(pc, function () {
             // set the layer list
             this._layers.length = 0;
             for (i = 0; i < value.length; i++) {
-                this._layers[0] = value[0];
+                this._layers[i] = value[i];
             }
 
             // don't add into layers until we're enabled
@@ -831,16 +841,20 @@ Object.assign(pc, function () {
         set: function (value) {
             if (this._batchGroupId === value) return;
 
-            this._batchGroupId = value;
-
             var batcher = this.system.app.batcher;
-            if (this._batchGroupId >= 0) batcher.markGroupDirty(this._batchGroupId);
-            if (value >= 0) batcher.markGroupDirty(value);
+            if (this.entity.enabled && this._batchGroupId >= 0) {
+                batcher.remove(pc.BatchGroup.MODEL, this.batchGroupId, this.entity);
+            }
+            if (this.entity.enabled && value >= 0) {
+                batcher.insert(pc.BatchGroup.MODEL, value, this.entity);
+            }
 
             if (value < 0 && this._batchGroupId >= 0 && this.enabled && this.entity.enabled) {
                 // re-add model to scene, in case it was removed by batching
                 this.addModelToLayers();
             }
+
+            this._batchGroupId = value;
         }
     });
 
@@ -859,7 +873,7 @@ Object.assign(pc, function () {
 
             if (_id !== this._materialAsset) {
                 if (this._materialAsset) {
-                    assets.off('add:' + this._materialAsset, this._onMaterialAdded, this);
+                    assets.off('add:' + this._materialAsset, this._onMaterialAssetAdd, this);
                     var _prev = assets.get(this._materialAsset);
                     if (_prev) {
                         this._unbindMaterialAsset(_prev);
@@ -871,13 +885,13 @@ Object.assign(pc, function () {
                 if (this._materialAsset) {
                     var asset = assets.get(this._materialAsset);
                     if (!asset) {
-                        this.material = pc.ModelHandler.DEFAULT_MATERIAL;
-                        assets.on('add:' + this._materialAsset, this._onMaterialAdded, this);
+                        this.material = this.system.defaultMaterial;
+                        assets.on('add:' + this._materialAsset, this._onMaterialAssetAdd, this);
                     } else {
                         this._bindMaterialAsset(asset);
                     }
                 } else {
-                    this.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                    this.material = this.system.defaultMaterial;
                 }
             }
         }
@@ -934,7 +948,7 @@ Object.assign(pc, function () {
                         asset = this.system.app.assets.get(value[i]);
                         this._loadAndSetMeshInstanceMaterial(asset, meshInstances[i], i);
                     } else {
-                        meshInstances[i].material = pc.ModelHandler.DEFAULT_MATERIAL;
+                        meshInstances[i].material = this.system.defaultMaterial;
                     }
                 } else if (assetMapping) {
                     if (assetMapping[i] && (assetMapping[i].material || assetMapping[i].path)) {
@@ -948,7 +962,7 @@ Object.assign(pc, function () {
                         }
                         this._loadAndSetMeshInstanceMaterial(asset, meshInstances[i], i);
                     } else {
-                        meshInstances[i].material = pc.ModelHandler.DEFAULT_MATERIAL;
+                        meshInstances[i].material = this.system.defaultMaterial;
                     }
                 }
             }

@@ -10,7 +10,7 @@ Object.assign(pc, function () {
      * @extends pc.Component
      * @property {Number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation
      * @property {Boolean} loop If true the animation will restart from the beginning when it reaches the end
-     * @property {Boolean} activate If true the first animation asset will begin playing when the Pack is loaded
+     * @property {Boolean} activate If true the first animation asset will begin playing when the scene is loaded
      * @property {pc.Asset[]} assets The array of animation assets - can also be an array of asset ids.
      * @property {Number} currentTime Get or Set the current time position (in seconds) of the animation
      * @property {Number} duration Get the duration in seconds of the current animation.
@@ -115,7 +115,9 @@ Object.assign(pc, function () {
             var onAssetReady = function (asset) {
                 self.animations[asset.name] = asset.resource;
                 self.animationsIndex[asset.id] = asset.name;
+                /* eslint-disable no-self-assign */
                 self.animations = self.animations; // assigning ensures set_animations event is fired
+                /* eslint-enable no-self-assign */
             };
 
             var onAssetAdd = function (asset) {

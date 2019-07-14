@@ -23,6 +23,7 @@ Object.assign(pc, function () {
 
     var AudioHandler = function (manager) {
         this.manager = manager;
+        this.retryRequests = false;
     };
 
     Object.assign(AudioHandler.prototype, {
@@ -46,23 +47,33 @@ Object.assign(pc, function () {
         },
 
         load: function (url, callback) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             var success = function (resource) {
                 callback(null, new pc.Sound(resource));
             };
 
-            var error = function (msg) {
-                msg = msg || 'Error loading audio url: ' + url;
+            var error = function (err) {
+                var msg = 'Error loading audio url: ' + url.original;
+                if (err) {
+                    msg += ': ' + (err.message || err);
+                }
                 console.warn(msg);
                 callback(msg);
             };
 
             if (this._createSound) {
-                if (!this._isSupported(url)) {
-                    error(pc.string.format('Audio format for {0} not supported', url));
+                if (!this._isSupported(url.original)) {
+                    error(pc.string.format('Audio format for {0} not supported', url.original));
                     return;
                 }
 
-                this._createSound(url, success, error);
+                this._createSound(url.load, success, error);
             } else {
                 error(null);
             }
@@ -92,7 +103,16 @@ Object.assign(pc, function () {
                 return;
             }
 
-            pc.http.get(url, function (err, response) {
+            // if this is a blob URL we need to set the response type to arraybuffer
+            var options = {
+                retry: this.retryRequests
+            };
+
+            if (url.startsWith('blob:')) {
+                options.responseType = pc.Http.ResponseType.ARRAY_BUFFER;
+            }
+
+            pc.http.get(url, options, function (err, response) {
                 if (err) {
                     error(err);
                     return;

@@ -5,17 +5,18 @@ Object.assign(pc, function () {
      * @classdesc Resource Handler for creating pc.Model resources
      * @description {@link pc.ResourceHandler} use to load 3D model resources
      * @param {pc.GraphicsDevice} device The graphics device that will be rendering
+     * @param {pc.StandardMaterial} defaultMaterial The shared default material that is used in any place that a material is not specified
      */
-    var ModelHandler = function (device) {
+    var ModelHandler = function (device, defaultMaterial) {
         this._device = device;
         this._parsers = [];
+        this._defaultMaterial = defaultMaterial;
+        this.retryRequests = false;
 
         this.addParser(new pc.JsonModelParser(this._device), function (url, data) {
             return (pc.path.getExtension(url) === '.json');
         });
     };
-
-    ModelHandler.DEFAULT_MATERIAL = pc.Scene.defaultMaterial;
 
     Object.assign(ModelHandler.prototype, {
         /**
@@ -29,14 +30,30 @@ Object.assign(pc, function () {
          * successfully loaded.
          */
         load: function (url, callback) {
-            pc.http.get(url, function (err, response) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
+            // we need to specify JSON for blob URLs
+            var options = {
+                retry: this.retryRequests
+            };
+
+            if (url.load.startsWith('blob:')) {
+                options.responseType = pc.Http.ResponseType.JSON;
+            }
+
+            pc.http.get(url.load, options, function (err, response) {
                 if (!callback)
                     return;
 
                 if (!err) {
                     callback(null, response);
                 } else {
-                    callback(pc.string.format("Error loading model: {0} [{1}]", url, err));
+                    callback(pc.string.format("Error loading model: {0} [{1}]", url.original, err));
                 }
             });
         },
@@ -67,6 +84,7 @@ Object.assign(pc, function () {
 
             var data = asset.data;
 
+            var self = this;
             asset.resource.meshInstances.forEach(function (meshInstance, i) {
                 if (data.mapping) {
                     var handleMaterial = function (asset) {
@@ -78,13 +96,14 @@ Object.assign(pc, function () {
                         }
 
                         asset.once('remove', function (asset) {
-                            if (meshInstance.material === asset.resource)
-                                meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                            if (meshInstance.material === asset.resource) {
+                                meshInstance.material = self._defaultMaterial;
+                            }
                         });
                     };
 
                     if (!data.mapping[i]) {
-                        meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                        meshInstance.material = self._defaultMaterial;
                         return;
                     }
 
@@ -94,7 +113,7 @@ Object.assign(pc, function () {
 
                     if (id !== undefined) { // id mapping
                         if (!id) {
-                            meshInstance.material = pc.ModelHandler.DEFAULT_MATERIAL;
+                            meshInstance.material = self._defaultMaterial;
                         } else {
                             material = assets.get(id);
                             if (material) {

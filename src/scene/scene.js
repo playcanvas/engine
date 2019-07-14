@@ -185,6 +185,9 @@
         PARTICLEMODE_CPU: 1,
         EMITTERSHAPE_BOX: 0,
         EMITTERSHAPE_SPHERE: 1,
+        PARTICLEORIENTATION_SCREEN: 0,
+        PARTICLEORIENTATION_WORLD: 1,
+        PARTICLEORIENTATION_EMITTER: 2,
 
         /**
          * @enum pc.PROJECTION
@@ -474,11 +477,18 @@ Object.assign(pc, function () {
         // backwards compatibilty only
         this._models = [];
 
+        // default material used in case no other material is available
+        this.defaultMaterial = new pc.StandardMaterial();
+        this.defaultMaterial.name = "Default Material";
+        this.defaultMaterial.shadingModel = pc.SPECULAR_BLINN;
+
         pc.events.attach(this);
     };
 
     Scene.prototype.destroy = function () {
         this.root = null;
+        this.defaultMaterial.destroy();
+        this.defaultMaterial = null;
         this.off();
     };
 
@@ -736,6 +746,7 @@ Object.assign(pc, function () {
         if (this.skyboxModel) {
             this.skyLayer.removeMeshInstances(this.skyboxModel.meshInstances);
             this.skyLayer.enabled = false;
+            this.skyboxModel.destroy();
         }
         this.skyboxModel = null;
         this.updateSkybox = true;

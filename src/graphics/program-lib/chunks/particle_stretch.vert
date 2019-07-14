@@ -1,5 +1,5 @@
     vec3 moveDir = inVel * stretch;
-    vec3 posPrev = inPos - moveDir;
+    vec3 posPrev = particlePos - moveDir;
     posPrev += particlePosMoved;
 
     vec2 centerToVertexV = normalize((mat3(matrix_view) * localPos).xy);

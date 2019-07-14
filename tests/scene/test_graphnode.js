@@ -1,4 +1,12 @@
 describe('pc.GraphNode', function () {
+    beforeEach(function () {
+        this.app = new pc.Application(document.createElement('canvas'));
+    });
+
+    afterEach(function () {
+        this.app.destroy();
+    });
+
     function buildGraph() {
         var g1 = new pc.GraphNode();
         g1.name = 'g1';
@@ -194,7 +202,7 @@ describe('pc.GraphNode', function () {
     it('GraphNode: g/setEulerAngles', function () {
         var g1 = new pc.GraphNode('g1');
 
-        g1.setEulerAngles(1,2,3);
+        g1.setEulerAngles(1, 2, 3);
 
         var angles = g1.getEulerAngles();
         close(angles.x, 1, 0.0001);
@@ -237,11 +245,12 @@ describe('pc.GraphNode', function () {
 
     it('GraphNode: rotate in hierarchy', function () {
         var p = new pc.GraphNode('g0');
-        p.setEulerAngles(10,10,10);
+        p.setEulerAngles(10, 10, 10);
+        var g;
         var angles;
 
         g = new pc.GraphNode('g1');
-        p.setEulerAngles(10,0,0);
+        p.setEulerAngles(10, 0, 0);
         p.addChild(g);
         g.rotate(10, 0, 0);
         angles = g.getEulerAngles();
@@ -251,7 +260,7 @@ describe('pc.GraphNode', function () {
         p.removeChild(g);
 
         g = new pc.GraphNode('g1');
-        p.setEulerAngles(0,10,0);
+        p.setEulerAngles(0, 10, 0);
         p.addChild(g);
         g.rotate(0, 10, 0);
         angles = g.getEulerAngles();
@@ -261,7 +270,7 @@ describe('pc.GraphNode', function () {
         p.removeChild(g);
 
         g = new pc.GraphNode('g1');
-        p.setEulerAngles(0,0,10);
+        p.setEulerAngles(0, 0, 10);
         p.addChild(g);
         g.rotate(0, 0, 10);
         angles = g.getEulerAngles();
@@ -291,11 +300,11 @@ describe('pc.GraphNode', function () {
 
 
     it('GraphNode: rotateLocal in hierarchy', function () {
-        var p = new pc.GraphNode('parent')
+        var p = new pc.GraphNode('parent');
         var g;
         var angles;
 
-        p.setEulerAngles(1,2,3);
+        p.setEulerAngles(1, 2, 3);
 
         g = new pc.GraphNode('g1');
         p.addChild(g);
@@ -313,11 +322,11 @@ describe('pc.GraphNode', function () {
     });
 
     it('GraphNode: translate in hierarchy', function () {
-        var p = new pc.GraphNode('parent')
+        var p = new pc.GraphNode('parent');
         var g;
         var pos;
 
-        p.setPosition(10,20,30);
+        p.setPosition(10, 20, 30);
 
         g = new pc.GraphNode('g1');
         p.addChild(g);
@@ -335,16 +344,16 @@ describe('pc.GraphNode', function () {
     });
 
     it('GraphNode: translateLocal in hierarchy', function () {
-        var p = new pc.GraphNode('parent')
+        var p = new pc.GraphNode('parent');
         var g;
         var pos;
 
-        p.setPosition(10,20,30);
+        p.setPosition(10, 20, 30);
 
         g = new pc.GraphNode('g1');
         p.addChild(g);
 
-        g.rotateLocal(0,180,0);
+        g.rotateLocal(0, 180, 0);
         g.translateLocal(10, 20, 30);
 
         pos = g.getPosition();
@@ -359,6 +368,17 @@ describe('pc.GraphNode', function () {
 
     });
 
+    it('GraphNode: frozen flag after reparent and sync for world-dirty node', function () {
+        var p = new pc.GraphNode('parent');
+        p.syncHierarchy();
+
+        var c = new pc.GraphNode('child');
+        c._dirtifyWorld();
+
+        p.addChild(c);
+        p.syncHierarchy();
+
+        equal(c._frozen, true);
+    });
 
 });
-

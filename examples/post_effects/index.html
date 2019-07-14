@@ -28,7 +28,7 @@
     <script src="../../extras/posteffects/posteffect-bloom.js"></script>
     <script src="../../extras/posteffects/posteffect-sepia.js"></script>
     <script src="../../extras/posteffects/posteffect-vignette.js"></script>
-
+    <script src="../../extras/posteffects/posteffect-bokeh.js"></script>
     <!-- The script -->
     <script>
         // Start the update loop
@@ -131,6 +131,9 @@
         vignette.darkness = 2;
         camera.camera.postEffects.addEffect(vignette);
 
+        var bokeh = new pc.BokehEffect(app.graphicsDevice);
+        bokeh.focus = 0.4;
+        camera.camera.postEffects.addEffect(bokeh);
         // Add Entities into the scene hierarchy
         app.root.addChild(camera);
         app.root.addChild(light);
@@ -144,6 +147,27 @@
 
         var pointRadius = 5;
         var pointHeight = 10;
+
+        var hasEffects = true;
+        var onKeyDown = function (e) {
+            if (e.key === pc.KEY_SPACE) {
+                if(hasEffects) {
+                    camera.camera.postEffects.removeEffect(bokeh);
+                    camera.camera.postEffects.removeEffect(sepia);
+                    camera.camera.postEffects.removeEffect(vignette);
+                }
+                else {
+                    camera.camera.postEffects.addEffect(sepia);
+                    camera.camera.postEffects.addEffect(vignette);
+                    camera.camera.postEffects.addEffect(bokeh);
+                }
+                hasEffects = !hasEffects;
+            }
+            e.event.preventDefault(); // Use original browser event to prevent browser action.
+        };
+        var keyboard = new pc.Keyboard(document.body);
+        keyboard.on("keydown", onKeyDown, this);
+
         app.on("update", function (dt) {
             angle += 20*dt;
             if (angle > 360) {

@@ -5,6 +5,8 @@ Object.assign(pc, function () {
     var scaleCompensateRot2 = new pc.Quat();
     var scaleCompensateScale = new pc.Vec3();
     var scaleCompensateScaleForParent = new pc.Vec3();
+    var tmpMat4 = new pc.Mat4();
+    var tmpQuat = new pc.Quat();
 
     /**
      * @constructor
@@ -34,6 +36,11 @@ Object.assign(pc, function () {
         this.localTransform = new pc.Mat4();
         this._dirtyLocal = false;
         this._aabbVer = 0;
+
+        // _frozen flag marks the node to ignore hierarchy sync etirely (including children nodes)
+        // engine code automatically freezes and unfreezes objects whenever required
+        // segrigating dynamic and stationary nodes into subhierarchies allows to reduce sync time significantly
+        this._frozen = false;
 
         this.worldTransform = new pc.Mat4();
         this._dirtyWorld = false;
@@ -201,6 +208,8 @@ Object.assign(pc, function () {
         _onHierarchyStateChanged: function (enabled) {
             // Override in derived classes
             this._enabledInHierarchy = enabled;
+            if (enabled && !this._frozen)
+                this._unfreezeParentToRoot();
         },
 
         _cloneInternal: function (clone) {
@@ -797,7 +806,8 @@ Object.assign(pc, function () {
                 this.localRotation.setFromEulerAngles(x, y, z);
             }
 
-            this._dirtifyLocal();
+            if (!this._dirtyLocal)
+                this._dirtifyLocal();
         },
 
         /**
@@ -825,7 +835,8 @@ Object.assign(pc, function () {
                 this.localPosition.set(x, y, z);
             }
 
-            this._dirtifyLocal();
+            if (!this._dirtyLocal)
+                this._dirtifyLocal();
         },
 
         /**
@@ -854,7 +865,8 @@ Object.assign(pc, function () {
                 this.localRotation.set(x, y, z, w);
             }
 
-            this._dirtifyLocal();
+            if (!this._dirtyLocal)
+                this._dirtifyLocal();
         },
 
         /**
@@ -882,7 +894,8 @@ Object.assign(pc, function () {
                 this.localScale.set(x, y, z);
             }
 
-            this._dirtifyLocal();
+            if (!this._dirtyLocal)
+                this._dirtifyLocal();
         },
 
         /**
@@ -902,16 +915,32 @@ Object.assign(pc, function () {
         _dirtifyLocal: function () {
             if (!this._dirtyLocal) {
                 this._dirtyLocal = true;
-                this._dirtifyWorld();
+                if (!this._dirtyWorld)
+                    this._dirtifyWorld();
+            }
+        },
+
+        _unfreezeParentToRoot: function () {
+            var p = this._parent;
+            while (p) {
+                p._frozen = false;
+                p = p._parent;
             }
         },
 
         _dirtifyWorld: function () {
+            if (!this._dirtyWorld)
+                this._unfreezeParentToRoot();
+            this._dirtifyWorldInternal();
+        },
+
+        _dirtifyWorldInternal: function () {
             if (!this._dirtyWorld) {
+                this._frozen = false;
                 this._dirtyWorld = true;
                 for (var i = 0; i < this._children.length; i++) {
                     if (!this._children[i]._dirtyWorld)
-                        this._children[i]._dirtifyWorld();
+                        this._children[i]._dirtifyWorldInternal();
                 }
             }
             this._dirtyNormal = true;
@@ -954,7 +983,8 @@ Object.assign(pc, function () {
                     invParentWtm.transformPoint(position, this.localPosition);
                 }
 
-                this._dirtifyLocal();
+                if (!this._dirtyLocal)
+                    this._dirtifyLocal();
             };
         }(),
 
@@ -996,7 +1026,8 @@ Object.assign(pc, function () {
                     this.localRotation.copy(invParentRot).mul(rotation);
                 }
 
-                this._dirtifyLocal();
+                if (!this._dirtyLocal)
+                    this._dirtifyLocal();
             };
         }(),
 
@@ -1035,7 +1066,8 @@ Object.assign(pc, function () {
                     this.localRotation.mul2(invParentRot, this.localRotation);
                 }
 
-                this._dirtifyLocal();
+                if (!this._dirtyLocal)
+                    this._dirtifyLocal();
             };
         }(),
 
@@ -1064,13 +1096,8 @@ Object.assign(pc, function () {
             if (current)
                 current.removeChild(node);
 
-            if (this.tmpMat4 === undefined) {
-                this.tmpMat4 = new pc.Mat4();
-                this.tmpQuat = new pc.Quat();
-            }
-
-            node.setPosition(this.tmpMat4.copy(this.worldTransform).invert().transformPoint(wPos));
-            node.setRotation(this.tmpQuat.copy(this.getRotation()).invert().mul(wRot));
+            node.setPosition(tmpMat4.copy(this.worldTransform).invert().transformPoint(wPos));
+            node.setRotation(tmpQuat.copy(this.getRotation()).invert().mul(wRot));
 
             this._children.push(node);
 
@@ -1116,6 +1143,9 @@ Object.assign(pc, function () {
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node._dirtifyWorld();
+            // node might be already marked as dirty, in that case the whole chain stays frozen, so let's enforce unfreeze
+            if (this._frozen)
+                node._unfreezeParentToRoot();
 
             // alert an entity that it has been inserted
             if (node.fire) node.fire('insert', this);
@@ -1311,7 +1341,13 @@ Object.assign(pc, function () {
             if (!this._enabled)
                 return;
 
-            this._sync();
+            if (this._frozen)
+                return;
+            this._frozen = true;
+
+            if (this._dirtyLocal || this._dirtyWorld) {
+                this._sync();
+            }
 
             var children = this._children;
             for (var i = 0, len = children.length; i < len; i++) {
@@ -1445,7 +1481,8 @@ Object.assign(pc, function () {
                 this.localRotation.transformVector(translation, translation);
                 this.localPosition.add(translation);
 
-                this._dirtifyLocal();
+                if (!this._dirtyLocal)
+                    this._dirtifyLocal();
             };
         }(),
 
@@ -1489,7 +1526,8 @@ Object.assign(pc, function () {
                     this.localRotation.mul2(quaternion, rot);
                 }
 
-                this._dirtifyLocal();
+                if (!this._dirtyLocal)
+                    this._dirtifyLocal();
             };
         }(),
 
@@ -1523,7 +1561,8 @@ Object.assign(pc, function () {
 
                 this.localRotation.mul(quaternion);
 
-                this._dirtifyLocal();
+                if (!this._dirtyLocal)
+                    this._dirtifyLocal();
             };
         }()
     });

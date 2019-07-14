@@ -398,7 +398,7 @@ describe("pc.Element: Masks", function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
 
         // move just into parent
         e.translateLocal(-2, 0, 0);
@@ -406,7 +406,7 @@ describe("pc.Element: Masks", function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
     });
 
@@ -447,7 +447,7 @@ describe("pc.Element: Masks", function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.false;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
 
         // move just into parent
         e.translateLocal(-2, 0, 0);
@@ -455,7 +455,7 @@ describe("pc.Element: Masks", function () {
         // update transform
         app.update(0.1);
         app.render();
-        expect(e.element.isCulled(camera.camera.camera)).to.be.true;
+        expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
     });
 

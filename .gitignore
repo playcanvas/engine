@@ -6,3 +6,4 @@ node_modules/
 .idea/
 npm-debug.log
 .java-version
+release.py
