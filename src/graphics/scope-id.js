@@ -21,7 +21,7 @@ Object.assign(pc, function () {
             this.versionObject.increment();
         },
 
-        getValue: function (value) {
+        getValue: function () {
             return this.value;
         }
     });
