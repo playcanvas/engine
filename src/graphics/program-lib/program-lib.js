@@ -23,15 +23,16 @@ pc.programlib = {
         return pc.shaderChunks.tonemappingNonePS;
     },
 
-    fogCode: function (value) {
+    fogCode: function (value, chunks) {
+        if (!chunks) chunks = pc.shaderChunks;
         if (value === 'linear') {
-            return pc.shaderChunks.fogLinearPS;
+            return chunks.fogLinearPS;
         } else if (value === 'exp') {
-            return pc.shaderChunks.fogExpPS;
+            return chunks.fogExpPS;
         } else if (value === 'exp2') {
-            return pc.shaderChunks.fogExp2PS;
+            return chunks.fogExp2PS;
         }
-        return pc.shaderChunks.fogNonePS;
+        return chunks.fogNonePS;
     },
 
     skinCode: function (device, chunks) {
