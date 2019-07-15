@@ -63,6 +63,108 @@ Object.assign(pc, function () {
     BatchGroup.ELEMENT = 'element';
     BatchGroup.SPRITE = 'sprite';
 
+
+    // Modified SkinBatchInstance for batching animated skins
+
+    var SkinInstancesBatched = function (device, nodes, rootNode, inverseBindPoses) {
+        this.rootNode = rootNode;
+        this._dirty = true;
+        this.inverseBindPoses = inverseBindPoses;
+        this.device = device;
+
+        // Unique per clone
+        this.bones = nodes;
+
+        var numBones = nodes.length;
+
+        if (device.supportsBoneTextures) {
+            var size;
+            if (numBones > 256)
+                size = 64;
+            else if (numBones > 64)
+                size = 32;
+            else if (numBones > 16)
+                size = 16;
+            else
+                size = 8;
+
+            this.boneTexture = new pc.Texture(device, {
+                width: size,
+                height: size,
+                format: pc.PIXELFORMAT_RGBA32F,
+                mipmaps: false,
+                minFilter: pc.FILTER_NEAREST,
+                magFilter: pc.FILTER_NEAREST
+            });
+            this.matrixPalette = this.boneTexture.lock();
+        } else {
+            this.matrixPalette = new Float32Array(numBones * 16);
+        }
+
+        this.matrices = [];
+        for (var i = 0; i < numBones; i++) {
+            this.matrices[i] = new pc.Mat4();
+        }
+
+
+    };
+    SkinInstancesBatched.invMatrix = new pc.Mat4();
+
+    SkinInstancesBatched.prototype = {
+
+        updateMatrices: function (rootNode) {
+            var _invMatrix = SkinInstancesBatched.invMatrix;
+           _invMatrix.copy(rootNode.getWorldTransform()).invert();
+           var vp;
+
+           var i = 0;
+           var inverseBindPoses = this.inverseBindPoses;
+           for (var v = 0; v <inverseBindPoses.length; v++) {
+               vp = inverseBindPoses[v];
+
+               for (var b=0; b< vp.boneCount; b++) {
+                    this.matrices[i].mul2(_invMatrix, this.bones[i].getWorldTransform()); // world space -> rootNode space
+                    this.matrices[i].mul2(this.matrices[i], vp.pose[b]); // rootNode space -> bind space
+                    i++;
+               }
+           }
+        },
+
+        updateMatrixPalette: function () {
+            var pe;
+            var mp = this.matrixPalette;
+            var base;
+
+            for (var i = this.bones.length - 1; i >= 0; i--) {
+                pe = this.matrices[i].data;
+
+                // Copy the matrix into the palette, ready to be sent to the vertex shader
+                base = i * 16;
+                mp[base] = pe[0];
+                mp[base + 1] = pe[1];
+                mp[base + 2] = pe[2];
+                mp[base + 3] = pe[3];
+                mp[base + 4] = pe[4];
+                mp[base + 5] = pe[5];
+                mp[base + 6] = pe[6];
+                mp[base + 7] = pe[7];
+                mp[base + 8] = pe[8];
+                mp[base + 9] = pe[9];
+                mp[base + 10] = pe[10];
+                mp[base + 11] = pe[11];
+                mp[base + 12] = pe[12];
+                mp[base + 13] = pe[13];
+                mp[base + 14] = pe[14];
+                mp[base + 15] = pe[15];
+            }
+
+            if (this.device.supportsBoneTextures) {
+                this.boneTexture.lock();
+                this.boneTexture.unlock();
+            }
+        }
+    };
+
     // Modified SkinInstance for batching
     // Doesn't contain bind matrices, simplier
     var SkinBatchInstance = function (device, nodes, rootNode) {
@@ -436,7 +538,7 @@ Object.assign(pc, function () {
         }
     };
 
-    /**
+   /**
      * @function
      * @name pc.BatchManager#generate
      * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start, and if batchGroupIds on models are changed.
@@ -555,6 +657,19 @@ Object.assign(pc, function () {
         return worldMatX.dot(worldMatZ) >= 0 ? 1 : -1;
     }
 
+    function getVertexFormatComponentSize(vertexFormat, formatName) {
+        for (var elem in vertexFormat.elements) {
+            if (elem.name === formatName) {
+                return elem.numComponents;
+            }
+        }
+        return 0;
+    }
+
+    function getMeshInstanceBonesCount(meshInstance) {
+        return meshInstance.skinInstance instanceof pc.SkinInstance ? meshInstance.skinInstance.bones.length : 1;
+    }
+
     /**
      * @function
      * @name pc.BatchManager#prepare
@@ -582,7 +697,7 @@ Object.assign(pc, function () {
         var maxInstanceCount = this.device.supportsBoneTextures ? 1024 : this.device.boneLimit;
 
         var i;
-        var material, layer, vertCount, params, lightList, defs, stencil, staticLights, scaleSign;
+        var material, layer, vertCount, params, lightList, defs, stencil, staticLights, scaleSign, isSkin, blendWeightSize;
         var aabb = new pc.BoundingBox();
         var testAabb = new pc.BoundingBox();
         var skipTranslucentAabb = null;
@@ -608,7 +723,7 @@ Object.assign(pc, function () {
             meshInstancesLeftB.push(mi);
         };
 
-        var mi, sf;
+        var mi, sf, bonesCount, curBoneCount;
 
         while (meshInstancesLeftA.length > 0) {
             lists[j] = [meshInstancesLeftA[0]];
@@ -623,15 +738,39 @@ Object.assign(pc, function () {
             aabb.copy(meshInstancesLeftA[0].aabb);
             scaleSign = getScaleSign(meshInstancesLeftA[0]);
             skipTranslucentAabb = null;
+            isSkin = (meshInstancesLeftA[0].skinInstance instanceof pc.SkinInstance);
+            bonesCount = !isSkin ? 1 : meshInstancesLeftA[0].skinInstance.bones.length;
+            blendWeightSize = getVertexFormatComponentSize(meshInstancesLeftA[0].mesh.vertexBuffer.format, pc.SEMANTIC_BLENDWEIGHT);
+
+            if (dynamic && isSkin)  {
+                if (getMeshInstanceBonesCount(meshInstancesLeftA[0]) > maxInstanceCount) {
+                    meshInstancesLeftB = meshInstancesLeftB.concat(meshInstancesLeftA.slice(i + 1));
+                    break;
+                }
+            }
 
             for (i = 1; i < meshInstancesLeftA.length; i++) {
                 mi = meshInstancesLeftA[i];
+
+                // Split by skin animated curBoneCount number
+                if (dynamic && (mi.skinInstance instanceof pc.SkinInstance) )  {
+                    curBoneCount =  getMeshInstanceBonesCount(meshInstancesLeftA[i]);
+                    if (curBoneCount > maxInstanceCount) {
+                        meshInstancesLeftB = meshInstancesLeftB.concat(meshInstancesLeftA.slice(i + 1));
+                        break;
+                    }
+                    else if (curBoneCount + bonesCount > maxInstanceCount) {
+                        skipMesh(mi);
+                        continue;
+                    }
+                }
 
                 // Split by instance number
                 if (dynamic && lists[j].length >= maxInstanceCount) {
                     meshInstancesLeftB = meshInstancesLeftB.concat(meshInstancesLeftA.slice(i));
                     break;
                 }
+
 
                 // Split by material, layer (legacy), shader defines, static source, vert count, overlaping UI
                 if ((material !== mi.material) ||
@@ -684,9 +823,21 @@ Object.assign(pc, function () {
                     continue;
                 }
 
+                // Split by skin vs non-skinned
+                if (isSkin !== (mi.skinInstance instanceof pc.SkinInstance) ) {
+                    skipMesh(mi);
+                    continue;
+                }
+                // Split by blend weight's number of components (component size)
+                if (blendWeightSize !== getVertexFormatComponentSize(meshInstancesLeftA[0].mesh.vertexBuffer.format, pc.SEMANTIC_BLENDWEIGHT) ) {
+                    skipMesh(mi);
+                    continue;
+                }
+
                 aabb.add(mi.aabb);
                 vertCount += mi.mesh.vertexBuffer.getNumVertices();
                 lists[j].push(mi);
+                bonesCount += !isSkin ? 1 : mi.skinInstance.bones.length;
             }
 
             j++;
@@ -712,10 +863,7 @@ Object.assign(pc, function () {
         // #endif
 
         if (!this._init) {
-            var boneLimit = "#define BONE_LIMIT " + this.device.getBoneLimit() + "\n";
-            this.transformVS = boneLimit + "#define DYNAMICBATCH\n" + pc.shaderChunks.transformVS;
-            this.skinTexVS = pc.shaderChunks.skinBatchTexVS;
-            this.skinConstVS = pc.shaderChunks.skinBatchConstVS;
+            this.boneLimit =  "#define BONE_LIMIT " + this.device.getBoneLimit() + "\n";
             this.vertexFormats = {};
             this._init = true;
         }
@@ -725,10 +873,12 @@ Object.assign(pc, function () {
         // Check which vertex format and buffer size are needed, find out material
         var material = null;
         var mesh, elems, numVerts, vertSize;
-        var hasPos, hasNormal, hasUv, hasUv2, hasTangent, hasColor;
+        var hasPos, hasNormal, hasUv, hasUv2, hasTangent, hasColor, hasBlendWeight;
+        var isSkin = meshInstances[0].skinInstance instanceof pc.SkinInstance;
         var batchNumVerts = 0;
         var batchNumIndices = 0;
         var visibleMeshInstanceCount = 0;
+        var boneComponentSize = 1;
         for (i = 0; i < meshInstances.length; i++) {
             if (!meshInstances[i].visible)
                 continue;
@@ -763,6 +913,10 @@ Object.assign(pc, function () {
                 } else if (elems[j].name === pc.SEMANTIC_COLOR) {
                     hasColor = true;
                 }
+                else if (elems[j].name === pc.SEMANTIC_BLENDWEIGHT && dynamic) {
+                    hasBlendWeight = true;
+                    boneComponentSize = elems[j].numComponents;
+                }
             }
             batchNumIndices += mesh.primitive[0].indexed ? mesh.primitive[0].count :
                 (mesh.primitive[0].count === 4 ? 6 : 0);
@@ -771,7 +925,6 @@ Object.assign(pc, function () {
         if (!visibleMeshInstanceCount) {
             return;
         }
-
         if (!hasPos) {
             // #ifdef DEBUG
             console.error("BatchManager.create: no position");
@@ -783,14 +936,15 @@ Object.assign(pc, function () {
         this._batchList.push(batch);
 
         // Create buffers
-        var entityIndexSizeF = dynamic ? 1 : 0;
-        var batchVertSizeF = 3 + (hasNormal ? 3 : 0) + (hasUv ? 2 : 0) +  (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0) + entityIndexSizeF;
+        var entityIndexSizeF = dynamic ? boneComponentSize : 0;
+        var batchVertSizeF = 3 + (hasNormal ? 3 : 0) + (hasUv ? 2 : 0) +  (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0) + (hasBlendWeight ? boneComponentSize : 0) + entityIndexSizeF;
         var batchOffsetNF = 3;
         var batchOffsetUF = hasNormal ? 3 * 2 : 3;
         var batchOffsetU2F = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0);
         var batchOffsetTF = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0);
         var batchOffsetCF = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0);
-        var batchOffsetEF = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0);
+        var batchOffsetBF = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0);
+        var batchOffsetEF = (hasNormal ? 3 * 2 : 3) + (hasUv ? 2 : 0) + (hasUv2 ? 2 : 0) + (hasTangent ? 4 : 0) + (hasColor ? 1 : 0) + (hasBlendWeight ? boneComponentSize : 0);
 
         var arrayBuffer = new ArrayBuffer(batchNumVerts * batchVertSizeF * 4);
         var batchData = new Float32Array(arrayBuffer);
@@ -805,15 +959,16 @@ Object.assign(pc, function () {
         var verticesOffset = 0;
         var indexOffset = 0;
         var vbOffset = 0;
-        var offsetPF, offsetNF, offsetUF, offsetU2F, offsetTF, offsetCF;
+        var offsetPF, offsetNF, offsetUF, offsetU2F, offsetTF, offsetCF, offsetBF, offsetBI;
         var transform, vec =  new pc.Vec3();
+        var b;
+        var bi;
 
+        var dynIndexCount = 0;
         for (i = 0; i < meshInstances.length; i++) {
             if (!meshInstances[i].visible)
-                continue;
-
+            continue;
             mesh = meshInstances[i].mesh;
-
             elems = mesh.vertexBuffer.format.elements;
             numVerts = mesh.vertexBuffer.numVertices;
             vertSize = mesh.vertexBuffer.format.size;
@@ -831,7 +986,12 @@ Object.assign(pc, function () {
                     offsetTF = elems[j].offset / 4;
                 } else if (elems[j].name === pc.SEMANTIC_COLOR) {
                     offsetCF = elems[j].offset / 4;
+                } else if (elems[j].name === pc.SEMANTIC_BLENDWEIGHT) {
+                    offsetBF = elems[j].offset / 4;
+                } else if (elems[j].name === pc.SEMANTIC_BLENDINDICES) {
+                    offsetBI = elems[j].offset / 4;
                 }
+
             }
             data = new Float32Array(mesh.vertexBuffer.storage);
             data8 = new Uint8Array(mesh.vertexBuffer.storage);
@@ -883,9 +1043,24 @@ Object.assign(pc, function () {
                     batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 2] = data8[j * vertSizeF * 4 + offsetCF * 4 + 2];
                     batchData8[j * batchVertSizeF * 4 + vbOffset * 4 + batchOffsetCF * 4 + 3] = data8[j * vertSizeF * 4 + offsetCF * 4 + 3];
                 }
-                if (dynamic)
+                if (dynamic) {
                     batchData[j * batchVertSizeF + batchOffsetEF + vbOffset] = i;
+                    if (hasBlendWeight) {
+                        for (bi =0; bi < boneComponentSize; bi++) {
+                            batchData[j * batchVertSizeF + vbOffset + batchOffsetBF+ bi] =  data[j * vertSizeF + offsetBF + bi];
+                        }
+                    }
+                    if ( isSkin ) {
+                        for (bi =0; bi < boneComponentSize; bi++) {
+                            batchData[j * batchVertSizeF + batchOffsetEF + vbOffset + bi] =  dynIndexCount +  data8[j * vertSizeF * 4 + offsetBI * 4 + bi];
+                        }
+                    } else {
+                        batchData[j * batchVertSizeF + batchOffsetEF + vbOffset] = dynIndexCount;
+                    }
+                }
             }
+
+            if (dynamic) dynIndexCount += isSkin ? meshInstances[i].skinInstance.bones.length :  1;
 
             indexBase = mesh.primitive[0].base;
             numIndices = mesh.primitive[0].count;
@@ -915,7 +1090,8 @@ Object.assign(pc, function () {
         if (hasUv2)     vertexFormatId |= 1 << 3;
         if (hasTangent) vertexFormatId |= 1 << 4;
         if (hasColor)   vertexFormatId |= 1 << 5;
-        if (dynamic)    vertexFormatId |= 1 << 6;
+        if (hasBlendWeight)   vertexFormatId |= 1 << 6;
+        if (dynamic)    vertexFormatId |= (hasBlendWeight ? (1 << 7) : ( 1 << 6) );
         var vertexFormat = this.vertexFormats[vertexFormatId];
         if (!vertexFormat) {
             var formatDesc = [];
@@ -965,10 +1141,18 @@ Object.assign(pc, function () {
                     normalize: true
                 });
             }
+            if (hasBlendWeight) {
+                formatDesc.push({
+                    semantic: pc.SEMANTIC_BLENDWEIGHT,
+                    components: boneComponentSize,
+                    type: pc.ELEMENTTYPE_FLOAT32,
+                    normalize: false
+                });
+            }
             if (dynamic) {
                 formatDesc.push({
                     semantic: pc.SEMANTIC_BLENDINDICES,
-                    components: 1,
+                    components: boneComponentSize,
                     type: pc.ELEMENTTYPE_FLOAT32,
                     normalize: false
                 });
@@ -993,9 +1177,9 @@ Object.assign(pc, function () {
         if (dynamic) {
             // Patch the material
             material = material.clone();
-            material.chunks.transformVS = this.transformVS;
-            material.chunks.skinTexVS = this.skinTexVS;
-            material.chunks.skinConstVS = this.skinConstVS;
+            material.chunks.transformVS = this.boneLimit + "#define "+(!isSkin ? "DYNAMICBATCH" : "SKIN")+"\n" + (material.chunks.transformVS ? material.chunks.transformVS : pc.shaderChunks.transformVS);
+			if (!isSkin) material.chunks.skinTexVS = (material.chunks.skinBatchTexVS ? material.chunks.skinBatchTexVS : pc.shaderChunks.skinBatchTexVS);
+			if (!isSkin) material.chunks.skinConstVS = (material.chunks.skinBatchConstVS ? material.chunks.skinBatchConstVS : pc.shaderChunks.skinBatchConstVS);
             material.update();
         }
 
@@ -1012,10 +1196,25 @@ Object.assign(pc, function () {
         if (dynamic) {
             // Create skinInstance
             var nodes = [];
-            for (i = 0; i < batch.origMeshInstances.length; i++) {
-                nodes.push(batch.origMeshInstances[i].node);
+            if (!isSkin) {
+                for (i = 0; i < batch.origMeshInstances.length; i++) {
+                    nodes.push(batch.origMeshInstances[i].node);
+                }
+                meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
             }
-            meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
+            else {   // Animated Skin case
+                var inverseBindPoses = [];
+
+                for (i = 0; i < batch.origMeshInstances.length; i++) {
+                    var bonesToAdd = meshInstances[i].skinInstance.bones;
+                    for (b = 0; b <  bonesToAdd.length; b++) {
+                        nodes.push(bonesToAdd[b]);
+                    }
+                    inverseBindPoses.push( {boneCount: bonesToAdd.length, pose:meshInstances[i].skinInstance.skin.inverseBindPose } );
+                }
+                meshInstance.skinInstance = new SkinInstancesBatched(this.device, nodes, this.rootNode, inverseBindPoses);
+            }
+
         }
 
         meshInstance._updateAabb = false;
@@ -1109,7 +1308,7 @@ Object.assign(pc, function () {
         batch2.meshInstance._staticLightList = clonedMeshInstances[0]._staticLightList;
 
         if (batch.dynamic) {
-            batch2.meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
+            batch2.meshInstance.skinInstance = batch.meshInstance.skinInstance instanceof SkinInstancesBatched ? new SkinInstancesBatched(this.device, nodes, this.rootNode, batch.meshInstance.skinInstance.inverseBindPoses) : new SkinBatchInstance(this.device, nodes, this.rootNode);
         }
 
         batch2.meshInstance.castShadow = batch.meshInstance.castShadow;
