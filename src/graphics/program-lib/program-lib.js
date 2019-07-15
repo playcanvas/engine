@@ -26,13 +26,13 @@ pc.programlib = {
     fogCode: function (value, chunks) {
         if (!chunks) chunks = pc.shaderChunks;
         if (value === 'linear') {
-            return chunks.fogLinearPS;
+            return chunks.fogLinearPS ? chunks.fogLinearPS : pc.shaderChunks.fogLinearPS;
         } else if (value === 'exp') {
-            return chunks.fogExpPS;
+            return chunks.fogExpPS ? chunks.fogExpPS : pc.shaderChunks.fogExpPS;
         } else if (value === 'exp2') {
-            return chunks.fogExp2PS;
+            return chunks.fogExp2PS ? chunks.fogExp2PS : pc.shaderChunks.fogExp2PS;
         }
-        return chunks.fogNonePS;
+        return chunks.fogNonePS ? chunks.fogNonePS : pc.shaderChunks.fogNonePS;
     },
 
     skinCode: function (device, chunks) {
