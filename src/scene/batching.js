@@ -681,7 +681,7 @@ Object.assign(pc, function () {
                     continue;
                 }
 
-                if (translucent && skipTranslucentAabb && skipTranslucentAabb.intersects(mi.aabb) && mi.drawOrder != drawOrder) {
+                if (translucent && skipTranslucentAabb && skipTranslucentAabb.intersects(mi.aabb) && mi.drawOrder !== drawOrder) {
                     skipMesh(mi);
                     continue;
                 }
