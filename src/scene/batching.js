@@ -426,7 +426,8 @@ Object.assign(pc, function () {
 
             for (var s = 0; s < group._obj.sprite.length; s++) {
                 node = group._obj.sprite[s];
-                if (node.sprite && node.sprite._meshInstance) {
+                if (node.sprite && node.sprite._meshInstance &&
+                    (group.dynamic || node.sprite.sprite._renderMode === pc.SPRITE_RENDERMODE_SIMPLE)) {
                     arr.push(node.sprite._meshInstance);
                     node.sprite.removeModelFromLayers();
                     group._sprite = true;
@@ -582,7 +583,7 @@ Object.assign(pc, function () {
         var maxInstanceCount = this.device.supportsBoneTextures ? 1024 : this.device.boneLimit;
 
         var i;
-        var material, layer, vertCount, params, lightList, defs, stencil, staticLights, scaleSign;
+        var material, layer, vertCount, params, lightList, defs, stencil, staticLights, scaleSign, drawOrder;
         var aabb = new pc.BoundingBox();
         var testAabb = new pc.BoundingBox();
         var skipTranslucentAabb = null;
@@ -620,6 +621,7 @@ Object.assign(pc, function () {
             stencil = meshInstancesLeftA[0].stencilFront;
             lightList = meshInstancesLeftA[0]._staticLightList;
             vertCount = meshInstancesLeftA[0].mesh.vertexBuffer.getNumVertices();
+            drawOrder = meshInstancesLeftA[0].drawOrder;
             aabb.copy(meshInstancesLeftA[0].aabb);
             scaleSign = getScaleSign(meshInstancesLeftA[0]);
             skipTranslucentAabb = null;
@@ -679,7 +681,7 @@ Object.assign(pc, function () {
                     continue;
                 }
 
-                if (translucent && skipTranslucentAabb && skipTranslucentAabb.intersects(mi.aabb)) {
+                if (translucent && skipTranslucentAabb && skipTranslucentAabb.intersects(mi.aabb) && mi.drawOrder != drawOrder) {
                     skipMesh(mi);
                     continue;
                 }
