@@ -20,7 +20,7 @@ pc.programlib = {
         } else if (value === pc.TONEMAP_ACES) {
             return chunks.tonemappingAcesPS ? chunks.tonemappingAcesPS : pc.shaderChunks.tonemappingAcesPS;
         } else if (value === pc.TONEMAP_ACES2) {
-            return chunks.tonemappingAces2PS ? tonemappingAces2PS : pc.shaderChunks.tonemappingAces2PS;
+            return chunks.tonemappingAces2PS ? chunks.tonemappingAces2PS : pc.shaderChunks.tonemappingAces2PS;
         }
         return chunks.tonemapingNonePS ? chunks.tonemapingNonePS : pc.shaderChunks.tonemappingNonePS;
     },
