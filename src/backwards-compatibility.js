@@ -335,3 +335,63 @@ pc.GraphNode.prototype._dirtify = function (local) {
     else
         this._dirtifyWorld();
 };
+
+pc.Application.prototype.isFullscreen = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Application#isFullscreen is deprecated. Use the Fullscreen API directly.');
+    // #endif
+
+    return !!document.fullscreenElement;
+};
+
+pc.Application.prototype.enableFullscreen = function (element, success, error) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Application#enableFullscreen is deprecated. Use the Fullscreen API directly.');
+    // #endif
+
+    element = element || this.graphicsDevice.canvas;
+
+    // success callback
+    var s = function () {
+        success();
+        document.removeEventListener('fullscreenchange', s);
+    };
+
+    // error callback
+    var e = function () {
+        error();
+        document.removeEventListener('fullscreenerror', e);
+    };
+
+    if (success) {
+        document.addEventListener('fullscreenchange', s, false);
+    }
+
+    if (error) {
+        document.addEventListener('fullscreenerror', e, false);
+    }
+
+    if (element.requestFullscreen) {
+        element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+    } else {
+        error();
+    }
+};
+
+pc.Application.prototype.disableFullscreen = function (success) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Application#disableFullscreen is deprecated. Use the Fullscreen API directly.');
+    // #endif
+
+    // success callback
+    var s = function () {
+        success();
+        document.removeEventListener('fullscreenchange', s);
+    };
+
+    if (success) {
+        document.addEventListener('fullscreenchange', s, false);
+    }
+
+    document.exitFullscreen();
+};
