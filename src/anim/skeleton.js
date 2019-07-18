@@ -1,13 +1,13 @@
 Object.assign(pc, function () {
     function InterpolatedKey() {
-        this._written = false;
+        this._written = 0;
         this._name = "";
         this._keyFrames = [];
 
         // Result of interpolation
         this._quat = new pc.Quat();
-        this._pos = new pc.Vec3();
-        this._scale = new pc.Vec3();
+        this._pos = new pc.Vec3(0, 0, 0);
+        this._scale = new pc.Vec3(1, 1, 1);
 
         // Optional destination for interpolated keyframe
         this._targetNode = null;
@@ -59,6 +59,10 @@ Object.assign(pc, function () {
 
         addInterpolatedKeys(graph);
     };
+
+    var WR_MASK_POS = (1 << 0);
+    var WR_MASK_ROT = (1 << 1);
+    var WR_MASK_SCL = (1 << 2);
 
     /**
      * @function
@@ -129,20 +133,24 @@ Object.assign(pc, function () {
                 // If there's only a single key, just copy the key to the interpolated key...
                 keyIndices[pc.KEYTYPE_POS] = this._interpolate(this._interpKey._pos, "lerp",
                                                                keys[pc.KEYTYPE_POS],
-                                                               keyIndices[pc.KEYTYPE_POS]);
+                                                               keyIndices[pc.KEYTYPE_POS],
+                                                               WR_MASK_POS);
                 keyIndices[pc.KEYTYPE_ROT] = this._interpolate(this._interpKey._quat, "slerp",
                                                                keys[pc.KEYTYPE_ROT],
-                                                               keyIndices[pc.KEYTYPE_ROT]);
+                                                               keyIndices[pc.KEYTYPE_ROT],
+                                                               WR_MASK_ROT);
                 keyIndices[pc.KEYTYPE_SCL] = this._interpolate(this._interpKey._scale, "lerp",
                                                                keys[pc.KEYTYPE_SCL],
-                                                               keyIndices[pc.KEYTYPE_SCL]);
+                                                               keyIndices[pc.KEYTYPE_SCL],
+                                                               WR_MASK_SCL);
             }
         }
     };
 
-    Skeleton.prototype._interpolate = function (target, op, keys, currKey) {
-        if (keys.length === 0)
+    Skeleton.prototype._interpolate = function (target, op, keys, currKey, mask) {
+        if (keys.length === 0) {
             return 0;
+        }
 
         var k1, k2, alpha;
         var foundKey = false;
@@ -158,7 +166,7 @@ Object.assign(pc, function () {
                     alpha = (this._time - k1.time) / (k2.time - k1.time);
 
                     target[op](k1.value, k2.value, alpha);
-                    this._interpKey._written = true;
+                    this._interpKey._written |= mask;
                     newKeyIdx = currKeyIndex;
 
                     foundKey = true;
@@ -168,7 +176,7 @@ Object.assign(pc, function () {
         }
         if (keys.length === 1 || (!foundKey && this._time === 0.0 && this.looping)) {
             target.copy(keys[0].value);
-            this._interpKey._written = true;
+            this._interpKey._written |= mask;
         }
         return newKeyIdx;
     };
@@ -190,22 +198,35 @@ Object.assign(pc, function () {
             var key2 = skel2._interpolatedKeys[i];
             var dstKey = this._interpolatedKeys[i];
 
-            if (key1._written && key2._written) {
-                dstKey._quat.slerp(key1._quat, skel2._interpolatedKeys[i]._quat, alpha);
-                dstKey._pos.lerp(key1._pos, skel2._interpolatedKeys[i]._pos, alpha);
-                dstKey._scale.lerp(key1._scale, key2._scale, alpha);
-                dstKey._written = true;
-            } else if (key1._written) {
-                dstKey._quat.copy(key1._quat);
+            dstKey._written |= WR_MASK_POS;
+            if ((key1._written & WR_MASK_POS) && (key2._written & WR_MASK_POS))
+                dstKey._pos.lerp(key1._pos, key2._pos, alpha);
+            else if (key1._written & WR_MASK_POS)
                 dstKey._pos.copy(key1._pos);
-                dstKey._scale.copy(key1._scale);
-                dstKey._written = true;
-            } else if (key2._written) {
-                dstKey._quat.copy(key2._quat);
+            else if (key2._written & WR_MASK_POS)
                 dstKey._pos.copy(key2._pos);
+            else
+                dstKey._written &= ~WR_MASK_POS;
+
+            dstKey._written |= WR_MASK_ROT;
+            if ((key1._written & WR_MASK_ROT) && (key2._written & WR_MASK_ROT))
+                dstKey._quat.slerp(key1._quat, key2._quat, alpha);
+            else if (key1._written & WR_MASK_ROT)
+                dstKey._quat.copy(key1._quat);
+            else if (key2._written & WR_MASK_ROT)
+                dstKey._quat.copy(key2._quat);
+            else
+                dstKey._written &= ~WR_MASK_ROT;
+
+            dstKey._written |= WR_MASK_SCL;
+            if ((key1._written & WR_MASK_SCL) && (key2._written & WR_MASK_SCL))
+                dstKey._scale.lerp(key1._scale, key2._scale, alpha);
+            else if (key1._written & WR_MASK_SCL)
+                dstKey._scale.copy(key1._scale);
+            else if (key2._written & WR_MASK_SCL)
                 dstKey._scale.copy(key2._scale);
-                dstKey._written = true;
-            }
+            else
+                dstKey._written &= ~WR_MASK_SCL;
         }
     };
 
@@ -361,18 +382,16 @@ Object.assign(pc, function () {
         if (this.graph) {
             for (var i = 0; i < this._interpolatedKeys.length; i++) {
                 var interpKey = this._interpolatedKeys[i];
-                if (interpKey._written) {
-                    var transform = interpKey.getTarget();
+                var transform = interpKey.getTarget();
 
-                    transform.localPosition.copy(interpKey._pos);
-                    transform.localRotation.copy(interpKey._quat);
-                    transform.localScale.copy(interpKey._scale);
+                if (interpKey._written & WR_MASK_POS) transform.localPosition.copy(interpKey._pos);
+                if (interpKey._written & WR_MASK_ROT) transform.localRotation.copy(interpKey._quat);
+                if (interpKey._written & WR_MASK_SCL) transform.localScale.copy(interpKey._scale);
 
-                    if (!transform._dirtyLocal)
-                        transform._dirtifyLocal();
+                if (interpKey._written && !transform._dirtyLocal)
+                    transform._dirtifyLocal();
 
-                    interpKey._written = false;
-                }
+                interpKey._written = 0;
             }
         }
     };
