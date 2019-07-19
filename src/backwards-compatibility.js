@@ -396,7 +396,7 @@ pc.Application.prototype.disableFullscreen = function (success) {
     document.exitFullscreen();
 };
 
-pc.RigidBodyComponentSystem.setGravity = function () {
+pc.RigidBodyComponentSystem.prototype.setGravity = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.RigidBodyComponentSystem#setGravity is deprecated. Use pc.RigidBodyComponentSystem#gravity instead.');
     // #endif
