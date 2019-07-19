@@ -109,23 +109,6 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @private
-     * @readonly
-     * @name pc.GraphNode#scale
-     * @description The world scale of the graph node. The scale will only be correct if the graph node
-     * in question is not skewed as a result of scales and rotations applied higher in the hierarchy.
-     * @type pc.Vec3
-     */
-    Object.defineProperty(GraphNode.prototype, 'scale', {
-        get: function () {
-            if (!this._scale) {
-                this._scale = new pc.Vec3();
-            }
-            return this.getWorldTransform().getScale(this._scale);
-        }
-    });
-
-    /**
      * @name pc.GraphNode#enabled
      * @type Boolean
      * @description Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
@@ -755,6 +738,25 @@ Object.assign(pc, function () {
         getRotation: function () {
             this.rotation.setFromMat4(this.getWorldTransform());
             return this.rotation;
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.GraphNode#getScale
+         * @description Get the world space scale for the specified GraphNode. The returned value
+         * will only be correct for graph nodes that have a non-skewed world transform. The value
+         * returned by this function should be considered read-only. Note that it is not possible
+         * to set the world space scale of a graph node.
+         * @returns {pc.Vec3} The world space scale of the graph node.
+         * @example
+         * var scale = this.entity.getScale();
+         */
+        getScale: function () {
+            if (!this._scale) {
+                this._scale = new pc.Vec3();
+            }
+            return this.getWorldTransform().getScale(this._scale);
         },
 
         /**
