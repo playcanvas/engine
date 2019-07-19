@@ -496,7 +496,46 @@ Object.assign(pc, function () {
         syncAabb: function () {
             // Deprecated
         },
+        destroy:function(){
+            
+            var mesh,  ib,  j;
+            var device;
+            
+            mesh = this.mesh;
+            if (mesh) {
+                mesh._refCount--;
+                if (mesh._refCount < 1) {
+                    if (mesh.vertexBuffer) {
+                        device = device || mesh.vertexBuffer.device;
+                        mesh.vertexBuffer.destroy();
+                        mesh.vertexBuffer = null;
+                    }
+                    for (j = 0; j < mesh.indexBuffer.length; j++) {
+                        device = device || mesh.indexBuffer.device;
+                        ib = mesh.indexBuffer[j];
+                        if (!ib) continue;
+                        ib.destroy();
+                    }
+                    mesh.indexBuffer.length = 0;
+                }
+            }
 
+            if (this.skinInstance) {
+                var boneTex = this.skinInstance.boneTexture;
+                if (boneTex) {
+                    boneTex.destroy();
+                }
+                this.skinInstance = null;
+            }
+
+            if (this.morphInstance) {
+                this.morphInstance.destroy();
+                this.morphInstance = null;
+            }
+
+            this.material = null; // make sure instance and material clear references
+            this.node = null;
+        },
         updateKey: function () {
             var material = this.material;
             this._key[pc.SORTKEY_FORWARD] = getKey(this.layer,
