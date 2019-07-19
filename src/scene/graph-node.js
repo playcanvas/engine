@@ -745,9 +745,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#getScale
          * @description Get the world space scale for the specified GraphNode. The returned value
-         * will only be correct for graph nodes that have a non-skewed world transform. The value
-         * returned by this function should be considered read-only. Note that it is not possible
-         * to set the world space scale of a graph node.
+         * will only be correct for graph nodes that have a non-skewed world transform (a skew can
+         * be introduced by the compounding of rotations and scales higher in the graph node
+         * hierarchy). The value returned by this function should be considered read-only. Note
+         * that it is not possible to set the world space scale of a graph node directly.
          * @returns {pc.Vec3} The world space scale of the graph node.
          * @example
          * var scale = this.entity.getScale();
