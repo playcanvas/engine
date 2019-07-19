@@ -1320,7 +1320,7 @@ Object.assign(pc, function () {
 
             if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
                 var gravity = settings.physics.gravity;
-                this.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
+                this.systems.rigidbody.gravity.set(gravity[0], gravity[1], gravity[2]);
             }
 
             this.scene.applySettings(settings);

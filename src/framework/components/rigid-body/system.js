@@ -140,6 +140,7 @@ Object.assign(pc, function () {
      * @description Create a new RigidBodyComponentSystem
      * @param {pc.Application} app The Application
      * @extends pc.ComponentSystem
+     * @property {pc.Vec3} gravity The gravity vector used by the physics simulation. Defaults to [0, -9.81, 0].
      */
     var RigidBodyComponentSystem = function RigidBodyComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
@@ -160,6 +161,9 @@ Object.assign(pc, function () {
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1 / 60;
 
+        this.gravity = new pc.Vec3(0, -9.81, 0);
+        this._lastGravity = new pc.Vec3();
+
         this.on('remove', this.onRemove, this);
     };
     RigidBodyComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
@@ -176,9 +180,6 @@ Object.assign(pc, function () {
                 var overlappingPairCache = new Ammo.btDbvtBroadphase();
                 var solver = new Ammo.btSequentialImpulseConstraintSolver();
                 this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
-
-                this._ammoGravity = new Ammo.btVector3(0, -9.82, 0);
-                this.dynamicsWorld.setGravity(this._ammoGravity);
 
                 // Lazily create temp vars
                 ammoRayStart = new Ammo.btVector3();
@@ -265,37 +266,6 @@ Object.assign(pc, function () {
 
         removeConstraint: function (constraint) {
             this.dynamicsWorld.removeConstraint(constraint);
-        },
-
-        /**
-         * @function
-         * @name pc.RigidBodyComponentSystem#setGravity
-         * @description Set the gravity vector for the 3D physics world. This function has two valid signatures.
-         * You can either specify the gravity with a 3D-vector or 3 numbers.
-         * @param {pc.Vec3|Number} x The x-component of the gravity vector
-         * @param {Number} [y] The y-component of the gravity vector
-         * @param {Number} [z] The z-component of the gravity vector
-         * @example
-         * // Set via vector
-         * var gravity = new pc.Vec3(0, -9.81, 0);
-         * this.app.systems.rigidbody.setGravity(gravity);
-         * @example
-         * // Set via numbers
-         * this.app.systems.rigidbody.setGravity(0, -9.81, 0);
-         */
-        setGravity: function () {
-            var x, y, z;
-            if (arguments.length === 1) {
-                x = arguments[0].x;
-                y = arguments[0].y;
-                z = arguments[0].z;
-            } else {
-                x = arguments[0];
-                y = arguments[1];
-                z = arguments[2];
-            }
-            this._ammoGravity.setValue(x, y, z);
-            this.dynamicsWorld.setGravity(this._ammoGravity);
         },
 
         /**
@@ -461,6 +431,15 @@ Object.assign(pc, function () {
             // #ifdef PROFILER
             this._stats.physicsStart = pc.now();
             // #endif
+
+            // Check to see whether we need to update gravity on the dynamics world
+            if (!this._lastGravity.equals(this.gravity)) {
+                var gravity = new Ammo.btVector3(this.gravity.x, this.gravity.y, this.gravity.z);
+                this.dynamicsWorld.setGravity(gravity);
+                Ammo.destroy(gravity);
+
+                this._lastGravity.copy(this.gravity);
+            }
 
             // Update the transforms of all bodies
             this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
