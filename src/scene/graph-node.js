@@ -32,6 +32,7 @@ Object.assign(pc, function () {
         this.position = new pc.Vec3(0, 0, 0);
         this.rotation = new pc.Quat(0, 0, 0, 1);
         this.eulerAngles = new pc.Vec3(0, 0, 0);
+        this._scale = null;
 
         this.localTransform = new pc.Mat4();
         this._dirtyLocal = false;
@@ -104,6 +105,23 @@ Object.assign(pc, function () {
                 this._forward = new pc.Vec3();
             }
             return this.getWorldTransform().getZ(this._forward).normalize().scale(-1);
+        }
+    });
+
+    /**
+     * @private
+     * @readonly
+     * @name pc.GraphNode#scale
+     * @description The world scale of the graph node. The scale will only be correct if the graph node
+     * in question is not skewed as a result of scales and rotations applied higher in the hierarchy.
+     * @type pc.Vec3
+     */
+    Object.defineProperty(GraphNode.prototype, 'scale', {
+        get: function () {
+            if (!this._scale) {
+                this._scale = new pc.Vec3();
+            }
+            return this.getWorldTransform().getScale(this._scale);
         }
     });
 
