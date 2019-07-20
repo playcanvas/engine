@@ -160,7 +160,6 @@ Object.assign(pc, function () {
 
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1 / 60;
-
         this.gravity = new pc.Vec3(0, -9.81, 0);
 
         this.on('remove', this.onRemove, this);
