@@ -475,10 +475,12 @@
         PIXELFORMAT_SRGBA: 20,
 
         PIXELFORMAT_ETC1: 21,
-        PIXELFORMAT_PVRTC_2BPP_RGB_1: 22,
-        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 23,
-        PIXELFORMAT_PVRTC_4BPP_RGB_1: 24,
-        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 25,
+        PIXELFORMAT_ETC2_RGB: 22,
+        PIXELFORMAT_ETC2_RGBA: 23,
+        PIXELFORMAT_PVRTC_2BPP_RGB_1: 24,
+        PIXELFORMAT_PVRTC_2BPP_RGBA_1: 25,
+        PIXELFORMAT_PVRTC_4BPP_RGB_1: 26,
+        PIXELFORMAT_PVRTC_4BPP_RGBA_1: 27,
         // only add compressed formats next
 
         /**
@@ -757,9 +759,9 @@
         UNIFORMTYPE_TEXTURE3D: 20
     };
 
-    pc.extend(pc, enums);
+    Object.assign(pc, enums);
 
     // For backwards compatibility
     pc.gfx = {};
-    pc.extend(pc.gfx, enums);
+    Object.assign(pc.gfx, enums);
 }());

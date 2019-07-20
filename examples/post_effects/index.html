@@ -11,7 +11,7 @@
 
     <script>
         function createMaterial(colors) {
-            var material = new pc.PhongMaterial();
+            var material = new pc.StandardMaterial();
             for (var param in colors) {
                 material[param] = colors[param];
             }
@@ -28,7 +28,7 @@
     <script src="../../extras/posteffects/posteffect-bloom.js"></script>
     <script src="../../extras/posteffects/posteffect-sepia.js"></script>
     <script src="../../extras/posteffects/posteffect-vignette.js"></script>
-
+    <script src="../../extras/posteffects/posteffect-bokeh.js"></script>
     <!-- The script -->
     <script>
         // Start the update loop
@@ -38,6 +38,19 @@
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
+
+        // Generate some materials to assigm to scene objects
+        var gray = createMaterial({
+            ambient: new pc.Color(0.1, 0.1, 0.1),
+            diffuse: new pc.Color(0.5, 0.5, 0.5)
+        });
+        var white = createMaterial({
+            emissive: new pc.Color(1,1,1)
+        });
+        var blue = createMaterial({
+            diffuse: new pc.Color(0,0,0),
+            emissive: new pc.Color(0,0,1)
+        });
 
         var entity, light, camera;
 
@@ -68,12 +81,7 @@
         });
         ground.setLocalScale(50, 1, 50);
         ground.setLocalPosition(0, -0.5, 0);
-
-        var material = createMaterial({
-            ambient: new pc.Color(0.1, 0.1, 0.1),
-            diffuse: new pc.Color(0.5, 0.5, 0.5),
-        });
-        ground.model.model.meshInstances[0].material = material;
+        ground.model.material = gray;
 
         // Create an spot light
         var light = new pc.Entity();
@@ -94,7 +102,7 @@
         cone.addComponent("model", {
             type: "cone"
         });
-        cone.model.model.meshInstances[0].material = createMaterial({emissive: new pc.Color(1,1,1)})
+        cone.model.material = white;
         light.addChild(cone);
 
         // Create a point light
@@ -108,7 +116,7 @@
         pointlight.addComponent("model", {
             type: "sphere"
         });
-        pointlight.model.model.meshInstances[0].material = createMaterial({diffuse: new pc.Color(0,0,0), emissive: new pc.Color(0,0,1)});
+        pointlight.model.material = blue;
 
         // create some post effects
         var bloom = new pc.BloomEffect(app.graphicsDevice);
@@ -123,6 +131,9 @@
         vignette.darkness = 2;
         camera.camera.postEffects.addEffect(vignette);
 
+        var bokeh = new pc.BokehEffect(app.graphicsDevice);
+        bokeh.focus = 0.4;
+        camera.camera.postEffects.addEffect(bokeh);
         // Add Entities into the scene hierarchy
         app.root.addChild(camera);
         app.root.addChild(light);
@@ -136,6 +147,27 @@
 
         var pointRadius = 5;
         var pointHeight = 10;
+
+        var hasEffects = true;
+        var onKeyDown = function (e) {
+            if (e.key === pc.KEY_SPACE) {
+                if(hasEffects) {
+                    camera.camera.postEffects.removeEffect(bokeh);
+                    camera.camera.postEffects.removeEffect(sepia);
+                    camera.camera.postEffects.removeEffect(vignette);
+                }
+                else {
+                    camera.camera.postEffects.addEffect(sepia);
+                    camera.camera.postEffects.addEffect(vignette);
+                    camera.camera.postEffects.addEffect(bokeh);
+                }
+                hasEffects = !hasEffects;
+            }
+            e.event.preventDefault(); // Use original browser event to prevent browser action.
+        };
+        var keyboard = new pc.Keyboard(document.body);
+        keyboard.on("keydown", onKeyDown, this);
+
         app.on("update", function (dt) {
             angle += 20*dt;
             if (angle > 360) {

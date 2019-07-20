@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @component Animation
      * @constructor
@@ -10,12 +10,14 @@ pc.extend(pc, function () {
      * @extends pc.Component
      * @property {Number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation
      * @property {Boolean} loop If true the animation will restart from the beginning when it reaches the end
-     * @property {Boolean} activate If true the first animation asset will begin playing when the Pack is loaded
+     * @property {Boolean} activate If true the first animation asset will begin playing when the scene is loaded
      * @property {pc.Asset[]} assets The array of animation assets - can also be an array of asset ids.
      * @property {Number} currentTime Get or Set the current time position (in seconds) of the animation
      * @property {Number} duration Get the duration in seconds of the current animation.
      */
     var AnimationComponent = function (system, entity) {
+        pc.Component.call(this, system, entity);
+
         this.animationsIndex = { };
 
         // Handle changes to the 'animations' value
@@ -25,9 +27,10 @@ pc.extend(pc, function () {
         // Handle changes to the 'loop' value
         this.on('set_loop', this.onSetLoop, this);
     };
-    AnimationComponent = pc.inherits(AnimationComponent, pc.Component);
+    AnimationComponent.prototype = Object.create(pc.Component.prototype);
+    AnimationComponent.prototype.constructor = AnimationComponent;
 
-    pc.extend(AnimationComponent.prototype, {
+    Object.assign(AnimationComponent.prototype, {
         /**
          * @function
          * @name pc.AnimationComponent#play
@@ -72,12 +75,12 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.AnimationComponent#getAnimation
-        * @description Return an animation
-        * @param {String} name The name of the animation asset
-        * @returns {pc.Animation} An Animation
-        */
+         * @function
+         * @name pc.AnimationComponent#getAnimation
+         * @description Return an animation
+         * @param {String} name The name of the animation asset
+         * @returns {pc.Animation} An Animation
+         */
         getAnimation: function (name) {
             return this.data.animations[name];
         },
@@ -102,7 +105,7 @@ pc.extend(pc, function () {
         },
 
         loadAnimationAssets: function (ids) {
-            if (! ids || ! ids.length)
+            if (!ids || !ids.length)
                 return;
 
             var self = this;
@@ -112,10 +115,12 @@ pc.extend(pc, function () {
             var onAssetReady = function (asset) {
                 self.animations[asset.name] = asset.resource;
                 self.animationsIndex[asset.id] = asset.name;
+                /* eslint-disable no-self-assign */
                 self.animations = self.animations; // assigning ensures set_animations event is fired
+                /* eslint-enable no-self-assign */
             };
 
-            var onAssetAdd = function(asset) {
+            var onAssetAdd = function (asset) {
                 asset.off('change', self.onAssetChanged, self);
                 asset.on('change', self.onAssetChanged, self);
 
@@ -131,7 +136,7 @@ pc.extend(pc, function () {
                 }
             };
 
-            for(i = 0; i < l; i++) {
+            for (i = 0; i < l; i++) {
                 var asset = assets.get(ids[i]);
                 if (asset) {
                     onAssetAdd(asset);
@@ -193,7 +198,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (! data.currAnim && data.activate && data.enabled && this.entity.enabled) {
+            if (!data.currAnim && data.activate && data.enabled && this.entity.enabled) {
                 for (var animName in data.animations) {
                     // Set the first loaded animation as the current
                     this.play(animName, 0);
@@ -225,11 +230,7 @@ pc.extend(pc, function () {
             }
 
             var ids = newValue.map(function (value) {
-                if (value instanceof pc.Asset) {
-                    return value.id;
-                } else {
-                    return value;
-                }
+                return (value instanceof pc.Asset) ? value.id : value;
             });
 
             this.loadAnimationAssets(ids);
@@ -248,7 +249,7 @@ pc.extend(pc, function () {
         },
 
         onEnable: function () {
-            AnimationComponent._super.onEnable.call(this);
+            pc.Component.prototype.onEnable.call(this);
 
             // load assets if they're not loaded
             var assets = this.data.assets;
@@ -256,7 +257,7 @@ pc.extend(pc, function () {
             if (assets) {
                 for (var i = 0, len = assets.length; i < len; i++) {
                     var asset = assets[i];
-                    if (! (asset instanceof pc.Asset))
+                    if (!(asset instanceof pc.Asset))
                         asset = registry.get(asset);
 
                     if (asset && !asset.resource)
@@ -264,7 +265,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if (this.data.activate && ! this.data.currAnim) {
+            if (this.data.activate && !this.data.currAnim) {
                 for (var animName in this.data.animations) {
                     this.play(animName, 0);
                     break;
@@ -272,10 +273,10 @@ pc.extend(pc, function () {
             }
         },
 
-        onBeforeRemove: function() {
-            for(var i = 0; i < this.assets.length; i++) {
+        onBeforeRemove: function () {
+            for (var i = 0; i < this.assets.length; i++) {
                 var asset = this.system.app.assets.get(this.assets[i]);
-                if (! asset) continue;
+                if (!asset) continue;
 
                 asset.off('change', this.onAssetChanged, this);
                 asset.off('remove', this.onAssetRemoved, this);

@@ -1,5 +1,5 @@
-pc.extend(pc, function() {
-    var ParticleSystemComponentData = function() {
+Object.assign(pc, function () {
+    var ParticleSystemComponentData = function () {
 
         this.numParticles = 1;                  // Amount of particles allocated (max particles = max GL texture width at this moment)
         this.rate = 1;                          // Emission rate
@@ -8,7 +8,9 @@ pc.extend(pc, function() {
         this.startAngle2 = null;
         this.lifetime = 50;                     // Particle lifetime
         this.emitterExtents = new pc.Vec3();       // Spawn point divergence
+        this.emitterExtentsInner = new pc.Vec3();
         this.emitterRadius = 0;
+        this.emitterRadiusInner = 0;
         this.emitterShape = pc.EMITTERSHAPE_BOX;
         this.initialVelocity = 0;
         this.wrapBounds = new pc.Vec3();
@@ -28,10 +30,14 @@ pc.extend(pc, function() {
         this.stretch = 0.0;
         this.alignToMotion = false;
         this.depthSoftening = 0;
+        this.meshAsset = null;
         this.mesh = null;                       // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                 // Leave undefined to use simple quads
         this.depthWrite = false;
         this.noFog = false;
+
+        this.orientation = pc.PARTICLEORIENTATION_SCREEN;
+        this.particleNormal = new pc.Vec3(0, 1, 0);
 
         this.animTilesX = 1;
         this.animTilesY = 1;
@@ -58,6 +64,9 @@ pc.extend(pc, function() {
         this.rotationSpeedGraph = null;
         this.rotationSpeedGraph2 = null;
 
+        this.radialSpeedGraph = null;
+        this.radialSpeedGraph2 = null;
+
         this.blendType = pc.BLEND_NORMAL;
 
         this.model = null;
@@ -67,8 +76,9 @@ pc.extend(pc, function() {
         this.paused = false;
 
         this.autoPlay = true;
+
+        this.layers = [pc.LAYERID_WORLD]; // assign to the default world layer
     };
-    ParticleSystemComponentData = pc.inherits(ParticleSystemComponentData, pc.ComponentData);
 
     return {
         ParticleSystemComponentData: ParticleSystemComponentData

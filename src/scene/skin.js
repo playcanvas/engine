@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Skin
@@ -10,7 +10,7 @@ pc.extend(pc, function () {
      * @param {String[]} boneNames The array of bone names for the bones referenced by this skin.
      */
 
-     var _invMatrix = new pc.Mat4();
+    var _invMatrix = new pc.Mat4();
 
     var Skin = function (graphicsDevice, ibp, boneNames) {
         // Constant between clones
@@ -66,17 +66,18 @@ pc.extend(pc, function () {
                 minFilter: pc.FILTER_NEAREST,
                 magFilter: pc.FILTER_NEAREST
             });
+            this.boneTexture.name = 'skin';
             this.matrixPalette = this.boneTexture.lock();
         } else {
             this.matrixPalette = new Float32Array(numBones * 16);
         }
         this.matrices = [];
-        for(var i=0; i<numBones; i++) {
+        for (var i = 0; i < numBones; i++) {
             this.matrices[i] = new pc.Mat4();
         }
     };
 
-    SkinInstance.prototype = {
+    Object.assign(SkinInstance.prototype, {
 
         updateMatrices: function (rootNode) {
 
@@ -121,7 +122,7 @@ pc.extend(pc, function () {
                 this.boneTexture.unlock();
             }
         }
-    };
+    });
 
     return {
         Skin: Skin,

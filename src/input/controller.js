@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     /**
      * @constructor
@@ -29,7 +29,7 @@ pc.extend(pc, function () {
         this._axes = {};
         this._axesValues = {};
 
-        if(element) {
+        if (element) {
             this.attach(element);
         }
     };
@@ -57,10 +57,10 @@ pc.extend(pc, function () {
      * @description Detach Controller from an Element, this should be done before the Controller is destroyed
      */
     Controller.prototype.detach = function () {
-        if(this._keyboard) {
+        if (this._keyboard) {
             this._keyboard.detach();
         }
-        if(this._mouse) {
+        if (this._mouse) {
             this._mouse.detach();
         }
         this._element = null;
@@ -72,7 +72,7 @@ pc.extend(pc, function () {
      * @description Disable the context menu usually activated with the right mouse button.
      */
     Controller.prototype.disableContextMenu = function () {
-        if(!this._mouse) {
+        if (!this._mouse) {
             this._enableMouse();
         }
 
@@ -85,7 +85,7 @@ pc.extend(pc, function () {
      * @description Enable the context menu usually activated with the right mouse button. This is enabled by default.
      */
     Controller.prototype.enableContextMenu = function () {
-        if(!this._mouse) {
+        if (!this._mouse) {
             this._enableMouse();
         }
 
@@ -214,11 +214,11 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @function
-    * @name pc.Controller#registerAxis
-    * @param {Object} [options] Optional options object.
-    * @param {Object} [options.pad] The index of the game pad to register for (use pc.PAD_1, etc)
-    */
+     * @function
+     * @name pc.Controller#registerAxis
+     * @param {Object} [options] Optional options object.
+     * @param {Object} [options.pad] The index of the game pad to register for (use pc.PAD_1, etc)
+     */
     Controller.prototype.registerAxis = function (options) {
         var name = options.name;
         if (!this._axes[name]) {
@@ -287,7 +287,7 @@ pc.extend(pc, function () {
      * @returns {Boolean} True if the action is enabled.
      */
     Controller.prototype.isPressed = function (actionName) {
-        if(!this._actions[actionName]) {
+        if (!this._actions[actionName]) {
             return false;
         }
 
@@ -295,11 +295,11 @@ pc.extend(pc, function () {
         var index = 0;
         var length = this._actions[actionName].length;
 
-        for(index = 0; index < length; ++index) {
+        for (index = 0; index < length; ++index) {
             action = this._actions[actionName][index];
-            switch(action.type) {
+            switch (action.type) {
                 case pc.ACTION_KEYBOARD:
-                    if(this._keyboard) {
+                    if (this._keyboard) {
                         var i, len = action.keys.length;
                         for (i = 0; i < len; i++) {
                             if (this._keyboard.isPressed(action.keys[i])) {
@@ -309,12 +309,12 @@ pc.extend(pc, function () {
                     }
                     break;
                 case pc.ACTION_MOUSE:
-                    if(this._mouse && this._mouse.isPressed(action.button)) {
+                    if (this._mouse && this._mouse.isPressed(action.button)) {
                         return true;
                     }
                     break;
                 case pc.ACTION_GAMEPAD:
-                    if(this._gamepads && this._gamepads.isPressed(action.pad, action.button)) {
+                    if (this._gamepads && this._gamepads.isPressed(action.pad, action.button)) {
                         return true;
                     }
                     break;
@@ -338,11 +338,11 @@ pc.extend(pc, function () {
         var index = 0;
         var length = this._actions[actionName].length;
 
-        for(index = 0; index < length; ++index) {
+        for (index = 0; index < length; ++index) {
             var action = this._actions[actionName][index];
-            switch(action.type) {
+            switch (action.type) {
                 case pc.ACTION_KEYBOARD:
-                    if(this._keyboard) {
+                    if (this._keyboard) {
                         var i, len = action.keys.length;
                         for (i = 0; i < len; i++) {
                             if (this._keyboard.wasPressed(action.keys[i])) {
@@ -352,12 +352,12 @@ pc.extend(pc, function () {
                     }
                     break;
                 case pc.ACTION_MOUSE:
-                    if(this._mouse && this._mouse.wasPressed(action.button)) {
+                    if (this._mouse && this._mouse.wasPressed(action.button)) {
                         return true;
                     }
                     break;
                 case pc.ACTION_GAMEPAD:
-                    if(this._gamepads && this._gamepads.wasPressed(action.pad, action.button)) {
+                    if (this._gamepads && this._gamepads.wasPressed(action.pad, action.button)) {
                         return true;
                     }
                     break;
@@ -371,7 +371,7 @@ pc.extend(pc, function () {
 
         if (this._axes[name]) {
             var i, len = this._axes[name].length;
-            for (i = 0;i < len; i++) {
+            for (i = 0; i < len; i++) {
                 if (pc.type(this._axes[name][i]) === 'function') {
                     var v = this._axes[name][i]();
                     if (Math.abs(v) > Math.abs(value)) {
@@ -390,7 +390,7 @@ pc.extend(pc, function () {
 
     Controller.prototype._enableMouse = function () {
         this._mouse = new pc.Mouse();
-        if(!this._element) {
+        if (!this._element) {
             throw new Error("Controller must be attached to an Element");
         }
         this._mouse.attach(this._element);
@@ -398,7 +398,7 @@ pc.extend(pc, function () {
 
     Controller.prototype._enableKeyboard = function () {
         this._keyboard = new pc.Keyboard();
-        if(!this._element) {
+        if (!this._element) {
             throw new Error("Controller must be attached to an Element");
         }
         this._keyboard.attach(this._element);

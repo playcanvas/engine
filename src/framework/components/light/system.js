@@ -1,11 +1,12 @@
-pc.extend(pc, function () {
-/*
-* @name pc.LightComponentSystem
-* @description Create a new LightComponentSystem.
-* @class A Light Component is used to dynamically light the scene.
-* @param {pc.Application} app The application.
-* @extends pc.ComponentSystem
-*/
+Object.assign(pc, function () {
+    /**
+     * @constructor
+     * @name pc.LightComponentSystem
+     * @classdesc A Light Component is used to dynamically light the scene.
+     * @description Create a new LightComponentSystem.
+     * @param {pc.Application} app The application.
+     * @extends pc.ComponentSystem
+     */
     var lightTypes = {
         'directional': pc.LIGHTTYPE_DIRECTIONAL,
         'point': pc.LIGHTTYPE_POINT,
@@ -13,32 +14,36 @@ pc.extend(pc, function () {
     };
 
     var LightComponentSystem = function (app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'light';
         this.description = "Enables the Entity to emit light.";
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.LightComponent;
         this.DataType = pc.LightComponentData;
-
-        this.on('remove', this.onRemove, this);
     };
-    LightComponentSystem = pc.inherits(LightComponentSystem, pc.ComponentSystem);
+    LightComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    LightComponentSystem.prototype.constructor = LightComponentSystem;
 
-    pc.extend(LightComponentSystem.prototype, {
+    Object.assign(LightComponentSystem.prototype, {
         initializeComponentData: function (component, _data) {
+            var properties = pc._lightProps;
+
             // duplicate because we're modifying the data
             var data = {};
-            var _props = pc._lightProps;
-            var name;
-            for(var i=0; i<_props.length; i++) {
-                name = _props[i];
-                data[name] = _data[name];
+            for (var i = 0, len = properties.length; i < len; i++) {
+                var property = properties[i];
+                data[property] = _data[property];
             }
 
             if (!data.type)
                 data.type = component.data.type;
 
             component.data.type = data.type;
+
+            if (data.layers && pc.type(data.layers) === 'array') {
+                data.layers = data.layers.slice(0);
+            }
 
             if (data.color && pc.type(data.color) === 'array')
                 data.color = new pc.Color(data.color[0], data.color[1], data.color[2]);
@@ -57,14 +62,17 @@ pc.extend(pc, function () {
             var light = new pc.Light();
             light.type = lightTypes[data.type];
             light._node = component.entity;
-            this.app.scene.addLight(light);
+            light._scene = this.app.scene;
             component.data.light = light;
 
-            LightComponentSystem._super.initializeComponentData.call(this, component, data, _props);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
-        onRemove: function (entity, data) {
-            this.app.scene.removeLight(data.light);
+        removeComponent: function (entity) {
+            var data = entity.light.data;
+            data.light.destroy();
+
+            pc.ComponentSystem.prototype.removeComponent.call(this, entity);
         },
 
         cloneComponent: function (entity, clone) {
@@ -73,9 +81,9 @@ pc.extend(pc, function () {
             var data = [];
             var name;
             var _props = pc._lightProps;
-            for(var i=0; i<_props.length; i++) {
+            for (var i = 0; i < _props.length; i++) {
                 name = _props[i];
-                if (name==="light") continue;
+                if (name === "light") continue;
                 if (light[name] && light[name].clone) {
                     data[name] = light[name].clone();
                 } else {
@@ -87,7 +95,7 @@ pc.extend(pc, function () {
         },
 
         changeType: function (component, oldValue, newValue) {
-            if (oldValue!==newValue) {
+            if (oldValue !== newValue) {
                 component.light.type = lightTypes[newValue];
             }
         }

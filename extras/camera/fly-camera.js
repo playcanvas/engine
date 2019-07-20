@@ -49,15 +49,15 @@ FlyCamera.prototype.update = function (dt) {
 
     // Update the camera's position
     if (app.keyboard.isPressed(pc.KEY_UP) || app.keyboard.isPressed(pc.KEY_W)) {
-        this.entity.translateLocal(0, 0, -speed*dt);
+        this.entity.translateLocal(0, 0, -speed * dt);
     } else if (app.keyboard.isPressed(pc.KEY_DOWN) || app.keyboard.isPressed(pc.KEY_S)) {
-        this.entity.translateLocal(0, 0, speed*dt);
+        this.entity.translateLocal(0, 0, speed * dt);
     }
 
     if (app.keyboard.isPressed(pc.KEY_LEFT) || app.keyboard.isPressed(pc.KEY_A)) {
-        this.entity.translateLocal(-speed*dt, 0, 0);
+        this.entity.translateLocal(-speed * dt, 0, 0);
     } else if (app.keyboard.isPressed(pc.KEY_RIGHT) || app.keyboard.isPressed(pc.KEY_D)) {
-        this.entity.translateLocal(speed*dt, 0, 0);
+        this.entity.translateLocal(speed * dt, 0, 0);
     }
 };
 

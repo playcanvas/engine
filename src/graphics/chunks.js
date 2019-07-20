@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     var shaderChunks = {};
@@ -26,13 +26,13 @@ pc.extend(pc, (function () {
 
         var found = vsCode.indexOf("attribute");
         while (found >= 0) {
-            if (found > 0 && vsCode[found-1]==="/") break;
+            if (found > 0 && vsCode[found - 1] === "/") break;
             var endOfLine = vsCode.indexOf(';', found);
             var startOfAttribName = vsCode.lastIndexOf(' ', endOfLine);
             var attribName = vsCode.substr(startOfAttribName + 1, endOfLine - (startOfAttribName + 1));
 
             var semantic = attrib2Semantic[attribName];
-            if (semantic!==undefined) {
+            if (semantic !== undefined) {
                 attribs[attribName] = semantic;
             } else {
                 attribs[attribName] = "ATTR" + attrs;
@@ -45,7 +45,7 @@ pc.extend(pc, (function () {
     };
 
 
-    shaderChunks.createShader = function(device, vsName, psName, useTransformFeedback) {
+    shaderChunks.createShader = function (device, vsName, psName, useTransformFeedback) {
         var vsCode = shaderChunks[vsName];
         var psCode = pc.programlib.precisionCode(device) + "\n" + shaderChunks[psName];
         var attribs = this.collectAttribs(vsCode);
@@ -63,7 +63,7 @@ pc.extend(pc, (function () {
         });
     };
 
-    shaderChunks.createShaderFromCode = function(device, vsCode, psCode, uName, useTransformFeedback) {
+    shaderChunks.createShaderFromCode = function (device, vsCode, psCode, uName, useTransformFeedback) {
         var shaderCache = device.programLib._cache;
         var cached = shaderCache[uName];
         if (cached !== undefined) return cached;

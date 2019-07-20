@@ -1,8 +1,8 @@
 /**
-* @name pc.debug
-* @private
-* @namespace
-*/
+ * @name pc.debug
+ * @private
+ * @namespace
+ */
 pc.debug = (function () {
     var table = null;
     var row = null;

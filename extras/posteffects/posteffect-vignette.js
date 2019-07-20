@@ -1,15 +1,19 @@
-//--------------- POST EFFECT DEFINITION ------------------------//
-pc.extend(pc, function () {
+// --------------- POST EFFECT DEFINITION --------------- //
+Object.assign(pc, function () {
 
     /**
+     * @constructor
      * @name pc.VignetteEffect
-     * @class Implements the VignetteEffect post processing effect.
+     * @classdesc Implements the VignetteEffect post processing effect.
+     * @description Creates new instance of the post effect.
      * @extends pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} offset Controls the offset of the effect.
      * @property {Number} darkness Controls the darkness of the effect.
      */
     var VignetteEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         // Shaders
         var attributes = {
             aPosition: pc.SEMANTIC_POSITION
@@ -53,9 +57,10 @@ pc.extend(pc, function () {
         this.darkness = 1;
     };
 
-    VignetteEffect = pc.inherits(VignetteEffect, pc.PostEffect);
+    VignetteEffect.prototype = Object.create(pc.PostEffect.prototype);
+    VignetteEffect.prototype.constructor = VignetteEffect;
 
-    VignetteEffect.prototype = pc.extend(VignetteEffect, {
+    Object.assign(VignetteEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -72,8 +77,7 @@ pc.extend(pc, function () {
     };
 }());
 
-
-//--------------- SCRIPT DEFINITION------------------------//
+// ----------------- SCRIPT DEFINITION ------------------ //
 var Vignette = pc.createScript('vignette');
 
 Vignette.attributes.add('offset', {
@@ -92,7 +96,7 @@ Vignette.attributes.add('darkness', {
 });
 
 // initialize code called once per entity
-Vignette.prototype.initialize = function() {
+Vignette.prototype.initialize = function () {
     this.effect = new pc.VignetteEffect(this.app.graphicsDevice);
     this.effect.offset = this.offset;
     this.effect.darkness = this.darkness;

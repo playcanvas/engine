@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var _schema = [
         'enabled',
         'assets',
@@ -25,11 +25,11 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The application managing this system.
      * @extends pc.ComponentSystem
      */
-    var AnimationComponentSystem = function AnimationComponentSystem (app) {
+    var AnimationComponentSystem = function AnimationComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'animation';
         this.description = "Specifies the animation assets that can run on the model specified by the Entity's model Component.";
-
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.AnimationComponent;
         this.DataType = pc.AnimationComponentData;
@@ -39,23 +39,24 @@ pc.extend(pc, function () {
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('update', this.onUpdate, this);
 
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.bind('update', this.onUpdate, this);
     };
-    AnimationComponentSystem = pc.inherits(AnimationComponentSystem, pc.ComponentSystem);
+    AnimationComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    AnimationComponentSystem.prototype.constructor = AnimationComponentSystem;
 
     pc.Component._buildAccessors(pc.AnimationComponent.prototype, _schema);
 
-    pc.extend(AnimationComponentSystem.prototype, {
+    Object.assign(AnimationComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['activate', 'enabled', 'loop', 'speed', 'assets'];
-            AnimationComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {
             var key;
             this.addComponent(clone, {});
 
-            clone.animation.data.assets = pc.extend([], entity.animation.assets);
+            clone.animation.assets = entity.animation.assets.slice();
             clone.animation.data.speed = entity.animation.speed;
             clone.animation.data.loop = entity.animation.loop;
             clone.animation.data.activate = entity.animation.activate;

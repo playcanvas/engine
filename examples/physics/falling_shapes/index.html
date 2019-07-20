@@ -29,7 +29,7 @@
     app.systems.rigidbody.setGravity(0, -9.8, 0);
 
     function createMaterial (color) {
-        var material = new pc.PhongMaterial();
+        var material = new pc.StandardMaterial();
         material.diffuse = color;
         // we need to call material.update when we change its properties
         material.update()

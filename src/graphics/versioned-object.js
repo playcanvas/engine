@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var idCounter = 0;
@@ -14,12 +14,12 @@ pc.extend(pc, function () {
         this.version.globalId = idCounter;
     };
 
-    VersionedObject.prototype = {
+    Object.assign(VersionedObject.prototype, {
         increment: function () {
             // Increment the revision number
             this.version.revision++;
         }
-    };
+    });
 
     return {
         VersionedObject: VersionedObject

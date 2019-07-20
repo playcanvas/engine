@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var ammoRayStart, ammoRayEnd;
 
     var collisions = {};
@@ -111,11 +111,11 @@ pc.extend(pc, function () {
 
     // Events Documentation
     /**
-    * @event
-    * @name pc.RigidBodyComponentSystem#contact
-    * @description Fired when a contact occurs between two rigid bodies
-    * @param {pc.SingleContactResult} result Details of the contact between the two bodies
-    */
+     * @event
+     * @name pc.RigidBodyComponentSystem#contact
+     * @description Fired when a contact occurs between two rigid bodies
+     * @param {pc.SingleContactResult} result Details of the contact between the two bodies
+     */
 
     var _schema = [
         'enabled',
@@ -141,10 +141,11 @@ pc.extend(pc, function () {
      * @param {pc.Application} app The Application
      * @extends pc.ComponentSystem
      */
-    var RigidBodyComponentSystem = function RigidBodyComponentSystem (app) {
+    var RigidBodyComponentSystem = function RigidBodyComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'rigidbody';
         this.description = "Adds the entity to the scene's physical simulation.";
-        app.systems.add(this.id, this);
         this._stats = app.stats.frame;
 
         this.ComponentType = pc.RigidBodyComponent;
@@ -157,15 +158,16 @@ pc.extend(pc, function () {
         this.schema = _schema;
 
         this.maxSubSteps = 10;
-        this.fixedTimeStep = 1/60;
+        this.fixedTimeStep = 1 / 60;
 
         this.on('remove', this.onRemove, this);
     };
-    RigidBodyComponentSystem = pc.inherits(RigidBodyComponentSystem, pc.ComponentSystem);
+    RigidBodyComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    RigidBodyComponentSystem.prototype.constructor = RigidBodyComponentSystem;
 
     pc.Component._buildAccessors(pc.RigidBodyComponent.prototype, _schema);
 
-    pc.extend(RigidBodyComponentSystem.prototype, {
+    Object.assign(RigidBodyComponentSystem.prototype, {
         onLibraryLoaded: function () {
             // Create the Ammo physics world
             if (typeof Ammo !== 'undefined') {
@@ -181,10 +183,10 @@ pc.extend(pc, function () {
                 // Lazily create temp vars
                 ammoRayStart = new Ammo.btVector3();
                 ammoRayEnd = new Ammo.btVector3();
-                pc.ComponentSystem.on('update', this.onUpdate, this);
+                pc.ComponentSystem.bind('update', this.onUpdate, this);
             } else {
                 // Unbind the update function if we haven't loaded Ammo by now
-                pc.ComponentSystem.off('update', this.onUpdate, this);
+                pc.ComponentSystem.unbind('update', this.onUpdate, this);
             }
         },
 
@@ -193,9 +195,10 @@ pc.extend(pc, function () {
 
             // duplicate the input data because we are modifying it
             var data = {};
-            properties.forEach(function (prop) {
-                data[prop] = _data[prop];
-            });
+            for (var i = 0, len = properties.length; i < len; i++) {
+                var property = properties[i];
+                data[property] = _data[property];
+            }
 
             // backwards compatibility
             if (_data.bodyType) {
@@ -210,7 +213,7 @@ pc.extend(pc, function () {
                 data.angularFactor = new pc.Vec3(data.angularFactor[0], data.angularFactor[1], data.angularFactor[2]);
             }
 
-            RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            pc.ComponentSystem.prototype.initializeComponentData.call(this, component, data, properties);
         },
 
         cloneComponent: function (entity, clone) {
@@ -267,16 +270,18 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.RigidBodyComponentSystem#setGravity
-         * @description Set the gravity vector for the 3D physics world
-         * @param {Number} x The x-component of the gravity vector
-         * @param {Number} y The y-component of the gravity vector
-         * @param {Number} z The z-component of the gravity vector
-         */
-        /**
-         * @function
-         * @name pc.RigidBodyComponentSystem#setGravity^2
-         * @description Set the gravity vector for the 3D physics world
-         * @param {pc.Vec3} gravity The gravity vector to use for the 3D physics world.
+         * @description Set the gravity vector for the 3D physics world. This function has two valid signatures.
+         * You can either specify the gravity with a 3D-vector or 3 numbers.
+         * @param {pc.Vec3|Number} x The x-component of the gravity vector
+         * @param {Number} [y] The y-component of the gravity vector
+         * @param {Number} [z] The z-component of the gravity vector
+         * @example
+         * // Set via vector
+         * var gravity = new pc.Vec3(0, -9.81, 0);
+         * this.app.systems.rigidbody.setGravity(gravity);
+         * @example
+         * // Set via numbers
+         * this.app.systems.rigidbody.setGravity(0, -9.81, 0);
          */
         setGravity: function () {
             var x, y, z;
@@ -302,7 +307,7 @@ pc.extend(pc, function () {
          * @param {pc.Vec3} end The world space point where the ray ends
          * @returns {pc.RaycastResult} The result of the raycasting or null if there was no hit.
          */
-        raycastFirst: function (start, end, callback /*callback is deprecated*/) {
+        raycastFirst: function (start, end) {
             var result = null;
 
             ammoRayStart.setValue(start.x, start.y, start.z);
@@ -324,10 +329,11 @@ pc.extend(pc, function () {
                     );
 
                     // keeping for backwards compatibility
-                    if (callback) {
+                    if (arguments.length > 2) {
+                        var callback = arguments[2];
                         callback(result);
 
-                        if (! WARNED_RAYCAST_CALLBACK) {
+                        if (!WARNED_RAYCAST_CALLBACK) {
                             console.warn('[DEPRECATED]: pc.RigidBodyComponentSystem#rayCastFirst no longer requires a callback. The result of the raycast is returned by the function instead.');
                             WARNED_RAYCAST_CALLBACK = true;
                         }
@@ -341,26 +347,26 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.RigidBodyComponentSystem#_storeCollision
-        * @description Stores a collision between the entity and other in the contacts map and returns true if it is a new collision
-        * @param {pc.Entity} entity The entity
-        * @param {pc.Entity} other The entity that collides with the first entity
-        * @returns {Boolean} true if this is a new collision, false otherwise.
-        */
+         * @private
+         * @function
+         * @name pc.RigidBodyComponentSystem#_storeCollision
+         * @description Stores a collision between the entity and other in the contacts map and returns true if it is a new collision
+         * @param {pc.Entity} entity The entity
+         * @param {pc.Entity} other The entity that collides with the first entity
+         * @returns {Boolean} true if this is a new collision, false otherwise.
+         */
         _storeCollision: function (entity, other) {
             var isNewCollision = false;
-            var guid = entity._guid;
+            var guid = entity.getGuid();
 
-            collisions[guid] = collisions[guid] || {others: [], entity: entity};
+            collisions[guid] = collisions[guid] || { others: [], entity: entity };
 
             if (collisions[guid].others.indexOf(other) < 0) {
                 collisions[guid].others.push(other);
                 isNewCollision = true;
             }
 
-            frameCollisions[guid] = frameCollisions[guid] || {others: [], entity: entity};
+            frameCollisions[guid] = frameCollisions[guid] || { others: [], entity: entity };
             frameCollisions[guid].others.push(other);
 
             return isNewCollision;
@@ -411,12 +417,12 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.RigidBodyComponentSystem#_cleanOldCollisions
-        * @description Removes collisions that no longer exist from the collisions list and fires collisionend events to the
-        * related entities.
-        */
+         * @private
+         * @function
+         * @name pc.RigidBodyComponentSystem#_cleanOldCollisions
+         * @description Removes collisions that no longer exist from the collisions list and fires collisionend events to the
+         * related entities.
+         */
         _cleanOldCollisions: function () {
             for (var guid in collisions) {
                 if (collisions.hasOwnProperty(guid)) {
@@ -424,7 +430,7 @@ pc.extend(pc, function () {
                     var entityCollision = entity.collision;
                     var others = collisions[guid].others;
                     var length = others.length;
-                    var i=length;
+                    var i = length;
                     while (i--) {
                         var other = others[i];
                         // if the contact does not exist in the current frame collisions then fire event
@@ -450,41 +456,6 @@ pc.extend(pc, function () {
                 }
             }
         },
-
-        /**
-        * @private
-        * @name pc.RigidBodyComponentSystem#raycast
-        * @description Raycast the world and return all entities the ray hits. Fire a ray into the world from start to end,
-        * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.RaycastResult}.
-        * @param {pc.Vec3} start The world space point where the ray starts
-        * @param {pc.Vec3} end The world space point where the ray ends
-        * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.RaycastResult} object
-        */
-        // raycast: function (start, end, callback) {
-        //     var rayFrom = new Ammo.btVector3(start.x, start.y, start.z);
-        //     var rayTo = new Ammo.btVector3(end.x, end.y, end.z);
-        //     var rayCallback = new Ammo.AllHitsRayResultCallback(rayFrom, rayTo);
-
-        //     this.dynamicsWorld.rayTest(rayFrom, rayTo, rayCallback);
-        //     if (rayCallback.hasHit()) {
-        //         var body = Module.castObject(rayCallback.get_m_collisionObject(), Ammo.btRigidBody);
-        //         var point = rayCallback.get_m_hitPointWorld();
-        //         var normal = rayCallback.get_m_hitNormalWorld();
-
-        //         if (body) {
-        //             callback(new RaycastResult(
-        //                             body.entity,
-        //                             new pc.Vec3(point.x(), point.y(), point.z()),
-        //                             new pc.Vec3(normal.x(), normal.y(), normal.z())
-        //                         )
-        //                     );
-        //         }
-        //     }
-
-        //     Ammo.destroy(rayFrom);
-        //     Ammo.destroy(rayTo);
-        //     Ammo.destroy(rayCallback);
-        // },
 
         onUpdate: function (dt) {
             // #ifdef PROFILER
@@ -568,7 +539,7 @@ pc.extend(pc, function () {
                             }
                         }
                     } else {
-                        e0Events = e0.collision ? e0.collision.hasEvent("collisionstart")  || e0.collision.hasEvent("collisionend")|| e0.collision.hasEvent("contact") : false;
+                        e0Events = e0.collision ? e0.collision.hasEvent("collisionstart")  || e0.collision.hasEvent("collisionend") || e0.collision.hasEvent("contact") : false;
                         e1Events = e1.collision ? e1.collision.hasEvent("collisionstart") || e1.collision.hasEvent("collisionend") || e1.collision.hasEvent("contact") : false;
                         var globalEvents = this.hasEvent("contact");
 

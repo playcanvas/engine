@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.MouseEvent
@@ -87,32 +87,32 @@ pc.extend(pc, function () {
 
     // Events Documentation
     /**
-    * @event
-    * @name pc.Mouse#mousemove
-    * @description Fired when the mouse is moved
-    * @param {pc.MouseEvent} event The MouseEvent object
-    */
+     * @event
+     * @name pc.Mouse#mousemove
+     * @description Fired when the mouse is moved
+     * @param {pc.MouseEvent} event The MouseEvent object
+     */
 
     /**
-    * @event
-    * @name pc.Mouse#mousedown
-    * @description Fired when a mouse button is pressed
-    * @param {pc.MouseEvent} event The MouseEvent object
-    */
+     * @event
+     * @name pc.Mouse#mousedown
+     * @description Fired when a mouse button is pressed
+     * @param {pc.MouseEvent} event The MouseEvent object
+     */
 
     /**
-    * @event
-    * @name pc.Mouse#mouseup
-    * @description Fired when a mouse button is released
-    * @param {pc.MouseEvent} event The MouseEvent object
-    */
+     * @event
+     * @name pc.Mouse#mouseup
+     * @description Fired when a mouse button is released
+     * @param {pc.MouseEvent} event The MouseEvent object
+     */
 
     /**
-    * @event
-    * @name pc.Mouse#mousewheel
-    * @description Fired when a mouse wheel is moved
-    * @param {pc.MouseEvent} event The MouseEvent object
-    */
+     * @event
+     * @name pc.Mouse#mousewheel
+     * @description Fired when a mouse wheel is moved
+     * @param {pc.MouseEvent} event The MouseEvent object
+     */
 
     /**
      * @constructor
@@ -125,7 +125,7 @@ pc.extend(pc, function () {
         // Clear the mouse state
         this._lastX      = 0;
         this._lastY      = 0;
-        this._buttons      = [false,false,false];
+        this._buttons      = [false, false, false];
         this._lastbuttons  = [false, false, false];
 
 
@@ -134,7 +134,9 @@ pc.extend(pc, function () {
         this._downHandler = this._handleDown.bind(this);
         this._moveHandler = this._handleMove.bind(this);
         this._wheelHandler = this._handleWheel.bind(this);
-        this._contextMenuHandler = function (event) { event.preventDefault(); };
+        this._contextMenuHandler = function (event) {
+            event.preventDefault();
+        };
 
         this._target = null;
         this._attached = false;
@@ -146,16 +148,16 @@ pc.extend(pc, function () {
     };
 
     /**
-    * @function
-    * @name pc.Mouse.isPointerLocked
-    * @description Check if the mouse pointer has been locked, using {@link pc.Mouse#enabledPointerLock}
-    * @returns {Boolean} True if locked
-    */
+     * @function
+     * @name pc.Mouse.isPointerLocked
+     * @description Check if the mouse pointer has been locked, using {@link pc.Mouse#enabledPointerLock}
+     * @returns {Boolean} True if locked
+     */
     Mouse.isPointerLocked = function () {
         return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
     };
 
-    Mouse.prototype = {
+    Object.assign(Mouse.prototype, {
         /**
          * @function
          * @name pc.Mouse#attach
@@ -181,8 +183,9 @@ pc.extend(pc, function () {
          * @description Remove mouse events from the element that it is attached to
          */
         detach: function () {
-            if (! this._attached) return;
+            if (!this._attached) return;
             this._attached = false;
+            this._target = null;
 
             window.removeEventListener("mouseup", this._upHandler);
             window.removeEventListener("mousedown", this._downHandler);
@@ -197,7 +200,7 @@ pc.extend(pc, function () {
          * @description Disable the context menu usually activated with right-click
          */
         disableContextMenu: function () {
-            if (! this._target) return;
+            if (!this._target) return;
             this._target.addEventListener("contextmenu", this._contextMenuHandler);
         },
 
@@ -207,25 +210,25 @@ pc.extend(pc, function () {
          * @description Enable the context menu usually activated with right-click. This option is active by default.
          */
         enableContextMenu: function () {
-            if (! this._target) return;
+            if (!this._target) return;
             this._target.removeEventListener("contextmenu", this._contextMenuHandler);
         },
 
         /**
-        * @function
-        * @name pc.Mouse#enablePointerLock
-        * @description Request that the browser hides the mouse cursor and locks the mouse to the element.
-        * Allowing raw access to mouse movement input without risking the mouse exiting the element.
-        * Notes: <br />
-        * <ul>
-        * <li>In some browsers this will only work when the browser is running in fullscreen mode. See {@link pc.Application#enableFullscreen}
-        * <li>Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
-        * </ul>
-        * @param {Function} [success] Function called if the request for mouse lock is successful.
-        * @param {Function} [error] Function called if the request for mouse lock is unsuccessful.
-        */
+         * @function
+         * @name pc.Mouse#enablePointerLock
+         * @description Request that the browser hides the mouse cursor and locks the mouse to the element.
+         * Allowing raw access to mouse movement input without risking the mouse exiting the element.
+         * Notes: <br />
+         * <ul>
+         * <li>In some browsers this will only work when the browser is running in fullscreen mode. See {@link pc.Application#enableFullscreen}
+         * <li>Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
+         * </ul>
+         * @param {Function} [success] Function called if the request for mouse lock is successful.
+         * @param {Function} [error] Function called if the request for mouse lock is unsuccessful.
+         */
         enablePointerLock: function (success, error) {
-            if (! document.body.requestPointerLock) {
+            if (!document.body.requestPointerLock) {
                 if (error)
                     error();
 
@@ -253,13 +256,13 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.Mouse#disablePointerLock
-        * @description Return control of the mouse cursor to the user
-        * @param {Function} [success] Function called when the mouse lock is disabled
-        */
+         * @function
+         * @name pc.Mouse#disablePointerLock
+         * @description Return control of the mouse cursor to the user
+         * @param {Function} [success] Function called when the mouse lock is disabled
+         */
         disablePointerLock: function (success) {
-            if (! document.exitPointerLock) {
+            if (!document.exitPointerLock) {
                 return;
             }
 
@@ -338,7 +341,7 @@ pc.extend(pc, function () {
             this._buttons[event.button] = false;
 
             var e = new MouseEvent(this, event);
-            if (! e.event) return;
+            if (!e.event) return;
 
             // send 'mouseup' event
             this.fire(pc.EVENT_MOUSEUP, e);
@@ -349,14 +352,14 @@ pc.extend(pc, function () {
             this._buttons[event.button] = true;
 
             var e = new MouseEvent(this, event);
-            if (! e.event) return;
+            if (!e.event) return;
 
             this.fire(pc.EVENT_MOUSEDOWN, e);
         },
 
         _handleMove: function (event) {
             var e = new MouseEvent(this, event);
-            if (! e.event) return;
+            if (!e.event) return;
 
             this.fire(pc.EVENT_MOUSEMOVE, e);
 
@@ -367,7 +370,7 @@ pc.extend(pc, function () {
 
         _handleWheel: function (event) {
             var e = new MouseEvent(this, event);
-            if (! e.event) return;
+            if (!e.event) return;
 
             this.fire(pc.EVENT_MOUSEWHEEL, e);
         },
@@ -391,73 +394,11 @@ pc.extend(pc, function () {
                 y: event.clientY - top
             };
         }
-    };
-
-    // Apply PointerLock shims
-    (function () {
-        // Old API
-        if (typeof navigator === 'undefined' || typeof document === 'undefined') {
-            // Not running in a browser
-            return;
-        }
-
-        navigator.pointer = navigator.pointer || navigator.webkitPointer || navigator.mozPointer;
-
-        // Events
-        var pointerlockchange = function () {
-            var e = document.createEvent('CustomEvent');
-            e.initCustomEvent('pointerlockchange', true, false, null);
-            document.dispatchEvent(e);
-        };
-
-        var pointerlockerror = function () {
-            var e = document.createEvent('CustomEvent');
-            e.initCustomEvent('pointerlockerror', true, false, null);
-            document.dispatchEvent(e);
-        };
-
-        document.addEventListener('webkitpointerlockchange', pointerlockchange, false);
-        document.addEventListener('webkitpointerlocklost', pointerlockchange, false);
-        document.addEventListener('mozpointerlockchange', pointerlockchange, false);
-        document.addEventListener('mozpointerlocklost', pointerlockchange, false);
-
-        document.addEventListener('webkitpointerlockerror', pointerlockerror, false);
-        document.addEventListener('mozpointerlockerror', pointerlockerror, false);
-
-        // requestPointerLock
-        if (Element.prototype.mozRequestPointerLock) {
-            // FF requires a new function for some reason
-            Element.prototype.requestPointerLock = function () {
-                this.mozRequestPointerLock();
-            };
-        } else {
-            Element.prototype.requestPointerLock = Element.prototype.requestPointerLock || Element.prototype.webkitRequestPointerLock || Element.prototype.mozRequestPointerLock;
-        }
-
-        if (!Element.prototype.requestPointerLock && navigator.pointer) {
-            Element.prototype.requestPointerLock = function () {
-                var el = this;
-                document.pointerLockElement = el;
-                navigator.pointer.lock(el, pointerlockchange, pointerlockerror);
-            };
-        }
-
-        // exitPointerLock
-        document.exitPointerLock = document.exitPointerLock || document.webkitExitPointerLock || document.mozExitPointerLock;
-        if (!document.exitPointerLock) {
-            document.exitPointerLock = function () {
-                if (navigator.pointer) {
-                    document.pointerLockElement = null;
-                    navigator.pointer.unlock();
-                }
-            };
-        }
-    })();
-
+    });
 
     // Public Interface
     return  {
         Mouse: Mouse,
         MouseEvent: MouseEvent
     };
-} ());
+}());

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var SoundInstance;
@@ -24,8 +24,8 @@ pc.extend(pc, function () {
         * @param {Number} [options.volume=1] The playback volume, between 0 and 1.
         * @param {Number} [options.pitch=1] The relative pitch, default of 1, plays at normal pitch.
         * @param {Boolean} [options.loop=false] Whether the sound should loop when it reaches the end or not.
-        * @param {Number} [options.startTime=0] The time from which the playback will start. Default is 0 to start at the beginning.
-        * @param {Number} [options.duration=null] The total time after the startTime when playback will stop or restart if loop is true.
+        * @param {Number} [options.startTime=0] The time from which the playback will start in seconds. Default is 0 to start at the beginning.
+        * @param {Number} [options.duration=null] The total time after the startTime in seconds when playback will stop or restart if loop is true.
         * @param {Function} [options.onPlay=null] Function called when the instance starts playing.
         * @param {Function} [options.onPause=null] Function called when the instance is paused.
         * @param {Function} [options.onResume=null] Function called when the instance is resumed.
@@ -110,7 +110,7 @@ pc.extend(pc, function () {
             this.source = null;
         };
 
-        SoundInstance.prototype = {
+        Object.assign(SoundInstance.prototype, {
             /**
              * @function
              * @private
@@ -181,7 +181,7 @@ pc.extend(pc, function () {
                     this._onManagerSuspend();
                 }
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onPlay();
 
                 return true;
@@ -214,7 +214,7 @@ pc.extend(pc, function () {
                 // reset user-set start offset
                 this._startOffset = null;
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onPause();
 
                 return true;
@@ -267,7 +267,7 @@ pc.extend(pc, function () {
                 this.pitch = this._pitch;
                 this._playWhenLoaded = false;
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onResume();
 
                 return true;
@@ -306,7 +306,7 @@ pc.extend(pc, function () {
                 // set the state to stopped
                 this._state = STATE_STOPPED;
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onStop();
 
                 return true;
@@ -332,12 +332,12 @@ pc.extend(pc, function () {
              * instance.setExternalNodes(analyzer, filter);
              */
             setExternalNodes: function (firstNode, lastNode) {
-                if (! firstNode) {
+                if (!firstNode) {
                     console.error('The firstNode must be a valid Audio Node');
                     return;
                 }
 
-                if (! lastNode) {
+                if (!lastNode) {
                     lastNode = firstNode;
                 }
 
@@ -415,7 +415,7 @@ pc.extend(pc, function () {
              */
 
             _createSource: function () {
-                if (! this._sound) {
+                if (!this._sound) {
                     return null;
                 }
 
@@ -442,13 +442,13 @@ pc.extend(pc, function () {
             },
 
             /**
-            * @private
-            * @function
-            * @name pc.SoundInstance#_updateCurrentTime
-            * @description Sets the current time taking into account the time the instance started playing, the current pitch and the current time offset.
-            */
+             * @private
+             * @function
+             * @name pc.SoundInstance#_updateCurrentTime
+             * @description Sets the current time taking into account the time the instance started playing, the current pitch and the current time offset.
+             */
             _updateCurrentTime: function () {
-                this._currentTime = capTime((this._manager.context.currentTime - this._startedAt) * this.pitch + this._currentOffset, this.duration);
+                this._currentTime = capTime((this._manager.context.currentTime - this._startedAt) * this._pitch + this._currentOffset, this.duration);
             },
 
             /**
@@ -458,12 +458,12 @@ pc.extend(pc, function () {
              * @description Handle the manager's 'destroy' event.
              */
             _onManagerDestroy: function () {
-                if (this.source && this.isPlaying) {
+                if (this.source && this._state === STATE_PLAYING) {
                     this.source.stop(0);
                     this.source = null;
                 }
             }
-        };
+        });
 
         Object.defineProperty(SoundInstance.prototype, 'volume', {
             get: function () {
@@ -520,7 +520,7 @@ pc.extend(pc, function () {
             set: function (value) {
                 this._sound = value;
 
-                if (!this.isStopped) {
+                if (this._state !== STATE_STOPPED) {
                     this.stop();
                 } else {
                     this._createSource();
@@ -538,13 +538,13 @@ pc.extend(pc, function () {
 
                 // if the sound is paused return the currentTime calculated when
                 // pause() was called
-                if (this.isPaused) {
+                if (this._state === STATE_PAUSED) {
                     return this._currentTime;
                 }
 
-                // if the sound is paused or we don't have a source
+                // if the sound is stopped or we don't have a source
                 // return 0
-                if (this.isStopped || !this.source) {
+                if (this._state === STATE_STOPPED || !this.source) {
                     return 0;
                 }
 
@@ -555,7 +555,7 @@ pc.extend(pc, function () {
             set: function (value) {
                 if (value < 0) return;
 
-                if (this.isPlaying) {
+                if (this._state === STATE_PLAYING) {
                     // stop first which will set _startOffset to null
                     this.stop();
 
@@ -614,14 +614,14 @@ pc.extend(pc, function () {
             this._createSource();
         };
 
-        SoundInstance.prototype = {
+        Object.assign(SoundInstance.prototype, {
             play: function () {
                 if (this._state !== STATE_STOPPED) {
                     this.stop();
                 }
 
-                if (! this.source) {
-                    if (! this._createSource()) {
+                if (!this.source) {
+                    if (!this._createSource()) {
                         return false;
                     }
                 }
@@ -643,7 +643,7 @@ pc.extend(pc, function () {
                 if (this._manager.suspended)
                     this._onManagerSuspend();
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onPlay();
 
                 return true;
@@ -651,7 +651,7 @@ pc.extend(pc, function () {
             },
 
             pause: function () {
-                if (! this.source || this._state !== STATE_PLAYING)
+                if (!this.source || this._state !== STATE_PLAYING)
                     return false;
 
                 this._suspendEndEvent = true;
@@ -660,14 +660,14 @@ pc.extend(pc, function () {
                 this._state = STATE_PAUSED;
                 this._startOffset = null;
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onPause();
 
                 return true;
             },
 
             resume: function () {
-                if (! this.source || this._state !== STATE_PAUSED)
+                if (!this.source || this._state !== STATE_PAUSED)
                     return false;
 
                 this._state = STATE_PLAYING;
@@ -675,7 +675,7 @@ pc.extend(pc, function () {
                 if (this.source.paused) {
                     this.source.play();
 
-                    if (! this._suspendInstanceEvents)
+                    if (!this._suspendInstanceEvents)
                         this._onResume();
                 }
 
@@ -683,7 +683,7 @@ pc.extend(pc, function () {
             },
 
             stop: function () {
-                if (! this.source || this._state === STATE_STOPPED)
+                if (!this.source || this._state === STATE_STOPPED)
                     return false;
 
                 this._manager.off('volumechange', this._onManagerVolumeChange, this);
@@ -697,7 +697,7 @@ pc.extend(pc, function () {
                 this._state = STATE_STOPPED;
                 this._startOffset = null;
 
-                if (! this._suspendInstanceEvents)
+                if (!this._suspendInstanceEvents)
                     this._onStop();
 
                 return true;
@@ -779,7 +779,7 @@ pc.extend(pc, function () {
                     this.source.pause();
                 }
             }
-        };
+        });
 
         Object.defineProperty(SoundInstance.prototype, 'volume', {
             get: function () {
@@ -839,7 +839,7 @@ pc.extend(pc, function () {
                     return this._startOffset;
                 }
 
-                if (this.isStopped || !this.source) {
+                if (this._state === STATE_STOPPED || !this.source) {
                     return 0;
                 }
 
@@ -861,7 +861,7 @@ pc.extend(pc, function () {
     }
 
     // Add functions which don't depend on source type
-    pc.extend(SoundInstance.prototype, {
+    Object.assign(SoundInstance.prototype, {
 
         _onPlay: function () {
             this.fire('play');
@@ -925,7 +925,7 @@ pc.extend(pc, function () {
          * @description Handle the manager's 'suspend' event.
          */
         _onManagerSuspend: function () {
-            if (this.isPlaying && !this._suspended) {
+            if (this._state === STATE_PLAYING && !this._suspended) {
                 this._suspended = true;
                 this.pause();
             }
@@ -954,7 +954,7 @@ pc.extend(pc, function () {
             this._startTime = Math.max(0, Number(value) || 0);
 
             // restart
-            var isPlaying = this.isPlaying;
+            var isPlaying = this._state === STATE_PLAYING;
             this.stop();
             if (isPlaying) {
                 this.play();
@@ -964,20 +964,19 @@ pc.extend(pc, function () {
 
     Object.defineProperty(SoundInstance.prototype, 'duration', {
         get: function () {
-            if (! this._sound)
+            if (!this._sound) {
                 return 0;
-
+            }
             if (this._duration) {
                 return capTime(this._duration, this._sound.duration);
-            } else {
-                return this._sound.duration;
             }
+            return this._sound.duration;
         },
         set: function (value) {
             this._duration = Math.max(0, Number(value) || 0);
 
             // restart
-            var isPlaying = this.isPlaying;
+            var isPlaying = this._state === STATE_PLAYING;
             this.stop();
             if (isPlaying) {
                 this.play();
@@ -1018,31 +1017,31 @@ pc.extend(pc, function () {
 // Events Documentation
 
 /**
-* @event
-* @name pc.SoundInstance#play
-* @description Fired when the instance starts playing its source
-*/
+ * @event
+ * @name pc.SoundInstance#play
+ * @description Fired when the instance starts playing its source
+ */
 
 /**
-* @event
-* @name pc.SoundInstance#pause
-* @description Fired when the instance is paused.
-*/
+ * @event
+ * @name pc.SoundInstance#pause
+ * @description Fired when the instance is paused.
+ */
 
 /**
-* @event
-* @name pc.SoundInstance#resume
-* @description Fired when the instance is resumed.
-*/
+ * @event
+ * @name pc.SoundInstance#resume
+ * @description Fired when the instance is resumed.
+ */
 
 /**
-* @event
-* @name pc.SoundInstance#stop
-* @description Fired when the instance is stopped.
-*/
+ * @event
+ * @name pc.SoundInstance#stop
+ * @description Fired when the instance is stopped.
+ */
 
 /**
-* @event
-* @name pc.SoundInstance#end
-* @description Fired when the sound currently played by the instance ends.
-*/
+ * @event
+ * @name pc.SoundInstance#end
+ * @description Fired when the sound currently played by the instance ends.
+ */

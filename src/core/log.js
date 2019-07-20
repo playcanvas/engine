@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var log = {
         /**
          * @private
@@ -74,21 +74,20 @@ pc.extend(pc, function () {
          */
         alert: function (text) {
             pc.log.write("ALERT:   " + text);
-            alert(text);
+            alert(text); // eslint-disable-line no-alert
         },
 
         /**
          * @private
          * @function
          * @name pc.log.assert
-         * @description If condition is false, then write text to the log preceded by 'ASSERT:' and pop up a dialog box.
+         * @description If condition is false, then write text to the log preceded by 'ASSERT:'.
          * @param {Boolean} condition The condition to test.
          * @param {String} text The text to show if the condition is false.
          */
         assert: function (condition, text) {
             if (condition === false) {
                 pc.log.write("ASSERT:  " + text);
-                alert("ASSERT failed: " + text);
             }
         }
     };
@@ -99,6 +98,9 @@ pc.extend(pc, function () {
 }());
 
 // Shortcuts to logging functions
+// ESLint disabled here because these vars may be accessed from other files
+// once all sources have been concatenated together and wrapped by the closure.
+/* eslint-disable no-unused-vars */
 var logINFO = pc.log.info;
 var logDEBUG = pc.log.debug;
 var logWARNING = pc.log.warning;
@@ -106,3 +108,4 @@ var logERROR = pc.log.error;
 
 var logALERT = pc.log.alert;
 var logASSERT = pc.log.assert;
+/* eslint-enable no-unused-vars */

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var tmpRay = new pc.Ray();
     var tmpVec3 = new pc.Vec3();
     var tmpSphere = new pc.BoundingSphere();
@@ -18,10 +18,12 @@ pc.extend(pc, function () {
 
         worldTransform = worldTransform || tmpMat4.setIdentity();
         this._modelTransform = worldTransform.clone().invert();
+
+        this._worldTransform = worldTransform.clone(); // temp - currently only used in the worldTransform accessor, see future PR for more use
         this._aabb = new pc.BoundingBox(new pc.Vec3(), this.halfExtents);
     };
 
-    OrientedBox.prototype = {
+    Object.assign(OrientedBox.prototype, {
         /**
          * @function
          * @name pc.OrientedBox#intersectsRay
@@ -38,9 +40,9 @@ pc.extend(pc, function () {
                 var result = this._aabb._intersectsRay(tmpRay, point);
                 tmpMat4.copy(this._modelTransform).invert().transformPoint(point, point);
                 return result;
-            } else {
-                return this._aabb._fastIntersectsRay(tmpRay);
             }
+
+            return this._aabb._fastIntersectsRay(tmpRay);
         },
 
         /**
@@ -72,10 +74,14 @@ pc.extend(pc, function () {
 
             return false;
         }
-    };
+    });
 
     Object.defineProperty(OrientedBox.prototype, 'worldTransform', {
+        get: function () {
+            return this._worldTransform;
+        },
         set: function (value) {
+            this._worldTransform.copy(value);
             this._modelTransform.copy(value).invert();
         }
     });

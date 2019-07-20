@@ -1,17 +1,16 @@
 pc.programlib.basic = {
-    generateKey: function (device, options) {
+    generateKey: function (options) {
         var key = 'basic';
         if (options.fog)          key += '_fog';
         if (options.alphaTest)    key += '_atst';
         if (options.vertexColors) key += '_vcol';
         if (options.diffuseMap)   key += '_diff';
+        key += '_' + options.pass;
         return key;
     },
 
     createShaderDefinition: function (device, options) {
-        /////////////////////////
-        // GENERATE ATTRIBUTES //
-        /////////////////////////
+        // GENERATE ATTRIBUTES
         var attributes = {
             vertex_position: pc.SEMANTIC_POSITION
         };
@@ -28,9 +27,7 @@ pc.programlib.basic = {
 
         var chunks = pc.shaderChunks;
 
-        ////////////////////////////
-        // GENERATE VERTEX SHADER //
-        ////////////////////////////
+        // GENERATE VERTEX SHADER
         var code = '';
 
         // VERTEX SHADER DECLARATIONS
@@ -52,10 +49,26 @@ pc.programlib.basic = {
             code += 'varying vec2 vUv0;\n';
         }
 
+        if (options.pass === pc.SHADER_DEPTH) {
+            code += 'varying float vDepth;\n';
+            code += '#ifndef VIEWMATRIX\n';
+            code += '#define VIEWMATRIX\n';
+            code += 'uniform mat4 matrix_view;\n';
+            code += '#endif\n';
+            code += '#ifndef CAMERAPLANES\n';
+            code += '#define CAMERAPLANES\n';
+            code += 'uniform vec4 camera_params;\n\n';
+            code += '#endif\n';
+        }
+
         // VERTEX SHADER BODY
         code += pc.programlib.begin();
 
         code += "   gl_Position = getPosition();\n";
+
+        if (options.pass === pc.SHADER_DEPTH) {
+            code += "    vDepth = -(matrix_view * vec4(getWorldPosition(),1.0)).z * camera_params.x;\n";
+        }
 
         if (options.vertexColors) {
             code += '    vColor = vertex_color;\n';
@@ -68,9 +81,7 @@ pc.programlib.basic = {
 
         var vshader = code;
 
-        //////////////////////////////
-        // GENERATE FRAGMENT SHADER //
-        //////////////////////////////
+        // GENERATE FRAGMENT SHADER
         code = pc.programlib.precisionCode(device);
 
         // FRAGMENT SHADER DECLARATIONS
@@ -90,6 +101,12 @@ pc.programlib.basic = {
             code += chunks.alphaTestPS;
         }
 
+        if (options.pass === pc.SHADER_DEPTH) {
+            // ##### SCREEN DEPTH PASS #####
+            code += 'varying float vDepth;\n';
+            code += chunks.packDepthPS;
+        }
+
         // FRAGMENT SHADER BODY
         code += pc.programlib.begin();
 
@@ -107,8 +124,16 @@ pc.programlib.basic = {
             code += "   alphaTest(gl_FragColor.a);\n";
         }
 
-        if (options.fog) {
-            code += "   glFragColor.rgb = addFog(gl_FragColor.rgb);\n";
+        if (options.pass === pc.SHADER_PICK) {
+            // ##### PICK PASS #####
+        } else if (options.pass === pc.SHADER_DEPTH) {
+            // ##### SCREEN DEPTH PASS #####
+            code += "    gl_FragColor = packFloat(vDepth);\n";
+        } else {
+            // ##### FORWARD PASS #####
+            if (options.fog) {
+                code += "   glFragColor.rgb = addFog(gl_FragColor.rgb);\n";
+            }
         }
 
         code += pc.programlib.end();

@@ -1,5 +1,5 @@
 // distance model
-pc.extend(pc, {
+Object.assign(pc, {
     /**
      * @static
      * @readOnly

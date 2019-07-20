@@ -1,16 +1,19 @@
-//--------------------------------- POST EFFECT DEFINITION -----------------------------------//
-pc.extend(pc, function () {
+// --------------- POST EFFECT DEFINITION --------------- //
+Object.assign(pc, function () {
 
     /**
+     * @constructor
      * @name pc.BrightnessContrastEffect
-     * @class Changes the brightness and contrast of the input render target
-     * @constructor Creates new instance of the post effect.
+     * @classdesc Changes the brightness and contrast of the input render target
+     * @description Creates new instance of the post effect.
      * @extends pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} brightness Controls the brightness of the render target. Ranges from -1 to 1 (-1 is solid black, 0 no change, 1 solid white)
      * @property {Number} contrast Controls the contrast of the render target. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum contrast)
      */
     var BrightnessContrastEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         // Shader author: tapio / http://tapio.github.com/
         this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
@@ -29,24 +32,22 @@ pc.extend(pc, function () {
             ].join("\n"),
             fshader: [
                 "precision " + graphicsDevice.precision + " float;",
+                "",
                 "uniform sampler2D uColorBuffer;",
                 "uniform float uBrightness;",
                 "uniform float uContrast;",
-
+                "",
                 "varying vec2 vUv0;",
-
+                "",
                 "void main() {",
-
-                    "gl_FragColor = texture2D( uColorBuffer, vUv0 );",
-
-                    "gl_FragColor.rgb += uBrightness;",
-
-                    "if (uContrast > 0.0) {",
-                        "gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) / (1.0 - uContrast) + 0.5;",
-                    "} else {",
-                        "gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) * (1.0 + uContrast) + 0.5;",
-                    "}",
-
+                "    gl_FragColor = texture2D( uColorBuffer, vUv0 );",
+                "    gl_FragColor.rgb += uBrightness;",
+                "",
+                "    if (uContrast > 0.0) {",
+                "        gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) / (1.0 - uContrast) + 0.5;",
+                "    } else {",
+                "        gl_FragColor.rgb = (gl_FragColor.rgb - 0.5) * (1.0 + uContrast) + 0.5;",
+                "    }",
                 "}"
             ].join("\n")
         });
@@ -56,9 +57,10 @@ pc.extend(pc, function () {
         this.contrast = 0;
     };
 
-    BrightnessContrastEffect = pc.inherits(BrightnessContrastEffect, pc.PostEffect);
+    BrightnessContrastEffect.prototype = Object.create(pc.PostEffect.prototype);
+    BrightnessContrastEffect.prototype.constructor = BrightnessContrastEffect;
 
-    BrightnessContrastEffect.prototype = pc.extend(BrightnessContrastEffect.prototype, {
+    Object.assign(BrightnessContrastEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -75,7 +77,7 @@ pc.extend(pc, function () {
     };
 }());
 
-//--------------------------------- SCRIPT DEFINITION -----------------------------------//
+// ----------------- SCRIPT DEFINITION ------------------ //
 var BrightnessContrast = pc.createScript('brightnessContrast');
 
 BrightnessContrast.attributes.add('brightness', {
@@ -96,7 +98,7 @@ BrightnessContrast.attributes.add('contrast', {
     title: 'Contrast'
 });
 
-BrightnessContrast.prototype.initialize = function() {
+BrightnessContrast.prototype.initialize = function () {
     this.effect = new pc.BrightnessContrastEffect(this.app.graphicsDevice);
     this.effect.brightness = this.brightness;
     this.effect.contrast = this.contrast;
@@ -121,4 +123,3 @@ BrightnessContrast.prototype.initialize = function() {
         queue.removeEffect(this.effect);
     });
 };
-

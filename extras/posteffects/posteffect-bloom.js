@@ -1,5 +1,5 @@
-//--------------- POST EFFECT DEFINITION------------------------//
-pc.extend(pc, function () {
+// --------------- POST EFFECT DEFINITION --------------- //
+Object.assign(pc, function () {
     var SAMPLE_COUNT = 15;
 
     function computeGaussian(n, theta) {
@@ -24,8 +24,8 @@ pc.extend(pc, function () {
         for (i = 0, len = Math.floor(SAMPLE_COUNT / 2); i < len; i++) {
             // Store weights for the positive and negative taps.
             var weight = computeGaussian(i + 1, blurAmount);
-            sampleWeights[i*2] = weight;
-            sampleWeights[i*2+1] = weight;
+            sampleWeights[i * 2] = weight;
+            sampleWeights[i * 2 + 1] = weight;
             totalWeights += weight * 2;
 
             // To get the maximum amount of blurring from a limited number of
@@ -39,10 +39,10 @@ pc.extend(pc, function () {
             var sampleOffset = i * 2 + 1.5;
 
             // Store texture coordinate offsets for the positive and negative taps.
-            sampleOffsets[i*4] = dx * sampleOffset;
-            sampleOffsets[i*4+1] = dy * sampleOffset;
-            sampleOffsets[i*4+2] = -dx * sampleOffset;
-            sampleOffsets[i*4+3] = -dy * sampleOffset;
+            sampleOffsets[i * 4] = dx * sampleOffset;
+            sampleOffsets[i * 4 + 1] = dy * sampleOffset;
+            sampleOffsets[i * 4 + 2] = -dx * sampleOffset;
+            sampleOffsets[i * 4 + 3] = -dy * sampleOffset;
         }
 
         // Normalize the list of sample weightings, so they will always sum to one.
@@ -52,9 +52,10 @@ pc.extend(pc, function () {
     }
 
     /**
+     * @constructor
      * @name pc.BloomEffect
-     * @class Implements the BloomEffect post processing effect
-     * @constructor Creates new instance of the post effect.
+     * @classdesc Implements the BloomEffect post processing effect
+     * @description Creates new instance of the post effect.
      * @extends pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} bloomThreshold Only pixels brighter then this threshold will be processed. Ranges from 0 to 1
@@ -62,6 +63,8 @@ pc.extend(pc, function () {
      * @property {Number} bloomIntensity The intensity of the effect.
      */
     var BloomEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         // Shaders
         var attributes = {
             aPosition: pc.SEMANTIC_POSITION
@@ -183,6 +186,7 @@ pc.extend(pc, function () {
             colorBuffer.magFilter = pc.FILTER_LINEAR;
             colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
             colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+            colorBuffer.name = 'pe-bloom';
             var target = new pc.RenderTarget(graphicsDevice, colorBuffer, { depth: false });
 
             this.targets.push(target);
@@ -196,11 +200,12 @@ pc.extend(pc, function () {
         // Uniforms
         this.sampleWeights = new Float32Array(SAMPLE_COUNT);
         this.sampleOffsets = new Float32Array(SAMPLE_COUNT * 2);
-    }
+    };
 
-    BloomEffect = pc.inherits(BloomEffect, pc.PostEffect);
+    BloomEffect.prototype = Object.create(pc.PostEffect.prototype);
+    BloomEffect.prototype.constructor = BloomEffect;
 
-    BloomEffect.prototype = pc.extend(BloomEffect.prototype, {
+    Object.assign(BloomEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -242,7 +247,7 @@ pc.extend(pc, function () {
     };
 }());
 
-//--------------- SCRIPT DEFINITION------------------------//
+// ----------------- SCRIPT DEFINITION ------------------ //
 var Bloom = pc.createScript('bloom');
 
 Bloom.attributes.add('bloomIntensity', {
@@ -268,7 +273,7 @@ Bloom.attributes.add('blurAmount', {
     'title': 'Blur amount'
 });
 
-Bloom.prototype.initialize = function() {
+Bloom.prototype.initialize = function () {
     this.effect = new pc.BloomEffect(this.app.graphicsDevice);
 
     this.effect.bloomThreshold = this.bloomThreshold;

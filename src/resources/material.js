@@ -1,112 +1,7 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
-    var PARAMETER_TYPES = {
-        ambient: 'vec3',
-        ambientTnumber: 'boolean',
-        aoMap: 'texture',
-        aoVertexColor: 'boolean',
-        aoVertexColorChannel: 'string',
-        aoMapChannel: 'string',
-        aoMapUv: 'number',
-        aoMapTiling: 'vec2',
-        aoMapOffset: 'vec2',
-        occludeSpecular: 'boolean',
-        diffuse: 'vec3',
-        diffuseMap: 'texture',
-        diffuseTint: 'boolean',
-        diffuseVertexColor: 'boolean',
-        diffuseVertexColorChannel: 'string',
-        diffuseMapChannel: 'string',
-        diffuseMapUv: 'number',
-        diffuseMapTiling: 'vec2',
-        diffuseMapOffset: 'vec2',
-        diffuseMapTnumber: 'boolean',
-        specular: 'vec3',
-        specularVertexColor: 'boolean',
-        specularVertexColorChannel: 'string',
-        specularMapChannel: 'string',
-        specularMapUv: 'number',
-        specularMap: 'texture',
-        specularTint: 'boolean',
-        specularMapTiling: 'vec2',
-        specularMapOffset: 'vec2',
-        specularMapTnumber: 'boolean',
-        specularAntialias: 'boolean',
-        useMetalness: 'boolean',
-        metalnessMap: 'texture',
-        metalnessVertexColor: 'boolean',
-        metalnessVertexColorChannel: 'string',
-        metalnessMapChannel: 'string',
-        metalnessMapUv: 'number',
-        metalnessMapTiling: 'vec2',
-        metalnessMapOffset: 'vec2',
-        metalnessMapTnumber: 'boolean',
-        metalness: 'number',
-        conserveEnergy: 'boolean',
-        shininess: 'number',
-        glossMap: 'texture',
-        glossVertexColor: 'boolean',
-        glossVertexColorChannel: 'string',
-        glossMapChannel: 'string',
-        glossMapUv: 'number',
-        glossMapTiling: 'vec2',
-        glossMapOffset: 'vec2',
-        fresnelModel: 'number',
-        fresnelFactor: 'float',
-        emissive: 'vec3',
-        emissiveMap: 'texture',
-        emissiveVertexColor: 'boolean',
-        emissiveVertexColorChannel: 'string',
-        emissiveMapChannel: 'string',
-        emissiveMapUv: 'number',
-        emissiveMapTiling: 'vec2',
-        emissiveMapOffset: 'vec2' ,
-        emissiveTint: 'boolean',
-        emissiveIntensity: 'number',
-        normalMap: 'texture',
-        normalMapTiling: 'vec2',
-        normalMapOffset: 'vec2',
-        normalMapUv: 'number',
-        bumpMapFactor: 'number',
-        heightMap: 'texture',
-        heightMapChannel: 'string',
-        heightMapUv: 'number',
-        heightMapTiling: 'vec2',
-        heightMapOffset: 'vec2',
-        heightMapFactor: 'number',
-        alphaTest: 'number',
-        opacity: 'number',
-        opacityMap: 'texture',
-        opacityVertexColor: 'boolean',
-        opacityVertexColorChannel: 'string',
-        opacityMapChannel: 'string',
-        opacityMapUv: 'number',
-        opacityMapTiling: 'vec2',
-        opacityMapOffset: 'vec2',
-        reflectivity: 'number',
-        refraction: 'number',
-        refractionIndex: 'number',
-        sphereMap: 'texture',
-        cubeMap: 'cubemap',
-        cubeMapProjection: 'number',
-        cubeMapProjectionBox: 'boundingbox',
-        lightMap: 'texture',
-        lightVertexColor: 'boolean',
-        lightVertexColorChannel: 'string',
-        lightMapChannel: 'string',
-        lightMapUv: 'number',
-        lightMapTiling: 'vec2',
-        lightMapOffset: 'vec2',
-        depthTest: 'boolean' ,
-        depthWrite: 'boolean',
-        cull: 'number',
-        blendType: 'number',
-        shadingModel: 'number'
-    };
-
-    var placeholders = { };
-    var placeholdersMapping = {
+    var PLACEHOLDER_MAP = {
         aoMap: 'white',
         diffuseMap: 'gray',
         specularMap: 'gray',
@@ -120,142 +15,104 @@ pc.extend(pc, function () {
         lightMap: 'white'
     };
 
-    var onCubemapAssetLoad = function (asset, attribute, newValue, oldValue) {
-        var props = [
-            'cubeMap',
-            'prefilteredCubeMap128',
-            'prefilteredCubeMap64',
-            'prefilteredCubeMap32',
-            'prefilteredCubeMap16',
-            'prefilteredCubeMap8',
-            'prefilteredCubeMap4'
-        ];
-
-        for (var i = 0; i < props.length; i++) {
-            if (this[props[i]] !== asset.resources[i])
-                this[props[i]] = asset.resources[i];
-        }
-
-        this.update();
-    };
-
     var MaterialHandler = function (app) {
         this._assets = app.assets;
         this._device = app.graphicsDevice;
 
-        this._createPlaceholders();
+        this._placeholderTextures = null;
+
+        this._parser = new pc.JsonStandardMaterialParser();
+        this.retryRequests = false;
     };
 
-    MaterialHandler.prototype = {
+    Object.assign(MaterialHandler.prototype, {
         load: function (url, callback) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             // Loading from URL (engine-only)
-            pc.http.get(url, function(err, response) {
+            pc.http.get(url.load, {
+                retry: this.retryRequests
+            }, function (err, response) {
                 if (!err) {
                     if (callback) {
+                        response._engine = true;
                         callback(null, response);
                     }
                 } else {
                     if (callback) {
-                        callback(pc.string.format("Error loading material: {0} [{1}]", url, err));
+                        callback(pc.string.format("Error loading material: {0} [{1}]", url.original, err));
                     }
                 }
             });
         },
 
         open: function (url, data) {
-            var material = new pc.StandardMaterial();
+            var material = this._parser.parse(data);
 
-            // TODO: this is a bit of a mess,
-            // Probably should create a new data block for the material
-            // and put it on the asset. This preserves originally loaded asset data
-            // and can be removed/cleared when asset is unloaded.
-            if (!data.parameters) {
-                this._createParameters(data);
+            // temp storage for engine-only as we need this during patching
+            if (data._engine) {
+                material._data = data;
+                delete data._engine;
             }
 
-            material.init(data);
-            material._data = data; // temp storage in case we need this during patching (engine-only)
             return material;
         },
 
         // creates placeholders for textures
         // that are used while texture is loading
-        _createPlaceholders: function() {
+        _createPlaceholders: function () {
+            this._placeholderTextures = {};
+
             var textures = {
-                white: [ 255, 255, 255, 255 ],
-                gray: [ 128, 128, 128, 255 ],
-                black: [ 0, 0, 0, 255 ],
-                normal: [ 128, 128, 255, 255 ]
+                white: [255, 255, 255, 255],
+                gray: [128, 128, 128, 255],
+                black: [0, 0, 0, 255],
+                normal: [128, 128, 255, 255]
             };
 
-            for(var key in textures) {
-                if (! textures.hasOwnProperty(key))
+            for (var key in textures) {
+                if (!textures.hasOwnProperty(key))
                     continue;
 
                 // create texture
-                var texture = placeholders[key] = new pc.Texture(this._device, {
+                this._placeholderTextures[key] = new pc.Texture(this._device, {
                     width: 2,
                     height: 2,
                     format: pc.PIXELFORMAT_R8_G8_B8_A8
                 });
+                this._placeholderTextures[key].name = 'placeholder';
 
                 // fill pixels with color
-                var pixels = texture.lock();
-                for(var i = 0; i < 4; i++) {
-                    for(var c = 0; c < 4; c++) {
+                var pixels = this._placeholderTextures[key].lock();
+                for (var i = 0; i < 4; i++) {
+                    for (var c = 0; c < 4; c++) {
                         pixels[i * 4 + c] = textures[key][c];
                     }
                 }
-                texture.unlock();
+                this._placeholderTextures[key].unlock();
             }
-        },
-
-        // creates parameters array from data dictionary
-        _createParameters: function (data) {
-            var parameters = [];
-
-            if (!data.shadingModel) {
-                data.shadingModel = data.shader === 'blinn' ? pc.SPECULAR_BLINN : pc.SPECULAR_PHONG;
-            }
-
-            var shader = data.shader;
-
-            // remove shader for the following loop
-            delete data.shader;
-
-            for (var key in data) {
-                if (!data.hasOwnProperty(key)) continue;
-
-                parameters.push({
-                    name: key,
-                    type: PARAMETER_TYPES[key],
-                    data: data[key]
-                });
-            }
-
-            data.shader = shader;
-
-            data.parameters = parameters;
         },
 
         patch: function (asset, assets) {
-            if (asset.data.shader === undefined) {
-                // for engine-only users restore original material data
-                asset.data = asset.resource._data;
-                delete asset.resource._data;
+            // in an engine-only environment we manually copy the source data into the asset
+            if (asset.resource._data) {
+                asset._data = asset.resource._data; // use _data to avoid firing events
+                delete asset.resource._data; // remove from temp storage
             }
-            this._updateStandardMaterial(asset, asset.data, assets);
 
-            // handle changes to the material
-            asset.off('change', this._onAssetChange, this);
-            asset.on('change', this._onAssetChange, this);
+            // patch the name of the asset over the material name property
+            asset.data.name = asset.name;
+            asset.resource.name = asset.name;
+
+            this._bindAndAssignAssets(asset, assets);
+
+            asset.off('unload', this._onAssetUnload, this);
             asset.on('unload', this._onAssetUnload, this);
-        },
-
-        _onAssetChange: function (asset, attribute, value) {
-            if (attribute === 'data') {
-                this._updateStandardMaterial(asset, value, this._assets);
-            }
         },
 
         _onAssetUnload: function (asset) {
@@ -265,196 +122,191 @@ pc.extend(pc, function () {
             delete asset.data.name;
         },
 
-        _updateStandardMaterial: function (asset, data, assets) {
-            var material = asset.resource;
-            var dir;
+        _assignTexture: function (parameterName, materialAsset, texture) {
+            materialAsset.data[parameterName] = texture;
+            materialAsset.resource[parameterName] = texture;
+        },
 
-            if (asset.file) {
-                dir = pc.path.getDirectory(asset.getFileUrl());
+        // assign a placeholder texture while waiting for one to load
+        // placeholder textures do not replace the data[parameterName] value
+        // in the asset.data thus preserving the final asset id until it is loaded
+        _assignPlaceholderTexture: function (parameterName, materialAsset) {
+            // create placeholder textures on-demand
+            if (!this._placeholderTextures) {
+                this._createPlaceholders();
             }
 
-            data.name = asset.name;
+            var placeholder = PLACEHOLDER_MAP[parameterName];
+            var texture = this._placeholderTextures[placeholder];
 
-            if (!data.parameters)
-                this._createParameters(data);
+            materialAsset.resource[parameterName] = texture;
+        },
 
-            var pathMapping = (data.mapping_format === "path");
+        _onTextureLoad: function (parameterName, materialAsset, textureAsset) {
+            this._assignTexture(parameterName, materialAsset, textureAsset.resource);
+            materialAsset.resource.update();
+        },
 
-            data.chunks = asset.resource.chunks;
+        _onTextureAdd: function (parameterName, materialAsset, textureAsset) {
+            this._assets.load(textureAsset);
+        },
 
-            // Replace texture ids with actual textures
-            // Should we copy 'data' here instead of updating in place?
-            // TODO: This calls material.init() for _every_ texture and cubemap field in the texture with an asset. Combine this into one call to init!
-            data.parameters.forEach(function (param, i) {
-                var id;
+        _onTextureRemove: function (parameterName, materialAsset, textureAsset) {
+            var material = materialAsset.resource;
 
-                if (param.type === 'texture') {
-                    if (! material._assetHandlers)
-                        material._assetHandlers = { };
+            if (material[parameterName] === textureAsset.resource) {
+                this._assignTexture(parameterName, materialAsset, null);
+                material.update();
+            }
+        },
 
-                    // asset handler
-                    var handler = material._assetHandlers[param.name];
+        _assignCubemap: function (parameterName, materialAsset, textures) {
+            materialAsset.data[parameterName] = textures[0]; // the primary cubemap texture
+            if (textures.length === 7) {
+                // the prefiltered textures
+                materialAsset.data.prefilteredCubeMap128 = textures[1];
+                materialAsset.data.prefilteredCubeMap64 = textures[2];
+                materialAsset.data.prefilteredCubeMap32 = textures[3];
+                materialAsset.data.prefilteredCubeMap16 = textures[4];
+                materialAsset.data.prefilteredCubeMap8 = textures[5];
+                materialAsset.data.prefilteredCubeMap4 = textures[6];
+            }
+        },
 
-                    if (param.data && !(param.data instanceof pc.Texture)) {
-                        if (pathMapping) {
-                            asset = assets.getByUrl(pc.path.join(dir, param.data));
-                        } else {
-                            id = param.data;
-                            asset = assets.get(param.data);
-                        }
+        _onCubemapLoad: function (parameterName, materialAsset, cubemapAsset) {
+            this._assignCubemap(parameterName, materialAsset, cubemapAsset.resources);
+            this._parser.initialize(materialAsset.resource, materialAsset.data);
+        },
 
-                        // unbind events
-                        if (handler) {
-                            assets.off('load:' + handler.id, handler.bind);
-                            assets.off('add:' + handler.id, handler.add);
-                            assets.off('remove:' + handler.id, handler.remove);
-                            if (handler.url) {
-                                assets.off('add:url:' + handler.url, handler.add);
-                                assets.off('remove:url:' + handler.url, handler.remove);
-                            }
-                            material._assetHandlers[param.name] = null;
-                        }
+        _onCubemapAdd: function (parameterName, materialAsset, cubemapAsset) {
+            // phong based - so ensure we load individual faces
+            if (materialAsset.data.shadingModel === pc.SPECULAR_PHONG) {
+                materialAsset.loadFaces = true;
+            }
 
-                        // bind events
-                        handler = material._assetHandlers[param.name] = {
-                            id: id,
-                            url: pathMapping ? pc.path.join(dir, param.data) : '',
-                            bind: function(asset) {
-                                // TODO
-                                // update specific param instead of all of them
-                                data.parameters[i].data = asset.resource;
-                                material[data.parameters[i].name] = asset.resource;
-                                material.update();
-                            },
-                            add: function(asset) {
-                                assets.load(asset);
-                            },
-                            remove: function (asset) {
-                                if (material[data.parameters[i].name] === asset.resource) {
-                                    data.parameters[i].data = null;
-                                    material[data.parameters[i].name] = null;
-                                    material.update();
-                                }
-                            }
-                        };
+            this._assets.load(cubemapAsset);
+        },
 
-                        // listen load events on texture
-                        if (id) {
-                            assets.on('load:' + id, handler.bind);
-                            assets.on('remove:' + id, handler.remove);
-                        } else if (pathMapping) {
-                            assets.on("load:url:" + pc.path.join(dir, param.data), handler.bind);
-                            assets.on('remove:url:' + pc.path.join(dir, param.data), handler.remove);
-                        }
+        _onCubemapRemove: function (parameterName, materialAsset, cubemapAsset) {
+            var material = materialAsset.resource;
 
-                        if (asset) {
-                            if (asset.resource) {
-                                handler.bind(asset);
-                            } else if (placeholdersMapping[data.parameters[i].name]) {
-                                var texture = placeholders[placeholdersMapping[data.parameters[i].name]];
-                                if (texture) {
-                                    data.parameters[i].data = texture;
-                                    material[data.parameters[i].name] = texture;
-                                }
-                            }
+            if (material[parameterName] === cubemapAsset.resource) {
+                this._assignCubemap(parameterName, materialAsset, [null, null, null, null, null, null, null]);
+                material.update();
+            }
+        },
 
-                            assets.load(asset);
-                        } else if (id) {
-                            assets.once('add:' + id, handler.add);
-                        } else if (pathMapping) {
-                            assets.once('add:url:' + handler.url, handler.add);
-                        }
-                    } else if (handler && ! param.data) {
-                        // unbind events
-                        assets.off('load:' + handler.id, handler.bind);
-                        assets.off('add:' + handler.id, handler.add);
-                        assets.off('remove:' + handler.id, handler.remove);
-                        if (handler.url) {
-                            assets.off('add:url:' + handler.url, handler.add);
-                            assets.off('remove:url:' + handler.url, handler.remove);
-                        }
-                        material._assetHandlers[param.name] = null;
+        _bindAndAssignAssets: function (materialAsset, assets) {
+            // always migrate before updating material from asset data
+            var data = this._parser.migrate(materialAsset.data);
+
+            var material = materialAsset.resource;
+
+            var pathMapping = (data.mappingFormat === "path");
+
+            var TEXTURES = pc.StandardMaterial.TEXTURE_PARAMETERS;
+
+            // texture paths are measured from the material directory
+            var dir;
+            if (pathMapping) {
+                dir = pc.path.getDirectory(materialAsset.getFileUrl());
+            }
+
+            var i, name, assetReference;
+            // iterate through all texture parameters
+            for (i = 0; i < TEXTURES.length; i++) {
+                name = TEXTURES[i];
+
+                assetReference = material._assetReferences[name];
+
+                // data[name] contains an asset id for a texture
+                if (data[name] && !(data[name] instanceof pc.Texture)) {
+                    if (!assetReference) {
+                        assetReference = new pc.AssetReference(name, materialAsset, assets, {
+                            load: this._onTextureLoad,
+                            add: this._onTextureAdd,
+                            remove: this._onTextureRemove
+                        }, this);
+
+                        material._assetReferences[name] = assetReference;
                     }
-                } else if (param.type === 'cubemap' && param.data && !(param.data instanceof pc.Texture)) {
+
                     if (pathMapping) {
-                        asset = assets.getByUrl(pc.path.join(dir, param.data));
+                        assetReference.url = pc.path.join(dir, data[name]);
                     } else {
-                        id = param.data;
-                        asset = assets.get(param.data);
+                        assetReference.id = data[name];
                     }
 
-                    var onAdd = function(asset) {
-                        if (data.shadingModel === pc.SPECULAR_PHONG)
-                            asset.loadFaces = true;
-
-                        asset.ready(onReady);
-                        assets.load(asset);
-                    };
-
-                    var onReady = function(asset) {
-                        param.data = asset.resource;
-                        // if this is a prefiltered map, then extra resources are present
-                        if (asset.resources.length > 1) {
-                            data.parameters.push({
-                                name: 'prefilteredCubeMap128',
-                                data: asset.resources[1]
-                            });
-                            data.parameters.push({
-                                name: 'prefilteredCubeMap64',
-                                data: asset.resources[2]
-                            });
-                            data.parameters.push({
-                                name: 'prefilteredCubeMap32',
-                                data: asset.resources[3]
-                            });
-                            data.parameters.push({
-                                name: 'prefilteredCubeMap16',
-                                data: asset.resources[4]
-                            });
-                            data.parameters.push({
-                                name: 'prefilteredCubeMap8',
-                                data: asset.resources[5]
-                            });
-                            data.parameters.push({
-                                name: 'prefilteredCubeMap4',
-                                data: asset.resources[6]
-                            });
+                    if (assetReference.asset) {
+                        if (assetReference.asset.resource) {
+                            // asset is already loaded
+                            this._assignTexture(name, materialAsset, assetReference.asset.resource);
+                        } else {
+                            this._assignPlaceholderTexture(name, materialAsset);
                         }
-                        material.init(data);
 
-                        asset.off('load', onCubemapAssetLoad, material);
-                        asset.on('load', onCubemapAssetLoad, material);
-                    };
-
-                    if (asset) {
-                        onAdd(asset);
-                    } else if (id) {
-                        assets.once("add:" + id, onAdd);
-                    } else if (pathMapping) {
-                        assets.once("add:url:" + pc.path.join(dir, param.data), function (asset) {
-                            asset.ready(function (asset) {
-                                // TODO
-                                // update specific param instead of all of them
-                                data.parameters[i].data = asset.resource;
-                                material.init(data);
-
-                                asset.off('load', onCubemapAssetLoad, material);
-                                asset.on('load', onCubemapAssetLoad, material);
-                            });
-                            assets.load(asset);
-                        });
+                        assets.load(assetReference.asset);
+                    }
+                } else {
+                    if (assetReference) {
+                        // texture has been removed
+                        if (pathMapping) {
+                            assetReference.url = null;
+                        } else {
+                            assetReference.id = null;
+                        }
+                    } else {
+                        // no asset reference and no data field
+                        // do nothing
                     }
                 }
-            });
+            }
 
-            material.init(data);
+            var CUBEMAPS = pc.StandardMaterial.CUBEMAP_PARAMETERS;
+
+            // iterate through all cubemap parameters
+            for (i = 0; i < CUBEMAPS.length; i++) {
+                name = CUBEMAPS[i];
+
+                assetReference = material._assetReferences[name];
+
+                // data[name] contains an asset id for a cubemap
+                if (data[name] && !(data[name] instanceof pc.Texture)) {
+                    if (!assetReference) {
+                        assetReference = new pc.AssetReference(name, materialAsset, assets, {
+                            load: this._onCubemapLoad,
+                            add: this._onCubemapAdd,
+                            remove: this._onCubemapRemove
+                        }, this);
+
+                        material._assetReferences[name] = assetReference;
+                    }
+
+                    if (pathMapping) {
+                        assetReference.url = data[name];
+                    } else {
+                        assetReference.id = data[name];
+                    }
+
+                    if (assetReference.asset) {
+                        if (assetReference.asset.resource) {
+                            // asset loaded
+                            this._assignCubemap(name, materialAsset, assetReference.asset.resources);
+                        }
+
+                        assets.load(assetReference.asset);
+                    }
+                }
+
+
+            }
+
+            // call to re-initialize material after all textures assigned
+            this._parser.initialize(material, data);
         }
-    };
+    });
 
     return {
-        MaterialHandler: MaterialHandler,
-        getMaterialParamType: function (name) {
-            return PARAMETER_TYPES[name];
-        }
+        MaterialHandler: MaterialHandler
     };
 }());

@@ -14,7 +14,7 @@ Many games and apps have been published using the PlayCanvas engine. Here is a s
 <br />
 [![Space Base](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/411394/I2C48B-image-25.jpg)](https://playcanv.as/p/yipplmVO/) [![Sponza Runtime Lightmaps](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/391368/221DFF-image-25.jpg)](https://playcanv.as/p/txPePQvy/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt) [![Orange Room VR](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/434546/BKST60-image-25.jpg)](https://playcanv.as/p/zi09Xvld/)
 <br />
-[![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](http://car.playcanvas.com/) [![Steampunk Slots](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/344862/VH0NOH-image-25.jpg)](https://playcanv.as/p/nL1dYbMv) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](http://casino.playcanvas.com/) [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](http://seemore.playcanvas.com/)
+[![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](http://car.playcanvas.com/) [![Steampunk Slots](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/344862/VH0NOH-image-25.jpg)](https://playcanv.as/p/nL1dYbMv) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](http://casino.playcanvas.com/) [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/)
 
 You can see more games on the [PlayCanvas website](https://playcanvas.com/explore).
 
@@ -45,7 +45,7 @@ The PlayCanvas Engine is a fully featured game engine.
 * **Resource Loading**
     * Simple and powerful resource loading
     * Streaming of individual assets
-    * Asset Variants - loads compressed textures (DXT, PVR, ETC1) based on platform support
+    * Asset Variants - loads compressed textures (DXT, PVR, ETC1, ETC2) based on platform support
 * **Entity / Component System**
     * Built-in components: model, sound, animation, camera, collision, light, rigidbody, script, particlesystem
 * **Scripting system**
@@ -179,11 +179,30 @@ Specific engine versions:
 * https://code.playcanvas.com/playcanvas-0.181.11.js
 * https://code.playcanvas.com/playcanvas-0.181.11.min.js
 
+## How to run tests
+
+PlayCanvas makes use of Karma for running unit tests, and provides three test ways of executing them depending on what phase of development you're in:
+
+    # Runs the tests once over the unbuilt source files - useful if you just want a quick 'all-clear'
+    npm run test
+
+    # Watches all source and test files for changes, and automatically re-runs the tests when they change.
+    # Open http://localhost:9876/debug.html in your browser to debug the tests in real time.
+    #
+    # You can also edit the `tests/**/test_*.js` glob in tests/karma.conf.js to run a subset of the tests,
+    # during development.
+    npm run test:watch
+
+    # Runs the tests once over playcanvas-latest.js - mainly used by CI, but sometimes useful if you want
+    # to test the engine after building it. Make sure to do `npm run build` first to make sure you have
+    # an up-to-date build.
+    npm run test:release
+
 ## Getting Help
 
 [**Forums**](https://forum.playcanvas.com) - Use the forum to ask/answer questions about PlayCanvas.
 
-[**Discord**](https://discord.gg/Abgck8a) - Real-time text, voice and video chat for the PlayCanvas developer community.
+[**Discord**](https://discord.gg/N67tQuU) - Real-time text, voice and video chat for the PlayCanvas developer community.
 
 ## Contributing
 

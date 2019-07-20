@@ -25,13 +25,6 @@ pc.math = {
     RAD_TO_DEG: 180 / Math.PI,
 
     /**
-    * @name pc.math.INV_LOG2
-    * @description Inverse log 2
-    * @type Number
-    */
-    INV_LOG2: 1 / Math.log(2),
-
-    /**
      * @function
      * @name pc.math.clamp
      * @description Clamp a number between min and max inclusive.
@@ -40,9 +33,9 @@ pc.math = {
      * @param {Number} max Max value
      * @returns {Number} The clamped value
      */
-    clamp: function(value, min, max) {
-        if(value >= max) return max;
-        if(value <= min) return min;
+    clamp: function (value, min, max) {
+        if (value >= max) return max;
+        if (value <= min) return min;
         return value;
     },
 
@@ -117,11 +110,11 @@ pc.math = {
      * @description Convert 4 1-byte Numbers into a single unsigned 32bit Number.
      * @returns {Number} A single unsigned 32bit Number.
      * @example
-      * // Set result1 to 0x11223344 from an array of 4 values
-      * var result1 = pc.math.bytesToInt32([0x11, 0x22, 0x33, 0x44]);
-      *
-      * // Set result2 to 0x11223344 from 4 discrete values
-      * var result2 = pc.math.bytesToInt32(0x11, 0x22, 0x33, 0x44);
+     * // Set result1 to 0x11223344 from an array of 4 values
+     * var result1 = pc.math.bytesToInt32([0x11, 0x22, 0x33, 0x44]);
+     *
+     * // Set result2 to 0x11223344 from 4 discrete values
+     * var result2 = pc.math.bytesToInt32(0x11, 0x22, 0x33, 0x44);
      * @param {Number} r A single byte (0-255)
      * @param {Number} g A single byte (0-255)
      * @param {Number} b A single byte (0-255)
@@ -138,7 +131,7 @@ pc.math = {
         // << operator uses signed 32 bit numbers, so 128<<24 is negative.
         // >>> used unsigned so >>>32 converts back to an unsigned.
         // See http://stackoverflow.com/questions/1908492/unsigned-integer-in-javascript
-        return ((r << 24) | (g << 16) | (b << 8) | a)>>>32;
+        return ((r << 24) | (g << 16) | (b << 8) | a) >>> 32;
     },
 
     /**
@@ -196,13 +189,13 @@ pc.math = {
      * @param {Number} val The value for which to calculate the next power of 2.
      * @returns {Number} The next power of 2.
      */
-    nextPowerOfTwo: function(val) {
+    nextPowerOfTwo: function (val) {
         val--;
-        val = (val >> 1) | val;
-        val = (val >> 2) | val;
-        val = (val >> 4) | val;
-        val = (val >> 8) | val;
-        val = (val >> 16) | val;
+        val |= (val >> 1);
+        val |= (val >> 2);
+        val |= (val >> 4);
+        val |= (val >> 8);
+        val |= (val >> 16);
         val++;
         return val;
     },
@@ -265,14 +258,3 @@ pc.math = {
         return x * x * x * (x * (x * 6 - 15) + 10);
     }
 };
-
-pc.math.intToBytes = pc.math.intToBytes32;
-pc.math.bytesToInt = pc.math.bytesToInt32;
-
-// IE doesn't have native log2
-if (!Math.log2) {
-    Math.log2 = function(x) {
-        return Math.log(x) * pc.math.INV_LOG2;
-    };
-}
-

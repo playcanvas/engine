@@ -1,11 +1,11 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var SceneParser = function (app) {
         this._app = app;
     };
 
-    SceneParser.prototype = {
+    Object.assign(SceneParser.prototype, {
         parse: function (data) {
             var entities = {};
             var id, i;
@@ -20,7 +20,7 @@ pc.extend(pc, function () {
             }
 
             // put entities into hierarchy
-            for(id in data.entities) {
+            for (id in data.entities) {
                 var l = data.entities[id].children.length;
                 for (i = 0; i < l; i++) {
                     // pop resource id off the end of the array
@@ -45,7 +45,7 @@ pc.extend(pc, function () {
             var s = data.scale;
 
             entity.name = data.name;
-            entity._guid = data.resource_id;
+            entity.setGuid(data.resource_id);
             entity.setLocalPosition(p[0], p[1], p[2]);
             entity.setLocalEulerAngles(r[0], r[1], r[2]);
             entity.setLocalScale(s[0], s[1], s[2]);
@@ -54,7 +54,7 @@ pc.extend(pc, function () {
             entity.template = data.template;
 
             if (data.tags) {
-                for(var i = 0; i < data.tags.length; i++) {
+                for (var i = 0; i < data.tags.length; i++) {
                     entity.tags.add(data.tags[i]);
                 }
             }
@@ -69,27 +69,29 @@ pc.extend(pc, function () {
         },
 
         _openComponentData: function (entity, entities) {
-            // Create Components in order
-            var systems = this._app.systems.list();
-            var i, len = systems.length;
-            var edata = entities[entity._guid];
+            // Create components in order
+            var systemsList = this._app.systems.list;
+
+            var i, len = systemsList.length;
+            var entityData = entities[entity.getGuid()];
             for (i = 0; i < len; i++) {
-                var componentData = edata.components[systems[i].id];
+                var system = systemsList[i];
+                var componentData = entityData.components[system.id];
                 if (componentData) {
-                    this._app.systems[systems[i].id].addComponent(entity, componentData);
+                    system.addComponent(entity, componentData);
                 }
             }
 
             // Open all children and add them to the node
-            var length = edata.children.length;
+            len = entityData.children.length;
             var children = entity._children;
-            for (i = 0; i < length; i++) {
+            for (i = 0; i < len; i++) {
                 children[i] = this._openComponentData(children[i], entities);
             }
 
             return entity;
         }
-    };
+    });
 
     return {
         SceneParser: SceneParser

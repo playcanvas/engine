@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>PlayCanvas canvas font Example</title>
+        <script src="../../build/output/playcanvas-latest.js"></script>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="application-canvas"></canvas>
+
+        <script>
+            var canvas = document.getElementById('application-canvas');
+            var app = new pc.Application(canvas, {
+                mouse: new pc.Mouse(document.body),
+                touch: new pc.TouchDevice(document.body),
+                elementInput: new pc.ElementInput(canvas)
+            });
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            // use device pixel ratio
+            app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
+
+            app.start();
+        </script>
+
+        <script>
+            // Create a canvas font asset
+            const size = 64;
+            const elSize = 32;
+            var cf = new pc.CanvasFont(app, {
+                color: new pc.Color(1, 1, 1), // white
+                fontName: "Arial",
+                fontSize: size,
+                width: 256,
+                height: 256
+            });
+
+            var asset = new pc.Asset("CanvasFont", "font", {});
+            app.assets.add(asset);
+            asset.resource = cf;
+            asset.loaded = true;
+
+            var fontAsset = new pc.Asset("Verdana", "font", {
+                url: "../assets/Arial/Arial.json"
+            });
+            app.assets.add(fontAsset);
+            app.assets.load(fontAsset);
+
+            // create camera
+            var c = new pc.Entity();
+            c.addComponent('camera', {
+                clearColor: new pc.Color(44/255, 62/255, 80/255),
+                farClip: 10000
+            });
+            c.translate(500,500,500);
+            c.lookAt(0,0,0);
+            app.root.addChild(c);
+
+            var scr = new pc.Entity();
+            scr.addComponent("screen", {
+                screenSpace: true,
+                referenceResolution: [1280, 720],
+                scaleMode: pc.SCALEMODE_BLEND,
+                scaleBlend: 1
+            });
+
+            var backing = new pc.Entity();
+            backing.addComponent('element', {
+                type: "image",
+                anchor: [0.5,1,0.5,1],
+                pivot: [0.5, 1],
+                width: 768,
+                height: 500,
+                color: [0.1,0.1,0.1]
+            });
+            scr.addChild(backing);
+            backing.translateLocal(0, -100, 0);
+
+            // some sample text
+            var firstline = "Flags: 🇺🇸🇩🇪🇮🇪🇮🇹🏴‍☠️🇨🇦";
+            var secondline = "Complex emoji: 👨🏿3️⃣👁️‍🗨️";
+            var thirdline = "Just strings";
+
+            cf.createTextures(firstline);
+
+            var canvasElementEntity1 = new pc.Entity();
+            canvasElementEntity1.addComponent("element", {
+                type: "text",
+                fontAsset: asset,
+                fontSize: elSize,
+                text: firstline,
+                wrapLines: true,
+                autoWidth: true,
+                autoHeight: true,
+                margin: [0,0,0,0],
+                anchor: [0,1,1,1],
+                pivot: [0, 1],
+                alignment: [1, 0]
+            });
+
+            cf.updateTextures(secondline);
+            var canvasElementEntity2 = new pc.Entity();
+            canvasElementEntity2.addComponent("element", {
+                type: "text",
+                fontAsset: asset,
+                fontSize: elSize,
+                text: secondline,
+                wrapLines: true,
+                autoWidth: true,
+                autoHeight: true,
+                margin: [0,0,0,0],
+                anchor: [0,1,1,1],
+                pivot: [0, 1],
+                alignment: [1, 0]
+            });
+
+            var msdfElementEntity = new pc.Entity();
+            msdfElementEntity.addComponent("element", {
+                type: "text",
+                fontAsset: fontAsset,
+                fontSize: elSize,
+                text: thirdline,
+                wrapLines: true,
+                autoWidth: true,
+                autoHeight: true,
+                margin: [0,0,0,0],
+                anchor: [0, 1, 1, 1],
+                pivot: [0, 1],
+                alignment: [1, 0]
+            });
+
+            app.root.addChild(scr);
+            backing.addChild(canvasElementEntity1);
+            canvasElementEntity1.translateLocal(0, 0, 0);
+            backing.addChild(canvasElementEntity2);
+            canvasElementEntity2.translateLocal(0, -elSize, 0);
+            backing.addChild(msdfElementEntity);
+            msdfElementEntity.translateLocal(0, -elSize*3, 0);
+
+            function renderAtlases () {
+                var wrapper = document.createElement('div');
+                for (var i = 0; i < cf.textures.length; i++) {
+                    var canvas = cf.textures[i].getSource();
+                    canvas.style.marginLeft = '20px';
+                    canvas.style.border = '1px solid blue';
+                    wrapper.appendChild(canvas);
+                }
+                wrapper.style.position = 'absolute';
+                wrapper.style.top = '0px';
+                document.body.appendChild(wrapper);
+            }
+            // purely for debugging: do not do this in a real application
+            var showCanvasAtlasForDebug = false;
+            renderAtlases();
+
+        </script>
+    </body>
+</html>

@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
@@ -18,7 +18,7 @@ pc.extend(pc, function () {
         }
     };
 
-    Listener.prototype = {
+    Object.assign(Listener.prototype, {
         getPosition: function () {
             return this.position;
         },
@@ -52,7 +52,7 @@ pc.extend(pc, function () {
         getOrientation: function () {
             return this.orientation;
         }
-    };
+    });
 
     return {
         Listener: Listener

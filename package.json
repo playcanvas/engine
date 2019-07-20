@@ -1,113 +1,67 @@
 {
-  "name": "playcanvas",
-  "version": "0.223.0",
-  "author": "PlayCanvas <support@playcanvas.com>",
-  "homepage": "https://playcanvas.com",
-  "description": "PlayCanvas WebGL game engine",
+  "name": "playcanvas", 
+  "version": "1.22.0-dev", 
+  "author": "PlayCanvas <support@playcanvas.com>", 
+  "homepage": "https://playcanvas.com", 
+  "description": "PlayCanvas WebGL game engine", 
   "keywords": [
-    "playcanvas",
-    "game engine",
-    "webgl",
-    "webgl2",
+    "playcanvas", 
+    "game engine", 
+    "webgl", 
+    "webgl2", 
     "3d"
-  ],
-  "license": "MIT",
-  "main": "build/output/playcanvas-latest.js",
+  ], 
+  "license": "MIT", 
+  "main": "build/output/playcanvas-latest.js", 
   "bugs": {
     "url": "https://github.com/playcanvas/engine/issues"
-  },
+  }, 
   "repository": {
-    "type": "git",
+    "type": "git", 
     "url": "https://github.com/playcanvas/engine.git"
-  },
-  "optionalDependencies": {
-    "jsdom": "^11.5.1"
-  },
+  }, 
   "eslintConfig": {
-    "parserOptions": {
-      "ecmaVersion": 5,
-      "sourceType": "script",
-      "ecmaFeatures": {}
-    },
-    "rules": {
-      "accessor-pairs": "error",
-      "comma-dangle": [
-        "error", "never"
-      ],
-      "for-direction": "error",
-      "getter-return": "error",
-      "no-compare-neg-zero": "error",
-      "no-cond-assign": "error",
-      "no-debugger": "error",
-      "no-dupe-args": "error",
-      "no-dupe-keys": "error",
-      "no-duplicate-case": "error",
-      "no-empty": [
-        "error", {
-          "allowEmptyCatch": true
-        }
-      ],
-      "no-ex-assign": "error",
-      "no-extra-boolean-cast": "error",
-      "no-extra-semi": "error",
-      "no-floating-decimal": "error",
-      "no-func-assign": "error",
-      "no-irregular-whitespace": "error",
-      "no-invalid-regexp": "error",
-      "no-labels": "error",
-      "no-lone-blocks": "error",
-      "no-obj-calls": "error",
-      "no-octal": "error",
-      "no-redeclare": "error",
-      "no-regex-spaces": "error",
-      "no-sparse-arrays": "error",
-      "no-tabs": "error",
-      "no-trailing-spaces": "error",
-      "no-unexpected-multiline": "error",
-      "no-unmodified-loop-condition": "error",
-      "no-undef-init": "error",
-      "no-unsafe-negation": "error",
-      "no-unreachable": "error",
-      "no-unsafe-finally": "error",
-      "no-useless-return": "error",
-      "no-useless-concat": "error",
-      "use-isnan": "error",
-      "valid-jsdoc": [
-        "error", {
-          "prefer": {
-            "return": "returns"
-          },
-          "preferType": {
-            "boolean": "Boolean",
-            "function": "Function",
-            "number": "Number",
-            "object": "Object",
-            "string": "String"
-          },
-          "requireReturn": false
-        }
-      ],
-      "valid-typeof": "error"
-    },
-    "env": {
-      "browser": true,
-      "node": true
-    }
-  },
+    "extends": "eslint-config-playcanvas"
+  }, 
+  "eslintIgnore": [
+    "src/polyfill/*"
+  ], 
   "devDependencies": {
-    "eslint": "^4.19.0",
-    "fs-extra": "^3.0.1",
-    "google-closure-compiler": "^20180204.0.0",
-    "preprocessor": "^1.4.0",
-    "uglify-js": "^3.3.16"
-  },
+    "chai": "^4.2.0", 
+    "eslint": "^5.16.0", 
+    "eslint-config-playcanvas": "^1.1.0", 
+    "fs-extra": "^3.0.1", 
+    "google-closure-compiler": "^20190513.0.0", 
+    "http-server": "^0.11.1", 
+    "karma": "^4.2.0", 
+    "karma-chrome-launcher": "^2.2.0", 
+    "karma-mocha": "^1.3.0", 
+    "karma-spec-reporter": "0.0.32", 
+    "mocha": "^5.2.0", 
+    "preprocessor": "^1.4.0", 
+    "sinon": "^5.1.1", 
+    "uglify-js": "^3.6.0"
+  }, 
+  "optionalDependencies": {
+    "jsdom": "^15.1.0"
+  }, 
   "scripts": {
-    "build": "cd build && node build.js",
-    "closure": "java -jar node_modules/google-closure-compiler/compiler.jar --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=checkTypes --externs build/externs.js --language_in=ECMASCRIPT5_STRICT --js build/output/playcanvas-latest.js --js_output_file build/output/playcanvas.min.js",
-    "uglify": "uglifyjs build/output/playcanvas-latest.js --compress --mangle --output build/output/playcanvas.min.js",
-    "lint": "eslint src"
-  },
+    "build": "cd build && node build.js -o output/playcanvas-latest.js", 
+    "build:debug": "cd build && node build.js -d -o output/playcanvas-latest.dbg.js", 
+    "build:profiler": "cd build && node build.js -p -o output/playcanvas-latest.prf.js", 
+    "build:min": "cd build && node build.js -l 1 -o output/playcanvas-latest.min.js", 
+    "serve": "npm run build; ./node_modules/.bin/http-server build/output -a localhost -p 51000", 
+    "closure": "java -jar node_modules/google-closure-compiler/compiler.jar --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=checkTypes --externs build/externs.js --language_in=ECMASCRIPT5_STRICT --js build/output/playcanvas-latest.js --js_output_file build/output/playcanvas.min.js", 
+    "uglify": "uglifyjs build/output/playcanvas-latest.js --compress --mangle --output build/output/playcanvas.min.js", 
+    "unzipbundle": "gzip -x tests/assets/bundle.gz", 
+    "test": "karma start tests/karma.conf.js -- --single-run", 
+    "test:release": "karma start tests/karma.conf.js -- --single-run --release", 
+    "test:watch": "karma start tests/karma.conf.js", 
+    "test:debug": "karma start tests/karma.conf.js -- --single-run=false", 
+    "lint": "eslint extras src"
+  }, 
   "engines": {
     "node": ">= 0.6.12"
-  }
+  }, 
+  "dependencies": {}
 }

@@ -1,38 +1,48 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var JSON_ADDRESS_MODE = {
         "repeat": pc.ADDRESS_REPEAT,
-        "clamp":  pc.ADDRESS_CLAMP_TO_EDGE,
+        "clamp": pc.ADDRESS_CLAMP_TO_EDGE,
         "mirror": pc.ADDRESS_MIRRORED_REPEAT
     };
 
     var JSON_FILTER_MODE = {
-        "nearest":             pc.FILTER_NEAREST,
-        "linear":              pc.FILTER_LINEAR,
+        "nearest": pc.FILTER_NEAREST,
+        "linear": pc.FILTER_LINEAR,
         "nearest_mip_nearest": pc.FILTER_NEAREST_MIPMAP_NEAREST,
-        "linear_mip_nearest":  pc.FILTER_LINEAR_MIPMAP_NEAREST,
-        "nearest_mip_linear":  pc.FILTER_NEAREST_MIPMAP_LINEAR,
-        "linear_mip_linear":   pc.FILTER_LINEAR_MIPMAP_LINEAR
+        "linear_mip_nearest": pc.FILTER_LINEAR_MIPMAP_NEAREST,
+        "nearest_mip_linear": pc.FILTER_NEAREST_MIPMAP_LINEAR,
+        "linear_mip_linear": pc.FILTER_LINEAR_MIPMAP_LINEAR
     };
 
     var regexFrame = /^data\.frames\.(\d+)$/;
 
     var TextureAtlasHandler = function (loader) {
         this._loader = loader;
+        this.retryRequests = false;
     };
 
-    TextureAtlasHandler.prototype = {
+    Object.assign(TextureAtlasHandler.prototype, {
         // Load the texture atlas texture using the texture resource loader
         load: function (url, callback) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             var self = this;
             var handler = this._loader.getHandler("texture");
 
             // if supplied with a json file url (probably engine-only)
             // load json data then load texture of same name
-            if (pc.path.getExtension(url) === '.json') {
-                pc.http.get(url, function (err, response) {
+            if (pc.path.getExtension(url.original) === '.json') {
+                pc.http.get(url.load, {
+                    retry: this.retryRequests
+                }, function (err, response) {
                     if (!err) {
                         // load texture
-                        var textureUrl = url.replace('.json', '.png');
+                        var textureUrl = url.original.replace('.json', '.png');
                         self._loader.load(textureUrl, "texture", function (err, texture) {
                             if (err) {
                                 callback(err);
@@ -61,7 +71,7 @@ pc.extend(pc, function () {
             } else {
                 var handler = this._loader.getHandler("texture");
                 var texture = handler.open(url, data);
-                if (! texture) return null;
+                if (!texture) return null;
                 resource.texture = texture;
             }
             return resource;
@@ -130,11 +140,13 @@ pc.extend(pc, function () {
         },
 
         _onAssetChange: function (asset, attribute, value) {
+            var frame;
+
             if (attribute === 'data' || attribute === 'data.frames') {
                 // set frames
                 var frames = {};
                 for (var key in value.frames) {
-                    var frame = value.frames[key];
+                    frame = value.frames[key];
                     frames[key] = {
                         rect: new pc.Vec4(frame.rect),
                         pivot: new pc.Vec2(frame.pivot),
@@ -149,14 +161,14 @@ pc.extend(pc, function () {
 
                     if (value) {
                         // add or update frame
-                        if (! asset.resource.frames[frameKey]) {
+                        if (!asset.resource.frames[frameKey]) {
                             asset.resource.frames[frameKey] = {
                                 rect: new pc.Vec4(value.rect),
                                 pivot: new pc.Vec2(value.pivot),
                                 border: new pc.Vec4(value.border)
-                            }
+                            };
                         } else {
-                            var frame = asset.resource.frames[frameKey];
+                            frame = asset.resource.frames[frameKey];
                             frame.rect.set(value.rect[0], value.rect[1], value.rect[2], value.rect[3]);
                             frame.pivot.set(value.pivot[0], value.pivot[1]);
                             frame.border.set(value.border[0], value.border[1], value.border[2], value.border[3]);
@@ -174,13 +186,10 @@ pc.extend(pc, function () {
 
                 }
             }
-
-
         }
-    };
+    });
 
     return {
         TextureAtlasHandler: TextureAtlasHandler
     };
-
 }());

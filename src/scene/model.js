@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Model
@@ -23,7 +23,7 @@ pc.extend(pc, function () {
         this._shadersVersion = 0;
     };
 
-    Model.prototype = {
+    Object.assign(Model.prototype, {
         getGraph: function () {
             return this.graph;
         },
@@ -83,8 +83,8 @@ pc.extend(pc, function () {
                 srcNodes.push(node);
                 cloneNodes.push(newNode);
 
-                for (var i = 0; i < node._children.length; i++) {
-                    newNode.addChild(_duplicate(node._children[i]));
+                for (var idx = 0; idx < node._children.length; idx++) {
+                    newNode.addChild(_duplicate(node._children[idx]));
                 }
 
                 return newNode;
@@ -161,7 +161,7 @@ pc.extend(pc, function () {
             var meshInstances = this.meshInstances;
             var meshInstance, mesh, skin, morph, ib, boneTex, j;
             var device;
-            for(var i = 0; i < meshInstances.length; i++) {
+            for (var i = 0; i < meshInstances.length; i++) {
                 meshInstance = meshInstances[i];
 
                 mesh = meshInstance.mesh;
@@ -173,7 +173,7 @@ pc.extend(pc, function () {
                             mesh.vertexBuffer.destroy();
                             mesh.vertexBuffer = null;
                         }
-                        for(j=0; j<mesh.indexBuffer.length; j++) {
+                        for (j = 0; j < mesh.indexBuffer.length; j++) {
                             device = device || mesh.indexBuffer.device;
                             ib = mesh.indexBuffer[j];
                             if (!ib) continue;
@@ -241,7 +241,7 @@ pc.extend(pc, function () {
 
                 var uniqueLineIndices = {};
                 var lines = [];
-                for (j = base; j < base + count; j+=3) {
+                for (j = base; j < base + count; j += 3) {
                     for (k = 0; k < 3; k++) {
                         i1 = srcIndices[j + offsets[k][0]];
                         i2 = srcIndices[j + offsets[k][1]];
@@ -269,7 +269,7 @@ pc.extend(pc, function () {
                 mesh.indexBuffer[pc.RENDERSTYLE_WIREFRAME] = wireBuffer;
             }
         }
-    };
+    });
 
     return {
         Model: Model

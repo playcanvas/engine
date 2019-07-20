@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @component
      * @constructor
@@ -18,6 +18,8 @@ pc.extend(pc, function () {
      * @property {Object} slots A dictionary that contains the {@link pc.SoundSlot}s managed by this Component.
      */
     var SoundComponent = function (system, entity) {
+        pc.Component.call(this, system, entity);
+
         this.on('set_slots', this.onSetSlots, this);
         this.on('set_volume', this.onSetVolume, this);
         this.on('set_pitch', this.onSetPitch, this);
@@ -27,10 +29,10 @@ pc.extend(pc, function () {
         this.on("set_distanceModel", this.onSetDistanceModel, this);
         this.on("set_positional", this.onSetPositional, this);
     };
+    SoundComponent.prototype = Object.create(pc.Component.prototype);
+    SoundComponent.prototype.constructor = SoundComponent;
 
-    SoundComponent = pc.inherits(SoundComponent, pc.Component);
-
-    pc.extend(SoundComponent.prototype, {
+    Object.assign(SoundComponent.prototype, {
         onSetSlots: function (name, oldValue, newValue) {
             var key;
 
@@ -45,7 +47,7 @@ pc.extend(pc, function () {
 
             // convert data to slots
             for (key in newValue) {
-                if (! (newValue[key] instanceof pc.SoundSlot)) {
+                if (!(newValue[key] instanceof pc.SoundSlot)) {
                     if (newValue[key].name) {
                         slots[newValue[key].name] = new pc.SoundSlot(this, newValue[key].name, newValue[key]);
                     }
@@ -66,7 +68,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // change volume of non-overlapping instances
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         instances[i].volume = slot.volume * newValue;
@@ -80,7 +82,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // change pitch of non-overlapping instances
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         instances[i].pitch = slot.pitch * newValue;
@@ -94,7 +96,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // change refDistance of non-overlapping instances
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         instances[i].refDistance = newValue;
@@ -108,7 +110,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // change maxDistance of non-overlapping instances
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         instances[i].maxDistance = newValue;
@@ -122,7 +124,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // change rollOffFactor of non-overlapping instances
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         instances[i].rollOffFactor = newValue;
@@ -136,7 +138,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // change distanceModel of non-overlapping instances
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         instances[i].distanceModel = newValue;
@@ -150,7 +152,7 @@ pc.extend(pc, function () {
             for (var key in slots) {
                 var slot = slots[key];
                 // recreate non overlapping sounds
-                if (! slot.overlap) {
+                if (!slot.overlap) {
                     var instances = slot.instances;
                     for (var i = 0, len = instances.length; i < len; i++) {
                         var isPlaying = instances[i].isPlaying || instances[i].isSuspended;
@@ -169,8 +171,6 @@ pc.extend(pc, function () {
         },
 
         onEnable: function () {
-            SoundComponent._super.onEnable.call(this);
-
             // do not run if running in Editor
             if (this.system._inTools) {
                 return;
@@ -196,13 +196,11 @@ pc.extend(pc, function () {
         },
 
         onDisable: function () {
-            SoundComponent._super.onDisable.call(this);
-
             var slots = this.data.slots;
             var playingBeforeDisable = {};
             for (var key in slots) {
                 // pause non-overlapping sounds
-                if (! slots[key].overlap) {
+                if (!slots[key].overlap) {
                     if (slots[key].isPlaying) {
                         slots[key].pause();
                         // remember sounds playing when we disable
@@ -213,6 +211,10 @@ pc.extend(pc, function () {
             }
 
             this.data.playingBeforeDisable = playingBeforeDisable;
+        },
+
+        onRemove: function () {
+            this.off();
         },
 
         /**
@@ -290,27 +292,27 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.SoundComponent#play
-        * @description Begins playing the sound slot with the specified name. The slot will restart playing if it is already playing unless the overlap field is true in which case a new sound will be created and played.
-        * @param {String} name The name of the {@link pc.SoundSlot} to play
-        * @example
-        * // get asset by id
-        * var asset = app.assets.get(10);
-        * // create a slot and play it
-        * this.entity.sound.addSlot('beep', {
-        *     asset: asset
-        * });
-        * this.entity.sound.play('beep');
-        * @returns {pc.SoundInstance} The sound instance that will be played.
-        */
+         * @function
+         * @name pc.SoundComponent#play
+         * @description Begins playing the sound slot with the specified name. The slot will restart playing if it is already playing unless the overlap field is true in which case a new sound will be created and played.
+         * @param {String} name The name of the {@link pc.SoundSlot} to play
+         * @example
+         * // get asset by id
+         * var asset = app.assets.get(10);
+         * // create a slot and play it
+         * this.entity.sound.addSlot('beep', {
+         *     asset: asset
+         * });
+         * this.entity.sound.play('beep');
+         * @returns {pc.SoundInstance} The sound instance that will be played.
+         */
         play: function (name) {
             if (!this.enabled || !this.entity.enabled) {
                 return null;
             }
 
             var slot = this.slots[name];
-            if (! slot) {
+            if (!slot) {
                 logWARNING('Trying to play sound slot with name ' + name + ' which does not exist');
                 return null;
             }
@@ -319,23 +321,23 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.SoundComponent#pause
-        * @description Pauses playback of the slot with the specified name. If the name is undefined then all slots currently played will be paused. The slots can be resumed by calling {@link pc.SoundComponent#resume}.
-        * @param {String} [name] The name of the slot to pause. Leave undefined to pause everything.
-        * @example
-        * // pause all sounds
-        * this.entity.sound.pause();
-        * // pause a specific sound
-        * this.entity.sound.pause('beep');
-        */
+         * @function
+         * @name pc.SoundComponent#pause
+         * @description Pauses playback of the slot with the specified name. If the name is undefined then all slots currently played will be paused. The slots can be resumed by calling {@link pc.SoundComponent#resume}.
+         * @param {String} [name] The name of the slot to pause. Leave undefined to pause everything.
+         * @example
+         * // pause all sounds
+         * this.entity.sound.pause();
+         * // pause a specific sound
+         * this.entity.sound.pause('beep');
+         */
         pause: function (name) {
             var slot;
             var slots = this.data.slots;
 
             if (name) {
                 slot = slots[name];
-                if (! slot) {
+                if (!slot) {
                     logWARNING('Trying to pause sound slot with name ' + name + ' which does not exist');
                     return;
                 }
@@ -349,23 +351,23 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.SoundComponent#resume
-        * @description Resumes playback of the sound slot with the specified name if it's paused. If no name is specified all slots will be resumed.
-        * @param {String} name The name of the slot to resume. Leave undefined to resume everything.
-        * @example
-        * // resume all sounds
-        * this.entity.sound.resume();
-        * // resume a specific sound
-        * this.entity.sound.resume('beep');
-        */
+         * @function
+         * @name pc.SoundComponent#resume
+         * @description Resumes playback of the sound slot with the specified name if it's paused. If no name is specified all slots will be resumed.
+         * @param {String} name The name of the slot to resume. Leave undefined to resume everything.
+         * @example
+         * // resume all sounds
+         * this.entity.sound.resume();
+         * // resume a specific sound
+         * this.entity.sound.resume('beep');
+         */
         resume: function (name) {
             var slot;
             var slots = this.data.slots;
 
             if (name) {
                 slot = slots[name];
-                if (! slot) {
+                if (!slot) {
                     logWARNING('Trying to resume sound slot with name ' + name + ' which does not exist');
                     return;
                 }
@@ -381,23 +383,23 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.SoundComponent#stop
-        * @description Stops playback of the sound slot with the specified name if it's paused. If no name is specified all slots will be stopped.
-        * @param {String} name The name of the slot to stop. Leave undefined to stop everything.
-        * @example
-        * // stop all sounds
-        * this.entity.sound.stop();
-        * // stop a specific sound
-        * this.entity.sound.stop('beep');
-        */
+         * @function
+         * @name pc.SoundComponent#stop
+         * @description Stops playback of the sound slot with the specified name if it's paused. If no name is specified all slots will be stopped.
+         * @param {String} name The name of the slot to stop. Leave undefined to stop everything.
+         * @example
+         * // stop all sounds
+         * this.entity.sound.stop();
+         * // stop a specific sound
+         * this.entity.sound.stop('beep');
+         */
         stop: function (name) {
             var slot;
             var slots = this.data.slots;
 
             if (name) {
                 slot = slots[name];
-                if (! slot) {
+                if (!slot) {
                     logWARNING('Trying to stop sound slot with name ' + name + ' which does not exist');
                     return;
                 }
@@ -420,41 +422,41 @@ pc.extend(pc, function () {
 // Events Documentation
 
 /**
-* @event
-* @name pc.SoundComponent#play
-* @description Fired when a sound instance starts playing
-* @param {pc.SoundSlot} slot The slot whose instance started playing
-* @param {pc.SoundInstance} instance The instance that started playing
-*/
+ * @event
+ * @name pc.SoundComponent#play
+ * @description Fired when a sound instance starts playing
+ * @param {pc.SoundSlot} slot The slot whose instance started playing
+ * @param {pc.SoundInstance} instance The instance that started playing
+ */
 
 /**
-* @event
-* @name pc.SoundComponent#pause
-* @description Fired when a sound instance is paused.
-* @param {pc.SoundSlot} slot The slot whose instance was paused
-* @param {pc.SoundInstance} instance The instance that was paused created to play the sound
-*/
+ * @event
+ * @name pc.SoundComponent#pause
+ * @description Fired when a sound instance is paused.
+ * @param {pc.SoundSlot} slot The slot whose instance was paused
+ * @param {pc.SoundInstance} instance The instance that was paused created to play the sound
+ */
 
 /**
-* @event
-* @name pc.SoundComponent#resume
-* @description Fired when a sound instance is resumed..
-* @param {pc.SoundSlot} slot The slot whose instance was resumed
-* @param {pc.SoundInstance} instance The instance that was resumed
-*/
+ * @event
+ * @name pc.SoundComponent#resume
+ * @description Fired when a sound instance is resumed..
+ * @param {pc.SoundSlot} slot The slot whose instance was resumed
+ * @param {pc.SoundInstance} instance The instance that was resumed
+ */
 
 /**
-* @event
-* @name pc.SoundComponent#stop
-* @description Fired when a sound instance is stopped.
-* @param {pc.SoundSlot} slot The slot whose instance was stopped
-* @param {pc.SoundInstance} instance The instance that was stopped
-*/
+ * @event
+ * @name pc.SoundComponent#stop
+ * @description Fired when a sound instance is stopped.
+ * @param {pc.SoundSlot} slot The slot whose instance was stopped
+ * @param {pc.SoundInstance} instance The instance that was stopped
+ */
 
 /**
-* @event
-* @name pc.SoundComponent#end
-* @description Fired when a sound instance stops playing because it reached its ending.
-* @param {pc.SoundSlot} slot The slot whose instance ended
-* @param {pc.SoundInstance} instance The instance that ended
-*/
+ * @event
+ * @name pc.SoundComponent#end
+ * @description Fired when a sound instance stops playing because it reached its ending.
+ * @param {pc.SoundSlot} slot The slot whose instance ended
+ * @param {pc.SoundInstance} instance The instance that ended
+ */

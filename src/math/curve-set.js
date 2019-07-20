@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -37,7 +37,7 @@ pc.extend(pc, (function () {
         }
     };
 
-    CurveSet.prototype = {
+    Object.assign(CurveSet.prototype, {
         /**
          * @function
          * @name pc.CurveSet#get
@@ -81,8 +81,8 @@ pc.extend(pc, (function () {
         clone: function () {
             var result = new pc.CurveSet();
 
-            result.curves = [ ];
-            for(var i = 0; i < this.curves.length; i++) {
+            result.curves = [];
+            for (var i = 0; i < this.curves.length; i++) {
                 result.curves.push(this.curves[i].clone());
             }
 
@@ -97,23 +97,36 @@ pc.extend(pc, (function () {
             var numCurves = this.curves.length;
             var values = new Float32Array(precision * numCurves);
             var step = 1.0 / (precision - 1);
-            var temp = [];
 
-            for (var i = 0; i < precision; i++) { // quantize graph to table of interpolated values
-                var value = this.value(step * i, temp);
-                if (numCurves == 1) {
-                    values[i] = value[0];
-                } else {
-                    for (var j = 0; j < numCurves; j++) {
-                        values[i * numCurves + j] = value[j];
-                    }
+            for (var c = 0; c < numCurves; c++) {
+                var ev = new pc.CurveEvaluator(this.curves[c]);
+                for (var i = 0; i < precision; i++) { // quantize graph to table of interpolated values
+                    values[i * numCurves + c] = ev.evaluate(step * i);
                 }
             }
 
             return values;
-        }
+        },
 
-    };
+        /**
+         * @private
+         * @function
+         * @name pc.CurveSet#quantizeClamped
+         * @description This function will sample the curveset at regular intervals
+         * over the range [0..1] and clamp the result to min and max.
+         * @param {Number} precision The number of samples to return.
+         * @param {Number} min The minimum output value.
+         * @param {Number} max The maximum output value.
+         * @returns {Array} The set of quantized values.
+         */
+        quantizeClamped: function (precision, min, max) {
+            var result = this.quantize(precision);
+            for (var i = 0; i < result.length; ++i) {
+                result[i] = Math.min(max, Math.max(min, result[i]));
+            }
+            return result;
+        }
+    });
 
     /**
      * @readonly
@@ -122,7 +135,7 @@ pc.extend(pc, (function () {
      * @description The number of curves in the curve set.
      */
     Object.defineProperty(CurveSet.prototype, 'length', {
-        get: function() {
+        get: function () {
             return this.curves.length;
         }
     });
@@ -139,11 +152,11 @@ pc.extend(pc, (function () {
      * </ul>
      */
     Object.defineProperty(CurveSet.prototype, 'type', {
-        get: function() {
+        get: function () {
             return this._type;
         },
 
-        set: function(value) {
+        set: function (value) {
             this._type = value;
             for (var i = 0; i < this.curves.length; i++) {
                 this.curves[i].type = value;

@@ -1,0 +1,47 @@
+# Javascript Node CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk@sha256:0405d443a664898c7b59f97b4cfebbe8d369370b2edf4f82b8fc1945bdd3b2e0
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@latest'
+
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+
+      - run:
+          name: install-npm
+          command: npm install
+
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+
+      - run:
+          name: build
+          command: npm run build
+
+      - run:
+          name: test-source
+          command: npm run test
+
+      - run:
+          name: test-release
+          command: npm run test:release
+
+      - run:
+          name: lint
+          command: npm run lint
+
+

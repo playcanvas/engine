@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
@@ -14,14 +14,9 @@ pc.extend(pc, function () {
      * @param {ArrayBuffer} [initialData] Initial data.
      */
     var VertexBuffer = function (graphicsDevice, format, numVertices, usage, initialData) {
-        // Initialize optional parameters
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
         this.usage = usage || pc.BUFFER_STATIC;
-
-        // Store the vertex format
         this.format = format;
-
-        // Store the number of vertices
         this.numVertices = numVertices;
 
         // Calculate the size
@@ -41,7 +36,7 @@ pc.extend(pc, function () {
         this.device.buffers.push(this);
     };
 
-    VertexBuffer.prototype = {
+    Object.assign(VertexBuffer.prototype, {
         /**
          * @function
          * @name pc.VertexBuffer#destroy
@@ -65,7 +60,7 @@ pc.extend(pc, function () {
                 device.vertexBuffers.length = 0;
                 device.vbOffsets.length = 0;
                 device.attributesInvalidated = true;
-                for(var loc in device.enabledAttributes) {
+                for (var loc in device.enabledAttributes) {
                     gl.disableVertexAttribArray(loc);
                 }
                 device.enabledAttributes = {};
@@ -162,7 +157,7 @@ pc.extend(pc, function () {
             this.unlock();
             return true;
         }
-    };
+    });
 
     return {
         VertexBuffer: VertexBuffer

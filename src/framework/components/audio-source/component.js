@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @private
      * @component
@@ -22,6 +22,8 @@ pc.extend(pc, function () {
      */
 
     var AudioSourceComponent = function (system, entity) {
+        pc.Component.call(this, system, entity);
+
         this.on("set_assets", this.onSetAssets, this);
         this.on("set_loop", this.onSetLoop, this);
         this.on("set_volume", this.onSetVolume, this);
@@ -32,9 +34,10 @@ pc.extend(pc, function () {
         this.on("set_distanceModel", this.onSetDistanceModel, this);
         this.on("set_3d", this.onSet3d, this);
     };
-    AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.Component);
+    AudioSourceComponent.prototype = Object.create(pc.Component.prototype);
+    AudioSourceComponent.prototype.constructor = AudioSourceComponent;
 
-    pc.extend(AudioSourceComponent.prototype, {
+    Object.assign(AudioSourceComponent.prototype, {
         /**
          * @private
          * @function
@@ -42,7 +45,7 @@ pc.extend(pc, function () {
          * @description Begin playback of an audio asset in the component attached to an entity
          * @param {String} name The name of the Asset to play
          */
-        play: function(name) {
+        play: function (name) {
             if (!this.enabled || !this.entity.enabled) {
                 return;
             }
@@ -54,7 +57,7 @@ pc.extend(pc, function () {
 
             var channel;
             var componentData = this.data;
-            if(componentData.sources[name]) {
+            if (componentData.sources[name]) {
                 if (!componentData['3d']) {
                     channel = this.system.manager.playSound(componentData.sources[name], componentData);
                     componentData.currentSource = name;
@@ -74,7 +77,7 @@ pc.extend(pc, function () {
          * @name pc.AudioSourceComponent#pause
          * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link pc.AudioSourceComponent#unpause}
          */
-        pause: function() {
+        pause: function () {
             if (this.channel) {
                 this.channel.pause();
             }
@@ -98,8 +101,8 @@ pc.extend(pc, function () {
          * @name pc.AudioSourceComponent#stop
          * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
          */
-        stop: function() {
-            if(this.channel) {
+        stop: function () {
+            if (this.channel) {
                 this.channel.stop();
                 this.channel = null;
             }
@@ -139,7 +142,7 @@ pc.extend(pc, function () {
                 }
             }
 
-            if(!this.system._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
+            if (!this.system._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
                 this.loadAudioSourceAssets(newAssets);
             }
         },
@@ -252,8 +255,6 @@ pc.extend(pc, function () {
         },
 
         onEnable: function () {
-            AudioSourceComponent._super.onEnable.call(this);
-
             // load assets that haven't been loaded yet
             var assets = this.data.assets;
             if (assets) {
@@ -261,7 +262,7 @@ pc.extend(pc, function () {
 
                 for (var i = 0, len = assets.length; i < len; i++) {
                     var asset = assets[i];
-                    if (! (asset instanceof pc.Asset))
+                    if (!(asset instanceof pc.Asset))
                         asset = registry.get(asset);
 
                     if (asset && !asset.resource) {
@@ -280,7 +281,6 @@ pc.extend(pc, function () {
         },
 
         onDisable: function () {
-            AudioSourceComponent._super.onDisable.call(this);
             this.pause();
         },
 
@@ -325,7 +325,7 @@ pc.extend(pc, function () {
 
                     asset.off('error', _error, this);
                     asset.on('error', _error, this);
-                    asset.ready(function(asset) {
+                    asset.ready(function (asset) {
                         sources[asset.name] = asset.resource;
                         count--;
                         if (count === 0) {
@@ -333,7 +333,7 @@ pc.extend(pc, function () {
                         }
                     });
 
-                    if (! asset.resource && self.enabled && self.entity.enabled)
+                    if (!asset.resource && self.enabled && self.entity.enabled)
                         this.system.app.assets.load(asset);
                 } else {
                     // don't wait for assets that aren't in the registry
@@ -347,7 +347,7 @@ pc.extend(pc, function () {
                             self.data.sources[asset.name] = asset.resource;
                         });
 
-                        if (! asset.resource)
+                        if (!asset.resource)
                             self.system.app.assets.load(asset);
                     });
                 }

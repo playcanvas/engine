@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @component
      * @constructor
@@ -32,7 +32,8 @@ pc.extend(pc, function () {
      * Defaults to pc.PROJECTION_PERSPECTIVE.
      * @property {Number} nearClip The distance from the camera before which no rendering will take place.
      * @property {Number} farClip The distance from the camera after which no rendering will take place.
-     * @property {Number} aspectRatio The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
+     * @property {Number} aspectRatioMode The aspect ratio mode of the camera. Can be pc.ASPECT_AUTO (default) or pc.ASPECT_MANUAL. ASPECT_AUTO will always be current render target's width divided by height. ASPECT_MANUAL will use the aspectRatio value instead.
+     * @property {Number} aspectRatio The aspect ratio (width divided by height) of the camera. If aspectRatioMode is ASPECT_AUTO, then this value will be automatically calculated every frame, and you can only read it. If it's ASPECT_MANUAL, you can set the value.
      * @property {Boolean} horizontalFov Set which axis to use for the Field of View calculation. Defaults to false (use Y-axis).
      * @property {Number} fov The field of view of the camera in degrees. Usually this is the Y-axis field of
      * view, see {@link pc.CameraComponent#horizontalFov}. Used for {@link pc.PROJECTION_PERSPECTIVE} cameras only. Defaults to 45.
@@ -46,12 +47,9 @@ pc.extend(pc, function () {
      * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates.
      * @property {pc.Vec4} scissorRect Clips all pixels which are not in the rectangle.
      * The order of the values is [x, y, width, height].
-     * @property {pc.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
-     * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
-     * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
-     * effects).
      * @property {pc.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add or remove post effects from the camera.
-     * @property {Boolean} frustumCulling Controls the culling of mesh instances against the camera frustum. If true, culling is enabled.
+     * @property {Boolean} frustumCulling Controls the culling of mesh instances against the camera frustum, i.e. if objects outside of camera should be omitted from rendering.
+     * If true, culling is enabled.
      * If false, all mesh instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
      * @property {Function} calculateTransform Custom function you can provide to calculate the camera transformation matrix manually. Can be used for complex effects like reflections. Function is called using component's scope.
      * Arguments:
@@ -63,9 +61,14 @@ pc.extend(pc, function () {
      *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
      * @property {Boolean} cullFaces If true the camera will take material.cull into account. Otherwise both front and back faces will be rendered.
      * @property {Boolean} flipFaces If true the camera will invert front and back faces. Can be useful for reflection rendering.
+     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this camera should belong.
+     * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var CameraComponent = function CameraComponent(system, entity) {
+        pc.Component.call(this, system, entity);
+
         // Bind event to update hierarchy if camera node changes
+        this.on("set_aspectRatioMode", this.onSetAspectRatioMode, this);
         this.on("set_aspectRatio", this.onSetAspectRatio, this);
         this.on("set_camera", this.onSetCamera, this);
         this.on("set_clearColor", this.onSetClearColor, this);
@@ -87,8 +90,10 @@ pc.extend(pc, function () {
         this.on("set_calculateProjection", this.onSetCalculateProjection, this);
         this.on("set_cullFaces", this.onSetCullFaces, this);
         this.on("set_flipFaces", this.onSetFlipFaces, this);
+        this.on("set_layers", this.onSetLayers, this);
     };
-    CameraComponent = pc.inherits(CameraComponent, pc.Component);
+    CameraComponent.prototype = Object.create(pc.Component.prototype);
+    CameraComponent.prototype.constructor = CameraComponent;
 
     /**
      * @readonly
@@ -97,7 +102,7 @@ pc.extend(pc, function () {
      * @description Queries the camera's projection matrix.
      */
     Object.defineProperty(CameraComponent.prototype, "projectionMatrix", {
-        get: function() {
+        get: function () {
             return this.data.camera.getProjectionMatrix();
         }
     });
@@ -109,9 +114,8 @@ pc.extend(pc, function () {
      * @description Queries the camera's view matrix.
      */
     Object.defineProperty(CameraComponent.prototype, "viewMatrix", {
-        get: function() {
-            var wtm = this.data.camera._node.getWorldTransform();
-            return wtm.clone().invert();
+        get: function () {
+            return this.data.camera.getViewMatrix();
         }
     });
 
@@ -122,7 +126,7 @@ pc.extend(pc, function () {
      * @description Queries the camera's frustum shape.
      */
     Object.defineProperty(CameraComponent.prototype, "frustum", {
-        get: function() {
+        get: function () {
             return this.data.camera.frustum;
         }
     });
@@ -165,12 +169,12 @@ pc.extend(pc, function () {
      * @description Queries the camera's GraphNode. Can be used to get position and rotation.
      */
     Object.defineProperty(CameraComponent.prototype, "node", {
-        get: function() {
+        get: function () {
             return this.data.camera._node;
         }
     });
 
-    pc.extend(CameraComponent.prototype, {
+    Object.assign(CameraComponent.prototype, {
         /**
          * @function
          * @name pc.CameraComponent#screenToWorld
@@ -195,6 +199,11 @@ pc.extend(pc, function () {
             return this.data.camera.screenToWorld(screenx, screeny, cameraz, device.clientRect.width, device.clientRect.height, worldCoord);
         },
 
+        onPrerender: function () {
+            this.data.camera._viewMatDirty = true;
+            this.data.camera._viewProjMatDirty = true;
+        },
+
         /**
          * @function
          * @name pc.CameraComponent#worldToScreen
@@ -206,6 +215,10 @@ pc.extend(pc, function () {
         worldToScreen: function (worldCoord, screenCoord) {
             var device = this.system.app.graphicsDevice;
             return this.data.camera.worldToScreen(worldCoord, device.clientRect.width, device.clientRect.height, screenCoord);
+        },
+
+        onSetAspectRatioMode: function (name, oldValue, newValue) {
+            this.data.camera.aspectRatioMode = newValue;
         },
 
         onSetAspectRatio: function (name, oldValue, newValue) {
@@ -221,10 +234,11 @@ pc.extend(pc, function () {
         },
 
         onSetClearColor: function (name, oldValue, newValue) {
-            this.data.camera.clearColor[0] = newValue.data[0];
-            this.data.camera.clearColor[1] = newValue.data[1];
-            this.data.camera.clearColor[2] = newValue.data[2];
-            this.data.camera.clearColor[3] = newValue.data[3];
+            var clearColor = this.data.camera.clearColor;
+            clearColor[0] = newValue.r;
+            clearColor[1] = newValue.g;
+            clearColor[2] = newValue.b;
+            clearColor[3] = newValue.a;
         },
 
         onSetFov: function (name, oldValue, newValue) {
@@ -275,20 +289,78 @@ pc.extend(pc, function () {
         },
 
         onSetPriority: function (name, oldValue, newValue) {
-            this.system.sortCamerasByPriority();
+            var layer;
+            for (var i = 0; i < this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer._sortCameras();
+            }
+        },
+
+        onSetLayers: function (name, oldValue, newValue) {
+            var i, layer;
+            for (i = 0; i < oldValue.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
+                if (!layer) continue;
+                layer.removeCamera(this);
+            }
+            if (!this.enabled || !this.entity.enabled) return;
+            for (i = 0; i < newValue.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(newValue[i]);
+                if (!layer) continue;
+                layer.addCamera(this);
+            }
+        },
+
+        addCameraToLayers: function () {
+            var layer;
+            for (var i = 0; i < this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.addCamera(this);
+            }
+        },
+
+        removeCameraFromLayers: function () {
+            var layer;
+            for (var i = 0; i < this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.removeCamera(this);
+            }
+        },
+
+        onLayersChanged: function (oldComp, newComp) {
+            this.addCameraToLayers();
+            oldComp.off("add", this.onLayerAdded, this);
+            oldComp.off("remove", this.onLayerRemoved, this);
+            newComp.on("add", this.onLayerAdded, this);
+            newComp.on("remove", this.onLayerRemoved, this);
+        },
+
+        onLayerAdded: function (layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.addCamera(this);
+        },
+
+        onLayerRemoved: function (layer) {
+            var index = this.layers.indexOf(layer.id);
+            if (index < 0) return;
+            layer.removeCamera(this);
         },
 
         updateClearFlags: function () {
             var flags = 0;
 
             if (this.clearColorBuffer)
-                flags = flags | pc.CLEARFLAG_COLOR;
+                flags |= pc.CLEARFLAG_COLOR;
 
             if (this.clearDepthBuffer)
-                flags = flags | pc.CLEARFLAG_DEPTH;
+                flags |= pc.CLEARFLAG_DEPTH;
 
             if (this.clearStencilBuffer)
-                flags = flags | pc.CLEARFLAG_STENCIL;
+                flags |= pc.CLEARFLAG_STENCIL;
 
             this.data.camera.clearFlags = flags;
         },
@@ -298,34 +370,58 @@ pc.extend(pc, function () {
         },
 
         onSetRect: function (name, oldValue, newValue) {
-            this.data.camera.setRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
-            this._resetAspectRatio();
+            this.data.camera.setRect(newValue.x, newValue.y, newValue.z, newValue.w);
         },
 
         onSetScissorRect: function (name, oldValue, newValue) {
-            this.data.camera.setScissorRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
+            this.data.camera.setScissorRect(newValue.x, newValue.y, newValue.z, newValue.w);
         },
 
         onEnable: function () {
-            CameraComponent._super.onEnable.call(this);
             this.system.addCamera(this);
+
+            this.system.app.scene.on("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.on("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.on("remove", this.onLayerRemoved, this);
+            }
+
+            if (this.enabled && this.entity.enabled) {
+                this.addCameraToLayers();
+            }
+
             this.postEffects.enable();
         },
 
         onDisable: function () {
-            CameraComponent._super.onDisable.call(this);
             this.postEffects.disable();
+
+            this.removeCameraFromLayers();
+
+            this.system.app.scene.off("set:layers", this.onLayersChanged, this);
+            if (this.system.app.scene.layers) {
+                this.system.app.scene.layers.off("add", this.onLayerAdded, this);
+                this.system.app.scene.layers.off("remove", this.onLayerRemoved, this);
+            }
+
             this.system.removeCamera(this);
         },
 
-        _resetAspectRatio: function () {
-            var camera = this.camera;
-            if (camera) {
-                if (camera.renderTarget) return;
-                var device = this.system.app.graphicsDevice;
-                var rect = this.rect;
-                this.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
-            }
+        onRemove: function () {
+            this.off();
+        },
+
+        /**
+         * @function
+         * @name pc.CameraComponent#calculateAspectRatio
+         * @description Calculates aspect ratio value for a given render target.
+         * @param {pc.RenderTarget} [rt] Optional render target. If unspecified, the backbuffer is assumed.
+         * @returns {Number} The aspect ratio of the render target (or backbuffer).
+         */
+        calculateAspectRatio: function (rt) {
+            var src = rt ? rt : this.system.app.graphicsDevice;
+            var rect = this.rect;
+            return (src.width * rect.z) / (src.height * rect.w);
         },
 
         /**
@@ -333,9 +429,12 @@ pc.extend(pc, function () {
          * @private
          * @name pc.CameraComponent#frameBegin
          * @description Start rendering the frame for this camera.
+         * @param {pc.RenderTarget} rt Render target to which rendering will be performed. Will affect camera's aspect ratio, if aspectRatioMode is pc.ASPECT_AUTO.
          */
-        frameBegin: function () {
-            this._resetAspectRatio();
+        frameBegin: function (rt) {
+            if (this.aspectRatioMode === pc.ASPECT_AUTO) {
+                this.aspectRatio = this.calculateAspectRatio(rt);
+            }
             this.data.isRendering = true;
         },
 
@@ -369,7 +468,7 @@ pc.extend(pc, function () {
          * });
          */
         enterVr: function (display, callback) {
-            if ((display instanceof Function) && ! callback) {
+            if ((display instanceof Function) && !callback) {
                 callback = display;
                 display = null;
             }

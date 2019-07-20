@@ -1,5 +1,6 @@
-module('pc.input');
-
-test("Namespace exists", function () {
-    ok(pc.input);
+describe('pc.input', function () {
+    it("Namespace exists", function () {
+        expect(pc.input).to.exist;
+    });
 });
+

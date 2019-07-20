@@ -15,14 +15,14 @@ OrbitCameraInputMouse.attributes.add('distanceSensitivity', {
 });
 
 // initialize code called once per entity
-OrbitCameraInputMouse.prototype.initialize = function() {
+OrbitCameraInputMouse.prototype.initialize = function () {
     this.orbitCamera = this.entity.script.orbitCamera;
 
     if (this.orbitCamera) {
         var self = this;
 
         var onMouseOut = function (e) {
-           self.onMouseOut(e);
+            self.onMouseOut(e);
         };
 
         this.app.mouse.on(pc.EVENT_MOUSEDOWN, this.onMouseDown, this);
@@ -34,7 +34,7 @@ OrbitCameraInputMouse.prototype.initialize = function() {
         window.addEventListener('mouseout', onMouseOut, false);
 
         // Remove the listeners so if this entity is destroyed
-        this.on('destroy', function() {
+        this.on('destroy', function () {
             this.app.mouse.off(pc.EVENT_MOUSEDOWN, this.onMouseDown, this);
             this.app.mouse.off(pc.EVENT_MOUSEUP, this.onMouseUp, this);
             this.app.mouse.off(pc.EVENT_MOUSEMOVE, this.onMouseMove, this);
@@ -59,7 +59,7 @@ OrbitCameraInputMouse.toWorldPoint = new pc.Vec3();
 OrbitCameraInputMouse.worldDiff = new pc.Vec3();
 
 
-OrbitCameraInputMouse.prototype.pan = function(screenPoint) {
+OrbitCameraInputMouse.prototype.pan = function (screenPoint) {
     var fromWorldPoint = OrbitCameraInputMouse.fromWorldPoint;
     var toWorldPoint = OrbitCameraInputMouse.toWorldPoint;
     var worldDiff = OrbitCameraInputMouse.worldDiff;
@@ -80,28 +80,26 @@ OrbitCameraInputMouse.prototype.pan = function(screenPoint) {
 
 OrbitCameraInputMouse.prototype.onMouseDown = function (event) {
     switch (event.button) {
-        case pc.MOUSEBUTTON_LEFT: {
+        case pc.MOUSEBUTTON_LEFT:
             this.lookButtonDown = true;
-        } break;
-
+            break;
         case pc.MOUSEBUTTON_MIDDLE:
-        case pc.MOUSEBUTTON_RIGHT: {
+        case pc.MOUSEBUTTON_RIGHT:
             this.panButtonDown = true;
-        } break;
+            break;
     }
 };
 
 
 OrbitCameraInputMouse.prototype.onMouseUp = function (event) {
     switch (event.button) {
-        case pc.MOUSEBUTTON_LEFT: {
+        case pc.MOUSEBUTTON_LEFT:
             this.lookButtonDown = false;
-        } break;
-
+            break;
         case pc.MOUSEBUTTON_MIDDLE:
-        case pc.MOUSEBUTTON_RIGHT: {
+        case pc.MOUSEBUTTON_RIGHT:
             this.panButtonDown = false;
-        } break;
+            break;
     }
 };
 

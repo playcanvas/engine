@@ -1,19 +1,21 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
      * @constructor
      * @name pc.ResourceLoader
+     * @param {pc.Application} app The application
      * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
      * multiple requests. Add ResourceHandlers to handle different types of resources.
      */
-    var ResourceLoader = function () {
+    var ResourceLoader = function (app) {
         this._handlers = {};
         this._requests = {};
         this._cache = {};
+        this._app = app;
     };
 
-    ResourceLoader.prototype = {
+    Object.assign(ResourceLoader.prototype, {
         /**
          * @function
          * @name pc.ResourceLoader#addHandler
@@ -47,13 +49,14 @@ pc.extend(pc, function () {
          * @param {String} url The URL of the resource to load.
          * @param {String} type The type of resource expected.
          * @param {Function} callback The callback used when the resource is loaded or an error occurs.
+         * @param {pc.Asset} [asset] Optional asset that is passed into handler
          * Passed (err, resource) where err is null if there are no errors.
          * @example
          * app.loader.load("../path/to/texture.png", "texture", function (err, texture) {
          *     // use texture here
          * });
          */
-        load: function(url, type, callback, asset) {
+        load: function (url, type, callback, asset) {
             var handler = this._handlers[type];
             if (!handler) {
                 var err = "No handler for asset type: " + type;
@@ -72,24 +75,63 @@ pc.extend(pc, function () {
             } else {
                 // new request
                 this._requests[key] = [callback];
-                handler.load(url, function (err, data, extra) {
-                    // make sure key exists because loader
-                    // might have been destroyed by now
-                    if (!this._requests[key])
-                        return;
 
-                    var i, len = this._requests[key].length;
-                    if (!err) {
-                        var resource = handler.open(url, data, asset);
-                        this._cache[key] = resource;
-                        for (i = 0; i < len; i++)
-                            this._requests[key][i](null, resource, extra);
-                    } else {
-                        for (i = 0; i < len; i++)
-                            this._requests[key][i](err);
+                var handleLoad = function (err, urlObj) {
+                    if (err) {
+                        console.error(err);
+                        if (this._requests[key]) {
+                            for (var i = 0, len = this._requests[key].length; i < len; i++) {
+                                this._requests[key][i](err);
+                            }
+                        }
+                        delete this._requests[key];
+                        return;
                     }
-                    delete this._requests[key];
-                }.bind(this), asset);
+
+                    handler.load(urlObj, function (err, data, extra) {
+                        // make sure key exists because loader
+                        // might have been destroyed by now
+                        if (!this._requests[key])
+                            return;
+
+                        var i, len = this._requests[key].length;
+
+                        var resource;
+                        if (! err) {
+                            try {
+                                resource = handler.open(urlObj.original, data, asset);
+                            } catch (ex) {
+                                err = ex;
+                            }
+                        }
+
+                        if (!err) {
+                            this._cache[key] = resource;
+                            for (i = 0; i < len; i++)
+                                this._requests[key][i](null, resource, extra);
+                        } else {
+                            console.error(err);
+                            for (i = 0; i < len; i++)
+                                this._requests[key][i](err);
+                        }
+                        delete this._requests[key];
+                    }.bind(this), asset);
+                }.bind(this);
+
+                var normalizedUrl = url.split('?')[0];
+                if (this._app.enableBundles && this._app.bundles.hasUrl(normalizedUrl)) {
+                    if (!this._app.bundles.canLoadUrl(normalizedUrl)) {
+                        handleLoad('Bundle for ' + url + ' not loaded yet');
+                        return;
+                    }
+
+                    this._app.bundles.loadUrl(normalizedUrl, function (err, fileUrlFromBundle) {
+                        handleLoad(err, { load: fileUrlFromBundle, original: url });
+                    });
+                } else {
+                    handleLoad(null, { load: url, original: url });
+                }
+
             }
         },
 
@@ -151,6 +193,30 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
+         * @function
+         * @name pc.ResourceLoader#enableRetry
+         * @description Enables retrying of failed requests when loading assets.
+         */
+        enableRetry: function () {
+            for (var key in this._handlers) {
+                this._handlers[key].retryRequests = true;
+            }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.ResourceLoader#disableRetry
+         * @description Disables retrying of failed requests when loading assets.
+         */
+        disableRetry: function () {
+            for (var key in this._handlers) {
+                this._handlers[key].retryRequests = false;
+            }
+        },
+
+        /**
          * @function
          * @name pc.ResourceLoader#destroy
          * @description Destroys the resource loader.
@@ -160,7 +226,7 @@ pc.extend(pc, function () {
             this._requests = {};
             this._cache = {};
         }
-    };
+    });
 
     return {
         ResourceLoader: ResourceLoader

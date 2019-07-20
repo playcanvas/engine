@@ -1,7 +1,6 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     /**
-     * @private
      * @constructor
      * @name pc.SpriteAnimationClip
      * @classdesc Handles playing of sprite animations and loading of relevant sprite assets.
@@ -39,7 +38,7 @@ pc.extend(pc, function () {
         pc.events.attach(this);
     };
 
-    SpriteAnimationClip.prototype = {
+    Object.assign(SpriteAnimationClip.prototype, {
         // When sprite asset is added bind it
         _onSpriteAssetAdded: function (asset) {
             this._component.system.app.assets.off('add:' + asset.id, this._onSpriteAssetAdded, this);
@@ -60,13 +59,23 @@ pc.extend(pc, function () {
             }
         },
 
+        _unbindSpriteAsset: function (asset) {
+            asset.off("load", this._onSpriteAssetLoad, this);
+            asset.off("remove", this._onSpriteAssetRemove, this);
+
+            // unbind atlas
+            if (asset.resource && asset.resource.atlas) {
+                this._component.system.app.assets.off('load:' + asset.data.textureAtlasAsset, this._onTextureAtlasLoad, this);
+            }
+        },
+
         // When sprite asset is loaded make sure the texture atlas asset is loaded too
         // If so then set the sprite, otherwise wait for the atlas to be loaded first
         _onSpriteAssetLoad: function (asset) {
-            if (! asset.resource) {
+            if (!asset.resource) {
                 this.sprite = null;
             } else {
-                if (! asset.resource.atlas) {
+                if (!asset.resource.atlas) {
                     var atlasAssetId = asset.data.textureAtlasAsset;
                     var assets = this._component.system.app.assets;
                     assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
@@ -88,6 +97,7 @@ pc.extend(pc, function () {
         },
 
         _onSpriteAssetRemove: function (asset) {
+            this.sprite = null;
         },
 
         // If the meshes are re-created make sure
@@ -108,15 +118,15 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SpriteAnimationClip#_update
-        * @param {Number} dt The delta time
-        * @description Advances the animation looping if necessary
-        */
+         * @private
+         * @function
+         * @name pc.SpriteAnimationClip#_update
+         * @param {Number} dt The delta time
+         * @description Advances the animation looping if necessary
+         */
         _update: function (dt) {
             if (this.fps === 0) return;
-            if (!this._playing || this._paused || ! this._sprite) return;
+            if (!this._playing || this._paused || !this._sprite) return;
 
             var dir = this.fps < 0 ? -1 : 1;
             var time = this._time + dt * this._component.speed * dir;
@@ -182,20 +192,21 @@ pc.extend(pc, function () {
 
         _destroy: function () {
             // remove sprite
-            if (this._sprite)
-                this._sprite = null;
+            if (this._sprite) {
+                this.sprite = null;
+            }
 
             // remove sprite asset
-            if (this._spriteAsset)
-                this._spriteAsset = null;
+            if (this._spriteAsset) {
+                this.spriteAsset = null;
+            }
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SpriteAnimationClip#play
-        * @description Plays the animation. If it's already playing then this does nothing.
-        */
+         * @function
+         * @name pc.SpriteAnimationClip#play
+         * @description Plays the animation. If it's already playing then this does nothing.
+         */
         play: function () {
             if (this._playing)
                 return;
@@ -209,13 +220,12 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SpriteAnimationClip#pause
-        * @description Pauses the animation.
-        */
+         * @function
+         * @name pc.SpriteAnimationClip#pause
+         * @description Pauses the animation.
+         */
         pause: function () {
-            if (! this._playing || this._paused)
+            if (!this._playing || this._paused)
                 return;
 
             this._paused = true;
@@ -225,13 +235,12 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SpriteAnimationClip#resume
-        * @description Resumes the paused animation.
-        */
+         * @function
+         * @name pc.SpriteAnimationClip#resume
+         * @description Resumes the paused animation.
+         */
         resume: function () {
-            if (! this._paused) return;
+            if (!this._paused) return;
 
             this._paused = false;
             this.fire('resume');
@@ -239,13 +248,12 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.SpriteAnimationClip#stop
-        * @description Stops the animation and resets the animation to the first frame.
-        */
+         * @function
+         * @name pc.SpriteAnimationClip#stop
+         * @description Stops the animation and resets the animation to the first frame.
+         */
         stop: function () {
-            if (! this._playing) return;
+            if (!this._playing) return;
 
             this._playing = false;
             this._paused = false;
@@ -255,8 +263,7 @@ pc.extend(pc, function () {
             this.fire('stop');
             this._component.fire('stop', this);
         }
-    };
-
+    });
 
     Object.defineProperty(SpriteAnimationClip.prototype, "spriteAsset", {
         get: function () {
@@ -275,13 +282,7 @@ pc.extend(pc, function () {
                     // clean old event listeners
                     var prev = assets.get(this._spriteAsset);
                     if (prev) {
-                        prev.off("load", this._onSpriteAssetLoad, this);
-                        prev.off("remove", this._onSpriteAssetRemove, this);
-
-                        var atlasAssetId = prev.data && prev.data.textureAtlasAsset;
-                        if (atlasAssetId) {
-                            assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
-                        }
+                        this._unbindSpriteAsset(prev);
                     }
                 }
 
@@ -290,7 +291,7 @@ pc.extend(pc, function () {
                 // bind sprite asset
                 if (this._spriteAsset) {
                     var asset = assets.get(this._spriteAsset);
-                    if (! asset) {
+                    if (!asset) {
                         this.sprite = null;
                         assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
                     } else {
@@ -341,9 +342,9 @@ pc.extend(pc, function () {
                     }
 
                     this._component._hideModel();
-                }
-                // otherwise show sprite
-                else {
+                } else {
+                    // otherwise show sprite
+
                     // update texture
                     if (value.atlas.texture) {
                         mi = this._component._meshInstance;
@@ -397,14 +398,13 @@ pc.extend(pc, function () {
         }
     });
 
-    Object.defineProperty(SpriteAnimationClip.prototype, "duration" , {
+    Object.defineProperty(SpriteAnimationClip.prototype, "duration", {
         get: function () {
             if (this._sprite) {
                 var fps = this.fps || Number.MIN_VALUE;
                 return this._sprite.frameKeys.length / Math.abs(fps);
-            } else {
-                return 0;
             }
+            return 0;
         }
     });
 
@@ -432,43 +432,37 @@ pc.extend(pc, function () {
 // Events Documentation
 
 /**
-* @private
-* @event
-* @name pc.SpriteAnimationClip#play
-* @description Fired when the clip starts playing
-*/
+ * @event
+ * @name pc.SpriteAnimationClip#play
+ * @description Fired when the clip starts playing
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteAnimationClip#pause
-* @description Fired when the clip is paused.
-*/
+ * @event
+ * @name pc.SpriteAnimationClip#pause
+ * @description Fired when the clip is paused.
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteAnimationClip#resume
-* @description Fired when the clip is resumed.
-*/
+ * @event
+ * @name pc.SpriteAnimationClip#resume
+ * @description Fired when the clip is resumed.
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteAnimationClip#stop
-* @description Fired when the clip is stopped.
-*/
+ * @event
+ * @name pc.SpriteAnimationClip#stop
+ * @description Fired when the clip is stopped.
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteAnimationClip#end
-* @description Fired when the clip stops playing because it reached its ending.
-*/
+ * @event
+ * @name pc.SpriteAnimationClip#end
+ * @description Fired when the clip stops playing because it reached its ending.
+ */
 
 /**
-* @private
-* @event
-* @name pc.SpriteAnimationClip#loop
-* @description Fired when the clip reached the end of its current loop.
-*/
+ * @event
+ * @name pc.SpriteAnimationClip#loop
+ * @description Fired when the clip reached the end of its current loop.
+ */

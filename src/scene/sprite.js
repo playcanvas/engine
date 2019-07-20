@@ -1,8 +1,7 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @private
      * @enum pc.SPRITE_RENDERMODE
      * @name pc.SPRITE_RENDERMODE_SIMPLE
      * @description This mode renders a sprite as a simple quad.
@@ -10,7 +9,6 @@ pc.extend(pc, function () {
     pc.SPRITE_RENDERMODE_SIMPLE = 0;
 
     /**
-     * @private
      * @enum pc.SPRITE_RENDERMODE
      * @name pc.SPRITE_RENDERMODE_SLICED
      * @description This mode renders a sprite using 9-slicing in 'sliced' mode. Sliced mode stretches the
@@ -20,7 +18,6 @@ pc.extend(pc, function () {
     pc.SPRITE_RENDERMODE_SLICED = 1;
 
     /**
-     * @private
      * @enum pc.SPRITE_RENDERMODE
      * @name pc.SPRITE_RENDERMODE_TILED
      * @description This mode renders a sprite using 9-slicing in 'tiled' mode. Tiled mode tiles the
@@ -30,7 +27,7 @@ pc.extend(pc, function () {
     pc.SPRITE_RENDERMODE_TILED = 2;
 
     // normals are the same for every mesh
-    var normals = [
+    var spriteNormals = [
         0, 0, 1,
         0, 0, 1,
         0, 0, 1,
@@ -38,14 +35,13 @@ pc.extend(pc, function () {
     ];
 
     // indices are the same for every mesh
-    var indices = [
+    var spriteIndices = [
         0, 1, 3,
         2, 3, 1
     ];
 
 
     /**
-     * @private
      * @constructor
      * @name pc.Sprite
      * @classdesc A pc.Sprite is contains references to one or more frames of a {@link pc.TextureAtlas}. It can be used
@@ -89,10 +85,10 @@ pc.extend(pc, function () {
         // destroy old meshes
         for (i = 0, len = this._meshes.length; i < len; i++) {
             var mesh = this._meshes[i];
-            if (! mesh) continue;
+            if (!mesh) continue;
 
             mesh.vertexBuffer.destroy();
-            for (var j = 0, len2 = mesh.indexBuffer.length; j<len2; j++) {
+            for (var j = 0, len2 = mesh.indexBuffer.length; j < len2; j++) {
                 mesh.indexBuffer[j].destroy();
             }
         }
@@ -118,26 +114,25 @@ pc.extend(pc, function () {
         var texWidth = this._atlas.texture.width;
         var texHeight = this._atlas.texture.height;
 
-        var w = rect.data[2] / this._pixelsPerUnit;
-        var h = rect.data[3] / this._pixelsPerUnit;
+        var w = rect.z / this._pixelsPerUnit;
+        var h = rect.w / this._pixelsPerUnit;
         var hp = frame.pivot.x;
         var vp = frame.pivot.y;
 
         // positions based on pivot and size of frame
         var positions = [
-            -hp*w,          -vp*h,          0,
-            (1 - hp) * w,   -vp*h,          0,
-            (1 - hp) * w,   (1 - vp) * h,   0,
-            -hp*w,          (1 - vp) * h,   0
+            -hp * w,      -vp * h,      0,
+            (1 - hp) * w, -vp * h,      0,
+            (1 - hp) * w, (1 - vp) * h, 0,
+            -hp * w,      (1 - vp) * h, 0
         ];
-
 
         // uvs based on frame rect
         // uvs
-        var lu = rect.data[0] / texWidth;
-        var bv = rect.data[1] / texHeight;
-        var ru = (rect.data[0] + rect.data[2]) / texWidth;
-        var tv = (rect.data[1] + rect.data[3]) / texHeight;
+        var lu = rect.x / texWidth;
+        var bv = rect.y / texHeight;
+        var ru = (rect.x + rect.z) / texWidth;
+        var tv = (rect.y + rect.w) / texHeight;
 
         var uvs = [
             lu, bv,
@@ -148,8 +143,8 @@ pc.extend(pc, function () {
 
         var mesh = pc.createMesh(this._device, positions, {
             uvs: uvs,
-            normals: normals,
-            indices: indices
+            normals: spriteNormals,
+            indices: spriteIndices
         });
 
         return mesh;
@@ -167,7 +162,6 @@ pc.extend(pc, function () {
         var positions = [];
         var normals = [];
         var uvs = [];
-        var uvs1 = [];
         var indices = [];
 
         // Generate plane as follows (assigned UVs denoted at corners):
@@ -178,7 +172,7 @@ pc.extend(pc, function () {
         //      |    |    |
         //      |    Z    |
         // (0,0)x---------x(1,0)
-        //         width
+        // width
         var vcounter = 0;
         for (i = 0; i <= ws; i++) {
             u = (i === 0 || i === ws) ? 0 : 1;
@@ -196,8 +190,8 @@ pc.extend(pc, function () {
                 uvs.push(u, v);
 
                 if ((i < ws) && (j < ls)) {
-                    indices.push(vcounter+ls+1, vcounter+1, vcounter);
-                    indices.push(vcounter+ls+1, vcounter+ls+2, vcounter+1);
+                    indices.push(vcounter + ls + 1, vcounter + 1, vcounter);
+                    indices.push(vcounter + ls + 1, vcounter + ls + 2, vcounter + 1);
                 }
 
                 vcounter++;
@@ -205,9 +199,9 @@ pc.extend(pc, function () {
         }
 
         var options = {
-            normals:   normals, // crashes without normals on mac?
-            uvs:       uvs,
-            indices:   indices
+            normals: normals, // crashes without normals on mac?
+            uvs: uvs,
+            indices: indices
         };
 
         return pc.createMesh(this._device, positions, options);
@@ -258,6 +252,28 @@ pc.extend(pc, function () {
 
         }
         this._meshesDirty = false;
+    };
+
+    /**
+     * @function
+     * @name pc.Sprite#destroy
+     * @description Free up the meshes created by the sprite.
+     */
+    Sprite.prototype.destroy = function () {
+        var i;
+        var len;
+
+        // destroy old meshes
+        for (i = 0, len = this._meshes.length; i < len; i++) {
+            var mesh = this._meshes[i];
+            if (!mesh) continue;
+
+            mesh.vertexBuffer.destroy();
+            for (var j = 0, len2 = mesh.indexBuffer.length; j < len2; j++) {
+                mesh.indexBuffer[j].destroy();
+            }
+        }
+        this._meshes.length = 0;
     };
 
     Object.defineProperty(Sprite.prototype, 'frameKeys', {

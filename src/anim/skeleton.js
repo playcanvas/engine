@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     function InterpolatedKey() {
         this._written = false;
         this._name = "";
@@ -13,7 +13,7 @@ pc.extend(pc, function () {
         this._targetNode = null;
     }
 
-    InterpolatedKey.prototype = {
+    Object.assign(InterpolatedKey.prototype, {
         getTarget: function () {
             return this._targetNode;
         },
@@ -21,7 +21,7 @@ pc.extend(pc, function () {
         setTarget: function (node) {
             this._targetNode = node;
         }
-    };
+    });
 
     /**
      * @constructor
@@ -114,12 +114,17 @@ pc.extend(pc, function () {
 
                 // Determine the interpolated keyframe for this animated node
                 interpKey = this._interpolatedKeyDict[nodeName];
-
+                if (interpKey === undefined) {
+                    // #ifdef DEBUG
+                    console.warn('Unknown skeleton node name: ' + nodeName);
+                    // #endif
+                    continue;
+                }
                 // If there's only a single key, just copy the key to the interpolated key...
                 foundKey = false;
                 if (keys.length !== 1) {
                     // Otherwise, find the keyframe pair for this node
-                    for (var currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length-1 && currKeyIndex >= 0; currKeyIndex += offset) {
+                    for (var currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length - 1 && currKeyIndex >= 0; currKeyIndex += offset) {
                         k1 = keys[currKeyIndex];
                         k2 = keys[currKeyIndex + 1];
 
@@ -192,7 +197,7 @@ pc.extend(pc, function () {
         get: function () {
             return this._animation;
         },
-        set: function(value) {
+        set: function (value) {
             this._animation = value;
             this.currentTime = 0;
         }
@@ -220,7 +225,7 @@ pc.extend(pc, function () {
         get: function () {
             return this._time;
         },
-        set: function(value) {
+        set: function (value) {
             this._time = value;
             var numNodes = this._interpolatedKeys.length;
             for (var i = 0; i < numNodes; i++) {
@@ -342,8 +347,8 @@ pc.extend(pc, function () {
                     transform.localRotation.copy(interpKey._quat);
                     transform.localScale.copy(interpKey._scale);
 
-                    if (! transform._dirtyLocal)
-                        transform._dirtify(true);
+                    if (!transform._dirtyLocal)
+                        transform._dirtifyLocal();
 
                     interpKey._written = false;
                 }

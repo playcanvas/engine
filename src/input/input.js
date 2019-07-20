@@ -52,31 +52,31 @@
         EVENT_MOUSEWHEEL: "mousewheel",
 
         /**
-        * @enum pc.EVENT
-        * @name pc.EVENT_TOUCHSTART
-        * @description Name of event fired when a new touch occurs. For example, a finger is placed on the device.
-        */
+         * @enum pc.EVENT
+         * @name pc.EVENT_TOUCHSTART
+         * @description Name of event fired when a new touch occurs. For example, a finger is placed on the device.
+         */
         EVENT_TOUCHSTART: 'touchstart',
         /**
-        * @enum pc.EVENT
-        * @name pc.EVENT_TOUCHEND
-        * @description Name of event fired when touch ends. For example, a finger is lifted off the device.
-        */
+         * @enum pc.EVENT
+         * @name pc.EVENT_TOUCHEND
+         * @description Name of event fired when touch ends. For example, a finger is lifted off the device.
+         */
         EVENT_TOUCHEND: 'touchend',
         /**
-        * @enum pc.EVENT
-        * @name pc.EVENT_TOUCHMOVE
-        * @description Name of event fired when a touch moves.
-        */
+         * @enum pc.EVENT
+         * @name pc.EVENT_TOUCHMOVE
+         * @description Name of event fired when a touch moves.
+         */
         EVENT_TOUCHMOVE: 'touchmove',
         /**
-        * @enum pc.EVENT
-        * @name pc.EVENT_TOUCHCANCEL
-        * @description Name of event fired when a touch point is interrupted in some way.
-        * The exact reasons for cancelling a touch can vary from device to device.
-        * For example, a modal alert pops up during the interaction; the touch point leaves the document area;
-        * or there are more touch points than the device supports, in which case the earliest touch point is canceled.
-        */
+         * @enum pc.EVENT
+         * @name pc.EVENT_TOUCHCANCEL
+         * @description Name of event fired when a touch point is interrupted in some way.
+         * The exact reasons for cancelling a touch can vary from device to device.
+         * For example, a modal alert pops up during the interaction; the touch point leaves the document area;
+         * or there are more touch points than the device supports, in which case the earliest touch point is canceled.
+         */
         EVENT_TOUCHCANCEL: 'touchcancel',
 
         /**
@@ -600,118 +600,118 @@
         MOUSEBUTTON_RIGHT: 2,
 
         /**
-        * @description Index for pad 1
-        */
+         * @description Index for pad 1
+         */
         PAD_1: 0,
         /**
-        * @description Index for pad 2
-        */
+         * @description Index for pad 2
+         */
         PAD_2: 1,
         /**
-        * @description Index for pad 3
-        */
+         * @description Index for pad 3
+         */
         PAD_3: 2,
         /**
-        * @description Index for pad 4
-        */
+         * @description Index for pad 4
+         */
         PAD_4: 3,
 
         /**
-        * @description The first face button, from bottom going clockwise
-        */
+         * @description The first face button, from bottom going clockwise
+         */
         PAD_FACE_1: 0,
         /**
-        * @description The second face button, from bottom going clockwise
-        */
+         * @description The second face button, from bottom going clockwise
+         */
         PAD_FACE_2: 1,
         /**
-        * @description The third face button, from bottom going clockwise
-        */
+         * @description The third face button, from bottom going clockwise
+         */
         PAD_FACE_3: 2,
         /**
-        * @description The fourth face button, from bottom going clockwise
-        */
+         * @description The fourth face button, from bottom going clockwise
+         */
         PAD_FACE_4: 3,
 
 
         /**
-        * @description The first shoulder button on the left
-        */
+         * @description The first shoulder button on the left
+         */
         PAD_L_SHOULDER_1: 4,
         /**
-        * @description The first shoulder button on the right
-        */
+         * @description The first shoulder button on the right
+         */
         PAD_R_SHOULDER_1: 5,
         /**
-        * @description The second shoulder button on the left
-        */
+         * @description The second shoulder button on the left
+         */
         PAD_L_SHOULDER_2: 6,
         /**
-        * @description The second shoulder button on the right
-        */
+         * @description The second shoulder button on the right
+         */
         PAD_R_SHOULDER_2: 7,
 
         /**
-        * @description The select button
-        */
+         * @description The select button
+         */
         PAD_SELECT: 8,
         /**
-        * @description The start button
-        */
+         * @description The start button
+         */
         PAD_START: 9,
 
         /**
-        * @description The button when depressing the left analogue stick
-        */
+         * @description The button when depressing the left analogue stick
+         */
         PAD_L_STICK_BUTTON: 10,
         /**
-        * @description The button when depressing the right analogue stick
-        */
+         * @description The button when depressing the right analogue stick
+         */
         PAD_R_STICK_BUTTON: 11,
 
         /**
-        * @description Direction pad up
-        */
+         * @description Direction pad up
+         */
         PAD_UP: 12,
         /**
-        * @description Direction pad down
-        */
+         * @description Direction pad down
+         */
         PAD_DOWN: 13,
         /**
-        * @description Direction pad left
-        */
+         * @description Direction pad left
+         */
         PAD_LEFT: 14,
         /**
-        * @description Direction pad right
-        */
+         * @description Direction pad right
+         */
         PAD_RIGHT: 15,
 
         /**
-        * @description Vendor specific button
-        */
+         * @description Vendor specific button
+         */
         PAD_VENDOR: 16,
 
         /**
-        * @description Horizontal axis on the left analogue stick
-        */
+         * @description Horizontal axis on the left analogue stick
+         */
         PAD_L_STICK_X: 0,
         /**
-        * @description Vertical axis on the left analogue stick
-        */
+         * @description Vertical axis on the left analogue stick
+         */
         PAD_L_STICK_Y: 1,
         /**
-        * @description Horizontal axis on the right analogue stick
-        */
+         * @description Horizontal axis on the right analogue stick
+         */
         PAD_R_STICK_X: 2,
         /**
-        * @description Vertical axis on the right analogue stick
-        */
+         * @description Vertical axis on the right analogue stick
+         */
         PAD_R_STICK_Y: 3
     };
 
-    pc.extend(pc, enums);
+    Object.assign(pc, enums);
 
     // For backwards compatibility
     pc.input = {};
-    pc.extend(pc.input, enums);
+    Object.assign(pc.input, enums);
 }());

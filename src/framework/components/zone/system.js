@@ -1,18 +1,20 @@
-pc.extend(pc, function () {
-    var _schema = [ 'enabled' ];
+Object.assign(pc, function () {
+    var _schema = ['enabled'];
 
     /**
+     * @private
+     * @constructor
      * @name pc.ZoneComponentSystem
-     * @description Create a new ZoneComponentSystem
-     * @class Defines zone in world.
-     * @param {pc.Application} app The application
+     * @classdesc Defines zone in world.
+     * @description Create a new ZoneComponentSystem.
+     * @param {pc.Application} app The application.
      * @extends pc.ComponentSystem
      */
-
     var ZoneComponentSystem = function ZoneComponentSystem(app) {
+        pc.ComponentSystem.call(this, app);
+
         this.id = 'zone';
         this.app = app;
-        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ZoneComponent;
         this.DataType = pc.ZoneComponentData;
@@ -21,12 +23,13 @@ pc.extend(pc, function () {
 
         this.on('beforeremove', this._onBeforeRemove, this);
     };
-    ZoneComponentSystem = pc.inherits(ZoneComponentSystem, pc.ComponentSystem);
+    ZoneComponentSystem.prototype = Object.create(pc.ComponentSystem.prototype);
+    ZoneComponentSystem.prototype.constructor = ZoneComponentSystem;
 
     pc.Component._buildAccessors(pc.ZoneComponent.prototype, _schema);
 
-    pc.extend(ZoneComponentSystem.prototype, {
-        initializeComponentData: function(component, data, properties) {
+    Object.assign(ZoneComponentSystem.prototype, {
+        initializeComponentData: function (component, data, properties) {
             component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
 
             if (data.size) {
@@ -38,7 +41,7 @@ pc.extend(pc, function () {
             }
         },
 
-        cloneComponent: function(entity, clone) {
+        cloneComponent: function (entity, clone) {
             var data = {
                 size: entity.zone.size
             };
@@ -46,7 +49,7 @@ pc.extend(pc, function () {
             return this.addComponent(clone, data);
         },
 
-        _onBeforeRemove: function(entity, component) {
+        _onBeforeRemove: function (entity, component) {
             component._onBeforeRemove();
         }
     });

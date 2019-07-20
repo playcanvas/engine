@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     function PartitionedVertex() {
         this.index = 0;
@@ -15,14 +15,17 @@ pc.extend(pc, function () {
         // Indices of bones in this partition. skin matrices will be uploaded to the vertex shader in this order.
         this.boneIndices = [];
 
-        this.vertices = []; // Partitioned vertex attributes
-        this.indices = [];  // Partitioned vertex indices
-        this.indexMap = {}; // Maps the index of an un-partitioned vertex to that same vertex if it has been added
-                            // to this particular partition. speeds up checking for duplicate vertices so we don't
-                            // add the same vertex more than once.
+        // Partitioned vertex attributes
+        this.vertices = [];
+        // Partitioned vertex indices
+        this.indices = [];
+        // Maps the index of an un-partitioned vertex to that same vertex if it has been added
+        // to this particular partition. speeds up checking for duplicate vertices so we don't
+        // add the same vertex more than once.
+        this.indexMap = {};
     }
 
-    SkinPartition.prototype = {
+    Object.assign(SkinPartition.prototype, {
         addVertex: function (vertex, idx, vertexArray) {
             var remappedIndex = -1;
             if (this.indexMap[idx] !== undefined) {
@@ -98,7 +101,7 @@ pc.extend(pc, function () {
             }
             return -1;
         }
-    };
+    });
 
     function indicesToReferences(model) {
         var i;
@@ -304,9 +307,7 @@ pc.extend(pc, function () {
                     skins.push(splitSkin);
                 }
 
-                /////////////
-                // Phase 4 //
-                /////////////
+                // Phase 4
 
                 // Create a partitioned vertex array
                 var attrib, attribName, data, components;
@@ -346,9 +347,7 @@ pc.extend(pc, function () {
                 // Replace original vertex array with split one
                 vertexArrays[vertexArrays.indexOf(vertexArray)] = splitVertexArray;
 
-                /////////////
-                // Phase 5 //
-                /////////////
+                // Phase 5
 
                 // Build new mesh array
                 for (j = 0; j < partitions.length; j++) {

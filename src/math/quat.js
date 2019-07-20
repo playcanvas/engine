@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
 
     /**
@@ -82,7 +82,7 @@ pc.extend(pc, (function () {
      * quat.w = 0;
      */
 
-    Quat.prototype = {
+    Object.assign(Quat.prototype, {
         /**
          * @function
          * @name pc.Quat#clone
@@ -249,14 +249,7 @@ pc.extend(pc, (function () {
          * console.log("The length of the quaternion is: " + len);
          */
         length: function () {
-            var x, y, z, w;
-
-            x = this.x;
-            y = this.y;
-            z = this.z;
-            w = this.w;
-
-            return Math.sqrt(x * x + y * y + z * z + w * w);
+            return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
         },
 
         /**
@@ -271,8 +264,7 @@ pc.extend(pc, (function () {
          * console.log("The length squared of the quaternion is: " + lenSq);
          */
         lengthSq: function () {
-            var x, y, z, w;
-            return x * x + y * y + z * z + w * w;
+            return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
         },
 
         /**
@@ -500,9 +492,18 @@ pc.extend(pc, (function () {
             m22 = m[10];
 
             // Remove the scale from the matrix
-            lx = 1 / Math.sqrt(m00 * m00 + m01 * m01 + m02 * m02);
-            ly = 1 / Math.sqrt(m10 * m10 + m11 * m11 + m12 * m12);
-            lz = 1 / Math.sqrt(m20 * m20 + m21 * m21 + m22 * m22);
+            lx = m00 * m00 + m01 * m01 + m02 * m02;
+            if (lx === 0)
+                return this;
+            lx = 1 / Math.sqrt(lx);
+            ly = m10 * m10 + m11 * m11 + m12 * m12;
+            if (ly === 0)
+                return this;
+            ly = 1 / Math.sqrt(ly);
+            lz = m20 * m20 + m21 * m21 + m22 * m22;
+            if (lz === 0)
+                return this;
+            lz = 1 / Math.sqrt(lz);
 
             m00 *= lx;
             m01 *= lx;
@@ -700,9 +701,9 @@ pc.extend(pc, (function () {
          * console.log(v.toString());
          */
         toString: function () {
-            return "[" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + "]";
+            return '[' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ']';
         }
-    };
+    });
 
     /**
      * @field

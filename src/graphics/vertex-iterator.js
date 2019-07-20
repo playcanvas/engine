@@ -1,7 +1,7 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
-    function VertexIteratorSetter(buffer, vertexElement) {
+    function VertexIteratorAccessor(buffer, vertexElement) {
         this.index = 0;
 
         switch (vertexElement.dataType) {
@@ -30,29 +30,33 @@ pc.extend(pc, function () {
 
         // Methods
         switch (vertexElement.numComponents) {
-            case 1: this.set = VertexIteratorSetter_set1; break;
-            case 2: this.set = VertexIteratorSetter_set2; break;
-            case 3: this.set = VertexIteratorSetter_set3; break;
-            case 4: this.set = VertexIteratorSetter_set4; break;
+            case 1: this.set = VertexIteratorAccessor_set1; break;
+            case 2: this.set = VertexIteratorAccessor_set2; break;
+            case 3: this.set = VertexIteratorAccessor_set3; break;
+            case 4: this.set = VertexIteratorAccessor_set4; break;
         }
     }
 
-    function VertexIteratorSetter_set1(a) {
+    VertexIteratorAccessor.prototype.get = function (offset) {
+        return this.array[this.index + offset];
+    };
+
+    function VertexIteratorAccessor_set1(a) {
         this.array[this.index] = a;
     }
 
-    function VertexIteratorSetter_set2(a, b) {
+    function VertexIteratorAccessor_set2(a, b) {
         this.array[this.index] = a;
         this.array[this.index + 1] = b;
     }
 
-    function VertexIteratorSetter_set3(a, b, c) {
+    function VertexIteratorAccessor_set3(a, b, c) {
         this.array[this.index] = a;
         this.array[this.index + 1] = b;
         this.array[this.index + 2] = c;
     }
 
-    function VertexIteratorSetter_set4(a, b, c, d) {
+    function VertexIteratorAccessor_set4(a, b, c, d) {
         this.array[this.index] = a;
         this.array[this.index + 1] = b;
         this.array[this.index + 2] = c;
@@ -74,23 +78,24 @@ pc.extend(pc, function () {
         this.buffer = this.vertexBuffer.lock();
 
         // Create an empty list
-        this.setters = [];
+        this.accessors = [];
         this.element = {};
 
         // Add a new 'setter' function for each element
         var vertexFormat = this.vertexBuffer.getFormat();
         for (var i = 0; i < vertexFormat.elements.length; i++) {
             var vertexElement = vertexFormat.elements[i];
-            this.setters[i] = new VertexIteratorSetter(this.buffer, vertexElement);
-            this.element[vertexElement.name] = this.setters[i];
+            this.accessors[i] = new VertexIteratorAccessor(this.buffer, vertexElement);
+            this.element[vertexElement.name] = this.accessors[i];
         }
     }
 
-    VertexIterator.prototype = {
+    Object.assign(VertexIterator.prototype, {
         /**
          * @function
          * @name pc.VertexIterator#next
          * @description Moves the vertex iterator on to the next vertex.
+         * @param {Number} [count] Optional number of steps to move on when calling next, defaults to 1.
          * @example
          * var iterator = new pc.VertexIterator(vertexBuffer);
          * iterator.element[pc.SEMANTIC_POSTIION].set(-0.9, -0.9, 0.0);
@@ -103,16 +108,18 @@ pc.extend(pc, function () {
          * iterator.element[pc.SEMANTIC_COLOR].set(0, 0, 255, 255);
          * iterator.end();
          */
-        next: function () {
+        next: function (count) {
+            if (count === undefined) count = 1;
+
             var i = 0;
-            var setters = this.setters;
-            var numSetters = this.setters.length;
+            var accessors = this.accessors;
+            var numAccessors = this.accessors.length;
             var vertexFormat = this.vertexBuffer.getFormat();
-            while (i < numSetters) {
-                var setter = setters[i++];
+            while (i < numAccessors) {
+                var accessor = accessors[i++];
                 // BYTES_PER_ELEMENT is on the instance and constructor for Chrome, Safari and Firefox
                 // but just the constructor for Opera
-                setter.index += vertexFormat.size / setter.array.constructor.BYTES_PER_ELEMENT;
+                accessor.index += (count * vertexFormat.size / accessor.array.constructor.BYTES_PER_ELEMENT);
             }
         },
 
@@ -137,7 +144,7 @@ pc.extend(pc, function () {
             // Unlock the vertex buffer
             this.vertexBuffer.unlock();
         }
-    };
+    });
 
     return {
         VertexIterator: VertexIterator

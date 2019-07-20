@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @name pc.platform
      * @namespace
@@ -61,7 +61,13 @@ pc.extend(pc, function () {
          * @name pc.platform.touch
          * @description if platform supports touch input
          */
-        touch: false
+        touch: false,
+
+        /**
+         * @name pc.platform.workers
+         * @description if the platform supports Web Workers
+         */
+        workers: false
     };
 
     var ua = navigator.userAgent;
@@ -89,9 +95,11 @@ pc.extend(pc, function () {
     if (navigator.isCocoonJS)
         platform.cocoonjs = true;
 
-    platform.touch = 'ontouchstart' in window;
+    platform.touch = 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
 
     platform.gamepads = 'getGamepads' in navigator;
+
+    platform.workers = (typeof(Worker) !== 'undefined');
 
     return {
         platform: platform

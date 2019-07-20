@@ -1,47 +1,22 @@
-pc.extend(pc, (function () {
+Object.assign(pc, (function () {
     'use strict';
-
-    var typeNumber = 'number';
 
     /**
      * @constructor
      * @name pc.Mat3
      * @classdesc A 3x3 matrix.
-     * @description Creates a new Mat3 object.
-     * @param {Number} [v0] The value in row 0, column 0. If v0 is an array of length 9, the array will be used to populate all components.
-     * @param {Number} [v1] The value in row 1, column 0.
-     * @param {Number} [v2] The value in row 2, column 0.
-     * @param {Number} [v3] The value in row 0, column 1.
-     * @param {Number} [v4] The value in row 1, column 1.
-     * @param {Number} [v5] The value in row 2, column 1.
-     * @param {Number} [v6] The value in row 0, column 2.
-     * @param {Number} [v7] The value in row 1, column 2.
-     * @param {Number} [v8] The value in row 2, column 2.
+     * @description Creates a new identity Mat3 object.
      */
-    var Mat3 = function (v0, v1, v2, v3, v4, v5, v6, v7, v8) {
-        if (v0 && v0.length === 9) {
-            this.data = new Float32Array(v0);
-            return;
-        }
-
-        this.data = new Float32Array(9);
-
-        if (typeof(v0) === typeNumber) {
-            this.data[0] = v0;
-            this.data[1] = v1;
-            this.data[2] = v2;
-            this.data[3] = v3;
-            this.data[4] = v4;
-            this.data[5] = v5;
-            this.data[6] = v6;
-            this.data[7] = v7;
-            this.data[8] = v8;
-        } else {
-            this.setIdentity();
-        }
+    var Mat3 = function () {
+        var data;
+        // Create an identity matrix. Note that a new Float32Array has all elements set
+        // to zero by default, so we only need to set the relevant elements to one.
+        data = new Float32Array(9);
+        data[0] = data[4] = data[8] = 1;
+        this.data = data;
     };
 
-    Mat3.prototype = {
+    Object.assign(Mat3.prototype, {
         /**
          * @function
          * @name pc.Mat3#clone
@@ -70,6 +45,32 @@ pc.extend(pc, (function () {
          */
         copy: function (rhs) {
             var src = rhs.data;
+            var dst = this.data;
+
+            dst[0] = src[0];
+            dst[1] = src[1];
+            dst[2] = src[2];
+            dst[3] = src[3];
+            dst[4] = src[4];
+            dst[5] = src[5];
+            dst[6] = src[6];
+            dst[7] = src[7];
+            dst[8] = src[8];
+
+            return this;
+        },
+
+        /**
+         * @function
+         * @name pc.Mat3#set
+         * @description Copies the contents of a source array[9] to a destination 3x3 matrix.
+         * @param {Array} src An array[9] to be copied.
+         * @returns {pc.Mat3} Self for chaining
+         * @example
+         * var dst = new pc.Mat3();
+         * dst.set([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+         */
+        set: function (src) {
             var dst = this.data;
 
             dst[0] = src[0];
@@ -170,12 +171,12 @@ pc.extend(pc, (function () {
          * console.log(m.toString());
          */
         toString: function () {
-            var t = "[";
+            var t = '[';
             for (var i = 0; i < 9; i++) {
                 t += this.data[i];
-                t += (i !== 9) ? ", " : "";
+                t += (i !== 8) ? ', ' : '';
             }
-            t += "]";
+            t += ']';
             return t;
         },
 
@@ -200,7 +201,7 @@ pc.extend(pc, (function () {
 
             return this;
         }
-    };
+    });
 
     /**
      * @field
@@ -213,7 +214,7 @@ pc.extend(pc, (function () {
     Object.defineProperty(Mat3, 'IDENTITY', {
         get: function () {
             var identity = new Mat3();
-            return function() {
+            return function () {
                 return identity;
             };
         }()
@@ -229,8 +230,8 @@ pc.extend(pc, (function () {
      */
     Object.defineProperty(Mat3, 'ZERO', {
         get: function () {
-            var zero = new Mat3(0, 0, 0, 0, 0, 0, 0, 0, 0);
-            return function() {
+            var zero = new Mat3().set([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+            return function () {
                 return zero;
             };
         }()

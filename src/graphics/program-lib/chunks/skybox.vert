@@ -1,6 +1,10 @@
 attribute vec3 aPosition;
 
+#ifndef VIEWMATRIX
+#define VIEWMATRIX
 uniform mat4 matrix_view;
+#endif
+
 uniform mat4 matrix_projection;
 
 varying vec3 vViewDir;

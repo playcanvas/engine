@@ -15,7 +15,7 @@ OrbitCameraInputTouch.attributes.add('distanceSensitivity', {
 });
 
 // initialize code called once per entity
-OrbitCameraInputTouch.prototype.initialize = function() {
+OrbitCameraInputTouch.prototype.initialize = function () {
     this.orbitCamera = this.entity.script.orbitCamera;
 
     // Store the position of the touch so we can calculate the distance moved
@@ -32,7 +32,7 @@ OrbitCameraInputTouch.prototype.initialize = function() {
 
         this.app.touch.on(pc.EVENT_TOUCHMOVE, this.onTouchMove, this);
 
-        this.on('destroy', function() {
+        this.on('destroy', function () {
             this.app.touch.off(pc.EVENT_TOUCHSTART, this.onTouchStartEndCancel, this);
             this.app.touch.off(pc.EVENT_TOUCHEND, this.onTouchStartEndCancel, this);
             this.app.touch.off(pc.EVENT_TOUCHCANCEL, this.onTouchStartEndCancel, this);
@@ -60,7 +60,7 @@ OrbitCameraInputTouch.prototype.calcMidPoint = function (pointA, pointB, result)
 };
 
 
-OrbitCameraInputTouch.prototype.onTouchStartEndCancel = function(event) {
+OrbitCameraInputTouch.prototype.onTouchStartEndCancel = function (event) {
     // We only care about the first touch for camera rotation. As the user touches the screen,
     // we stored the current touch position
     var touches = event.touches;
@@ -80,7 +80,7 @@ OrbitCameraInputTouch.toWorldPoint = new pc.Vec3();
 OrbitCameraInputTouch.worldDiff = new pc.Vec3();
 
 
-OrbitCameraInputTouch.prototype.pan = function(midPoint) {
+OrbitCameraInputTouch.prototype.pan = function (midPoint) {
     var fromWorldPoint = OrbitCameraInputTouch.fromWorldPoint;
     var toWorldPoint = OrbitCameraInputTouch.toWorldPoint;
     var worldDiff = OrbitCameraInputTouch.worldDiff;
@@ -101,7 +101,7 @@ OrbitCameraInputTouch.prototype.pan = function(midPoint) {
 
 OrbitCameraInputTouch.pinchMidPoint = new pc.Vec2();
 
-OrbitCameraInputTouch.prototype.onTouchMove = function(event) {
+OrbitCameraInputTouch.prototype.onTouchMove = function (event) {
     var pinchMidPoint = OrbitCameraInputTouch.pinchMidPoint;
 
     // We only care about the first touch for camera rotation. Work out the difference moved since the last event

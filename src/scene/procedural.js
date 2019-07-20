@@ -133,19 +133,19 @@ pc.calculateTangents = function (positions, normals, uvs, indices) {
 
         area = s1 * t2 - s2 * t1;
 
-        //area can 0.0 for degenerate triangles or bad uv coordinates
+        // Area can 0.0 for degenerate triangles or bad uv coordinates
         if (area == 0.0) {
-            //fallback to default values
+            // Fallback to default values
             sdir.set(0.0, 1.0, 0.0);
             tdir.set(1.0, 0.0, 0.0);
         } else {
             r = 1.0 / area;
             sdir.set((t2 * x1 - t1 * x2) * r,
-                    (t2 * y1 - t1 * y2) * r,
-                    (t2 * z1 - t1 * z2) * r);
+                     (t2 * y1 - t1 * y2) * r,
+                     (t2 * z1 - t1 * z2) * r);
             tdir.set((s1 * x2 - s2 * x1) * r,
-                    (s1 * y2 - s2 * y1) * r,
-                    (s1 * z2 - s2 * z1) * r);
+                     (s1 * y2 - s2 * y1) * r,
+                     (s1 * z2 - s2 * z1) * r);
         }
 
         tan1[i1 * 3 + 0] += sdir.x;
@@ -266,27 +266,27 @@ pc.createMesh = function (device, positions, opts) {
     // Write the vertex data into the vertex buffer
     var iterator = new pc.VertexIterator(vertexBuffer);
     for (var i = 0; i < numVertices; i++) {
-        iterator.element[pc.SEMANTIC_POSITION].set(positions[i*3], positions[i*3+1], positions[i*3+2]);
+        iterator.element[pc.SEMANTIC_POSITION].set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
         if (normals !== null) {
-            iterator.element[pc.SEMANTIC_NORMAL].set(normals[i*3], normals[i*3+1], normals[i*3+2]);
+            iterator.element[pc.SEMANTIC_NORMAL].set(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
         }
         if (tangents !== null) {
-            iterator.element[pc.SEMANTIC_TANGENT].set(tangents[i*4], tangents[i*4+1], tangents[i*4+2], tangents[i*4+3]);
+            iterator.element[pc.SEMANTIC_TANGENT].set(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2], tangents[i * 4 + 3]);
         }
         if (colors !== null) {
-            iterator.element[pc.SEMANTIC_COLOR].set(colors[i*4], colors[i*4+1], colors[i*4+2], colors[i*4+3]);
+            iterator.element[pc.SEMANTIC_COLOR].set(colors[i * 4], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 3]);
         }
         if (uvs !== null) {
-            iterator.element[pc.SEMANTIC_TEXCOORD0].set(uvs[i*2], uvs[i*2+1]);
+            iterator.element[pc.SEMANTIC_TEXCOORD0].set(uvs[i * 2], uvs[i * 2 + 1]);
         }
         if (uvs1 !== null) {
-            iterator.element[pc.SEMANTIC_TEXCOORD1].set(uvs1[i*2], uvs1[i*2+1]);
+            iterator.element[pc.SEMANTIC_TEXCOORD1].set(uvs1[i * 2], uvs1[i * 2 + 1]);
         }
-        if(blendIndices !== null) {
-            iterator.element[pc.SEMANTIC_BLENDINDICES].set(blendIndices[i*2], blendIndices[i*2+1]);
+        if (blendIndices !== null) {
+            iterator.element[pc.SEMANTIC_BLENDINDICES].set(blendIndices[i * 2], blendIndices[i * 2 + 1]);
         }
-        if(blendWeights !== null) {
-            iterator.element[pc.SEMANTIC_BLENDWEIGHT].set(blendWeights[i*2], blendWeights[i*2+1]);
+        if (blendWeights !== null) {
+            iterator.element[pc.SEMANTIC_BLENDWEIGHT].set(blendWeights[i * 2], blendWeights[i * 2 + 1]);
         }
         iterator.next();
     }
@@ -341,6 +341,7 @@ pc.createTorus = function (device, opts) {
     var rt = opts && opts.ringRadius !== undefined ? opts.ringRadius : 0.3;
     var segments = opts && opts.segments !== undefined ? opts.segments : 30;
     var sides = opts && opts.sides !== undefined ? opts.sides : 20;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Variable declarations
     var i, j;
@@ -381,12 +382,12 @@ pc.createTorus = function (device, opts) {
     }
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        indices: indices
     };
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(positions, normals, uvs, indices);
     }
 
@@ -495,7 +496,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
         offset = (heightSegments + 1) * (capSegments + 1);
         for (lat = 0; lat < latitudeBands; ++lat) {
             for (lon = 0; lon < longitudeBands; ++lon) {
-                first  = (lat * (longitudeBands+1)) + lon;
+                first  = (lat * (longitudeBands + 1)) + lon;
                 second = first + longitudeBands + 1;
 
                 indices.push(offset + first + 1, offset + second, offset + first);
@@ -538,7 +539,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
         offset = (heightSegments + 1) * (capSegments + 1) + (longitudeBands + 1) * (latitudeBands + 1);
         for (lat = 0; lat < latitudeBands; ++lat) {
             for (lon = 0; lon < longitudeBands; ++lon) {
-                first  = (lat * (longitudeBands+1)) + lon;
+                first  = (lat * (longitudeBands + 1)) + lon;
                 second = first + longitudeBands + 1;
 
                 indices.push(offset + first + 1, offset + second, offset + first);
@@ -609,7 +610,7 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
         positions: positions,
         normals: normals,
         uvs: uvs,
-        uvs1:uvs1,
+        uvs1: uvs1,
         indices: indices
     };
 };
@@ -632,22 +633,24 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
  * @returns {pc.Mesh} A new cylinder-shaped mesh.
  */
 pc.createCylinder = function (device, opts) {
-    // Check the supplied options and provide defaults for unspecified ones
     // #ifdef DEBUG
-    if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius'))
-      console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+    if (opts && opts.hasOwnProperty('baseRadius') && !opts.hasOwnProperty('radius')) {
+        console.warn('DEPRECATED: "baseRadius" in arguments, use "radius" instead');
+    }
     // #endif
 
+    // Check the supplied options and provide defaults for unspecified ones
     var radius = opts && (opts.radius || opts.baseRadius);
     radius = radius !== undefined ? radius : 0.5;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 20;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = pc._createConeData(radius, radius, height, heightSegments, capSegments, false);
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
@@ -677,11 +680,12 @@ pc.createCapsule = function (device, opts) {
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
     var sides = opts && opts.sides !== undefined ? opts.sides : 20;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = pc._createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
@@ -713,10 +717,11 @@ pc.createCone = function (device, opts) {
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     var options = pc._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, false);
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
@@ -743,6 +748,7 @@ pc.createSphere = function (device, opts) {
     var radius = opts && opts.radius !== undefined ? opts.radius : 0.5;
     var latitudeBands = opts && opts.latitudeBands !== undefined ? opts.latitudeBands : 16;
     var longitudeBands = opts && opts.longitudeBands !== undefined ? opts.longitudeBands : 16;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Variable declarations
     var lon, lat;
@@ -779,7 +785,7 @@ pc.createSphere = function (device, opts) {
 
     for (lat = 0; lat < latitudeBands; ++lat) {
         for (lon = 0; lon < longitudeBands; ++lon) {
-            first  = (lat * (longitudeBands+1)) + lon;
+            first  = (lat * (longitudeBands + 1)) + lon;
             second = first + longitudeBands + 1;
 
             indices.push(first + 1, second, first);
@@ -788,13 +794,13 @@ pc.createSphere = function (device, opts) {
     }
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        uvs1:      uvs, // UV1 = UV0 for sphere
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        uvs1: uvs, // UV1 = UV0 for sphere
+        indices: indices
     };
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(positions, normals, uvs, indices);
     }
 
@@ -823,6 +829,7 @@ pc.createPlane = function (device, opts) {
     var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : new pc.Vec2(0.5, 0.5);
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 5;
     var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 5;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     // Variable declarations
     var i, j;
@@ -840,7 +847,7 @@ pc.createPlane = function (device, opts) {
     //      |    |    |
     //      |    Z    |
     // (0,0)x---------x(1,0)
-    //         width
+    // width
     var vcounter = 0;
 
     for (i = 0; i <= ws; i++) {
@@ -856,8 +863,8 @@ pc.createPlane = function (device, opts) {
             uvs.push(u, v);
 
             if ((i < ws) && (j < ls)) {
-                indices.push(vcounter+ls+1, vcounter+1, vcounter);
-                indices.push(vcounter+ls+1, vcounter+ls+2, vcounter+1);
+                indices.push(vcounter + ls + 1, vcounter + 1, vcounter);
+                indices.push(vcounter + ls + 1, vcounter + ls + 2, vcounter + 1);
             }
 
             vcounter++;
@@ -865,13 +872,13 @@ pc.createPlane = function (device, opts) {
     }
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        uvs1:      uvs, // UV1 = UV0 for plane
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        uvs1: uvs, // UV1 = UV0 for plane
+        indices: indices
     };
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(positions, normals, uvs, indices);
     }
 
@@ -901,6 +908,7 @@ pc.createBox = function (device, opts) {
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 1;
     var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 1;
     var hs = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
+    var calculateTangents = opts && opts.calculateTangents !== undefined ? opts.calculateTangents : false;
 
     var corners = [
         new pc.Vec3(-he.x, -he.y,  he.z),
@@ -914,30 +922,30 @@ pc.createBox = function (device, opts) {
     ];
 
     var faceAxes = [
-        [ 0, 1, 3 ], // FRONT
-        [ 4, 5, 7 ], // BACK
-        [ 3, 2, 6 ], // TOP
-        [ 1, 0, 4 ], // BOTTOM
-        [ 1, 4, 2 ], // RIGHT
-        [ 5, 0, 6 ]  // LEFT
+        [0, 1, 3], // FRONT
+        [4, 5, 7], // BACK
+        [3, 2, 6], // TOP
+        [1, 0, 4], // BOTTOM
+        [1, 4, 2], // RIGHT
+        [5, 0, 6]  // LEFT
     ];
 
     var faceNormals = [
-        [  0,  0,  1 ], // FRONT
-        [  0,  0, -1 ], // BACK
-        [  0,  1,  0 ], // TOP
-        [  0, -1,  0 ], // BOTTOM
-        [  1,  0,  0 ], // RIGHT
-        [ -1,  0,  0 ]  // LEFT
+        [0,  0,  1], // FRONT
+        [0,  0, -1], // BACK
+        [0,  1,  0], // TOP
+        [0, -1,  0], // BOTTOM
+        [1,  0,  0], // RIGHT
+        [-1,  0,  0]  // LEFT
     ];
 
     var sides = {
-        FRONT  : 0,
-        BACK   : 1,
-        TOP    : 2,
-        BOTTOM : 3,
-        RIGHT  : 4,
-        LEFT   : 5
+        FRONT: 0,
+        BACK: 1,
+        TOP: 2,
+        BOTTOM: 3,
+        RIGHT: 4,
+        LEFT: 5
     };
 
     var positions = [];
@@ -950,7 +958,6 @@ pc.createBox = function (device, opts) {
     var generateFace = function (side, uSegments, vSegments) {
         var u, v;
         var i, j;
-        var offset = positions.length / 3;
 
         for (i = 0; i <= uSegments; i++) {
             for (j = 0; j <= vSegments; j++) {
@@ -980,8 +987,8 @@ pc.createBox = function (device, opts) {
                 uvs1.push(u, v);
 
                 if ((i < uSegments) && (j < vSegments)) {
-                    indices.push(vcounter+vSegments+1, vcounter+1, vcounter);
-                    indices.push(vcounter+vSegments+1, vcounter+vSegments+2, vcounter+1);
+                    indices.push(vcounter + vSegments + 1, vcounter + 1, vcounter);
+                    indices.push(vcounter + vSegments + 1, vcounter + vSegments + 2, vcounter + 1);
                 }
 
                 vcounter++;
@@ -997,13 +1004,13 @@ pc.createBox = function (device, opts) {
     generateFace(sides.LEFT, ls, hs);
 
     var options = {
-        normals:   normals,
-        uvs:       uvs,
-        uvs1:      uvs1,
-        indices:   indices
+        normals: normals,
+        uvs: uvs,
+        uvs1: uvs1,
+        indices: indices
     };
 
-    if (pc.precalculatedTangents) {
+    if (calculateTangents) {
         options.tangents = pc.calculateTangents(positions, normals, uvs, indices);
     }
 

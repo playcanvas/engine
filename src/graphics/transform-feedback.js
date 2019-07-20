@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     /**
@@ -93,7 +93,7 @@ pc.extend(pc, function () {
         return pc.shaderChunks.createShaderFromCode(graphicsDevice, vsCode, null, name, true);
     };
 
-    TransformFeedback.prototype = {
+    Object.assign(TransformFeedback.prototype, {
         /**
          * @function
          * @name pc.TransformFeedback#destroy
@@ -137,7 +137,7 @@ pc.extend(pc, function () {
                 this._outputBuffer.bufferId = tmp;
             }
         }
-    };
+    });
 
     /**
      * @readonly
@@ -146,7 +146,9 @@ pc.extend(pc, function () {
      * @description The current input buffer
      */
     Object.defineProperty(TransformFeedback.prototype, 'inputBuffer', {
-        get: function () { return this._inputBuffer; }
+        get: function () {
+            return this._inputBuffer;
+        }
     });
 
     /**
@@ -156,7 +158,9 @@ pc.extend(pc, function () {
      * @description The current output buffer
      */
     Object.defineProperty(TransformFeedback.prototype, 'outputBuffer', {
-        get: function () { return this._outputBuffer; }
+        get: function () {
+            return this._outputBuffer;
+        }
     });
 
     return {

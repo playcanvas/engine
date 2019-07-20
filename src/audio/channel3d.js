@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     // default maxDistance, same as Web Audio API
@@ -8,15 +8,18 @@ pc.extend(pc, function () {
 
     if (pc.AudioManager.hasAudioContext()) {
         Channel3d = function (manager, sound, options) {
+            pc.Channel.call(this, manager, sound, options);
+
             this.position = new pc.Vec3();
             this.velocity = new pc.Vec3();
 
             var context = manager.context;
             this.panner = context.createPanner();
         };
-        Channel3d = pc.inherits(Channel3d, pc.Channel);
+        Channel3d.prototype = Object.create(pc.Channel.prototype);
+        Channel3d.prototype.constructor = Channel3d;
 
-        Channel3d.prototype = pc.extend(Channel3d.prototype, {
+        Object.assign(Channel3d.prototype, {
             getPosition: function () {
                 return this.position;
             },
@@ -68,11 +71,11 @@ pc.extend(pc, function () {
             },
 
             /**
-            * @private
-            * @function
-            * @name pc.Channel3d#_createSource
-            * @description Create the buffer source and connect it up to the correct audio nodes
-            */
+             * @private
+             * @function
+             * @name pc.Channel3d#_createSource
+             * @description Create the buffer source and connect it up to the correct audio nodes
+             */
             _createSource: function () {
                 var context = this.manager.context;
 
@@ -105,21 +108,22 @@ pc.extend(pc, function () {
                 return 1;
             } else if (distance > maxDistance) {
                 return 0;
-            } else {
-                var result = 0;
-                if (distanceModel === pc.DISTANCE_LINEAR) {
-                    result = 1 - rolloffFactor * (distance - refDistance) / (maxDistance - refDistance);
-                } else if (distanceModel === pc.DISTANCE_INVERSE) {
-                    result = refDistance / (refDistance + rolloffFactor * (distance - refDistance));
-                } else if (distanceModel === pc.DISTANCE_EXPONENTIAL) {
-                    result = Math.pow(distance / refDistance, -rolloffFactor);
-                }
-
-                return pc.math.clamp(result, 0, 1);
             }
+
+            var result = 0;
+            if (distanceModel === pc.DISTANCE_LINEAR) {
+                result = 1 - rolloffFactor * (distance - refDistance) / (maxDistance - refDistance);
+            } else if (distanceModel === pc.DISTANCE_INVERSE) {
+                result = refDistance / (refDistance + rolloffFactor * (distance - refDistance));
+            } else if (distanceModel === pc.DISTANCE_EXPONENTIAL) {
+                result = Math.pow(distance / refDistance, -rolloffFactor);
+            }
+            return pc.math.clamp(result, 0, 1);
         };
 
         Channel3d = function (manager, sound) {
+            pc.Channel.call(this, manager, sound);
+
             this.position = new pc.Vec3();
             this.velocity = new pc.Vec3();
 
@@ -127,11 +131,11 @@ pc.extend(pc, function () {
             this.minDistance = 1;
             this.rollOffFactor = 1;
             this.distanceModel = pc.DISTANCE_INVERSE;
-
         };
-        Channel3d = pc.inherits(Channel3d, pc.Channel);
+        Channel3d.prototype = Object.create(pc.Channel.prototype);
+        Channel3d.prototype.constructor = Channel3d;
 
-        Channel3d.prototype = pc.extend(Channel3d.prototype, {
+        Object.assign(Channel3d.prototype, {
             getPosition: function () {
                 return this.position;
             },

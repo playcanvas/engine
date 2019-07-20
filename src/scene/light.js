@@ -1,10 +1,10 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     var spotCenter = new pc.Vec3();
     var spotEndPoint = new pc.Vec3();
     var tmpVec = new pc.Vec3();
 
-    var chanId = { r:0, g:1, b:2, a:3 };
+    var chanId = { r: 0, g: 1, b: 2, a: 3 };
 
     /**
      * @private
@@ -37,7 +37,9 @@ pc.extend(pc, function () {
         this._cookieFalloff = true;
         this._cookieChannel = "rgb";
         this._cookieTransform = null; // 2d rotation/scale matrix (spot only)
+        this._cookieTransformUniform = new Float32Array(4);
         this._cookieOffset = null; // 2d position offset (spot only)
+        this._cookieOffsetUniform = new Float32Array(2);
         this._cookieTransformSet = false;
         this._cookieOffsetSet = false;
 
@@ -46,9 +48,9 @@ pc.extend(pc, function () {
         this._outerConeAngle = 45;
 
         // Cache of light property data in a format more friendly for shader uniforms
-        this._finalColor = new pc.Vec3(0.8, 0.8, 0.8);
-        var c = Math.pow(this._finalColor.data[0], 2.2);
-        this._linearFinalColor = new pc.Vec3(c, c, c);
+        this._finalColor = new Float32Array([0.8, 0.8, 0.8]);
+        var c = Math.pow(this._finalColor[0], 2.2);
+        this._linearFinalColor = new Float32Array([c, c, c]);
 
         this._position = new pc.Vec3(0, 0, 0);
         this._direction = new pc.Vec3(0, 0, 0);
@@ -72,9 +74,17 @@ pc.extend(pc, function () {
         this._isPcf = true;
         this._cacheShadowMap = false;
         this._isCachedShadowMap = false;
+
+        this._visibleLength = [0]; // lengths of passes in culledList
+        this._visibleList = [[]]; // culled mesh instances per pass (1 for spot, 6 for point, cameraCount for directional)
+        this._visibleCameraSettings = []; // camera settings used in each directional light pass
     };
 
-    Light.prototype = {
+    Object.assign(Light.prototype, {
+        destroy: function () {
+            this._destroyShadowMap();
+        },
+
         /**
          * @private
          * @function
@@ -129,14 +139,14 @@ pc.extend(pc, function () {
         },
 
         getBoundingSphere: function (sphere) {
-            if (this._type===pc.LIGHTTYPE_SPOT) {
+            if (this._type === pc.LIGHTTYPE_SPOT) {
                 var range = this.attenuationEnd;
                 var angle = this._outerConeAngle;
                 var f = Math.cos(angle * pc.math.DEG_TO_RAD);
                 var node = this._node;
 
                 spotCenter.copy(node.up);
-                spotCenter.scale(-range*0.5*f);
+                spotCenter.scale(-range * 0.5 * f);
                 spotCenter.add(node.getPosition());
                 sphere.center = spotCenter;
 
@@ -149,28 +159,53 @@ pc.extend(pc, function () {
 
                 sphere.radius = spotEndPoint.length() * 0.5;
 
-            } else if (this._type===pc.LIGHTTYPE_POINT) {
+            } else if (this._type === pc.LIGHTTYPE_POINT) {
                 sphere.center = this._node.getPosition();
                 sphere.radius = this.attenuationEnd;
             }
         },
 
         getBoundingBox: function (box) {
-            if (this._type===pc.LIGHTTYPE_SPOT) {
+            if (this._type === pc.LIGHTTYPE_SPOT) {
                 var range = this.attenuationEnd;
                 var angle = this._outerConeAngle;
                 var node = this._node;
 
                 var scl = Math.abs( Math.sin(angle * pc.math.DEG_TO_RAD) * range );
 
-                box.center.set(0, -range*0.5, 0);
-                box.halfExtents.set(scl, range*0.5, scl);
+                box.center.set(0, -range * 0.5, 0);
+                box.halfExtents.set(scl, range * 0.5, scl);
 
                 box.setFromTransformedAabb(box, node.getWorldTransform());
 
-            } else if (this._type===pc.LIGHTTYPE_POINT) {
+            } else if (this._type === pc.LIGHTTYPE_POINT) {
                 box.center.copy(this._node.getPosition());
                 box.halfExtents.set(this.attenuationEnd, this.attenuationEnd, this.attenuationEnd);
+            }
+        },
+
+        _updateFinalColor: function () {
+            var color = this._color;
+            var r = color.r;
+            var g = color.g;
+            var b = color.b;
+
+            var i = this._intensity;
+
+            var finalColor = this._finalColor;
+            var linearFinalColor = this._linearFinalColor;
+
+            finalColor[0] = r * i;
+            finalColor[1] = g * i;
+            finalColor[2] = b * i;
+            if (i >= 1) {
+                linearFinalColor[0] = Math.pow(r, 2.2) * i;
+                linearFinalColor[1] = Math.pow(g, 2.2) * i;
+                linearFinalColor[2] = Math.pow(b, 2.2) * i;
+            } else {
+                linearFinalColor[0] = Math.pow(finalColor[0], 2.2);
+                linearFinalColor[1] = Math.pow(finalColor[1], 2.2);
+                linearFinalColor[2] = Math.pow(finalColor[2], 2.2);
             }
         },
 
@@ -188,16 +223,7 @@ pc.extend(pc, function () {
 
             this._color.set(r, g, b);
 
-            // Update final color
-            var i = this._intensity;
-            this._finalColor.set(r * i, g * i, b * i);
-            for(var c=0; c<3; c++) {
-                if (i >= 1) {
-                    this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c] / i, 2.2) * i;
-                } else {
-                    this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c], 2.2);
-                }
-            }
+            this._updateFinalColor();
         },
 
         _destroyShadowMap: function () {
@@ -207,12 +233,13 @@ pc.extend(pc, function () {
                     var i;
                     if (rt) {
                         if (rt.length) {
-                            for(i=0; i<rt.length; i++) {
+                            for (i = 0; i < rt.length; i++) {
                                 if (rt[i].colorBuffer) rt[i].colorBuffer.destroy();
                                 rt[i].destroy();
                             }
                         } else {
                             if (rt.colorBuffer) rt.colorBuffer.destroy();
+                            if (rt.depthBuffer) rt.depthBuffer.destroy();
                             rt.destroy();
                         }
                     }
@@ -220,19 +247,19 @@ pc.extend(pc, function () {
                 this._shadowCamera.renderTarget = null;
                 this._shadowCamera = null;
                 this._shadowCubeMap = null;
-                if (this.shadowUpdateMode===pc.SHADOWUPDATE_NONE) {
+                if (this.shadowUpdateMode === pc.SHADOWUPDATE_NONE) {
                     this.shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
                 }
             }
         },
 
-        updateShadow: function() {
-            if (this.shadowUpdateMode!==pc.SHADOWUPDATE_REALTIME) {
+        updateShadow: function () {
+            if (this.shadowUpdateMode !== pc.SHADOWUPDATE_REALTIME) {
                 this.shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
             }
         },
 
-        updateKey: function() {
+        updateKey: function () {
             // Key definition:
             // Bit
             // 31      : sign bit (leave)
@@ -247,51 +274,52 @@ pc.extend(pc, function () {
             // 16 - 17 : cookie channel G
             // 14 - 15 : cookie channel B
             // 12      : cookie transform
-            var key = (this._type << 29) |
-                   ((this._castShadows? 1 : 0)                  << 28) |
-                   (this._shadowType                            << 25) |
-                   (this._falloffMode                           << 23) |
-                   ((this._normalOffsetBias!==0.0? 1 : 0)       << 22) |
-                   ((this._cookie? 1 : 0)                       << 21) |
-                   ((this._cookieFalloff? 1 : 0)                << 20) |
-                   (chanId[this._cookieChannel.charAt(0)]       << 18) |
-                   ((this._cookieTransform? 1 : 0)              << 12);
+            var key =
+                   (this._type                                << 29) |
+                   ((this._castShadows ? 1 : 0)               << 28) |
+                   (this._shadowType                          << 25) |
+                   (this._falloffMode                         << 23) |
+                   ((this._normalOffsetBias !== 0.0 ? 1 : 0)  << 22) |
+                   ((this._cookie ? 1 : 0)                    << 21) |
+                   ((this._cookieFalloff ? 1 : 0)             << 20) |
+                   (chanId[this._cookieChannel.charAt(0)]     << 18) |
+                   ((this._cookieTransform ? 1 : 0)           << 12);
 
-            if (this._cookieChannel.length===3) {
-                key |= (chanId[this._cookieChannel.charAt(1)]   << 16);
-                key |= (chanId[this._cookieChannel.charAt(2)]   << 14);
+            if (this._cookieChannel.length === 3) {
+                key |= (chanId[this._cookieChannel.charAt(1)] << 16);
+                key |= (chanId[this._cookieChannel.charAt(2)] << 14);
+            }
+
+            if (key !== this.key && this._scene !== null) {
+                this._scene.layers._dirtyLights = true;
             }
 
             this.key = key;
         }
-    };
+    });
 
     Object.defineProperty(Light.prototype, 'enabled', {
-        get: function() {
+        get: function () {
             return this._type;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._type === value)
                 return;
 
             this._enabled = value;
-            if (this._scene !== null)
-                this._scene.updateShaders = true;
         }
     });
 
     Object.defineProperty(Light.prototype, 'type', {
-        get: function() {
+        get: function () {
             return this._type;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._type === value)
                 return;
 
             this._type = value;
             this._destroyShadowMap();
-            if (this._scene !== null)
-                this._scene.updateShaders = true;
             this.updateKey();
 
             var stype = this._shadowType;
@@ -301,24 +329,22 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'mask', {
-        get: function() {
+        get: function () {
             return this._mask;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._mask === value)
                 return;
 
             this._mask = value;
-            if (this._scene !== null)
-                this._scene.updateShaders = true;
         }
     });
 
     Object.defineProperty(Light.prototype, 'shadowType', {
-        get: function() {
+        get: function () {
             return this._shadowType;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._shadowType === value)
                 return;
 
@@ -331,10 +357,10 @@ pc.extend(pc, function () {
                 value = pc.SHADOW_PCF3; // fallback from HW PCF to old PCF
             }
 
-            if (value === pc.SHADOW_VSM32 && ! device.extTextureFloatRenderable) // fallback from vsm32 to vsm16
+            if (value === pc.SHADOW_VSM32 && !device.textureFloatRenderable) // fallback from vsm32 to vsm16
                 value = pc.SHADOW_VSM16;
 
-            if (value === pc.SHADOW_VSM16 && ! device.extTextureHalfFloatRenderable) // fallback from vsm16 to vsm8
+            if (value === pc.SHADOW_VSM16 && !device.textureHalfFloatRenderable) // fallback from vsm16 to vsm8
                 value = pc.SHADOW_VSM8;
 
             this._isVsm = value >= pc.SHADOW_VSM8 && value <= pc.SHADOW_VSM32;
@@ -342,32 +368,28 @@ pc.extend(pc, function () {
 
             this._shadowType = value;
             this._destroyShadowMap();
-            if (this._scene !== null)
-                this._scene.updateShaders = true;
             this.updateKey();
         }
     });
 
     Object.defineProperty(Light.prototype, 'castShadows', {
-        get: function() {
+        get: function () {
             return this._castShadows && this._mask !== pc.MASK_LIGHTMAP && this._mask !== 0;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._castShadows === value)
                 return;
 
             this._castShadows = value;
-            if (this._scene !== null)
-                this._scene.updateShaders = true;
             this.updateKey();
         }
     });
 
     Object.defineProperty(Light.prototype, 'shadowResolution', {
-        get: function() {
+        get: function () {
             return this._shadowResolution;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._shadowResolution === value)
                 return;
 
@@ -382,10 +404,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'vsmBlurSize', {
-        get: function() {
+        get: function () {
             return this._vsmBlurSize;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._vsmBlurSize === value)
                 return;
 
@@ -395,16 +417,14 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'normalOffsetBias', {
-        get: function() {
+        get: function () {
             return this._normalOffsetBias;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._normalOffsetBias === value)
                 return;
 
-            if ((! this._normalOffsetBias && value) || (this._normalOffsetBias && ! value)) {
-                if (this._scene !== null)
-                    this._scene.updateShaders = true;
+            if ((!this._normalOffsetBias && value) || (this._normalOffsetBias && !value)) {
                 this.updateKey();
             }
             this._normalOffsetBias = value;
@@ -412,25 +432,23 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'falloffMode', {
-        get: function() {
+        get: function () {
             return this._falloffMode;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._falloffMode === value)
                 return;
 
             this._falloffMode = value;
-            if (this._scene !== null)
-                this._scene.updateShaders = true;
             this.updateKey();
         }
     });
 
     Object.defineProperty(Light.prototype, 'innerConeAngle', {
-        get: function() {
+        get: function () {
             return this._innerConeAngle;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._innerConeAngle === value)
                 return;
 
@@ -440,10 +458,10 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'outerConeAngle', {
-        get: function() {
+        get: function () {
             return this._outerConeAngle;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._outerConeAngle === value)
                 return;
 
@@ -453,67 +471,48 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'intensity', {
-        get: function() {
+        get: function () {
             return this._intensity;
         },
-        set: function(value) {
-            if (this._intensity === value)
-                return;
-
-            this._intensity = value;
-
-            // Update final color
-            var c = this._color.data;
-            var r = c[0];
-            var g = c[1];
-            var b = c[2];
-            var i = this._intensity;
-            this._finalColor.set(r * i, g * i, b * i);
-            for(var j = 0; j < 3; j++) {
-                if (i >= 1) {
-                    this._linearFinalColor.data[j] = Math.pow(this._finalColor.data[j] / i, 2.2) * i;
-                } else {
-                    this._linearFinalColor.data[j] = Math.pow(this._finalColor.data[j], 2.2);
-                }
+        set: function (value) {
+            if (this._intensity !== value) {
+                this._intensity = value;
+                this._updateFinalColor();
             }
         }
     });
 
     Object.defineProperty(Light.prototype, 'cookie', {
-        get: function() {
+        get: function () {
             return this._cookie;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookie === value)
                 return;
 
             this._cookie = value;
-            if (this._scene !== null)
-                this._scene.updateShaders = true;
             this.updateKey();
         }
     });
 
     Object.defineProperty(Light.prototype, 'cookieFalloff', {
-        get: function() {
+        get: function () {
             return this._cookieFalloff;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookieFalloff === value)
                 return;
 
             this._cookieFalloff = value;
-            if (this._scene !== null)
-                this._scene.updateShaders = true;
             this.updateKey();
         }
     });
 
     Object.defineProperty(Light.prototype, 'cookieChannel', {
-        get: function() {
+        get: function () {
             return this._cookieChannel;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookieChannel === value)
                 return;
 
@@ -524,29 +523,21 @@ pc.extend(pc, function () {
                     value += chr;
             }
             this._cookieChannel = value;
-            if (this._scene !== null)
-                this._scene.updateShaders = true;
             this.updateKey();
         }
     });
 
     Object.defineProperty(Light.prototype, 'cookieTransform', {
-        get: function() {
+        get: function () {
             return this._cookieTransform;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookieTransform === value)
                 return;
 
-            var xformOld = !! (this._cookieTransformSet || this._cookieOffsetSet);
-            var xformNew = !! (value || this._cookieOffsetSet);
-            if (xformOld !== xformNew) {
-                if (this._scene !== null)
-                    this._scene.updateShaders = true;
-            }
             this._cookieTransform = value;
-            this._cookieTransformSet = !! value;
-            if (value && ! this._cookieOffset) {
+            this._cookieTransformSet = !!value;
+            if (value && !this._cookieOffset) {
                 this.cookieOffset = new pc.Vec2(); // using transform forces using offset code
                 this._cookieOffsetSet = false;
             }
@@ -555,27 +546,22 @@ pc.extend(pc, function () {
     });
 
     Object.defineProperty(Light.prototype, 'cookieOffset', {
-        get: function() {
+        get: function () {
             return this._cookieOffset;
         },
-        set: function(value) {
+        set: function (value) {
             if (this._cookieOffset === value)
                 return;
 
-            var xformOld = !! (this._cookieTransformSet || this._cookieOffsetSet);
-            var xformNew = !! (this._cookieTransformSet || value);
-            if (xformOld !== xformNew) {
-                if (this._scene !== null)
-                    this._scene.updateShaders = true;
-            }
+            var xformNew = !!(this._cookieTransformSet || value);
             if (xformNew && !value && this._cookieOffset) {
-                this._cookieOffset.set(0,0);
+                this._cookieOffset.set(0, 0);
             } else {
                 this._cookieOffset = value;
             }
-            this._cookieOffsetSet = !! value;
-            if (value && ! this._cookieTransform) {
-                this.cookieTransform = new pc.Vec4(1,1,0,0); // using offset forces using matrix code
+            this._cookieOffsetSet = !!value;
+            if (value && !this._cookieTransform) {
+                this.cookieTransform = new pc.Vec4(1, 1, 0, 0); // using offset forces using matrix code
                 this._cookieTransformSet = false;
             }
             this.updateKey();

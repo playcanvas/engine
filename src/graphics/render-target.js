@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var defaultOptions = {
@@ -38,14 +38,17 @@ pc.extend(pc, function () {
      *     height: 512,
      *     format: pc.PIXELFORMAT_R8_G8_B8
      * });
-     * var renderTarget = new pc.RenderTarget(graphicsDevice, colorBuffer, {
+     * var renderTarget = new pc.RenderTarget({
+     *     colorBuffer: colorBuffer,
      *     depth: true
      * });
      *
-     * // Set the render target on an entity's camera component
-     * entity.camera.renderTarget = renderTarget;
+     * // Set the render target on a layer
+     * layer.renderTarget = renderTarget;
      */
-    var RenderTarget = function (options, _arg2, _arg3) {
+    var RenderTarget = function (options) {
+        var _arg2 = arguments[1];
+        var _arg3 = arguments[2];
 
         if (options instanceof pc.GraphicsDevice) {
             // old constructor
@@ -91,7 +94,7 @@ pc.extend(pc, function () {
         this._glMsaaDepthBuffer = null;
     };
 
-    RenderTarget.prototype = {
+    Object.assign(RenderTarget.prototype, {
         /**
          * @function
          * @name pc.RenderTarget#destroy
@@ -187,7 +190,7 @@ pc.extend(pc, function () {
             }
             return this._device.copyRenderTarget(source, this, color, depth);
         }
-    };
+    });
 
     /**
      * @readonly
@@ -196,7 +199,7 @@ pc.extend(pc, function () {
      * @description Color buffer set up on the render target.
      */
     Object.defineProperty(RenderTarget.prototype, 'colorBuffer', {
-        get: function() {
+        get: function () {
             return this._colorBuffer;
         }
     });
@@ -209,7 +212,7 @@ pc.extend(pc, function () {
      * Not available, if depth property was used instead.
      */
     Object.defineProperty(RenderTarget.prototype, 'depthBuffer', {
-        get: function() {
+        get: function () {
             return this._depthBuffer;
         }
     });
@@ -230,7 +233,7 @@ pc.extend(pc, function () {
      * </ul>
      */
     Object.defineProperty(RenderTarget.prototype, 'face', {
-        get: function() {
+        get: function () {
             return this._face;
         }
     });
@@ -242,12 +245,8 @@ pc.extend(pc, function () {
      * @description Width of the render target in pixels.
      */
     Object.defineProperty(RenderTarget.prototype, 'width', {
-        get: function() {
-            if (this._colorBuffer) {
-                return this._colorBuffer.width;
-            } else {
-                return this._depthBuffer.width;
-            }
+        get: function () {
+            return this._colorBuffer ? this._colorBuffer.width : this._depthBuffer.width;
         }
     });
 
@@ -258,12 +257,8 @@ pc.extend(pc, function () {
      * @description Height of the render target in pixels.
      */
     Object.defineProperty(RenderTarget.prototype, 'height', {
-        get: function() {
-            if (this._colorBuffer) {
-                return this._colorBuffer.height;
-            } else {
-                return this._depthBuffer.height;
-            }
+        get: function () {
+            return this._colorBuffer ? this._colorBuffer.height : this._depthBuffer.height;
         }
     });
 

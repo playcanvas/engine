@@ -1,8 +1,7 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var ZoneComponentData = function () {
         this.enabled = true;
     };
-    ZoneComponentData = pc.inherits(ZoneComponentData, pc.ComponentData);
 
     return {
         ZoneComponentData: ZoneComponentData

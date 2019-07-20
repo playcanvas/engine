@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.GamePads
@@ -7,8 +7,8 @@ pc.extend(pc, function () {
     var GamePads = function () {
         this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
 
-        this.current = [ ];
-        this.previous = [ ];
+        this.current = [];
+        this.previous = [];
 
         this.deadZone = 0.25;
     };
@@ -96,20 +96,20 @@ pc.extend(pc, function () {
         'Product: 0268': 'PS3'
     };
 
-    GamePads.prototype = {
+    Object.assign(GamePads.prototype, {
         /**
-        * @function
-        * @name pc.GamePads#update
-        * @description Update the current and previous state of the gamepads. This must be called every frame for wasPressed()
-        * to work
-        */
+         * @function
+         * @name pc.GamePads#update
+         * @description Update the current and previous state of the gamepads. This must be called every frame for wasPressed()
+         * to work
+         */
         update: function () {
             var i, j, l;
             var buttons, buttonsLen;
 
             // move current buttons status into previous array
             for (i = 0, l = this.current.length; i < l; i++) {
-                buttons = this.current[i].pad.buttons
+                buttons = this.current[i].pad.buttons;
                 buttonsLen = buttons.length;
                 for (j = 0; j < buttonsLen; j++) {
                     if (this.previous[i] === undefined) {
@@ -124,16 +124,16 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.GamePads#poll
-        * @description Poll for the latest data from the gamepad API.
-        * @param {Object[]} An optional array used to save the gamepads mapping instead of returning a new one
-        * @returns {Object[]} An array of gamepads and mappings for the model of gamepad that is attached
-        * @example
-        *   var gamepads = new pc.GamePads();
-        *   var pads = gamepads.poll();
-        *   // pads[0] = { map: <map>, pad: <pad> }
-        */
+         * @function
+         * @name pc.GamePads#poll
+         * @description Poll for the latest data from the gamepad API.
+         * @param {Object[]} An optional array used to save the gamepads mapping instead of returning a new one
+         * @returns {Object[]} An array of gamepads and mappings for the model of gamepad that is attached
+         * @example
+         *   var gamepads = new pc.GamePads();
+         *   var pads = gamepads.poll();
+         *   // pads[0] = { map: <map>, pad: <pad> }
+         */
         poll: function () {
             var pads;
             if (arguments.length === 0) {
@@ -168,13 +168,13 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.GamePads#isPressed
-        * @description Returns true if the button on the pad requested is pressed
-        * @param {Number} index The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc
-        * @param {Number} button The button to test, use constants pc.PAD_FACE_1, etc
-        * @returns {Boolean} True if the button is pressed
-        */
+         * @function
+         * @name pc.GamePads#isPressed
+         * @description Returns true if the button on the pad requested is pressed
+         * @param {Number} index The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc
+         * @param {Number} button The button to test, use constants pc.PAD_FACE_1, etc
+         * @returns {Boolean} True if the button is pressed
+         */
         isPressed: function (index, button) {
             if (!this.current[index]) {
                 return false;
@@ -185,13 +185,13 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.GamePads#wasPressed
-        * @description Returns true if the button was pressed since the last frame
-        * @param {Number} index The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc
-        * @param {Number} button The button to test, use constants pc.PAD_FACE_1, etc
-        * @returns {Boolean} True if the button was pressed since the last frame
-        */
+         * @function
+         * @name pc.GamePads#wasPressed
+         * @description Returns true if the button was pressed since the last frame
+         * @param {Number} index The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc
+         * @param {Number} button The button to test, use constants pc.PAD_FACE_1, etc
+         * @returns {Boolean} True if the button was pressed since the last frame
+         */
         wasPressed: function (index, button) {
             if (!this.current[index]) {
                 return false;
@@ -203,13 +203,13 @@ pc.extend(pc, function () {
         },
 
         /**
-        * @function
-        * @name pc.GamePads#getAxis
-        * @description Get the value of one of the analogue axes of the pad
-        * @param {Number} index The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc
-        * @param {Number} axes The axes to get the value of, use constants pc.PAD_L_STICK_X, etc
-        * @returns {Number} The value of the axis between -1 and 1.
-        */
+         * @function
+         * @name pc.GamePads#getAxis
+         * @description Get the value of one of the analogue axes of the pad
+         * @param {Number} index The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc
+         * @param {Number} axes The axes to get the value of, use constants pc.PAD_L_STICK_X, etc
+         * @returns {Number} The value of the axis between -1 and 1.
+         */
         getAxis: function (index, axes) {
             if (!this.current[index]) {
                 return false;
@@ -223,7 +223,7 @@ pc.extend(pc, function () {
             }
             return value;
         }
-    };
+    });
 
     return {
         GamePads: GamePads

@@ -1,10 +1,10 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var FolderHandler = function () {
     };
 
-    FolderHandler.prototype = {
+    Object.assign(FolderHandler.prototype, {
         load: function (url, callback) {
             callback(null, null);
         },
@@ -12,7 +12,7 @@ pc.extend(pc, function () {
         open: function (url, data) {
             return data;
         }
-    };
+    });
 
     return {
         FolderHandler: FolderHandler

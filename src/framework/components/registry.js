@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ComponentSystemRegistry
@@ -6,89 +6,52 @@ pc.extend(pc, function () {
      * @description Create a new ComponentSystemRegistry
      */
     var ComponentSystemRegistry = function () {
+        // An array of pc.ComponentSystem objects
+        this.list = [];
     };
 
-    ComponentSystemRegistry.prototype = {
+    Object.assign(ComponentSystemRegistry.prototype, {
         /**
          * @private
          * @function
          * @name pc.ComponentSystemRegistry#add
-         * @description Add a new Component type
-         * @param {Object} name The name of the Component
+         * @description Add a component system to the registry.
          * @param {Object} system The {pc.ComponentSystem} instance
          */
-        add: function (name, system) {
-            if(!this[name]) {
-                this[name] = system;
-                system.name = name;
-            } else {
-                throw new Error(pc.string.format("ComponentSystem name '{0}' already registered or not allowed", name));
+        add: function (system) {
+            var id = system.id;
+            if (this[id]) {
+                throw new Error(pc.string.format("ComponentSystem name '{0}' already registered or not allowed", id));
             }
+
+            this[id] = system;
+
+            // Update the component system array
+            this.list.push(system);
         },
+
         /**
          * @private
          * @function
          * @name pc.ComponentSystemRegistry#remove
-         * @description Remove a Component type
-         * @param {Object} name The name of the Component remove
+         * @description Remove a component system from the registry.
+         * @param {Object} system The {pc.ComponentSystem} instance
          */
-        remove: function(name) {
-            if(!this[name]) {
-                throw new Error(pc.string.format("No ComponentSystem named '{0}' registered", name));
+        remove: function (system) {
+            var id = system.id;
+            if (!this[id]) {
+                throw new Error(pc.string.format("No ComponentSystem named '{0}' registered", id));
             }
 
-            delete this[name];
-        },
+            delete this[id];
 
-        /**
-         * @private
-         * @function
-         * @name pc.ComponentSystemRegistry#list
-         * @description Return the contents of the registry as an array, this order of the array
-         * is the order in which the ComponentSystems must be initialized.
-         * @returns {pc.ComponentSystem[]} An array of component systems.
-         */
-        list: function () {
-            var list = Object.keys(this);
-            var defaultPriority = 1;
-            var priorities = {
-                'collisionrect': 0.5,
-                'collisioncircle': 0.5
-            };
-
-            list.sort(function (a, b) {
-                var pa = priorities[a] || defaultPriority;
-                var pb = priorities[b] || defaultPriority;
-
-                if (pa < pb) {
-                    return -1;
-                } else if (pa > pb) {
-                    return 1;
-                }
-
-                return 0;
-            });
-
-            return list.map(function (key) {
-                return this[key];
-            }, this);
-        },
-
-        getComponentSystemOrder: function () {
-            var index;
-            var names = Object.keys(this);
-
-            index = names.indexOf('collisionrect');
-            names.splice(index, 1);
-            names.unshift('collisionrect');
-
-            index = names.indexOf('collisioncircle');
-            names.splice(index, 1);
-            names.unshift('collisioncircle');
-
-            return names;
+            // Update the component system array
+            var index = this.list.indexOf(this[id]);
+            if (index !== -1) {
+                this.list.splice(index, 1);
+            }
         }
-    };
+    });
 
     return {
         ComponentSystemRegistry: ComponentSystemRegistry

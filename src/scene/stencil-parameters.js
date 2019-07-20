@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.StencilParameters
@@ -12,12 +12,12 @@ pc.extend(pc, function () {
      * @property {Number} zpass Sets operation to perform if both stencil and depth test are passed. See {@link pc.GraphicsDevice#setStencilOperation}
      * @property {Number} readMask Sets stencil test reading mask. See {@link pc.GraphicsDevice#setStencilFunc}
      * @property {Number} writeMask Sets stencil test writing mask. See {@link pc.GraphicsDevice#setStencilOperation}
-    */
+     */
     var StencilParameters = function (options) {
-        this.func = options.func===undefined? pc.FUNC_ALWAYS : options.func;
+        this.func = options.func === undefined ? pc.FUNC_ALWAYS : options.func;
         this.ref = options.ref || 0;
-        this.readMask = options.readMask===undefined? 0xFF : options.readMask;
-        this.writeMask = options.writeMask===undefined? 0xFF : options.writeMask;
+        this.readMask = options.readMask === undefined ? 0xFF : options.readMask;
+        this.writeMask = options.writeMask === undefined ? 0xFF : options.writeMask;
 
         this.fail = options.fail || pc.STENCILOP_KEEP; // keep == 0
         this.zfail = options.zfail || pc.STENCILOP_KEEP;

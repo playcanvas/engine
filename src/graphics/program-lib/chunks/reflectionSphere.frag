@@ -1,4 +1,8 @@
+#ifndef VIEWMATRIX
+#define VIEWMATRIX
 uniform mat4 matrix_view;
+#endif
+
 uniform sampler2D texture_sphereMap;
 uniform float material_reflectivity;
 void addReflection() {

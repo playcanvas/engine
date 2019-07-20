@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     'use strict';
 
     var _typeSize = [];
@@ -73,6 +73,7 @@ pc.extend(pc, function () {
         this.hasUv0 = false;
         this.hasUv1 = false;
         this.hasColor = false;
+        this.hasTangents = false;
 
         this.size = 0;
         for (i = 0, len = description.length; i < len; i++) {
@@ -97,6 +98,8 @@ pc.extend(pc, function () {
                 this.hasUv1 = true;
             } else if (elementDesc.semantic === pc.SEMANTIC_COLOR) {
                 this.hasColor = true;
+            } else if (elementDesc.semantic === pc.SEMANTIC_TANGENT) {
+                this.hasTangents = true;
             }
         }
 

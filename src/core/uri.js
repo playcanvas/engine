@@ -1,4 +1,4 @@
-pc.extend(pc, function() {
+Object.assign(pc, function () {
     return {
         /**
          * @private
@@ -17,13 +17,13 @@ pc.extend(pc, function() {
          */
         createURI: function (options) {
             var s = "";
-            if((options.authority || options.scheme) && (options.host || options.hostpath)) {
+            if ((options.authority || options.scheme) && (options.host || options.hostpath)) {
                 throw new Error("Can't have 'scheme' or 'authority' and 'host' or 'hostpath' option");
             }
-            if(options.host && options.hostpath) {
+            if (options.host && options.hostpath) {
                 throw new Error("Can't have 'host' and 'hostpath' option");
             }
-            if(options.path && options.hostpath) {
+            if (options.path && options.hostpath) {
                 throw new Error("Can't have 'path' and 'hostpath' option");
             }
 
@@ -39,7 +39,7 @@ pc.extend(pc, function() {
                 s += options.host;
             }
 
-            if(options.path) {
+            if (options.path) {
                 s += options.path;
             }
 
@@ -69,7 +69,7 @@ pc.extend(pc, function() {
         URI: function (uri) {
             // See http://tools.ietf.org/html/rfc2396#appendix-B for details of RegExp
             var re = /^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/,
-            result = uri.match(re);
+                result = uri.match(re);
 
             /**
              * @name pc.URI#scheme
@@ -186,4 +186,4 @@ pc.extend(pc, function() {
             };
         }
     };
-} ());
+}());

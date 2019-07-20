@@ -1,5 +1,5 @@
 pc.programlib.skybox = {
-    generateKey: function (device, options) {
+    generateKey: function (options) {
         var key = "skybox" + options.rgbm + " " + options.hdr + " " + options.fixSeams + "" +
                   options.toneMapping + "" + options.gamma + "" + options.useIntensity + "" + options.mip;
         return key;
@@ -15,11 +15,11 @@ pc.programlib.skybox = {
             },
             vshader: chunks.skyboxVS,
             fshader: pc.programlib.precisionCode(device) +
-                (options.mip? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS) +
-                (options.useIntensity? chunks.envMultiplyPS : chunks.envConstPS) +
+                (options.mip ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS) +
+                (options.useIntensity ? chunks.envMultiplyPS : chunks.envConstPS) +
                 pc.programlib.gammaCode(options.gamma) + pc.programlib.tonemapCode(options.toneMapping) + chunks.rgbmPS +
-                chunks.skyboxHDRPS.replace(/\$textureCubeSAMPLE/g, options.rgbm? "textureCubeRGBM" : (options.hdr? "textureCube" : "textureCubeSRGB"))
-                .replace(/\$FIXCONST/g, (1.0 - 1.0 / mip2size[options.mip]) + "")
+                chunks.skyboxHDRPS.replace(/\$textureCubeSAMPLE/g, options.rgbm ? "textureCubeRGBM" : (options.hdr ? "textureCube" : "textureCubeSRGB"))
+                    .replace(/\$FIXCONST/g, (1.0 - 1.0 / mip2size[options.mip]) + "")
         };
     }
 };

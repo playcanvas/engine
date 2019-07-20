@@ -1,0 +1,146 @@
+{
+  "shader": "blinn",
+  "ambient": [
+    0,
+    0,
+    0
+  ],
+  "diffuse": [
+    0.64,
+    0.64,
+    0.64
+  ],
+  "specular": [
+    0.25,
+    0.25,
+    0.25
+  ],
+  "shininess": 29.6747,
+  "emissive": [
+    0,
+    0,
+    0
+  ],
+  "opacity": 1,
+  "aoMapChannel": "r",
+  "aoMapTiling": [
+    1,
+    1
+  ],
+  "aoMapOffset": [
+    0,
+    0
+  ],
+  "occludeSpecular": 1,
+  "diffuseMapChannel": "rgb",
+  "diffuseMapTiling": [
+    1,
+    1
+  ],
+  "diffuseMapOffset": [
+    0,
+    0
+  ],
+  "specularMapChannel": "rgb",
+  "specularMapTiling": [
+    1,
+    1
+  ],
+  "specularMapOffset": [
+    0,
+    0
+  ],
+  "specularAntialias": true,
+  "metalnessMapChannel": "r",
+  "metalnessMapTiling": [
+    1,
+    1
+  ],
+  "metalnessMapOffset": [
+    0,
+    0
+  ],
+  "metalness": 1,
+  "conserveEnergy": true,
+  "glossMapChannel": "r",
+  "glossMapTiling": [
+    1,
+    1
+  ],
+  "glossMapOffset": [
+    0,
+    0
+  ],
+  "emissiveMapChannel": "rgb",
+  "emissiveMapTiling": [
+    1,
+    1
+  ],
+  "emissiveMapOffset": [
+    0,
+    0
+  ],
+  "emissiveIntensity": 1,
+  "normalMapTiling": [
+    1,
+    1
+  ],
+  "normalMapOffset": [
+    0,
+    0
+  ],
+  "bumpMapFactor": 1,
+  "heightMapChannel": "r",
+  "heightMapTiling": [
+    1,
+    1
+  ],
+  "heightMapOffset": [
+    0,
+    0
+  ],
+  "heightMapFactor": 1,
+  "opacityMapChannel": "r",
+  "opacityMapTiling": [
+    1,
+    1
+  ],
+  "opacityMapOffset": [
+    0,
+    0
+  ],
+  "reflectivity": 1,
+  "refractionIndex": 0.6666666666666666,
+  "cubeMapProjectionBox": {
+    "center": [
+      0,
+      0,
+      0
+    ],
+    "halfExtents": [
+      0.5,
+      0.5,
+      0.5
+    ]
+  },
+  "lightMapChannel": "rgb",
+  "lightMapUv": 1,
+  "lightMapTiling": [
+    1,
+    1
+  ],
+  "lightMapOffset": [
+    0,
+    0
+  ],
+  "depthTest": true,
+  "depthWrite": true,
+  "cull": 1,
+  "blendType": 3,
+  "shadowSampleType": 1,
+  "useFog": true,
+  "useLighting": true,
+  "useSkybox": true,
+  "useGammaTonemap": true,
+  "mapping_format": "path"
+}

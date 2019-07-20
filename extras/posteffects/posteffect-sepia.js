@@ -1,14 +1,18 @@
-//--------------- POST EFFECT DEFINITION ------------------------//
-pc.extend(pc, function () {
+// --------------- POST EFFECT DEFINITION --------------- //
+Object.assign(pc, function () {
+
     /**
+     * @constructor
      * @name pc.SepiaEffect
-     * @class Implements the SepiaEffect color filter.
-     * @constructor Creates new instance of the post effect.
+     * @classdesc Implements the SepiaEffect color filter.
+     * @description Creates new instance of the post effect.
      * @extends pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} amount Controls the intensity of the effect. Ranges from 0 to 1.
      */
     var SepiaEffect = function (graphicsDevice) {
+        pc.PostEffect.call(this, graphicsDevice);
+
         this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.SEMANTIC_POSITION
@@ -49,9 +53,10 @@ pc.extend(pc, function () {
         this.amount = 1;
     };
 
-    SepiaEffect = pc.inherits(SepiaEffect, pc.PostEffect);
+    SepiaEffect.prototype = Object.create(pc.PostEffect.prototype);
+    SepiaEffect.prototype.constructor = SepiaEffect;
 
-    SepiaEffect.prototype = pc.extend(SepiaEffect.prototype, {
+    Object.assign(SepiaEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -67,8 +72,7 @@ pc.extend(pc, function () {
     };
 }());
 
-
-//--------------- SCRIPT DEFINITION------------------------//
+// ----------------- SCRIPT DEFINITION ------------------ //
 var Sepia = pc.createScript('sepia');
 
 Sepia.attributes.add('amount', {
@@ -80,7 +84,7 @@ Sepia.attributes.add('amount', {
 });
 
 // initialize code called once per entity
-Sepia.prototype.initialize = function() {
+Sepia.prototype.initialize = function () {
     this.effect = new pc.SepiaEffect(this.app.graphicsDevice);
     this.effect.amount = this.amount;
 

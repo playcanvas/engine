@@ -1,7 +1,8 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
     var SpriteHandler = function (assets, device) {
         this._assets = assets;
         this._device = device;
+        this.retryRequests = false;
     };
 
     // The scope of this function is the sprite asset
@@ -18,12 +19,21 @@ pc.extend(pc, function () {
         spriteAsset.registry.load(atlasAsset);
     };
 
-    SpriteHandler.prototype = {
+    Object.assign(SpriteHandler.prototype, {
         load: function (url, callback) {
+            if (typeof url === 'string') {
+                url = {
+                    load: url,
+                    original: url
+                };
+            }
+
             // if given a json file (probably engine-only use case)
-            if (pc.path.getExtension(url) === '.json') {
-                pc.http.get(url, function (err, response) {
-                    if(!err) {
+            if (pc.path.getExtension(url.original) === '.json') {
+                pc.http.get(url.load, {
+                    retry: this.retryRequests
+                }, function (err, response) {
+                    if (!err) {
                         callback(null, response);
                     } else {
                         callback(err);
@@ -35,8 +45,8 @@ pc.extend(pc, function () {
         // Create sprite resource
         open: function (url, data) {
             var sprite = new pc.Sprite(this._device);
-            // json data loaded from file
-            if (data) {
+            if (url) {
+                // if url field is present json data is being loaded from file
                 // store data on sprite object temporarily
                 sprite.__data = data;
             }
@@ -55,13 +65,17 @@ pc.extend(pc, function () {
                 asset.data.renderMode = sprite.__data.renderMode;
                 asset.data.frameKeys = sprite.__data.frameKeys;
 
-                var atlas = assets.getByUrl(sprite.__data.textureAtlasAsset);
-                if (atlas) {
-                    asset.data.textureAtlasAsset = atlas.id;
+                if (sprite.__data.textureAtlasAsset) {
+                    var atlas = assets.getByUrl(sprite.__data.textureAtlasAsset);
+                    if (atlas) {
+                        asset.data.textureAtlasAsset = atlas.id;
+                    } else {
+                        console.warn("Could not find textureatlas with url: " + sprite.__data.textureAtlasAsset);
+                    }
                 }
 
-                delete sprite.__data;
-
+                // note: we don't remove sprite.__data in case another asset is loaded from the same URL when it is fetched from the cache
+                // the __data is not re-assigned and so asset.data is not set up.
             }
 
             sprite.startUpdate();
@@ -78,7 +92,7 @@ pc.extend(pc, function () {
         // Load atlas
         _updateAtlas: function (asset) {
             var sprite = asset.resource;
-            if (! asset.data.textureAtlasAsset) {
+            if (!asset.data.textureAtlasAsset) {
                 sprite.atlas = null;
                 return;
             }
@@ -108,7 +122,7 @@ pc.extend(pc, function () {
                 }
             }
         }
-    };
+    });
 
     return {
         SpriteHandler: SpriteHandler

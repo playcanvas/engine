@@ -1,7 +1,6 @@
-pc.extend(pc, function () {
+Object.assign(pc, function () {
 
     var maxSize = 2048;
-    var maskDynamic = 1;
     var maskBaked = 2;
     var maskLightmap = 4;
 
@@ -26,11 +25,11 @@ pc.extend(pc, function () {
         var i;
         if (node.model && node.model.model && node.model.enabled) {
             if (allNodes) allNodes.push(node);
-            if (node.model.data.lightmapped) {
+            if (node.model.lightmapped) {
                 if (nodes) {
                     var hasUv1 = true;
                     var meshInstances = node.model.model.meshInstances;
-                    for(i=0; i<meshInstances.length; i++) {
+                    for (i = 0; i < meshInstances.length; i++) {
                         if (!meshInstances[i].mesh.vertexBuffer.format.hasUv1) {
                             hasUv1 = false;
                             break;
@@ -41,11 +40,11 @@ pc.extend(pc, function () {
                         var j;
                         var isInstance;
                         var notInstancedMeshInstances = [];
-                        for(i=0; i<meshInstances.length; i++) {
+                        for (i = 0; i < meshInstances.length; i++) {
                             isInstance = false;
-                            for(j=0; j<meshInstances.length; j++) {
-                                if (i!==j) {
-                                    if (meshInstances[i].mesh===meshInstances[j].mesh) {
+                            for (j = 0; j < meshInstances.length; j++) {
+                                if (i !== j) {
+                                    if (meshInstances[i].mesh === meshInstances[j].mesh) {
                                         isInstance = true;
                                     }
                                 }
@@ -68,7 +67,7 @@ pc.extend(pc, function () {
                 }
             }
         }
-        for(i = 0; i < node._children.length; i++) {
+        for (i = 0; i < node._children.length; i++) {
             collectModels(node._children[i], nodes, nodesMeshInstances, allNodes);
         }
     }
@@ -104,13 +103,20 @@ pc.extend(pc, function () {
         // #endif
     };
 
-    Lightmapper.prototype = {
+    Object.assign(Lightmapper.prototype, {
+        destroy: function () {
+            this.device = null;
+            this.root = null;
+            this.scene = null;
+            this.renderer = null;
+            this.assets = null;
+        },
 
-        calculateLightmapSize: function(node) {
+        calculateLightmapSize: function (node) {
             var data, parent;
             var sizeMult = this.scene.lightmapSizeMultiplier || 16;
             var scale = tempVec;
-            var area = {x:1, y:1, z:1, uv:1};
+            var area = { x: 1, y: 1, z: 1, uv: 1 };
 
             if (node.model.asset) {
                 data = this.assets.get(node.model.asset).data;
@@ -136,7 +142,7 @@ pc.extend(pc, function () {
 
             scale.copy(node.localScale);
             parent = node._parent;
-            while(parent) {
+            while (parent) {
                 scale.mul(parent.localScale);
                 parent = parent._parent;
             }
@@ -167,7 +173,7 @@ pc.extend(pc, function () {
          * </ul>
          * Only lights with bakeDir=true will be used for generating the dominant light direction.
          */
-        bake: function(nodes, mode) {
+        bake: function (nodes, mode) {
 
             // #ifdef PROFILER
             var startTime = pc.now();
@@ -183,8 +189,8 @@ pc.extend(pc, function () {
             var scene = this.scene;
 
             var passCount = 1;
-            if (mode===undefined) mode = pc.BAKE_COLORDIR;
-            if (mode===pc.BAKE_COLORDIR) passCount = 2;
+            if (mode === undefined) mode = pc.BAKE_COLORDIR;
+            if (mode === pc.BAKE_COLORDIR) passCount = 2;
             var pass;
 
             // #ifdef PROFILER
@@ -200,8 +206,8 @@ pc.extend(pc, function () {
                 // ///// Full bake /////
 
                 // delete old lightmaps, if present
-                for(i=0; i<sceneLightmaps.length; i++) {
-                    for(j=0; j<sceneLightmaps[i].length; j++) {
+                for (i = 0; i < sceneLightmaps.length; i++) {
+                    for (j = 0; j < sceneLightmaps[i].length; j++) {
                         sceneLightmaps[i][j].destroy();
                     }
                 }
@@ -217,20 +223,20 @@ pc.extend(pc, function () {
                 // delete old lightmaps, if present
                 var k;
                 for (i = sceneLightmapsNode.length - 1; i >= 0; i--) {
-                  for (j = 0; j < nodes.length; j++) {
-                    if (sceneLightmapsNode[i] === nodes[j]) {
-                      for (k = 0; k < sceneLightmaps[i].length; k++) {
-                        sceneLightmaps[i][k].destroy();
-                      }
-                      sceneLightmaps.splice(i, 1);
-                      sceneLightmapsNode.splice(i, 1);
+                    for (j = 0; j < nodes.length; j++) {
+                        if (sceneLightmapsNode[i] === nodes[j]) {
+                            for (k = 0; k < sceneLightmaps[i].length; k++) {
+                                sceneLightmaps[i][k].destroy();
+                            }
+                            sceneLightmaps.splice(i, 1);
+                            sceneLightmapsNode.splice(i, 1);
+                        }
                     }
-                  }
                 }
 
                 // collect
                 var _nodes = [];
-                for(i=0; i<nodes.length; i++) {
+                for (i = 0; i < nodes.length; i++) {
                     collectModels(nodes[i], _nodes, nodesMeshInstances);
                 }
                 nodes = _nodes;
@@ -238,7 +244,7 @@ pc.extend(pc, function () {
                 collectModels(this.root, null, null, allNodes);
             }
 
-            if (nodes.length===0) {
+            if (nodes.length === 0) {
                 device.fire('lightmapper:end', {
                     timestamp: pc.now(),
                     target: this
@@ -270,10 +276,11 @@ pc.extend(pc, function () {
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
                 rgbm: true
             });
-            for(i=0; i<nodes.length; i++) {
+            blackTex.name = 'lightmap';
+            for (i = 0; i < nodes.length; i++) {
                 size = this.calculateLightmapSize(nodes[i]);
                 texSize.push(size);
-                for(pass=0; pass<passCount; pass++) {
+                for (pass = 0; pass < passCount; pass++) {
                     tex = new pc.Texture(device, {
                         // #ifdef PROFILER
                         profilerHint: pc.TEXHINT_LIGHTMAP,
@@ -286,6 +293,7 @@ pc.extend(pc, function () {
                         minFilter: pc.FILTER_NEAREST,
                         magFilter: pc.FILTER_NEAREST
                     });
+                    tex.name = 'lightmap';
 
                     lmaps[pass].push(tex);
                 }
@@ -303,6 +311,7 @@ pc.extend(pc, function () {
                         minFilter: pc.FILTER_NEAREST,
                         magFilter: pc.FILTER_NEAREST
                     });
+                    tex2.name = 'lightmap';
 
                     var targ2 = new pc.RenderTarget(device, tex2, {
                         depth: false
@@ -311,22 +320,25 @@ pc.extend(pc, function () {
                 }
             }
 
+            var activeComp = scene.layers;
+            activeComp._update();
+
             // Collect bakeable lights
             var lights = [];
             var origMask = [];
             var origShadowMode = [];
             var origEnabled = [];
-            var sceneLights = scene._lights;
+            var sceneLights = activeComp._lights;
             var mask;
-            for(i=0; i<sceneLights.length; i++) {
+            for (i = 0; i < sceneLights.length; i++) {
                 if (sceneLights[i]._enabled) {
                     mask = sceneLights[i]._mask;
-                    if ((mask & maskLightmap) !==0) {
+                    if ((mask & maskLightmap) !== 0) {
                         origMask.push(mask);
                         origShadowMode.push(sceneLights[i].shadowUpdateMode);
                         sceneLights[i]._mask = 0xFFFFFFFF;
                         sceneLights[i].shadowUpdateMode =
-                            sceneLights[i]._type===pc.LIGHTTYPE_DIRECTIONAL? pc.SHADOWUPDATE_REALTIME : pc.SHADOWUPDATE_THISFRAME;
+                            sceneLights[i]._type === pc.LIGHTTYPE_DIRECTIONAL ? pc.SHADOWUPDATE_REALTIME : pc.SHADOWUPDATE_THISFRAME;
                         lights.push(sceneLights[i]);
                         sceneLights[i].isStatic = false; // if baked, can't be used as static
                     }
@@ -334,6 +346,7 @@ pc.extend(pc, function () {
                 origEnabled.push(sceneLights[i]._enabled);
                 sceneLights[i].enabled = false;
             }
+
 
             // Init shaders
             var chunks = pc.shaderChunks;
@@ -346,26 +359,23 @@ pc.extend(pc, function () {
             var constantPixelOffset = device.scope.resolve("pixelOffset");
             var constantBakeDir = device.scope.resolve("bakeDir");
 
-            var pixelOffset = new pc.Vec2();
+            var pixelOffset = new Float32Array(2);
 
-            var drawCalls = scene.drawCalls;
+            var drawCalls = activeComp._meshInstances;
 
             // update scene matrices
-            for(i=0; i<drawCalls.length; i++) {
+            for (i = 0; i < drawCalls.length; i++) {
                 if (drawCalls[i].node) drawCalls[i].node.getWorldTransform();
             }
 
             // Store scene values
             var origFog = scene.fog;
-            var origAmbientR = scene.ambientLight.data[0];
-            var origAmbientG = scene.ambientLight.data[1];
-            var origAmbientB = scene.ambientLight.data[2];
-            var origDrawCalls = scene.drawCalls;
+            var origAmbientR = scene.ambientLight.r;
+            var origAmbientG = scene.ambientLight.g;
+            var origAmbientB = scene.ambientLight.b;
 
             scene.fog = pc.FOG_NONE;
-            scene.ambientLight.data[0] = 0;
-            scene.ambientLight.data[1] = 0;
-            scene.ambientLight.data[2] = 0;
+            scene.ambientLight.set(0, 0, 0);
 
             // Create pseudo-camera
             if (!lmCamera) {
@@ -382,22 +392,20 @@ pc.extend(pc, function () {
             }
 
             var node;
-            var lm, rcv, mat, m;
+            var lm, rcv, m;
 
             // Disable existing scene lightmaps
             var origShaderDefs = [];
             origShaderDefs.length = sceneLightmapsNode.length;
             var shaderDefs;
-            for(node=0; node<allNodes.length; node++) {
+            for (node = 0; node < allNodes.length; node++) {
                 rcv = allNodes[node].model.model.meshInstances;
                 shaderDefs = [];
-                for(i=0; i<rcv.length; i++) {
+                for (i = 0; i < rcv.length; i++) {
                     shaderDefs.push(rcv[i]._shaderDefs);
                     rcv[i]._shaderDefs &= ~(pc.SHADERDEF_LM | pc.SHADERDEF_DIRLM);
-                    //rcv[i].mask |= pc.MASK_DYNAMIC;
-                    //rcv[i].mask &= ~pc.MASK_LIGHTMAP;
                 }
-                for (i=0; i<sceneLightmapsNode.length; i++) {
+                for (i = 0; i < sceneLightmapsNode.length; i++) {
                     if (sceneLightmapsNode[i] === allNodes[node]) {
                         origShaderDefs[i] = shaderDefs;
                         break;
@@ -407,57 +415,43 @@ pc.extend(pc, function () {
 
             // Change shadow casting
             var origCastShadows = [];
-            var origCasters2 = scene.shadowCasters.slice();
-            for(node=0; node<allNodes.length; node++) {
-                origCastShadows[node] = allNodes[node].model.castShadows;
-                allNodes[node].model.castShadows = allNodes[node].model.data.castShadowsLightmap;
-            }
-            var origCasters = scene.shadowCasters;
             var casters = [];
-            var instanceClone, prop;
-            for(i=0; i<origCasters.length; i++) {
-                m = origCasters[i];
-                instanceClone = new pc.MeshInstance(m.node, m.mesh, m.material);
-                for (prop in m) {
-                    if (m.hasOwnProperty(prop)) {
-                        instanceClone[prop] = m[prop];
+            var meshes;
+            for (node = 0; node < allNodes.length; node++) {
+                origCastShadows[node] = allNodes[node].model.castShadows;
+                allNodes[node].model.castShadows = allNodes[node].model.castShadowsLightmap;
+                if (allNodes[node].model.castShadowsLightmap) {
+                    meshes = allNodes[node].model.meshInstances;
+                    for (i = 0; i < meshes.length; i++) {
+                        meshes[i].visibleThisFrame = true;
+                        casters.push(meshes[i]);
                     }
                 }
-                casters.push(instanceClone);
             }
-            scene.shadowCasters = casters;
+
+            this.renderer.updateCpuSkinMatrices(casters);
+            this.renderer.gpuUpdate(casters);
 
             var origMat = [];
 
             // Prepare models
             var nodeBounds = [];
-            var nodeTarg = [[],[]];
+            var nodeTarg = [[], []];
             var targ, targTmp, texTmp;
             var light, shadowCam;
             var nodeLightCount = [];
             nodeLightCount.length = nodes.length;
 
-            scene.updateShadersFunc(device); // needed to initialize skybox once, so it wont pop up during lightmap rendering
-
-            for(node=0; node<nodes.length; node++) {
-                rcv = nodesMeshInstances[node];
-                // Store original material values to be changed
-                for(i=0; i<rcv.length; i++) {
-                    mat = rcv[i].material;
-                    origMat.push(mat);
-                }
-            }
-
             var lmMaterial;
-            for(pass=0; pass<passCount; pass++) {
+            for (pass = 0; pass < passCount; pass++) {
                 if (!passMaterial[pass]) {
                     lmMaterial = new pc.StandardMaterial();
                     lmMaterial.chunks.transformVS = xformUv1; // draw UV1
 
-                    if (pass===PASS_COLOR) {
+                    if (pass === PASS_COLOR) {
                         lmMaterial.chunks.endPS = bakeLmEnd; // encode to RGBM
                         // don't bake ambient
-                        lmMaterial.ambient = new pc.Color(0,0,0);
+                        lmMaterial.ambient = new pc.Color(0, 0, 0);
                         lmMaterial.ambientTint = true;
                         lmMaterial.lightMap = blackTex;
                     } else {
@@ -479,15 +473,14 @@ pc.extend(pc, function () {
                 }
             }
 
-            var cntr = 0;
-            for(node=0; node<nodes.length; node++) {
+            for (node = 0; node < nodes.length; node++) {
                 rcv = nodesMeshInstances[node];
                 nodeLightCount[node] = 0;
 
                 // Calculate model AABB
                 if (rcv.length > 0) {
                     bounds.copy(rcv[0].aabb);
-                    for(i=0; i<rcv.length; i++) {
+                    for (i = 0; i < rcv.length; i++) {
                         rcv[i].node.getWorldTransform();
                         bounds.add(rcv[i].aabb);
                     }
@@ -496,7 +489,7 @@ pc.extend(pc, function () {
                 nbounds.copy(bounds);
                 nodeBounds.push(nbounds);
 
-                for(i=0; i<rcv.length; i++) {
+                for (i = 0; i < rcv.length; i++) {
                     // patch meshInstance
                     m = rcv[i];
                     m._shaderDefs &= ~(pc.SHADERDEF_LM | pc.SHADERDEF_DIRLM); // disable LM define, if set, to get bare ambient on first pass
@@ -505,13 +498,11 @@ pc.extend(pc, function () {
                     m.deleteParameter("texture_dirLightMap");
 
                     // patch material
-                    //m.material = lmMaterial;
-                    m.setParameter("texture_lightMap", origMat[cntr].lightMap? origMat[cntr].lightMap : blackTex);
+                    m.setParameter("texture_lightMap", m.material.lightMap ? m.material.lightMap : blackTex);
                     m.setParameter("texture_dirLightMap", blackTex);
-                    cntr++;
                 }
 
-                for(pass=0; pass<passCount; pass++) {
+                for (pass = 0; pass < passCount; pass++) {
                     lm = lmaps[pass][node];
                     targ = new pc.RenderTarget(device, lm, {
                         depth: false
@@ -521,15 +512,21 @@ pc.extend(pc, function () {
             }
 
             // Disable all bakeable lights
-            for(j=0; j<lights.length; j++)
+            for (j = 0; j < lights.length; j++)
                 lights[j].enabled = false;
+
+            var lightArray = [[], [], []];
 
             // Accumulate lights into RGBM textures
             var shadersUpdatedOn1stPass = false;
-            for(i=0; i<lights.length; i++) {
+            var shadowMapRendered;
+            for (i = 0; i < lights.length; i++) {
+
                 lights[i].enabled = true; // enable next light
+                shadowMapRendered = false;
+
                 lights[i]._cacheShadowMap = true;
-                if (lights[i]._type!==pc.LIGHTTYPE_DIRECTIONAL) {
+                if (lights[i]._type !== pc.LIGHTTYPE_DIRECTIONAL) {
                     lights[i]._node.getWorldTransform();
                     lights[i].getBoundingSphere(tempSphere);
                     lightBounds.center = tempSphere.center;
@@ -537,7 +534,7 @@ pc.extend(pc, function () {
                     lightBounds.halfExtents.y = tempSphere.radius;
                     lightBounds.halfExtents.z = tempSphere.radius;
                 }
-                if (lights[i]._type===pc.LIGHTTYPE_SPOT) {
+                if (lights[i]._type === pc.LIGHTTYPE_SPOT) {
                     light = lights[i];
                     shadowCam = this.renderer.getShadowCamera(device, light);
 
@@ -554,18 +551,17 @@ pc.extend(pc, function () {
                     this.renderer.updateCameraFrustum(shadowCam);
                 }
 
-                for(node=0; node<nodes.length; node++) {
+                if (nodesMeshInstances.length > 0) {
+                    this.renderer.updateShaders(nodesMeshInstances[0]);
+                }
+
+                for (node = 0; node < nodes.length; node++) {
 
                     rcv = nodesMeshInstances[node];
                     bounds = nodeBounds[node];
-                    scene.drawCalls = [];
-                    for(j=0; j<rcv.length; j++) {
-                        scene.drawCalls.push(rcv[j]);
-                    }
-                    scene.updateShaders = true;
 
                     // Tweak camera to fully see the model, so directional light frustum will also see it
-                    if (lights[i]._type===pc.LIGHTTYPE_DIRECTIONAL) {
+                    if (lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL) {
                         tempVec.copy(bounds.center);
                         tempVec.y += bounds.halfExtents.y;
 
@@ -585,9 +581,9 @@ pc.extend(pc, function () {
                         }
                     }
 
-                    if (lights[i]._type===pc.LIGHTTYPE_SPOT) {
+                    if (lights[i]._type === pc.LIGHTTYPE_SPOT) {
                         var nodeVisible = false;
-                        for(j=0; j<rcv.length; j++) {
+                        for (j = 0; j < rcv.length; j++) {
                             if (this.renderer._isVisible(shadowCam, rcv[j])) {
                                 nodeVisible = true;
                                 break;
@@ -598,35 +594,77 @@ pc.extend(pc, function () {
                         }
                     }
 
-                    for(pass=0; pass<passCount; pass++) {
+                    if (lights[i]._type === pc.LIGHTTYPE_DIRECTIONAL) {
+                        lightArray[pc.LIGHTTYPE_DIRECTIONAL][0] = lights[i];
+                        lightArray[pc.LIGHTTYPE_POINT].length = 0;
+                        lightArray[pc.LIGHTTYPE_SPOT].length = 0;
+                        if (!shadowMapRendered && lights[i].castShadows) {
+                            this.renderer.cullDirectionalShadowmap(lights[i], casters, lmCamera, 0);
+                            this.renderer.renderShadows(lightArray[pc.LIGHTTYPE_DIRECTIONAL], 0);
+                            shadowMapRendered = true;
+                        }
+                    } else {
+                        lightArray[pc.LIGHTTYPE_DIRECTIONAL].length = 0;
+                        if (lights[i]._type === pc.LIGHTTYPE_POINT) {
+                            lightArray[pc.LIGHTTYPE_POINT][0] = lights[i];
+                            lightArray[pc.LIGHTTYPE_SPOT].length = 0;
+                            if (!shadowMapRendered && lights[i].castShadows) {
+                                this.renderer.cullLocalShadowmap(lights[i], casters);
+                                this.renderer.renderShadows(lightArray[pc.LIGHTTYPE_POINT]);
+                                shadowMapRendered = true;
+                            }
+                        } else {
+                            lightArray[pc.LIGHTTYPE_POINT].length = 0;
+                            lightArray[pc.LIGHTTYPE_SPOT][0] = lights[i];
+                            if (!shadowMapRendered && lights[i].castShadows) {
+                                this.renderer.cullLocalShadowmap(lights[i], casters);
+                                this.renderer.renderShadows(lightArray[pc.LIGHTTYPE_SPOT]);
+                                shadowMapRendered = true;
+                            }
+                        }
+                    }
+
+                    // Store original materials
+                    for (j = 0; j < rcv.length; j++) {
+                        origMat[j] = rcv[j].material;
+                    }
+
+                    for (pass = 0; pass < passCount; pass++) {
                         lm = lmaps[pass][node];
                         targ = nodeTarg[pass][node];
                         targTmp = texPool[lm.width];
                         texTmp = targTmp.colorBuffer;
 
-                        if (pass===0) {
+                        if (pass === 0) {
                             shadersUpdatedOn1stPass = scene.updateShaders;
                         } else if (shadersUpdatedOn1stPass) {
                             scene.updateShaders = true;
                         }
 
-                        for(j=0; j<rcv.length; j++) {
+                        for (j = 0; j < rcv.length; j++) {
                             rcv[j].material = passMaterial[pass];
+                        }
+                        if (passCount > 1) {
+                            this.renderer.updateShaders(rcv); // update between passes
                         }
 
                         // ping-ponging output
-                        lmCamera.renderTarget = targTmp;
+                        this.renderer.setCamera(lmCamera, targTmp, true);
 
-                        if (pass===PASS_DIR) {
-                            constantBakeDir.setValue(lights[i].bakeDir? 1 : 0);
+                        if (pass === PASS_DIR) {
+                            constantBakeDir.setValue(lights[i].bakeDir ? 1 : 0);
                         }
 
-                        //console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
+                        // console.log("Baking light "+lights[i]._node.name + " on model " + nodes[node].name);
 
                         this.renderer._forwardTime = 0;
                         this.renderer._shadowMapTime = 0;
 
-                        this.renderer.render(scene, lmCamera);
+                        this.renderer.renderForward(lmCamera,
+                                                    rcv, rcv.length,
+                                                    lightArray,
+                                                    pc.SHADER_FORWARDHDR);
+
                         // #ifdef PROFILER
                         stats.shadowMapTime += this.renderer._shadowMapTime;
                         stats.forwardTime += this.renderer._forwardTime;
@@ -637,7 +675,7 @@ pc.extend(pc, function () {
                         nodeTarg[pass][node] = targTmp;
                         texPool[lm.width] = targ;
 
-                        for(j=0; j<rcv.length; j++) {
+                        for (j = 0; j < rcv.length; j++) {
                             m = rcv[j];
                             m.setParameter(passTexName[pass], texTmp); // ping-ponging input
                             m._shaderDefs |= pc.SHADERDEF_LM; // force using LM even if material doesn't have it
@@ -645,6 +683,11 @@ pc.extend(pc, function () {
                     }
 
                     nodeLightCount[node]++;
+
+                    // Revert original materials
+                    for (j = 0; j < rcv.length; j++) {
+                        rcv[j].material = origMat[j];
+                    }
                 }
 
                 lights[i].enabled = false; // disable that light
@@ -655,13 +698,12 @@ pc.extend(pc, function () {
             }
 
 
-            var id = 0;
             var sceneLmaps;
-            for(node=0; node<nodes.length; node++) {
+            for (node = 0; node < nodes.length; node++) {
                 rcv = nodesMeshInstances[node];
                 sceneLmaps = [];
 
-                for(pass=0; pass<passCount; pass++) {
+                for (pass = 0; pass < passCount; pass++) {
                     lm = lmaps[pass][node];
                     targ = nodeTarg[pass][node];
                     targTmp = texPool[lm.width];
@@ -669,9 +711,10 @@ pc.extend(pc, function () {
 
                     // Dilate
                     var numDilates2x = 4; // 8 dilates
-                    pixelOffset.set(1/lm.width, 1/lm.height);
-                    constantPixelOffset.setValue(pixelOffset.data);
-                    for(i=0; i<numDilates2x; i++) {
+                    pixelOffset[0] = 1 / lm.width;
+                    pixelOffset[1] = 1 / lm.height;
+                    constantPixelOffset.setValue(pixelOffset);
+                    for (i = 0; i < numDilates2x; i++) {
                         constantTexSource.setValue(lm);
                         pc.drawQuadWithShader(device, targTmp, dilateShader);
 
@@ -680,31 +723,25 @@ pc.extend(pc, function () {
                     }
 
 
-                    for(i=0; i<rcv.length; i++) {
+                    for (i = 0; i < rcv.length; i++) {
                         m = rcv[i];
-
-                        if (pass===0) {
-                            m.mask = maskBaked;
-                            // roll material back
-                            rcv[i].material = origMat[id];
-                            id++;
-                        }
+                        m.mask = maskBaked;
 
                         // Set lightmap
                         rcv[i].setParameter(passTexName[pass], lm);
-                        if (pass===PASS_DIR) rcv[i]._shaderDefs |= pc.SHADERDEF_DIRLM;
+                        if (pass === PASS_DIR) rcv[i]._shaderDefs |= pc.SHADERDEF_DIRLM;
                     }
                     sceneLmaps[pass] = lm;
 
                     // Clean up
-                    if (pass===passCount-1) targ.destroy();
+                    if (pass === passCount - 1) targ.destroy();
                 }
 
                 sceneLightmaps.push(sceneLmaps);
                 sceneLightmapsNode.push(nodes[node]);
             }
 
-            for(var key in texPool) {
+            for (var key in texPool) {
                 if (texPool.hasOwnProperty(key)) {
                     texPool[key].colorBuffer.destroy();
                     texPool[key].destroy();
@@ -712,8 +749,8 @@ pc.extend(pc, function () {
             }
 
             // Set up linear filtering
-            for(i=0; i<sceneLightmaps.length; i++) {
-                for(j=0; j<sceneLightmaps[i].length; j++) {
+            for (i = 0; i < sceneLightmaps.length; i++) {
+                for (j = 0; j < sceneLightmaps[i].length; j++) {
                     tex = sceneLightmaps[i][j];
                     tex.minFilter = pc.FILTER_LINEAR;
                     tex.magFilter = pc.FILTER_LINEAR;
@@ -721,37 +758,33 @@ pc.extend(pc, function () {
             }
 
             // Revert shadow casting
-            for(node=0; node<allNodes.length; node++) {
+            for (node = 0; node < allNodes.length; node++) {
                 allNodes[node].model.castShadows = origCastShadows[node];
             }
-            scene.shadowCasters = origCasters2;
 
             // Enable existing scene lightmaps
-            for (i=0; i<origShaderDefs.length; i++) {
+            for (i = 0; i < origShaderDefs.length; i++) {
                 if (origShaderDefs[i]) {
                     rcv = sceneLightmapsNode[i].model.model.meshInstances;
-                    for (j=0; j<rcv.length; j++) {
+                    for (j = 0; j < rcv.length; j++) {
                         rcv[j]._shaderDefs |= origShaderDefs[i][j] & (pc.SHADERDEF_LM | pc.SHADERDEF_DIRLM);
                     }
                 }
             }
 
             // Enable all lights back
-            for(i=0; i<lights.length; i++) {
+            for (i = 0; i < lights.length; i++) {
                 lights[i]._mask = origMask[i];
                 lights[i].shadowUpdateMode = origShadowMode[i];
             }
 
-            for(i=0; i<sceneLights.length; i++) {
+            for (i = 0; i < sceneLights.length; i++) {
                 sceneLights[i].enabled = origEnabled[i];
             }
 
             // Roll back scene stuff
-            scene.drawCalls = origDrawCalls;
             scene.fog = origFog;
-            scene.ambientLight.data[0] = origAmbientR;
-            scene.ambientLight.data[1] = origAmbientG;
-            scene.ambientLight.data[2] = origAmbientB;
+            scene.ambientLight.set(origAmbientR, origAmbientG, origAmbientB);
 
             // Revert static preprocessing
             if (revertStatic) {
@@ -759,8 +792,6 @@ pc.extend(pc, function () {
             }
 
             // #ifdef PROFILER
-            scene._updateLightStats(); // update statistics
-
             this.device.fire('lightmapper:end', {
                 timestamp: pc.now(),
                 target: this
@@ -772,12 +803,9 @@ pc.extend(pc, function () {
             stats.fboTime = device._renderTargetCreationTime - startFboTime;
             // #endif
         }
-    };
+    });
 
     return {
-        Lightmapper: Lightmapper,
-        MASK_DYNAMIC: maskDynamic,
-        MASK_BAKED: maskBaked,
-        MASK_LIGHTMAP: maskLightmap
+        Lightmapper: Lightmapper
     };
 }());
