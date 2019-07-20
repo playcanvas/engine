@@ -496,7 +496,8 @@ Object.assign(pc, function () {
         syncAabb: function () {
             // Deprecated
         },
-        destroy:function(){
+        
+        destroy: function(){
             
             var mesh,  ib,  j;
             var device;
@@ -534,8 +535,10 @@ Object.assign(pc, function () {
             }
 
             this.material = null; // make sure instance and material clear references
+            
             this.node = null;
         },
+        
         updateKey: function () {
             var material = this.material;
             this._key[pc.SORTKEY_FORWARD] = getKey(this.layer,

@@ -561,7 +561,7 @@ Object.assign(pc, function () {
 
                 if (system._inTools)
                     model.generateWireframe();
-				this._clonedModel = true;
+                this._clonedModel = true;
                 this.model = model;
                 this._asset = null;
             }
