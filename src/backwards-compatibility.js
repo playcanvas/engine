@@ -401,17 +401,9 @@ pc.RigidBodyComponentSystem.prototype.setGravity = function () {
     console.warn('DEPRECATED: pc.RigidBodyComponentSystem#setGravity is deprecated. Use pc.RigidBodyComponentSystem#gravity instead.');
     // #endif
 
-    var x, y, z;
     if (arguments.length === 1) {
-        x = arguments[0].x;
-        y = arguments[0].y;
-        z = arguments[0].z;
+        this.gravity.copy(arguments[0]);
     } else {
-        x = arguments[0];
-        y = arguments[1];
-        z = arguments[2];
+        this.gravity.set(arguments[0], arguments[1], arguments[2]);
     }
-    var gravity = new Ammo.btVector3(x, y, z);
-    this.dynamicsWorld.setGravity(gravity);
-    Ammo.destroy(gravity);
 };
