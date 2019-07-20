@@ -162,7 +162,6 @@ Object.assign(pc, function () {
         this.fixedTimeStep = 1 / 60;
 
         this.gravity = new pc.Vec3(0, -9.81, 0);
-        this._lastGravity = new pc.Vec3();
 
         this.on('remove', this.onRemove, this);
     };
@@ -433,12 +432,10 @@ Object.assign(pc, function () {
             // #endif
 
             // Check to see whether we need to update gravity on the dynamics world
-            if (!this._lastGravity.equals(this.gravity)) {
-                var gravity = new Ammo.btVector3(this.gravity.x, this.gravity.y, this.gravity.z);
+            var gravity = this.dynamicsWorld.getGravity();
+            if (gravity.x() !== this.gravity.x || gravity.y() !== this.gravity.y || gravity.z() !== this.gravity.z) {
+                gravity.setValue(this.gravity.x, this.gravity.y, this.gravity.z);
                 this.dynamicsWorld.setGravity(gravity);
-                Ammo.destroy(gravity);
-
-                this._lastGravity.copy(this.gravity);
             }
 
             // Update the transforms of all bodies
