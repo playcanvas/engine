@@ -383,7 +383,7 @@ Object.assign(pc, function () {
                 // search up the hierarchy until we find an entity which has:
                 // - no parent
                 // - screen component on parent
-                var next = current.getParent();
+                var next = current.parent;
                 if ((next === null || next.screen) && current.element) {
                     if (!this.system._prerender || !this.system._prerender.length) {
                         this.system._prerender = [];
@@ -461,7 +461,7 @@ Object.assign(pc, function () {
             this._anchorDirty = true;
 
             // update all child screens
-            var children = this.entity.getChildren();
+            var children = this.entity.children;
             for (var i = 0, l = children.length; i < l; i++) {
                 if (children[i].element) children[i].element._updateScreen(screen);
             }
@@ -546,7 +546,7 @@ Object.assign(pc, function () {
                 }
 
                 // recurse through all children
-                children = this.entity.getChildren();
+                children = this.entity.children;
                 for (i = 0, l = children.length; i < l; i++) {
                     if (children[i].element) {
                         children[i].element._updateMask(currentMask, depth);
@@ -583,7 +583,7 @@ Object.assign(pc, function () {
                 }
 
                 // recurse through all children
-                children = this.entity.getChildren();
+                children = this.entity.children;
                 for (i = 0, l = children.length; i < l; i++) {
                     if (children[i].element) {
                         children[i].element._updateMask(currentMask, depth);

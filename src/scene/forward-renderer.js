@@ -547,7 +547,7 @@ Object.assign(pc, function () {
         updateCameraFrustum: function (camera) {
             if (camera.vrDisplay && camera.vrDisplay.presenting) {
                 projMat = camera.vrDisplay.combinedProj;
-                var parent = camera._node.getParent();
+                var parent = camera._node.parent;
                 if (parent) {
                     viewMat.copy(parent.getWorldTransform()).mul(camera.vrDisplay.combinedViewInv).invert();
                 } else {
@@ -633,7 +633,7 @@ Object.assign(pc, function () {
                     viewR.copy(viewInvR).invert();
                     viewMat.copy(viewInvMat).invert();
                 } else {
-                    var parent = camera._node.getParent();
+                    var parent = camera._node.parent;
                     if (parent) {
                         var transform = parent.getWorldTransform();
 
