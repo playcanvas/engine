@@ -340,7 +340,6 @@ pc.GraphNode.prototype.addLabel = function (label) {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.GraphNode#addLabel is deprecated. Use pc.GraphNode#tags instead.');
     // #endif
-
     this._labels[label] = true;
 };
 
@@ -348,7 +347,6 @@ pc.GraphNode.prototype.getLabels = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.GraphNode#getLabels is deprecated. Use pc.GraphNode#tags instead.');
     // #endif
-
     return Object.keys(this._labels);
 };
 
@@ -356,7 +354,6 @@ pc.GraphNode.prototype.hasLabel = function (label) {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.GraphNode#hasLabel is deprecated. Use pc.GraphNode#tags instead.');
     // #endif
-
     return !!this._labels[label];
 };
 
@@ -364,7 +361,6 @@ pc.GraphNode.prototype.removeLabel = function (label) {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.GraphNode#removeLabel is deprecated. Use pc.GraphNode#tags instead.');
     // #endif
-
     delete this._labels[label];
 };
 
@@ -391,7 +387,6 @@ pc.GraphNode.prototype.getChildren = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.GraphNode#getChildren is deprecated. Use pc.GraphNode#children instead.');
     // #endif
-
     return this.children;
 };
 
@@ -399,7 +394,6 @@ pc.GraphNode.prototype.getName = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.GraphNode#getName is deprecated. Use pc.GraphNode#name instead.');
     // #endif
-
     return this.name;
 };
 
@@ -407,7 +401,6 @@ pc.GraphNode.prototype.getPath = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.GraphNode#getPath is deprecated. Use pc.GraphNode#path instead.');
     // #endif
-
     return this.path;
 };
 
@@ -415,7 +408,6 @@ pc.GraphNode.prototype.getRoot = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.GraphNode#getRoot is deprecated. Use pc.GraphNode#root instead.');
     // #endif
-
     return this.root;
 };
 
@@ -423,7 +415,6 @@ pc.GraphNode.prototype.getParent = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.GraphNode#getParent is deprecated. Use pc.GraphNode#parent instead.');
     // #endif
-
     return this.parent;
 };
 
@@ -431,7 +422,6 @@ pc.GraphNode.prototype.setName = function (name) {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.GraphNode#setName is deprecated. Use pc.GraphNode#name instead.');
     // #endif
-
     this.name = name;
 };
 
@@ -439,7 +429,6 @@ pc.Application.prototype.isFullscreen = function () {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.Application#isFullscreen is deprecated. Use the Fullscreen API directly.');
     // #endif
-
     return !!document.fullscreenElement;
 };
 
@@ -447,7 +436,6 @@ pc.Application.prototype.enableFullscreen = function (element, success, error) {
     // #ifdef DEBUG
     console.warn('DEPRECATED: pc.Application#enableFullscreen is deprecated. Use the Fullscreen API directly.');
     // #endif
-
     element = element || this.graphicsDevice.canvas;
 
     // success callback
