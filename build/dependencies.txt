@@ -117,7 +117,6 @@
 ../src/i18n/i18n-parser.js
 ../src/i18n/i18n.js
 ../src/templates/template.js
-../src/templates/load-dependencies.js
 ../src/templates/template-utils.js
 ../src/framework/script.js
 ../src/framework/application.js
