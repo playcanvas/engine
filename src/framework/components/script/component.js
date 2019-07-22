@@ -518,7 +518,7 @@ Object.assign(pc, function () {
                         app: this.system.app,
                         entity: this.entity,
                         enabled: args.hasOwnProperty('enabled') ? args.enabled : true,
-                        attributes: args.attributes || null
+                        attributes: args.attributes
                     });
 
                     var len = this._scripts.length;
