@@ -245,7 +245,7 @@ Object.assign(pc, function () {
         addSlot: function (name, options) {
             var slots = this.data.slots;
             if (slots[name]) {
-                logWARNING('A sound slot with name ' + name + ' already exists on Entity ' + this.entity.getPath());
+                logWARNING('A sound slot with name ' + name + ' already exists on Entity ' + this.entity.path);
                 return null;
             }
 
