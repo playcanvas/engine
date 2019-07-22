@@ -20,22 +20,14 @@ Object.assign(pc, function () {
         this._data = data;
 
         this._expandedData = {};
-
-        this._instanceGuids = [];
     };
 
-    Template.prototype.instantiate = function (saveGuid) {
+    Template.prototype.instantiate = function () {
         if (!this._templateRoot) { // at first use, after scripts are loaded
             this._parseTemplate();
         }
 
-        var instance = this._templateRoot.clone();
-
-        if (saveGuid) {
-            this._instanceGuids.push(instance.getGuid());
-        }
-
-        return instance;
+        return this._templateRoot.clone();
     };
 
     Template.prototype.getExpandedData = function () {
@@ -51,16 +43,6 @@ Object.assign(pc, function () {
         var parser = new pc.SceneParser(this._app);
 
         this._templateRoot = parser.parse(this.getExpandedData());
-    };
-
-    Template.prototype.applyToInstances = function (callback) {
-        for (var i = 0; i < this._instanceGuids.length; i++) {
-            var guid = this._instanceGuids[i];
-
-            var entity = this._app.root.findByGuid(guid);
-
-            callback(entity, i, guid);
-        }
     };
 
     return {
