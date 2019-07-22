@@ -32,6 +32,7 @@ Object.assign(pc, function () {
         this.position = new pc.Vec3(0, 0, 0);
         this.rotation = new pc.Quat(0, 0, 0, 1);
         this.eulerAngles = new pc.Vec3(0, 0, 0);
+        this._scale = null;
 
         this.localTransform = new pc.Mat4();
         this._dirtyLocal = false;
@@ -665,6 +666,26 @@ Object.assign(pc, function () {
         getRotation: function () {
             this.rotation.setFromMat4(this.getWorldTransform());
             return this.rotation;
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.GraphNode#getScale
+         * @description Get the world space scale for the specified GraphNode. The returned value
+         * will only be correct for graph nodes that have a non-skewed world transform (a skew can
+         * be introduced by the compounding of rotations and scales higher in the graph node
+         * hierarchy). The value returned by this function should be considered read-only. Note
+         * that it is not possible to set the world space scale of a graph node directly.
+         * @returns {pc.Vec3} The world space scale of the graph node.
+         * @example
+         * var scale = this.entity.getScale();
+         */
+        getScale: function () {
+            if (!this._scale) {
+                this._scale = new pc.Vec3();
+            }
+            return this.getWorldTransform().getScale(this._scale);
         },
 
         /**
