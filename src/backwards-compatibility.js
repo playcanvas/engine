@@ -494,3 +494,15 @@ pc.Application.prototype.disableFullscreen = function (success) {
 
     document.exitFullscreen();
 };
+
+pc.RigidBodyComponentSystem.prototype.setGravity = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.RigidBodyComponentSystem#setGravity is deprecated. Use pc.RigidBodyComponentSystem#gravity instead.');
+    // #endif
+
+    if (arguments.length === 1) {
+        this.gravity.copy(arguments[0]);
+    } else {
+        this.gravity.set(arguments[0], arguments[1], arguments[2]);
+    }
+};
