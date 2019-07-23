@@ -55,7 +55,6 @@ Object.assign(pc, function () {
                 }
                 if (this.indexBuffer) {
                     for (j = 0; j < this.indexBuffer.length; j++) {
-                        device = device || this.indexBuffer.device;
                         ib = this.indexBuffer[j];
                         if (!ib) continue;
                         ib.destroy();
@@ -181,7 +180,8 @@ Object.assign(pc, function () {
             return this._mesh;
         },
         set: function (mesh) {
-            if (this._mesh) this._mesh._refCount--;
+            if(this._mesh === mesh) return;
+            if (this._mesh) this._mesh.destroy();
             this._mesh = mesh;
             if (mesh) mesh._refCount++;
         }
@@ -526,10 +526,7 @@ Object.assign(pc, function () {
         },
 
         destroy: function() {
-            if (this.mesh) {
-                this.mesh.destroy();
-                this.mesh = null;
-            }
+            this.mesh = null;
 
             if (this.skinInstance) {
                 var boneTex = this.skinInstance.boneTexture;
