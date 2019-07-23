@@ -41,7 +41,6 @@ Object.assign(pc, function () {
 
     Object.assign(Mesh.prototype, {
         destroy: function() {
-            var  ib, j;
             this._refCount--;
             if (this._refCount < 1) {
                 this.primitive = null;
@@ -54,6 +53,7 @@ Object.assign(pc, function () {
                     this.vertexBuffer = null;
                 }
                 if (this.indexBuffer) {
+                    var ib, j;
                     for (j = 0; j < this.indexBuffer.length; j++) {
                         ib = this.indexBuffer[j];
                         if (!ib) continue;
