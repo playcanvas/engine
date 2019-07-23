@@ -694,7 +694,7 @@ Object.assign(pc, function () {
                     if (data) {
                         var kerning = 0;
                         if (numCharsThisLine > 0) {
-                            var table = this._font._data.kerning;
+                            var table = this._font.data.kerning;
                             if (table) {
                                 var left = table[pc.string.getCodePoint(this._symbols[i - 1]) || 0];
                                 if (left) {
