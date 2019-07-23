@@ -79,7 +79,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            var children = e.getChildren();
+            var children = e.children;
             for (var j = 0; j < children.length; j++) {
                 i = this._recurseDrawOrderSync(children[j], i);
             }
