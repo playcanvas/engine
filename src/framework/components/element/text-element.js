@@ -696,7 +696,7 @@ Object.assign(pc, function () {
                         if (numCharsThisLine > 0) {
                             var kernTable = this._font.data.kerning;
                             if (kernTable) {
-                                var kernLeft = table[pc.string.getCodePoint(this._symbols[i - 1]) || 0];
+                                var kernLeft = kernTable[pc.string.getCodePoint(this._symbols[i - 1]) || 0];
                                 if (kernLeft) {
                                     kerning = kernLeft[pc.string.getCodePoint(this._symbols[i]) || 0] || 0;
                                 }
