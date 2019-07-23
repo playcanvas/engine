@@ -39,6 +39,34 @@ Object.assign(pc, function () {
         this.boneAabb = null;
     };
 
+    Object.assign(Mesh.prototype, {
+        destroy: function() {
+            var  ib, j;
+            this._refCount--;
+            if (this._refCount < 1) {
+                this.primitive = null;
+                this._aabb = null;
+                this.skin = null;
+                this.morph = null;
+                this.boneAabb = null;
+                if (this.vertexBuffer) {
+                    this.vertexBuffer.destroy();
+                    this.vertexBuffer = null;
+                }
+                if (this.indexBuffer) {
+                    for (j = 0; j < this.indexBuffer.length; j++) {
+                        device = device || this.indexBuffer.device;
+                        ib = this.indexBuffer[j];
+                        if (!ib) continue;
+                        ib.destroy();
+                    }
+                    this.indexBuffer.length = 0;
+                    this.indexBuffer = null;
+                }
+            }
+        }
+    });
+
     Object.defineProperty(Mesh.prototype, 'aabb', {
         get: function () {
             return this.morph ? this.morph.aabb : this._aabb;
@@ -498,27 +526,9 @@ Object.assign(pc, function () {
         },
 
         destroy: function() {
-            
-            var mesh,  ib,  j;
-            var device;
-            
-            mesh = this.mesh;
-            if (mesh) {
-                mesh._refCount--;
-                if (mesh._refCount < 1) {
-                    if (mesh.vertexBuffer) {
-                        device = device || mesh.vertexBuffer.device;
-                        mesh.vertexBuffer.destroy();
-                        mesh.vertexBuffer = null;
-                    }
-                    for (j = 0; j < mesh.indexBuffer.length; j++) {
-                        device = device || mesh.indexBuffer.device;
-                        ib = mesh.indexBuffer[j];
-                        if (!ib) continue;
-                        ib.destroy();
-                    }
-                    mesh.indexBuffer.length = 0;
-                }
+            if (this.mesh) {
+                this.mesh.destroy();
+                this.mesh = null;
             }
 
             if (this.skinInstance) {
