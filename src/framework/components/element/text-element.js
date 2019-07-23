@@ -692,11 +692,21 @@ Object.assign(pc, function () {
                     }
 
                     if (data) {
+                        var kerning = 0;
+                        if (numCharsThisLine > 0) {
+                            var kernTable = this._font.data.kerning;
+                            if (kernTable) {
+                                var kernLeft = kernTable[pc.string.getCodePoint(this._symbols[i - 1]) || 0];
+                                if (kernLeft) {
+                                    kerning = kernLeft[pc.string.getCodePoint(this._symbols[i]) || 0] || 0;
+                                }
+                            }
+                        }
                         dataScale = data.scale || 1;
                         size = (data.width + data.height) / 2;
                         quadsize = scale * size / dataScale;
-                        advance = data.xadvance * scale;
-                        x = data.xoffset * scale;
+                        advance = (data.xadvance + kerning) * scale;
+                        x = (data.xoffset - kerning) * scale;
                         y = data.yoffset * scale;
                     } else {
                         console.error("Couldn't substitute missing character: '" + char + "'");
