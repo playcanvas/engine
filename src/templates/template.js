@@ -1,19 +1,12 @@
-/**
- * Create a Template resource from raw database data.
- *
- * This is called by TemplateHandler after all assets referenced
- * by template_id in entities here have been loaded.
- * Therefore entities can be expanded right away.
- *
- * Calling SceneParser requires script assets referenced in components
- * to be loaded. We do it when 'instantiate' is called for the first
- * time, after the scene has been parsed, which in turn happens
- * after all scripts are loaded.
- *
- */
-
 Object.assign(pc, function () {
-
+    /**
+     * @private
+     * @constructor
+     * @name pc.Template
+     * @classdesc Create a Template resource from raw database data
+     * @param {pc.Application} app The application
+     * @param {Object} data Asset data from the database
+     */
     var Template = function Template(app, data) {
         this._app = app;
 
@@ -22,6 +15,12 @@ Object.assign(pc, function () {
         this._expandedData = {};
     };
 
+    /**
+     * @function
+     * @name pc.Template#instantiate
+     * @description Create an instance of this template
+     * @returns {pc.Entity} The root entity of the created instance
+     */
     Template.prototype.instantiate = function () {
         if (!this._templateRoot) { // at first use, after scripts are loaded
             this._parseTemplate();
@@ -30,6 +29,16 @@ Object.assign(pc, function () {
         return this._templateRoot.clone();
     };
 
+
+    /**
+     * @private
+     * @function
+     * @name pc.Template#getExpandedData
+     * @description Creates, if needed, and returns an object whose entities field contains
+     * expanded entity data. This output format matches the format of raw scene data.
+     * @returns {Object} An object whose entities field contains
+     * expanded entity data
+     */
     Template.prototype.getExpandedData = function () {
         if (!this._expandedData.entities) {
             this._expandedData.entities = pc.TemplateUtils.expandTemplateEntities(
