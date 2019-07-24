@@ -746,6 +746,7 @@ Object.assign(pc, function () {
         if (this.skyboxModel) {
             this.skyLayer.removeMeshInstances(this.skyboxModel.meshInstances);
             this.skyLayer.enabled = false;
+            this.skyboxModel.destroy();
         }
         this.skyboxModel = null;
         this.updateSkybox = true;

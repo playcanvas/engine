@@ -249,30 +249,40 @@ Object.assign(pc, function () {
         },
 
         _bindColorMapAsset: function (asset) {
-            asset.once('remove', this._onColorMapRemoved, this);
+            asset.on('load', this._onColorMapAssetLoad, this);
+            asset.on('unload', this._onColorMapAssetUnload, this);
+            asset.on('remove', this._onColorMapAssetRemove, this);
+            asset.on('change', this._onColorMapAssetChange, this);
 
             if (asset.resource) {
-                this.colorMap = asset.resource;
+                this._onColorMapAssetLoad(asset);
             } else {
-                asset.once("load", this._onColorMapLoad, this);
-                if (this.enabled && this.entity.enabled) {
-                    this.system.app.assets.load(asset);
-                }
-
+                // don't trigger an asset load unless the component is enabled
+                if (!this.enabled || !this.entity.enabled) return;
+                this.system.app.assets.load(asset);
             }
         },
 
         _unbindColorMapAsset: function (asset) {
-            asset.off("remove", this._onColorMapRemoved, this);
-            asset.off("load", this._onColorMapLoad, this);
+            asset.off('load', this._onColorMapAssetLoad, this);
+            asset.off('unload', this._onColorMapAssetUnload, this);
+            asset.off('remove', this._onColorMapAssetRemove, this);
+            asset.off('change', this._onColorMapAssetChange, this);
         },
 
-        _onColorMapLoad: function (asset) {
+        _onColorMapAssetLoad: function (asset) {
             this.colorMap = asset.resource;
         },
 
-        _onColorMapRemoved: function (asset) {
-            this.colorMapAsset = null;
+        _onColorMapAssetUnload: function (asset) {
+            this.colorMap = null;
+        },
+
+        _onColorMapAssetRemove: function (asset) {
+            this._onColorMapAssetUnload(asset);
+        },
+
+        _onColorMapAssetChange: function (asset) {
         },
 
         onSetColorMapAsset: function (name, oldValue, newValue) {
@@ -306,30 +316,40 @@ Object.assign(pc, function () {
         },
 
         _bindNormalMapAsset: function (asset) {
-            asset.once('remove', this._onNormalMapRemoved, this);
+            asset.on('load', this._onNormalMapAssetLoad, this);
+            asset.on('unload', this._onNormalMapAssetUnload, this);
+            asset.on('remove', this._onNormalMapAssetRemove, this);
+            asset.on('change', this._onNormalMapAssetChange, this);
 
             if (asset.resource) {
-                this.normalMap = asset.resource;
+                this._onNormalMapAssetLoad(asset);
             } else {
-                asset.once("load", this._onNormalMapLoad, this);
-                if (this.enabled && this.entity.enabled) {
-                    this.system.app.assets.load(asset);
-                }
-
+                // don't trigger an asset load unless the component is enabled
+                if (!this.enabled || !this.entity.enabled) return;
+                this.system.app.assets.load(asset);
             }
         },
 
         _unbindNormalMapAsset: function (asset) {
-            asset.off("remove", this._onNormalMapRemoved, this);
-            asset.off("load", this._onNormalMapLoad, this);
+            asset.off('load', this._onNormalMapAssetLoad, this);
+            asset.off('unload', this._onNormalMapAssetUnload, this);
+            asset.off('remove', this._onNormalMapAssetRemove, this);
+            asset.off('change', this._onNormalMapAssetChange, this);
         },
 
-        _onNormalMapLoad: function (asset) {
+        _onNormalMapAssetLoad: function (asset) {
             this.normalMap = asset.resource;
         },
 
-        _onNormalMapRemoved: function (asset) {
-            this.normalMapAsset = null;
+        _onNormalMapAssetUnload: function (asset) {
+            this.normalMap = null;
+        },
+
+        _onNormalMapAssetRemove: function (asset) {
+            this._onNormalMapAssetUnload(asset);
+        },
+
+        _onNormalMapAssetChange: function (asset) {
         },
 
         onSetNormalMapAsset: function (name, oldValue, newValue) {
@@ -364,17 +384,40 @@ Object.assign(pc, function () {
         },
 
         _bindMeshAsset: function (asset) {
-            asset.on('remove', this._onMeshAssetRemoved, this);
             asset.on('load', this._onMeshAssetLoad, this);
+            asset.on('unload', this._onMeshAssetUnload, this);
+            asset.on('remove', this._onMeshAssetRemove, this);
+            asset.on('change', this._onMeshAssetChange, this);
+
+            if (asset.resource) {
+                this._onMeshAssetLoad(asset);
+            } else {
+                // don't trigger an asset load unless the component is enabled
+                if (!this.enabled || !this.entity.enabled) return;
+                this.system.app.assets.load(asset);
+            }
         },
 
         _unbindMeshAsset: function (asset) {
-            asset.off('remove', this._onMeshAssetRemoved, this);
             asset.off('load', this._onMeshAssetLoad, this);
+            asset.off('unload', this._onMeshAssetUnload, this);
+            asset.off('remove', this._onMeshAssetRemove, this);
+            asset.off('change', this._onMeshAssetChange, this);
         },
 
         _onMeshAssetLoad: function (asset) {
             this._onMeshChanged(asset.resource);
+        },
+
+        _onMeshAssetUnload: function (asset) {
+            this.mesh = null;
+        },
+
+        _onMeshAssetRemove: function (asset) {
+            this._onMeshAssetUnload(asset);
+        },
+
+        _onMeshAssetChange: function (asset) {
         },
 
         onSetMeshAsset: function (name, oldValue, newValue) {
@@ -437,11 +480,6 @@ Object.assign(pc, function () {
                 this.emitter.resetMaterial();
                 this.rebuild();
             }
-        },
-
-        onMeshAssetRemoved: function (asset) {
-            asset.off('remove', this.onMeshAssetRemoved, this);
-            this.mesh = null;
         },
 
         onSetLoop: function (name, oldValue, newValue) {

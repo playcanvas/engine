@@ -1,4 +1,3 @@
-../src/polyfill/fullscreen.js
 ../src/polyfill/math-log2.js
 ../src/polyfill/object-assign.js
 ../src/polyfill/pointer-lock.js

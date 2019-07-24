@@ -342,7 +342,7 @@ Object.assign(pc, function () {
             this._enabledOld = this.enabled;
             this.__destroyed = false;
             this.__attributes = { };
-            this.__attributesRaw = args.attributes || null;
+            this.__attributesRaw = args.attributes || { }; // need at least an empty object to make sure default attributes are initialized
             this.__scriptType = script;
 
             // the order in the script component that the

@@ -878,6 +878,7 @@ Object.assign(pc, function () {
                     this.loader.load(url, 'script', onLoad);
                 }
             } else {
+                self.onLibrariesLoaded();
                 callback(null);
             }
         },
@@ -953,6 +954,9 @@ Object.assign(pc, function () {
                 var asset = new pc.Asset(data.name, data.type, data.file, data.data);
                 asset.id = parseInt(data.id, 10);
                 asset.preload = data.preload ? data.preload : false;
+                // if this is a script asset and has already been embedded in the page then
+                // mark it as loaded
+                asset.loaded = data.type === 'script' && data.data && data.data.loadingType > 0;
                 // tags
                 asset.tags.add(data.tags);
                 // i18n
@@ -1220,85 +1224,6 @@ Object.assign(pc, function () {
 
         /**
          * @function
-         * @name pc.Application#isFullscreen
-         * @description Returns true if the application is currently running fullscreen
-         * @returns {Boolean} True if the application is running fullscreen
-         */
-        isFullscreen: function () {
-            return !!document.fullscreenElement;
-        },
-
-        /**
-         * @function
-         * @name pc.Application#enableFullscreen
-         * @description Request that the browser enters fullscreen mode. This is not available on all browsers.
-         * Note: Switching to fullscreen can only be initiated by a user action, e.g. in the event hander for a mouse or keyboard input
-         * @param {Element} [element] The element to display in fullscreen, if element is not provided the application canvas is used
-         * @param {Function} [success] Function called if the request for fullscreen was successful
-         * @param {Function} [error] Function called if the request for fullscreen was unsuccessful
-         * @example
-         * var button = document.getElementById('my-button');
-         * button.addEventListener('click', function () {
-         *     app.enableFullscreen(canvas, function () {
-         *         console.log('Now fullscreen');
-         *     }, function () {
-         *         console.log('Something went wrong!');
-         *     });
-         * }, false);
-         */
-        enableFullscreen: function (element, success, error) {
-            element = element || this.graphicsDevice.canvas;
-
-            // success callback
-            var s = function () {
-                success();
-                document.removeEventListener('fullscreenchange', s);
-            };
-
-            // error callback
-            var e = function () {
-                error();
-                document.removeEventListener('fullscreenerror', e);
-            };
-
-            if (success) {
-                document.addEventListener('fullscreenchange', s, false);
-            }
-
-            if (error) {
-                document.addEventListener('fullscreenerror', e, false);
-            }
-
-            if (element.requestFullscreen) {
-                element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-            } else {
-                error();
-            }
-
-        },
-
-        /**
-         * @function
-         * @name pc.Application#disableFullscreen
-         * @description If application is currently displaying an element as fullscreen, then stop and return to normal.
-         * @param {Function} [success] Function called when transition to normal mode is finished
-         */
-        disableFullscreen: function (success) {
-            // success callback
-            var s = function () {
-                success();
-                document.removeEventListener('fullscreenchange', s);
-            };
-
-            if (success) {
-                document.addEventListener('fullscreenchange', s, false);
-            }
-
-            document.exitFullscreen();
-        },
-
-        /**
-         * @function
          * @name pc.Application#isHidden
          * @description Queries the visibility of the window or tab in which the application is running.
          * @returns {Boolean} True if the application is not visible and false otherwise.
@@ -1396,7 +1321,7 @@ Object.assign(pc, function () {
 
             if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
                 var gravity = settings.physics.gravity;
-                this.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
+                this.systems.rigidbody.gravity.set(gravity[0], gravity[1], gravity[2]);
             }
 
             this.scene.applySettings(settings);
@@ -1505,6 +1430,10 @@ Object.assign(pc, function () {
                 this.scene._needsStaticPrepare = false;
             }
             this.batcher.generate();
+        },
+
+        _processTimestamp: function (timestamp) {
+            return timestamp;
         },
 
         /**
@@ -1671,7 +1600,7 @@ Object.assign(pc, function () {
             // have current application pointer in pc
             pc.app = app;
 
-            var now = timestamp || pc.now();
+            var now = app._processTimestamp(timestamp) || pc.now();
             var ms = now - (app._time || now);
             var dt = ms / 1000.0;
             dt = pc.math.clamp(dt, 0, app.maxDeltaTime);
