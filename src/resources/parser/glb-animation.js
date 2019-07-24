@@ -1,10 +1,10 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var GLBAnimationsParser = function () {
+    var GlbAnimationsParser = function () {
     };
 
-    Object.assign(GLBAnimationsParser.prototype, {
+    Object.assign(GlbAnimationsParser.prototype, {
         parse: function (glb, onLoaded, onFailed) {
             var decoder = new pc.GLBHelpers.GLTFDecoder(glb, onFailed);
             var gltf = decoder.parseGLTF();
@@ -71,6 +71,6 @@ Object.assign(pc, function () {
     };
 
     return {
-        GLBAnimationsParser: GLBAnimationsParser
+        GlbAnimationsParser: GlbAnimationsParser
     };
 }());

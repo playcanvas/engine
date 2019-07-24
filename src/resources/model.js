@@ -18,7 +18,7 @@ Object.assign(pc, function () {
         }, function (url, data) {
             return (pc.path.getExtension(url) === '.json');
         });
-        this.addParser(new pc.GLBModelParser(this._device), function (url, data) {
+        this.addParser(new pc.GlbModelParser(this._device), function (url, data) {
             return false;
         }, function (url, data) {
             return (pc.path.getExtension(url) === '.glb');

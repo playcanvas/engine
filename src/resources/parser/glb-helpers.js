@@ -314,7 +314,7 @@ Object.assign(pc, function () {
 
     // ----------------------------------------------------------------------
     // Material parsing
-    var glossChunk = [
+    var GLOSS_CHUNK = [
         "#ifdef MAPFLOAT",
         "uniform float material_shininess;",
         "#endif",
@@ -344,7 +344,7 @@ Object.assign(pc, function () {
         "}"
     ].join('\n');
 
-    var specularChunk = [
+    var SPECULAR_CHUNK = [
         "#ifdef MAPCOLOR",
         "uniform vec3 material_specular;",
         "#endif",
@@ -466,7 +466,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            material.chunks.specularPS = specularChunk;
+            material.chunks.specularPS = SPECULAR_CHUNK;
 
         } else if (data.hasOwnProperty('pbrMetallicRoughness')) {
             var pbrData = data.pbrMetallicRoughness;
@@ -538,7 +538,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            material.chunks.glossPS = glossChunk;
+            material.chunks.glossPS = GLOSS_CHUNK;
         }
 
         if (data.hasOwnProperty('normalTexture')) {

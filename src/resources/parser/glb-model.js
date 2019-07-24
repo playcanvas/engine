@@ -2,12 +2,12 @@ Object.assign(pc, function () {
     'use strict';
 
     // Takes GLB file data and create pc.Model
-    var GLBModelParser = function (device) {
+    var GlbModelParser = function (device) {
         this._device = device;
         this._defaultMaterial = pc.getDefaultMaterial();
     };
 
-    Object.assign(GLBModelParser.prototype, {
+    Object.assign(GlbModelParser.prototype, {
         parse: function (glb, onLoaded, onFailed) {
             var decoder = new pc.GLBHelpers.GLTFDecoder(glb, onFailed);
             var gltf = decoder.parseGLTF(onFailed);
@@ -221,6 +221,6 @@ Object.assign(pc, function () {
     };
 
     return {
-        GLBModelParser: GLBModelParser
+        GlbModelParser: GlbModelParser
     };
 }());

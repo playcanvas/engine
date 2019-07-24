@@ -3,7 +3,7 @@ Object.assign(pc, function () {
 
     var AnimationHandler = function () {
         this.retryRequests = false;
-        this._glbParser = new pc.GLBAnimationsParser();
+        this._glbParser = new pc.GlbAnimationsParser();
     };
 
     Object.assign(AnimationHandler.prototype, {
