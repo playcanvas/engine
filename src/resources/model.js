@@ -99,6 +99,7 @@ Object.assign(pc, function () {
                 }
             }
             logWARNING(pc.string.format("No model parser found for: {0}", url));
+            return false;
         },
 
         patch: function (asset, assets) {
