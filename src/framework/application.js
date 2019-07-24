@@ -1640,6 +1640,18 @@ Object.assign(pc, function () {
             if (Application._currentApplication === this) {
                 Application._currentApplication = null;
             }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Application#getEntityFromIndex
+         * @description Get entity from the index by guid
+         * @param {String} guid The GUID to search for
+         * @returns {pc.Entity} The Entity with the GUID or null
+         */
+        getEntityFromIndex: function (guid) {
+            return this._entityIndex[guid];
         }
     });
 
