@@ -26,6 +26,17 @@ Object.assign(pc, function () {
             }
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.TemplateUtils#waitForTemplateAssets
+         * @description Delay execution of the callback until template assets
+         * referenced by the provided entities are loaded
+         * @param {Object[]} entities Scene entity data from the database
+         * @param {pc.AssetRegistry} assets The application's asset registry
+         * @param {Function} callback The callback to execute after template assets are loaded
+         * @param {Object} response The response object to be passed to the callback
+         */
         waitForTemplateAssets: function (entities, assets, callback, response) {
             var templateIds = pc.TemplateUtils._extractTemplateIds(entities);
 
