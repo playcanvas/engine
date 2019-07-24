@@ -22,7 +22,7 @@ Object.assign(pc, function () {
                     callback,
                     data);
             } else {
-                callback(null, response);
+                callback(null, data);
             }
         },
 
