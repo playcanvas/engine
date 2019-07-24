@@ -1,7 +1,18 @@
 Object.assign(pc, function () {
 
     var TemplateUtils = {
-        waitForTemplatesInScene: function(data, assets, callback) {
+        /**
+         * @private
+         * @function
+         * @name pc.TemplateUtils#waitForTemplatesInScene
+         * @description Delay execution of the callback until collapsedInstances
+         * are expanded (if present). For expansion we need to wait for template assets
+         * to load.
+         * @param {Object} data Raw scene data from the database
+         * @param {pc.AssetRegistry} assets The application's asset registry
+         * @param {Function} callback The callback to execute after template assets are loaded.
+         */
+        waitForTemplatesInScene: function (data, assets, callback) {
             if (data.collapsedInstances) {
                 var entities = pc.TemplateUtils._getAllCollapsedEntities(data);
 
@@ -15,7 +26,7 @@ Object.assign(pc, function () {
             }
         },
 
-        waitForTemplateAssets: function(entities, assets, callback, response) {
+        waitForTemplateAssets: function (entities, assets, callback, response) {
             var templateIds = pc.TemplateUtils._extractTemplateIds(entities);
 
             var loader = new pc.AssetListLoader(templateIds, assets);
@@ -25,7 +36,7 @@ Object.assign(pc, function () {
             });
         },
 
-        _getAllCollapsedEntities: function(data) {
+        _getAllCollapsedEntities: function (data) {
             var entities = {};
 
             data.collapsedInstances.forEach(function (h) {
