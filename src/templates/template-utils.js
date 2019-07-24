@@ -71,6 +71,15 @@ Object.assign(pc, function () {
             return templateIds;
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.TemplateUtils#expandTemplateEntities
+         * @description Expand entities marked with the collapsed_entity flag
+         * @param {pc.Application} app The application
+         * @param {Object} entities Scene entity data from the database
+         * @returns {Object} An entities map with those that needed expansion expanded
+         */
         expandTemplateEntities: function (app, entities) {
             var result = {};
 
