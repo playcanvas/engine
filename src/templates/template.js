@@ -13,6 +13,8 @@ Object.assign(pc, function () {
         this._data = data;
 
         this._expandedData = {};
+
+        this._templateRoot = null;
     };
 
     /**
