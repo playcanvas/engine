@@ -1,12 +1,14 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var SceneParser = function (app) {
+    var SceneParser = function (app, isTemplate) {
         this._app = app;
+
+        this._isTemplate = isTemplate;
     };
 
     Object.assign(SceneParser.prototype, {
-        parse: function (data, isTemplate) {
+        parse: function (data) {
             var entities = {};
             var id, i;
             var parent = null;
@@ -17,7 +19,7 @@ Object.assign(pc, function () {
 
             // instantiate entities
             for (id in data.entities) {
-                entities[id] = this._createEntity(data.entities[id], isTemplate);
+                entities[id] = this._createEntity(data.entities[id]);
                 if (data.entities[id].parent === null) {
                     parent = entities[id];
                 }
@@ -41,7 +43,7 @@ Object.assign(pc, function () {
             return parent;
         },
 
-        _createEntity: function (data, isTemplate) {
+        _createEntity: function (data) {
             var entity = new pc.Entity();
 
             var p = data.position;
@@ -55,7 +57,7 @@ Object.assign(pc, function () {
             entity.setLocalScale(s[0], s[1], s[2]);
             entity._enabled = data.enabled !== undefined ? data.enabled : true;
 
-            if (!isTemplate) {
+            if (!this._isTemplate) {
                 entity._enabledInHierarchy = entity._enabled;
             }
 

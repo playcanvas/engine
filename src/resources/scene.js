@@ -45,8 +45,8 @@ Object.assign(pc, function () {
             // prevent script initialization until entire scene is open
             this._app.systems.script.preloading = true;
 
-            var parser = new pc.SceneParser(this._app);
-            var parent = parser.parse(data, false);
+            var parser = new pc.SceneParser(this._app, false);
+            var parent = parser.parse(data);
 
             // set scene root
             var scene = this._app.scene;
