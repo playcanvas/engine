@@ -271,7 +271,7 @@ Object.assign(pc, function () {
 
                     // Initialise pack settings
                     if (self._app.systems.rigidbody && typeof Ammo !== 'undefined') {
-                        self._app.systems.rigidbody.setGravity(scene._gravity.x, scene._gravity.y, scene._gravity.z);
+                        self._app.systems.rigidbody.gravity.set(scene._gravity.x, scene._gravity.y, scene._gravity.z);
                     }
 
                     if (callback) {

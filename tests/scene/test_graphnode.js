@@ -23,39 +23,6 @@ describe('pc.GraphNode', function () {
         return g1;
     }
 
-    it('GraphNode: addLabel', function () {
-        var node = buildGraph();
-
-        node.addLabel("new label");
-
-        ok(node.hasLabel("new label"));
-        equal(node.getLabels().length, 1);
-        equal(node.getLabels()[0], "new label");
-    });
-
-    it('GraphNode: removeLabel', function () {
-        var node = buildGraph();
-
-        node.addLabel("new label");
-        node.removeLabel("new label");
-
-        equal(node.hasLabel("new label"), false);
-        equal(node.getLabels().length, 0);
-
-    });
-
-    it('GraphNode: findByLabel', function () {
-        var node = buildGraph();
-
-        var child = node.getChildren()[0];
-        child.addLabel("new label");
-
-        var found = node.findByLabel("new label");
-
-        equal(found.length, 1);
-        equal(found[0].getName(), child.getName());
-    });
-
     it('GraphNode: findByName same entity', function () {
         var node = buildGraph();
         var found = node.findByName('g1');
@@ -64,8 +31,8 @@ describe('pc.GraphNode', function () {
 
     it('GraphNode: findByName grandchild', function () {
         var node = buildGraph();
-        var child = node.getChildren()[0];
-        var grandchild = child.getChildren()[0];
+        var child = node.children[0];
+        var grandchild = child.children[0];
 
         var found = node.findByName('g3');
         equal(found, grandchild);
@@ -79,15 +46,15 @@ describe('pc.GraphNode', function () {
 
     it('GraphNode: findByPath without slashes', function () {
         var node = buildGraph();
-        var child = node.getChildren()[0];
+        var child = node.children[0];
         var found = node.findByPath('g2');
         equal(found, child);
     });
 
     it('GraphNode: findByPath with slashes', function () {
         var node = buildGraph();
-        var child = node.getChildren()[0];
-        var grandchild = child.getChildren()[0];
+        var child = node.children[0];
+        var grandchild = child.children[0];
 
         var found = node.findByPath('g2/g3');
 
@@ -106,17 +73,17 @@ describe('pc.GraphNode', function () {
         equal(found, null);
     });
 
-    it('GraphNode: getPath', function () {
+    it('GraphNode: path', function () {
         var node = buildGraph();
-        var child = node.getChildren()[0];
-        var grandchild = child.getChildren()[0];
+        var child = node.children[0];
+        var grandchild = child.children[0];
 
-        equal(grandchild.getPath(), 'g2/g3');
+        equal(grandchild.path, 'g2/g3');
     });
 
-    it('GraphNode: getPath of root entity', function () {
+    it('GraphNode: path of root entity', function () {
         var node = buildGraph();
-        equal(node.getPath(), '');
+        equal(node.path, '');
     });
 
     it('GraphNode: addChild', function () {
@@ -125,7 +92,7 @@ describe('pc.GraphNode', function () {
 
         g1.addChild(g2);
 
-        equal(g1.getChildren()[0], g2);
+        equal(g1.children[0], g2);
     });
 
     it('GraphNode: insertChild', function () {
@@ -136,8 +103,8 @@ describe('pc.GraphNode', function () {
         g1.addChild(g2);
         g1.insertChild(g3, 0);
 
-        equal(g1.getChildren()[0], g3);
-        equal(g1.getChildren()[1], g2);
+        equal(g1.children[0], g3);
+        equal(g1.children[1], g2);
     });
 
     it('GraphNode: removeChild', function () {
@@ -148,7 +115,7 @@ describe('pc.GraphNode', function () {
 
         g1.removeChild(g2);
 
-        equal(g1.getChildren().length, 0);
+        equal(g1.children.length, 0);
     });
 
     it('GraphNode: reparent', function () {
@@ -159,9 +126,9 @@ describe('pc.GraphNode', function () {
         g1.addChild(g2);
         g2.reparent(g3);
 
-        equal(g3.getChildren().length, 1);
-        equal(g3.getChildren()[0], g2);
-        equal(g1.getChildren().length, 0);
+        equal(g3.children.length, 1);
+        equal(g3.children[0], g2);
+        equal(g1.children.length, 0);
     });
 
     it('GraphNode: reparent at specific index', function () {
@@ -176,17 +143,17 @@ describe('pc.GraphNode', function () {
 
         g2.reparent(g3, 0);
 
-        equal(g3.getChildren().length, 2);
-        equal(g3.getChildren()[0], g2);
-        equal(g1.getChildren().length, 0);
+        equal(g3.children.length, 2);
+        equal(g3.children[0], g2);
+        equal(g1.children.length, 0);
 
         g2.reparent(g3, 1);
-        equal(g3.getChildren().length, 2);
-        equal(g3.getChildren()[0], g4);
-        equal(g3.getChildren()[1], g2);
+        equal(g3.children.length, 2);
+        equal(g3.children[0], g4);
+        equal(g3.children[1], g2);
     });
 
-    it('GraphNode: getChildren', function () {
+    it('GraphNode: children', function () {
         var g1 = new pc.GraphNode('g1');
         var g2 = new pc.GraphNode('g2');
         var g3 = new pc.GraphNode('g3');
@@ -194,8 +161,8 @@ describe('pc.GraphNode', function () {
         g1.addChild(g2);
         g1.addChild(g3);
 
-        equal(g1.getChildren()[0], g2);
-        equal(g1.getChildren()[1], g3);
+        equal(g1.children[0], g2);
+        equal(g1.children[1], g3);
 
     });
 
@@ -297,7 +264,6 @@ describe('pc.GraphNode', function () {
         close(angles.y, 0, 0.001);
         close(angles.z, 0, 0.001);
     });
-
 
     it('GraphNode: rotateLocal in hierarchy', function () {
         var p = new pc.GraphNode('parent');

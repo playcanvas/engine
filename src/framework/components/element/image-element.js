@@ -118,7 +118,7 @@ Object.assign(pc, function () {
 
         var getLastChild = function (e) {
             var last;
-            var c = e.getChildren();
+            var c = e.children;
             var l = c.length;
             if (l) {
                 for (var i = 0; i < l; i++) {
