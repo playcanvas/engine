@@ -104,6 +104,9 @@ Object.assign(pc, function () {
         for (i = 0; i < count; i++) {
             var frame = this._atlas.frames[this._frameKeys[i]];
             this._meshes[i] = frame ? createMeshFunc.call(this, frame) : null;
+            if (this._meshes[i]) {
+                this._meshes[i]._refCount++;
+            }
         }
 
         this.fire('set:meshes');
@@ -267,11 +270,7 @@ Object.assign(pc, function () {
         for (i = 0, len = this._meshes.length; i < len; i++) {
             var mesh = this._meshes[i];
             if (!mesh) continue;
-
-            mesh.vertexBuffer.destroy();
-            for (var j = 0, len2 = mesh.indexBuffer.length; j < len2; j++) {
-                mesh.indexBuffer[j].destroy();
-            }
+            mesh.destroy();
         }
         this._meshes.length = 0;
     };
