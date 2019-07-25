@@ -1,4 +1,5 @@
 Object.assign(pc, function () {
+    'use strict';
 
     var TemplateUtils = {
         /**

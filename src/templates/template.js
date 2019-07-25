@@ -1,4 +1,6 @@
 Object.assign(pc, function () {
+    'use strict';
+
     /**
      * @private
      * @constructor
