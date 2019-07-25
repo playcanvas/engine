@@ -53,7 +53,7 @@ Object.assign(pc, function () {
     Template.prototype._parseTemplate = function () {
         var parser = new pc.SceneParser(this._app);
 
-        this._templateRoot = parser.parse(this.getExpandedData());
+        this._templateRoot = parser.parse(this.getExpandedData(), true);
     };
 
     return {

@@ -46,7 +46,7 @@ Object.assign(pc, function () {
             this._app.systems.script.preloading = true;
 
             var parser = new pc.SceneParser(this._app);
-            var parent = parser.parse(data);
+            var parent = parser.parse(data, false);
 
             // set scene root
             var scene = this._app.scene;

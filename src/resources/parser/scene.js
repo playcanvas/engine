@@ -6,7 +6,7 @@ Object.assign(pc, function () {
     };
 
     Object.assign(SceneParser.prototype, {
-        parse: function (data) {
+        parse: function (data, isTemplate) {
             var entities = {};
             var id, i;
             var parent = null;
@@ -17,7 +17,7 @@ Object.assign(pc, function () {
 
             // instantiate entities
             for (id in data.entities) {
-                entities[id] = this._createEntity(data.entities[id]);
+                entities[id] = this._createEntity(data.entities[id], isTemplate);
                 if (data.entities[id].parent === null) {
                     parent = entities[id];
                 }
@@ -41,7 +41,7 @@ Object.assign(pc, function () {
             return parent;
         },
 
-        _createEntity: function (data) {
+        _createEntity: function (data, isTemplate) {
             var entity = new pc.Entity();
 
             var p = data.position;
@@ -54,6 +54,11 @@ Object.assign(pc, function () {
             entity.setLocalEulerAngles(r[0], r[1], r[2]);
             entity.setLocalScale(s[0], s[1], s[2]);
             entity._enabled = data.enabled !== undefined ? data.enabled : true;
+
+            if (!isTemplate) {
+                entity._enabledInHierarchy = entity._enabled;
+            }
+
             entity.template = data.template;
 
             if (data.tags) {
