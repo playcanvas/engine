@@ -20,7 +20,7 @@ Object.assign(pc, function () {
         this.name = typeof name === "string" ? name : "Untitled"; // Non-unique human readable name
         this.tags = new pc.Tags(this);
 
-        this._labels = { };
+        this._labels = {};
 
         // Local-space properties of transform (only first 3 are settable by the user)
         this.localPosition = new pc.Vec3(0, 0, 0);
@@ -32,6 +32,7 @@ Object.assign(pc, function () {
         this.position = new pc.Vec3(0, 0, 0);
         this.rotation = new pc.Quat(0, 0, 0, 1);
         this.eulerAngles = new pc.Vec3(0, 0, 0);
+        this._scale = null;
 
         this.localTransform = new pc.Mat4();
         this._dirtyLocal = false;
@@ -141,6 +142,31 @@ Object.assign(pc, function () {
     Object.defineProperty(GraphNode.prototype, 'parent', {
         get: function () {
             return this._parent;
+        }
+    });
+
+    /**
+     * @readonly
+     * @name pc.GraphNode#path
+     * @type pc.GraphNode
+     * @description A read-only property to get the path of the graph node relative to
+     * the root of the hierarchy
+     */
+    Object.defineProperty(GraphNode.prototype, 'path', {
+        get: function () {
+            var parent = this._parent;
+            if (parent) {
+                var path = this.name;
+                var format = "{0}/{1}";
+
+                while (parent && parent._parent) {
+                    path = pc.string.format(format, parent.name, path);
+                    parent = parent._parent;
+                }
+
+                return path;
+            }
+            return '';
         }
     });
 
@@ -476,69 +502,6 @@ Object.assign(pc, function () {
 
         /**
          * @function
-         * @name  pc.GraphNode#getPath
-         * @description Gets the path of the entity relative to the root of the hierarchy
-         * @returns {String} The path
-         * @example
-         * var path = this.entity.getPath();
-         */
-        getPath: function () {
-            var parent = this._parent;
-            if (parent) {
-                var path = this.name;
-                var format = "{0}/{1}";
-
-                while (parent && parent._parent) {
-                    path = pc.string.format(format, parent.name, path);
-                    parent = parent._parent;
-                }
-
-                return path;
-            }
-            return '';
-
-        },
-
-
-        /**
-         * @private
-         * @deprecated
-         * @function
-         * @name pc.GraphNode#getRoot
-         * @description Get the highest ancestor node from this graph node.
-         * @returns {pc.GraphNode} The root node of the hierarchy to which this node belongs.
-         * @example
-         * var root = this.entity.getRoot();
-         */
-        getRoot: function () {
-            var parent = this._parent;
-            if (!parent) {
-                return this;
-            }
-
-            while (parent._parent) {
-                parent = parent._parent;
-            }
-
-            return parent;
-        },
-
-        /**
-         * @private
-         * @deprecated
-         * @function
-         * @name pc.GraphNode#getParent
-         * @description Get the parent GraphNode
-         * @returns {pc.GraphNode} The parent node
-         * @example
-         * var parent = this.entity.getParent();
-         */
-        getParent: function () {
-            return this._parent;
-        },
-
-        /**
-         * @function
          * @name pc.GraphNode#isDescendantOf
          * @description Check if node is descendant of another node.
          * @param {pc.GraphNode} node Potential ancestor of node.
@@ -572,23 +535,6 @@ Object.assign(pc, function () {
          */
         isAncestorOf: function (node) {
             return node.isDescendantOf(this);
-        },
-
-        /**
-         * @private
-         * @deprecated
-         * @function
-         * @name pc.GraphNode#getChildren
-         * @description Get the children of this graph node.
-         * @returns {pc.GraphNode[]} The child array of this node.
-         * @example
-         * var children = this.entity.getChildren();
-         * for (i = 0; i < children.length; i++) {
-         * // children[i]
-         * }
-         */
-        getChildren: function () {
-            return this._children;
         },
 
         /**
@@ -691,23 +637,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
-         * @deprecated
-         * @function
-         * @name pc.GraphNode#getName
-         * @description Get the human-readable name for this graph node. Note the name
-         * is not guaranteed to be unique. For Entities, this is the name that is set in the PlayCanvas Editor.
-         * @returns {String} The name of the node.
-         * @example
-         * if (this.entity.getName() === "My Entity") {
-         *     console.log("My Entity Found");
-         * }
-         */
-        getName: function () {
-            return this.name;
-        },
-
-        /**
          * @function
          * @name pc.GraphNode#getPosition
          * @description Get the world space position for the specified GraphNode. The
@@ -737,6 +666,26 @@ Object.assign(pc, function () {
         getRotation: function () {
             this.rotation.setFromMat4(this.getWorldTransform());
             return this.rotation;
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.GraphNode#getScale
+         * @description Get the world space scale for the specified GraphNode. The returned value
+         * will only be correct for graph nodes that have a non-skewed world transform (a skew can
+         * be introduced by the compounding of rotations and scales higher in the graph node
+         * hierarchy). The value returned by this function should be considered read-only. Note
+         * that it is not possible to set the world space scale of a graph node directly.
+         * @returns {pc.Vec3} The world space scale of the graph node.
+         * @example
+         * var scale = this.entity.getScale();
+         */
+        getScale: function () {
+            if (!this._scale) {
+                this._scale = new pc.Vec3();
+            }
+            return this.getWorldTransform().getScale(this._scale);
         },
 
         /**
@@ -896,20 +845,6 @@ Object.assign(pc, function () {
 
             if (!this._dirtyLocal)
                 this._dirtifyLocal();
-        },
-
-        /**
-         * @private
-         * @deprecated
-         * @function
-         * @name pc.GraphNode#setName
-         * @description Sets the non-unique name for this graph node.
-         * @param {String} name The name for the node.
-         * @example
-         * this.entity.setName("My Entity");
-         */
-        setName: function (name) {
-            this.name = name;
         },
 
         _dirtifyLocal: function () {
@@ -1193,83 +1128,6 @@ Object.assign(pc, function () {
                     return;
                 }
             }
-        },
-
-        /**
-         * @private
-         * @deprecated
-         * @function
-         * @name pc.GraphNode#addLabel
-         * @description Add a string label to this graph node, labels can be used to group
-         * and filter nodes. For example, the 'enemies' label could be applied to a group of NPCs
-         * who are enemies.
-         * @param {String} label The label to apply to this graph node.
-         */
-        addLabel: function (label) {
-            this._labels[label] = true;
-        },
-
-        /**
-         * @private
-         * @deprecated
-         * @function
-         * @name pc.GraphNode#getLabels
-         * @description Get an array of all labels applied to this graph node.
-         * @returns {String[]} An array of all labels.
-         */
-        getLabels: function () {
-            return Object.keys(this._labels);
-        },
-
-        /**
-         * @private
-         * @deprecated
-         * @function
-         * @name pc.GraphNode#hasLabel
-         * @description Test if a label has been applied to this graph node.
-         * @param {String} label The label to test for.
-         * @returns {Boolean} True if the label has been added to this GraphNode.
-         *
-         */
-        hasLabel: function (label) {
-            return !!this._labels[label];
-        },
-
-        /**
-         * @private
-         * @deprecated
-         * @function
-         * @name pc.GraphNode#removeLabel
-         * @description Remove label from this graph node.
-         * @param {String} label The label to remove from this node.
-         */
-        removeLabel: function (label) {
-            delete this._labels[label];
-        },
-
-        /**
-         * @private
-         * @deprecated
-         * @function
-         * @name pc.GraphNode#findByLabel
-         * @description Find all graph nodes from the root and all descendants with the label.
-         * @param {String} label The label to search for.
-         * @param {pc.GraphNode[]} [results] An array to store the results in.
-         * @returns {pc.GraphNode[]} The array passed in or a new array of results.
-         */
-        findByLabel: function (label, results) {
-            var i, length = this._children.length;
-            results = results || [];
-
-            if (this.hasLabel(label)) {
-                results.push(this);
-            }
-
-            for (i = 0; i < length; ++i) {
-                results = this._children[i].findByLabel(label, results);
-            }
-
-            return results;
         },
 
         _sync: function () {
