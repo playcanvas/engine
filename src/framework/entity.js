@@ -184,6 +184,24 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @function
+     * @name pc.Entity#findComponents
+     * @description Search the entity and all of its descendants for all components of specified type.
+     * @param {String} type The name of the component type to retrieve.
+     * @returns {pc.Component} All components of specified type in the entity or any of its descendants. Returns empty array if none found.
+     * @example
+     * var lights = entity.findComponents("light"); // get all light components in the heirachy tree that starts with this entity
+     */
+    Entity.prototype.findComponents = function (type) {
+        var entities = this.find(function (node) {
+            return node.getComponent && node.getComponent(type);
+        });
+        return entities.map(function (entity) {
+            return entity.getComponent(type);
+        });
+    };
+
+    /**
      * @private
      * @function
      * @name pc.Entity#getGuid
