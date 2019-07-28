@@ -691,11 +691,15 @@ Object.assign(pc, function () {
          * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
          * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|Array} source A canvas, image or video element,
          * or an array of 6 canvas, image or video elements.
+         * @param {Number} mipLevel A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
+         * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
          */
-        setSource: function (source) {
+        setSource: function (source, mipLevel) {
             var i;
             var invalid = false;
             var width, height;
+
+            mipLevel = mipLevel || 0;
 
             if (this._cubemap) {
                 if (source[0]) {
@@ -724,8 +728,8 @@ Object.assign(pc, function () {
                 if (!invalid) {
                     // mark levels as updated
                     for (i = 0; i < 6; i++) {
-                        if (this._levels[0][i] !== source[i])
-                            this._levelsUpdated[0][i] = true;
+                        if (this._levels[mipLevel][i] !== source[i])
+                            this._levelsUpdated[mipLevel][i] = true;
                     }
                 }
             } else {
@@ -735,8 +739,8 @@ Object.assign(pc, function () {
 
                 if (!invalid) {
                     // mark level as updated
-                    if (source !== this._levels[0])
-                        this._levelsUpdated[0] = true;
+                    if (source !== this._levels[mipLevel])
+                        this._levelsUpdated[mipLevel] = true;
 
                     width = source.width;
                     height = source.height;
@@ -754,20 +758,22 @@ Object.assign(pc, function () {
                 // remove levels
                 if (this._cubemap) {
                     for (i = 0; i < 6; i++) {
-                        this._levels[0][i] = null;
-                        this._levelsUpdated[0][i] = true;
+                        this._levels[mipLevel][i] = null;
+                        this._levelsUpdated[mipLevel][i] = true;
                     }
                 } else {
-                    this._levels[0] = null;
-                    this._levelsUpdated[0] = true;
+                    this._levels[mipLevel] = null;
+                    this._levelsUpdated[mipLevel] = true;
                 }
             } else {
                 // valid texture
-                this._width = width;
-                this._height = height;
+                if (mipLevel === 0) {
+                    this._width = width;
+                    this._height = height;
+                }
                 this._pot = pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
 
-                this._levels[0] = source;
+                this._levels[mipLevel] = source;
             }
 
             // valid or changed state of validity
@@ -784,10 +790,13 @@ Object.assign(pc, function () {
          * @name pc.Texture#getSource
          * @description Get the pixel data of the texture. If this is a cubemap then an array of 6 images will be returned otherwise
          * a single image.
-         * @returns {HTMLImageElement} The source image of this texture.
+         * @param {Number} mipLevel A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
+         * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
+         * @returns {HTMLImageElement} The source image of this texture. Can be null if source not assigned for specific image level.
          */
-        getSource: function () {
-            return this._levels[0];
+        getSource: function (mipLevel) {
+            mipLevel = mipLevel || 0;
+            return this._levels[mipLevel];
         },
 
         /**
