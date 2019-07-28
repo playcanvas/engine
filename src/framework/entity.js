@@ -168,6 +168,22 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @function
+     * @name pc.Entity#findComponent
+     * @description Search the entity and all of its descendants for the first component of specified type.
+     * @param {String} type The name of the component type to retrieve.
+     * @returns {pc.Component} A component of specified type, if the entity or any of its descendants has one. Returns undefined otherwise.
+     * @example
+     * var light = entity.findComponent("light"); // get a light component in the heirachy tree that starts with this entity
+     */
+    Entity.prototype.findComponent = function (type) {
+        var entity = this.findOne(function (node) {
+            return node.getComponent && node.getComponent(type);
+        });
+        return entity && entity.getComponent(type);
+    };
+
+    /**
      * @private
      * @function
      * @name pc.Entity#getGuid
