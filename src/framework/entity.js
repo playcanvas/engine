@@ -151,6 +151,23 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @function
+     * @name pc.Entity#getComponent
+     * @description Get a component of specified type from the entity.
+     * @param {String} type The name of the component type to retrieve.
+     * @returns {pc.Component} A component of specified type if the entity has one, undefined if it doesn't.
+     * @example
+     * var entity = new pc.Entity();
+     * entity.addComponent("light"); // add new light component
+     * //...
+     * var light = entity.getComponent("light"); // get light component
+     */
+    Entity.prototype.getComponent = function (type) {
+        var components = this.c;
+        return components[type];
+    };
+
+    /**
      * @private
      * @function
      * @name pc.Entity#getGuid
