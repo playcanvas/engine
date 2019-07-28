@@ -476,6 +476,27 @@ Object.assign(pc, function () {
 
         /**
          * @function
+         * @name pc.GraphNode#forEach
+         * @description Executes a provided function once on this graph node and all of its descendants.
+         * @param {Function} callback The function to execute on the graph node and each descendant.
+         * @param {Object} [thisArg] Optional value to use as this when executing callback function.
+         * @example
+         * // Log the path and name of each node in descendant tree starting with "parent"
+         * parent.forEach(function(node) {
+         *     console.log(node.getPath(), node.name);
+         * });
+         */
+        forEach: function(callback, thisArg) {
+            callback.call(thisArg, this);
+
+            var children = this._children;
+            for (var i = 0; i < children.length; i++) {
+                children[i].forEach(callback, thisArg);
+            }
+        },
+
+        /**
+         * @function
          * @name  pc.GraphNode#getPath
          * @description Gets the path of the entity relative to the root of the hierarchy
          * @returns {String} The path
