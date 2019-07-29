@@ -508,11 +508,11 @@ Object.assign(pc, function () {
          * @param {Object} [thisArg] Optional value to use as this when executing callback function.
          * @example
          * // Log the path and name of each node in descendant tree starting with "parent"
-         * parent.forEach(function(node) {
+         * parent.forEach(function (node) {
          *     console.log(node.path + "/" + node.name);
          * });
          */
-        forEach: function(callback, thisArg) {
+        forEach: function (callback, thisArg) {
             callback.call(thisArg, this);
 
             var children = this._children;
