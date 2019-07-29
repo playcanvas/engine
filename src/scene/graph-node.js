@@ -376,7 +376,7 @@ Object.assign(pc, function () {
                 for (i = 0; i < len; i++) {
                     result = this._children[i].findOne(fn);
                     if (result)
-                        return this._children[i];
+                        return result;
                 }
             } else {
                 var testValue;
