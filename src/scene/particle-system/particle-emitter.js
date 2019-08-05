@@ -609,9 +609,10 @@ Object.assign(pc, function () {
 
             // Note: createShaderFromCode can return a shader from the cache (not a new shader) so we *should not* delete these shaders
             // when the particle emitter is destroyed
-            this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0" + this.emitterShape + "" + this.pack8);
-            this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1" + this.emitterShape + "" + this.pack8);
-            this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2" + this.emitterShape + "" + this.pack8);
+            var params = this.emitterShape + "" + this.pack8 + "" + this.localSpace;
+            this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0" + params);
+            this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1" + params);
+            this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2" + params);
 
             this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
             this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
