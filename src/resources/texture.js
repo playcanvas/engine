@@ -212,9 +212,7 @@ Object.assign(pc, function () {
         var downsample = function (width, height, data) {
             var sampledWidth = Math.max(1, width >> 1);
             var sampledHeight = Math.max(1, height >> 1);
-            var sampledData = data.subarray(0, sampledWidth * sampledHeight * 4).map(function (v) {
-                return 0;
-            });
+            var sampledData = new data.constructor(sampledWidth * sampledHeight * 4);
 
             var xs = Math.floor(width / sampledWidth);
             var ys = Math.floor(height / sampledHeight);
