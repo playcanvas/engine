@@ -1497,6 +1497,11 @@ Object.assign(pc, function () {
             }
             this.assets.off();
 
+            // destroy all textures created by new pc.Texture.
+            // they are NOT pc.Asset and can not be destroyed by asset.unload.
+            while (this.graphicsDevice.textures.length > 0) {
+                this.graphicsDevice.textures[0].destroy();
+            }
 
             // destroy bundle registry
             this.bundles.destroy();
