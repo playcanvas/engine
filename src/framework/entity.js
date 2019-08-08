@@ -151,6 +151,44 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @function
+     * @name pc.Entity#findComponent
+     * @description Search the entity and all of its descendants for the first component of specified type.
+     * @param {String} type The name of the component type to retrieve.
+     * @returns {pc.Component} A component of specified type, if the entity or any of its descendants has
+     * one. Returns undefined otherwise.
+     * @example
+     * // Get the first found light component in the hierarchy tree that starts with this entity
+     * var light = entity.findComponent("light");
+     */
+    Entity.prototype.findComponent = function (type) {
+        var entity = this.findOne(function (node) {
+            return node.c && node.c[type];
+        });
+        return entity && entity.c[type];
+    };
+
+    /**
+     * @function
+     * @name pc.Entity#findComponents
+     * @description Search the entity and all of its descendants for all components of specified type.
+     * @param {String} type The name of the component type to retrieve.
+     * @returns {pc.Component} All components of specified type in the entity or any of its descendants.
+     * Returns empty array if none found.
+     * @example
+     * // Get all light components in the hierarchy tree that starts with this entity
+     * var lights = entity.findComponents("light");
+     */
+    Entity.prototype.findComponents = function (type) {
+        var entities = this.find(function (node) {
+            return node.c && node.c[type];
+        });
+        return entities.map(function (entity) {
+            return entity.c[type];
+        });
+    };
+
+    /**
      * @private
      * @function
      * @name pc.Entity#getGuid
@@ -210,8 +248,10 @@ Object.assign(pc, function () {
         node._beingEnabled = false;
 
         if (enableFirst) {
-            for (i = 0, len = this._app._enableList.length; i < len; i++)
+            // do not cache the length here, as enableList may be added to during loop
+            for (i = 0; i < this._app._enableList.length; i++) {
                 this._app._enableList[i]._onHierarchyStatePostChanged();
+            }
 
             this._app._enableList.length = 0;
         }
