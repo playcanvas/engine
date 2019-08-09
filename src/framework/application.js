@@ -782,8 +782,6 @@ Object.assign(pc, function () {
                 props.resolutionMode = props.resolution_mode;
             if (!props.fillMode)
                 props.fillMode = props.fill_mode;
-            if (!props.vrPolyfillUrl)
-                props.vrPolyfillUrl = props.vr_polyfill_url;
 
             this._width = props.width;
             this._height = props.height;
@@ -793,14 +791,6 @@ Object.assign(pc, function () {
 
             this.setCanvasResolution(props.resolutionMode, this._width, this._height);
             this.setCanvasFillMode(props.fillMode, this._width, this._height);
-
-            // if VR is enabled in the project and there is no native VR support
-            // load the polyfill
-            if (props.vr && props.vrPolyfillUrl) {
-                if (!pc.VrManager.isSupported || pc.platform.android) {
-                    props.libraries.push(props.vrPolyfillUrl);
-                }
-            }
 
             // set up layers
             if (props.layers && props.layerOrder) {
