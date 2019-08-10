@@ -585,7 +585,7 @@ Object.assign(pc, function () {
 
         this._textureFloatHighPrecision = undefined;
 
-        this.initializeGrabPass(options);
+        this.initializeGrabPass(options.alpha);
     };
 
     Object.assign(GraphicsDevice.prototype, {
@@ -879,10 +879,10 @@ Object.assign(pc, function () {
             this.transformFeedbackBuffer = null;
         },
 
-        initializeGrabPass: function (options) {
+        initializeGrabPass: function (alpha) {
             if (this.grabPassTexture) return;
 
-            var format = options.alpha ? pc.PIXELFORMAT_R8_G8_B8_A8 : pc.PIXELFORMAT_R8_G8_B8;
+            var format = alpha ? pc.PIXELFORMAT_R8_G8_B8_A8 : pc.PIXELFORMAT_R8_G8_B8;
 
             var grabPassTexture = new pc.Texture(this, {
                 format: format,
@@ -893,7 +893,9 @@ Object.assign(pc, function () {
                 mipmaps: false
             });
 
-            grabPassTexture._pot = false; // never treat texture as "power of 2", framebuffer size is arbitrary.
+            // Framebuffer size is arbitrary.
+            grabPassTexture.width = 0;
+            grabPassTexture.height = 0;
             grabPassTexture.name = 'texture_grabPass';
 
             var grabPassTextureId = this.scope.resolve(grabPassTexture.name);
@@ -911,7 +913,7 @@ Object.assign(pc, function () {
             gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, source.width, source.height, 0);
         },
 
-        unnitializeGrabPass: function () {
+        unitializeGrabPass: function () {
             this.grabPassTexture.destroy();
             this.grabPassTexture = null;
             this.grabPassTextureId = null;
@@ -3173,7 +3175,7 @@ Object.assign(pc, function () {
         destroy: function () {
             var gl = this.gl;
 
-            this.unnitializeGrabPass();
+            this.unitializeGrabPass();
 
             if (this.webgl2 && this.feedback) {
                 gl.deleteTransformFeedback(this.feedback);
