@@ -585,7 +585,7 @@ Object.assign(pc, function () {
 
         this._textureFloatHighPrecision = undefined;
 
-        this.initializeGrabPassTexture();
+        this.createGrabPass(options.alpha);
     };
 
     Object.assign(GraphicsDevice.prototype, {
@@ -879,27 +879,44 @@ Object.assign(pc, function () {
             this.transformFeedbackBuffer = null;
         },
 
-        initializeGrabPassTexture: function () {
+        createGrabPass: function (alpha) {
             if (this.grabPassTexture) return;
 
+            var format = alpha ? pc.PIXELFORMAT_R8_G8_B8_A8 : pc.PIXELFORMAT_R8_G8_B8;
+
             var grabPassTexture = new pc.Texture(this, {
-                format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                autoMipmap: false
+                format: format,
+                minFilter: pc.FILTER_LINEAR,
+                magFilter: pc.FILTER_LINEAR,
+                addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+                addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+                mipmaps: false
             });
 
-            grabPassTexture.minFilter = pc.FILTER_LINEAR;
-            grabPassTexture.magFilter = pc.FILTER_LINEAR;
-            grabPassTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-            grabPassTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-
+            // Framebuffer size is arbitrary.
+            grabPassTexture.width = 0;
+            grabPassTexture.height = 0;
             grabPassTexture.name = 'texture_grabPass';
-            grabPassTexture.setSource(this.canvas);
 
             var grabPassTextureId = this.scope.resolve(grabPassTexture.name);
             grabPassTextureId.setValue(grabPassTexture);
 
             this.grabPassTextureId = grabPassTextureId;
             this.grabPassTexture = grabPassTexture;
+        },
+
+        updateGrabPass: function () {
+            var gl = this.gl;
+
+            var format = this.grabPassTexture._glFormat;
+            var source = (this.renderTarget && this.renderTarget.colorBuffer) || this.canvas;
+            gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, source.width, source.height, 0);
+        },
+
+        destroyGrabPass: function () {
+            this.grabPassTexture.destroy();
+            this.grabPassTexture = null;
+            this.grabPassTextureId = null;
         },
 
         updateClientRect: function () {
@@ -1840,7 +1857,7 @@ Object.assign(pc, function () {
             if (!texture._glTexture)
                 this.initializeTexture(texture);
 
-            if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
+            if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload || texture === this.grabPassTexture) {
                 // Ensure the specified texture unit is active
                 this.activeTexture(textureUnit);
                 // Ensure the texture is bound on correct target of the specified texture unit
@@ -1851,13 +1868,13 @@ Object.assign(pc, function () {
                     texture._parameterFlags = 0;
                 }
 
-                if (texture._needsUpload || texture._needsMipmapsUpload) {
-                    this.uploadTexture(texture);
+                if (texture === this.grabPassTexture) {
+                    this.updateGrabPass();
 
-                    if (texture !== this.grabPassTexture) {
-                        texture._needsUpload = false;
-                        texture._needsMipmapsUpload = false;
-                    }
+                } else if (texture._needsUpload || texture._needsMipmapsUpload) {
+                    this.uploadTexture(texture);
+                    texture._needsUpload = false;
+                    texture._needsMipmapsUpload = false;
                 }
             } else {
                 // Ensure the texture is currently bound to the correct target on the specified texture unit.
@@ -3158,7 +3175,7 @@ Object.assign(pc, function () {
         destroy: function () {
             var gl = this.gl;
 
-            this.grabPassTexture.destroy();
+            this.destroyGrabPass();
 
             if (this.webgl2 && this.feedback) {
                 gl.deleteTransformFeedback(this.feedback);
