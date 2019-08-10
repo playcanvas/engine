@@ -585,7 +585,7 @@ Object.assign(pc, function () {
 
         this._textureFloatHighPrecision = undefined;
 
-        this.initializeGrabPass(options.alpha);
+        this.createGrabPass(options.alpha);
     };
 
     Object.assign(GraphicsDevice.prototype, {
@@ -879,7 +879,7 @@ Object.assign(pc, function () {
             this.transformFeedbackBuffer = null;
         },
 
-        initializeGrabPass: function (alpha) {
+        createGrabPass: function (alpha) {
             if (this.grabPassTexture) return;
 
             var format = alpha ? pc.PIXELFORMAT_R8_G8_B8_A8 : pc.PIXELFORMAT_R8_G8_B8;
@@ -913,7 +913,7 @@ Object.assign(pc, function () {
             gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, source.width, source.height, 0);
         },
 
-        uninitializeGrabPass: function () {
+        destroyGrabPass: function () {
             this.grabPassTexture.destroy();
             this.grabPassTexture = null;
             this.grabPassTextureId = null;
@@ -3175,7 +3175,7 @@ Object.assign(pc, function () {
         destroy: function () {
             var gl = this.gl;
 
-            this.uninitializeGrabPass();
+            this.destroyGrabPass();
 
             if (this.webgl2 && this.feedback) {
                 gl.deleteTransformFeedback(this.feedback);
