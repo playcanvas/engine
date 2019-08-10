@@ -913,7 +913,7 @@ Object.assign(pc, function () {
             gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, source.width, source.height, 0);
         },
 
-        unitializeGrabPass: function () {
+        uninitializeGrabPass: function () {
             this.grabPassTexture.destroy();
             this.grabPassTexture = null;
             this.grabPassTextureId = null;
@@ -3175,7 +3175,7 @@ Object.assign(pc, function () {
         destroy: function () {
             var gl = this.gl;
 
-            this.unitializeGrabPass();
+            this.uninitializeGrabPass();
 
             if (this.webgl2 && this.feedback) {
                 gl.deleteTransformFeedback(this.feedback);
