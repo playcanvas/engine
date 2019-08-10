@@ -248,8 +248,10 @@ Object.assign(pc, function () {
         node._beingEnabled = false;
 
         if (enableFirst) {
-            for (i = 0, len = this._app._enableList.length; i < len; i++)
+            // do not cache the length here, as enableList may be added to during loop
+            for (i = 0; i < this._app._enableList.length; i++) {
                 this._app._enableList[i]._onHierarchyStatePostChanged();
+            }
 
             this._app._enableList.length = 0;
         }

@@ -105,6 +105,24 @@ Object.assign(pc, (function () {
 
         /**
          * @function
+         * @name pc.Vec2#distance
+         * @description Returns the distance between the two specified 2-dimensional vectors.
+         * @param {pc.Vec2} rhs The second 2-dimensional vector to test.
+         * @returns {Number} The distance between the two vectors.
+         * @example
+         * var v1 = new pc.Vec2(5, 10);
+         * var v2 = new pc.Vec2(10, 20);
+         * var d = v1.distance(v2);
+         * console.log("The between v1 and v2 is: " + d);
+         */
+        distance: function (rhs) {
+            var x = this.x - rhs.x;
+            var y = this.y - rhs.y;
+            return Math.sqrt(x * x + y * y);
+        },
+
+        /**
+         * @function
          * @name pc.Vec2#dot
          * @description Returns the result of a dot product operation performed on the two specified 2-dimensional vectors.
          * @param {pc.Vec2} rhs The second 2-dimensional vector operand of the dot product.
