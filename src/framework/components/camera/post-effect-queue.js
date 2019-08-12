@@ -58,7 +58,7 @@ Object.assign(pc, function () {
             var device = this.app.graphicsDevice;
             var format = hdr ? device.getHdrFormat() : pc.PIXELFORMAT_R8_G8_B8_A8;
             var useStencil =  this.app.graphicsDevice.supportsStencil;
-            var samples = useDepth && device.supportsMsaa ? 4 : 1;
+            var samples = useDepth ? device.samples : 1;
 
             var colorBuffer = new pc.Texture(device, {
                 format: format,

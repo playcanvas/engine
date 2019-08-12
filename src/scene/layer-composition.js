@@ -111,7 +111,7 @@ Object.assign(pc, function () {
                     }
                 }
             }
-            // this._dirty = false;
+
             for (i = 0; i < len; i++) {
                 this.layerList[i]._dirty = false;
                 this.layerList[i]._version++;

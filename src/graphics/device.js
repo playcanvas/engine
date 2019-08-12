@@ -727,6 +727,9 @@ Object.assign(pc, function () {
 
             ext = this.extTextureFilterAnisotropic;
             this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
+
+            this.samples = gl.getParameter(gl.SAMPLES);
+            this.maxSamples = gl.getParameter(gl.MAX_SAMPLES);
         },
 
         initializeRenderState: function () {
