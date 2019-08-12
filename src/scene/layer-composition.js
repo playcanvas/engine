@@ -116,6 +116,7 @@ Object.assign(pc, function () {
                 this.layerList[i]._dirty = false;
                 this.layerList[i]._version++;
             }
+            this._dirty = false;
         }
 
         if (this._dirtyBlend) {
@@ -155,8 +156,6 @@ Object.assign(pc, function () {
             this._dirtyBlend = false;
         }
 
-        this._dirty = false;
-
         var casters, lid, light;
         if (this._dirtyLights) {
             result |= pc.COMPUPDATED_LIGHTS;
@@ -182,9 +181,7 @@ Object.assign(pc, function () {
                     }
                 }
             }
-        }
 
-        if (this._dirtyLights) {
             this._sortLights(this);
             this._dirtyLights = false;
 

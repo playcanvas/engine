@@ -58,6 +58,7 @@ Object.assign(pc, function () {
             var device = this.app.graphicsDevice;
             var format = hdr ? device.getHdrFormat() : pc.PIXELFORMAT_R8_G8_B8_A8;
             var useStencil =  this.app.graphicsDevice.supportsStencil;
+            var samples = useDepth && device.supportsMsaa ? 4 : 1;
 
             var colorBuffer = new pc.Texture(device, {
                 format: format,
@@ -71,7 +72,7 @@ Object.assign(pc, function () {
             colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
             colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
-            return new pc.RenderTarget(this.app.graphicsDevice, colorBuffer, { depth: useDepth, stencil: useStencil });
+            return new pc.RenderTarget(this.app.graphicsDevice, colorBuffer, { depth: useDepth, stencil: useStencil, samples: samples });
         },
 
         _resizeOffscreenTarget: function (rt) {
@@ -350,7 +351,6 @@ Object.assign(pc, function () {
                                 if (i === len - 1) {
                                     rect = self.camera.rect;
                                 }
-
                                 fx.effect.render(fx.inputTarget, fx.outputTarget, rect);
                             }
                         }
