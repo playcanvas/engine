@@ -897,8 +897,6 @@ Object.assign(pc, function () {
             });
 
             // Framebuffer size is arbitrary.
-            grabPassTexture.width = 0;
-            grabPassTexture.height = 0;
             grabPassTexture.name = 'texture_grabPass';
 
             var grabPassTextureId = this.scope.resolve(grabPassTexture.name);
