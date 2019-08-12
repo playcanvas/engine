@@ -896,7 +896,6 @@ Object.assign(pc, function () {
                 mipmaps: false
             });
 
-            // Framebuffer size is arbitrary.
             grabPassTexture.name = 'texture_grabPass';
 
             var grabPassTextureId = this.scope.resolve(grabPassTexture.name);
@@ -1258,7 +1257,7 @@ Object.assign(pc, function () {
             if (target) {
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
-                if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && colorBuffer._pot) {
+                if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && colorBuffer.pot) {
                     this.activeTexture(this.maxCombinedTextures - 1);
                     this.bindTexture(colorBuffer);
                     gl.generateMipmap(colorBuffer._glTarget);
@@ -1533,7 +1532,7 @@ Object.assign(pc, function () {
         uploadTexture: function (texture) {
             var gl = this.gl;
 
-            if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture._pot))
+            if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))
                 return;
 
             var mipLevel = 0;
@@ -1731,7 +1730,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && texture._pot && texture._levels.length === 1) {
+            if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && texture.pot && texture._levels.length === 1) {
                 gl.generateMipmap(texture._glTarget);
                 texture._mipmapsUploaded = true;
             }
@@ -1803,7 +1802,7 @@ Object.assign(pc, function () {
 
             if (flags & 1) {
                 var filter = texture._minFilter;
-                if (!texture._pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
+                if (!texture.pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
                     if (filter === pc.FILTER_NEAREST_MIPMAP_NEAREST || filter === pc.FILTER_NEAREST_MIPMAP_LINEAR) {
                         filter = pc.FILTER_NEAREST;
                     } else if (filter === pc.FILTER_LINEAR_MIPMAP_NEAREST || filter === pc.FILTER_LINEAR_MIPMAP_LINEAR) {
@@ -1820,7 +1819,7 @@ Object.assign(pc, function () {
                     gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
                 } else {
                     // WebGL1 doesn't support all addressing modes with NPOT textures
-                    gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture.pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
                 }
             }
             if (flags & 8) {
@@ -1828,7 +1827,7 @@ Object.assign(pc, function () {
                     gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
                 } else {
                     // WebGL1 doesn't support all addressing modes with NPOT textures
-                    gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture.pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
                 }
             }
             if (flags & 16) {
