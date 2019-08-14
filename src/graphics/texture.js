@@ -587,6 +587,12 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @readonly
+     * @name pc.Texture#pot
+     * @type Boolean
+     * @description Returns true if all dimensions of the texture are power of two, and false otherwise.
+     */
     Object.defineProperty(Texture.prototype, 'pot',  {
         get: function () {
             return pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
