@@ -911,6 +911,8 @@ Object.assign(pc, function () {
             var format = this.grabPassTexture._glFormat;
             var source = (this.renderTarget && this.renderTarget.colorBuffer) || this.canvas;
             gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, source.width, source.height, 0);
+            this.grabPassTexture._width = source.width;
+            this.grabPassTexture._height = source.height;
         },
 
         destroyGrabPass: function () {
