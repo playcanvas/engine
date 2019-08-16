@@ -94,7 +94,6 @@ Object.assign(pc, function () {
         this._width = 4;
         this._height = 4;
         this._depth = 1;
-        this._pot = true;
 
         this._format = pc.PIXELFORMAT_R8_G8_B8_A8;
         this.rgbm = false;
@@ -124,7 +123,6 @@ Object.assign(pc, function () {
         if (options !== undefined) {
             this._width = (options.width !== undefined) ? options.width : this._width;
             this._height = (options.height !== undefined) ? options.height : this._height;
-            this._pot = pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
 
             this._format = (options.format !== undefined) ? options.format : this._format;
             this.rgbm = (options.rgbm !== undefined) ? options.rgbm : this.rgbm;
@@ -507,7 +505,7 @@ Object.assign(pc, function () {
             }
 
             var mips = 1;
-            if (this._pot && (this._mipmaps || this._minFilter === pc.FILTER_NEAREST_MIPMAP_NEAREST ||
+            if (this.pot && (this._mipmaps || this._minFilter === pc.FILTER_NEAREST_MIPMAP_NEAREST ||
                 this._minFilter === pc.FILTER_NEAREST_MIPMAP_LINEAR || this._minFilter === pc.FILTER_LINEAR_MIPMAP_NEAREST ||
                 this._minFilter === pc.FILTER_LINEAR_MIPMAP_LINEAR) && !(this._compressed && this._levels.length === 1)) {
 
@@ -586,6 +584,18 @@ Object.assign(pc, function () {
                 this._premultiplyAlpha = premultiplyAlpha;
                 this._needsUpload = true;
             }
+        }
+    });
+
+    /**
+     * @readonly
+     * @name pc.Texture#pot
+     * @type Boolean
+     * @description Returns true if all dimensions of the texture are power of two, and false otherwise.
+     */
+    Object.defineProperty(Texture.prototype, 'pot',  {
+        get: function () {
+            return pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
         }
     });
 
@@ -753,7 +763,6 @@ Object.assign(pc, function () {
                 // default sizes
                 this._width = 4;
                 this._height = 4;
-                this._pot = true;
 
                 // remove levels
                 if (this._cubemap) {
@@ -771,7 +780,6 @@ Object.assign(pc, function () {
                     this._width = width;
                     this._height = height;
                 }
-                this._pot = pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
 
                 this._levels[mipLevel] = source;
             }
