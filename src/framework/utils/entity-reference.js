@@ -220,8 +220,12 @@ Object.assign(pc, function () {
         },
 
         /**
-         * Must be called from the parent component's onEnable() method in order for entity
-         * references to be correctly resolved when {@link pc.Entity#clone} is called.
+         * @private
+         * @function
+         * @name pc.EntityReference#onParentComponentEnable
+         * @description Must be called from the parent component's onEnable() method in
+         * order for entity references to be correctly resolved when {@link pc.Entity#clone}
+         * is called.
          */
         onParentComponentEnable: function () {
             // When an entity is cloned via the JS API, we won't be able to resolve the
@@ -382,8 +386,11 @@ Object.assign(pc, function () {
         },
 
         /**
-         * Convenience method indicating whether the entity exists and has a component of the provided type.
-         *
+         * @private
+         * @function
+         * @name pc.EntityReference#hasComponent
+         * @description Convenience method indicating whether the entity exists and has a
+         * component of the provided type.
          * @param {String} componentName Name of the component.
          * @returns {Boolean} True if the entity exists and has a component of the provided type.
          */

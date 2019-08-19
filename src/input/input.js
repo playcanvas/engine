@@ -600,110 +600,159 @@
         MOUSEBUTTON_RIGHT: 2,
 
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_1
          * @description Index for pad 1
          */
         PAD_1: 0,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_2
          * @description Index for pad 2
          */
         PAD_2: 1,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_3
          * @description Index for pad 3
          */
         PAD_3: 2,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_4
          * @description Index for pad 4
          */
         PAD_4: 3,
 
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_FACE_1
          * @description The first face button, from bottom going clockwise
          */
         PAD_FACE_1: 0,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_FACE_2
          * @description The second face button, from bottom going clockwise
          */
         PAD_FACE_2: 1,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_FACE_3
          * @description The third face button, from bottom going clockwise
          */
         PAD_FACE_3: 2,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_FACE_4
          * @description The fourth face button, from bottom going clockwise
          */
         PAD_FACE_4: 3,
 
-
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_L_SHOULDER_1
          * @description The first shoulder button on the left
          */
         PAD_L_SHOULDER_1: 4,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_R_SHOULDER_1
          * @description The first shoulder button on the right
          */
         PAD_R_SHOULDER_1: 5,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_L_SHOULDER_2
          * @description The second shoulder button on the left
          */
         PAD_L_SHOULDER_2: 6,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_R_SHOULDER_2
          * @description The second shoulder button on the right
          */
         PAD_R_SHOULDER_2: 7,
 
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_SELECT
          * @description The select button
          */
         PAD_SELECT: 8,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_START
          * @description The start button
          */
         PAD_START: 9,
 
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_L_STICK_BUTTON
          * @description The button when depressing the left analogue stick
          */
         PAD_L_STICK_BUTTON: 10,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_R_STICK_BUTTON
          * @description The button when depressing the right analogue stick
          */
         PAD_R_STICK_BUTTON: 11,
 
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_UP
          * @description Direction pad up
          */
         PAD_UP: 12,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_DOWN
          * @description Direction pad down
          */
         PAD_DOWN: 13,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_LEFT
          * @description Direction pad left
          */
         PAD_LEFT: 14,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_RIGHT
          * @description Direction pad right
          */
         PAD_RIGHT: 15,
 
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_VENDOR
          * @description Vendor specific button
          */
         PAD_VENDOR: 16,
 
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_L_STICK_X
          * @description Horizontal axis on the left analogue stick
          */
         PAD_L_STICK_X: 0,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_L_STICK_Y
          * @description Vertical axis on the left analogue stick
          */
         PAD_L_STICK_Y: 1,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_R_STICK_X
          * @description Horizontal axis on the right analogue stick
          */
         PAD_R_STICK_X: 2,
         /**
+         * @enum pc.PAD
+         * @name pc.PAD_R_STICK_Y
          * @description Vertical axis on the right analogue stick
          */
         PAD_R_STICK_Y: 3

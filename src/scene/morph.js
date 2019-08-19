@@ -209,6 +209,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.MorphInstance#destroy
          * @description Frees video memory allocated by this object.
