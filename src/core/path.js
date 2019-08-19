@@ -7,6 +7,7 @@ pc.path = function () {
         /**
          * The character that separates path segments
          * @name pc.path.delimiter
+         * @type String
          */
         delimiter: "/",
         /**

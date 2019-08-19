@@ -14,6 +14,7 @@ Object.assign(pc, function () {
 
     /**
      * @component
+     * @constructor
      * @name pc.ElementDragHelper
      * @description Create a new ElementDragHelper
      * @classdesc Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
