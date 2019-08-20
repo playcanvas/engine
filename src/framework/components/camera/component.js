@@ -452,8 +452,26 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.CameraComponent#enterVr
+         * @variation 1
          * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
-         * @param {pc.VrDisplay} [display] The VrDisplay to present. If not supplied this uses {@link pc.VrManager#display} as the default
+         * @param {Function} callback Function called once to indicate success of failure. The callback takes one argument (err).
+         * On success it returns null on failure it returns the error message.
+         * @example
+         * // On an entity with a camera component
+         * this.entity.camera.enterVr(function (err) {
+         *     if (err) {
+         *         console.error(err);
+         *         return;
+         *     } else {
+         *         // in VR!
+         *     }
+         * });
+         *//**
+         * @function
+         * @name pc.CameraComponent#enterVr
+         * @variation 2
+         * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
+         * @param {pc.VrDisplay} display The VrDisplay to present. If not supplied this uses {@link pc.VrManager#display} as the default
          * @param {Function} callback Function called once to indicate success of failure. The callback takes one argument (err).
          * On success it returns null on failure it returns the error message.
          * @example
