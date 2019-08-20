@@ -339,7 +339,6 @@ Object.assign(pc, function () {
     }
 
     /**
-     * @private
      * @constructor
      * @name pc.ForwardRenderer
      * @classdesc The forward renderer render scene objects.
