@@ -524,6 +524,11 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @name pc.http
+     * @description Default instance of {@link pc.Http}.
+     * @type pc.Http
+     */
     return {
         Http: Http,
         http: new Http()
