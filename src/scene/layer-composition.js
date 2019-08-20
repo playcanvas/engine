@@ -5,12 +5,12 @@ Object.assign(pc, function () {
      * @name pc.LayerComposition
      * @classdesc Layer Composition is a collection of {@link pc.Layer} that is fed to {@link pc.Scene#layers} to define rendering order.
      * @description Create a new layer composition.
-     * @property {Array} layerList A read-only array of {@link pc.Layer} sorted in the order they will be rendered.
-     * @property {Array} subLayerList A read-only array of boolean values, matching {@link pc.Layer#layerList}.
+     * @property {pc.Layer[]} layerList A read-only array of {@link pc.Layer} sorted in the order they will be rendered.
+     * @property {Boolean[]} subLayerList A read-only array of boolean values, matching {@link pc.Layer#layerList}.
      * True means only semi-transparent objects are rendered, and false means opaque.
-     * @property {Array} subLayerEnabled A read-only array of boolean values, matching {@link pc.Layer#layerList}.
+     * @property {Boolean[]} subLayerEnabled A read-only array of boolean values, matching {@link pc.Layer#layerList}.
      * True means the layer is rendered, false means it's skipped.
-     * @property {Array} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering, e.g. inside
+     * @property {pc.CameraComponent[]} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering, e.g. inside
      * {@link pc.Layer#onPreCull}, {@link pc.Layer#onPostCull}, {@link pc.Layer#onPreRender}, {@link pc.Layer#onPostRender}.
      */
     // Composition can hold only 2 sublayers of each layer

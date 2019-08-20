@@ -772,7 +772,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat4#set
          * @description Sets matrix data from an array.
-         * @param {Array} src Source array. Must have 16 values.
+         * @param {Number[]} src Source array. Must have 16 values.
          * @returns {pc.Mat4} Self for chaining.
          */
         set: function (src) {

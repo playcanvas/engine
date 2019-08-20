@@ -61,7 +61,7 @@ Object.assign(pc, function () {
      *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
      * @property {Boolean} cullFaces If true the camera will take material.cull into account. Otherwise both front and back faces will be rendered.
      * @property {Boolean} flipFaces If true the camera will invert front and back faces. Can be useful for reflection rendering.
-     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this camera should belong.
+     * @property {Number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this camera should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var CameraComponent = function CameraComponent(system, entity) {

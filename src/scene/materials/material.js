@@ -345,7 +345,7 @@ Object.assign(pc, function () {
      * @name pc.Material#setParameter
      * @description Sets a shader parameter on a material.
      * @param {String} name The name of the parameter to set.
-     * @param {Number|Array|pc.Texture} data The value for the specified parameter.
+     * @param {Number|Number[]|pc.Texture} data The value for the specified parameter.
      * @param {Number} [passFlags] Mask describing which passes the material should be included in.
      */
     Material.prototype.setParameter = function (name, data, passFlags) {
