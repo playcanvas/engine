@@ -1,2 +1,7 @@
+.*
+/build/*
+!/build/output
 /examples
+/src
 /tests
+/tsd-jsdoc.conf
