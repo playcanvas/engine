@@ -62,6 +62,7 @@
     "test:release": "karma start tests/karma.conf.js -- --single-run --release", 
     "test:watch": "karma start tests/karma.conf.js", 
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false", 
+    "test:tsd": "npm run tsd && tsc --pretty false build/output/playcanvas.d.ts",
     "tsd": "jsdoc -c tsd-jsdoc.conf",
     "lint": "eslint extras src"
   }, 
