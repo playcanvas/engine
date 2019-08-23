@@ -383,9 +383,34 @@
          */
         SPECULAR_BLINN: 1,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.GAMMA_NONE
+         * @description 
+         */
         GAMMA_NONE: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.GAMMA_SRGB
+         * @description 
+         */
         GAMMA_SRGB: 1,
+        /**
+         * @deprecated
+         * @constant
+         * @type {Number}
+         * @name pc.GAMMA_SRGBFAST
+         * @description 
+         */
         GAMMA_SRGBFAST: 2, // deprecated
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.GAMMA_SRGBHDR
+         * @description 
+         */
         GAMMA_SRGBHDR: 3,
 
         TONEMAP_LINEAR: 0,
