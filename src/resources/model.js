@@ -24,7 +24,7 @@ Object.assign(pc, function () {
          * @name pc.ModelHandler#load
          * @description Fetch model data from a remote url
          * @param {String} url The URL of the model data.
-         * @param {Function} callback Callback function called when the load completes. The
+         * @param {pc.ResourceHandlerLoadCallback} callback Callback function called when the load completes. The
          * callback is of the form fn(err, response), where err is a String error message in
          * the case where the load fails, and repsponse is the model data that has been
          * successfully loaded.
