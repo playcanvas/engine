@@ -368,7 +368,19 @@
          */
         CUBEPROJ_BOX: 1,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.SPECULAR_PHONG
+         * @description 
+         */
         SPECULAR_PHONG: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.SPECULAR_BLINN
+         * @description 
+         */
         SPECULAR_BLINN: 1,
 
         GAMMA_NONE: 0,
