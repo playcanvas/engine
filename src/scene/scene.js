@@ -449,8 +449,26 @@
          */
         TONEMAP_ACES2: 4,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.SPECOCC_NONE
+         * @description 
+         */
         SPECOCC_NONE: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.SPECOCC_AO
+         * @description 
+         */
         SPECOCC_AO: 1,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.SPECOCC_GLOSSDEPENDENT
+         * @description 
+         */
         SPECOCC_GLOSSDEPENDENT: 2,
 
         SHADERDEF_NOSHADOW: 1,
