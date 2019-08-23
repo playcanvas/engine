@@ -806,13 +806,61 @@
 
         SHADERTAG_MATERIAL: 1,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.STENCILOP_KEEP
+         * @description 
+         */
         STENCILOP_KEEP: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.STENCILOP_ZERO
+         * @description 
+         */
         STENCILOP_ZERO: 1,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.STENCILOP_REPLACE
+         * @description 
+         */
         STENCILOP_REPLACE: 2,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.STENCILOP_INCREMENT
+         * @description 
+         */
         STENCILOP_INCREMENT: 3,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.STENCILOP_INCREMENTWRAP
+         * @description 
+         */
         STENCILOP_INCREMENTWRAP: 4,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.STENCILOP_DECREMENT
+         * @description 
+         */
         STENCILOP_DECREMENT: 5,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.STENCILOP_DECREMENTWRAP
+         * @description 
+         */
         STENCILOP_DECREMENTWRAP: 6,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.STENCILOP_INVERT
+         * @description 
+         */
         STENCILOP_INVERT: 7,
 
         /**
