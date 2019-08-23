@@ -140,12 +140,20 @@ Object.assign(pc, function () {
         },
 
         /**
+        * @callback pc.ModelHandlerParserCallback
+        * @description Function that decides on which parser to use, when passed into {@link pc.ModelHandler#addParser}.
+        * @param {String} url The resource url.
+        * @param {Object} data The raw model data.
+        * @returns {Boolean} Return true if this parser should be used to parse the data into a {@link pc.Model}
+        */
+
+        /**
          * @function
          * @name pc.ModelHandler#addParser
          * @description Add a parser that converts raw data into a {@link pc.Model}
          * Default parser is for JSON models
          * @param {Object} parser See JsonModelParser for example
-         * @param {Function} decider Function that decides on which parser to use.
+         * @param {ModelHandlerParserCallback} decider Function that decides on which parser to use.
          * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link pc.Model}.
          * The first parser to return true is used.
          */
