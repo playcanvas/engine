@@ -1,7 +1,25 @@
 Object.assign(pc, {
     // types
+    /**
+     * @constant
+     * @type {String}
+     * @name pc.BODYTYPE_STATIC
+     * @description 
+     */
     BODYTYPE_STATIC: 'static',
+    /**
+     * @constant
+     * @type {String}
+     * @name pc.BODYTYPE_DYNAMIC
+     * @description 
+     */
     BODYTYPE_DYNAMIC: 'dynamic',
+    /**
+     * @constant
+     * @type {String}
+     * @name pc.BODYTYPE_KINEMATIC
+     * @description 
+     */
     BODYTYPE_KINEMATIC: 'kinematic',
 
     // Collision flags
