@@ -536,7 +536,19 @@
         // 17: PCF5 SPOT
         SHADER_PICK: 18,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.BAKE_COLOR
+         * @description
+         */
         BAKE_COLOR: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.BAKE_COLORDIR
+         * @description
+         */
         BAKE_COLORDIR: 1,
 
         VIEW_CENTER: 0,
