@@ -6,7 +6,7 @@ Object.assign(pc, (function () {
      * @name pc.CurveSet
      * @classdesc A curve set is a collection of curves.
      * @description Creates a new curve set.
-     * @param {Array} [curveKeys] An array of arrays of keys (pairs of numbers with
+     * @param {Array<Number[]>} [curveKeys] An array of arrays of keys (pairs of numbers with
      * the time first and value second).
      */
     var CurveSet = function () {
@@ -55,10 +55,10 @@ Object.assign(pc, (function () {
          * @description Returns the interpolated value of all curves in the curve
          * set at the specified time.
          * @param {Number} time The time at which to calculate the value
-         * @param {Array} [result] The interpolated curve values at the specified time.
+         * @param {Number[]} [result] The interpolated curve values at the specified time.
          * If this parameter is not supplied, the function allocates a new array internally
          * to return the result.
-         * @returns {Array} The interpolated curve values at the specified time
+         * @returns {Number[]} The interpolated curve values at the specified time
          */
         value: function (time, result) {
             var length = this.curves.length;
@@ -117,7 +117,7 @@ Object.assign(pc, (function () {
          * @param {Number} precision The number of samples to return.
          * @param {Number} min The minimum output value.
          * @param {Number} max The maximum output value.
-         * @returns {Array} The set of quantized values.
+         * @returns {Number[]} The set of quantized values.
          */
         quantizeClamped: function (precision, min, max) {
             var result = this.quantize(precision);

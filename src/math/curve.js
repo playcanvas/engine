@@ -164,7 +164,7 @@ Object.assign(pc, (function () {
          * @name pc.Curve#quantize
          * @description Sample the curve at regular intervals over the range [0..1]
          * @param {Number} precision The number of samples to return.
-         * @returns {Array} The set of quantized values.
+         * @returns {Float32Array} The set of quantized values.
          */
         quantize: function (precision) {
             precision = Math.max(precision, 2);
@@ -190,7 +190,7 @@ Object.assign(pc, (function () {
          * @param {Number} precision The number of samples to return.
          * @param {Number} min The minimum output value.
          * @param {Number} max The maximum output value.
-         * @returns {Array} The set of quantized values.
+         * @returns {Float32Array} The set of quantized values.
          */
         quantizeClamped: function (precision, min, max) {
             var result = this.quantize(precision);

@@ -207,6 +207,7 @@
 ../src/framework/utils/entity-reference.js
 ../src/framework/utils/sorted-loop-array.js
 ../src/resources/loader.js
+../src/resources/handler.js
 ../src/resources/bundle.js
 ../src/resources/untar.js
 ../src/resources/animation.js
