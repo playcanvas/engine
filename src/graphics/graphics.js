@@ -522,13 +522,62 @@
          */
         PIXELFORMAT_SRGBA: 20,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PIXELFORMAT_ETC1
+         * @description
+         */
         PIXELFORMAT_ETC1: 21,
+
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PIXELFORMAT_ETC2_RGB
+         * @description
+         */
         PIXELFORMAT_ETC2_RGB: 22,
+
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PIXELFORMAT_ETC2_RGBA
+         * @description
+         */
         PIXELFORMAT_ETC2_RGBA: 23,
+
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PIXELFORMAT_PVRTC_2BPP_RGB_1
+         * @description
+         */
         PIXELFORMAT_PVRTC_2BPP_RGB_1: 24,
+
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1
+         * @description
+         */
         PIXELFORMAT_PVRTC_2BPP_RGBA_1: 25,
+
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PIXELFORMAT_PVRTC_4BPP_RGB_1
+         * @description
+         */
         PIXELFORMAT_PVRTC_4BPP_RGB_1: 26,
+
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1
+         * @description
+         */
         PIXELFORMAT_PVRTC_4BPP_RGBA_1: 27,
+
         // only add compressed formats next
 
         /**
