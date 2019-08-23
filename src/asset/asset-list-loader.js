@@ -55,6 +55,7 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @private
      * @function
      * @name pc.AssetListLoader#load
      * @description  Start loading asset list, call done() when all assets have loaded or failed to load
@@ -87,6 +88,7 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @private
      * @function
      * @name pc.AssetListLoader#ready
      * @param {Function} done Callback called when all assets in the list are loaded

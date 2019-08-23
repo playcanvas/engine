@@ -70,7 +70,7 @@ pc.script = (function () {
          *   <li>{Number} decimalPrecision: A number that specifies the number of decimal digits allowed for the value</li>
          *   <li>{Object[]} enumerations: An array of name, value pairs from which the user can select one if the attribute type is an enumeration</li>
          *   <li>{String[]} curves: (For 'curve' attributes only) An array of strings that define the names of each curve in the curve editor.</li>
-         *   <li>{Array} color: (For 'curve' attributes only) If true then the curve attribute will be a color curve.</li>
+         *   <li>{Boolean} color: (For 'curve' attributes only) If true then the curve attribute will be a color curve.</li>
          * </ul>
          * @example
          * pc.script.attribute('speed', 'number', 5);

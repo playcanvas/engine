@@ -31,7 +31,7 @@ Object.assign(pc, function () {
      * @property {Boolean} isStatic Mark model as non-movable (optimization)
      * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component's model. If model is not set or loaded for component it will return null.
      * @property {Number} batchGroupId Assign model to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
-     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this model should belong.
+     * @property {Number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this model should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
 

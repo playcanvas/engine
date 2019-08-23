@@ -156,7 +156,7 @@ Object.assign(pc, function () {
      * @property {pc.Curve} scaleGraph2 If not null, particles pick random values between scaleGraph and scaleGraph2.
      * @property {pc.Curve} alphaGraph Alpha over lifetime.
      * @property {pc.Curve} alphaGraph2 If not null, particles pick random values between alphaGraph and alphaGraph2.
-     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this particle system should belong.
+     * @property {Number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this particle system should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {

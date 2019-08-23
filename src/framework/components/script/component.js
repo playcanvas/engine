@@ -391,7 +391,8 @@ Object.assign(pc, function () {
 
         /**
          * @private
-         * Inserts script instance into the scripts array at the specified index. Also inserts the script
+         * @function
+         * @description Inserts script instance into the scripts array at the specified index. Also inserts the script
          * into the update list if it has an update method and the post update list if it has a postUpdate method.
          * @param {Object} scriptInstance The script instance
          * @param {Number} index The index where to insert the script at. If -1 then append it at the end.
