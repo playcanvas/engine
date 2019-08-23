@@ -118,9 +118,9 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ScriptAttributes
-     * @classdesc Container of Script Attribute definitions. Implements an interface to add/remove attributes and store their definition for a {@link ScriptType}.
-     * Note: An instance of pc.ScriptAttributes is created automatically by each {@link ScriptType}.
-     * @param {ScriptType} scriptType Script Type that attributes relate to.
+     * @classdesc Container of Script Attribute definitions. Implements an interface to add/remove attributes and store their definition for a {@link pc.ScriptType}.
+     * Note: An instance of pc.ScriptAttributes is created automatically by each {@link pc.ScriptType}.
+     * @param {pc.ScriptType} scriptType Script Type that attributes relate to.
      */
     var ScriptAttributes = function (scriptType) {
         this.scriptType = scriptType;
@@ -269,7 +269,7 @@ Object.assign(pc, function () {
      * @static
      * @function
      * @name pc.createScript
-     * @description Method to create named {@link ScriptType}.
+     * @description Method to create named {@link pc.ScriptType}.
      * It returns new function (class) "Script Type", which is auto-registered to {@link pc.ScriptRegistry} using it's name.
      * This is the main interface to create Script Types, to define custom logic using JavaScript, that is used to create interaction for entities.
      * @param {String} name unique Name of a Script Type.
@@ -279,7 +279,7 @@ Object.assign(pc, function () {
      * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent
      * @param {pc.Application} [app] Optional application handler, to choose which {@link pc.ScriptRegistry} to add a script to.
      * By default it will use `pc.Application.getApplication()` to get current {@link pc.Application}.
-     * @returns {Function} The constructor of a {@link ScriptType}, which the developer is meant to extend by adding attributes and prototype methods.
+     * @returns {Function} The constructor of a {@link pc.ScriptType}, which the developer is meant to extend by adding attributes and prototype methods.
      * @example
      * var Turning = pc.createScript('turn');
      *
@@ -308,14 +308,14 @@ Object.assign(pc, function () {
 
         /**
          * @constructor
-         * @name ScriptType
+         * @name pc.ScriptType
          * @classdesc Represents the type of a script. It is returned by {@link pc.createScript}. Also referred to as Script Type.<br />
          * The type is to be extended using its JavaScript prototype. There is a <strong>list of methods</strong>
          * that will be executed by the engine on instances of this type, such as: <ul><li>initialize</li><li>postInitialize</li><li>update</li><li>postUpdate</li><li>swap</li></ul>
          * <strong>initialize</strong> and <strong>postInitialize</strong> - are called if defined when script is about to run for the first time - postInitialize will run after all initialize methods are executed in the same tick or enabling chain of actions.<br />
          * <strong>update</strong> and <strong>postUpdate</strong> - methods are called if defined for enabled (running state) scripts on each tick.<br />
-         * <strong>swap</strong> - This method will be called when a {@link ScriptType} that already exists in the registry gets redefined.
-         * If the new {@link ScriptType} has a `swap` method in its prototype, then it will be executed to perform hot-reload at runtime.
+         * <strong>swap</strong> - This method will be called when a {@link pc.ScriptType} that already exists in the registry gets redefined.
+         * If the new {@link pc.ScriptType} has a `swap` method in its prototype, then it will be executed to perform hot-reload at runtime.
          * @property {pc.Application} app The {@link pc.Application} that the instance of this type belongs to.
          * @property {pc.Entity} entity The {@link pc.Entity} that the instance of this type belongs to.
          * @property {Boolean} enabled True if the instance of this type is in running state. False when script is not running,
@@ -355,7 +355,7 @@ Object.assign(pc, function () {
          * @private
          * @readonly
          * @static
-         * @name ScriptType.__name
+         * @name pc.ScriptType.__name
          * @type String
          * @description Name of a Script Type.
          */
@@ -366,7 +366,7 @@ Object.assign(pc, function () {
          * @static
          * @readonly
          * @type pc.ScriptAttributes
-         * @name ScriptType.attributes
+         * @name pc.ScriptType.attributes
          * @description The interface to define attributes for Script Types. Refer to {@link pc.ScriptAttributes}
          * @example
          * var PlayerController = pc.createScript('playerController');
@@ -405,7 +405,7 @@ Object.assign(pc, function () {
          * @readonly
          * @static
          * @function
-         * @name ScriptType.extend
+         * @name pc.ScriptType.extend
          * @param {Object} methods Object with methods, where key - is name of method, and value - is function.
          * @description Shorthand function to extend Script Type prototype with list of methods.
          * @example
@@ -431,7 +431,7 @@ Object.assign(pc, function () {
 
         /**
          * @event
-         * @name ScriptType#enable
+         * @name pc.ScriptType#enable
          * @description Fired when a script instance becomes enabled
          * @example
          * PlayerController.prototype.initialize = function() {
@@ -443,7 +443,7 @@ Object.assign(pc, function () {
 
         /**
          * @event
-         * @name ScriptType#disable
+         * @name pc.ScriptType#disable
          * @description Fired when a script instance becomes disabled
          * @example
          * PlayerController.prototype.initialize = function() {
@@ -455,7 +455,7 @@ Object.assign(pc, function () {
 
         /**
          * @event
-         * @name ScriptType#state
+         * @name pc.ScriptType#state
          * @description Fired when a script instance changes state to enabled or disabled
          * @param {Boolean} enabled True if now enabled, False if disabled
          * @example
@@ -468,7 +468,7 @@ Object.assign(pc, function () {
 
         /**
          * @event
-         * @name ScriptType#destroy
+         * @name pc.ScriptType#destroy
          * @description Fired when a script instance is destroyed and removed from component
          * @example
          * PlayerController.prototype.initialize = function() {
@@ -481,7 +481,7 @@ Object.assign(pc, function () {
 
         /**
          * @event
-         * @name ScriptType#attr
+         * @name pc.ScriptType#attr
          * @description Fired when any script attribute has been changed
          * @param {String} name Name of attribute
          * @param {Object} value New value
@@ -496,7 +496,7 @@ Object.assign(pc, function () {
 
         /**
          * @event
-         * @name ScriptType#attr:[name]
+         * @name pc.ScriptType#attr:[name]
          * @description Fired when a specific script attribute has been changed
          * @param {Object} value New value
          * @param {Object} valueOld Old value
@@ -510,7 +510,7 @@ Object.assign(pc, function () {
 
         /**
          * @event
-         * @name ScriptType#error
+         * @name pc.ScriptType#error
          * @description Fired when a script instance had an exception. The script instance will be automatically disabled.
          * @param {Error} err Native JavaScript Error object with details of error
          * @param {String} method The method of the script instance that the exception originated from.
