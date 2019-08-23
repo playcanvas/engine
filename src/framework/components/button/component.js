@@ -36,7 +36,7 @@ Object.assign(pc, function () {
      * @property {Boolean} active If set to false, the button will be visible but will not respond to hover or touch interactions.
      * @property {pc.Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.
      * @property {pc.Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
-     * @property {pc.BUTTON_TRANSITION_MODE} transitionMode Controls how the button responds when the user hovers over it/presses it.
+     * @property {Number} transitionMode Controls how the button responds when the user hovers over it/presses it.
      * @property {pc.Color} hoverTint Color to be used on the button image when the user hovers over it.
      * @property {pc.Color} pressedTint Color to be used on the button image when the user presses it.
      * @property {pc.Color} inactiveTint Color to be used on the button image when the button is not interactive.
