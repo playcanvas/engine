@@ -2,21 +2,24 @@
     // Scene API enums
     var enums = {
         /**
-         * @enum pc.BLEND
+         * @constant
+         * @type {Number}
          * @name pc.BLEND_SUBTRACTIVE
          * @description Subtract the color of the source fragment from the destination fragment
          * and write the result to the frame buffer.
          */
         BLEND_SUBTRACTIVE: 0,
         /**
-         * @enum pc.BLEND
+         * @constant
+         * @type {Number}
          * @name pc.BLEND_ADDITIVE
          * @description Add the color of the source fragment to the destination fragment
          * and write the result to the frame buffer.
          */
         BLEND_ADDITIVE: 1,
         /**
-         * @enum pc.BLEND
+         * @constant
+         * @type {Number}
          * @name pc.BLEND_NORMAL
          * @description Enable simple translucency for materials such as glass. This is
          * equivalent to enabling a source blend mode of pc.BLENDMODE_SRC_ALPHA and a destination
@@ -24,55 +27,63 @@
          */
         BLEND_NORMAL: 2,
         /**
-         * @enum pc.BLEND
+         * @constant
+         * @type {Number}
          * @name pc.BLEND_NONE
          * @description Disable blending.
          */
         BLEND_NONE: 3,
         /**
-         * @enum pc.BLEND
+         * @constant
+         * @type {Number}
          * @name pc.BLEND_PREMULTIPLIED
          * @description Similar to pc.BLEND_NORMAL expect the source fragment is assumed to have
          * already been multiplied by the source alpha value.
          */
         BLEND_PREMULTIPLIED: 4,
         /**
-         * @enum pc.BLEND
+         * @constant
+         * @type {Number}
          * @name pc.BLEND_MULTIPLICATIVE
          * @description Multiply the color of the source fragment by the color of the destination
          * fragment and write the result to the frame buffer.
          */
         BLEND_MULTIPLICATIVE: 5,
         /**
-         * @enum pc.BLEND
+         * @constant
+         * @type {Number}
          * @name pc.BLEND_ADDITIVEALPHA
          * @description Same as pc.BLEND_ADDITIVE except the source RGB is multiplied by the source alpha.
          */
         BLEND_ADDITIVEALPHA: 6,
 
         /**
-         * @enum pc.BLEND
+         * @constant
+         * @type {Number}
          * @name pc.BLEND_MULTIPLICATIVE2X
          * @description Multiplies colors and doubles the result
          */
         BLEND_MULTIPLICATIVE2X: 7,
 
         /**
-         * @enum pc.BLEND
+         * @constant
+         * @type {Number}
          * @name pc.BLEND_SCREEN
          * @description Softer version of additive
          */
         BLEND_SCREEN: 8,
 
         /**
-         * @enum pc.BLEND
+         * @constant
+         * @type {Number}
          * @name pc.BLEND_MIN
          * @description Minimum color. Check app.graphicsDevice.extBlendMinmax for support.
          */
         BLEND_MIN: 9,
 
         /**
-         * @enum pc.BLEND
+         * @constant
+         * @type {Number}
          * @name pc.BLEND_MAX
          * @description Maximum color. Check app.graphicsDevice.extBlendMinmax for support.
          */
@@ -119,50 +130,58 @@
 
         // New layers
         /**
-         * @enum pc.LAYERID
+         * @constant
+         * @type {Number}
          * @name pc.LAYERID_WORLD
          * @description The world layer.
          */
         LAYERID_WORLD: 0,
         /**
-         * @enum pc.LAYERID
+         * @constant
+         * @type {Number}
          * @name pc.LAYERID_DEPTH
          * @description The depth layer.
          */
         LAYERID_DEPTH: 1,
         /**
-         * @enum pc.LAYERID
+         * @constant
+         * @type {Number}
          * @name pc.LAYERID_SKYBOX
          * @description The skybox layer.
          */
         LAYERID_SKYBOX: 2,
         /**
-         * @enum pc.LAYERID
+         * @constant
+         * @type {Number}
          * @name pc.LAYERID_IMMEDIATE
          * @description The immediate layer.
          */
         LAYERID_IMMEDIATE: 3,
         /**
-         * @enum pc.LAYERID
+         * @constant
+         * @type {Number}
          * @name pc.LAYERID_UI
          * @description The UI layer.
          */
         LAYERID_UI: 4,
 
         /**
-         * @enum pc.LIGHTTYPE
+         * @constant
+         * @type {Number}
          * @name pc.LIGHTTYPE_DIRECTIONAL
          * @description Directional (global) light source.
          */
         LIGHTTYPE_DIRECTIONAL: 0,
         /**
-         * @enum pc.LIGHTTYPE
+         * @constant
+         * @type {Number}
          * @name pc.LIGHTTYPE_POINT
          * @description Point (local) light source.
          */
         LIGHTTYPE_POINT: 1,
         /**
-         * @enum pc.LIGHTTYPE
+         * @constant
+         * @type {Number}
          * @name pc.LIGHTTYPE_SPOT
          * @description Spot (local) light source.
          */
@@ -194,13 +213,15 @@
         PARTICLEORIENTATION_EMITTER: 2,
 
         /**
-         * @enum pc.PROJECTION
+         * @constant
+         * @type {Number}
          * @name pc.PROJECTION_PERSPECTIVE
          * @description A perspective camera projection where the frustum shape is essentially pyramidal.
          */
         PROJECTION_PERSPECTIVE: 0,
         /**
-         * @enum pc.PROJECTION
+         * @constant
+         * @type {Number}
          * @name pc.PROJECTION_ORTHOGRAPHIC
          * @description An orthographic camera projection where the frustum shape is essentially a cuboid.
          */
@@ -258,21 +279,24 @@
         MASK_LIGHTMAP: 4,
 
         /**
-         * @enum pc.SHADER
+         * @constant
+         * @type {Number}
          * @name pc.SHADER_FORWARD
          * @description Render shaded materials with gamma correction and tonemapping.
          */
         SHADER_FORWARD: 0,
 
         /**
-         * @enum pc.SHADER
+         * @constant
+         * @type {Number}
          * @name pc.SHADER_FORWARD
          * @description Render shaded materials without gamma correction and tonemapping.
          */
         SHADER_FORWARDHDR: 1,
 
         /**
-         * @enum pc.SHADER
+         * @constant
+         * @type {Number}
          * @name pc.SHADER_FORWARD
          * @description Render RGBA-encoded depth value.
          */
@@ -304,35 +328,40 @@
         VIEW_RIGHT: 2,
 
         /**
-         * @enum pc.SORTMODE
+         * @constant
+         * @type {Number}
          * @name pc.SORTMODE_NONE
          * @description No sorting is applied. Mesh instances are rendered in the same order they were added to a layer.
          */
         SORTMODE_NONE: 0,
 
         /**
-         * @enum pc.SORTMODE
+         * @constant
+         * @type {Number}
          * @name pc.SORTMODE_MANUAL
          * @description Mesh instances are sorted based on {@link pc.MeshInstance#drawOrder}.
          */
         SORTMODE_MANUAL: 1,
 
         /**
-         * @enum pc.SORTMODE
+         * @constant
+         * @type {Number}
          * @name pc.SORTMODE_MATERIALMESH
          * @description Mesh instances are sorted to minimize switching between materials and meshes to improve rendering performance.
          */
         SORTMODE_MATERIALMESH: 2,
 
         /**
-         * @enum pc.SORTMODE
+         * @constant
+         * @type {Number}
          * @name pc.SORTMODE_BACK2FRONT
          * @description Mesh instances are sorted back to front. This is the way to properly render many semi-transparent objects on different depth, one is blended on top of another.
          */
         SORTMODE_BACK2FRONT: 3,
 
         /**
-         * @enum pc.SORTMODE
+         * @constant
+         * @type {Number}
          * @name pc.SORTMODE_FRONT2BACK
          * @description Mesh instances are sorted front to back. Depending on GPU and the scene, this option may give better performance than pc.SORTMODE_MATERIALMESH due to reduced overdraw.
          */
@@ -340,7 +369,8 @@
 
         /**
          * @private
-         * @enum pc.SORTMODE
+         * @constant
+         * @type {Number}
          * @name  pc.SORTMODE_CUSTOM
          * @description Provide custom functions for sorting drawcalls and calculating distance
          */
@@ -355,13 +385,15 @@
         ASPECT_MANUAL: 1,
 
         /**
-         * @enum pc.ORIENTATION
+         * @constant
+         * @type {Number}
          * @name pc.ORIENTATION_HORIZONTAL
          * @description Horizontal orientation.
          */
         ORIENTATION_HORIZONTAL: 0,
         /**
-         * @enum pc.ORIENTATION
+         * @constant
+         * @type {Number}
          * @name pc.ORIENTATION_VERTICAL
          * @description Vertical orientation.
          */
