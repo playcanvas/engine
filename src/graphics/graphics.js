@@ -527,181 +527,211 @@
         PRIMITIVE_TRIFAN: 6,
 
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_POSITION
          * @description Vertex attribute to be treated as a position.
          */
         SEMANTIC_POSITION: "POSITION",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_NORMAL
          * @description Vertex attribute to be treated as a normal.
          */
         SEMANTIC_NORMAL: "NORMAL",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_TANGENT
          * @description Vertex attribute to be treated as a tangent.
          */
         SEMANTIC_TANGENT: "TANGENT",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_BLENDWEIGHT
          * @description Vertex attribute to be treated as skin blend weights.
          */
         SEMANTIC_BLENDWEIGHT: "BLENDWEIGHT",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_BLENDINDICES
          * @description Vertex attribute to be treated as skin blend indices.
          */
         SEMANTIC_BLENDINDICES: "BLENDINDICES",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_COLOR
          * @description Vertex attribute to be treated as a color.
          */
         SEMANTIC_COLOR: "COLOR",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_TEXCOORD0
          * @description Vertex attribute to be treated as a texture coordinate (set 0).
          */
         SEMANTIC_TEXCOORD0: "TEXCOORD0",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_TEXCOORD1
          * @description Vertex attribute to be treated as a texture coordinate (set 1).
          */
         SEMANTIC_TEXCOORD1: "TEXCOORD1",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_TEXCOORD2
          * @description Vertex attribute to be treated as a texture coordinate (set 2).
          */
         SEMANTIC_TEXCOORD2: "TEXCOORD2",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_TEXCOORD3
          * @description Vertex attribute to be treated as a texture coordinate (set 3).
          */
         SEMANTIC_TEXCOORD3: "TEXCOORD3",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_TEXCOORD4
          * @description Vertex attribute to be treated as a texture coordinate (set 4).
          */
         SEMANTIC_TEXCOORD4: "TEXCOORD4",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_TEXCOORD5
          * @description Vertex attribute to be treated as a texture coordinate (set 5).
          */
         SEMANTIC_TEXCOORD5: "TEXCOORD5",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_TEXCOORD6
          * @description Vertex attribute to be treated as a texture coordinate (set 6).
          */
         SEMANTIC_TEXCOORD6: "TEXCOORD6",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_TEXCOORD7
          * @description Vertex attribute to be treated as a texture coordinate (set 7).
          */
         SEMANTIC_TEXCOORD7: "TEXCOORD7",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR0
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR0: "ATTR0",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR1
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR1: "ATTR1",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR2
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR2: "ATTR2",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR3
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR3: "ATTR3",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR4
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR4: "ATTR4",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR5
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR5: "ATTR5",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR6
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR6: "ATTR6",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR7
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR7: "ATTR7",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR8
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR8: "ATTR8",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR9
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR9: "ATTR9",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR10
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR10: "ATTR10",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR11
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR11: "ATTR11",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR12
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR12: "ATTR12",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR13
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR13: "ATTR13",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR14
          * @description Vertex attribute with a user defined semantic.
          */
         SEMANTIC_ATTR14: "ATTR14",
         /**
-         * @enum pc.SEMANTIC
+         * @constant
+         * @type {String}
          * @name pc.SEMANTIC_ATTR15
          * @description Vertex attribute with a user defined semantic.
          */

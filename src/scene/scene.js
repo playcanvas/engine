@@ -79,25 +79,29 @@
         BLEND_MAX: 10,
 
         /**
-         * @enum pc.FOG
+         * @constant
+         * @type {String}
          * @name pc.FOG_NONE
          * @description No fog is applied to the scene.
          */
         FOG_NONE: 'none',
         /**
-         * @enum pc.FOG
+         * @constant
+         * @type {String}
          * @name pc.FOG_LINEAR
          * @description Fog rises linearly from zero to 1 between a start and end depth.
          */
         FOG_LINEAR: 'linear',
         /**
-         * @enum pc.FOG
+         * @constant
+         * @type {String}
          * @name pc.FOG_EXP
          * @description Fog rises according to an exponential curve controlled by a density value.
          */
         FOG_EXP: 'exp',
         /**
-         * @enum pc.FOG
+         * @constant
+         * @type {String}
          * @name pc.FOG_EXP2
          * @description Fog rises according to an exponential curve controlled by a density value.
          */

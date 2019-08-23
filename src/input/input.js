@@ -14,63 +14,73 @@
         AXIS_KEY: 'key',
 
         /**
-         * @enum pc.EVENT
+         * @constant
+         * @type {String}
          * @name pc.EVENT_KEYDOWN
          * @description Name of event fired when a key is pressed
          */
         EVENT_KEYDOWN: 'keydown',
         /**
-         * @enum pc.EVENT
+         * @constant
+         * @type {String}
          * @name pc.EVENT_KEYUP
          * @description Name of event fired when a key is released
          */
         EVENT_KEYUP: 'keyup',
 
         /**
-         * @enum pc.EVENT
+         * @constant
+         * @type {String}
          * @name pc.EVENT_MOUSEDOWN
          * @description Name of event fired when a mouse button is pressed
          */
         EVENT_MOUSEDOWN: "mousedown",
         /**
-         * @enum pc.EVENT
+         * @constant
+         * @type {String}
          * @name pc.EVENT_MOUSEMOVE
          * @description Name of event fired when the mouse is moved
          */
         EVENT_MOUSEMOVE: "mousemove",
         /**
-         * @enum pc.EVENT
+         * @constant
+         * @type {String}
          * @name pc.EVENT_MOUSEUP
          * @description Name of event fired when a mouse button is released
          */
         EVENT_MOUSEUP: "mouseup",
         /**
-         * @enum pc.EVENT
+         * @constant
+         * @type {String}
          * @name pc.EVENT_MOUSEWHEEL
          * @description Name of event fired when the mouse wheel is rotated
          */
         EVENT_MOUSEWHEEL: "mousewheel",
 
         /**
-         * @enum pc.EVENT
+         * @constant
+         * @type {String}
          * @name pc.EVENT_TOUCHSTART
          * @description Name of event fired when a new touch occurs. For example, a finger is placed on the device.
          */
         EVENT_TOUCHSTART: 'touchstart',
         /**
-         * @enum pc.EVENT
+         * @constant
+         * @type {String}
          * @name pc.EVENT_TOUCHEND
          * @description Name of event fired when touch ends. For example, a finger is lifted off the device.
          */
         EVENT_TOUCHEND: 'touchend',
         /**
-         * @enum pc.EVENT
+         * @constant
+         * @type {String}
          * @name pc.EVENT_TOUCHMOVE
          * @description Name of event fired when a touch moves.
          */
         EVENT_TOUCHMOVE: 'touchmove',
         /**
-         * @enum pc.EVENT
+         * @constant
+         * @type {String}
          * @name pc.EVENT_TOUCHCANCEL
          * @description Name of event fired when a touch point is interrupted in some way.
          * The exact reasons for cancelling a touch can vary from device to device.
