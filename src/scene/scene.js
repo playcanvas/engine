@@ -621,7 +621,19 @@
         COMPUPDATED_CAMERAS: 4,
         COMPUPDATED_BLEND: 8,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.ASPECT_AUTO
+         * @description
+         */
         ASPECT_AUTO: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.ASPECT_MANUAL
+         * @description
+         */
         ASPECT_MANUAL: 1,
 
         /**
