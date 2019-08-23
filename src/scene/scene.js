@@ -551,8 +551,26 @@
          */
         BAKE_COLORDIR: 1,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.VIEW_CENTER
+         * @description
+         */
         VIEW_CENTER: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.VIEW_LEFT
+         * @description
+         */
         VIEW_LEFT: 1,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.VIEW_RIGHT
+         * @description
+         */
         VIEW_RIGHT: 2,
 
         /**
