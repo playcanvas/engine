@@ -103,7 +103,19 @@
          */
         FOG_EXP2: 'exp2',
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.FRESNEL_NONE
+         * @description 
+         */
         FRESNEL_NONE: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.FRESNEL_SCHLICK
+         * @description 
+         */
         FRESNEL_SCHLICK: 2,
 
         // Legacy
