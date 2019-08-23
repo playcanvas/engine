@@ -41,6 +41,13 @@ Object.assign(pc, function () {
         },
 
         /**
+        * @callback pc.ResourceLoaderCallback
+        * @description The callback passed into {@link pc.ResourceLoader#load} and called when the resource is loaded or an error occur.
+        * @param {String|Null} err The error message in the case where the load fails.
+        * @param {*} resource The resource that has been successfully loaded.
+        */
+
+        /**
          * @function
          * @name pc.ResourceLoader#load
          * @description Make a request for a resource from a remote URL. Parse the returned data using the
@@ -48,7 +55,7 @@ Object.assign(pc, function () {
          * the resource.
          * @param {String} url The URL of the resource to load.
          * @param {String} type The type of resource expected.
-         * @param {Function} callback The callback used when the resource is loaded or an error occurs.
+         * @param {pc.ResourceLoaderCallback} callback The callback used when the resource is loaded or an error occurs.
          * @param {pc.Asset} [asset] Optional asset that is passed into handler
          * Passed (err, resource) where err is null if there are no errors.
          * @example
