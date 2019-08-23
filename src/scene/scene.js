@@ -295,8 +295,27 @@
          * @description 
          */
         EMITTERSHAPE_SPHERE: 1,
+
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PARTICLEORIENTATION_SCREEN
+         * @description 
+         */
         PARTICLEORIENTATION_SCREEN: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PARTICLEORIENTATION_WORLD
+         * @description 
+         */
         PARTICLEORIENTATION_WORLD: 1,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PARTICLEORIENTATION_EMITTER
+         * @description 
+         */
         PARTICLEORIENTATION_EMITTER: 2,
 
         /**
