@@ -433,13 +433,20 @@ Object.assign(pc, function () {
         },
 
         /**
+        * @callback pc.AssetRegistryLoadCallback
+        * @description Function called when asset is loaded using {@link pc.AssetRegistry#loadFromUrl}.
+        * @param {String|Null} err The error message is null if no errors were encountered.
+        * @param {pc.Asset} asset The loaded asset.
+        */
+
+        /**
          * @function
          * @name pc.AssetRegistry#loadFromUrl
          * @description Use this to load and create an asset if you don't have assets created. Usually you would only use this
          * if you are not integrated with the PlayCanvas Editor
          * @param {String} url The url to load
          * @param {String} type The type of asset to load
-         * @param {Function} callback Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered
+         * @param {pc.AssetRegistryLoadCallback} callback Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered
          * @example
          * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
          *     var texture = asset.resource;
@@ -671,10 +678,17 @@ Object.assign(pc, function () {
         },
 
         /**
+        * @callback pc.AssetRegistryFilterCallback
+        * @description Function used to filter assets when passed into {@link pc.AssetRegistry#filter}.
+        * @param {pc.Asset} asset The current asset to filter.
+        * @returns {Boolean} Return `true` to include asset to result list.
+        */
+
+        /**
          * @function
          * @name pc.AssetRegistry#filter
          * @description Return all Assets that satisfy filter callback
-         * @param {Function} callback The callback function that is used to filter assets, return `true` to include asset to result list
+         * @param {pc.AssetRegistryFilterCallback} callback The callback function that is used to filter assets, return `true` to include asset to result list
          * @returns {pc.Asset[]} A list of all Assets found
          * @example
          * var assets = app.assets.filter(function(asset) {
