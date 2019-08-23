@@ -234,7 +234,19 @@
          */
         SHADOW_PCF5: 4,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.BLUR_BOX
+         * @description 
+         */
         BLUR_BOX: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.BLUR_GAUSSIAN
+         * @description 
+         */
         BLUR_GAUSSIAN: 1,
 
         PARTICLESORT_NONE: 0,
