@@ -279,7 +279,7 @@ Object.assign(pc, function () {
      * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent
      * @param {pc.Application} [app] Optional application handler, to choose which {@link pc.ScriptRegistry} to add a script to.
      * By default it will use `pc.Application.getApplication()` to get current {@link pc.Application}.
-     * @returns {Function} The constructor of a {@link pc.ScriptType}, which the developer is meant to extend by adding attributes and prototype methods.
+     * @returns {pc.ScriptType} The constructor of a {@link pc.ScriptType}, which the developer is meant to extend by adding attributes and prototype methods.
      * @example
      * var Turning = pc.createScript('turn');
      *
