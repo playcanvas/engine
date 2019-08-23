@@ -26,7 +26,7 @@ Object.assign(pc, function () {
          * @param {String} url The URL of the model data.
          * @param {pc.ResourceHandlerLoadCallback} callback Callback function called when the load completes. The
          * callback is of the form fn(err, response), where err is a String error message in
-         * the case where the load fails, and repsponse is the model data that has been
+         * the case where the load fails, and response is the model data that has been
          * successfully loaded.
          */
         load: function (url, callback) {
