@@ -191,11 +191,47 @@
          */
         LIGHTFALLOFF_INVERSESQUARED: 1,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.SHADOW_PCF3
+         * @description 
+         */
         SHADOW_PCF3: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.SHADOW_DEPTH
+         * @description 
+         */
         SHADOW_DEPTH: 0, // alias for SHADOW_PCF3 for backwards compatibility
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.SHADOW_VSM8
+         * @description 
+         */
         SHADOW_VSM8: 1,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.SHADOW_VSM16
+         * @description 
+         */
         SHADOW_VSM16: 2,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.SHADOW_VSM32
+         * @description 
+         */
         SHADOW_VSM32: 3,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.SHADOW_PCF5
+         * @description 
+         */
         SHADOW_PCF5: 4,
 
         BLUR_BOX: 0,
