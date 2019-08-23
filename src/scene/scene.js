@@ -249,10 +249,35 @@
          */
         BLUR_GAUSSIAN: 1,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PARTICLESORT_NONE
+         * @description 
+         */
         PARTICLESORT_NONE: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PARTICLESORT_DISTANCE
+         * @description 
+         */
         PARTICLESORT_DISTANCE: 1,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PARTICLESORT_NEWER_FIRST
+         * @description 
+         */
         PARTICLESORT_NEWER_FIRST: 2,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.PARTICLESORT_OLDER_FIRST
+         * @description 
+         */
         PARTICLESORT_OLDER_FIRST: 3,
+
         PARTICLEMODE_GPU: 0,
         PARTICLEMODE_CPU: 1,
         EMITTERSHAPE_BOX: 0,
