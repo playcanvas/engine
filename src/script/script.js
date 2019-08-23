@@ -323,8 +323,8 @@ Object.assign(pc, function () {
          * When disabled no update methods will be called on each tick.
          * initialize and postInitialize methods will run once when the script instance is in `enabled` state during app tick.
          * @param {Object} args The input arguments object
-         * @param {Object} args.app The {@link pc.Application} that is running the script
-         * @param {Object} args.entity The {@link pc.Entity} that the script is attached to
+         * @param {pc.Application} args.app The {@link pc.Application} that is running the script
+         * @param {pc.Entity} args.entity The {@link pc.Entity} that the script is attached to
          *
          */
         var script = function (args) {
