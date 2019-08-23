@@ -31,6 +31,7 @@ Object.assign(pc, function () {
          * @param {pc.Asset} [asset] Optional asset that is passed by ResourceLoader.
          * @returns {*} The parsed resource data.
          */
+        // eslint-disable-next-line valid-jsdoc
         open: function (url, data, asset) {
             throw new Error('not implemented');
         },
