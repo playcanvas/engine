@@ -280,7 +280,20 @@
 
         PARTICLEMODE_GPU: 0,
         PARTICLEMODE_CPU: 1,
+
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.EMITTERSHAPE_BOX
+         * @description 
+         */
         EMITTERSHAPE_BOX: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.EMITTERSHAPE_SPHERE
+         * @description 
+         */
         EMITTERSHAPE_SPHERE: 1,
         PARTICLEORIENTATION_SCREEN: 0,
         PARTICLEORIENTATION_WORLD: 1,
