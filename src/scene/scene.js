@@ -176,7 +176,19 @@
          */
         LIGHTTYPE_SPOT: 2,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.LIGHTFALLOFF_LINEAR
+         * @description 
+         */
         LIGHTFALLOFF_LINEAR: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.LIGHTFALLOFF_INVERSESQUARED
+         * @description 
+         */
         LIGHTFALLOFF_INVERSESQUARED: 1,
 
         SHADOW_PCF3: 0,
