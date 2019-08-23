@@ -413,10 +413,40 @@
          */
         GAMMA_SRGBHDR: 3,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.TONEMAP_LINEAR
+         * @description 
+         */
         TONEMAP_LINEAR: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.TONEMAP_FILMIC
+         * @description 
+         */
         TONEMAP_FILMIC: 1,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.TONEMAP_HEJL
+         * @description 
+         */
         TONEMAP_HEJL: 2,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.TONEMAP_ACES
+         * @description 
+         */
         TONEMAP_ACES: 3,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.TONEMAP_ACES2
+         * @description 
+         */
         TONEMAP_ACES2: 4,
 
         SPECOCC_NONE: 0,
