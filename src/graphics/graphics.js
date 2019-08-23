@@ -2,24 +2,21 @@
     // Graphics engine enums
     var enums = {
         /**
-         * @static
-         * @readonly
+         * @constant
          * @type Number
          * @name pc.ADDRESS_REPEAT
          * @description Ignores the integer part of texture coordinates, using only the fractional part.
          */
         ADDRESS_REPEAT: 0,
         /**
-         * @static
-         * @readonly
+         * @constant
          * @type Number
          * @name pc.ADDRESS_CLAMP_TO_EDGE
          * @description Clamps texture coordinate to the range 0 to 1.
          */
         ADDRESS_CLAMP_TO_EDGE: 1,
         /**
-         * @static
-         * @readonly
+         * @constant
          * @type Number
          * @name pc.ADDRESS_MIRRORED_REPEAT
          * @description Texture coordinate to be set to the fractional part if the integer part is even; if the integer part is odd,
