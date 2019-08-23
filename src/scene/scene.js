@@ -353,7 +353,19 @@
          */
         RENDERSTYLE_POINTS: 2,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.CUBEPROJ_NONE
+         * @description 
+         */
         CUBEPROJ_NONE: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.CUBEPROJ_BOX
+         * @description 
+         */
         CUBEPROJ_BOX: 1,
 
         SPECULAR_PHONG: 0,
