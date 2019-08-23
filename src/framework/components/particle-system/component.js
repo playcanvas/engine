@@ -122,12 +122,12 @@ Object.assign(pc, function () {
      * @property {pc.Asset} meshAsset The {@link pc.Asset} used to set the mesh.
      * @property {pc.Texture} colorMap The color map texture to apply to all particles in the system. If no texture is assigned, a default spot texture is used.
      * @property {pc.Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
-     * @property {pc.EMITTERSHAPE} emitterShape Shape of the emitter. Defines the bounds inside which particles are spawned. Also affects the direction of initial velocity.
+     * @property {Number} emitterShape Shape of the emitter. Defines the bounds inside which particles are spawned. Also affects the direction of initial velocity.
      * <ul>
      * <li><strong>{@link pc.EMITTERSHAPE_BOX}</strong>: Box shape parameterized by emitterExtents. Initial velocity is directed towards local Z axis.</li>
      * <li><strong>{@link pc.EMITTERSHAPE_SPHERE}</strong>: Sphere shape parameterized by emitterRadius. Initial velocity is directed outwards from the center.</li>
      * </ul>
-     * @property {pc.PARTICLESORT} sort Sorting mode. Forces CPU simulation, so be careful.
+     * @property {Number} sort Sorting mode. Forces CPU simulation, so be careful.
      * <ul>
      * <li><strong>{@link pc.PARTICLESORT_NONE}</strong>: No sorting, particles are drawn in arbitary order. Can be simulated on GPU.</li>
      * <li><strong>{@link pc.PARTICLESORT_DISTANCE}</strong>: Sorting based on distance to the camera. CPU only.</li>
@@ -135,8 +135,8 @@ Object.assign(pc, function () {
      * <li><strong>{@link pc.PARTICLESORT_OLDER_FIRST}</strong>: Older particles are drawn first. CPU only.</li>
      * </ul>
      * @property {pc.Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
-     * @property {pc.BLEND} blend Blending mode.
-     * @property {pc.PARTICLEORIENTATION} orientation Sorting mode. Forces CPU simulation, so be careful.
+     * @property {Number} blend Blending mode.
+     * @property {Number} orientation Sorting mode. Forces CPU simulation, so be careful.
      * <ul>
      * <li><strong>{@link pc.PARTICLEORIENTATION_SCREEN}</strong>: Particles are facing camera.</li>
      * <li><strong>{@link pc.PARTICLEORIENTATION_WORLD}</strong>: User defines world space normal (particleNormal) to set planes orientation.</li>
