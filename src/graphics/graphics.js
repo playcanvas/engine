@@ -313,13 +313,61 @@
          */
         FILTER_LINEAR_MIPMAP_LINEAR: 5,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.FUNC_NEVER
+         * @description 
+         */
         FUNC_NEVER: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.FUNC_LESS
+         * @description 
+         */
         FUNC_LESS: 1,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.FUNC_EQUAL
+         * @description 
+         */
         FUNC_EQUAL: 2,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.FUNC_LESSEQUAL
+         * @description 
+         */
         FUNC_LESSEQUAL: 3,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.FUNC_GREATER
+         * @description 
+         */
         FUNC_GREATER: 4,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.FUNC_NOTEQUAL
+         * @description 
+         */
         FUNC_NOTEQUAL: 5,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.FUNC_GREATEREQUAL
+         * @description 
+         */
         FUNC_GREATEREQUAL: 6,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.FUNC_ALWAYS
+         * @description 
+         */
         FUNC_ALWAYS: 7,
 
         /**
