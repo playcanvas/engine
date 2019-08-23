@@ -331,8 +331,26 @@
          */
         PROJECTION_ORTHOGRAPHIC: 1,
 
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.RENDERSTYLE_SOLID
+         * @description 
+         */
         RENDERSTYLE_SOLID: 0,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.RENDERSTYLE_WIREFRAME
+         * @description 
+         */
         RENDERSTYLE_WIREFRAME: 1,
+        /**
+         * @constant
+         * @type {Number}
+         * @name pc.RENDERSTYLE_POINTS
+         * @description 
+         */
         RENDERSTYLE_POINTS: 2,
 
         CUBEPROJ_NONE: 0,
