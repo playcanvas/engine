@@ -1,6 +1,7 @@
 Object.assign(pc, function () {
     /**
      * @private
+     * @constructor
      * @name pc.EntityReference
      * @description Helper class used for managing component properties that represent entity references.
      * @classdesc An EntityReference can be used in scenarios where a component has one or more properties that

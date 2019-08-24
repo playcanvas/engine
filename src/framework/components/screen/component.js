@@ -1,12 +1,14 @@
 Object.assign(pc, function () {
     /**
-     * @enum pc.SCALEMODE
+     * @constant
+     * @type {String}
      * @name pc.SCALEMODE_NONE
      * @description Always use the application's resolution as the resolution for the {@link pc.ScreenComponent}.
      */
     pc.SCALEMODE_NONE = "none";
     /**
-     * @enum pc.SCALEMODE
+     * @constant
+     * @type {String}
      * @name pc.SCALEMODE_BLEND
      * @description Scale the {@link pc.ScreenComponent} when the application's resolution is different than the ScreenComponent's referenceResolution.
      */
