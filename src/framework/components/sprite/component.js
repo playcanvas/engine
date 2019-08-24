@@ -2,7 +2,8 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @enum pc.SPRITETYPE
+     * @constant
+     * @type {String}
      * @name pc.SPRITETYPE_SIMPLE
      * @description A {@link pc.SpriteComponent} that displays a single frame from a sprite asset.
      */
@@ -10,7 +11,8 @@ Object.assign(pc, function () {
 
 
     /**
-     * @enum pc.SPRITETYPE
+     * @constant
+     * @type {String}
      * @name pc.SPRITETYPE_ANIMATED
      * @description A {@link pc.SpriteComponent} that renders sprite animations.
      */
