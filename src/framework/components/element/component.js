@@ -4,19 +4,22 @@ Object.assign(pc, function () {
     // #endif
 
     /**
-     * @enum pc.ELEMENTTYPE
+     * @constant
+     * @type {String}
      * @name pc.ELEMENTTYPE_GROUP
      * @description A {@link pc.ElementComponent} that contains child {@link pc.ElementComponent}s.
      */
     pc.ELEMENTTYPE_GROUP = 'group';
     /**
-     * @enum pc.ELEMENTTYPE
+     * @constant
+     * @type {String}
      * @name pc.ELEMENTTYPE_IMAGE
      * @description A {@link pc.ElementComponent} that displays an image.
      */
     pc.ELEMENTTYPE_IMAGE = 'image';
     /**
-     * @enum pc.ELEMENTTYPE
+     * @constant
+     * @type {String}
      * @name pc.ELEMENTTYPE_TEXT
      * @description A {@link pc.ElementComponent} that displays text.
      */

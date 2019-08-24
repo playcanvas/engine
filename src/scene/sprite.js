@@ -2,14 +2,16 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @enum pc.SPRITE_RENDERMODE
+     * @constant
+     * @type {Number}
      * @name pc.SPRITE_RENDERMODE_SIMPLE
      * @description This mode renders a sprite as a simple quad.
      */
     pc.SPRITE_RENDERMODE_SIMPLE = 0;
 
     /**
-     * @enum pc.SPRITE_RENDERMODE
+     * @constant
+     * @type {Number}
      * @name pc.SPRITE_RENDERMODE_SLICED
      * @description This mode renders a sprite using 9-slicing in 'sliced' mode. Sliced mode stretches the
      * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
@@ -18,7 +20,8 @@ Object.assign(pc, function () {
     pc.SPRITE_RENDERMODE_SLICED = 1;
 
     /**
-     * @enum pc.SPRITE_RENDERMODE
+     * @constant
+     * @type {Number}
      * @name pc.SPRITE_RENDERMODE_TILED
      * @description This mode renders a sprite using 9-slicing in 'tiled' mode. Tiled mode tiles the
      * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
