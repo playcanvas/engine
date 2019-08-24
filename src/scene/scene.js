@@ -107,14 +107,14 @@
          * @constant
          * @type {Number}
          * @name pc.FRESNEL_NONE
-         * @description 
+         * @description No Fresnel.
          */
         FRESNEL_NONE: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.FRESNEL_SCHLICK
-         * @description 
+         * @description Schlick's approximation of Fresnel.
          */
         FRESNEL_SCHLICK: 2,
 
@@ -180,14 +180,14 @@
          * @constant
          * @type {Number}
          * @name pc.LIGHTFALLOFF_LINEAR
-         * @description 
+         * @description Linear distance falloff model for light attenuation.
          */
         LIGHTFALLOFF_LINEAR: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.LIGHTFALLOFF_INVERSESQUARED
-         * @description 
+         * @description Inverse squared distance falloff model for light attenuation.
          */
         LIGHTFALLOFF_INVERSESQUARED: 1,
 
@@ -195,42 +195,36 @@
          * @constant
          * @type {Number}
          * @name pc.SHADOW_PCF3
-         * @description 
+         * @description Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.
          */
         SHADOW_PCF3: 0,
-        /**
-         * @constant
-         * @type {Number}
-         * @name pc.SHADOW_DEPTH
-         * @description 
-         */
         SHADOW_DEPTH: 0, // alias for SHADOW_PCF3 for backwards compatibility
         /**
          * @constant
          * @type {Number}
          * @name pc.SHADOW_VSM8
-         * @description 
+         * @description Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.
          */
         SHADOW_VSM8: 1,
         /**
          * @constant
          * @type {Number}
          * @name pc.SHADOW_VSM16
-         * @description 
+         * @description Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.
          */
         SHADOW_VSM16: 2,
         /**
          * @constant
          * @type {Number}
          * @name pc.SHADOW_VSM32
-         * @description 
+         * @description Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.
          */
         SHADOW_VSM32: 3,
         /**
          * @constant
          * @type {Number}
          * @name pc.SHADOW_PCF5
-         * @description 
+         * @description Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to pc.SHADOW_PCF3 on WebGL 1.0.
          */
         SHADOW_PCF5: 4,
 
@@ -238,14 +232,14 @@
          * @constant
          * @type {Number}
          * @name pc.BLUR_BOX
-         * @description 
+         * @description Box filter.
          */
         BLUR_BOX: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.BLUR_GAUSSIAN
-         * @description 
+         * @description Gaussian filter. May look smoother than box, but requires more samples.
          */
         BLUR_GAUSSIAN: 1,
 
@@ -253,28 +247,28 @@
          * @constant
          * @type {Number}
          * @name pc.PARTICLESORT_NONE
-         * @description 
+         * @description No sorting, particles are drawn in arbitary order. Can be simulated on GPU.
          */
         PARTICLESORT_NONE: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.PARTICLESORT_DISTANCE
-         * @description 
+         * @description Sorting based on distance to the camera. CPU only.
          */
         PARTICLESORT_DISTANCE: 1,
         /**
          * @constant
          * @type {Number}
          * @name pc.PARTICLESORT_NEWER_FIRST
-         * @description 
+         * @description Newer particles are drawn first. CPU only.
          */
         PARTICLESORT_NEWER_FIRST: 2,
         /**
          * @constant
          * @type {Number}
          * @name pc.PARTICLESORT_OLDER_FIRST
-         * @description 
+         * @description Older particles are drawn first. CPU only.
          */
         PARTICLESORT_OLDER_FIRST: 3,
 
@@ -285,14 +279,14 @@
          * @constant
          * @type {Number}
          * @name pc.EMITTERSHAPE_BOX
-         * @description 
+         * @description Box shape parameterized by emitterExtents. Initial velocity is directed towards local Z axis.
          */
         EMITTERSHAPE_BOX: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.EMITTERSHAPE_SPHERE
-         * @description 
+         * @description Sphere shape parameterized by emitterRadius. Initial velocity is directed outwards from the center.
          */
         EMITTERSHAPE_SPHERE: 1,
 
@@ -300,21 +294,21 @@
          * @constant
          * @type {Number}
          * @name pc.PARTICLEORIENTATION_SCREEN
-         * @description 
+         * @description Particles are facing camera.
          */
         PARTICLEORIENTATION_SCREEN: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.PARTICLEORIENTATION_WORLD
-         * @description 
+         * @description User defines world space normal (particleNormal) to set planes orientation.
          */
         PARTICLEORIENTATION_WORLD: 1,
         /**
          * @constant
          * @type {Number}
          * @name pc.PARTICLEORIENTATION_EMITTER
-         * @description 
+         * @description Similar to previous, but the normal is affected by emitter(entity) transformation.
          */
         PARTICLEORIENTATION_EMITTER: 2,
 
@@ -335,21 +329,21 @@
          * @constant
          * @type {Number}
          * @name pc.RENDERSTYLE_SOLID
-         * @description 
+         * @description Render mesh instance as solid geometry.
          */
         RENDERSTYLE_SOLID: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.RENDERSTYLE_WIREFRAME
-         * @description 
+         * @description Render mesh instance as wireframe.
          */
         RENDERSTYLE_WIREFRAME: 1,
         /**
          * @constant
          * @type {Number}
          * @name pc.RENDERSTYLE_POINTS
-         * @description 
+         * @description Render mesh instance as points.
          */
         RENDERSTYLE_POINTS: 2,
 
@@ -357,14 +351,14 @@
          * @constant
          * @type {Number}
          * @name pc.CUBEPROJ_NONE
-         * @description 
+         * @description The cube map is treated as if it is infinitely far away.
          */
         CUBEPROJ_NONE: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.CUBEPROJ_BOX
-         * @description 
+         * @description The cube map is box-projected based on a world space axis-aligned bounding box.
          */
         CUBEPROJ_BOX: 1,
 
@@ -372,14 +366,14 @@
          * @constant
          * @type {Number}
          * @name pc.SPECULAR_PHONG
-         * @description 
+         * @description Phong without energy conservation. You should only use it as a backwards compatibility with older projects.
          */
         SPECULAR_PHONG: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.SPECULAR_BLINN
-         * @description 
+         * @description Energy-conserving Blinn-Phong.
          */
         SPECULAR_BLINN: 1,
 
@@ -387,14 +381,14 @@
          * @constant
          * @type {Number}
          * @name pc.GAMMA_NONE
-         * @description 
+         * @description No gamma correction.
          */
         GAMMA_NONE: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.GAMMA_SRGB
-         * @description 
+         * @description Apply sRGB gamma correction.
          */
         GAMMA_SRGB: 1,
         /**
@@ -402,14 +396,14 @@
          * @constant
          * @type {Number}
          * @name pc.GAMMA_SRGBFAST
-         * @description 
+         * @description Apply sRGB (fast) gamma correction.
          */
         GAMMA_SRGBFAST: 2, // deprecated
         /**
          * @constant
          * @type {Number}
          * @name pc.GAMMA_SRGBHDR
-         * @description 
+         * @description Apply sRGB (HDR) gamma correction.
          */
         GAMMA_SRGBHDR: 3,
 
@@ -417,35 +411,35 @@
          * @constant
          * @type {Number}
          * @name pc.TONEMAP_LINEAR
-         * @description 
+         * @description Linear tonemapping.
          */
         TONEMAP_LINEAR: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.TONEMAP_FILMIC
-         * @description 
+         * @description Filmic tonemapping curve.
          */
         TONEMAP_FILMIC: 1,
         /**
          * @constant
          * @type {Number}
          * @name pc.TONEMAP_HEJL
-         * @description 
+         * @description Hejl filmic tonemapping curve.
          */
         TONEMAP_HEJL: 2,
         /**
          * @constant
          * @type {Number}
          * @name pc.TONEMAP_ACES
-         * @description 
+         * @description ACES filmic tonemapping curve.
          */
         TONEMAP_ACES: 3,
         /**
          * @constant
          * @type {Number}
          * @name pc.TONEMAP_ACES2
-         * @description 
+         * @description ACES v2 filmic tonemapping curve.
          */
         TONEMAP_ACES2: 4,
 
@@ -453,21 +447,21 @@
          * @constant
          * @type {Number}
          * @name pc.SPECOCC_NONE
-         * @description 
+         * @description No specular occlusion.
          */
         SPECOCC_NONE: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.SPECOCC_AO
-         * @description 
+         * @description Use AO directly to occlude specular.
          */
         SPECOCC_AO: 1,
         /**
          * @constant
          * @type {Number}
          * @name pc.SPECOCC_GLOSSDEPENDENT
-         * @description 
+         * @description Modify AO based on material glossiness/view angle to occlude specular.
          */
         SPECOCC_GLOSSDEPENDENT: 2,
 
@@ -540,14 +534,14 @@
          * @constant
          * @type {Number}
          * @name pc.BAKE_COLOR
-         * @description
+         * @description Single color lightmap.
          */
         BAKE_COLOR: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.BAKE_COLORDIR
-         * @description
+         * @description Single color lightmap + dominant light direction (used for bump/specular).
          */
         BAKE_COLORDIR: 1,
 
@@ -555,21 +549,21 @@
          * @constant
          * @type {Number}
          * @name pc.VIEW_CENTER
-         * @description
+         * @description Center of view.
          */
         VIEW_CENTER: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.VIEW_LEFT
-         * @description
+         * @description Left of view. Only used in stereo rendering.
          */
         VIEW_LEFT: 1,
         /**
          * @constant
          * @type {Number}
          * @name pc.VIEW_RIGHT
-         * @description
+         * @description Right of view. Only used in stereo rendering.
          */
         VIEW_RIGHT: 2,
 
@@ -625,14 +619,14 @@
          * @constant
          * @type {Number}
          * @name pc.ASPECT_AUTO
-         * @description
+         * @description Automatically set aspect ratio to current render target's width divided by height.
          */
         ASPECT_AUTO: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.ASPECT_MANUAL
-         * @description
+         * @description Use the manual aspect ratio value.
          */
         ASPECT_MANUAL: 1,
 

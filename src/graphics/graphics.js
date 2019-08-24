@@ -317,56 +317,56 @@
          * @constant
          * @type {Number}
          * @name pc.FUNC_NEVER
-         * @description 
+         * @description Never pass.
          */
         FUNC_NEVER: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.FUNC_LESS
-         * @description 
+         * @description Pass if (ref & mask) < (stencil & mask).
          */
         FUNC_LESS: 1,
         /**
          * @constant
          * @type {Number}
          * @name pc.FUNC_EQUAL
-         * @description 
+         * @description Pass if (ref & mask) == (stencil & mask).
          */
         FUNC_EQUAL: 2,
         /**
          * @constant
          * @type {Number}
          * @name pc.FUNC_LESSEQUAL
-         * @description 
+         * @description Pass if (ref & mask) <= (stencil & mask).
          */
         FUNC_LESSEQUAL: 3,
         /**
          * @constant
          * @type {Number}
          * @name pc.FUNC_GREATER
-         * @description 
+         * @description Pass if (ref & mask) > (stencil & mask).
          */
         FUNC_GREATER: 4,
         /**
          * @constant
          * @type {Number}
          * @name pc.FUNC_NOTEQUAL
-         * @description 
+         * @description Pass if (ref & mask) != (stencil & mask).
          */
         FUNC_NOTEQUAL: 5,
         /**
          * @constant
          * @type {Number}
          * @name pc.FUNC_GREATEREQUAL
-         * @description 
+         * @description Pass if (ref & mask) >= (stencil & mask).
          */
         FUNC_GREATEREQUAL: 6,
         /**
          * @constant
          * @type {Number}
          * @name pc.FUNC_ALWAYS
-         * @description 
+         * @description Always pass.
          */
         FUNC_ALWAYS: 7,
 
@@ -526,7 +526,7 @@
          * @constant
          * @type {Number}
          * @name pc.PIXELFORMAT_ETC1
-         * @description
+         * @description ETC1 compressed format.
          */
         PIXELFORMAT_ETC1: 21,
 
@@ -534,7 +534,7 @@
          * @constant
          * @type {Number}
          * @name pc.PIXELFORMAT_ETC2_RGB
-         * @description
+         * @description ETC2 (RGB) compressed format.
          */
         PIXELFORMAT_ETC2_RGB: 22,
 
@@ -542,7 +542,7 @@
          * @constant
          * @type {Number}
          * @name pc.PIXELFORMAT_ETC2_RGBA
-         * @description
+         * @description ETC2 (RGBA) compressed format.
          */
         PIXELFORMAT_ETC2_RGBA: 23,
 
@@ -550,7 +550,7 @@
          * @constant
          * @type {Number}
          * @name pc.PIXELFORMAT_PVRTC_2BPP_RGB_1
-         * @description
+         * @description PVRTC (2BPP RGB) compressed format.
          */
         PIXELFORMAT_PVRTC_2BPP_RGB_1: 24,
 
@@ -558,7 +558,7 @@
          * @constant
          * @type {Number}
          * @name pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1
-         * @description
+         * @description PVRTC (2BPP RGBA) compressed format.
          */
         PIXELFORMAT_PVRTC_2BPP_RGBA_1: 25,
 
@@ -566,7 +566,7 @@
          * @constant
          * @type {Number}
          * @name pc.PIXELFORMAT_PVRTC_4BPP_RGB_1
-         * @description
+         * @description PVRTC (4BPP RGB) compressed format.
          */
         PIXELFORMAT_PVRTC_4BPP_RGB_1: 26,
 
@@ -574,7 +574,7 @@
          * @constant
          * @type {Number}
          * @name pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1
-         * @description
+         * @description PVRTC (4BPP RGBA) compressed format.
          */
         PIXELFORMAT_PVRTC_4BPP_RGBA_1: 27,
 
@@ -810,56 +810,56 @@
          * @constant
          * @type {Number}
          * @name pc.STENCILOP_KEEP
-         * @description 
+         * @description Don't change the stencil buffer value.
          */
         STENCILOP_KEEP: 0,
         /**
          * @constant
          * @type {Number}
          * @name pc.STENCILOP_ZERO
-         * @description 
+         * @description Set value to zero.
          */
         STENCILOP_ZERO: 1,
         /**
          * @constant
          * @type {Number}
          * @name pc.STENCILOP_REPLACE
-         * @description 
+         * @description Replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc}).
          */
         STENCILOP_REPLACE: 2,
         /**
          * @constant
          * @type {Number}
          * @name pc.STENCILOP_INCREMENT
-         * @description 
+         * @description Increment the value.
          */
         STENCILOP_INCREMENT: 3,
         /**
          * @constant
          * @type {Number}
          * @name pc.STENCILOP_INCREMENTWRAP
-         * @description 
+         * @description Increment the value, but wrap it to zero when it's larger than a maximum representable value.
          */
         STENCILOP_INCREMENTWRAP: 4,
         /**
          * @constant
          * @type {Number}
          * @name pc.STENCILOP_DECREMENT
-         * @description 
+         * @description Decrement the value.
          */
         STENCILOP_DECREMENT: 5,
         /**
          * @constant
          * @type {Number}
          * @name pc.STENCILOP_DECREMENTWRAP
-         * @description 
+         * @description Decrement the value, but wrap it to a maximum representable value, if the current value is 0.
          */
         STENCILOP_DECREMENTWRAP: 6,
         /**
          * @constant
          * @type {Number}
          * @name pc.STENCILOP_INVERT
-         * @description 
+         * @description Invert the value bitwise.
          */
         STENCILOP_INVERT: 7,
 

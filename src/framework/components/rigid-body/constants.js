@@ -4,21 +4,21 @@ Object.assign(pc, {
      * @constant
      * @type {String}
      * @name pc.BODYTYPE_STATIC
-     * @description 
+     * @description Rigid body has infinite mass and cannot move.
      */
     BODYTYPE_STATIC: 'static',
     /**
      * @constant
      * @type {String}
      * @name pc.BODYTYPE_DYNAMIC
-     * @description 
+     * @description Rigid body is simulated according to applied forces.
      */
     BODYTYPE_DYNAMIC: 'dynamic',
     /**
      * @constant
      * @type {String}
      * @name pc.BODYTYPE_KINEMATIC
-     * @description 
+     * @description Rigid body has infinite mass and does not respond to forces but can still be moved by setting their velocity or position.
      */
     BODYTYPE_KINEMATIC: 'kinematic',
 
