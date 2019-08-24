@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     /**
      * @private
      * @component
-     * @constrcutor
+     * @constructor
      * @name pc.ZoneComponent
      * @extends pc.Component
      * @classdesc The ZoneComponent allows you to define an area in world space of certain size.

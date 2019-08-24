@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     /**
-     * @constrcutor
+     * @constructor
      * @name pc.Application
      * @classdec Default application which performs general setup code and initiates the main game loop.
      * @description Create a new Application.
