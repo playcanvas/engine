@@ -4,10 +4,11 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ScriptHandler
-     * @classdesc ResourceHandler for loading JavaScript files dynamically
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler for loading JavaScript files dynamically
      * Two types of JavaScript files can be loaded, PlayCanvas scripts which contain calls to {@link pc.createScript},
      * or regular JavaScript files, such as third-party libraries.
-     * @param {pc.Application} app The running {pc.Application}
+     * @param {pc.Application} app The running {@link pc.Application}
      */
     var ScriptHandler = function (app) {
         this._app = app;
