@@ -74,6 +74,8 @@ Object.assign(pc, function () {
      * Defaults to false.
      * @property {Boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
      * But note that the mesh instance is still in the hierarchy and still in the draw call list.
+     * @property {pc.GraphNode} node The graph node defining the transform for this instance.
+     * @property {pc.Mesh} mesh The graphics mesh being instanced.
      * @property {pc.Material} material The material used by this mesh instance.
      * @property {Number} renderStyle The render style of the mesh instance. Can be:
      * <ul>
