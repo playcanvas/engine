@@ -6,7 +6,7 @@ Object.assign(pc, (function () {
      * @name pc.Vec2
      * @classdesc A 2-dimensional vector.
      * @description Creates a new Vec2 object.
-     * @param {Number} [x] The x value. If x is an array of length 2, the array will be used to populate all components.
+     * @param {Number|Number[]} [x] The x value. If x is an array of length 2, the array will be used to populate all components.
      * @param {Number} [y] The y value.
      * @example
      * var v = new pc.Vec2(1, 2);
