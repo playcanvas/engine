@@ -2,39 +2,45 @@ Object.assign(pc, (function () {
     'use strict';
 
     /**
-     * @enum pc.CURVE
+     * @constant
+     * @type {Number}
      * @name pc.CURVE_LINEAR
      * @description A linear interpolation scheme.
      */
     var CURVE_LINEAR = 0;
     /**
-     * @enum pc.CURVE
+     * @constant
+     * @type {Number}
      * @name pc.CURVE_SMOOTHSTEP
      * @description A smooth step interpolation scheme.
      */
     var CURVE_SMOOTHSTEP = 1;
     /**
      * @deprecated
-     * @enum pc.CURVE
+     * @constant
+     * @type {Number}
      * @name pc.CURVE_CATMULL
      * @description A Catmull-Rom spline interpolation scheme. This interpolation scheme is deprecated. Use CURVE_SPLINE instead.
      */
     var CURVE_CATMULL = 2;
     /**
      * @deprecated
-     * @enum pc.CURVE
+     * @constant
+     * @type {Number}
      * @name pc.CURVE_CARDINAL
      * @description A cardinal spline interpolation scheme. This interpolation scheme is deprecated. Use CURVE_SPLINE instead.
      */
     var CURVE_CARDINAL = 3;
     /**
-     * @enum pc.CURVE
+     * @constant
+     * @type {Number}
      * @name pc.CURVE_SPLINE
      * @description Cardinal spline interpolation scheme. For Catmull-Rom, specify curve tension 0.5.
      */
     var CURVE_SPLINE = 4;
     /**
-     * @enum pc.CURVE
+     * @constant
+     * @type {Number}
      * @name pc.CURVE_STEP
      * @description A stepped interpolater, free from the shackles of blending.
      */
