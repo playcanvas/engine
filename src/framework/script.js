@@ -17,7 +17,7 @@ pc.script = (function () {
 
         /**
         * @callback pc.ScriptCreateCallback
-        * @description Function passed into {@link pc.script.create}.
+        * @description Callback function used by {@link pc.script.create}.
         * @param {pc.Application} app The application.
         * @returns {Object} Return the Type of the script resource to be instanced for each Entity.
         */
@@ -116,7 +116,7 @@ pc.script = (function () {
 
         /**
         * @callback pc.ScriptCreateLoadingScreenCallback
-        * @description Function passed into {@link pc.script.createLoadingScreen}.
+        * @description Callback function used by {@link pc.script.createLoadingScreen}.
         * @param {pc.Application} app The application.
         */
 

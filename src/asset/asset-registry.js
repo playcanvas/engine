@@ -434,7 +434,7 @@ Object.assign(pc, function () {
 
         /**
         * @callback pc.AssetRegistryLoadCallback
-        * @description Function called when asset is loaded using {@link pc.AssetRegistry#loadFromUrl}.
+        * @description Callback function used by {@link pc.AssetRegistry#loadFromUrl} and called when an asset is loaded (or an error occurs).
         * @param {String|Null} err The error message is null if no errors were encountered.
         * @param {pc.Asset} asset The loaded asset.
         */
@@ -679,7 +679,7 @@ Object.assign(pc, function () {
 
         /**
         * @callback pc.AssetRegistryFilterCallback
-        * @description Function used to filter assets when passed into {@link pc.AssetRegistry#filter}.
+        * @description Callback function used by {@link pc.AssetRegistry#filter} to filter assets.
         * @param {pc.Asset} asset The current asset to filter.
         * @returns {Boolean} Return `true` to include asset to result list.
         */

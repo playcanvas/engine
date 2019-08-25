@@ -11,7 +11,7 @@ Object.assign(pc, function () {
 
         /**
         * @callback pc.ResourceHandlerLoadCallback
-        * @description Callback function called when the {@link pc.ResourceHandler#load} completes.
+        * @description Callback function used by {@link pc.ResourceHandler#load} when a resource is loaded (or an error occurs).
         * @param {String|Null} err The error message in the case where the load fails.
         * @param {*} response The raw data that has been successfully loaded.
         */

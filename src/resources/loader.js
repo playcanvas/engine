@@ -42,7 +42,7 @@ Object.assign(pc, function () {
 
         /**
         * @callback pc.ResourceLoaderCallback
-        * @description The callback passed into {@link pc.ResourceLoader#load} and called when the resource is loaded or an error occur.
+        * @description Callback function used by {@link pc.ResourceLoader#load} when a resource is loaded (or an error occurs).
         * @param {String|Null} err The error message in the case where the load fails.
         * @param {*} resource The resource that has been successfully loaded.
         */
