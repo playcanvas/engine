@@ -18,7 +18,7 @@ Object.assign(pc, function () {
      * @description Returns a new pc.VertexFormat object.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this vertex format.
      * @param {Object[]} description An array of vertex attribute descriptions.
-     * @param {Number} description[].semantic The meaning of the vertex element. This is used to link
+     * @param {String} description[].semantic The meaning of the vertex element. This is used to link
      * the vertex data to a shader input. Can be:
      * <ul>
      *     <li>pc.SEMANTIC_POSITION</li>
