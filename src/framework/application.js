@@ -748,6 +748,30 @@ Object.assign(pc, function () {
             this._sceneRegistry.loadSceneSettings(url, callback);
         },
 
+        /**
+         * @callback pc.Application.loadSceneCallback
+         * @description Callback function used by {@link pc.Application#loadScene}.
+         * @param {String|Null} err The error message in the case where the loading or parsing fails.
+         * @param {pc.Entity} [entity] The loaded root entity if no errors were encountered.
+         */
+
+        /**
+         * @function
+         * @name pc.Application#loadScene
+         * @description Load a scene file.
+         * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
+         * @param {pc.Application.loadSceneCallback} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
+         * @example
+         *
+         * app.loadScene("1000.json", function (err, entity) {
+         *     if (!err) {""
+         *       var e = app.root.find("My New Entity");
+         *     } else {
+         *       // error
+         *     }
+         *   }
+         * });
+         */
         loadScene: function (url, callback) {
             this._sceneRegistry.loadScene(url, callback);
         },
