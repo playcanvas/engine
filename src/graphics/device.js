@@ -3268,6 +3268,12 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @readonly
+     * @name pc.GraphicsDevice#textureFloatHighPrecision
+     * @type {Number}
+     * @description Check if high precision floating-point textures are supported
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
         get: function () {
             if (this._textureFloatHighPrecision === undefined) {
