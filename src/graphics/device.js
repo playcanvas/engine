@@ -3239,6 +3239,11 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @name pc.GraphicsDevice#enableAutoInstancing
+     * @type {Boolean}
+     * @description Automatic instancing
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'enableAutoInstancing', {
         get: function () {
             return this._enableAutoInstancing;
