@@ -19,9 +19,9 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.ResourceLoader#addHandler
-         * @description Add a handler for a resource type. Handler should support: load(url, callback) and open(url, data).
+         * @description Add a {@link pc.ResourceHandler} for a resource type. Handler should support: load(url, callback) and open(url, data).
          * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets
-         * @param {String} type The name of the type that the handler will load
+         * @param {String} type The name of the resource type that the handler will be registerd with.
          * @param {pc.ResourceHandler} handler An instance of a resource handler supporting load() and open().
          * @example
          * var loader = new ResourceLoader();
@@ -32,10 +32,23 @@ Object.assign(pc, function () {
             handler._loader = this;
         },
 
+        /**
+         * @function
+         * @name pc.ResourceLoader#removeHandler
+         * @description Remove a {@link pc.ResourceHandler} for a resource type.
+         * @param {String} type The name of the type that the handler will be removed.
+         */
         removeHandler: function (type) {
             delete this._handlers[type];
         },
 
+        /**
+         * @function
+         * @name pc.ResourceLoader#getHandler
+         * @description Get a {@link pc.ResourceHandler} for a resource type.
+         * @param {String} type The name of the resource type that the handler is registerd with.
+         * @returns {pc.ResourceHandler} The registerd handler.
+         */
         getHandler: function (type) {
             return this._handlers[type];
         },
