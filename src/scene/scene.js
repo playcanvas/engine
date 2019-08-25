@@ -423,6 +423,7 @@ Object.assign(pc, function () {
      * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
      * pc.BAKE_COLORDIR.
      * @property {pc.LayerComposition} layers A {@link pc.LayerComposition} that defines rendering order of this scene.
+     * @property {pc.StandardMaterial} defaultMaterial The default material used in case no other material is available.
      */
     var Scene = function Scene() {
         this.root = null;
