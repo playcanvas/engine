@@ -436,7 +436,7 @@ Object.assign(pc, function () {
         * @callback pc.AssetRegistry.loadCallback
         * @description Callback function used by {@link pc.AssetRegistry#loadFromUrl} and called when an asset is loaded (or an error occurs).
         * @param {String|Null} err The error message is null if no errors were encountered.
-        * @param {pc.Asset} asset The loaded asset.
+        * @param {pc.Asset} [asset] The loaded asset if no errors were encountered.
         */
 
         /**
