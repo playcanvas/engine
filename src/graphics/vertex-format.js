@@ -50,7 +50,7 @@ Object.assign(pc, function () {
      *     <li>pc.TYPE_UINT32</li>
      *     <li>pc.TYPE_FLOAT32</li>
      * </ul>
-     * @param {Boolean} description[].normalize If true, vertex attribute data will be mapped from a
+     * @param {Boolean} [description[].normalize] If true, vertex attribute data will be mapped from a
      * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
      * unchanged. If this property is unspecified, false is assumed.
      * @example
