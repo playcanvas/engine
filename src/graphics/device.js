@@ -3248,6 +3248,11 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @name pc.GraphicsDevice#maxPixelRatio
+     * @type {Number}
+     * @description Maximum pixel ratio
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'maxPixelRatio', {
         get: function () {
             return this._maxPixelRatio;
