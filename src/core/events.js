@@ -38,17 +38,17 @@ pc.events = {
     },
 
     /**
-    * @callback pc.events.callback
-    * @description Callback function used by {@link pc.events} functions. Note the callback is limited to 8 arguments.
-    * @param {*} [arg1]
-    * @param {*} [arg2]
-    * @param {*} [arg3]
-    * @param {*} [arg4]
-    * @param {*} [arg5]
-    * @param {*} [arg6]
-    * @param {*} [arg7]
-    * @param {*} [arg8]
-    */
+     * @callback pc.events.callback
+     * @description Callback function used by {@link pc.events} functions. Note the callback is limited to 8 arguments.
+     * @param {*} [arg1] First argument that is passed from caller
+     * @param {*} [arg2] Second argument that is passed from caller
+     * @param {*} [arg3] Third argument that is passed from caller
+     * @param {*} [arg4] Fourth argument that is passed from caller
+     * @param {*} [arg5] Fifth argument that is passed from caller
+     * @param {*} [arg6] Sixth argument that is passed from caller
+     * @param {*} [arg7] Seventh argument that is passed from caller
+     * @param {*} [arg8] Eighth argument that is passed from caller
+     */
 
     /**
      * @function
