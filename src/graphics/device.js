@@ -1960,17 +1960,17 @@ Object.assign(pc, function () {
          * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
          * @param {Number} primitive.type The type of primitive to render. Can be:
          * <ul>
-         *     <li>pc.PRIMITIVE_POINTS</li>
-         *     <li>pc.PRIMITIVE_LINES</li>
-         *     <li>pc.PRIMITIVE_LINELOOP</li>
-         *     <li>pc.PRIMITIVE_LINESTRIP</li>
-         *     <li>pc.PRIMITIVE_TRIANGLES</li>
-         *     <li>pc.PRIMITIVE_TRISTRIP</li>
-         *     <li>pc.PRIMITIVE_TRIFAN</li>
+         *     <li>{@link pc.PRIMITIVE_POINTS}</li>
+         *     <li>{@link pc.PRIMITIVE_LINES}</li>
+         *     <li>{@link pc.PRIMITIVE_LINELOOP}</li>
+         *     <li>{@link pc.PRIMITIVE_LINESTRIP}</li>
+         *     <li>{@link pc.PRIMITIVE_TRIANGLES}</li>
+         *     <li>{@link pc.PRIMITIVE_TRISTRIP}</li>
+         *     <li>{@link pc.PRIMITIVE_TRIFAN}</li>
          * </ul>
          * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
          * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
-         * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
+         * @param {Boolean} [primitive.indexed] True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
          * @param {Number} [numInstances=1] The number of instances to render when using ANGLE_instanced_arrays. Defaults to 1.
          * @example
          * // Render a single, unindexed triangle
