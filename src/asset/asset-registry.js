@@ -433,11 +433,11 @@ Object.assign(pc, function () {
         },
 
         /**
-        * @callback pc.AssetRegistry.loadCallback
-        * @description Callback function used by {@link pc.AssetRegistry#loadFromUrl} and called when an asset is loaded (or an error occurs).
-        * @param {String|Null} err The error message is null if no errors were encountered.
-        * @param {pc.Asset} [asset] The loaded asset if no errors were encountered.
-        */
+         * @callback pc.AssetRegistry.loadCallback
+         * @description Callback function used by {@link pc.AssetRegistry#loadFromUrl} and called when an asset is loaded (or an error occurs).
+         * @param {String|Null} err The error message is null if no errors were encountered.
+         * @param {pc.Asset} [asset] The loaded asset if no errors were encountered.
+         */
 
         /**
          * @function
@@ -678,11 +678,11 @@ Object.assign(pc, function () {
         },
 
         /**
-        * @callback pc.AssetRegistry.filterCallback
-        * @description Callback function used by {@link pc.AssetRegistry#filter} to filter assets.
-        * @param {pc.Asset} asset The current asset to filter.
-        * @returns {Boolean} Return `true` to include asset to result list.
-        */
+         * @callback pc.AssetRegistry.filterCallback
+         * @description Callback function used by {@link pc.AssetRegistry#filter} to filter assets.
+         * @param {pc.Asset} asset The current asset to filter.
+         * @returns {Boolean} Return `true` to include asset to result list.
+         */
 
         /**
          * @function

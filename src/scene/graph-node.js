@@ -279,11 +279,11 @@ Object.assign(pc, function () {
         },
 
         /**
-        * @callback pc.GraphNode.findCallback
-        * @description Callback function used by {@link pc.GraphNode#find} to search through a graph node and all of its descendants.
-        * @param {pc.GraphNode} node The current graph node.
-        * @returns {Boolean} Returning `true` from the function will include the node into the results from {@link pc.GraphNode#find}.
-        */
+         * @callback pc.GraphNode.findCallback
+         * @description Callback function used by {@link pc.GraphNode#find} to search through a graph node and all of its descendants.
+         * @param {pc.GraphNode} node The current graph node.
+         * @returns {Boolean} Returning `true` from the function will include the node into the results from {@link pc.GraphNode#find}.
+         */
 
         /**
          * @function
@@ -347,11 +347,11 @@ Object.assign(pc, function () {
         },
 
         /**
-        * @callback pc.GraphNode.findOneCallback
-        * @description Callback function used by {@link pc.GraphNode#findOne} to search through a graph node and all of its descendants.
-        * @param {pc.GraphNode} node The current graph node.
-        * @returns {Boolean} Returning `true` from the function will result in that node being returned from {@link pc.GraphNode#findOne}.
-        */
+         * @callback pc.GraphNode.findOneCallback
+         * @description Callback function used by {@link pc.GraphNode#findOne} to search through a graph node and all of its descendants.
+         * @param {pc.GraphNode} node The current graph node.
+         * @returns {Boolean} Returning `true` from the function will result in that node being returned from {@link pc.GraphNode#findOne}.
+         */
 
         /**
          * @function
@@ -515,10 +515,10 @@ Object.assign(pc, function () {
         },
 
         /**
-        * @callback pc.GraphNode.forEachCallback
-        * @description Callback function used by {@link pc.GraphNode#forEach} to iterate through a graph node and all of its descendants.
-        * @param {pc.GraphNode} node The current graph node.
-        */
+         * @callback pc.GraphNode.forEachCallback
+         * @description Callback function used by {@link pc.GraphNode#forEach} to iterate through a graph node and all of its descendants.
+         * @param {pc.GraphNode} node The current graph node.
+         */
 
         /**
          * @function

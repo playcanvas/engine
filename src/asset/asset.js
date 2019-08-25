@@ -253,10 +253,10 @@ Object.assign(pc, function () {
         },
 
         /**
-        * @callback pc.Asset.readyCallback
-        * @description Callback function used by {@link pc.Asset#ready} and called when an asset is ready.
-        * @param {pc.Asset} asset The ready asset.
-        */
+         * @callback pc.Asset.readyCallback
+         * @description Callback function used by {@link pc.Asset#ready} and called when an asset is ready.
+         * @param {pc.Asset} asset The ready asset.
+         */
 
         /**
          * @function

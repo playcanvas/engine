@@ -140,12 +140,12 @@ Object.assign(pc, function () {
         },
 
         /**
-        * @callback pc.ModelHandler.addParserCallback
-        * @description Callback function used by {@link pc.ModelHandler#addParser} to decide on which parser to use.
-        * @param {String} url The resource url.
-        * @param {Object} data The raw model data.
-        * @returns {Boolean} Return true if this parser should be used to parse the data into a {@link pc.Model}
-        */
+         * @callback pc.ModelHandler.addParserCallback
+         * @description Callback function used by {@link pc.ModelHandler#addParser} to decide on which parser to use.
+         * @param {String} url The resource url.
+         * @param {Object} data The raw model data.
+         * @returns {Boolean} Return true if this parser should be used to parse the data into a {@link pc.Model}
+         */
 
         /**
          * @function

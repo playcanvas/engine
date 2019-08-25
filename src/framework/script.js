@@ -16,11 +16,11 @@ pc.script = (function () {
         app: null,
 
         /**
-        * @callback pc.script.createCallback
-        * @description Callback function used by {@link pc.script.create}.
-        * @param {pc.Application} app The application.
-        * @returns {Object} Return the Type of the script resource to be instanced for each Entity.
-        */
+         * @callback pc.script.createCallback
+         * @description Callback function used by {@link pc.script.create}.
+         * @param {pc.Application} app The application.
+         * @returns {Object} Return the Type of the script resource to be instanced for each Entity.
+         */
 
         /**
          * @function
@@ -115,10 +115,10 @@ pc.script = (function () {
         },
 
         /**
-        * @callback pc.script.createLoadingScreenCallback
-        * @description Callback function used by {@link pc.script.createLoadingScreen}.
-        * @param {pc.Application} app The application.
-        */
+         * @callback pc.script.createLoadingScreenCallback
+         * @description Callback function used by {@link pc.script.createLoadingScreen}.
+         * @param {pc.Application} app The application.
+         */
 
         /**
          * @function
