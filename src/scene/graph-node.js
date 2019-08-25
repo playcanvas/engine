@@ -279,7 +279,7 @@ Object.assign(pc, function () {
         },
 
         /**
-        * @callback pc.GraphNodeFindCallback
+        * @callback pc.GraphNode.findCallback
         * @description Callback function used by {@link pc.GraphNode#find} to search through a graph node and all of its descendants.
         * @param {pc.GraphNode} node The current graph node.
         * @returns {Boolean} Returning `true` from the function will include the node into the results from {@link pc.GraphNode#find}.
@@ -289,7 +289,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#find
          * @description Search the graph node and all of its descendants for the nodes that satisfy some search criteria.
-         * @param {pc.GraphNodeFindCallback|String} attr This can either be a function or a string. If it's a function, it is executed
+         * @param {pc.GraphNode.findCallback|String} attr This can either be a function or a string. If it's a function, it is executed
          * for each descendant node to test if node satisfies the search logic. Returning true from the function will
          * include the node into the results. If it's a string then it represents the name of a field or a method of the
          * node. If this is the name of a field then the value passed as the second argument will be checked for equality.
@@ -347,7 +347,7 @@ Object.assign(pc, function () {
         },
 
         /**
-        * @callback pc.GraphNodeFindOneCallback
+        * @callback pc.GraphNode.findOneCallback
         * @description Callback function used by {@link pc.GraphNode#findOne} to search through a graph node and all of its descendants.
         * @param {pc.GraphNode} node The current graph node.
         * @returns {Boolean} Returning `true` from the function will result in that node being returned from {@link pc.GraphNode#findOne}.
@@ -357,7 +357,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#findOne
          * @description Search the graph node and all of its descendants for the first node that satisfies some search criteria.
-         * @param {pc.GraphNodeFindOneCallback|String} attr This can either be a function or a string. If it's a function, it is executed
+         * @param {pc.GraphNode.findOneCallback|String} attr This can either be a function or a string. If it's a function, it is executed
          * for each descendant node to test if node satisfies the search logic. Returning true from the function will
          * result in that node being returned from findOne. If it's a string then it represents the name of a field or a method of the
          * node. If this is the name of a field then the value passed as the second argument will be checked for equality.
@@ -515,7 +515,7 @@ Object.assign(pc, function () {
         },
 
         /**
-        * @callback pc.GraphNodeForEachCallback
+        * @callback pc.GraphNode.forEachCallback
         * @description Callback function used by {@link pc.GraphNode#forEach} to iterate through a graph node and all of its descendants.
         * @param {pc.GraphNode} node The current graph node.
         */
@@ -524,7 +524,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#forEach
          * @description Executes a provided function once on this graph node and all of its descendants.
-         * @param {pc.GraphNodeForEachCallback} callback The function to execute on the graph node and each descendant.
+         * @param {pc.GraphNode.forEachCallback} callback The function to execute on the graph node and each descendant.
          * @param {Object} [thisArg] Optional value to use as this when executing callback function.
          * @example
          * // Log the path and name of each node in descendant tree starting with "parent"
