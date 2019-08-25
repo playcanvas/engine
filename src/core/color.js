@@ -4,7 +4,7 @@ Object.assign(pc, (function () {
      * @name pc.Color
      * @classdesc Representation of an RGBA color
      * @description Create a new Color object
-     * @param {Number} [r] The value of the red component (0-1). If r is an array of length 3 or 4, the array will be used to populate all components.
+     * @param {Number|Number[]} [r] The value of the red component (0-1). If r is an array of length 3 or 4, the array will be used to populate all components.
      * @param {Number} [g] The value of the green component (0-1)
      * @param {Number} [b] The value of the blue component (0-1)
      * @param {Number} [a] The value of the alpha component (0-1)

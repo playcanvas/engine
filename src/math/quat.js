@@ -6,7 +6,7 @@ Object.assign(pc, (function () {
      * @name pc.Quat
      * @classdesc A quaternion.
      * @description Create a new Quat object.
-     * @param {Number} [x] The quaternion's x component. Default value 0. If x is an array of length 4, the array will be used to populate all components.
+     * @param {Number|Number[]} [x] The quaternion's x component. Default value 0. If x is an array of length 4, the array will be used to populate all components.
      * @param {Number} [y] The quaternion's y component. Default value 0.
      * @param {Number} [z] The quaternion's z component. Default value 0.
      * @param {Number} [w] The quaternion's w component. Default value 1.
