@@ -3199,7 +3199,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphicsDevice#width
-     * @type Number
+     * @type {Number}
      * @description Width of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'width', {
@@ -3211,7 +3211,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphicsDevice#height
-     * @type Number
+     * @type {Number}
      * @description Height of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'height', {
@@ -3220,6 +3220,11 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @name pc.GraphicsDevice#fullscreen
+     * @type {Boolean}
+     * @description Fullscreen mode
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'fullscreen', {
         get: function () {
             return !!document.fullscreenElement;
