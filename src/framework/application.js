@@ -758,6 +758,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @callback pc.Application.loadSceneCallback
          * @description Callback function used by {@link pc.Application#loadScene}.
          * @param {String|Null} err The error message in the case where the loading or parsing fails.
@@ -765,6 +766,7 @@ Object.assign(pc, function () {
          */
 
         /**
+         * @private
          * @function
          * @name pc.Application#loadScene
          * @description Load a scene file.
