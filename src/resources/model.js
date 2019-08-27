@@ -2,8 +2,8 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ModelHandler
-     * @classdesc Resource Handler for creating pc.Model resources
-     * @description {@link pc.ResourceHandler} use to load 3D model resources
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading {@link pc.Model} resources
      * @param {pc.GraphicsDevice} device The graphics device that will be rendering
      * @param {pc.StandardMaterial} defaultMaterial The shared default material that is used in any place that a material is not specified
      */
