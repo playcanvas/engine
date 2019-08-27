@@ -537,6 +537,15 @@ Object.assign(pc, function () {
 
     Application._currentApplication = null;
     Application._applications = {};
+
+    /**
+     * @static
+     * @function
+     * @name pc.Application.getApplication
+     * @description Get the current application (alternatively get application based on the canvas id)
+     * @param {String} [id] If not `undefined`, the returned application should use the canvas which has this id. Otherwise current application will be returned.
+     * @returns {pc.Application} The running application.
+     */
     Application.getApplication = function (id) {
         return id ? Application._applications[id] : Application._currentApplication;
     };
@@ -557,11 +566,17 @@ Object.assign(pc, function () {
 
     Object.assign(Application.prototype, {
         /**
+         * @callback pc.Application.configureCallback
+         * @description Callback function used by {@link pc.Application#configure} when configuration file is loaded and parsed (or an error occurs).
+         * @param {String|Null} err The error message in the case where the loading or parsing fails.
+         */
+
+        /**
          * @function
          * @name pc.Application#configure
          * @description Load the application configuration file and apply application properties and fill the asset registry
          * @param {String} url The URL of the configuration file to load
-         * @param {Function} callback The Function called when the configuration file is loaded and parsed
+         * @param {pc.Application.configureCallback} callback The Function called when the configuration file is loaded and parsed (or an error occurs).
          */
         configure: function (url, callback) {
             var self = this;
@@ -589,10 +604,15 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @callback pc.Application.preloadCallback
+         * @description Callback function used by {@link pc.Application#preload} when all assets (marked as 'preload') are loaded.
+         */
+
+        /**
          * @function
          * @name pc.Application#preload
          * @description Load all assets in the asset registry that are marked as 'preload'
-         * @param {Function} callback Function called when all assets are loaded
+         * @param {pc.Application.preloadCallback} callback Function called when all assets are loaded
          */
         preload: function (callback) {
             var self = this;
@@ -683,12 +703,19 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @callback pc.Application.loadSceneHierarchyCallback
+         * @description Callback function used by {@link pc.Application#loadSceneHierarchy}.
+         * @param {String|Null} err The error message in the case where the loading or parsing fails.
+         * @param {pc.Entity} [entity] The loaded root entity if no errors were encountered.
+         */
+
+        /**
          * @function
          * @name pc.Application#loadSceneHierarchy
          * @description Load a scene file, create and initialize the Entity hierarchy
          * and add the hierarchy to the application root Entity.
          * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
-         * @param {Function} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
+         * @param {pc.Application.loadSceneHierarchyCallback} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
          * @example
          *
          * app.loadSceneHierarchy("1000.json", function (err, entity) {
@@ -705,11 +732,17 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @callback pc.Application.loadSceneSettingsCallback
+         * @description Callback function used by {@link pc.Application#loadSceneSettings}.
+         * @param {String|Null} err The error message in the case where the loading or parsing fails.
+         */
+
+        /**
          * @function
          * @name pc.Application#loadSceneSettings
          * @description Load a scene file and apply the scene settings to the current scene
          * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
-         * @param {Function} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
+         * @param {pc.Application.loadSceneSettingsCallback} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
          * @example
          * app.loadSceneSettings("1000.json", function (err) {
          *     if (!err) {
@@ -724,6 +757,32 @@ Object.assign(pc, function () {
             this._sceneRegistry.loadSceneSettings(url, callback);
         },
 
+        /**
+         * @private
+         * @callback pc.Application.loadSceneCallback
+         * @description Callback function used by {@link pc.Application#loadScene}.
+         * @param {String|Null} err The error message in the case where the loading or parsing fails.
+         * @param {pc.Entity} [entity] The loaded root entity if no errors were encountered.
+         */
+
+        /**
+         * @private
+         * @function
+         * @name pc.Application#loadScene
+         * @description Load a scene file.
+         * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
+         * @param {pc.Application.loadSceneCallback} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
+         * @example
+         *
+         * app.loadScene("1000.json", function (err, entity) {
+         *     if (!err) {""
+         *       var e = app.root.find("My New Entity");
+         *     } else {
+         *       // error
+         *     }
+         *   }
+         * });
+         */
         loadScene: function (url, callback) {
             this._sceneRegistry.loadScene(url, callback);
         },

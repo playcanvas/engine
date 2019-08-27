@@ -4,6 +4,7 @@ Object.assign(pc, function () {
      * @private
      * @constructor
      * @name pc.BundleHandler
+     * @implements {pc.ResourceHandler}
      * @param {pc.AssetRegistry} assets The asset registry
      * @classdesc Loads Bundle Assets
      */

@@ -10,12 +10,19 @@ Object.assign(pc, function () {
     Object.assign(ResourceHandler.prototype, {
 
         /**
+         * @callback pc.ResourceHandler.loadCallback
+         * @description Callback function used by {@link pc.ResourceHandler#load} when a resource is loaded (or an error occurs).
+         * @param {String|Null} err The error message in the case where the load fails.
+         * @param {*} [response] The raw data that has been successfully loaded.
+         */
+
+        /**
          * @function
          * @name pc.ResourceHandler#load
          * @description Load a resource from a remote URL. When loaded (or failed),
          * use the callback to return an the raw resource data (or error).
          * @param {String} url The URL of the resource to load.
-         * @param {Function} callback The callback used when the resource is loaded or an error occurs.
+         * @param {pc.ResourceHandler.loadCallback} callback The callback used when the resource is loaded or an error occurs.
          * @param {pc.Asset} [asset] Optional asset that is passed by ResourceLoader.
          */
         load: function (url, callback, asset) {
