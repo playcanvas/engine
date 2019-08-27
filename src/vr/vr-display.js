@@ -210,10 +210,16 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @callback pc.VrDisplay.presentCallback
+         * @description Callback function used by {@link pc.VrDisplay#requestPresent} and {@link pc.VrDisplay#exitPresent}.
+         * @param {String|Null} err The error message if presenting fails, or null if the call succeeds.
+         */
+
+        /**
          * @function
          * @name pc.VrDisplay#requestPresent
          * @description Try to present full screen VR content on this display
-         * @param {Function} callback Called when the request is completed. Callback takes a single argument (err) that is the error message return
+         * @param {pc.VrDisplay.presentCallback} callback Called when the request is completed. Callback takes a single argument (err) that is the error message return
          * if presenting fails, or null if the call succeeds. Usually called by {@link pc.CameraComponent#enterVr}.
          */
         requestPresent: function (callback) {
@@ -238,7 +244,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.VrDisplay#exitPresent
          * @description Try to stop presenting VR content on this display
-         * @param {Function} callback Called when the request is completed. Callback takes a single argument (err) that is the error message return
+         * @param {pc.VrDisplay.presentCallback} callback Called when the request is completed. Callback takes a single argument (err) that is the error message return
          * if presenting fails, or null if the call succeeds. Usually called by {@link pc.CameraComponent#exitVr}.
          */
         exitPresent: function (callback) {
@@ -259,10 +265,15 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @callback pc.VrDisplay.requestAnimationFrameCallback
+         * @description Callback function used by {@link pc.VrDisplay#requestAnimationFrame}.
+         */
+
+        /**
          * @function
          * @name pc.VrDisplay#requestAnimationFrame
          * @description Used in the main application loop instead of the regular `window.requestAnimationFrame`. Usually only called from inside {@link pc.Application}
-         * @param {Function} fn Function called when it is time to update the frame.
+         * @param {pc.VrDisplay.requestAnimationFrameCallback} fn Function called when it is time to update the frame.
          */
         requestAnimationFrame: function (fn) {
             if (this.display) this.display.requestAnimationFrame(fn);
