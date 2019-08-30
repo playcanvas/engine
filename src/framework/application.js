@@ -152,9 +152,8 @@ Object.assign(pc, function () {
         Application._currentApplication = this;
 
         /**
-         * @field
+         * @private
          * @static
-         * @readonly
          * @type {pc.Application|Undefined}
          * @name pc.app
          * @description Gets the current application, if any.
