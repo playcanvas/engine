@@ -13,6 +13,24 @@ Object.assign(pc, (function () {
         tex._levels[0][face] = pixels;
     }
 
+    /**
+     * @static
+     * @function
+     * @name pc.prefilterCubemap
+     * @description Prefilter a cubemap so it can be used as an environment map for a {@link pc.StandardMaterial}.
+     * @param {Object} options The options for how prefiltering is done
+     * @param {pc.GraphicsDevice} options.device The graphics device of the application
+     * @param {pc.Texture} options.sourceCubemap The cubemap to be prefiltered
+     * @param {Number} options.samples Number of samples to be used for prefiltering.
+     * @param {Number} [options.method] The method used for prefiltering. Can be 1 for "cos" or 0 for "phong". Default is 1.
+     * @param {Boolean} [options.cpuSync] Set to true if the CPU should wait for the GPU to finish. Default is false.
+     * @param {pc.Texture[]} [options.filtered] If defined, is an array of just filtered cubemaps.
+     * @param {pc.Texture[]} [options.filteredRgbm] If defined, is an array of just filtered cubemaps (RGBM-encoded).
+     * @param {pc.Texture[]} [options.filteredFixed] If defined, is an array of filtered and edge-fixed cubemaps.
+     * @param {pc.Texture[]} [options.filteredFixedRgbm] If defined, is an array of filtered and edge-fixed cubemaps (RGBM-encoded).
+     * @param {pc.Texture[]} [options.singleFilteredFixed] If defined, is a single cubemap where the results (of filtering and edge fixup) are its mipmaps.
+     * @param {pc.Texture[]} [options.singleFilteredFixedRgbm] If defined, is a single cubemap where the results (of filtering and edge fixup) are its mipmaps (RGBM-encoded).
+     */
     function prefilterCubemap(options) {
         var device = options.device;
         var sourceCubemap = options.sourceCubemap;
