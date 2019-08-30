@@ -1,6 +1,13 @@
 Object.assign(pc, (function () {
     'use strict';
 
+    /**
+     * @static
+     * @readonly
+     * @type {Object}
+     * @name pc.shaderChunks
+     * @description Collection of all shader chunks
+     */
     var shaderChunks = {};
 
     var attrib2Semantic = {
