@@ -150,6 +150,15 @@ Object.assign(pc, function () {
         // Store application instance
         Application._applications[canvas.id] = this;
         Application._currentApplication = this;
+
+        /**
+         * @field
+         * @static
+         * @readonly
+         * @type {pc.Application|Undefined}
+         * @name pc.app
+         * @description Gets the current application.
+         */
         pc.app = this;
 
         this._time = 0;
