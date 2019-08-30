@@ -62,6 +62,17 @@ Object.assign(pc, function () {
         return vertexBuffer;
     }
 
+    /**
+     * @static
+     * @function
+     * @name pc.drawFullscreenQuad
+     * @description Draw a screen-space rectangle to render target
+     * @param {pc.GraphicsDevice} device The graphics device of the application
+     * @param {pc.RenderTarget} target The output render target
+     * @param {pc.VertexBuffer} vertexBuffer The vertex buffer for the quad mesh
+     * @param {pc.Shader} shader The shader to be used for drawing the quad
+     * @param {pc.Vec4} rect The normalized rectangular position (rect.x, rect.y) and size (rect.z, rect.w) of the quad
+     */
     function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
         var oldRt = device.getRenderTarget();
         device.setRenderTarget(target);
