@@ -4,9 +4,9 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ScopeId
-     * @classdesc The scope for a variable
-     * @param {String} name The variable name
-     * @property {String} name The variable name
+     * @classdesc The scope for a variable.
+     * @param {String} name The variable name.
+     * @property {String} name The variable name.
      */
     var ScopeId = function (name) {
         // Set the name
@@ -23,8 +23,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.ScopeId#setValue
-         * @description Set variable value
-         * @param {*} value The value
+         * @description Set variable value.
+         * @param {*} value The value.
          */
         setValue: function (value) {
             // Set the new value
@@ -37,8 +37,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.ScopeId#getValue
-         * @description Get variable value
-         * @returns {*} The value
+         * @description Get variable value.
+         * @returns {*} The value.
          */
         getValue: function () {
             return this.value;

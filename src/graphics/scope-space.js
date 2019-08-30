@@ -4,9 +4,9 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ScopeSpace
-     * @classdesc The scope for variables and subspaces
-     * @param {String} name The scope name
-     * @property {String} name The scope name
+     * @classdesc The scope for variables and subspaces.
+     * @param {String} name The scope name.
+     * @property {String} name The scope name.
      */
     var ScopeSpace = function (name) {
         // Store the name
@@ -21,9 +21,9 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.ScopeSpace#resolve
-         * @description Get or create a variable in the scope
-         * @param {String} name The variable name
-         * @returns {pc.ScopeId} The variable instance
+         * @description Get (or create, if it doesn't already exist) a variable in the scope.
+         * @param {String} name The variable name.
+         * @returns {pc.ScopeId} The variable instance.
          */
         resolve: function (name) {
             // Check if the ScopeId already exists
@@ -39,9 +39,9 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.ScopeSpace#getSubSpace
-         * @description Get or create a subspace in the scope
-         * @param {String} name The subspace name
-         * @returns {pc.ScopeSpace} The subspace instance
+         * @description Get (or create, if it doesn't already exist) a subspace in the scope.
+         * @param {String} name The subspace name.
+         * @returns {pc.ScopeSpace} The subspace instance.
          */
         getSubSpace: function (name) {
             // Check if the nested namespace already exists

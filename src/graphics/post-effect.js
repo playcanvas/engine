@@ -66,12 +66,12 @@ Object.assign(pc, function () {
      * @static
      * @function
      * @name pc.drawFullscreenQuad
-     * @description Draw a screen-space rectangle to render target
-     * @param {pc.GraphicsDevice} device The graphics device of the application
-     * @param {pc.RenderTarget} target The output render target
-     * @param {pc.VertexBuffer} vertexBuffer The vertex buffer for the quad mesh
-     * @param {pc.Shader} shader The shader to be used for drawing the quad
-     * @param {pc.Vec4} rect The normalized rectangular position (rect.x, rect.y) and size (rect.z, rect.w) of the quad
+     * @description Draw a screen-space rectangle in a render target. Primarily meant to be used in custom post effects based on {@link pc.PostEffect}.
+     * @param {pc.GraphicsDevice} device The graphics device of the application.
+     * @param {pc.RenderTarget} target The output render target.
+     * @param {pc.VertexBuffer} vertexBuffer The vertex buffer for the rectangle mesh. When calling from a custom post effect, pass the field {@link pc.PostEffect#vertexBuffer}.
+     * @param {pc.Shader} shader The shader to be used for drawing the rectangle. When calling from a custom post effect, pass the field {@link pc.PostEffect#shader}.
+     * @param {pc.Vec4} [rect] The normalized screen-space position (rect.x, rect.y) and size (rect.z, rect.w) of the rectangle. Default is (0, 0, 1, 1);
      */
     function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
         var oldRt = device.getRenderTarget();

@@ -3,10 +3,9 @@ Object.assign(pc, (function () {
 
     /**
      * @static
-     * @readonly
      * @type {Object}
      * @name pc.shaderChunks
-     * @description Collection of all shader chunks
+     * @description Object containing all default shader chunks used by shader generators.
      */
     var shaderChunks = {};
 
