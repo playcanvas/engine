@@ -543,8 +543,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Application.getApplication
      * @description Get the current application (alternatively get application based on the canvas id)
-     * @param {String} [id] If not `undefined`, the returned application should use the canvas which has this id. Otherwise current application will be returned.
-     * @returns {pc.Application} The running application.
+     * @param {String} [id] If defined, the returned application should use the canvas which has this id. Otherwise current application will be returned.
+     * @returns {pc.Application|Undefined} The running application, if any.
      */
     Application.getApplication = function (id) {
         return id ? Application._applications[id] : Application._currentApplication;
