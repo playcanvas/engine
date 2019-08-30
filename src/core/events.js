@@ -152,7 +152,14 @@ pc.events = {
      * @name pc.events.fire
      * @description Fire an event, all additional arguments are passed on to the event listener
      * @param {Object} name Name of event to fire
-     * @param {*} [...] Arguments that are passed to the event handler
+     * @param {*} [arg1] First argument that is passed to the event handler
+     * @param {*} [arg2] Second argument that is passed to the event handler
+     * @param {*} [arg3] Third argument that is passed to the event handler
+     * @param {*} [arg4] Fourth argument that is passed to the event handler
+     * @param {*} [arg5] Fifth argument that is passed to the event handler
+     * @param {*} [arg6] Sixth argument that is passed to the event handler
+     * @param {*} [arg7] Seventh argument that is passed to the event handler
+     * @param {*} [arg8] Eighth argument that is passed to the event handler
      * @returns {*} 'this' for chaining
      * @example
      * obj.fire('test', 'This is the message');
