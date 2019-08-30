@@ -16,6 +16,10 @@ Object.assign(pc, function () {
      * if no output is specified.
      * @description Creates new PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
+     * @property {pc.GraphicsDevice} device The graphics device of the application
+     * @property {pc.Shader|Null} shader The shader definition that should be populated by the actual post effect (default is null).
+     * @property {pc.VertexBuffer} vertexBuffer The vertex buffer for the fullscreen quad.
+     * @property {Boolean} needsDepthBuffer The property that should be set to true by the actual post effect, if it needs a depth map (default is false).
      */
     var PostEffect = function (graphicsDevice) {
         this.device = graphicsDevice;
