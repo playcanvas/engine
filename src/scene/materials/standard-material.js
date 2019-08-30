@@ -170,6 +170,7 @@ Object.assign(pc, function () {
      * @property {Boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in scene settings)
      * @property {Boolean} pixelSnap Align vertices to pixel co-ordinates when rendering. Useful for pixel perfect 2D graphics
      * @property {Boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on backfaces
+     * @property {Object} chunks Object containing custom shader chunks that will replace default ones.
      *
      * @property {pc.StandardMaterial.onUpdateShaderCallback} onUpdateShader A custom function that will be called after all shader generator properties are collected and before shader code is generated.
      * This function will receive an object with shader generator settings (based on current material and scene properties), that you can change and then return.
