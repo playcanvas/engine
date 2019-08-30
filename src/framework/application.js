@@ -157,7 +157,7 @@ Object.assign(pc, function () {
          * @readonly
          * @type {pc.Application|Undefined}
          * @name pc.app
-         * @description Gets the current application.
+         * @description Gets the current application, if any.
          */
         pc.app = this;
 
