@@ -96,11 +96,12 @@ Object.assign(pc, function () {
      *     <li>button ({@link pc.ButtonComponentSystem})</li>
      *     <li>camera ({@link pc.CameraComponentSystem})</li>
      *     <li>collision ({@link pc.CollisionComponentSystem})</li>
+     *     <li>element ({@link pc.ElementComponentSystem})</li>
      *     <li>layoutchild ({@link pc.LayoutChildComponentSystem})</li>
      *     <li>layoutgroup ({@link pc.LayoutGroupComponentSystem})</li>
      *     <li>light ({@link pc.LightComponentSystem})</li>
      *     <li>model ({@link pc.ModelComponentSystem})</li>
-     *     <li>particle ({@link pc.ParticleSystemComponentSystem})</li>
+     *     <li>particlesystem ({@link pc.ParticleSystemComponentSystem})</li>
      *     <li>rigidbody ({@link pc.RigidBodyComponentSystem})</li>
      *     <li>screen ({@link pc.ScreenComponentSystem})</li>
      *     <li>script ({@link pc.ScriptComponentSystem})</li>
