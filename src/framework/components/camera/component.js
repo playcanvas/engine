@@ -451,7 +451,6 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.CameraComponent#enterVr
-         * @variation 1
          * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
          * @param {pc.callbacks.CameraVr} callback Function called once to indicate success of failure. The callback takes one argument (err).
          * On success it returns null on failure it returns the error message.

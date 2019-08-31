@@ -56,7 +56,6 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Http#get
-         * @variation 1
          * @description Perform an HTTP GET request to the given url.
          * @param {String} url The URL to make the request to.
          * @param {pc.callbacks.Http} callback The callback used when the response has returned. Passed (err, data)
@@ -102,7 +101,6 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Http#post
-         * @variation 1
          * @description Perform an HTTP POST request to the given url.
          * @param {String} url The URL to make the request to.
          * @param {Object} data Data to send in the body of the request.
@@ -149,7 +147,6 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Http#put
-         * @variation 1
          * @description Perform an HTTP PUT request to the given url.
          * @param {String} url The URL to make the request to.
          * @param {Document | Object} data Data to send in the body of the request.
@@ -196,7 +193,6 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Http#del
-         * @variation 1
          * @description Perform an HTTP DELETE request to the given url
          * @param {Object} url The URL to make the request to
          * @param {pc.callbacks.Http} callback The callback used when the response has returned. Passed (err, data)
@@ -238,7 +234,6 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Http#request
-         * @variation 1
          * @description Make a general purpose HTTP request.
          * @param {String} method The HTTP method "GET", "POST", "PUT", "DELETE"
          * @param {String} url The url to make the request to
