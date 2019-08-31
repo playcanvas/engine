@@ -2,7 +2,11 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Application
-     * @classdec Default application which performs general setup code and initiates the main game loop.
+     * @classdesc A pc.Application represents and manages your PlayCanvas application. Internally,
+     * it creates a {@link pc.GraphicsDevice} that is initialized with the supplied canvas element.
+     * Then, it creates the application's main loop. On every iteration of the main loop, the
+     * application first updates all {@link pc.Component}s and then renders the {@link pc.Scene}
+     * for every enabled {@link pc.CameraComponent}.
      * @description Create a new Application.
      * @param {Element} canvas The canvas element
      * @param {Object} options
@@ -26,13 +30,19 @@ Object.assign(pc, function () {
     /**
      * @name pc.Application#scene
      * @type {pc.Scene}
-     * @description The current {@link pc.Scene}
+     * @description The scene managed by the application.
+     * @example
+     * // Set the tone mapping property of the application's scene 
+     * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
      */
 
     /**
      * @name pc.Application#timeScale
      * @type {Number}
-     * @description Scales the global time delta.
+     * @description Scales the global time delta. Defaults to 1.
+     * @example
+     * // Set the app to run at half speed
+     * this.app.timeScale = 0.5;
      */
 
     /**
@@ -41,12 +51,18 @@ Object.assign(pc, function () {
      * @description Clamps per-frame delta time to an upper bound. Useful since returning from a tab
      * deactivation can generate huge values for dt, which can adversely affect game state. Defaults
      * to 0.1 (seconds).
+     * @example
+     * // Don't clamp inter-frame times of 200ms or less
+     * this.app.maxDeltaTime = 0.2;
      */
 
     /**
      * @name pc.Application#assets
      * @type {pc.AssetRegistry}
-     * @description The assets available to the application.
+     * @description The asset registry managed by the application.
+     * @example
+     * // Search the asset registry for all assets with the tag 'vehicle'
+     * var vehicleAssets = this.app.assets.findByTag('vehicle');
      */
 
     /**
@@ -54,11 +70,61 @@ Object.assign(pc, function () {
      * @type {pc.GraphicsDevice}
      * @description The graphics device used by the application.
      */
+        this.systems.add(new pc.RigidBodyComponentSystem(this));
+        this.systems.add(new pc.CollisionComponentSystem(this));
+        this.systems.add(new pc.AnimationComponentSystem(this));
+        this.systems.add(new pc.ModelComponentSystem(this));
+        this.systems.add(new pc.CameraComponentSystem(this));
+        this.systems.add(new pc.LightComponentSystem(this));
+        if (pc.script.legacy) {
+            this.systems.add(new pc.ScriptLegacyComponentSystem(this));
+        } else {
+            this.systems.add(new pc.ScriptComponentSystem(this));
+        }
+        this.systems.add(new pc.AudioSourceComponentSystem(this, this._audioManager));
+        this.systems.add(new pc.SoundComponentSystem(this, this._audioManager));
+        this.systems.add(new pc.AudioListenerComponentSystem(this, this._audioManager));
+        this.systems.add(new pc.ParticleSystemComponentSystem(this));
+        this.systems.add(new pc.ScreenComponentSystem(this));
+        this.systems.add(new pc.ElementComponentSystem(this));
+        this.systems.add(new pc.ButtonComponentSystem(this));
+        this.systems.add(new pc.ScrollViewComponentSystem(this));
+        this.systems.add(new pc.ScrollbarComponentSystem(this));
+        this.systems.add(new pc.SpriteComponentSystem(this));
+        this.systems.add(new pc.LayoutGroupComponentSystem(this));
+        this.systems.add(new pc.LayoutChildComponentSystem(this));
+        this.systems.add(new pc.ZoneComponentSystem(this));
 
     /**
      * @name pc.Application#systems
      * @type {pc.ComponentSystemRegistry}
-     * @description The component systems.
+     * @description The component system registry. The pc.Application constructor
+     * adds the following component systems to its component system registry:
+     * <ul>
+     *     <li>animation ({@link pc.AnimationComponentSystem})</li>
+     *     <li>audiolistener ({@link pc.AudioListenerComponentSystem})</li>
+     *     <li>button ({@link pc.ButtonComponentSystem})</li>
+     *     <li>camera ({@link pc.CameraComponentSystem})</li>
+     *     <li>collision ({@link pc.CollisionComponentSystem})</li>
+     *     <li>layoutchild ({@link pc.LayoutChildComponentSystem})</li>
+     *     <li>layoutgroup ({@link pc.LayoutGroupComponentSystem})</li>
+     *     <li>light ({@link pc.LightComponentSystem})</li>
+     *     <li>model ({@link pc.ModelComponentSystem})</li>
+     *     <li>particle ({@link pc.ParticleSystemComponentSystem})</li>
+     *     <li>rigidbody ({@link pc.RigidBodyComponentSystem})</li>
+     *     <li>screen ({@link pc.ScreenComponentSystem})</li>
+     *     <li>script ({@link pc.ScriptComponentSystem})</li>
+     *     <li>scrollbar ({@link pc.ScrollbarComponentSystem})</li>
+     *     <li>scrollview ({@link pc.ScrollViewComponentSystem})</li>
+     *     <li>sound ({@link pc.SoundComponentSystem})</li>
+     *     <li>sprite ({@link pc.SpriteComponentSystem})</li>
+     * </ul>
+     * @example
+     * // Set global gravity to zero
+     * this.app.systems.rigidbody.gravity.set(0, 0, 0);
+     * @example
+     * // Set the global sound volume to 50%
+     * this.app.systems.sound.volume = 0.5;
      */
 
     /**
@@ -70,7 +136,10 @@ Object.assign(pc, function () {
     /**
      * @name pc.Application#root
      * @type {pc.Entity}
-     * @description The root {@link pc.Entity} of the application.
+     * @description The root entity of the application.
+     * @example
+     * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
+     * var camera = this.app.root.findByName('Camera');
      */
 
     /**
@@ -118,15 +187,27 @@ Object.assign(pc, function () {
     /**
      * @name pc.Application#autoRender
      * @type Boolean
-     * @description When true (the default) the application's render function is called every frame.
+     * @description When true, the application's render function is called every frame.
+     * Setting autoRender to false is useful to applications where the rendered image
+     * may often be unchanged over time. This can heavily reduce the application's
+     * load on the CPU and GPU. Defaults to true.
+     * @example
+     * // Disable rendering every frame and only render on a keydown event
+     * this.app.autoRender = false;
+     * this.app.keyboard.on('keydown', function (event) {
+     *     this.app.renderNextFrame = true;
+     * }, this);
      */
 
     /**
      * @name pc.Application#renderNextFrame
      * @type Boolean
-     * @description If {@link pc.Application#autoRender} is false, set `app.renderNextFrame` true to force application to render the scene once next frame.
+     * @description Set to true to render the scene on the next iteration of the main loop.
+     * This only has an effect if {@link pc.Application#autoRender} is set to false. The 
+     * value of renderNextFrame is set back to false again as soon as the scene has been
+     * rendered.
      * @example
-     * // render the scene only while space key is pressed
+     * // Render the scene only while space key is pressed
      * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
      *    this.app.renderNextFrame = true;
      * }
@@ -553,6 +634,9 @@ Object.assign(pc, function () {
      * @description Get the current application (alternatively get application based on the canvas id)
      * @param {String} [id] If defined, the returned application should use the canvas which has this id. Otherwise current application will be returned.
      * @returns {pc.Application|Undefined} The running application, if any.
+     * @example
+     * var app = pc.Application.getApplication();
+     * app.
      */
     Application.getApplication = function (id) {
         return id ? Application._applications[id] : Application._currentApplication;
@@ -1066,7 +1150,19 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Application#start
-         * @description Start the Application updating
+         * @description Start the application. This function does the following:
+         * <ol>
+         *     <li>Fires an event on the application named 'start'</li>
+         *     <li>Calls initialize for all components on entities in the hierachy</li>
+         *     <li>Fires an event on the application named 'initialize'</li>
+         *     <li>Calls postInitialize for all components on entities in the hierachy</li>
+         *     <li>Fires an event on the application named 'postinitialize'</li>
+         *     <li>Starts executing the main loop of the application</li>
+         * </ol>
+         * This function is called internally by PlayCanvas applications made in the Editor
+         * but you will need to call start yourself if you are using the engine stand-alone.
+         * @example
+         * app.start();
          */
         start: function () {
             this.frame = 0;
@@ -1497,6 +1593,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#destroy
          * @description Destroys application and removes all event listeners.
+         * @example
+         * this.app.destroy();
          */
         destroy: function () {
             var i, l;
