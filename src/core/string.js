@@ -98,25 +98,27 @@ pc.string = function () {
 
     return {
         /**
+         * @constant
+         * @type {String}
          * @name pc.string.ASCII_LOWERCASE
          * @description All lowercase letters
-         * @type String
          */
         ASCII_LOWERCASE: ASCII_LOWERCASE,
-
         /**
+         * @constant
+         * @type {String}
          * @name pc.string.ASCII_UPPERCASE
          * @description All uppercase letters
-         * @type String
          */
         ASCII_UPPERCASE: ASCII_UPPERCASE,
-
         /**
+         * @constant
+         * @type {String}
          * @name pc.string.ASCII_LETTERS
          * @description All ASCII letters
-         * @type String
          */
         ASCII_LETTERS: ASCII_LETTERS,
+
         /**
          * @function
          * @name pc.string.format
