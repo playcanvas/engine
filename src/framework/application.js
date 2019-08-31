@@ -46,7 +46,7 @@ Object.assign(pc, function () {
      * @type {pc.Scene}
      * @description The scene managed by the application.
      * @example
-     * // Set the tone mapping property of the application's scene 
+     * // Set the tone mapping property of the application's scene
      * this.app.scene.toneMapping = pc.TONEMAP_FILMIC;
      */
 
@@ -196,7 +196,7 @@ Object.assign(pc, function () {
      * @name pc.Application#renderNextFrame
      * @type Boolean
      * @description Set to true to render the scene on the next iteration of the main loop.
-     * This only has an effect if {@link pc.Application#autoRender} is set to false. The 
+     * This only has an effect if {@link pc.Application#autoRender} is set to false. The
      * value of renderNextFrame is set back to false again as soon as the scene has been
      * rendered.
      * @example
@@ -1152,7 +1152,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#update
          * @description Update the application. This function will call the update
-         * functions and then the postUpdate functions of all enabled components. It 
+         * functions and then the postUpdate functions of all enabled components. It
          * will then update the current state of all connected input devices.
          * This function is called internally in the application's main loop and
          * does not need to be called explicitly.
@@ -1201,7 +1201,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#render
          * @description Render the application's scene. More specifically, the scene's
-         * {@link pc.LayerComposition} is rendered by the application's {@link pc.ForwardRenderer}. 
+         * {@link pc.LayerComposition} is rendered by the application's {@link pc.ForwardRenderer}.
          * This function is called internally in the application's main loop and
          * does not need to be called explicitly.
          */
