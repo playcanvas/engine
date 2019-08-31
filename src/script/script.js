@@ -430,6 +430,38 @@ Object.assign(pc, function () {
         };
 
         /**
+         * @function
+         * @name pc.ScriptType#[initialize]
+         * @description Called when script is about to run for the first time.
+         */
+
+        /**
+         * @function
+         * @name pc.ScriptType#[postInitialize]
+         * @description Called after all initialize methods are executed in the same tick or enabling chain of actions.
+         */
+
+        /**
+         * @function
+         * @name pc.ScriptType#[update]
+         * @description Called for enabled (running state) scripts on each tick.
+         */
+
+        /**
+         * @function
+         * @name pc.ScriptType#[postUpdate]
+         * @description Called for enabled (running state) scripts on each tick, after update.
+         */
+
+        /**
+         * @function
+         * @name pc.ScriptType#[swap]
+         * @description Called when a ScriptType that already exists in the registry
+         * gets redefined. If the new ScriptType has a `swap` method in its prototype,
+         * then it will be executed to perform hot-reload at runtime.
+         */
+
+        /**
          * @event
          * @name pc.ScriptType#enable
          * @description Fired when a script instance becomes enabled
