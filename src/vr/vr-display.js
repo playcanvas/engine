@@ -210,12 +210,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.VrDisplayCallback
-         * @description Callback function used by {@link pc.VrDisplay#requestPresent} and {@link pc.VrDisplay#exitPresent}.
-         * @param {String|Null} err The error message if presenting fails, or null if the call succeeds.
-         */
-
-        /**
          * @function
          * @name pc.VrDisplay#requestPresent
          * @description Try to present full screen VR content on this display
@@ -263,11 +257,6 @@ Object.assign(pc, function () {
                 if (callback) callback(new Error("exitPresent failed"));
             });
         },
-
-        /**
-         * @callback pc.VrFrameCallback
-         * @description Callback function used by {@link pc.VrDisplay#requestAnimationFrame}.
-         */
 
         /**
          * @function

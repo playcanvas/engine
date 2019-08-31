@@ -279,13 +279,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.FindNodeCallback
-         * @description Callback function used by {@link pc.GraphNode#find} and {@link pc.GraphNode#findOne} to search through a graph node and all of its descendants.
-         * @param {pc.GraphNode} node The current graph node.
-         * @returns {Boolean} Returning `true` will result in that node being returned from {@link pc.GraphNode#find} or {@link pc.GraphNode#findOne}.
-         */
-
-        /**
          * @function
          * @name pc.GraphNode#find
          * @description Search the graph node and all of its descendants for the nodes that satisfy some search criteria.
@@ -506,12 +499,6 @@ Object.assign(pc, function () {
 
             return result;
         },
-
-        /**
-         * @callback pc.ForEachNodeCallback
-         * @description Callback function used by {@link pc.GraphNode#forEach} to iterate through a graph node and all of its descendants.
-         * @param {pc.GraphNode} node The current graph node.
-         */
 
         /**
          * @function

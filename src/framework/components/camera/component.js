@@ -1,12 +1,5 @@
 Object.assign(pc, function () {
     /**
-     * @callback pc.CalculateCallback
-     * @description Callback function used by {@link pc.Application#calculateTransform} and {@link pc.Application#calculateProjection}.
-     * @param {pc.Mat4} transformMatrix Output of the function.
-     * @param {Number} view Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.
-     */
-
-    /**
      * @component
      * @constructor
      * @name pc.CameraComponent
@@ -454,12 +447,6 @@ Object.assign(pc, function () {
         frameEnd: function () {
             this.data.isRendering = false;
         },
-
-        /**
-         * @callback pc.CameraVrCallback
-         * @description Callback function used by {@link pc.CameraComponent#enterVr} and {@link pc.CameraComponent#exitVr}.
-         * @param {String|Null} err On success it is null on failure it is the error message.
-         */
 
         /**
          * @function

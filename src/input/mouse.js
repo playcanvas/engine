@@ -215,11 +215,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.LockMouseCallback
-         * @description Callback function used by {@link pc.Mouse#enablePointerLock} and {@link pc.Application#disablePointerLock}.
-         */
-
-        /**
          * @function
          * @name pc.Mouse#enablePointerLock
          * @description Request that the browser hides the mouse cursor and locks the mouse to the element.

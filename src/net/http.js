@@ -54,13 +54,6 @@ Object.assign(pc, function () {
         binaryExtensions: Http.binaryExtensions,
 
         /**
-         * @callback pc.HttpCallback
-         * @description Callback function used by {@link pc.Http#get}, {@link pc.Http#post}, {@link pc.Http#put}, {@link pc.Http#del}, and {@link pc.Http#request}.
-         * @param {Number|String|Error|Null} err The error code, message, or exception in the case where the request fails.
-         * @param {*} [response] The response data if no errors were encountered. (format depends on response type: text, Object, ArrayBuffer, XML).
-         */
-
-        /**
          * @function
          * @name pc.Http#get
          * @variation 1

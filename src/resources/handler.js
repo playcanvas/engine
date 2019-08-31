@@ -10,13 +10,6 @@ Object.assign(pc, function () {
     Object.assign(ResourceHandler.prototype, {
 
         /**
-         * @callback pc.HandlerCallback
-         * @description Callback function used by {@link pc.ResourceHandler#load} when a resource is loaded (or an error occurs).
-         * @param {String|Null} err The error message in the case where the load fails.
-         * @param {*} [response] The raw data that has been successfully loaded.
-         */
-
-        /**
          * @function
          * @name pc.ResourceHandler#load
          * @description Load a resource from a remote URL. When loaded (or failed),

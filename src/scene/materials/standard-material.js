@@ -1,13 +1,5 @@
 Object.assign(pc, function () {
     /**
-     * @callback pc.UpdateShaderCallback
-     * @description Callback function used by {@link pc.Application#onUpdateShader}.
-     * @param {Object} options An object with shader generator settings (based on current material and scene properties), that you can change and then return.
-     * Properties of the object passed into this function are documented in {@link pc.Application#onUpdateShader}.
-     * @returns {Object} Returned settings will be used by the shader.
-     */
-
-    /**
      * @constructor
      * @name pc.StandardMaterial
      * @classdesc A Standard material is the main, general purpose material that is most often used for rendering.

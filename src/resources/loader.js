@@ -69,13 +69,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.LoaderCallback
-         * @description Callback function used by {@link pc.ResourceLoader#load} when a resource is loaded (or an error occurs).
-         * @param {String|Null} err The error message in the case where the load fails.
-         * @param {*} [resource] The resource that has been successfully loaded.
-         */
-
-        /**
          * @function
          * @name pc.ResourceLoader#load
          * @description Make a request for a resource from a remote URL. Parse the returned data using the

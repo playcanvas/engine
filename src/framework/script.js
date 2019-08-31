@@ -17,14 +17,6 @@ pc.script = (function () {
 
         /**
          * @private
-         * @callback pc.CreateScriptCallback
-         * @description Callback function used by {@link pc.script.create}.
-         * @param {pc.Application} app The application.
-         * @returns {Object} Return the Type of the script resource to be instanced for each Entity.
-         */
-
-        /**
-         * @private
          * @function
          * @name pc.script.create
          * @description Create a script resource object. A script file should contain a single call to pc.script.create and the callback should return a script object which will be
@@ -116,12 +108,6 @@ pc.script = (function () {
         attribute: function (name, type, defaultValue, options) {
             // only works when parsing the script...
         },
-
-        /**
-         * @callback pc.CreateScreenCallback
-         * @description Callback function used by {@link pc.script.createLoadingScreen}.
-         * @param {pc.Application} app The application.
-         */
 
         /**
          * @function

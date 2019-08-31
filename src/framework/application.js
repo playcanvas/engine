@@ -574,12 +574,6 @@ Object.assign(pc, function () {
 
     Object.assign(Application.prototype, {
         /**
-         * @callback pc.ConfigureCallback
-         * @description Callback function used by {@link pc.Application#configure} when configuration file is loaded and parsed (or an error occurs).
-         * @param {String|Null} err The error message in the case where the loading or parsing fails.
-         */
-
-        /**
          * @function
          * @name pc.Application#configure
          * @description Load the application configuration file and apply application properties and fill the asset registry
@@ -610,11 +604,6 @@ Object.assign(pc, function () {
                 });
             });
         },
-
-        /**
-         * @callback pc.PreloadCallback
-         * @description Callback function used by {@link pc.Application#preload} when all assets (marked as 'preload') are loaded.
-         */
 
         /**
          * @function
@@ -711,13 +700,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.LoadHierarchyCallback
-         * @description Callback function used by {@link pc.Application#loadSceneHierarchy}.
-         * @param {String|Null} err The error message in the case where the loading or parsing fails.
-         * @param {pc.Entity} [entity] The loaded root entity if no errors were encountered.
-         */
-
-        /**
          * @function
          * @name pc.Application#loadSceneHierarchy
          * @description Load a scene file, create and initialize the Entity hierarchy
@@ -740,12 +722,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.LoadSettingsCallback
-         * @description Callback function used by {@link pc.Application#loadSceneSettings}.
-         * @param {String|Null} err The error message in the case where the loading or parsing fails.
-         */
-
-        /**
          * @function
          * @name pc.Application#loadSceneSettings
          * @description Load a scene file and apply the scene settings to the current scene
@@ -764,14 +740,6 @@ Object.assign(pc, function () {
         loadSceneSettings: function (url, callback) {
             this._sceneRegistry.loadSceneSettings(url, callback);
         },
-
-        /**
-         * @private
-         * @callback pc.LoadSceneCallback
-         * @description Callback function used by {@link pc.Application#loadScene}.
-         * @param {String|Null} err The error message in the case where the loading or parsing fails.
-         * @param {pc.Entity} [entity] The loaded root entity if no errors were encountered.
-         */
 
         /**
          * @private
