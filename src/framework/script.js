@@ -17,7 +17,7 @@ pc.script = (function () {
 
         /**
          * @private
-         * @callback pc.script.createCallback
+         * @callback pc.CreateScriptCallback
          * @description Callback function used by {@link pc.script.create}.
          * @param {pc.Application} app The application.
          * @returns {Object} Return the Type of the script resource to be instanced for each Entity.
@@ -30,7 +30,7 @@ pc.script = (function () {
          * @description Create a script resource object. A script file should contain a single call to pc.script.create and the callback should return a script object which will be
          * instantiated when attached to Entities.
          * @param {String} name The name of the script object.
-         * @param {pc.script.createCallback} callback The callback function which is passed an {pc.Application} object,
+         * @param {pc.CreateScriptCallback} callback The callback function which is passed an {pc.Application} object,
          * which is used to access Entities and Components, and should return the Type of the script resource
          * to be instanced for each Entity.
          * @example
@@ -118,7 +118,7 @@ pc.script = (function () {
         },
 
         /**
-         * @callback pc.script.createLoadingScreenCallback
+         * @callback pc.CreateScreenCallback
          * @description Callback function used by {@link pc.script.createLoadingScreen}.
          * @param {pc.Application} app The application.
          */
@@ -129,7 +129,7 @@ pc.script = (function () {
          * @description Handles the creation of the loading screen of the application. A script can subscribe to
          * the events of a {@link pc.Application} to show a loading screen, progress bar etc. In order for this to work
          * you need to set the project's loading screen script to the script that calls this method.
-         * @param  {pc.script.createLoadingScreenCallback} callback A function which can set up and tear down a customised loading screen.
+         * @param  {pc.CreateScreenCallback} callback A function which can set up and tear down a customised loading screen.
          * @example
          * pc.script.createLoadingScreen(function (app) {
          *     var showSplashScreen = function () { // }

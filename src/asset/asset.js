@@ -253,7 +253,7 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.Asset.readyCallback
+         * @callback pc.AssetReadyCallback
          * @description Callback function used by {@link pc.Asset#ready} and called when an asset is ready.
          * @param {pc.Asset} asset The ready asset.
          */
@@ -262,7 +262,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Asset#ready
          * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away
-         * @param {pc.Asset.readyCallback} callback The function called when the asset is ready. Passed the (asset) arguments
+         * @param {pc.AssetReadyCallback} callback The function called when the asset is ready. Passed the (asset) arguments
          * @param {Object} [scope] Scope object to use when calling the callback
          * @example
          * var asset = app.assets.find("My Asset");

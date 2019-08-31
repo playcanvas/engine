@@ -69,7 +69,7 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.ResourceLoader.loadCallback
+         * @callback pc.LoaderCallback
          * @description Callback function used by {@link pc.ResourceLoader#load} when a resource is loaded (or an error occurs).
          * @param {String|Null} err The error message in the case where the load fails.
          * @param {*} [resource] The resource that has been successfully loaded.
@@ -83,7 +83,7 @@ Object.assign(pc, function () {
          * the resource.
          * @param {String} url The URL of the resource to load.
          * @param {String} type The type of resource expected.
-         * @param {pc.ResourceLoader.loadCallback} callback The callback used when the resource is loaded or an error occurs.
+         * @param {pc.LoaderCallback} callback The callback used when the resource is loaded or an error occurs.
          * @param {pc.Asset} [asset] Optional asset that is passed into handler
          * Passed (err, resource) where err is null if there are no errors.
          * @example

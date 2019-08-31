@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     /**
-     * @callback pc.StandardMaterial.onUpdateShaderCallback
+     * @callback pc.UpdateShaderCallback
      * @description Callback function used by {@link pc.Application#onUpdateShader}.
      * @param {Object} options An object with shader generator settings (based on current material and scene properties), that you can change and then return.
      * Properties of the object passed into this function are documented in {@link pc.Application#onUpdateShader}.
@@ -172,7 +172,7 @@ Object.assign(pc, function () {
      * @property {Boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on backfaces
      * @property {Object} chunks Object containing custom shader chunks that will replace default ones.
      *
-     * @property {pc.StandardMaterial.onUpdateShaderCallback} onUpdateShader A custom function that will be called after all shader generator properties are collected and before shader code is generated.
+     * @property {pc.UpdateShaderCallback} onUpdateShader A custom function that will be called after all shader generator properties are collected and before shader code is generated.
      * This function will receive an object with shader generator settings (based on current material and scene properties), that you can change and then return.
      * Returned value will be used instead. This is mostly useful when rendering the same set of objects, but with different shader variations based on the same material.
      * For example, you may wish to render a depth or normal pass using textures assigned to the material, a reflection pass with simpler shaders and so on.

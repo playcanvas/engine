@@ -215,7 +215,7 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.Mouse.pointerLockCallback
+         * @callback pc.LockMouseCallback
          * @description Callback function used by {@link pc.Mouse#enablePointerLock} and {@link pc.Application#disablePointerLock}.
          */
 
@@ -229,8 +229,8 @@ Object.assign(pc, function () {
          * <li>In some browsers this will only work when the browser is running in fullscreen mode. See {@link pc.Application#enableFullscreen}
          * <li>Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
          * </ul>
-         * @param {pc.Mouse.pointerLockCallback} [success] Function called if the request for mouse lock is successful.
-         * @param {pc.Mouse.pointerLockCallback} [error] Function called if the request for mouse lock is unsuccessful.
+         * @param {pc.LockMouseCallback} [success] Function called if the request for mouse lock is successful.
+         * @param {pc.LockMouseCallback} [error] Function called if the request for mouse lock is unsuccessful.
          */
         enablePointerLock: function (success, error) {
             if (!document.body.requestPointerLock) {
@@ -264,7 +264,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Mouse#disablePointerLock
          * @description Return control of the mouse cursor to the user
-         * @param {pc.Mouse.pointerLockCallback} [success] Function called when the mouse lock is disabled
+         * @param {pc.LockMouseCallback} [success] Function called when the mouse lock is disabled
          */
         disablePointerLock: function (success) {
             if (!document.exitPointerLock) {

@@ -574,7 +574,7 @@ Object.assign(pc, function () {
 
     Object.assign(Application.prototype, {
         /**
-         * @callback pc.Application.configureCallback
+         * @callback pc.ConfigureCallback
          * @description Callback function used by {@link pc.Application#configure} when configuration file is loaded and parsed (or an error occurs).
          * @param {String|Null} err The error message in the case where the loading or parsing fails.
          */
@@ -584,7 +584,7 @@ Object.assign(pc, function () {
          * @name pc.Application#configure
          * @description Load the application configuration file and apply application properties and fill the asset registry
          * @param {String} url The URL of the configuration file to load
-         * @param {pc.Application.configureCallback} callback The Function called when the configuration file is loaded and parsed (or an error occurs).
+         * @param {pc.ConfigureCallback} callback The Function called when the configuration file is loaded and parsed (or an error occurs).
          */
         configure: function (url, callback) {
             var self = this;
@@ -612,7 +612,7 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.Application.preloadCallback
+         * @callback pc.PreloadCallback
          * @description Callback function used by {@link pc.Application#preload} when all assets (marked as 'preload') are loaded.
          */
 
@@ -620,7 +620,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#preload
          * @description Load all assets in the asset registry that are marked as 'preload'
-         * @param {pc.Application.preloadCallback} callback Function called when all assets are loaded
+         * @param {pc.PreloadCallback} callback Function called when all assets are loaded
          */
         preload: function (callback) {
             var self = this;
@@ -711,7 +711,7 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.Application.loadSceneHierarchyCallback
+         * @callback pc.LoadHierarchyCallback
          * @description Callback function used by {@link pc.Application#loadSceneHierarchy}.
          * @param {String|Null} err The error message in the case where the loading or parsing fails.
          * @param {pc.Entity} [entity] The loaded root entity if no errors were encountered.
@@ -723,7 +723,7 @@ Object.assign(pc, function () {
          * @description Load a scene file, create and initialize the Entity hierarchy
          * and add the hierarchy to the application root Entity.
          * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
-         * @param {pc.Application.loadSceneHierarchyCallback} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
+         * @param {pc.LoadHierarchyCallback} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
          * @example
          *
          * app.loadSceneHierarchy("1000.json", function (err, entity) {
@@ -740,7 +740,7 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.Application.loadSceneSettingsCallback
+         * @callback pc.LoadSettingsCallback
          * @description Callback function used by {@link pc.Application#loadSceneSettings}.
          * @param {String|Null} err The error message in the case where the loading or parsing fails.
          */
@@ -750,7 +750,7 @@ Object.assign(pc, function () {
          * @name pc.Application#loadSceneSettings
          * @description Load a scene file and apply the scene settings to the current scene
          * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
-         * @param {pc.Application.loadSceneSettingsCallback} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
+         * @param {pc.LoadSettingsCallback} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
          * @example
          * app.loadSceneSettings("1000.json", function (err) {
          *     if (!err) {
@@ -767,7 +767,7 @@ Object.assign(pc, function () {
 
         /**
          * @private
-         * @callback pc.Application.loadSceneCallback
+         * @callback pc.LoadSceneCallback
          * @description Callback function used by {@link pc.Application#loadScene}.
          * @param {String|Null} err The error message in the case where the loading or parsing fails.
          * @param {pc.Entity} [entity] The loaded root entity if no errors were encountered.
@@ -779,7 +779,7 @@ Object.assign(pc, function () {
          * @name pc.Application#loadScene
          * @description Load a scene file.
          * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
-         * @param {pc.Application.loadSceneCallback} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
+         * @param {pc.LoadSceneCallback} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
          * @example
          *
          * app.loadScene("1000.json", function (err, entity) {
