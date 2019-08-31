@@ -2,11 +2,25 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Application
-     * @classdesc A pc.Application represents and manages your PlayCanvas application. Internally,
-     * it creates a {@link pc.GraphicsDevice} that is initialized with the supplied canvas element.
-     * Then, it creates the application's main loop. On every iteration of the main loop, the
-     * application first updates all {@link pc.Component}s and then renders the {@link pc.Scene}
-     * for every enabled {@link pc.CameraComponent}.
+     * @classdesc A pc.Application represents and manages your PlayCanvas application.
+     * If you are developing using the PlayCanvas Editor, the pc.Application is created
+     * for you. You can access your pc.Application instance in your scripts. Below is a
+     * skeleton script which shows how you can access the application 'app' property inside
+     * the initialize and update functions:
+     * <pre><code class="javascript">// Editor example: accessing the pc.Application from a script
+     * var MyScript = pc.createScript('myScript');
+     *
+     * MyScript.prototype.initialize = function() {
+     *     // Every script instance has a property 'this.app' accessible in the initialize...
+     *     var app = this.app;
+     * }
+     *
+     * MyScript.prototype.update = function(dt) {
+     *     // ...and update functions.
+     *     var app = this.app;
+     * }</code></pre>
+     * If you are using the Engine without the Editor, you have to create the application
+     * instance manually.
      * @description Create a new Application.
      * @param {Element} canvas The canvas element
      * @param {Object} options
@@ -17,11 +31,11 @@ Object.assign(pc, function () {
      * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
      * @param {String} [options.assetPrefix] Prefix to apply to asset urls before loading
      * @param {Object} [options.graphicsDeviceOptions] Options object that is passed into the {@link pc.GraphicsDevice} constructor
-     *
      * @example
-     * // Create application
+     * // Engine-only example: create the application manually
      * var app = new pc.Application(canvas, options);
-     * // Start game loop
+     *
+     * // Start the application's main loop
      * app.start()
      */
 
@@ -70,36 +84,12 @@ Object.assign(pc, function () {
      * @type {pc.GraphicsDevice}
      * @description The graphics device used by the application.
      */
-        this.systems.add(new pc.RigidBodyComponentSystem(this));
-        this.systems.add(new pc.CollisionComponentSystem(this));
-        this.systems.add(new pc.AnimationComponentSystem(this));
-        this.systems.add(new pc.ModelComponentSystem(this));
-        this.systems.add(new pc.CameraComponentSystem(this));
-        this.systems.add(new pc.LightComponentSystem(this));
-        if (pc.script.legacy) {
-            this.systems.add(new pc.ScriptLegacyComponentSystem(this));
-        } else {
-            this.systems.add(new pc.ScriptComponentSystem(this));
-        }
-        this.systems.add(new pc.AudioSourceComponentSystem(this, this._audioManager));
-        this.systems.add(new pc.SoundComponentSystem(this, this._audioManager));
-        this.systems.add(new pc.AudioListenerComponentSystem(this, this._audioManager));
-        this.systems.add(new pc.ParticleSystemComponentSystem(this));
-        this.systems.add(new pc.ScreenComponentSystem(this));
-        this.systems.add(new pc.ElementComponentSystem(this));
-        this.systems.add(new pc.ButtonComponentSystem(this));
-        this.systems.add(new pc.ScrollViewComponentSystem(this));
-        this.systems.add(new pc.ScrollbarComponentSystem(this));
-        this.systems.add(new pc.SpriteComponentSystem(this));
-        this.systems.add(new pc.LayoutGroupComponentSystem(this));
-        this.systems.add(new pc.LayoutChildComponentSystem(this));
-        this.systems.add(new pc.ZoneComponentSystem(this));
 
     /**
      * @name pc.Application#systems
      * @type {pc.ComponentSystemRegistry}
-     * @description The component system registry. The pc.Application constructor
-     * adds the following component systems to its component system registry:
+     * @description The application's component system registry. The pc.Application
+     * constructor adds the following component systems to its component system registry:
      * <ul>
      *     <li>animation ({@link pc.AnimationComponentSystem})</li>
      *     <li>audiolistener ({@link pc.AudioListenerComponentSystem})</li>
@@ -175,13 +165,15 @@ Object.assign(pc, function () {
     /**
      * @name pc.Application#scripts
      * @type pc.ScriptRegistry
-     * @description The Script Registry of the Application
+     * @description The application's script registry.
      */
 
     /**
      * @name pc.Application#batcher
      * @type pc.BatchManager
-     * @description The Batch Manager of the Application
+     * @description The application's batch manager. The batch manager is used to
+     * merge mesh instances in the scene, which reduces the overall number of draw
+     * calls, thereby boosting performance.
      */
 
     /**
@@ -631,12 +623,14 @@ Object.assign(pc, function () {
      * @static
      * @function
      * @name pc.Application.getApplication
-     * @description Get the current application (alternatively get application based on the canvas id)
+     * @description Get the current application. In the case where there are multiple running
+     * applications, the function can get an application based on a supplied canvas id. This
+     * function is particularly useful when the current pc.Application is not readily available.
+     * For example, in the JavaScript console of the browser's developer tools.
      * @param {String} [id] If defined, the returned application should use the canvas which has this id. Otherwise current application will be returned.
      * @returns {pc.Application|Undefined} The running application, if any.
      * @example
      * var app = pc.Application.getApplication();
-     * app.
      */
     Application.getApplication = function (id) {
         return id ? Application._applications[id] : Application._currentApplication;
@@ -1156,7 +1150,11 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Application#update
-         * @description Application specific update method. Override this if you have a custom Application
+         * @description Update the application. This function will call the update
+         * functions and then the postUpdate functions of all enabled components. It 
+         * will then update the current state of all connected input devices.
+         * This function is called internally in the application's main loop and
+         * does not need to be called explicitly.
          * @param {Number} dt The time delta since the last frame.
          */
         update: function (dt) {
@@ -1201,7 +1199,10 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Application#render
-         * @description Application specific render method. Override this if you have a custom Application
+         * @description Render the application's scene. More specifically, the scene's
+         * {@link pc.LayerComposition} is rendered by the application's {@link pc.ForwardRenderer}. 
+         * This function is called internally in the application's main loop and
+         * does not need to be called explicitly.
          */
         render: function () {
             // #ifdef PROFILER
@@ -1370,13 +1371,13 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Application#resizeCanvas
-         * @description Resize the canvas in line with the current FillMode
-         * In KEEP_ASPECT mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio
-         * In FILL_WINDOW mode, the canvas will simply fill the window, changing aspect ratio
-         * In NONE mode, the canvas will always match the size provided
-         * @param {Number} [width] The width of the canvas, only used in NONE mode
-         * @param {Number} [height] The height of the canvas, only used in NONE mode
-         * @returns {Object} A object containing the values calculated to use as width and height
+         * @description Resize the application's canvas element in line with the current fill mode.
+         * In {@link pc.FILLMODE_KEEP_ASPECT} mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
+         * In {@link pc.FILLMODE_FILL_WINDOW} mode, the canvas will simply fill the window, changing aspect ratio.
+         * In {@link pc.FILLMODE_NONE} mode, the canvas will always match the size provided.
+         * @param {Number} [width] The width of the canvas. Only used if current fill mode is {@link pc.FILLMODE_NONE}.
+         * @param {Number} [height] The height of the canvas. Only used if current fill mode is {@link pc.FILLMODE_NONE}.
+         * @returns {Object} A object containing the values calculated to use as width and height.
          */
         resizeCanvas: function (width, height) {
             if (!this._allowResize) return; // prevent resizing (e.g. if presenting in VR HMD)
