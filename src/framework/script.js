@@ -1,8 +1,8 @@
 /**
  * @name pc.script
  * @namespace
- * @description Functions for creating user scripts for the script component
- * @property {Boolean} legacy If True, then engine will use legacy scripting system, defaults to true (subject to change)
+ * @description The pc.script namespace holds the createLoadingScreen function that
+ * is used to override the default PlayCanvas loading screen.
  */
 pc.script = (function () {
     var _legacy = false;
@@ -16,6 +16,7 @@ pc.script = (function () {
         app: null,
 
         /**
+         * @private
          * @callback pc.script.createCallback
          * @description Callback function used by {@link pc.script.create}.
          * @param {pc.Application} app The application.
@@ -23,6 +24,7 @@ pc.script = (function () {
          */
 
         /**
+         * @private
          * @function
          * @name pc.script.create
          * @description Create a script resource object. A script file should contain a single call to pc.script.create and the callback should return a script object which will be
@@ -61,6 +63,7 @@ pc.script = (function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.script.attribute
          * @description Creates a script attribute for the current script. The script attribute can be accessed
