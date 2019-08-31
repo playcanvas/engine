@@ -42,7 +42,7 @@ pc.events = {
      * @name pc.events.on
      * @description Attach an event handler to an event
      * @param {String} name Name of the event to bind the callback to
-     * @param {pc.callbacks.Event} callback Function that is called when event is fired. Note the callback is limited to 8 arguments.
+     * @param {pc.callbacks.HandleEvent} callback Function that is called when event is fired. Note the callback is limited to 8 arguments.
      * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
      * @returns {*} 'this' for chaining
      * @example
@@ -75,7 +75,7 @@ pc.events = {
      * @description Detach an event handler from an event. If callback is not provided then all callbacks are unbound from the event,
      * if scope is not provided then all events with the callback will be unbound.
      * @param {String} [name] Name of the event to unbind
-     * @param {pc.callbacks.Event} [callback] Function to be unbound.
+     * @param {pc.callbacks.HandleEvent} [callback] Function to be unbound.
      * @param {Object} [scope] Scope that was used as the this when the event is fired
      * @returns {*} 'this' for chaining
      * @example
@@ -197,7 +197,7 @@ pc.events = {
      * @name pc.events.once
      * @description Attach an event handler to an event. This handler will be removed after being fired once.
      * @param {String} name Name of the event to bind the callback to
-     * @param {pc.callbacks.Event} callback Function that is called when event is fired. Note the callback is limited to 8 arguments.
+     * @param {pc.callbacks.HandleEvent} callback Function that is called when event is fired. Note the callback is limited to 8 arguments.
      * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
      * @returns {*} 'this' for chaining
      * @example

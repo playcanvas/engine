@@ -578,7 +578,7 @@ Object.assign(pc, function () {
          * @name pc.Application#configure
          * @description Load the application configuration file and apply application properties and fill the asset registry
          * @param {String} url The URL of the configuration file to load
-         * @param {pc.callbacks.Configure} callback The Function called when the configuration file is loaded and parsed (or an error occurs).
+         * @param {pc.callbacks.ConfigureApp} callback The Function called when the configuration file is loaded and parsed (or an error occurs).
          */
         configure: function (url, callback) {
             var self = this;
@@ -609,7 +609,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#preload
          * @description Load all assets in the asset registry that are marked as 'preload'
-         * @param {pc.callbacks.Preload} callback Function called when all assets are loaded
+         * @param {pc.callbacks.PreloadApp} callback Function called when all assets are loaded
          */
         preload: function (callback) {
             var self = this;

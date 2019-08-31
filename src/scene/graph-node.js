@@ -504,7 +504,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#forEach
          * @description Executes a provided function once on this graph node and all of its descendants.
-         * @param {pc.callbacks.ForEachNode} callback The function to execute on the graph node and each descendant.
+         * @param {pc.callbacks.ForEach} callback The function to execute on the graph node and each descendant.
          * @param {Object} [thisArg] Optional value to use as this when executing callback function.
          * @example
          * // Log the path and name of each node in descendant tree starting with "parent"

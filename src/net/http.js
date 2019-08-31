@@ -58,7 +58,7 @@ Object.assign(pc, function () {
          * @name pc.Http#get
          * @description Perform an HTTP GET request to the given url.
          * @param {String} url The URL to make the request to.
-         * @param {pc.callbacks.Http} callback The callback used when the response has returned. Passed (err, data)
+         * @param {pc.callbacks.HttpResponse} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @example
@@ -85,7 +85,7 @@ Object.assign(pc, function () {
          * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
          * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
          * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
-         * @param {pc.callbacks.Http} callback The callback used when the response has returned. Passed (err, data)
+         * @param {pc.callbacks.HttpResponse} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @returns {XMLHttpRequest} The request object.
@@ -107,7 +107,7 @@ Object.assign(pc, function () {
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
          * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
          * Otherwise, by default, the data is sent as form-urlencoded.
-         * @param {pc.callbacks.Http} callback The callback used when the response has returned. Passed (err, data)
+         * @param {pc.callbacks.HttpResponse} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @returns {XMLHttpRequest} The request object.
@@ -130,7 +130,7 @@ Object.assign(pc, function () {
          * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
          * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
          * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
-         * @param {pc.callbacks.Http} callback The callback used when the response has returned. Passed (err, data)
+         * @param {pc.callbacks.HttpResponse} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @returns {XMLHttpRequest} The request object.
@@ -153,7 +153,7 @@ Object.assign(pc, function () {
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
          * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
          * Otherwise, by default, the data is sent as form-urlencoded.
-         * @param {pc.callbacks.Http} callback The callback used when the response has returned. Passed (err, data)
+         * @param {pc.callbacks.HttpResponse} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @returns {XMLHttpRequest} The request object.
@@ -176,7 +176,7 @@ Object.assign(pc, function () {
          * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
          * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
          * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
-         * @param {pc.callbacks.Http} callback The callback used when the response has returned. Passed (err, data)
+         * @param {pc.callbacks.HttpResponse} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @returns {XMLHttpRequest} The request object.
@@ -195,7 +195,7 @@ Object.assign(pc, function () {
          * @name pc.Http#del
          * @description Perform an HTTP DELETE request to the given url
          * @param {Object} url The URL to make the request to
-         * @param {pc.callbacks.Http} callback The callback used when the response has returned. Passed (err, data)
+         * @param {pc.callbacks.HttpResponse} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @returns {XMLHttpRequest} The request object.
@@ -218,7 +218,7 @@ Object.assign(pc, function () {
          * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
          * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
          * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
-         * @param {pc.callbacks.Http} callback The callback used when the response has returned. Passed (err, data)
+         * @param {pc.callbacks.HttpResponse} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @returns {XMLHttpRequest} The request object.
@@ -237,7 +237,7 @@ Object.assign(pc, function () {
          * @description Make a general purpose HTTP request.
          * @param {String} method The HTTP method "GET", "POST", "PUT", "DELETE"
          * @param {String} url The url to make the request to
-         * @param {pc.callbacks.Http} callback The callback used when the response has returned. Passed (err, data)
+         * @param {pc.callbacks.HttpResponse} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @returns {XMLHttpRequest} The request object.
@@ -261,7 +261,7 @@ Object.assign(pc, function () {
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
          * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
          * Otherwise, by default, the data is sent as form-urlencoded.
-         * @param {pc.callbacks.Http} callback The callback used when the response has returned. Passed (err, data)
+         * @param {pc.callbacks.HttpResponse} callback The callback used when the response has returned. Passed (err, data)
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @returns {XMLHttpRequest} The request object.
