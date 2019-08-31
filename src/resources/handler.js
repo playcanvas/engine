@@ -15,7 +15,7 @@ Object.assign(pc, function () {
          * @description Load a resource from a remote URL. When loaded (or failed),
          * use the callback to return an the raw resource data (or error).
          * @param {String} url The URL of the resource to load.
-         * @param {pc.HandlerCallback} callback The callback used when the resource is loaded or an error occurs.
+         * @param {pc.callbacks.Handler} callback The callback used when the resource is loaded or an error occurs.
          * @param {pc.Asset} [asset] Optional asset that is passed by ResourceLoader.
          */
         load: function (url, callback, asset) {

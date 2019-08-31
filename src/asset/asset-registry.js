@@ -439,7 +439,7 @@ Object.assign(pc, function () {
          * if you are not integrated with the PlayCanvas Editor
          * @param {String} url The url to load
          * @param {String} type The type of asset to load
-         * @param {pc.LoadAssetCallback} callback Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered
+         * @param {pc.callbacks.LoadAsset} callback Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered
          * @example
          * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
          *     var texture = asset.resource;
@@ -674,7 +674,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AssetRegistry#filter
          * @description Return all Assets that satisfy filter callback
-         * @param {pc.FilterAssetCallback} callback The callback function that is used to filter assets, return `true` to include asset to result list
+         * @param {pc.callbacks.FilterAsset} callback The callback function that is used to filter assets, return `true` to include asset to result list
          * @returns {pc.Asset[]} A list of all Assets found
          * @example
          * var assets = app.assets.filter(function(asset) {
