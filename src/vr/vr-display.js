@@ -236,7 +236,7 @@ Object.assign(pc, function () {
 
         /**
          * @function
-         * @name pc.VrExitPresent
+         * @name pc.VrDisplay#exitPresent
          * @description Try to stop presenting VR content on this display
          * @param {pc.callbacks.VrDisplay} callback Called when the request is completed. Callback takes a single argument (err) that is the error message return
          * if presenting fails, or null if the call succeeds. Usually called by {@link pc.CameraComponent#exitVr}.

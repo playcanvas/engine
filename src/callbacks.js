@@ -3,7 +3,7 @@
 /**
  * @name pc.callbacks
  * @namespace
- * @description Namespace for callback type definitions.
+ * @description Namespace for callback definitions.
  */
 
 /**
@@ -73,7 +73,7 @@
 
 /**
  * @callback pc.callbacks.Calculate
- * @description Callback function used by {@link pc.Application#calculateTransform} and {@link pc.Application#calculateProjection}.
+ * @description Callback function used by {@link pc.CameraComponent#calculateTransform} and {@link pc.CameraComponent#calculateProjection}.
  * @param {pc.Mat4} transformMatrix Output of the function.
  * @param {Number} view Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.
  */
@@ -147,9 +147,9 @@
 
 /**
  * @callback pc.callbacks.UpdateShader
- * @description Callback function used by {@link pc.Application#onUpdateShader}.
+ * @description Callback function used by {@link pc.StandardMaterial#onUpdateShader}.
  * @param {Object} options An object with shader generator settings (based on current material and scene properties), that you can change and then return.
- * Properties of the object passed into this function are documented in {@link pc.Application#onUpdateShader}.
+ * Properties of the object passed into this function are documented in {@link pc.StandardMaterial#onUpdateShader}.
  * @returns {Object} Returned settings will be used by the shader.
  */
 
