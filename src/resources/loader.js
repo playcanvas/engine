@@ -209,6 +209,13 @@ Object.assign(pc, function () {
             }
         },
 
+        /**
+         * @function
+         * @name pc.ResourceLoader#clearCache
+         * @description Remove resource from cache.
+         * @param {String} url The URL of the resource.
+         * @param {String} type The type of resource.
+         */
         clearCache: function (url, type) {
             delete this._cache[url + type];
         },
