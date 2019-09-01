@@ -33,9 +33,9 @@
     "src/polyfill/*"
   ],
   "devDependencies": {
-    "@playcanvas/jsdoc-template": "^1.0.5",
+    "@playcanvas/jsdoc-template": "^1.0.7",
     "chai": "^4.2.0",
-    "eslint": "^5.16.0",
+    "eslint": "^6.3.0",
     "eslint-config-playcanvas": "^1.1.0",
     "fs-extra": "^8.1.0",
     "google-closure-compiler": "^20190513.0.0",
