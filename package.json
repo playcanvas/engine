@@ -5,11 +5,16 @@
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
   "keywords": [
-    "playcanvas",
-    "game engine",
-    "webgl",
-    "webgl2",
-    "3d"
+    "3D",
+    "2D",
+    "VR",
+    "WebGL",
+    "WebGL2",
+    "game",
+    "engine",
+    "HTML5",
+    "browser",
+    "typings"
   ],
   "license": "MIT",
   "main": "build/output/playcanvas-latest.js",
