@@ -13,6 +13,23 @@ Object.assign(pc, function () {
      * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
      * @param {String} [name] The non-unique name of the entity, default is "Untitled".
      * @param {pc.Application} [app] The application the entity belongs to, default is the current application.
+     * @property {pc.AnimationComponent} [animation] Gets the {@link pc.AnimationComponent} attached to this entity. [read only]
+     * @property {pc.AudioListenerComponent} [audiolistener] Gets the {@link pc.AudioSourceComponent} attached to this entity. [read only]
+     * @property {pc.ButtonComponent} [button] Gets the {@link pc.ButtonComponent} attached to this entity. [read only]
+     * @property {pc.CameraComponent} [camera] Gets the {@link pc.CameraComponent} attached to this entity. [read only]
+     * @property {pc.CollisionComponent} [collision] Gets the {@link pc.CollisionComponent} attached to this entity. [read only]
+     * @property {pc.ElementComponent} [element] Gets the {@link pc.ElementComponent} attached to this entity. [read only]
+     * @property {pc.LayoutChildComponent} [layoutchild] Gets the {@link pc.LayoutChildComponent} attached to this entity. [read only]
+     * @property {pc.LayoutGroupComponent} [layoutgroup] Gets the {@link pc.LayoutGroupComponent} attached to this entity. [read only]
+     * @property {pc.LightComponent} [light] Gets the {@link pc.LightComponent} attached to this entity. [read only]
+     * @property {pc.ModelComponent} [model] Gets the {@link pc.ModelComponent} attached to this entity. [read only]
+     * @property {pc.ParticleSystemComponent} [particlesystem] Gets the {@link pc.ParticleSystemComponent} attached to this entity. [read only]
+     * @property {pc.RigidBodyComponent} [rigidbody] Gets the {@link pc.RigidBodyComponent} attached to this entity. [read only]
+     * @property {pc.ScreenComponent} [screen] Gets the {@link pc.ScreenComponent} attached to this entity. [read only]
+     * @property {pc.ScriptComponent} [script] Gets the {@link pc.ScriptComponent} attached to this entity. [read only]
+     * @property {pc.ScrollViewComponent} [scrollview] Gets the {@link pc.ScrollViewComponent} attached to this entity. [read only]
+     * @property {pc.SoundComponent} [sound] Gets the {@link pc.SoundComponent} attached to this entity. [read only]
+     * @property {pc.SpriteComponent} [sprite] Gets the {@link pc.SpriteComponent} attached to this entity. [read only]
      * @example
      * var app = ... // Get the pc.Application
      *

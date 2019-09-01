@@ -148,6 +148,7 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @static
      * @function
      * @name pc.Mouse.isPointerLocked
      * @description Check if the mouse pointer has been locked, using {@link pc.Mouse#enabledPointerLock}

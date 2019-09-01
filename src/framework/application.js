@@ -24,6 +24,7 @@ Object.assign(pc, function () {
      * @description Create a new Application.
      * @param {Element} canvas The canvas element
      * @param {Object} options
+     * @param {pc.ElementInput} [options.elementInput] Input handler for {@link pc.ElementComponent}s
      * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input
      * @param {pc.Mouse} [options.mouse] Mouse handler for input
      * @param {pc.TouchDevice} [options.touch] TouchDevice handler for input
@@ -31,6 +32,7 @@ Object.assign(pc, function () {
      * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
      * @param {String} [options.assetPrefix] Prefix to apply to asset urls before loading
      * @param {Object} [options.graphicsDeviceOptions] Options object that is passed into the {@link pc.GraphicsDevice} constructor
+     * @param {String[]} [options.scriptsOrder] Scripts in order of loading first
      * @example
      * // Engine-only example: create the application manually
      * var app = new pc.Application(canvas, options);
