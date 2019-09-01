@@ -5,14 +5,20 @@
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
   "keywords": [
-    "playcanvas",
-    "game engine",
-    "webgl",
-    "webgl2",
-    "3d"
+    "3D",
+    "2D",
+    "VR",
+    "WebGL",
+    "WebGL2",
+    "game",
+    "engine",
+    "HTML5",
+    "browser",
+    "typings"
   ],
   "license": "MIT",
   "main": "build/output/playcanvas-latest.js",
+  "types": "index.d.ts",
   "bugs": {
     "url": "https://github.com/playcanvas/engine/issues"
   },
@@ -45,9 +51,6 @@
     "tsd-jsdoc": "^2.4.0",
     "typescript": "^3.5.3",
     "uglify-js": "^3.6.0"
-  },
-  "optionalDependencies": {
-    "jsdom": "^15.1.0"
   },
   "scripts": {
     "build": "cd build && node build.js -o output/playcanvas-latest.js",

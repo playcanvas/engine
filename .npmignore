@@ -1,2 +1,8 @@
+.*
+/build/*
+!/build/output
 /examples
+/src
 /tests
+/conf-api.json
+/conf-tsd.json
