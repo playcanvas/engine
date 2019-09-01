@@ -520,9 +520,11 @@ Object.assign(pc, function () {
     });
 
     /**
+     * @static
+     * @readonly
+     * @type {pc.Http}
      * @name pc.http
      * @description Default instance of {@link pc.Http}.
-     * @type pc.Http
      */
     return {
         Http: Http,
