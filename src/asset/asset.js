@@ -253,17 +253,11 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.Asset.readyCallback
-         * @description Callback function used by {@link pc.Asset#ready} and called when an asset is ready.
-         * @param {pc.Asset} asset The ready asset.
-         */
-
-        /**
          * @function
          * @name pc.Asset#ready
          * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away
-         * @param {pc.Asset.readyCallback} callback The function called when the asset is ready. Passed the (asset) arguments
-         * @param {Object} scope Scope object to use when calling the callback
+         * @param {pc.callbacks.AssetReady} callback The function called when the asset is ready. Passed the (asset) arguments
+         * @param {Object} [scope] Scope object to use when calling the callback
          * @example
          * var asset = app.assets.find("My Asset");
          * asset.ready(function (asset) {
@@ -454,19 +448,99 @@ Object.assign(pc, function () {
 
     return {
         Asset: Asset,
+
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_ANIMATION
+         * @description Asset type name for animation.
+         */
         ASSET_ANIMATION: 'animation',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_AUDIO
+         * @description Asset type name for audio.
+         */
         ASSET_AUDIO: 'audio',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_IMAGE
+         * @description Asset type name for image.
+         */
         ASSET_IMAGE: 'image',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_JSON
+         * @description Asset type name for json.
+         */
         ASSET_JSON: 'json',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_MODEL
+         * @description Asset type name for model.
+         */
         ASSET_MODEL: 'model',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_MATERIAL
+         * @description Asset type name for material.
+         */
         ASSET_MATERIAL: 'material',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_TEXT
+         * @description Asset type name for text.
+         */
         ASSET_TEXT: 'text',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_TEXTURE
+         * @description Asset type name for texture.
+         */
         ASSET_TEXTURE: 'texture',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_CUBEMAP
+         * @description Asset type name for cubemap.
+         */
         ASSET_CUBEMAP: 'cubemap',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_SHADER
+         * @description Asset type name for shader.
+         */
         ASSET_SHADER: 'shader',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_CSS
+         * @description Asset type name for CSS.
+         */
         ASSET_CSS: 'css',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_HTML
+         * @description Asset type name for HTML.
+         */
         ASSET_HTML: 'html',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_SCRIPT
+         * @description Asset type name for script.
+         */
         ASSET_SCRIPT: 'script',
+
         ABSOLUTE_URL: ABSOLUTE_URL
     };
 }());

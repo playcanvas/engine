@@ -165,6 +165,7 @@ Object.assign(pc, function () {
      * @property {HTMLCanvasElement} canvas The canvas DOM element that provides the underlying WebGL context used by the graphics device.
      * @property {Boolean} textureFloatRenderable Determines if 32-bit floating-point textures can be used as frame buffer. [read only]
      * @property {Boolean} textureHalfFloatRenderable Determines if 16-bit floating-point textures can be used as frame buffer. [read only]
+     * @property {pc.ScopeSpace} scope The scope namespace for shader attributes and variables. [read only]
      */
     var GraphicsDevice = function (canvas, options) {
         var i;
