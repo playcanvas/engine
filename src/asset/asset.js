@@ -58,7 +58,7 @@ Object.assign(pc, function () {
      * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field
      * @property {Object} data JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
      * @property {Object} resource A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
-     * @property {Any[]} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
+     * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
      * @property {Boolean} preload If true the asset will be loaded during the preload phase of application set up.
      * @property {Boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
      * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to

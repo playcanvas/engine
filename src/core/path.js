@@ -5,9 +5,10 @@
 pc.path = function () {
     return {
         /**
-         * The character that separates path segments
+         * @constant
+         * @type {String}
          * @name pc.path.delimiter
-         * @type String
+         * @description The character that separates path segments
          */
         delimiter: "/",
         /**

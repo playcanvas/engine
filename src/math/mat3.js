@@ -6,6 +6,7 @@ Object.assign(pc, (function () {
      * @name pc.Mat3
      * @classdesc A 3x3 matrix.
      * @description Creates a new identity Mat3 object.
+     * @property {Float32Array} data Matrix elements in the form of a flat array.
      */
     var Mat3 = function () {
         var data;

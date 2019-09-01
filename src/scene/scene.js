@@ -527,7 +527,7 @@
         /**
          * @constant
          * @type {Number}
-         * @name pc.SHADER_FORWARD
+         * @name pc.SHADER_FORWARDHDR
          * @description Render shaded materials without gamma correction and tonemapping.
          */
         SHADER_FORWARDHDR: 1,
@@ -535,7 +535,7 @@
         /**
          * @constant
          * @type {Number}
-         * @name pc.SHADER_FORWARD
+         * @name pc.SHADER_DEPTH
          * @description Render RGBA-encoded depth value.
          */
         SHADER_DEPTH: 2,
@@ -739,6 +739,7 @@ Object.assign(pc, function () {
      * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
      * pc.BAKE_COLORDIR.
      * @property {pc.LayerComposition} layers A {@link pc.LayerComposition} that defines rendering order of this scene.
+     * @property {pc.StandardMaterial} defaultMaterial The default material used in case no other material is available.
      */
     var Scene = function Scene() {
         this.root = null;

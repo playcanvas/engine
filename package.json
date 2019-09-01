@@ -48,7 +48,7 @@
     "mocha": "^5.2.0",
     "preprocessor": "^1.4.0",
     "sinon": "^5.1.1",
-    "tsd-jsdoc": "^2.3.1",
+    "tsd-jsdoc": "^2.4.0",
     "typescript": "^3.5.3",
     "uglify-js": "^3.6.0"
   },
