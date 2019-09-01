@@ -3243,6 +3243,7 @@ Object.assign(pc, function () {
     });
 
     /**
+     * @private
      * @name pc.GraphicsDevice#enableAutoInstancing
      * @type {Boolean}
      * @description Automatic instancing
