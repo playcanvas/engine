@@ -28,10 +28,11 @@
     "src/polyfill/*"
   ],
   "devDependencies": {
+    "@playcanvas/jsdoc-template": "^1.0.5",
     "chai": "^4.2.0",
     "eslint": "^5.16.0",
     "eslint-config-playcanvas": "^1.1.0",
-    "fs-extra": "^3.0.1",
+    "fs-extra": "^8.1.0",
     "google-closure-compiler": "^20190513.0.0",
     "http-server": "^0.11.1",
     "jsdoc": "^3.6.3",
@@ -55,6 +56,7 @@
     "build:profiler": "cd build && node build.js -p -o output/playcanvas-latest.prf.js",
     "build:min": "cd build && node build.js -l 1 -o output/playcanvas-latest.min.js",
     "build:all": "npm run build; npm run build:debug; npm run build:profiler; npm run build:min",
+    "docs": "jsdoc -c conf-api.json",
     "serve": "npm run build; ./node_modules/.bin/http-server build/output -a localhost -p 51000",
     "closure": "java -jar node_modules/google-closure-compiler/compiler.jar --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=checkTypes --externs build/externs.js --language_in=ECMASCRIPT5_STRICT --js build/output/playcanvas-latest.js --js_output_file build/output/playcanvas.min.js",
     "uglify": "uglifyjs build/output/playcanvas-latest.js --compress --mangle --output build/output/playcanvas.min.js",
@@ -64,7 +66,7 @@
     "test:watch": "karma start tests/karma.conf.js",
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false",
     "test:tsd": "npm run tsd && tsc --pretty false build/output/playcanvas.d.ts",
-    "tsd": "jsdoc -c tsd-jsdoc.conf",
+    "tsd": "jsdoc -c conf-tsd.json",
     "lint": "eslint extras src"
   },
   "engines": {

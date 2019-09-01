@@ -163,6 +163,7 @@ Object.assign(pc, function () {
      * @param {HTMLCanvasElement} canvas The canvas to which the graphics device will render.
      * @param {Object} [options] Options passed when creating the WebGL context. More info {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext here}.
      * @property {HTMLCanvasElement} canvas The canvas DOM element that provides the underlying WebGL context used by the graphics device.
+     * @property {pc.ScopeSpace} scope The scope namespace for shader attributes and variables. [read only]
      */
     var GraphicsDevice = function (canvas, options) {
         var i;

@@ -15,7 +15,7 @@ Object.assign(pc, function () {
          * @description Load a resource from a remote URL. When loaded (or failed),
          * use the callback to return an the raw resource data (or error).
          * @param {String} url The URL of the resource to load.
-         * @param {Function} callback The callback used when the resource is loaded or an error occurs.
+         * @param {pc.callbacks.ResourceHandler} callback The callback used when the resource is loaded or an error occurs.
          * @param {pc.Asset} [asset] Optional asset that is passed by ResourceLoader.
          */
         load: function (url, callback, asset) {
@@ -31,6 +31,7 @@ Object.assign(pc, function () {
          * @param {pc.Asset} [asset] Optional asset that is passed by ResourceLoader.
          * @returns {*} The parsed resource data.
          */
+        // eslint-disable-next-line valid-jsdoc
         open: function (url, data, asset) {
             throw new Error('not implemented');
         },

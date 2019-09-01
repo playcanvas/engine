@@ -162,8 +162,9 @@ Object.assign(pc, function () {
      * @property {Boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in scene settings)
      * @property {Boolean} pixelSnap Align vertices to pixel co-ordinates when rendering. Useful for pixel perfect 2D graphics
      * @property {Boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on backfaces
+     * @property {Object} chunks Object containing custom shader chunks that will replace default ones.
      *
-     * @property {Function} onUpdateShader A custom function that will be called after all shader generator properties are collected and before shader code is generated.
+     * @property {pc.callbacks.UpdateShader} onUpdateShader A custom function that will be called after all shader generator properties are collected and before shader code is generated.
      * This function will receive an object with shader generator settings (based on current material and scene properties), that you can change and then return.
      * Returned value will be used instead. This is mostly useful when rendering the same set of objects, but with different shader variations based on the same material.
      * For example, you may wish to render a depth or normal pass using textures assigned to the material, a reflection pass with simpler shaders and so on.
