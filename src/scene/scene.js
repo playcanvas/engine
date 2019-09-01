@@ -527,7 +527,7 @@
         /**
          * @constant
          * @type {Number}
-         * @name pc.SHADER_FORWARD
+         * @name pc.SHADER_FORWARDHDR
          * @description Render shaded materials without gamma correction and tonemapping.
          */
         SHADER_FORWARDHDR: 1,
@@ -535,7 +535,7 @@
         /**
          * @constant
          * @type {Number}
-         * @name pc.SHADER_FORWARD
+         * @name pc.SHADER_DEPTH
          * @description Render RGBA-encoded depth value.
          */
         SHADER_DEPTH: 2,
