@@ -2,7 +2,7 @@
 
 # PlayCanvas WebGL Game Engine
 
-PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games and other interactive 3D content in all modern browsers without the need for a plugin.
+PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games and other interactive 3D content in any mobile or desktop browser.
 
 ## Project Showcase
 
@@ -20,12 +20,12 @@ You can see more games on the [PlayCanvas website](https://playcanvas.com/explor
 
 ## Users
 
-PlayCanvas Engine and Tools been used by leading companies in game development, automotive, digital agencies and more. Some of them are:  
-**Disney, King, Zynga, Miniclip, Nickelodeon, Leapfrog, IGT, ARM, Samsung, Mozilla, Facebook**
+PlayCanvas is used by leading companies in video games, advertising and visualization such as:  
+**Animech, ARM, Disney, Facebook, IGT, King, Miniclip, Leapfrog, Mozilla, Nickelodeon, Nordeus, PikPok, PlaySide Studios, Polaris, Samsung, Spry Fox, Zeptolab, Zynga**
 
 ## Features
 
-The PlayCanvas Engine is a fully featured game engine.
+PlayCanvas is a fully featured game engine.
 
 * **Graphics**
     * WebGL 2.0 based renderer (with fallback to WebGL 1.0)
