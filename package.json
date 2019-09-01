@@ -52,9 +52,6 @@
     "typescript": "^3.5.3",
     "uglify-js": "^3.6.0"
   },
-  "optionalDependencies": {
-    "jsdom": "^15.1.0"
-  },
   "scripts": {
     "build": "cd build && node build.js -o output/playcanvas-latest.js",
     "build:debug": "cd build && node build.js -d -o output/playcanvas-latest.dbg.js",
