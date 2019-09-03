@@ -27,7 +27,7 @@
     "url": "https://github.com/playcanvas/engine.git"
   },
   "eslintConfig": {
-    "extends": "eslint-config-playcanvas"
+    "extends": "@playcanvas/eslint-config"
   },
   "eslintIgnore": [
     "src/polyfill/*"
