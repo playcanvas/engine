@@ -27,16 +27,16 @@
     "url": "https://github.com/playcanvas/engine.git"
   },
   "eslintConfig": {
-    "extends": "eslint-config-playcanvas"
+    "extends": "@playcanvas/eslint-config"
   },
   "eslintIgnore": [
     "src/polyfill/*"
   ],
   "devDependencies": {
     "@playcanvas/jsdoc-template": "^1.0.7",
+    "@playcanvas/eslint-config": "^1.0.0",
     "chai": "^4.2.0",
     "eslint": "^6.3.0",
-    "eslint-config-playcanvas": "^1.1.0",
     "fs-extra": "^8.1.0",
     "google-closure-compiler": "^20190513.0.0",
     "http-server": "^0.11.1",
