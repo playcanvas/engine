@@ -6,10 +6,10 @@ Object.assign(pc, function () {
      * @constructor
      * @name pc.Batch
      * @classdesc Holds information about batched mesh instances. Created in {@link pc.BatchManager#create}.
-     * @param {Array} meshInstances The mesh instances to be batched.
+     * @param {pc.MeshInstance[]} meshInstances The mesh instances to be batched.
      * @param {Boolean} dynamic Whether this batch is dynamic (supports transforming mesh instances at runtime).
      * @param {Number} batchGroupId Link this batch to a specific batch group. This is done automatically with default batches.
-     * @property {Array} origMeshInstances An array of original mesh instances, from which this batch was generated.
+     * @property {pc.MeshInstance[]} origMeshInstances An array of original mesh instances, from which this batch was generated.
      * @property {pc.MeshInstance} meshInstance A single combined mesh instance, the result of batching.
      * @property {pc.Model} model A handy model object
      * @property {Boolean} dynamic Whether this batch is dynamic (supports transforming mesh instances at runtime).
@@ -51,6 +51,7 @@ Object.assign(pc, function () {
         this.name = name;
         this.layers = layers === undefined ? [pc.LAYERID_WORLD] : layers;
         this._ui = false;
+        this._sprite = false;
         this._obj = {
             model: [],
             element: [],
@@ -425,9 +426,11 @@ Object.assign(pc, function () {
 
             for (var s = 0; s < group._obj.sprite.length; s++) {
                 node = group._obj.sprite[s];
-                if (node.sprite && node.sprite._meshInstance) {
+                if (node.sprite && node.sprite._meshInstance &&
+                    (group.dynamic || node.sprite.sprite._renderMode === pc.SPRITE_RENDERMODE_SIMPLE)) {
                     arr.push(node.sprite._meshInstance);
-                    this.scene.removeModel(node.sprite._model);
+                    node.sprite.removeModelFromLayers();
+                    group._sprite = true;
                     node.sprite._batchGroup = group;
                 }
             }
@@ -438,7 +441,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.BatchManager#generate
      * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start, and if batchGroupIds on models are changed.
-     * @param {Array} [groupIds] Optional array of batch group IDs to update. Otherwise all groups are updated.
+     * @param {Number[]} [groupIds] Optional array of batch group IDs to update. Otherwise all groups are updated.
      */
     BatchManager.prototype.generate = function (groupIds) {
         var i, j;
@@ -486,12 +489,14 @@ Object.assign(pc, function () {
                 continue;
             }
 
-            lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize, groupData._ui);
+            lists = this.prepare(group, groupData.dynamic, groupData.maxAabbSize, groupData._ui || groupData._sprite);
             for (i = 0; i < lists.length; i++) {
                 batch = this.create(lists[i], groupData.dynamic, parseInt(groupId, 10));
                 if (!batch) continue;
                 for (j = 0; j < groupData.layers.length; j++) {
-                    this.scene.layers.getLayerById(groupData.layers[j]).addMeshInstances(batch.model.meshInstances);
+                    var layer = this.scene.layers.getLayerById(groupData.layers[j]);
+                    if (layer)
+                        layer.addMeshInstances(batch.model.meshInstances);
                 }
             }
         }
@@ -564,28 +569,28 @@ Object.assign(pc, function () {
      *     <li>Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024 on high-end)</li>
      *     <li>Bounding box of a batch is larger than maxAabbSize in any dimension</li>
      * </ul>
-     * @param {Array} meshInstances Input list of mesh instances
+     * @param {pc.MeshInstance[]} meshInstances Input list of mesh instances
      * @param {Boolean} dynamic Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
      * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
-     * @param {Boolean} isUI Are we batching UI elements
+     * @param {Boolean} translucent Are we batching UI elements or sprites
      * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
-     * @returns {Array} An array of arrays of mesh instances, each valid to pass to {@link pc.BatchManager#create}.
+     * @returns {pc.MeshInstance[]} An array of arrays of mesh instances, each valid to pass to {@link pc.BatchManager#create}.
      */
-    BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize, isUI) {
+    BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize, translucent) {
         if (meshInstances.length === 0) return [];
         if (maxAabbSize === undefined) maxAabbSize = Number.POSITIVE_INFINITY;
         var halfMaxAabbSize = maxAabbSize * 0.5;
         var maxInstanceCount = this.device.supportsBoneTextures ? 1024 : this.device.boneLimit;
 
         var i;
-        var material, layer, vertCount, params, lightList, defs, stencil, staticLights, scaleSign;
+        var material, layer, vertCount, params, lightList, defs, stencil, staticLights, scaleSign, drawOrder;
         var aabb = new pc.BoundingBox();
         var testAabb = new pc.BoundingBox();
-        var skipUIAabb = null;
+        var skipTranslucentAabb = null;
 
         var lists = [];
         var j = 0;
-        if (isUI) {
+        if (translucent) {
             meshInstances.sort(function (a, b) {
                 return a.drawOrder - b.drawOrder;
             });
@@ -593,11 +598,11 @@ Object.assign(pc, function () {
         var meshInstancesLeftA = meshInstances;
         var meshInstancesLeftB;
 
-        var skipMesh = isUI ? function (mi) {
-            if (skipUIAabb) {
-                skipUIAabb.add(mi.aabb);
+        var skipMesh = translucent ? function (mi) {
+            if (skipTranslucentAabb) {
+                skipTranslucentAabb.add(mi.aabb);
             } else {
-                skipUIAabb = mi.aabb.clone();
+                skipTranslucentAabb = mi.aabb.clone();
             }
             meshInstancesLeftB.push(mi);
         } : function (mi) {
@@ -616,9 +621,10 @@ Object.assign(pc, function () {
             stencil = meshInstancesLeftA[0].stencilFront;
             lightList = meshInstancesLeftA[0]._staticLightList;
             vertCount = meshInstancesLeftA[0].mesh.vertexBuffer.getNumVertices();
+            drawOrder = meshInstancesLeftA[0].drawOrder;
             aabb.copy(meshInstancesLeftA[0].aabb);
             scaleSign = getScaleSign(meshInstancesLeftA[0]);
-            skipUIAabb = null;
+            skipTranslucentAabb = null;
 
             for (i = 1; i < meshInstancesLeftA.length; i++) {
                 mi = meshInstancesLeftA[i];
@@ -675,7 +681,7 @@ Object.assign(pc, function () {
                     continue;
                 }
 
-                if (isUI && skipUIAabb && skipUIAabb.intersects(mi.aabb)) {
+                if (translucent && skipTranslucentAabb && skipTranslucentAabb.intersects(mi.aabb) && mi.drawOrder !== drawOrder) {
                     skipMesh(mi);
                     continue;
                 }
@@ -696,7 +702,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.BatchManager#create
      * @description Takes a mesh instance list that has been prepared by {@link pc.BatchManager#prepare}, and returns a {@link pc.Batch} object. This method assumes that all mesh instances provided can be rendered in a single draw call.
-     * @param {Array} meshInstances Input list of mesh instances
+     * @param {pc.MeshInstance[]} meshInstances Input list of mesh instances
      * @param {Boolean} dynamic Is it a static or dynamic batch? Will objects be transformed after batching?
      * @param {Number} [batchGroupId] Link this batch to a specific batch group. This is done automatically with default batches.
      * @returns {pc.Batch} The resulting batch object.
@@ -760,7 +766,8 @@ Object.assign(pc, function () {
                     hasColor = true;
                 }
             }
-            batchNumIndices += mesh.primitive[0].count;
+            batchNumIndices += mesh.primitive[0].indexed ? mesh.primitive[0].count :
+                (mesh.primitive[0].count === 4 ? 6 : 0);
         }
 
         if (!visibleMeshInstanceCount) {
@@ -808,6 +815,7 @@ Object.assign(pc, function () {
                 continue;
 
             mesh = meshInstances[i].mesh;
+
             elems = mesh.vertexBuffer.format.elements;
             numVerts = mesh.vertexBuffer.numVertices;
             vertSize = mesh.vertexBuffer.format.size;
@@ -883,7 +891,17 @@ Object.assign(pc, function () {
 
             indexBase = mesh.primitive[0].base;
             numIndices = mesh.primitive[0].count;
-            indexData = new Uint16Array(mesh.indexBuffer[0].storage);
+            if (mesh.primitive[0].indexed) {
+                indexData = new Uint16Array(mesh.indexBuffer[0].storage);
+            } else if (numIndices === 4) {
+                // Special case for UI image elements (pc.PRIMITIVE_TRIFAN)
+                indexBase = 0;
+                numIndices = 6;
+                indexData = [0, 1, 3, 2, 3, 1];
+            } else {
+                numIndices = 0;
+                continue;
+            }
             for (j = 0; j < numIndices; j++) {
                 batchIndexData[j + indexOffset] = indexData[indexBase + j] + verticesOffset;
             }
@@ -968,7 +986,7 @@ Object.assign(pc, function () {
         mesh = new pc.Mesh();
         mesh.vertexBuffer = vertexBuffer;
         mesh.indexBuffer[0] = indexBuffer;
-        mesh.primitive[0].type = batch.origMeshInstances[0].mesh.primitive[0].type;
+        mesh.primitive[0].type = pc.PRIMITIVE_TRIANGLES; // Doesn't support any other primitive types batch.origMeshInstances[0].mesh.primitive[0].type;
         mesh.primitive[0].base = 0;
         mesh.primitive[0].count = batchNumIndices;
         mesh.primitive[0].indexed = true;
@@ -1072,7 +1090,7 @@ Object.assign(pc, function () {
      * @name pc.BatchManager#clone
      * @description Clones a batch. This method doesn't rebuild batch geometry, but only creates a new model and batch objects, linked to different source mesh instances.
      * @param {pc.Batch} batch A batch object
-     * @param {Array} clonedMeshInstances New mesh instances
+     * @param {pc.MeshInstance[]} clonedMeshInstances New mesh instances
      * @returns {pc.Batch} New batch object
      */
     BatchManager.prototype.clone = function (batch, clonedMeshInstances) {
@@ -1121,7 +1139,9 @@ Object.assign(pc, function () {
             return;
         var layers = this._batchGroups[batch.batchGroupId].layers;
         for (var i = 0; i < layers.length; i++) {
-            this.scene.layers.getLayerById(layers[i]).removeMeshInstances(batch.model.meshInstances);
+            var layer = this.scene.layers.getLayerById(layers[i]);
+            if (layer)
+                layer.removeMeshInstances(batch.model.meshInstances);
         }
         batch.model.destroy();
     };

@@ -6,7 +6,7 @@ Object.assign(pc, function () {
      * @classdesc A Basic material is for rendering unlit geometry, either using a constant color or a
      * color map modulated with a color.
      * @property {pc.Color} color The flat color of the material (RGBA, where each component is 0 to 1).
-     * @property {pc.Texture} colorMap The color map of the material. If specified, the color map is
+     * @property {pc.Texture|Null} colorMap The color map of the material (default is null). If specified, the color map is
      * modulated by the color property.
      * @example
      * // Create a new Basic material

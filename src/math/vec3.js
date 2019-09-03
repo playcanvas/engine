@@ -6,7 +6,7 @@ Object.assign(pc, (function () {
      * @name pc.Vec3
      * @classdesc A 3-dimensional vector.
      * @description Creates a new Vec3 object.
-     * @param {Number} [x] The x value. If x is an array of length 3, the array will be used to populate all components.
+     * @param {Number|Number[]} [x] The x value. If x is an array of length 3, the array will be used to populate all components.
      * @param {Number} [y] The y value.
      * @param {Number} [z] The z value.
      * @example
@@ -136,6 +136,25 @@ Object.assign(pc, (function () {
             this.z = lx * ry - rx * ly;
 
             return this;
+        },
+
+        /**
+         * @function
+         * @name pc.Vec3#distance
+         * @description Returns the distance between the two specified 3-dimensional vectors.
+         * @param {pc.Vec3} rhs The second 3-dimensional vector to test.
+         * @returns {Number} The distance between the two vectors.
+         * @example
+         * var v1 = new pc.Vec3(5, 10, 20);
+         * var v2 = new pc.Vec3(10, 20, 40);
+         * var d = v1.distance(v2);
+         * console.log("The between v1 and v2 is: " + d);
+         */
+        distance: function (rhs) {
+            var x = this.x - rhs.x;
+            var y = this.y - rhs.y;
+            var z = this.z - rhs.z;
+            return Math.sqrt(x * x + y * y + z * z);
         },
 
         /**

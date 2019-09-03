@@ -17,6 +17,7 @@ Object.assign(pc, function () {
 
     Object.assign(Plane.prototype, {
         /**
+         * @private
          * @function
          * @name pc.Plane#intersectsLine
          * @description Test if the plane intersects between two points.
@@ -39,6 +40,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Plane#intersectsRay
          * @description Test if a ray intersects with the infinite plane

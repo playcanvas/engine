@@ -26,16 +26,17 @@ Object.assign(pc, function () {
 
     /**
      * @component
+     * @constructor
      * @name pc.ButtonComponent
-     * @description Create a new ButtonComponent
+     * @extends pc.Component
      * @classdesc A ButtonComponent enables a group of entities to behave like a button, with different visual states for hover and press interactions.
+     * @description Create a new ButtonComponent.
      * @param {pc.ButtonComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.Component
      * @property {Boolean} active If set to false, the button will be visible but will not respond to hover or touch interactions.
      * @property {pc.Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.
      * @property {pc.Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
-     * @property {pc.BUTTON_TRANSITION_MODE} transitionMode Controls how the button responds when the user hovers over it/presses it.
+     * @property {Number} transitionMode Controls how the button responds when the user hovers over it/presses it.
      * @property {pc.Color} hoverTint Color to be used on the button image when the user hovers over it.
      * @property {pc.Color} pressedTint Color to be used on the button image when the user presses it.
      * @property {pc.Color} inactiveTint Color to be used on the button image when the button is not interactive.

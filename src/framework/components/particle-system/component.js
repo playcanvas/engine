@@ -122,12 +122,12 @@ Object.assign(pc, function () {
      * @property {pc.Asset} meshAsset The {@link pc.Asset} used to set the mesh.
      * @property {pc.Texture} colorMap The color map texture to apply to all particles in the system. If no texture is assigned, a default spot texture is used.
      * @property {pc.Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
-     * @property {pc.EMITTERSHAPE} emitterShape Shape of the emitter. Defines the bounds inside which particles are spawned. Also affects the direction of initial velocity.
+     * @property {Number} emitterShape Shape of the emitter. Defines the bounds inside which particles are spawned. Also affects the direction of initial velocity.
      * <ul>
      * <li><strong>{@link pc.EMITTERSHAPE_BOX}</strong>: Box shape parameterized by emitterExtents. Initial velocity is directed towards local Z axis.</li>
      * <li><strong>{@link pc.EMITTERSHAPE_SPHERE}</strong>: Sphere shape parameterized by emitterRadius. Initial velocity is directed outwards from the center.</li>
      * </ul>
-     * @property {pc.PARTICLESORT} sort Sorting mode. Forces CPU simulation, so be careful.
+     * @property {Number} sort Sorting mode. Forces CPU simulation, so be careful.
      * <ul>
      * <li><strong>{@link pc.PARTICLESORT_NONE}</strong>: No sorting, particles are drawn in arbitary order. Can be simulated on GPU.</li>
      * <li><strong>{@link pc.PARTICLESORT_DISTANCE}</strong>: Sorting based on distance to the camera. CPU only.</li>
@@ -135,8 +135,18 @@ Object.assign(pc, function () {
      * <li><strong>{@link pc.PARTICLESORT_OLDER_FIRST}</strong>: Older particles are drawn first. CPU only.</li>
      * </ul>
      * @property {pc.Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
-     * @property {pc.BLEND} blend Blending mode.
-     * @property {pc.PARTICLEORIENTATION} orientation Sorting mode. Forces CPU simulation, so be careful.
+     * @property {Number} blend Controls how particles are blended when being written to the currently active render target.
+     * Can be one of the following values:
+     * <ul>
+     * <li>{@link pc.BLEND_SUBTRACTIVE}: Subtract the color of the source fragment from the destination fragment and write the result to the frame buffer.</li>
+     * <li>{@link pc.BLEND_ADDITIVE}: Add the color of the source fragment to the destination fragment and write the result to the frame buffer.</li>
+     * <li>{@link pc.BLEND_NORMAL}: Enable simple translucency for materials such as glass. This is equivalent to enabling a source blend mode of pc.BLENDMODE_SRC_ALPHA and a destination blend mode of pc.BLENDMODE_ONE_MINUS_SRC_ALPHA.</li>
+     * <li>{@link pc.BLEND_NONE}: Disable blending.</li>
+     * <li>{@link pc.BLEND_PREMULTIPLIED}: Similar to pc.BLEND_NORMAL expect the source fragment is assumed to have already been multiplied by the source alpha value.</li>
+     * <li>{@link pc.BLEND_MULTIPLICATIVE}: Multiply the color of the source fragment by the color of the destination fragment and write the result to the frame buffer.</li>
+     * <li>{@link pc.BLEND_ADDITIVEALPHA}: Same as pc.BLEND_ADDITIVE except the source RGB is multiplied by the source alpha.</li>
+     * </ul>
+     * @property {Number} orientation Sorting mode. Forces CPU simulation, so be careful.
      * <ul>
      * <li><strong>{@link pc.PARTICLEORIENTATION_SCREEN}</strong>: Particles are facing camera.</li>
      * <li><strong>{@link pc.PARTICLEORIENTATION_WORLD}</strong>: User defines world space normal (particleNormal) to set planes orientation.</li>
@@ -156,7 +166,7 @@ Object.assign(pc, function () {
      * @property {pc.Curve} scaleGraph2 If not null, particles pick random values between scaleGraph and scaleGraph2.
      * @property {pc.Curve} alphaGraph Alpha over lifetime.
      * @property {pc.Curve} alphaGraph2 If not null, particles pick random values between alphaGraph and alphaGraph2.
-     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this particle system should belong.
+     * @property {Number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this particle system should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
@@ -249,30 +259,40 @@ Object.assign(pc, function () {
         },
 
         _bindColorMapAsset: function (asset) {
-            asset.once('remove', this._onColorMapRemoved, this);
+            asset.on('load', this._onColorMapAssetLoad, this);
+            asset.on('unload', this._onColorMapAssetUnload, this);
+            asset.on('remove', this._onColorMapAssetRemove, this);
+            asset.on('change', this._onColorMapAssetChange, this);
 
             if (asset.resource) {
-                this.colorMap = asset.resource;
+                this._onColorMapAssetLoad(asset);
             } else {
-                asset.once("load", this._onColorMapLoad, this);
-                if (this.enabled && this.entity.enabled) {
-                    this.system.app.assets.load(asset);
-                }
-
+                // don't trigger an asset load unless the component is enabled
+                if (!this.enabled || !this.entity.enabled) return;
+                this.system.app.assets.load(asset);
             }
         },
 
         _unbindColorMapAsset: function (asset) {
-            asset.off("remove", this._onColorMapRemoved, this);
-            asset.off("load", this._onColorMapLoad, this);
+            asset.off('load', this._onColorMapAssetLoad, this);
+            asset.off('unload', this._onColorMapAssetUnload, this);
+            asset.off('remove', this._onColorMapAssetRemove, this);
+            asset.off('change', this._onColorMapAssetChange, this);
         },
 
-        _onColorMapLoad: function (asset) {
+        _onColorMapAssetLoad: function (asset) {
             this.colorMap = asset.resource;
         },
 
-        _onColorMapRemoved: function (asset) {
-            this.colorMapAsset = null;
+        _onColorMapAssetUnload: function (asset) {
+            this.colorMap = null;
+        },
+
+        _onColorMapAssetRemove: function (asset) {
+            this._onColorMapAssetUnload(asset);
+        },
+
+        _onColorMapAssetChange: function (asset) {
         },
 
         onSetColorMapAsset: function (name, oldValue, newValue) {
@@ -306,30 +326,40 @@ Object.assign(pc, function () {
         },
 
         _bindNormalMapAsset: function (asset) {
-            asset.once('remove', this._onNormalMapRemoved, this);
+            asset.on('load', this._onNormalMapAssetLoad, this);
+            asset.on('unload', this._onNormalMapAssetUnload, this);
+            asset.on('remove', this._onNormalMapAssetRemove, this);
+            asset.on('change', this._onNormalMapAssetChange, this);
 
             if (asset.resource) {
-                this.normalMap = asset.resource;
+                this._onNormalMapAssetLoad(asset);
             } else {
-                asset.once("load", this._onNormalMapLoad, this);
-                if (this.enabled && this.entity.enabled) {
-                    this.system.app.assets.load(asset);
-                }
-
+                // don't trigger an asset load unless the component is enabled
+                if (!this.enabled || !this.entity.enabled) return;
+                this.system.app.assets.load(asset);
             }
         },
 
         _unbindNormalMapAsset: function (asset) {
-            asset.off("remove", this._onNormalMapRemoved, this);
-            asset.off("load", this._onNormalMapLoad, this);
+            asset.off('load', this._onNormalMapAssetLoad, this);
+            asset.off('unload', this._onNormalMapAssetUnload, this);
+            asset.off('remove', this._onNormalMapAssetRemove, this);
+            asset.off('change', this._onNormalMapAssetChange, this);
         },
 
-        _onNormalMapLoad: function (asset) {
+        _onNormalMapAssetLoad: function (asset) {
             this.normalMap = asset.resource;
         },
 
-        _onNormalMapRemoved: function (asset) {
-            this.normalMapAsset = null;
+        _onNormalMapAssetUnload: function (asset) {
+            this.normalMap = null;
+        },
+
+        _onNormalMapAssetRemove: function (asset) {
+            this._onNormalMapAssetUnload(asset);
+        },
+
+        _onNormalMapAssetChange: function (asset) {
         },
 
         onSetNormalMapAsset: function (name, oldValue, newValue) {
@@ -364,17 +394,40 @@ Object.assign(pc, function () {
         },
 
         _bindMeshAsset: function (asset) {
-            asset.on('remove', this._onMeshAssetRemoved, this);
             asset.on('load', this._onMeshAssetLoad, this);
+            asset.on('unload', this._onMeshAssetUnload, this);
+            asset.on('remove', this._onMeshAssetRemove, this);
+            asset.on('change', this._onMeshAssetChange, this);
+
+            if (asset.resource) {
+                this._onMeshAssetLoad(asset);
+            } else {
+                // don't trigger an asset load unless the component is enabled
+                if (!this.enabled || !this.entity.enabled) return;
+                this.system.app.assets.load(asset);
+            }
         },
 
         _unbindMeshAsset: function (asset) {
-            asset.off('remove', this._onMeshAssetRemoved, this);
             asset.off('load', this._onMeshAssetLoad, this);
+            asset.off('unload', this._onMeshAssetUnload, this);
+            asset.off('remove', this._onMeshAssetRemove, this);
+            asset.off('change', this._onMeshAssetChange, this);
         },
 
         _onMeshAssetLoad: function (asset) {
             this._onMeshChanged(asset.resource);
+        },
+
+        _onMeshAssetUnload: function (asset) {
+            this.mesh = null;
+        },
+
+        _onMeshAssetRemove: function (asset) {
+            this._onMeshAssetUnload(asset);
+        },
+
+        _onMeshAssetChange: function (asset) {
         },
 
         onSetMeshAsset: function (name, oldValue, newValue) {
@@ -437,11 +490,6 @@ Object.assign(pc, function () {
                 this.emitter.resetMaterial();
                 this.rebuild();
             }
-        },
-
-        onMeshAssetRemoved: function (asset) {
-            asset.off('remove', this.onMeshAssetRemoved, this);
-            this.mesh = null;
         },
 
         onSetLoop: function (name, oldValue, newValue) {

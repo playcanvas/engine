@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
-     * @private
+     * @constructor
      * @name pc.LayoutChildComponentSystem
      * @description Create a new LayoutChildComponentSystem
      * @classdesc Manages creation of {@link pc.LayoutChildComponent}s.
