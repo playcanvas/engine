@@ -2,7 +2,8 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @enum pc.SPRITETYPE
+     * @constant
+     * @type {String}
      * @name pc.SPRITETYPE_SIMPLE
      * @description A {@link pc.SpriteComponent} that displays a single frame from a sprite asset.
      */
@@ -10,7 +11,8 @@ Object.assign(pc, function () {
 
 
     /**
-     * @enum pc.SPRITETYPE
+     * @constant
+     * @type {String}
      * @name pc.SPRITETYPE_ANIMATED
      * @description A {@link pc.SpriteComponent} that renders sprite animations.
      */
@@ -40,7 +42,6 @@ Object.assign(pc, function () {
      * @property {Number} frame The frame counter of the sprite. Specifies which frame from the current sprite asset to render.
      * @property {Number} spriteAsset The id of the sprite asset to render. Only works for {@link pc.SPRITETYPE_SIMPLE} types.
      * @property {pc.Sprite} sprite The current sprite.
-     * @property {pc.Sprite} sprite The current sprite.
      * @property {pc.Color} color The color tint of the sprite.
      * @property {Number} opacity The opacity of the sprite.
      * @property {Boolean} flipX Flip the X axis when rendering a sprite.
@@ -50,7 +51,7 @@ Object.assign(pc, function () {
      * @property {Number} speed A global speed modifier used when playing sprite animation clips.
      * @property {Number} batchGroupId Assign sprite to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      * @property {String} autoPlayClip The name of the clip to play automatically when the component is enabled and the clip exists.
-     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this sprite should belong.
+     * @property {Number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this sprite should belong.
      * @property {Number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components in the same layer.
      */
     var SpriteComponent = function SpriteComponent(system, entity) {
@@ -437,6 +438,15 @@ Object.assign(pc, function () {
             var index = this.layers.indexOf(layer.id);
             if (index < 0) return;
             layer.removeMeshInstances([this._meshInstance]);
+        },
+
+        removeModelFromLayers: function () {
+            var layer;
+            for (var i = 0; i < this.layers.length; i++) {
+                layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
+                if (!layer) continue;
+                layer.removeMeshInstances([this._meshInstance]);
+            }
         },
 
         /**

@@ -160,8 +160,12 @@ Object.assign(pc, function () {
      * device is tied to a specific canvas HTML element. It is valid to have more than one
      * canvas element per page and create a new graphics device against each.
      * @description Creates a new graphics device.
-     * @param {Object} canvas The canvas to which the graphics device is tied.
-     * @param {Object} [options] Options passed when creating the WebGL context. More info here https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+     * @param {HTMLCanvasElement} canvas The canvas to which the graphics device will render.
+     * @param {Object} [options] Options passed when creating the WebGL context. More info {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext here}.
+     * @property {HTMLCanvasElement} canvas The canvas DOM element that provides the underlying WebGL context used by the graphics device.
+     * @property {Boolean} textureFloatRenderable Determines if 32-bit floating-point textures can be used as frame buffer. [read only]
+     * @property {Boolean} textureHalfFloatRenderable Determines if 16-bit floating-point textures can be used as frame buffer. [read only]
+     * @property {pc.ScopeSpace} scope The scope namespace for shader attributes and variables. [read only]
      */
     var GraphicsDevice = function (canvas, options) {
         var i;
@@ -584,7 +588,7 @@ Object.assign(pc, function () {
 
         this._textureFloatHighPrecision = undefined;
 
-        this.initializeGrabPassTexture();
+        this.createGrabPass(options.alpha);
     };
 
     Object.assign(GraphicsDevice.prototype, {
@@ -726,6 +730,9 @@ Object.assign(pc, function () {
 
             ext = this.extTextureFilterAnisotropic;
             this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
+
+            this.samples = gl.getParameter(gl.SAMPLES);
+            this.maxSamples = gl.getParameter(gl.MAX_SAMPLES);
         },
 
         initializeRenderState: function () {
@@ -878,27 +885,43 @@ Object.assign(pc, function () {
             this.transformFeedbackBuffer = null;
         },
 
-        initializeGrabPassTexture: function () {
+        createGrabPass: function (alpha) {
             if (this.grabPassTexture) return;
 
+            var format = alpha ? pc.PIXELFORMAT_R8_G8_B8_A8 : pc.PIXELFORMAT_R8_G8_B8;
+
             var grabPassTexture = new pc.Texture(this, {
-                format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                autoMipmap: false
+                format: format,
+                minFilter: pc.FILTER_LINEAR,
+                magFilter: pc.FILTER_LINEAR,
+                addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+                addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+                mipmaps: false
             });
 
-            grabPassTexture.minFilter = pc.FILTER_LINEAR;
-            grabPassTexture.magFilter = pc.FILTER_LINEAR;
-            grabPassTexture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-            grabPassTexture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-
             grabPassTexture.name = 'texture_grabPass';
-            grabPassTexture.setSource(this.canvas);
 
             var grabPassTextureId = this.scope.resolve(grabPassTexture.name);
             grabPassTextureId.setValue(grabPassTexture);
 
             this.grabPassTextureId = grabPassTextureId;
             this.grabPassTexture = grabPassTexture;
+        },
+
+        updateGrabPass: function () {
+            var gl = this.gl;
+
+            var format = this.grabPassTexture._glFormat;
+            var source = (this.renderTarget && this.renderTarget.colorBuffer) || this.canvas;
+            gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, source.width, source.height, 0);
+            this.grabPassTexture._width = source.width;
+            this.grabPassTexture._height = source.height;
+        },
+
+        destroyGrabPass: function () {
+            this.grabPassTexture.destroy();
+            this.grabPassTexture = null;
+            this.grabPassTextureId = null;
         },
 
         updateClientRect: function () {
@@ -1239,7 +1262,7 @@ Object.assign(pc, function () {
             if (target) {
                 // If the active render target is auto-mipmapped, generate its mip chain
                 var colorBuffer = target._colorBuffer;
-                if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && colorBuffer._pot) {
+                if (colorBuffer && colorBuffer._glTexture && colorBuffer.mipmaps && colorBuffer.pot) {
                     this.activeTexture(this.maxCombinedTextures - 1);
                     this.bindTexture(colorBuffer);
                     gl.generateMipmap(colorBuffer._glTarget);
@@ -1514,12 +1537,14 @@ Object.assign(pc, function () {
         uploadTexture: function (texture) {
             var gl = this.gl;
 
-            if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture._pot))
+            if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))
                 return;
 
             var mipLevel = 0;
             var mipObject;
             var resMult;
+
+            var requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
 
             while (texture._levels[mipLevel] || mipLevel === 0) {
                 // Upload all existing mip levels. Initialize 0 mip anyway.
@@ -1533,9 +1558,10 @@ Object.assign(pc, function () {
 
                 mipObject = texture._levels[mipLevel];
 
-                if (mipLevel == 1 && !texture._compressed) {
+                if (mipLevel == 1 && !texture._compressed && texture._levels.length < requiredMipLevels) {
                     // We have more than one mip levels we want to assign, but we need all mips to make
                     // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
+                    // (this implies the call to _completePartialMipLevels above was unsuccessful)
                     gl.generateMipmap(texture._glTarget);
                     texture._mipmapsUploaded = true;
                 }
@@ -1709,7 +1735,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && texture._pot && texture._levels.length === 1) {
+            if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && texture.pot && texture._levels.length === 1) {
                 gl.generateMipmap(texture._glTarget);
                 texture._mipmapsUploaded = true;
             }
@@ -1781,7 +1807,7 @@ Object.assign(pc, function () {
 
             if (flags & 1) {
                 var filter = texture._minFilter;
-                if (!texture._pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
+                if (!texture.pot || !texture._mipmaps || (texture._compressed && texture._levels.length === 1)) {
                     if (filter === pc.FILTER_NEAREST_MIPMAP_NEAREST || filter === pc.FILTER_NEAREST_MIPMAP_LINEAR) {
                         filter = pc.FILTER_NEAREST;
                     } else if (filter === pc.FILTER_LINEAR_MIPMAP_NEAREST || filter === pc.FILTER_LINEAR_MIPMAP_LINEAR) {
@@ -1798,7 +1824,7 @@ Object.assign(pc, function () {
                     gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
                 } else {
                     // WebGL1 doesn't support all addressing modes with NPOT textures
-                    gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture._pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    gl.texParameteri(target, gl.TEXTURE_WRAP_S, this.glAddress[texture.pot ? texture._addressU : pc.ADDRESS_CLAMP_TO_EDGE]);
                 }
             }
             if (flags & 8) {
@@ -1806,7 +1832,7 @@ Object.assign(pc, function () {
                     gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
                 } else {
                     // WebGL1 doesn't support all addressing modes with NPOT textures
-                    gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture._pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
+                    gl.texParameteri(target, gl.TEXTURE_WRAP_T, this.glAddress[texture.pot ? texture._addressV : pc.ADDRESS_CLAMP_TO_EDGE]);
                 }
             }
             if (flags & 16) {
@@ -1836,7 +1862,7 @@ Object.assign(pc, function () {
             if (!texture._glTexture)
                 this.initializeTexture(texture);
 
-            if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
+            if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload || texture === this.grabPassTexture) {
                 // Ensure the specified texture unit is active
                 this.activeTexture(textureUnit);
                 // Ensure the texture is bound on correct target of the specified texture unit
@@ -1847,13 +1873,13 @@ Object.assign(pc, function () {
                     texture._parameterFlags = 0;
                 }
 
-                if (texture._needsUpload || texture._needsMipmapsUpload) {
-                    this.uploadTexture(texture);
+                if (texture === this.grabPassTexture) {
+                    this.updateGrabPass();
 
-                    if (texture !== this.grabPassTexture) {
-                        texture._needsUpload = false;
-                        texture._needsMipmapsUpload = false;
-                    }
+                } else if (texture._needsUpload || texture._needsMipmapsUpload) {
+                    this.uploadTexture(texture);
+                    texture._needsUpload = false;
+                    texture._needsMipmapsUpload = false;
                 }
             } else {
                 // Ensure the texture is currently bound to the correct target on the specified texture unit.
@@ -1935,17 +1961,17 @@ Object.assign(pc, function () {
          * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
          * @param {Number} primitive.type The type of primitive to render. Can be:
          * <ul>
-         *     <li>pc.PRIMITIVE_POINTS</li>
-         *     <li>pc.PRIMITIVE_LINES</li>
-         *     <li>pc.PRIMITIVE_LINELOOP</li>
-         *     <li>pc.PRIMITIVE_LINESTRIP</li>
-         *     <li>pc.PRIMITIVE_TRIANGLES</li>
-         *     <li>pc.PRIMITIVE_TRISTRIP</li>
-         *     <li>pc.PRIMITIVE_TRIFAN</li>
+         *     <li>{@link pc.PRIMITIVE_POINTS}</li>
+         *     <li>{@link pc.PRIMITIVE_LINES}</li>
+         *     <li>{@link pc.PRIMITIVE_LINELOOP}</li>
+         *     <li>{@link pc.PRIMITIVE_LINESTRIP}</li>
+         *     <li>{@link pc.PRIMITIVE_TRIANGLES}</li>
+         *     <li>{@link pc.PRIMITIVE_TRISTRIP}</li>
+         *     <li>{@link pc.PRIMITIVE_TRIFAN}</li>
          * </ul>
          * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
          * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
-         * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
+         * @param {Boolean} [primitive.indexed] True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
          * @param {Number} [numInstances=1] The number of instances to render when using ANGLE_instanced_arrays. Defaults to 1.
          * @example
          * // Render a single, unindexed triangle
@@ -3154,7 +3180,7 @@ Object.assign(pc, function () {
         destroy: function () {
             var gl = this.gl;
 
-            this.grabPassTexture.destroy();
+            this.destroyGrabPass();
 
             if (this.webgl2 && this.feedback) {
                 gl.deleteTransformFeedback(this.feedback);
@@ -3176,7 +3202,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphicsDevice#width
-     * @type Number
+     * @type {Number}
      * @description Width of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'width', {
@@ -3188,7 +3214,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphicsDevice#height
-     * @type Number
+     * @type {Number}
      * @description Height of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'height', {
@@ -3197,6 +3223,11 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @name pc.GraphicsDevice#fullscreen
+     * @type {Boolean}
+     * @description Fullscreen mode
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'fullscreen', {
         get: function () {
             return !!document.fullscreenElement;
@@ -3211,6 +3242,12 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @private
+     * @name pc.GraphicsDevice#enableAutoInstancing
+     * @type {Boolean}
+     * @description Automatic instancing
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'enableAutoInstancing', {
         get: function () {
             return this._enableAutoInstancing;
@@ -3220,6 +3257,11 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @name pc.GraphicsDevice#maxPixelRatio
+     * @type {Number}
+     * @description Maximum pixel ratio
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'maxPixelRatio', {
         get: function () {
             return this._maxPixelRatio;
@@ -3230,6 +3272,12 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @readonly
+     * @name pc.GraphicsDevice#textureFloatHighPrecision
+     * @type {Number}
+     * @description Check if high precision floating-point textures are supported
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
         get: function () {
             if (this._textureFloatHighPrecision === undefined) {

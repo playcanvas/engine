@@ -2,14 +2,16 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @enum pc.SPRITE_RENDERMODE
+     * @constant
+     * @type {Number}
      * @name pc.SPRITE_RENDERMODE_SIMPLE
      * @description This mode renders a sprite as a simple quad.
      */
     pc.SPRITE_RENDERMODE_SIMPLE = 0;
 
     /**
-     * @enum pc.SPRITE_RENDERMODE
+     * @constant
+     * @type {Number}
      * @name pc.SPRITE_RENDERMODE_SLICED
      * @description This mode renders a sprite using 9-slicing in 'sliced' mode. Sliced mode stretches the
      * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
@@ -18,7 +20,8 @@ Object.assign(pc, function () {
     pc.SPRITE_RENDERMODE_SLICED = 1;
 
     /**
-     * @enum pc.SPRITE_RENDERMODE
+     * @constant
+     * @type {Number}
      * @name pc.SPRITE_RENDERMODE_TILED
      * @description This mode renders a sprite using 9-slicing in 'tiled' mode. Tiled mode tiles the
      * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
@@ -49,12 +52,12 @@ Object.assign(pc, function () {
      * @param {pc.GraphicsDevice} device The graphics device of the application.
      * @param {Object} options Options for creating the pc.Sprite.
      * @param {Number} [options.pixelsPerUnit] The number of pixels that map to one PlayCanvas unit.
-     * @param {pc.SPRITE_RENDERMODE} [options.renderMode] The rendering mode of the Sprite.
+     * @param {Number} [options.renderMode] The rendering mode of the Sprite, see {@link pc.SPRITE_RENDERMODE}.
      * @param {pc.TextureAtlas} [options.atlas] The texture atlas.
      * @property {String[]} [options.frameKeys] The keys of the frames in the sprite atlas that this sprite is using.
      * @property {Number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
      * @property {pc.TextureAtlas} atlas The texture atlas.
-     * @property {pc.SPRITE_RENDERMODE} renderMode The rendering mode of the Sprite.
+     * @property {Number} renderMode The rendering mode of the Sprite, see {@link pc.SPRITE_RENDERMODE}.
      * @property {String[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
      * @property {pc.Mesh[]} meshes An array that contains a mesh for each frame.
      */

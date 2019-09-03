@@ -148,6 +148,7 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @static
      * @function
      * @name pc.Mouse.isPointerLocked
      * @description Check if the mouse pointer has been locked, using {@link pc.Mouse#enabledPointerLock}
@@ -224,8 +225,8 @@ Object.assign(pc, function () {
          * <li>In some browsers this will only work when the browser is running in fullscreen mode. See {@link pc.Application#enableFullscreen}
          * <li>Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
          * </ul>
-         * @param {Function} [success] Function called if the request for mouse lock is successful.
-         * @param {Function} [error] Function called if the request for mouse lock is unsuccessful.
+         * @param {pc.callbacks.LockMouse} [success] Function called if the request for mouse lock is successful.
+         * @param {pc.callbacks.LockMouse} [error] Function called if the request for mouse lock is unsuccessful.
          */
         enablePointerLock: function (success, error) {
             if (!document.body.requestPointerLock) {
@@ -259,7 +260,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Mouse#disablePointerLock
          * @description Return control of the mouse cursor to the user
-         * @param {Function} [success] Function called when the mouse lock is disabled
+         * @param {pc.callbacks.LockMouse} [success] Function called when the mouse lock is disabled
          */
         disablePointerLock: function (success) {
             if (!document.exitPointerLock) {

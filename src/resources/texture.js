@@ -183,6 +183,85 @@ Object.assign(pc, function () {
         return texture;
     };
 
+    // In the case where a texture has more than 1 level of mip data specified, but not the full
+    // mip chain, we generate the missing levels here.
+    // This is to overcome an issue where iphone xr and xs ignores further updates to the mip data
+    // after invoking gl.generateMipmap on the texture (which was the previous method of ensuring
+    // the texture's full mip chain was complete).
+    // NOTE: this function only resamples RGBA8 and RGBAFloat32 data.
+    var _completePartialMipmapChain = function (texture) {
+
+        var requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
+
+        var isHtmlElement = function (object) {
+            return (object instanceof HTMLCanvasElement) ||
+                   (object instanceof HTMLImageElement) ||
+                   (object instanceof HTMLVideoElement);
+        };
+
+        if (!(texture._format === pc.PIXELFORMAT_R8_G8_B8_A8 ||
+              texture._format === pc.PIXELFORMAT_RGBA32F) ||
+              texture._volume ||
+              texture._compressed ||
+              texture._levels.length === 1 ||
+              texture._levels.length === requiredMipLevels ||
+              isHtmlElement(texture._cubemap ? texture._levels[0][0] : texture._levels[0])) {
+            return;
+        }
+
+        var downsample = function (width, height, data) {
+            var sampledWidth = Math.max(1, width >> 1);
+            var sampledHeight = Math.max(1, height >> 1);
+            var sampledData = new data.constructor(sampledWidth * sampledHeight * 4);
+
+            var xs = Math.floor(width / sampledWidth);
+            var ys = Math.floor(height / sampledHeight);
+            var xsys = xs * ys;
+
+            for (var y = 0; y < sampledHeight; ++y) {
+                for (var x = 0; x < sampledWidth; ++x) {
+                    for (var e = 0; e < 4; ++e) {
+                        var sum = 0;
+                        for (var sy = 0; sy < ys; ++sy) {
+                            for (var sx = 0; sx < xs; ++sx) {
+                                sum += data[(x * xs + sx + (y * ys + sy) * width) * 4 + e];
+                            }
+                        }
+                        sampledData[(x + y * sampledWidth) * 4 + e] = sum / xsys;
+                    }
+                }
+            }
+
+            return sampledData;
+        };
+
+        // step through levels
+        for (var level = texture._levels.length; level < requiredMipLevels; ++level) {
+            var width = Math.max(1, texture._width >> (level - 1));
+            var height = Math.max(1, texture._height >> (level - 1));
+            if (texture._cubemap) {
+                var mips = [];
+                for (var face = 0; face < 6; ++face) {
+                    mips.push(downsample(width, height, texture._levels[level - 1][face]));
+                }
+                texture._levels.push(mips);
+            } else {
+                texture._levels.push(downsample(width, height, texture._levels[level - 1]));
+            }
+        }
+
+        texture._levelsUpdated = texture._cubemap ? [[true, true, true, true, true, true]] : [true];
+    };
+
+    /**
+     * @constructor
+     * @name pc.TextureHandler
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading 2D and 3D {@link pc.Texture} resources
+     * @param {pc.GraphicsDevice} device The graphics device
+     * @param {pc.AssetRegistry} assets The asset registry
+     * @param {pc.ResourceLoader} loader The resource loader
+     */
     var TextureHandler = function (device, assets, loader) {
         this._device = device;
         this._assets = assets;
@@ -369,8 +448,11 @@ Object.assign(pc, function () {
                     texture.name = url;
                     texture.upload();
                 }
-
             }
+
+            // check if the texture has only a partial mipmap chain specified and generate the
+            // missing levels if possible.
+            _completePartialMipmapChain(texture);
 
             return texture;
         },

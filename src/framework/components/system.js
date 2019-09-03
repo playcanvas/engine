@@ -194,7 +194,7 @@ Object.assign(pc, function () {
          * This can be overridden by derived Component Systems and either called by the derived System or replaced entirely
          * @param {pc.Component} component The component being initialized.
          * @param {Object} data The data block used to initialize the component.
-         * @param {Array} properties The array of property descriptors for the component. A descriptor can be either a plain property name, or an object specifying the name and type.
+         * @param {String[]|Object[]} properties The array of property descriptors for the component. A descriptor can be either a plain property name, or an object specifying the name and type.
          */
         initializeComponentData: function (component, data, properties) {
             data = data || {};
@@ -243,7 +243,7 @@ Object.assign(pc, function () {
          * @name pc.ComponentSystem#getPropertiesOfType
          * @description Searches the component schema for properties that match the specified type.
          * @param {String} type The type to search for
-         * @returns {Array} An array of property descriptors matching the specified type.
+         * @returns {String[]|Object[]} An array of property descriptors matching the specified type.
          */
         getPropertiesOfType: function (type) {
             var matchingProperties = [];

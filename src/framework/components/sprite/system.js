@@ -4,7 +4,6 @@ Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
-     * @private
      * @constructor
      * @name pc.SpriteComponentSystem
      * @classdesc Manages creation of {@link pc.SpriteComponent}s.
