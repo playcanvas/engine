@@ -145,11 +145,12 @@ Object.assign(pc, (function () {
      * @type Number
      * @description The interpolation scheme applied to all curves in the curve set. Can be:
      * <ul>
-     *     <li>pc.CURVE_LINEAR</li>
-     *     <li>pc.CURVE_SMOOTHSTEP</li>
-     *     <li>pc.CURVE_CATMULL</li>
-     *     <li>pc.CURVE_CARDINAL</li>
+     *     <li>{@link pc.CURVE_LINEAR}</li>
+     *     <li>{@link pc.CURVE_SMOOTHSTEP}</li>
+     *     <li>{@link pc.CURVE_SPLINE}</li>
+     *     <li>{@link pc.CURVE_STEP}</li>
      * </ul>
+     * Defaults to {@link pc.CURVE_SMOOTHSTEP};
      */
     Object.defineProperty(CurveSet.prototype, 'type', {
         get: function () {

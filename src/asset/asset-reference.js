@@ -11,7 +11,7 @@ Object.assign(pc, function () {
      * @param {Object} [callbacks.load] The function called when the asset loads load(propertyName, parent, asset).
      * @param {Object} [callbacks.add] The function called when the asset is added to the registry add(propertyName, parent, asset).
      * @param {Object} [callbacks.remove] The function called when the asset is remove from the registry remove(propertyName, parent, asset).
-     * @param {Object} scope The scope to call the callbacks in
+     * @param {Object} [scope] The scope to call the callbacks in
      * @property {Number} id Get or set the asset id which this references. One of either id or url must be set to initialize an asset reference.
      * @property {String} url Get or set the asset url which this references. One of either id or url must be called to initialize an asset reference.
      * @example

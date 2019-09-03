@@ -10,65 +10,83 @@ Object.assign(pc, function () {
      */
     var platform = {
         /**
+         * @static
+         * @readonly
+         * @type {Boolean}
          * @name pc.platform.desktop
          * @description is it a desktop or laptop device
-         * @type Boolean
          */
         desktop: false,
 
         /**
+         * @static
+         * @readonly
+         * @type {Boolean}
          * @name pc.platform.mobile
          * @description is it a mobile or tablet device
-         * @type Boolean
          */
         mobile: false,
 
         /**
+         * @static
+         * @readonly
+         * @type {Boolean}
          * @name pc.platform.ios
          * @description if it is iOS
-         * @type Boolean
          */
         ios: false,
 
         /**
+         * @static
+         * @readonly
+         * @type {Boolean}
          * @name pc.platform.android
          * @description if it is Android
-         * @type Boolean
          */
         android: false,
 
         /**
+         * @static
+         * @readonly
+         * @type {Boolean}
          * @name pc.platform.windows
          * @description if it is Windows
-         * @type Boolean
          */
         windows: false,
 
         /**
+         * @static
+         * @readonly
+         * @type {Boolean}
          * @name pc.platform.xbox
          * @description if it is Xbox
-         * @type Boolean
          */
         xbox: false,
 
         /**
+         * @static
+         * @readonly
+         * @type {Boolean}
          * @name pc.platform.gamepads
          * @description if platform supports gamepads
-         * @type Boolean
          */
         gamepads: false,
 
         /**
+         * @static
+         * @readonly
+         * @type {Boolean}
          * @name pc.platform.touch
          * @description if platform supports touch input
-         * @type Boolean
          */
         touch: false,
 
         /**
+         * @static
+         * @readonly
+         * @type {Boolean}
          * @name pc.platform.workers
          * @description if the platform supports Web Workers
-         * @type Boolean
          */
         workers: false
     };

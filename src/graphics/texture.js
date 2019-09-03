@@ -8,11 +8,11 @@ Object.assign(pc, function () {
      * Typically, the texel data represents an image that is mapped over geometry.
      * @description Creates a new texture.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this texture.
-     * @param {Object} options Object for passing optional arguments.
-     * @param {Number} options.width The width of the texture in pixels. Defaults to 4.
-     * @param {Number} options.height The height of the texture in pixels. Defaults to 4.
-     * @param {Number} options.depth The number of depth slices in a 3D texture (WebGL2 only). Defaults to 1 (single 2D image).
-     * @param {Number} options.format The pixel format of the texture. Can be:
+     * @param {Object} [options] Object for passing optional arguments.
+     * @param {Number} [options.width] The width of the texture in pixels. Defaults to 4.
+     * @param {Number} [options.height] The height of the texture in pixels. Defaults to 4.
+     * @param {Number} [options.depth] The number of depth slices in a 3D texture (WebGL2 only). Defaults to 1 (single 2D image).
+     * @param {Number} [options.format] The pixel format of the texture. Can be:
      * <ul>
      *     <li>{@link pc.PIXELFORMAT_A8}</li>
      *     <li>{@link pc.PIXELFORMAT_L8}</li>
@@ -37,26 +37,27 @@ Object.assign(pc, function () {
      *     <li>{@link pc.PIXELFORMAT_111110F}</li>
      * </ul>
      * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
-     * @param {Number} options.minFilter The minification filter type to use. Defaults to {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
-     * @param {Number} options.magFilter The magnification filter type to use. Defaults to {@link pc.FILTER_LINEAR}
-     * @param {Number} options.anisotropy The level of anisotropic filtering to use. Defaults to 1
-     * @param {Number} options.addressU The repeat mode to use in the U direction. Defaults to {@link pc.ADDRESS_REPEAT}
-     * @param {Number} options.addressV The repeat mode to use in the V direction. Defaults to {@link pc.ADDRESS_REPEAT}
-     * @param {Boolean} options.mipmaps When enabled try to generate or use mipmaps for this texture. Default is true
-     * @param {Boolean} options.cubemap Specifies whether the texture is to be a cubemap. Defaults to false.
-     * @param {Boolean} options.volume Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
-     * @param {Boolean} options.rgbm Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
-     * @param {Boolean} options.fixCubemapSeams Specifies whether this cubemap texture requires special
+     * @param {Number} [options.minFilter] The minification filter type to use. Defaults to {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
+     * @param {Number} [options.magFilter] The magnification filter type to use. Defaults to {@link pc.FILTER_LINEAR}
+     * @param {Number} [options.anisotropy] The level of anisotropic filtering to use. Defaults to 1
+     * @param {Number} [options.addressU] The repeat mode to use in the U direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {Number} [options.addressV] The repeat mode to use in the V direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {Number} [options.addressW] The repeat mode to use in the W direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {Boolean} [options.mipmaps] When enabled try to generate or use mipmaps for this texture. Default is true
+     * @param {Boolean} [options.cubemap] Specifies whether the texture is to be a cubemap. Defaults to false.
+     * @param {Boolean} [options.volume] Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
+     * @param {Boolean} [options.rgbm] Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
+     * @param {Boolean} [options.fixCubemapSeams] Specifies whether this cubemap texture requires special
      * seam fixing shader code to look right. Defaults to false.
-     * @param {Boolean} options.flipY Specifies whether the texture should be flipped in the Y-direction. Only affects textures
+     * @param {Boolean} [options.flipY] Specifies whether the texture should be flipped in the Y-direction. Only affects textures
      * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures or textures set from raw
      * pixel data. Defaults to true.
-     * @param {Boolean} options.premultiplyAlpha If true, the alpha channel of the texture (if present) is multiplied into the color
+     * @param {Boolean} [options.premultiplyAlpha] If true, the alpha channel of the texture (if present) is multiplied into the color
      * channels. Defaults to false.
-     * @param {Boolean} options.compareOnRead When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
+     * @param {Boolean} [options.compareOnRead] When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      * Defaults to false.
-     * @param {Number} options.compareFunc Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to pc.FUNC_LESS.
+     * @param {Number} [options.compareFunc] Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to pc.FUNC_LESS.
      * Possible values:
      * <ul>
      *     <li>pc.FUNC_LESS</li>

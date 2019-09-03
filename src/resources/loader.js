@@ -19,10 +19,25 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.ResourceLoader#addHandler
-         * @description Add a {@link pc.ResourceHandler} for a resource type. Handler should support: load(url, callback) and open(url, data).
-         * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets
-         * @param {String} type The name of the resource type that the handler will be registerd with.
-         * @param {pc.ResourceHandler} handler An instance of a resource handler supporting load() and open().
+         * @description Add a {@link pc.ResourceHandler} for a resource type. Handler should support atleast load() and open().
+         * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets.
+         * @param {String} type The name of the resource type that the handler will be registerd with. Can be:
+         * <ul>
+         *     <li>{@link pc.ASSET_ANIMATION}</li>
+         *     <li>{@link pc.ASSET_AUDIO}</li>
+         *     <li>{@link pc.ASSET_IMAGE}</li>
+         *     <li>{@link pc.ASSET_JSON}</li>
+         *     <li>{@link pc.ASSET_MODEL}</li>
+         *     <li>{@link pc.ASSET_MATERIAL}</li>
+         *     <li>{@link pc.ASSET_TEXT}</li>
+         *     <li>{@link pc.ASSET_TEXTURE}</li>
+         *     <li>{@link pc.ASSET_CUBEMAP}</li>
+         *     <li>{@link pc.ASSET_SHADER}</li>
+         *     <li>{@link pc.ASSET_CSS}</li>
+         *     <li>{@link pc.ASSET_HTML}</li>
+         *     <li>{@link pc.ASSET_SCRIPT}</li>
+         * </ul>
+         * @param {pc.ResourceHandler} handler An instance of a resource handler supporting atleast load() and open().
          * @example
          * var loader = new ResourceLoader();
          * loader.addHandler("json", new pc.JsonHandler());
@@ -54,13 +69,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.ResourceLoader.loadCallback
-         * @description Callback function used by {@link pc.ResourceLoader#load} when a resource is loaded (or an error occurs).
-         * @param {String|Null} err The error message in the case where the load fails.
-         * @param {*} [resource] The resource that has been successfully loaded.
-         */
-
-        /**
          * @function
          * @name pc.ResourceLoader#load
          * @description Make a request for a resource from a remote URL. Parse the returned data using the
@@ -68,7 +76,7 @@ Object.assign(pc, function () {
          * the resource.
          * @param {String} url The URL of the resource to load.
          * @param {String} type The type of resource expected.
-         * @param {pc.ResourceLoader.loadCallback} callback The callback used when the resource is loaded or an error occurs.
+         * @param {pc.callbacks.ResourceLoader} callback The callback used when the resource is loaded or an error occurs.
          * @param {pc.Asset} [asset] Optional asset that is passed into handler
          * Passed (err, resource) where err is null if there are no errors.
          * @example
@@ -194,6 +202,13 @@ Object.assign(pc, function () {
             }
         },
 
+        /**
+         * @function
+         * @name pc.ResourceLoader#clearCache
+         * @description Remove resource from cache.
+         * @param {String} url The URL of the resource.
+         * @param {String} type The type of resource.
+         */
         clearCache: function (url, type) {
             delete this._cache[url + type];
         },

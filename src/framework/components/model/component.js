@@ -19,7 +19,7 @@ Object.assign(pc, function () {
      *     <li>plane: The component will render a plane (1 unit in each dimension)</li>
      *     <li>sphere: The component will render a sphere (radius 0.5)</li>
      * </ul>
-     * @property {pc.Asset} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
+     * @property {pc.Asset|Number} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
      * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')

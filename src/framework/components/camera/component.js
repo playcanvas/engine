@@ -1,12 +1,5 @@
 Object.assign(pc, function () {
     /**
-     * @callback pc.CameraComponent.calculateCallback
-     * @description Callback function used by {@link pc.Application#calculateTransform} and {@link pc.Application#calculateProjection}.
-     * @param {pc.Mat4} transformMatrix Output of the function.
-     * @param {Number} view Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.
-     */
-
-    /**
      * @component
      * @constructor
      * @name pc.CameraComponent
@@ -58,11 +51,11 @@ Object.assign(pc, function () {
      * @property {Boolean} frustumCulling Controls the culling of mesh instances against the camera frustum, i.e. if objects outside of camera should be omitted from rendering.
      * If true, culling is enabled.
      * If false, all mesh instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
-     * @property {pc.CameraComponent.calculateCallback} calculateTransform Custom function you can provide to calculate the camera transformation matrix manually. Can be used for complex effects like reflections. Function is called using component's scope.
+     * @property {pc.callbacks.CalculateMatrix} calculateTransform Custom function you can provide to calculate the camera transformation matrix manually. Can be used for complex effects like reflections. Function is called using component's scope.
      * Arguments:
      *     <li>{pc.Mat4} transformMatrix: output of the function</li>
      *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
-     * @property {pc.CameraComponent.calculateCallback} calculateProjection Custom function you can provide to calculate the camera projection matrix manually. Can be used for complex effects like doing oblique projection. Function is called using component's scope.
+     * @property {pc.callbacks.CalculateMatrix} calculateProjection Custom function you can provide to calculate the camera projection matrix manually. Can be used for complex effects like doing oblique projection. Function is called using component's scope.
      * Arguments:
      *     <li>{pc.Mat4} transformMatrix: output of the function</li>
      *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
@@ -456,17 +449,10 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.CameraComponent.vrCallback
-         * @description Callback function used by {@link pc.CameraComponent#enterVr} and {@link pc.CameraComponent#exitVr}.
-         * @param {String|Null} err On success it is null on failure it is the error message.
-         */
-
-        /**
          * @function
          * @name pc.CameraComponent#enterVr
-         * @variation 1
          * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
-         * @param {pc.CameraComponent.vrCallback} callback Function called once to indicate success of failure. The callback takes one argument (err).
+         * @param {pc.callbacks.VrCamera} callback Function called once to indicate success of failure. The callback takes one argument (err).
          * On success it returns null on failure it returns the error message.
          * @example
          * // On an entity with a camera component
@@ -484,7 +470,7 @@ Object.assign(pc, function () {
          * @variation 2
          * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
          * @param {pc.VrDisplay} display The VrDisplay to present. If not supplied this uses {@link pc.VrManager#display} as the default
-         * @param {pc.CameraComponent.vrCallback} callback Function called once to indicate success of failure. The callback takes one argument (err).
+         * @param {pc.callbacks.VrCamera} callback Function called once to indicate success of failure. The callback takes one argument (err).
          * On success it returns null on failure it returns the error message.
          * @example
          * // On an entity with a camera component
@@ -544,7 +530,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.CameraComponent#exitVr
          * @description Attempt to stop presenting this camera.
-         * @param {pc.CameraComponent.vrCallback} callback Function called once to indicate success of failure. The callback takes one argument (err).
+         * @param {pc.callbacks.VrCamera} callback Function called once to indicate success of failure. The callback takes one argument (err).
          * On success it returns null on failure it returns the error message.
          * @example
          * this.entity.camera.exitVr(function (err) {
