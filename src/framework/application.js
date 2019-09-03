@@ -1665,7 +1665,7 @@ Object.assign(pc, function () {
             if (app.vr && app.vr.display) {
                 app.vr.display.requestAnimationFrame(app.tick);
             } else {
-                window.requestAnimationFrame(app.tick);
+                requestAnimationFrame(app.tick);
             }
 
             if (app.graphicsDevice.contextLost) {
