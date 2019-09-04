@@ -1,8 +1,8 @@
 /**
  * @name pc.script
  * @namespace
- * @description Functions for creating user scripts for the script component
- * @property {Boolean} legacy If True, then engine will use legacy scripting system, defaults to true (subject to change)
+ * @description The pc.script namespace holds the createLoadingScreen function that
+ * is used to override the default PlayCanvas loading screen.
  */
 pc.script = (function () {
     var _legacy = false;
@@ -16,19 +16,13 @@ pc.script = (function () {
         app: null,
 
         /**
-         * @callback pc.script.createCallback
-         * @description Callback function used by {@link pc.script.create}.
-         * @param {pc.Application} app The application.
-         * @returns {Object} Return the Type of the script resource to be instanced for each Entity.
-         */
-
-        /**
+         * @private
          * @function
          * @name pc.script.create
          * @description Create a script resource object. A script file should contain a single call to pc.script.create and the callback should return a script object which will be
          * instantiated when attached to Entities.
          * @param {String} name The name of the script object.
-         * @param {pc.script.createCallback} callback The callback function which is passed an {pc.Application} object,
+         * @param {pc.callbacks.CreateScript} callback The callback function which is passed an {pc.Application} object,
          * which is used to access Entities and Components, and should return the Type of the script resource
          * to be instanced for each Entity.
          * @example
@@ -61,6 +55,7 @@ pc.script = (function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.script.attribute
          * @description Creates a script attribute for the current script. The script attribute can be accessed
@@ -115,18 +110,12 @@ pc.script = (function () {
         },
 
         /**
-         * @callback pc.script.createLoadingScreenCallback
-         * @description Callback function used by {@link pc.script.createLoadingScreen}.
-         * @param {pc.Application} app The application.
-         */
-
-        /**
          * @function
          * @name pc.script.createLoadingScreen
          * @description Handles the creation of the loading screen of the application. A script can subscribe to
          * the events of a {@link pc.Application} to show a loading screen, progress bar etc. In order for this to work
          * you need to set the project's loading screen script to the script that calls this method.
-         * @param  {pc.script.createLoadingScreenCallback} callback A function which can set up and tear down a customised loading screen.
+         * @param  {pc.callbacks.CreateScreen} callback A function which can set up and tear down a customised loading screen.
          * @example
          * pc.script.createLoadingScreen(function (app) {
          *     var showSplashScreen = function () { // }

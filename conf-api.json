@@ -17,6 +17,8 @@
     },
     "opts": {
         "destination": "docs",
-        "recurse": true
+        "encoding": "utf8",
+        "recurse": true,
+        "template": "./node_modules/@playcanvas/jsdoc-template"
     }
 }

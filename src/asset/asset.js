@@ -58,7 +58,7 @@ Object.assign(pc, function () {
      * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field
      * @property {Object} data JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
      * @property {Object} resource A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
-     * @property {Any[]} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
+     * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
      * @property {Boolean} preload If true the asset will be loaded during the preload phase of application set up.
      * @property {Boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
      * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
@@ -253,16 +253,10 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @callback pc.Asset.readyCallback
-         * @description Callback function used by {@link pc.Asset#ready} and called when an asset is ready.
-         * @param {pc.Asset} asset The ready asset.
-         */
-
-        /**
          * @function
          * @name pc.Asset#ready
          * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away
-         * @param {pc.Asset.readyCallback} callback The function called when the asset is ready. Passed the (asset) arguments
+         * @param {pc.callbacks.AssetReady} callback The function called when the asset is ready. Passed the (asset) arguments
          * @param {Object} [scope] Scope object to use when calling the callback
          * @example
          * var asset = app.assets.find("My Asset");

@@ -6,6 +6,7 @@ Object.assign(pc, (function () {
      * @name pc.Mat4
      * @classdesc A 4x4 matrix.
      * @description Creates a new identity Mat4 object.
+     * @property {Float32Array} data Matrix elements in the form of a flat array.
      */
     var Mat4 = function () {
         var data = new Float32Array(16);

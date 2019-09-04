@@ -2,7 +2,7 @@
 
 # PlayCanvas WebGL Game Engine
 
-PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games and other interactive 3D content in all modern browsers without the need for a plugin.
+PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games and other interactive 3D content in any mobile or desktop browser.
 
 ## Project Showcase
 
@@ -20,12 +20,12 @@ You can see more games on the [PlayCanvas website](https://playcanvas.com/explor
 
 ## Users
 
-PlayCanvas Engine and Tools been used by leading companies in game development, automotive, digital agencies and more. Some of them are:  
-**Disney, King, Zynga, Miniclip, Nickelodeon, Leapfrog, IGT, ARM, Samsung, Mozilla, Facebook**
+PlayCanvas is used by leading companies in video games, advertising and visualization such as:  
+**Animech, ARM, Disney, Facebook, IGT, King, Miniclip, Leapfrog, Mozilla, Nickelodeon, Nordeus, PikPok, PlaySide Studios, Polaris, Samsung, Spry Fox, Zeptolab, Zynga**
 
 ## Features
 
-The PlayCanvas Engine is a fully featured game engine.
+PlayCanvas is a fully featured game engine.
 
 * **Graphics**
     * WebGL 2.0 based renderer (with fallback to WebGL 1.0)
@@ -126,41 +126,15 @@ Here's a super-simple Hello World example - a spinning cube!
 
 Want to play with the code yourself? Edit it on [CodePen](http://codepen.io/playcanvas/pen/NPbxMj).
 
-## Tutorials & Examples
-
-See all the [tutorials](http://developer.playcanvas.com/tutorials/) here.
-
-## Documentation
-
-Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/en/api/)
-
-## Releases
-
-A full list of Releases and Release Notes is available [here](https://github.com/playcanvas/engine/releases).
-
-## How to get models?
-
-To convert any models created using a 3D modelling package see [this page](http://developer.playcanvas.com/en/engine/) in the developer documentation.
-
 ## How to build
 
-* Ensure you have [nodejs](https://nodejs.org) installed
-* Ensure you have [Java](https://java.com/en/download/) installed.
+Ensure you have [Node.js](https://nodejs.org) installed. Then, install all of the required Node.js dependencies:
 
-The first time you build you will be asked to install dependencies using `npm`. e.g.
+    npm install
+    
+To execute a build of the engine to build/playcanvas-latest.js, do:
 
-    npm install fs-extra
-    npm install google-closure-compiler
-    npm install preprocessor
-
-Then, to execute a build of the engine to the build/output folder, do:
-
-    cd build
-    node build.js
-
-See the built in help for more build instructions
-
-    node build.js -h
+    npm run build
 
 Pre-built versions of the engine are also available.
 
@@ -179,6 +153,14 @@ Specific engine versions:
 * https://code.playcanvas.com/playcanvas-0.181.11.js
 * https://code.playcanvas.com/playcanvas-0.181.11.min.js
 
+## Releases
+
+A full list of Releases and Release Notes is available [here](https://github.com/playcanvas/engine/releases).
+
+## How to get models?
+
+To convert any models created using a 3D modelling package see [this page](http://developer.playcanvas.com/en/engine/) in the developer documentation.
+
 ## How to run tests
 
 PlayCanvas makes use of Karma for running unit tests, and provides three test ways of executing them depending on what phase of development you're in:
@@ -193,16 +175,32 @@ PlayCanvas makes use of Karma for running unit tests, and provides three test wa
     # during development.
     npm run test:watch
 
-    # Runs the tests once over playcanvas-latest.js - mainly used by CI, but sometimes useful if you want
-    # to test the engine after building it. Make sure to do `npm run build` first to make sure you have
+    # Runs the tests once over playcanvas.js - mainly used by CI, but sometimes useful if you want to
+    # test the engine after building it. Make sure to do `npm run build` first to make sure you have
     # an up-to-date build.
     npm run test:release
+
+## Documentation
+
+Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/en/api/). To build a local copy of the API reference manual to the docs folder, do:
+
+    npm run docs
+
+## Tutorials & Examples
+
+See all the [tutorials](http://developer.playcanvas.com/tutorials/) here.
+
+## TypeScript Bindings
+
+You can develop TypeScript applications against the PlayCanvas engine. To generate a TypeScript definitions file for the entire API, do:
+
+    npm run tsd
+
+This will output to build/output/playcanvas.d.ts
 
 ## Getting Help
 
 [**Forums**](https://forum.playcanvas.com) - Use the forum to ask/answer questions about PlayCanvas.
-
-[**Discord**](https://discord.gg/N67tQuU) - Real-time text, voice and video chat for the PlayCanvas developer community.
 
 ## Contributing
 

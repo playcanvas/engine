@@ -1,13 +1,5 @@
 Object.assign(pc, function () {
     /**
-     * @callback pc.StandardMaterial.onUpdateShaderCallback
-     * @description Callback function used by {@link pc.Application#onUpdateShader}.
-     * @param {Object} options An object with shader generator settings (based on current material and scene properties), that you can change and then return.
-     * Properties of the object passed into this function are documented in {@link pc.Application#onUpdateShader}.
-     * @returns {Object} Returned settings will be used by the shader.
-     */
-
-    /**
      * @constructor
      * @name pc.StandardMaterial
      * @classdesc A Standard material is the main, general purpose material that is most often used for rendering.
@@ -21,7 +13,7 @@ Object.assign(pc, function () {
      * where each component is between 0 and 1.
      * Defines basic surface color (aka albedo).
      * @property {Boolean} diffuseTint Multiply diffuse map and/or diffuse vertex color by the constant diffuse value.
-     * @property {pc.Texture} diffuseMap The diffuse map of the material.
+     * @property {pc.Texture|Null} diffuseMap The diffuse map of the material (default is null).
      * @property {Number} diffuseMapUv Diffuse map UV channel
      * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the diffuse map.
      * @property {pc.Vec2} diffuseMapOffset Controls the 2D offset of the diffuse map. Each component is between 0 and 1.
@@ -33,7 +25,7 @@ Object.assign(pc, function () {
      * where each component is between 0 and 1.
      * Defines surface reflection/specular color. Affects specular intensity and tint.
      * @property {Boolean} specularTint Multiply specular map and/or specular vertex color by the constant specular value.
-     * @property {pc.Texture} specularMap The specular map of the material.
+     * @property {pc.Texture|Null} specularMap The specular map of the material (default is null).
      * @property {Number} specularMapUv Specular map UV channel
      * @property {pc.Vec2} specularMapTiling Controls the 2D tiling of the specular map.
      * @property {pc.Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
@@ -47,7 +39,7 @@ Object.assign(pc, function () {
      * With metaless == 0, the pixel is assumed to be dielectric, and diffuse color is used as normal.
      * With metaless == 1, the pixel is fully metallic, and diffuse color is used as specular color instead.
      * @property {Number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1 (metal).
-     * @property {pc.Texture} metalnessMap Monochrome metalness map.
+     * @property {pc.Texture|Null} metalnessMap Monochrome metalness map (default is null).
      * @property {Number} metalnessMapUv Metalness map UV channel
      * @property {pc.Vec2} metalnessMapTiling Controls the 2D tiling of the metalness map.
      * @property {pc.Vec2} metalnessMapOffset Controls the 2D offset of the metalness map. Each component is between 0 and 1.
@@ -58,7 +50,7 @@ Object.assign(pc, function () {
      * @property {Number} shininess Defines glossiness of the material from 0 (rough) to 100 (shiny mirror).
      * A higher shininess value results in a more focused specular highlight.
      * Glossiness map/vertex colors are always multiplied by this value (normalized to 0 - 1 range), or it is used directly as constant output.
-     * @property {pc.Texture} glossMap Glossiness map. If set, will be multiplied by normalized 'shininess' value and/or vertex colors.
+     * @property {pc.Texture|Null} glossMap Glossiness map (default is null). If specified, will be multiplied by normalized 'shininess' value and/or vertex colors.
      * @property {Number} glossMapUv Gloss map UV channel
      * @property {String} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
@@ -74,7 +66,7 @@ Object.assign(pc, function () {
      * @property {pc.Color} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {Boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the constant emissive value.
-     * @property {pc.Texture} emissiveMap The emissive map of the material. Can be HDR.
+     * @property {pc.Texture|Null} emissiveMap The emissive map of the material (default is null). Can be HDR.
      * @property {Number} emissiveIntensity Emissive color multiplier.
      * @property {Number} emissiveMapUv Emissive map UV channel.
      * @property {pc.Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
@@ -87,7 +79,7 @@ Object.assign(pc, function () {
      * transparent and 1 is fully opaque. If you want the material to be semi-transparent you also need to
      * set the {@link pc.Material#blendType} to pc.BLEND_NORMAL, pc.BLEND_ADDITIVE or any other mode.
      * Also note that for most semi-transparent objects you want {@link pc.Material#depthWrite} to be false, otherwise they can fully occlude objects behind them.
-     * @property {pc.Texture} opacityMap The opacity map of the material.
+     * @property {pc.Texture|Null} opacityMap The opacity map of the material (default is null).
      * @property {Number} opacityMapUv Opacity map UV channel
      * @property {String} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
@@ -95,7 +87,7 @@ Object.assign(pc, function () {
      * @property {Boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
      * @property {String} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
      *
-     * @property {pc.Texture} normalMap The normal map of the material.
+     * @property {pc.Texture|Null} normalMap The normal map of the material (default is null).
      * The texture must contains normalized, tangent space normals.
      * @property {Number} normalMapUv Normal map UV channel
      * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
@@ -103,7 +95,7 @@ Object.assign(pc, function () {
      * @property {Number} bumpiness The bumpiness of the material. This value scales the assigned normal map.
      * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
      *
-     * @property {pc.Texture} heightMap The height map of the material. Used for a view-dependent parallax effect.
+     * @property {pc.Texture|Null} heightMap The height map of the material (default is null). Used for a view-dependent parallax effect.
      * The texture must represent the height of the surface where darker pixels are lower and lighter pixels are higher.
      * It is recommended to use it together with a normal map.
      * @property {Number} heightMapUv Height map UV channel
@@ -112,8 +104,8 @@ Object.assign(pc, function () {
      * @property {pc.Vec2} heightMapOffset Controls the 2D offset of the height map. Each component is between 0 and 1.
      * @property {Number} heightMapFactor Height map multiplier. Affects the strength of the parallax effect.
      *
-     * @property {pc.Texture} sphereMap The spherical environment map of the material. Affects reflections.
-     * @property {pc.Texture} cubeMap The cubic environment map of the material. Overrides sphereMap. Affects reflections. If cubemap is prefiltered, will also affect ambient color.
+     * @property {pc.Texture|Null} sphereMap The spherical environment map of the material (default is null). Affects reflections.
+     * @property {pc.Texture|Null} cubeMap The cubic environment map of the material (default is null). Overrides sphereMap. Affects reflections. If cubemap is prefiltered, will also affect ambient color.
      * @property {Number} cubeMapProjection The type of projection applied to the cubeMap property:
      * <ul>
      *     <li>{@link pc.CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.</li>
@@ -124,7 +116,7 @@ Object.assign(pc, function () {
      * box-projection used for the cubeMap property. Only used when cubeMapProjection is set to pc.CUBEPROJ_BOX.
      * @property {Number} reflectivity Environment map intensity.
      *
-     * @property {pc.Texture} lightMap A custom lightmap of the material. Lightmaps are textures that contain pre-rendered lighting. Can be HDR.
+     * @property {pc.Texture|Null} lightMap A custom lightmap of the material (default is null). Lightmaps are textures that contain pre-rendered lighting. Can be HDR.
      * @property {Number} lightMapUv Lightmap UV channel
      * @property {String} lightMapChannel Color channels of the lightmap to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      * @property {pc.Vec2} lightMapTiling Controls the 2D tiling of the lightmap.
@@ -133,7 +125,7 @@ Object.assign(pc, function () {
      * @property {String} lightVertexColorChannel Vertex color channels to use for baked lighting. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      *
      * @property {Boolean} ambientTint Enables scene ambient multiplication by material ambient color.
-     * @property {pc.Texture} aoMap Baked ambient occlusion (AO) map. Modulates ambient color.
+     * @property {pc.Texture|Null} aoMap Baked ambient occlusion (AO) map (default is null). Modulates ambient color.
      * @property {Number} aoMapUv AO map UV channel
      * @property {String} aoMapChannel Color channel of the AO map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} aoMapTiling Controls the 2D tiling of the AO map.
@@ -170,8 +162,9 @@ Object.assign(pc, function () {
      * @property {Boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in scene settings)
      * @property {Boolean} pixelSnap Align vertices to pixel co-ordinates when rendering. Useful for pixel perfect 2D graphics
      * @property {Boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on backfaces
+     * @property {Object} chunks Object containing custom shader chunks that will replace default ones.
      *
-     * @property {pc.StandardMaterial.onUpdateShaderCallback} onUpdateShader A custom function that will be called after all shader generator properties are collected and before shader code is generated.
+     * @property {pc.callbacks.UpdateShader} onUpdateShader A custom function that will be called after all shader generator properties are collected and before shader code is generated.
      * This function will receive an object with shader generator settings (based on current material and scene properties), that you can change and then return.
      * Returned value will be used instead. This is mostly useful when rendering the same set of objects, but with different shader variations based on the same material.
      * For example, you may wish to render a depth or normal pass using textures assigned to the material, a reflection pass with simpler shaders and so on.
