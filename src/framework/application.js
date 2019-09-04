@@ -863,8 +863,7 @@ Object.assign(pc, function () {
                     if (err) {
                         callback(err);
                     } else if (count === 0) {
-                        self.onLibrariesLoaded();
-                        callback(null);
+                        self.onLibrariesLoaded(callback);
                     }
                 };
 
@@ -877,8 +876,7 @@ Object.assign(pc, function () {
                     this.loader.load(url, 'script', onLoad);
                 }
             } else {
-                self.onLibrariesLoaded();
-                callback(null);
+                self.onLibrariesLoaded(callback);
             }
         },
 
@@ -1308,11 +1306,31 @@ Object.assign(pc, function () {
          * @description Event handler called when all code libraries have been loaded
          * Code libraries are passed into the constructor of the Application and the application won't start running or load packs until all libraries have
          * been loaded
+         * @param {Function} callback Callback function called when Ammo and the rigidbody and collision systems have been initialized.
          */
-        onLibrariesLoaded: function () {
+        onLibrariesLoaded: function (callback) {
+            var self = this;
+            var initializeSystems = function() {
+                self.systems.rigidbody.onLibraryLoaded();
+                self.systems.collision.onLibraryLoaded();
+                callback(null);
+            };
+
             this._librariesLoaded = true;
-            this.systems.rigidbody.onLibraryLoaded();
-            this.systems.collision.onLibraryLoaded();
+
+            // ammo.js builds newer than April 12 2017 have an async initialization API
+            if (typeof Ammo.then === 'function') {
+                initialize(function (ammo) {
+                    Ammo = ammo; // Overwrite the global initializer with the instance
+                    initializeSystems();
+                }, callback);
+                return;
+            }
+            try {
+                initializeSystems();
+            } catch (error) {
+                callback(error);
+            }
         },
 
         applySceneSettings: function (settings) {
