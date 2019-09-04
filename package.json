@@ -17,7 +17,7 @@
     "typings"
   ],
   "license": "MIT",
-  "main": "build/output/playcanvas-latest.js",
+  "main": "build/output/playcanvas.js", 
   "types": "index.d.ts",
   "bugs": {
     "url": "https://github.com/playcanvas/engine/issues"
@@ -53,15 +53,15 @@
     "uglify-js": "^3.6.0"
   },
   "scripts": {
-    "build": "cd build && node build.js -o output/playcanvas-latest.js",
-    "build:debug": "cd build && node build.js -d -o output/playcanvas-latest.dbg.js",
-    "build:profiler": "cd build && node build.js -p -o output/playcanvas-latest.prf.js",
-    "build:min": "cd build && node build.js -l 1 -o output/playcanvas-latest.min.js",
+    "build": "cd build && node build.js -o output/playcanvas.js",
+    "build:debug": "cd build && node build.js -d -o output/playcanvas.dbg.js",
+    "build:profiler": "cd build && node build.js -p -o output/playcanvas.prf.js",
+    "build:min": "cd build && node build.js -l 1 -o output/playcanvas.min.js",
     "build:all": "npm run build; npm run build:debug; npm run build:profiler; npm run build:min",
     "docs": "jsdoc -c conf-api.json",
     "serve": "npm run build; ./node_modules/.bin/http-server build/output -a localhost -p 51000",
     "closure": "java -jar node_modules/google-closure-compiler/compiler.jar --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=checkTypes --externs build/externs.js --language_in=ECMASCRIPT5_STRICT --js build/output/playcanvas-latest.js --js_output_file build/output/playcanvas.min.js",
-    "uglify": "uglifyjs build/output/playcanvas-latest.js --compress --mangle --output build/output/playcanvas.min.js",
+    "uglify": "uglifyjs build/output/playcanvas.js --compress --mangle --output build/output/playcanvas.min.js",
     "unzipbundle": "gzip -x tests/assets/bundle.gz",
     "test": "karma start tests/karma.conf.js -- --single-run",
     "test:release": "karma start tests/karma.conf.js -- --single-run --release",
