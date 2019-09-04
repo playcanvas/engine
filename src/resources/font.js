@@ -25,6 +25,13 @@ Object.assign(pc, function () {
         return data;
     }
 
+    /**
+     * @constructor
+     * @name pc.FontHandler
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading {@link pc.Font} resources
+     * @param {pc.ResourceLoader} loader The resource loader
+     */
     var FontHandler = function (loader) {
         this._loader = loader;
         this.retryRequests = false;

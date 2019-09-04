@@ -282,7 +282,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#find
          * @description Search the graph node and all of its descendants for the nodes that satisfy some search criteria.
-         * @param {Function|String} attr This can either be a function or a string. If it's a function, it is executed
+         * @param {pc.callbacks.FindNode|String} attr This can either be a function or a string. If it's a function, it is executed
          * for each descendant node to test if node satisfies the search logic. Returning true from the function will
          * include the node into the results. If it's a string then it represents the name of a field or a method of the
          * node. If this is the name of a field then the value passed as the second argument will be checked for equality.
@@ -343,7 +343,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#findOne
          * @description Search the graph node and all of its descendants for the first node that satisfies some search criteria.
-         * @param {Function|String} attr This can either be a function or a string. If it's a function, it is executed
+         * @param {pc.callbacks.FindNode|String} attr This can either be a function or a string. If it's a function, it is executed
          * for each descendant node to test if node satisfies the search logic. Returning true from the function will
          * result in that node being returned from findOne. If it's a string then it represents the name of a field or a method of the
          * node. If this is the name of a field then the value passed as the second argument will be checked for equality.
@@ -504,7 +504,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#forEach
          * @description Executes a provided function once on this graph node and all of its descendants.
-         * @param {Function} callback The function to execute on the graph node and each descendant.
+         * @param {pc.callbacks.ForEach} callback The function to execute on the graph node and each descendant.
          * @param {Object} [thisArg] Optional value to use as this when executing callback function.
          * @example
          * // Log the path and name of each node in descendant tree starting with "parent"

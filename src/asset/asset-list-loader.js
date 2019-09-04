@@ -55,11 +55,12 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @private
      * @function
      * @name pc.AssetListLoader#load
      * @description  Start loading asset list, call done() when all assets have loaded or failed to load
      * @param {Function} done Callback called when all assets in the list are loaded. Passed (err, failed) where err is the undefined if no errors are encountered and failed contains a list of assets that failed to load
-     * @param {Object} scope Scope to use when calling callback
+     * @param {Object} [scope] Scope to use when calling callback
      *
      */
     AssetListLoader.prototype.load = function (done, scope) {
@@ -87,10 +88,11 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @private
      * @function
      * @name pc.AssetListLoader#ready
      * @param {Function} done Callback called when all assets in the list are loaded
-     * @param {Object} scope Scope to use when calling callback
+     * @param {Object} [scope] Scope to use when calling callback
      */
     AssetListLoader.prototype.ready = function (done, scope) {
         scope = scope || this;

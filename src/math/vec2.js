@@ -6,7 +6,7 @@ Object.assign(pc, (function () {
      * @name pc.Vec2
      * @classdesc A 2-dimensional vector.
      * @description Creates a new Vec2 object.
-     * @param {Number} [x] The x value. If x is an array of length 2, the array will be used to populate all components.
+     * @param {Number|Number[]} [x] The x value. If x is an array of length 2, the array will be used to populate all components.
      * @param {Number} [y] The y value.
      * @example
      * var v = new pc.Vec2(1, 2);
@@ -101,6 +101,24 @@ Object.assign(pc, (function () {
             this.y = rhs.y;
 
             return this;
+        },
+
+        /**
+         * @function
+         * @name pc.Vec2#distance
+         * @description Returns the distance between the two specified 2-dimensional vectors.
+         * @param {pc.Vec2} rhs The second 2-dimensional vector to test.
+         * @returns {Number} The distance between the two vectors.
+         * @example
+         * var v1 = new pc.Vec2(5, 10);
+         * var v2 = new pc.Vec2(10, 20);
+         * var d = v1.distance(v2);
+         * console.log("The between v1 and v2 is: " + d);
+         */
+        distance: function (rhs) {
+            var x = this.x - rhs.x;
+            var y = this.y - rhs.y;
+            return Math.sqrt(x * x + y * y);
         },
 
         /**

@@ -19,7 +19,7 @@ Object.assign(pc, function () {
      *     <li>plane: The component will render a plane (1 unit in each dimension)</li>
      *     <li>sphere: The component will render a sphere (radius 0.5)</li>
      * </ul>
-     * @property {pc.Asset} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
+     * @property {pc.Asset|Number} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
      * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
@@ -31,7 +31,7 @@ Object.assign(pc, function () {
      * @property {Boolean} isStatic Mark model as non-movable (optimization)
      * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in the component's model. If model is not set or loaded for component it will return null.
      * @property {Number} batchGroupId Assign model to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
-     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this model should belong.
+     * @property {Number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this model should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
 

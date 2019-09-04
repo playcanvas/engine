@@ -21,6 +21,13 @@ Object.assign(pc, function () {
         return false;
     })();
 
+    /**
+     * @constructor
+     * @name pc.AudioHandler
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading {@link pc.Sound} resources
+     * @param {pc.SoundManager} manager The sound manager
+     */
     var AudioHandler = function (manager) {
         this.manager = manager;
         this.retryRequests = false;

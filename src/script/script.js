@@ -135,10 +135,10 @@ Object.assign(pc, function () {
      * @param {Object} args Object with Arguments for an attribute
      * @param {String} args.type Type of an attribute value, list of possible types:
      * boolean, number, string, json, asset, entity, rgb, rgba, vec2, vec3, vec4, curve
-     * @param {?} [args.default] Default attribute value
+     * @param {*} [args.default] Default attribute value
      * @param {String} [args.title] Title for Editor's for field UI
      * @param {String} [args.description] Description for Editor's for field UI
-     * @param {(String|String[])} [args.placeholder] Placeholder for Editor's for field UI.
+     * @param {String|String[]} [args.placeholder] Placeholder for Editor's for field UI.
      * For multi-field types, such as vec2, vec3, and others use array of strings.
      * @param {Boolean} [args.array] If attribute can hold single or multiple values
      * @param {Number} [args.size] If attribute is array, maximum number of values can be set
