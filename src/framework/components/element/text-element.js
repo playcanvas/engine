@@ -915,7 +915,7 @@ Object.assign(pc, function () {
                 for (var line in this._meshInfo[i].lines) {
                     var index = this._meshInfo[i].lines[line];
                     var lw = this._lineWidths[parseInt(line, 10)];
-                    var hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw);
+                    var hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw) * (this._rtl ? -1 : 1);
                     var voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
 
                     for (quad = prevQuad; quad <= index; quad++) {
@@ -937,7 +937,8 @@ Object.assign(pc, function () {
 
                             // flip the entire line horizontally
                             for (var vert = 0; vert < 4; ++vert) {
-                                this._meshInfo[i].positions[idx + vert * 3] = -(this._element.calculatedWidth + this._meshInfo[i].positions[idx + vert * 3]);
+                                this._meshInfo[i].positions[idx + vert * 3] =
+                                    this._element.calculatedWidth - this._meshInfo[i].positions[idx + vert * 3] + hoffset * 2;
                             }
 
                             // flip the character horizontally
