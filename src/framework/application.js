@@ -533,11 +533,6 @@ Object.assign(pc, function () {
             this.elementInput.app = this;
 
         this.vr = null;
-        if (options.vr) {
-            if (options.vr) {
-                this.enableVr();
-            }
-        }
 
         this._inTools = false;
 
