@@ -149,10 +149,6 @@ Specific engine versions:
 * https://code.playcanvas.com/playcanvas-0.181.11.js
 * https://code.playcanvas.com/playcanvas-0.181.11.min.js
 
-## Releases
-
-A full list of Releases and Release Notes is available [here](https://github.com/playcanvas/engine/releases).
-
 ## How to get models?
 
 To convert any models created using a 3D modelling package see [this page](https://developer.playcanvas.com/en/engine/) in the developer documentation.
