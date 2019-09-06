@@ -776,6 +776,15 @@ Object.assign(pc, function () {
                     var bottom = _y - y;
                     var top = bottom + quadsize;
 
+                    if (this._rtl) {
+                        // rtl text will be flipped vertically before rendering and here we
+                        // account for the mis-alignment that would be introduced. shift is calculated
+                        // as the difference between the glyph's left and right offset.
+                        var shift = quadsize - x - this._spacing * advance - x;
+                        left -= shift;
+                        right -= shift;
+                    }
+
                     meshInfo.positions[quad * 4 * 3 + 0] = left;
                     meshInfo.positions[quad * 4 * 3 + 1] = bottom;
                     meshInfo.positions[quad * 4 * 3 + 2] = _z;
@@ -930,7 +939,7 @@ Object.assign(pc, function () {
                         this._meshInfo[i].positions[quad * 4 * 3 + 10] += voffset;
                     }
 
-                    // flip characters when rendering RTL text
+                    // flip rtl characters
                     if (this._rtl) {
                         for (quad = prevQuad; quad <= index; quad++) {
                             var idx = quad * 4 * 3;
