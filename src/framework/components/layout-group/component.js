@@ -3,11 +3,11 @@ Object.assign(pc, function () {
      * @component
      * @constructor
      * @name pc.LayoutGroupComponent
+     * @extends pc.Component
      * @description Create a new LayoutGroupComponent
      * @classdesc A LayoutGroupComponent enables the Entity to position and scale child {@link pc.ElementComponent}s according to configurable layout rules.
      * @param {pc.LayoutGroupComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.Component
      * @property {Number} orientation Whether the layout should run horizontally or vertically.
      * @property {Boolean} reverseX Reverses the order of children along the x axis.
      * @property {Boolean} reverseY Reverses the order of children along the y axis.

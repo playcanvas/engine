@@ -2,10 +2,10 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.LightComponentSystem
+     * @extends pc.ComponentSystem
      * @classdesc A Light Component is used to dynamically light the scene.
      * @description Create a new LightComponentSystem.
      * @param {pc.Application} app The application.
-     * @extends pc.ComponentSystem
      */
     var lightTypes = {
         'directional': pc.LIGHTTYPE_DIRECTIONAL,

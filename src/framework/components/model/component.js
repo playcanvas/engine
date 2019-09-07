@@ -3,12 +3,12 @@ Object.assign(pc, function () {
      * @component
      * @constructor
      * @name pc.ModelComponent
+     * @extends pc.Component
      * @classdesc Enables an Entity to render a model or a primitive shape. This Component attaches additional model
      * geometry in to the scene graph below the Entity.
      * @description Create a new ModelComponent
      * @param {pc.ModelComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.Component
      * @property {String} type The type of the model, which can be one of the following values:
      * <ul>
      *     <li>asset: The component will render a model asset</li>
