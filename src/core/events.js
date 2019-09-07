@@ -1,4 +1,5 @@
 /**
+ * @private
  * @name pc.events
  * @namespace
  * @description Namespace for event functions. Use these functions to attach events to an object.
@@ -16,6 +17,7 @@
  */
 pc.events = {
     /**
+     * @private
      * @function
      * @name pc.events.attach
      * @description Attach event methods 'on', 'off', 'fire', 'once' and 'hasEvent' to the target object
@@ -38,6 +40,7 @@ pc.events = {
     },
 
     /**
+     * @private
      * @function
      * @name pc.events.on
      * @description Attach an event handler to an event
@@ -70,6 +73,7 @@ pc.events = {
     },
 
     /**
+     * @private
      * @function
      * @name pc.events.off
      * @description Detach an event handler from an event. If callback is not provided then all callbacks are unbound from the event,
@@ -135,6 +139,7 @@ pc.events = {
     // arguments is preferable to documenting each one individually.
     /* eslint-disable valid-jsdoc */
     /**
+     * @private
      * @function
      * @name pc.events.fire
      * @description Fire an event, all additional arguments are passed on to the event listener
@@ -193,6 +198,7 @@ pc.events = {
     },
 
     /**
+     * @private
      * @function
      * @name pc.events.once
      * @description Attach an event handler to an event. This handler will be removed after being fired once.
@@ -214,6 +220,7 @@ pc.events = {
     },
 
     /**
+     * @private
      * @function
      * @name pc.events.hasEvent
      * @description Test if there are any handlers bound to an event name
