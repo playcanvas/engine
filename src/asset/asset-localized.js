@@ -1,5 +1,7 @@
 Object.assign(pc, function (){
     var LocalizedAsset = function (app) {
+        pc.EventHandler.call(this);
+
         this._app = app;
         app.i18n.on('set:locale', this._onSetLocale, this);
 
@@ -8,9 +10,9 @@ Object.assign(pc, function (){
 
         this._defaultAsset = null;
         this._localizedAsset = null;
-
-        pc.events.attach(this);
     };
+    LocalizedAsset.prototype = Object.create(pc.EventHandler.prototype);
+    LocalizedAsset.prototype.constructor = LocalizedAsset;
 
     LocalizedAsset.prototype._bindDefaultAsset = function () {
         var asset = this._app.assets.get(this._defaultAsset);

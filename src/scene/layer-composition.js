@@ -3,6 +3,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.LayerComposition
+     * @extends pc.EventHandler
      * @classdesc Layer Composition is a collection of {@link pc.Layer} that is fed to {@link pc.Scene#layers} to define rendering order.
      * @description Create a new layer composition.
      * @property {pc.Layer[]} layerList A read-only array of {@link pc.Layer} sorted in the order they will be rendered.
@@ -15,6 +16,8 @@ Object.assign(pc, function () {
      */
     // Composition can hold only 2 sublayers of each layer
     var LayerComposition = function () {
+        pc.EventHandler.call(this);
+
         this.layerList = [];
         this.subLayerList = [];
         this.subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
@@ -41,9 +44,9 @@ Object.assign(pc, function () {
         // identical otherwise
         this._renderList = []; // index to layerList/subLayerList
         this._renderListCamera = []; // index to layer.cameras
-
-        pc.events.attach(this);
     };
+    LayerComposition.prototype = Object.create(pc.EventHandler.prototype);
+    LayerComposition.prototype.constructor = LayerComposition;
 
     LayerComposition.prototype._sortLights = function (target) {
         var light;

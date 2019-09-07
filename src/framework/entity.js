@@ -80,8 +80,6 @@ Object.assign(pc, function () {
 
         // used by component systems to speed up destruction
         this._destroying = false;
-
-        pc.events.attach(this);
     };
     Entity.prototype = Object.create(pc.GraphNode.prototype);
     Entity.prototype.constructor = Entity;
