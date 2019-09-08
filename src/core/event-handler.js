@@ -30,7 +30,7 @@ Object.assign(pc, (function () {
          * @param {String} name Name of the event to bind the callback to
          * @param {pc.callbacks.HandleEvent} callback Function that is called when event is fired. Note the callback is limited to 8 arguments.
          * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
-         * @returns {*} 'this' for chaining
+         * @returns {pc.EventHandler} Self for chaining.
          * @example
          * obj.on('test', function (a, b) {
          *     console.log(a + b);
@@ -63,7 +63,7 @@ Object.assign(pc, (function () {
          * @param {String} [name] Name of the event to unbind
          * @param {pc.callbacks.HandleEvent} [callback] Function to be unbound.
          * @param {Object} [scope] Scope that was used as the this when the event is fired
-         * @returns {*} 'this' for chaining
+         * @returns {pc.EventHandler} Self for chaining.
          * @example
          * var handler = function () {
          * };
@@ -133,7 +133,7 @@ Object.assign(pc, (function () {
          * @param {*} [arg6] Sixth argument that is passed to the event handler
          * @param {*} [arg7] Seventh argument that is passed to the event handler
          * @param {*} [arg8] Eighth argument that is passed to the event handler
-         * @returns {*} 'this' for chaining
+         * @returns {pc.EventHandler} Self for chaining.
          * @example
          * obj.fire('test', 'This is the message');
          */
@@ -185,7 +185,7 @@ Object.assign(pc, (function () {
          * @param {String} name Name of the event to bind the callback to
          * @param {pc.callbacks.HandleEvent} callback Function that is called when event is fired. Note the callback is limited to 8 arguments.
          * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
-         * @returns {*} 'this' for chaining
+         * @returns {pc.EventHandler} Self for chaining.
          * @example
          * obj.once('test', function (a, b) {
          *     console.log(a + b);
