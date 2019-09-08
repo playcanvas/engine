@@ -309,6 +309,7 @@ Object.assign(pc, function () {
         /**
          * @constructor
          * @name ScriptType
+         * @extends pc.EventHandler
          * @classdesc Represents the type of a script. It is returned by {@link pc.createScript}. Also referred to as Script Type.<br />
          * The type is to be extended using its JavaScript prototype. There is a <strong>list of methods</strong>
          * that will be executed by the engine on instances of this type, such as: <ul><li>initialize</li><li>postInitialize</li><li>update</li><li>postUpdate</li><li>swap</li></ul>
@@ -328,13 +329,13 @@ Object.assign(pc, function () {
          *
          */
         var script = function (args) {
+            pc.GraphNode.call(this, name);
+
             // #ifdef DEBUG
             if (!args || !args.app || !args.entity) {
                 console.warn('script \'' + name + '\' has missing arguments in constructor');
             }
             // #endif
-
-            pc.events.attach(this);
 
             this.app = args.app;
             this.entity = args.entity;
@@ -350,6 +351,8 @@ Object.assign(pc, function () {
             // other script instances in the component
             this.__executionOrder = -1;
         };
+        script.prototype = Object.create(pc.EventHandler.prototype);
+        script.prototype.constructor = script;
 
         /**
          * @private
