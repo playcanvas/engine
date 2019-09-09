@@ -3,6 +3,7 @@ Object.assign(pc, function () {
      * @component
      * @constructor
      * @name pc.CollisionComponent
+     * @extends pc.Component
      * @classdesc A collision volume. Use this in conjunction with a {@link pc.RigidBodyComponent} to make a collision volume that can be simulated using the physics engine.
      * <p>If the {@link pc.Entity} does not have a {@link pc.RigidBodyComponent} then this collision volume will act as a trigger volume. When an entity with a dynamic
      * or kinematic body enters or leaves an entity with a trigger volume, both entities will receive trigger events.
@@ -64,7 +65,6 @@ Object.assign(pc, function () {
      * @property {Number} height The total height of the capsule or cylinder-shaped collision volume from tip to tip. Defaults to 2.
      * @property {pc.Asset} asset The asset for the model of the mesh collision volume - can also be an asset id.
      * @property {pc.Model} model The model that is added to the scene graph for the mesh collision volume.
-     * @extends pc.Component
      */
     var CollisionComponent = function CollisionComponent(system, entity) {
         pc.Component.call(this, system, entity);
