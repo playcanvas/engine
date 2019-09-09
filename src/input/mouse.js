@@ -117,11 +117,14 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Mouse
+     * @extends pc.EventHandler
      * @classdesc A Mouse Device, bound to a DOM Element.
      * @description Create a new Mouse device
      * @param {Element} [element] The Element that the mouse events are attached to
      */
     var Mouse = function (element) {
+        pc.EventHandler.call(this);
+
         // Clear the mouse state
         this._lastX      = 0;
         this._lastY      = 0;
@@ -142,10 +145,9 @@ Object.assign(pc, function () {
         this._attached = false;
 
         this.attach(element);
-
-        // Add events
-        pc.events.attach(this);
     };
+    Mouse.prototype = Object.create(pc.EventHandler.prototype);
+    Mouse.prototype.constructor = Mouse;
 
     /**
      * @static

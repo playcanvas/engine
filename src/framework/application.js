@@ -2,6 +2,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Application
+     * @extends pc.EventHandler
      * @classdesc A pc.Application represents and manages your PlayCanvas application.
      * If you are developing using the PlayCanvas Editor, the pc.Application is created
      * for you. You can access your pc.Application instance in your scripts. Below is a
@@ -216,12 +217,12 @@ Object.assign(pc, function () {
      */
 
     var Application = function (canvas, options) {
+        pc.EventHandler.call(this);
+
         options = options || {};
 
         // Open the log
         pc.log.open();
-        // Add event support
-        pc.events.attach(this);
 
         // Store application instance
         Application._applications[canvas.id] = this;
@@ -614,6 +615,8 @@ Object.assign(pc, function () {
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     };
+    Application.prototype = Object.create(pc.EventHandler.prototype);
+    Application.prototype.constructor = Application;
 
     Application._currentApplication = null;
     Application._applications = {};

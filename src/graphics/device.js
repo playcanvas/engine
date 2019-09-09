@@ -155,6 +155,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.GraphicsDevice
+     * @extends pc.EventHandler
      * @classdesc The graphics device manages the underlying graphics context. It is responsible
      * for submitting render state changes and graphics primitives to the hardware. A graphics
      * device is tied to a specific canvas HTML element. It is valid to have more than one
@@ -168,6 +169,8 @@ Object.assign(pc, function () {
      * @property {pc.ScopeSpace} scope The scope namespace for shader attributes and variables. [read only]
      */
     var GraphicsDevice = function (canvas, options) {
+        pc.EventHandler.call(this);
+
         var i;
         this.canvas = canvas;
         this.shader = null;
@@ -507,8 +510,6 @@ Object.assign(pc, function () {
         for (var generator in pc.programlib)
             this.programLib.register(generator, pc.programlib[generator]);
 
-        pc.events.attach(this);
-
         this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
         this.useTexCubeLod = this.extTextureLod && this.maxTextures < 16;
 
@@ -590,6 +591,8 @@ Object.assign(pc, function () {
 
         this.createGrabPass(options.alpha);
     };
+    GraphicsDevice.prototype = Object.create(pc.EventHandler.prototype);
+    GraphicsDevice.prototype.constructor = GraphicsDevice;
 
     Object.assign(GraphicsDevice.prototype, {
         getPrecision: function () {
