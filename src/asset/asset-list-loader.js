@@ -3,11 +3,14 @@ Object.assign(pc, function () {
      * @private
      * @constructor
      * @name pc.AssetListLoader
+     * @extends pc.EventHandler
      * @classdesc Used to load a group of assets and fires a callback when all assets are loaded
      * @param {pc.Asset[] | Number[]} assetList An array of pc.Asset objects to load or an array of Asset IDs to load
      * @param {pc.AssetRegistry} assetRegistry The application's asset registry
      */
     var AssetListLoader = function (assetList, assetRegistry) {
+        pc.EventHandler.call(this);
+
         this._assets = [];
         this._registry = assetRegistry;
         this._loaded = false;
@@ -33,10 +36,9 @@ Object.assign(pc, function () {
 
             }
         }
-
-
-        pc.events.attach(this);
     };
+    AssetListLoader.prototype = Object.create(pc.EventHandler.prototype);
+    AssetListLoader.prototype.constructor = AssetListLoader;
 
     AssetListLoader.prototype.destroy = function () {
         // remove any outstanding listeners
@@ -193,5 +195,4 @@ Object.assign(pc, function () {
     return {
         AssetListLoader: AssetListLoader
     };
-
 }());

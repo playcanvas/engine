@@ -26,6 +26,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Asset
+     * @extends pc.EventHandler
      * @classdesc An asset record of a file or data resource that can be loaded by the engine.
      * The asset contains three important fields:<br/>
      * <strong>file</strong>: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset<br/>
@@ -64,6 +65,8 @@ Object.assign(pc, function () {
      * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
      */
     var Asset = function (name, type, file, data) {
+        pc.EventHandler.call(this);
+
         this._id = ++assetIdCounter;
 
         this.name = name || '';
@@ -89,10 +92,10 @@ Object.assign(pc, function () {
 
         this.registry = null;
 
-        pc.events.attach(this);
-
         if (file) this.file = file;
     };
+    Asset.prototype = Object.create(pc.EventHandler.prototype);
+    Asset.prototype.constructor = Asset;
 
     /**
      * @event

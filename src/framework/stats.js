@@ -86,6 +86,4 @@ pc.ApplicationStats = function (device) {
             return pc.Application._currentApplication.batcher._stats;
         }
     });
-
-    pc.events.attach(this);
 };
