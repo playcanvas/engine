@@ -26,6 +26,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.SoundManager
+     * @extends pc.EventHandler
      * @classdesc The SoundManager is used to load and play audio. As well as apply system-wide settings
      * like global volume, suspend and resume.
      * @description Creates a new sound manager.
@@ -34,6 +35,8 @@ Object.assign(pc, function () {
      * @property {Number} volume Global volume for the manager. All {@link pc.SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
      */
     var SoundManager = function (options) {
+        pc.EventHandler.call(this);
+
         if (hasAudioContext() || options.forceWebAudioApi) {
             if (typeof AudioContext !== 'undefined') {
                 this.context = new AudioContext();
@@ -84,9 +87,9 @@ Object.assign(pc, function () {
 
         this._volume = 1;
         this.suspended = false;
-
-        pc.events.attach(this);
     };
+    SoundManager.prototype = Object.create(pc.EventHandler.prototype);
+    SoundManager.prototype.constructor = SoundManager;
 
     SoundManager.hasAudio = hasAudio;
     SoundManager.hasAudioContext = hasAudioContext;

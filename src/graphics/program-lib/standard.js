@@ -930,7 +930,7 @@ pc.programlib.standard = {
 
 
         var tbn;
-        if (!options.hasTangents) {
+        if (!options.hasTangents && device.extStandardDerivatives) {
             tbn = chunks.TBNderivativePS;
         } else if (options.fastTbn) {
             tbn = chunks.TBNfastPS;

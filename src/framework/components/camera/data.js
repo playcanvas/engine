@@ -3,8 +3,8 @@ Object.assign(pc, function () {
      * @private
      * @constructor
      * @name pc.CameraComponentData
-     * @classdesc ComponentData structure for Camera components.
      * @extends pc.ComponentData
+     * @classdesc ComponentData structure for Camera components.
      */
     var CameraComponentData = function () {
         // serialized

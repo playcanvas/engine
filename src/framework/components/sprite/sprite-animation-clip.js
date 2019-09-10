@@ -3,6 +3,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.SpriteAnimationClip
+     * @extends pc.EventHandler
      * @classdesc Handles playing of sprite animations and loading of relevant sprite assets.
      * @param {pc.SpriteComponent} component The sprite component managing this clip.
      * @param {Object} data Data for the new animation clip.
@@ -19,6 +20,8 @@ Object.assign(pc, function () {
      * @property {Boolean} isPaused Whether the animation is currently paused.
      */
     var SpriteAnimationClip = function (component, data) {
+        pc.EventHandler.call(this);
+
         this._component = component;
 
         this._frame = 0;
@@ -34,9 +37,9 @@ Object.assign(pc, function () {
         this._paused = false;
 
         this._time = 0;
-
-        pc.events.attach(this);
     };
+    SpriteAnimationClip.prototype = Object.create(pc.EventHandler.prototype);
+    SpriteAnimationClip.prototype.constructor = SpriteAnimationClip;
 
     Object.assign(SpriteAnimationClip.prototype, {
         // When sprite asset is added bind it
