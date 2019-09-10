@@ -306,7 +306,7 @@ Object.assign(pc, function () {
          * var entities = parent.find('name', 'Test');
          */
         find: function (attr, value) {
-            var results = [];
+            var result, results = [];
             var len = this._children.length;
             var i, descendants;
 
