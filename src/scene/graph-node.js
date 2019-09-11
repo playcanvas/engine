@@ -11,12 +11,15 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.GraphNode
+     * @extends pc.EventHandler
      * @classdesc A hierarchical scene node.
      * @param {String} [name] The non-unique name of the graph node, default is "Untitled".
      * @property {String} name The non-unique name of a graph node.
      * @property {pc.Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link pc.GraphNode#findByTag} function.
      */
     var GraphNode = function GraphNode(name) {
+        pc.EventHandler.call(this);
+
         this.name = typeof name === "string" ? name : "Untitled"; // Non-unique human readable name
         this.tags = new pc.Tags(this);
 
@@ -62,6 +65,8 @@ Object.assign(pc, function () {
 
         this.scaleCompensation = false;
     };
+    GraphNode.prototype = Object.create(pc.EventHandler.prototype);
+    GraphNode.prototype.constructor = GraphNode;
 
     /**
      * @readonly
@@ -301,17 +306,18 @@ Object.assign(pc, function () {
          * var entities = parent.find('name', 'Test');
          */
         find: function (attr, value) {
-            var results = [];
+            var result, results = [];
             var len = this._children.length;
             var i, descendants;
 
             if (attr instanceof Function) {
                 var fn = attr;
 
-                for (i = 0; i < len; i++) {
-                    if (fn(this._children[i]))
-                        results.push(this._children[i]);
+                result = fn(this);
+                if (result)
+                    results.push(this);
 
+                for (i = 0; i < len; i++) {
                     descendants = this._children[i].find(fn);
                     if (descendants.length)
                         results = results.concat(descendants);

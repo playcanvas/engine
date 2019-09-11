@@ -3,9 +3,9 @@ Object.assign(pc, function () {
      * @private
      * @constructor
      * @name pc.RigidBodyComponentData
+     * @extends pc.ComponentData
      * @classdesc Contains data for the RigidBodyComponent
      * @description Create a new data structure for a RigidBodyComponent
-     * @extends pc.ComponentData
      */
     var RigidBodyComponentData = function () {
         this.enabled = true;

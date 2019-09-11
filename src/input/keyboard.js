@@ -106,6 +106,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Keyboard
+     * @extends pc.EventHandler
      * @classdesc A Keyboard device bound to an Element. Allows you to detect the state of the key presses.
      * Note, Keyboard object must be attached to an Element before it can detect any key presses.
      * @description Create a new Keyboard object
@@ -118,14 +119,14 @@ Object.assign(pc, function () {
      * var keyboard = new pc.Keyboard(window); // attach keyboard listeners to the window
      */
     var Keyboard = function (element, options) {
+        pc.EventHandler.call(this);
+
         options = options || {};
         this._element = null;
 
         this._keyDownHandler = this._handleKeyDown.bind(this);
         this._keyUpHandler = this._handleKeyUp.bind(this);
         this._keyPressHandler = this._handleKeyPress.bind(this);
-
-        pc.events.attach(this);
 
         this._keymap = {};
         this._lastmap = {};
@@ -137,6 +138,8 @@ Object.assign(pc, function () {
         this.preventDefault = options.preventDefault || false;
         this.stopPropagation = options.stopPropagation || false;
     };
+    Keyboard.prototype = Object.create(pc.EventHandler.prototype);
+    Keyboard.prototype.constructor = Keyboard;
 
     /**
      * @function

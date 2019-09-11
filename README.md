@@ -8,13 +8,9 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 
 Many games and apps have been published using the PlayCanvas engine. Here is a small selection:
 
-[![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://apps.facebook.com/1315812941823883/) [![Disney: Hour of Code](https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/images/disney_moana_hourofcode.jpg)](http://partners.disney.com/hour-of-code/wayfinding-with-code) [![WebVR Lab](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/446331/CAAA6B-image-25.jpg)](https://playcanv.as/p/sAsiDvtC/)
-<br />
-[![TANX](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/45093/ESR5DQ-image-25.jpg)](https://tanx.io/) [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://chrome.google.com/webstore/detail/swooop/jblimahfbhdcengjfbdpdngcfcghladf) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](http://www.miniclip.com/games/flappy-bird/en/) [![Virtual Voodoo](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/422705/E23A1E-image-25.jpg)](http://www.miniclip.com/games/virtual-voodoo/en/)
-<br />
-[![Space Base](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/411394/I2C48B-image-25.jpg)](https://playcanv.as/p/yipplmVO/) [![Sponza Runtime Lightmaps](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/391368/221DFF-image-25.jpg)](https://playcanv.as/p/txPePQvy/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt) [![Orange Room VR](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/434546/BKST60-image-25.jpg)](https://playcanv.as/p/zi09Xvld/)
-<br />
-[![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](http://car.playcanvas.com/) [![Steampunk Slots](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/344862/VH0NOH-image-25.jpg)](https://playcanv.as/p/nL1dYbMv) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](http://casino.playcanvas.com/) [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/)
+[![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/) [![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](https://playcanv.as/p/LpmXGUe6/)  
+[![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://apps.facebook.com/1315812941823883/) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](https://playcanv.as/p/2OlkUaxF/)  
+[![Car](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/347824/7ULQ3Y-image-25.jpg)](https://playcanv.as/p/RqJJ9oU9/) [![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/333626/BGQN9H-image-25.jpg)](https://playcanv.as/p/SA7hVBLt/) [![Steampunk Slots](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/23510/344862/VH0NOH-image-25.jpg)](https://playcanv.as/p/nL1dYbMv/) 
 
 You can see more games on the [PlayCanvas website](https://playcanvas.com/explore).
 
@@ -37,7 +33,7 @@ PlayCanvas is a fully featured game engine.
     * GPU Particle engine with editor
     * PostFX library: bloom, edge detect, FXAA, vignette, etc
     * Seamless default material support from Maya, 3DS Max, Blender, etc.
-    * Full model export pipeline from Maya, 3DS Max, Blender, etc via [Assets User Manual](http://developer.playcanvas.com/en/user-manual/assets/)
+    * Full model export pipeline from Maya, 3DS Max, Blender, etc via [Assets User Manual](https://developer.playcanvas.com/en/user-manual/assets/)
 * **Collision & Physics**
     * Full integration with 3D rigid-body physics engine [ammo.js](https://github.com/kripken/ammo.js)
 * **Audio**
@@ -124,7 +120,7 @@ Here's a super-simple Hello World example - a spinning cube!
 </html>
 ```
 
-Want to play with the code yourself? Edit it on [CodePen](http://codepen.io/playcanvas/pen/NPbxMj).
+Want to play with the code yourself? Edit it on [CodePen](https://codepen.io/playcanvas/pen/NPbxMj).
 
 ## How to build
 
@@ -153,13 +149,9 @@ Specific engine versions:
 * https://code.playcanvas.com/playcanvas-0.181.11.js
 * https://code.playcanvas.com/playcanvas-0.181.11.min.js
 
-## Releases
-
-A full list of Releases and Release Notes is available [here](https://github.com/playcanvas/engine/releases).
-
 ## How to get models?
 
-To convert any models created using a 3D modelling package see [this page](http://developer.playcanvas.com/en/engine/) in the developer documentation.
+To convert any models created using a 3D modelling package see [this page](https://developer.playcanvas.com/en/engine/) in the developer documentation.
 
 ## How to run tests
 
@@ -182,13 +174,13 @@ PlayCanvas makes use of Karma for running unit tests, and provides three test wa
 
 ## Documentation
 
-Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/en/api/). To build a local copy of the API reference manual to the docs folder, do:
+Full documentation available on the [PlayCanvas Developer](https://developer.playcanvas.com) site including [API reference](https://developer.playcanvas.com/en/api/). To build a local copy of the API reference manual to the docs folder, do:
 
     npm run docs
 
 ## Tutorials & Examples
 
-See all the [tutorials](http://developer.playcanvas.com/tutorials/) here.
+See all the [tutorials](https://developer.playcanvas.com/tutorials/) here.
 
 ## TypeScript Bindings
 
@@ -228,4 +220,4 @@ The PlayCanvas Engine is an open source engine which you can use to create games
 
 ## License
 
-The PlayCanvas Engine is released under the [MIT](http://opensource.org/licenses/MIT) license. See LICENSE file.
+The PlayCanvas Engine is released under the [MIT](https://opensource.org/licenses/MIT) license. See LICENSE file.

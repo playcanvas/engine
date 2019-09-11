@@ -3,11 +3,11 @@ Object.assign(pc, function () {
      * @private
      * @component
      * @name pc.ScrollbarComponent
+     * @extends pc.Component
      * @description Create a new ScrollbarComponent
      * @classdesc A ScrollbarComponent enables a group of entities to behave like a draggable scrollbar.
      * @param {pc.ScrollbarComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.Component
      * @property {Number} orientation Whether the scrollbar moves horizontally or vertically.
      * @property {Number} value The current position value of the scrollbar, in the range 0...1.
      * @property {Number} handleSize The size of the handle relative to the size of the track, in the range 0...1. For a vertical scrollbar, a value of 1 means that the handle will take up the full height of the track.

@@ -2,18 +2,21 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ComponentSystem
+     * @extends pc.EventHandler
      * @classdesc Component Systems contain the logic and functionality to update all Components of a particular type.
      * @param {pc.Application} app The application managing this system.
      */
     var ComponentSystem = function (app) {
+        pc.EventHandler.call(this);
+
         this.app = app;
 
         // The store where all pc.ComponentData objects are kept
         this.store = {};
         this.schema = [];
-
-        pc.events.attach(this);
     };
+    ComponentSystem.prototype = Object.create(pc.EventHandler.prototype);
+    ComponentSystem.prototype.constructor = ComponentSystem;
 
     // Class methods
     Object.assign(ComponentSystem, {
@@ -116,7 +119,7 @@ Object.assign(pc, function () {
     });
 
     // Instance methods
-    ComponentSystem.prototype = {
+    Object.assign(ComponentSystem.prototype, {
         /**
          * @private
          * @function
@@ -261,7 +264,7 @@ Object.assign(pc, function () {
         destroy: function () {
             this.off();
         }
-    };
+    });
 
     function convertValue(value, type) {
         if (!value) {

@@ -23,6 +23,36 @@ describe('pc.GraphNode', function () {
         return g1;
     }
 
+    it('GraphNode: find', function () {
+        var root, found;
+        root = buildGraph();
+        found = root.find('name', 'g1');
+        equal(found.length, 1);
+        equal(found[0], root);
+        found = root.find('name', 'g2');
+        equal(found.length, 1);
+        equal(found[0].parent, root);
+        found = root.find('name', 'g3');
+        equal(found.length, 1);
+        equal(found[0].parent.parent, root);
+
+        found = root.find(function (node) {
+            return node.name === 'g1';
+        });
+        equal(found.length, 1);
+        equal(found[0], root);
+        found = root.find(function (node) {
+            return node.name === 'g2';
+        });
+        equal(found.length, 1);
+        equal(found[0].parent, root);
+        found = root.find(function (node) {
+            return node.name === 'g3';
+        });
+        equal(found.length, 1);
+        equal(found[0].parent.parent, root);
+    });
+
     it('GraphNode: findByName same entity', function () {
         var node = buildGraph();
         var found = node.findByName('g1');
