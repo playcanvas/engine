@@ -472,13 +472,7 @@ Object.assign(pc, function () {
          * }
          */
         has: function (name) {
-            var scriptType = name;
-
-            // shorthand using script name
-            if (typeof scriptType === 'string')
-                scriptType = this.system.app.scripts.get(scriptType);
-
-            return !!this._scriptsIndex[scriptType.__name];
+            return !!this._scriptsIndex[name];
         },
 
         /**

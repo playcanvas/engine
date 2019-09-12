@@ -2,6 +2,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Application
+     * @extends pc.EventHandler
      * @classdesc A pc.Application represents and manages your PlayCanvas application.
      * If you are developing using the PlayCanvas Editor, the pc.Application is created
      * for you. You can access your pc.Application instance in your scripts. Below is a
@@ -216,12 +217,12 @@ Object.assign(pc, function () {
      */
 
     var Application = function (canvas, options) {
+        pc.EventHandler.call(this);
+
         options = options || {};
 
         // Open the log
         pc.log.open();
-        // Add event support
-        pc.events.attach(this);
 
         // Store application instance
         Application._applications[canvas.id] = this;
@@ -533,10 +534,6 @@ Object.assign(pc, function () {
             this.elementInput.app = this;
 
         this.vr = null;
-        // you can enable vr here, or in application properties
-        if (options.vr) {
-            this._onVrChange(options.vr);
-        }
 
         this._inTools = false;
 
@@ -618,6 +615,8 @@ Object.assign(pc, function () {
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     };
+    Application.prototype = Object.create(pc.EventHandler.prototype);
+    Application.prototype.constructor = Application;
 
     Application._currentApplication = null;
     Application._applications = {};
@@ -674,7 +673,6 @@ Object.assign(pc, function () {
                 var assets = response.assets;
 
                 self._parseApplicationProperties(props, function (err) {
-                    self._onVrChange(props.vr);
                     self._parseScenes(scenes);
                     self._parseAssets(assets);
                     if (!err) {
@@ -1526,16 +1524,26 @@ Object.assign(pc, function () {
             }
         },
 
-        _onVrChange: function (enabled) {
-            if (enabled) {
-                if (!this.vr) {
-                    this.vr = new pc.VrManager(this);
-                }
-            } else {
-                if (this.vr) {
-                    this.vr.destroy();
-                    this.vr = null;
-                }
+        /**
+         * @function
+         * @name pc.Application#enableVr
+         * @description Create and assign a {@link pc.VrManager} object to allow this application render in VR.
+         */
+        enableVr: function () {
+            if (!this.vr) {
+                this.vr = new pc.VrManager(this);
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.Application#disableVr
+         * @description Destroy the {@link pc.VrManager}
+         */
+        disableVr: function () {
+            if (this.vr) {
+                this.vr.destroy();
+                this.vr = null;
             }
         },
 
@@ -1690,6 +1698,11 @@ Object.assign(pc, function () {
             this.defaultLayerWorld = null;
 
             pc.destroyPostEffectQuad();
+
+            if (this.vr) {
+                this.vr.destroy();
+                this.vr = null;
+            }
 
             this.graphicsDevice.destroy();
             this.graphicsDevice = null;

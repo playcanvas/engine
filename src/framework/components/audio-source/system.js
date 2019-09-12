@@ -20,10 +20,10 @@ Object.assign(pc, function () {
      * @private
      * @constructor
      * @name pc.AudioSourceComponentSystem
+     * @extends pc.ComponentSystem
      * @classdesc Controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponentSystem}.
      * @param {pc.Application} app The application managing this system.
      * @param {pc.SoundManager} manager A sound manager instance.
-     * @extends pc.ComponentSystem
      */
     var AudioSourceComponentSystem = function (app, manager) {
         pc.ComponentSystem.call(this, app);

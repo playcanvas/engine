@@ -13,6 +13,7 @@
 ../src/core/path.js
 ../src/core/string.js
 ../src/core/debug.js
+../src/core/event-handler.js
 ../src/core/events.js
 ../src/core/tags.js
 ../src/core/object-pool.js

@@ -2,18 +2,21 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ScriptRegistry
+     * @extends pc.EventHandler
      * @classdesc Container for all Script Types that are available to this application
      * @description Create an instance of a pc.ScriptRegistry.
      * Note: PlayCanvas scripts can access the Script Registry from inside the application with {@link pc.Application#scripts} {@link pc.ADDRESS_REPEAT}.
      * @param {pc.Application} app Application to attach registry to.
      */
     var ScriptRegistry = function (app) {
-        pc.events.attach(this);
+        pc.EventHandler.call(this);
 
         this.app = app;
         this._scripts = { };
         this._list = [];
     };
+    ScriptRegistry.prototype = Object.create(pc.EventHandler.prototype);
+    ScriptRegistry.prototype.constructor = ScriptRegistry;
 
     ScriptRegistry.prototype.destroy = function () {
         this.app = null;

@@ -77,6 +77,7 @@ Object.assign(pc, function () {
      * @component
      * @constructor
      * @name pc.ParticleSystemComponent
+     * @extends pc.Component
      * @classdesc Used to simulate particles and produce renderable particle mesh on either CPU or GPU.
      * GPU simulation is generally much faster than its CPU counterpart, because it avoids slow CPU-GPU synchronization and takes advantage of many GPU cores.
      * However, it requires client to support reasonable uniform count, reading from multiple textures in vertex shader and OES_texture_float extension, including rendering into float textures.
@@ -87,7 +88,6 @@ Object.assign(pc, function () {
      * @description Create a new ParticleSystemComponent
      * @param {pc.ParticleSystemComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity this Component is attached to
-     * @extends pc.Component
      * @property {Boolean} autoPlay Controls whether the particle system plays automatically on creation. If set to false, it is necessary to call {@link pc.ParticleSystemComponent#play} for the particle system to play. Defaults to true.
      * @property {Boolean} loop Enables or disables respawning of particles.
      * @property {Boolean} preWarm If enabled, the particle system will be initialized as though it had already completed a full cycle. This only works with looping particle systems.
