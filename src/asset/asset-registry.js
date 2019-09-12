@@ -471,7 +471,7 @@ Object.assign(pc, function () {
 
             asset.once("load", function (loadedAsset) {
                 if (type === 'material') {
-                    self._loadTextures([ asset ], function (err, textures) {
+                    self._loadTextures([ loadedAsset ], function (err, textures) {
                         if (err) {
                             callback(err);
                         } else {
