@@ -1445,8 +1445,8 @@ Object.assign(pc, function () {
             this._librariesLoaded = true;
 
             // ammo.js builds newer than April 12 2017 have an async initialization API
-            if (typeof Ammo.then === 'function') {
-                initialize(function (ammo) {
+            if (typeof Ammo === 'function') {
+                Ammo().then(function (ammo) {
                     Ammo = ammo; // Overwrite the global initializer with the instance
                     initializeSystems();
                 }, callback);
