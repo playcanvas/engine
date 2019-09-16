@@ -466,6 +466,13 @@ Object.assign(pc, function () {
             }
 
             this.removeLightFromLayers();
+        },
+
+        onRemove: function () {
+            // destroy light node
+            this.light.destroy();
+            // remove cookie asset events
+            this.cookieAsset = null;
         }
 
     });
