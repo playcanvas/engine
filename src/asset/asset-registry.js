@@ -470,7 +470,17 @@ Object.assign(pc, function () {
             }
 
             asset.once("load", function (loadedAsset) {
-                callback(null, loadedAsset);
+                if (type === 'material') {
+                    self._loadTextures([ loadedAsset ], function (err, textures) {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            callback(null, loadedAsset);
+                        }
+                    });
+                } else {
+                    callback(null, loadedAsset);
+                }
             });
             asset.once("error", function (err) {
                 callback(err);

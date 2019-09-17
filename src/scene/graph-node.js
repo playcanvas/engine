@@ -306,17 +306,18 @@ Object.assign(pc, function () {
          * var entities = parent.find('name', 'Test');
          */
         find: function (attr, value) {
-            var results = [];
+            var result, results = [];
             var len = this._children.length;
             var i, descendants;
 
             if (attr instanceof Function) {
                 var fn = attr;
 
-                for (i = 0; i < len; i++) {
-                    if (fn(this._children[i]))
-                        results.push(this._children[i]);
+                result = fn(this);
+                if (result)
+                    results.push(this);
 
+                for (i = 0; i < len; i++) {
                     descendants = this._children[i].find(fn);
                     if (descendants.length)
                         results = results.concat(descendants);
