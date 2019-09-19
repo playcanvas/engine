@@ -691,6 +691,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Scene
+     * @extends pc.EventHandler
      * @classdesc A scene is graphical representation of an environment. It manages the scene hierarchy, all
      * graphical objects, lights, and scene-wide properties.
      * @description Creates a new Scene.
@@ -742,6 +743,8 @@ Object.assign(pc, function () {
      * @property {pc.StandardMaterial} defaultMaterial The default material used in case no other material is available.
      */
     var Scene = function Scene() {
+        pc.EventHandler.call(this);
+
         this.root = null;
 
         this._gravity = new pc.Vec3(0, -9.8, 0);
@@ -798,9 +801,9 @@ Object.assign(pc, function () {
         this.defaultMaterial = new pc.StandardMaterial();
         this.defaultMaterial.name = "Default Material";
         this.defaultMaterial.shadingModel = pc.SPECULAR_BLINN;
-
-        pc.events.attach(this);
     };
+    Scene.prototype = Object.create(pc.EventHandler.prototype);
+    Scene.prototype.constructor = Scene;
 
     Scene.prototype.destroy = function () {
         this.root = null;

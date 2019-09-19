@@ -2,6 +2,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.VrManager
+     * @extends pc.EventHandler
      * @classdesc Manage and update {@link pc.VrDisplay}s that are attached to this device.
      * @description Manage and update {@link pc.VrDisplay}s that are attached to this device.
      * @param {pc.Application} app The main application
@@ -10,7 +11,7 @@ Object.assign(pc, function () {
      * @property {Boolean} isSupported Reports whether this device supports the WebVR API
      */
     var VrManager = function (app) {
-        pc.events.attach(this);
+        pc.EventHandler.call(this);
 
         var self = this;
 
@@ -41,6 +42,8 @@ Object.assign(pc, function () {
             }
         });
     };
+    VrManager.prototype = Object.create(pc.EventHandler.prototype);
+    VrManager.prototype.constructor = VrManager;
 
     /**
      * @event
