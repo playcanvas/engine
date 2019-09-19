@@ -6,6 +6,7 @@ Object.assign(pc, (function () {
      * @name pc.Mat3
      * @classdesc A 3x3 matrix.
      * @description Creates a new identity Mat3 object.
+     * @property {Float32Array} data Matrix elements in the form of a flat array.
      */
     var Mat3 = function () {
         var data;
@@ -64,7 +65,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat3#set
          * @description Copies the contents of a source array[9] to a destination 3x3 matrix.
-         * @param {Array} src An array[9] to be copied.
+         * @param {Number[]} src An array[9] to be copied.
          * @returns {pc.Mat3} Self for chaining
          * @example
          * var dst = new pc.Mat3();

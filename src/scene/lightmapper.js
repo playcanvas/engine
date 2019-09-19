@@ -80,7 +80,7 @@ Object.assign(pc, function () {
      * @param {pc.Entity} root The root entity of the scene.
      * @param {pc.Scene} scene The scene to lightmap.
      * @param {pc.ForwardRenderer} renderer The renderer.
-     * @param {Array} assets Array of assets to lightmap.
+     * @param {pc.AssetRegistry} assets Registry of assets to lightmap.
      */
     var Lightmapper = function (device, root, scene, renderer, assets) {
         this.device = device;

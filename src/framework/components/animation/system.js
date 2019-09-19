@@ -20,10 +20,10 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.AnimationComponentSystem
+     * @extends pc.ComponentSystem
      * @classdesc The AnimationComponentSystem manages creating and deleting AnimationComponents
      * @description Create an AnimationComponentSystem
      * @param {pc.Application} app The application managing this system.
-     * @extends pc.ComponentSystem
      */
     var AnimationComponentSystem = function AnimationComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

@@ -5,8 +5,10 @@
 pc.path = function () {
     return {
         /**
-         * The character that separates path segments
+         * @constant
+         * @type {String}
          * @name pc.path.delimiter
+         * @description The character that separates path segments
          */
         delimiter: "/",
         /**
@@ -91,7 +93,7 @@ pc.path = function () {
          * @description Split the pathname path into a pair [head, tail] where tail is the final part of the path
          * after the last delimiter and head is everything leading up to that. tail will never contain a slash
          * @param {String} path The path to split.
-         * @returns {Array} The split path which is an array of two strings, the path and the filename.
+         * @returns {String[]} The split path which is an array of two strings, the path and the filename.
          */
         split: function (path) {
             var parts = path.split(pc.path.delimiter);

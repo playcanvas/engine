@@ -135,10 +135,10 @@ Object.assign(pc, function () {
      * @param {Object} args Object with Arguments for an attribute
      * @param {String} args.type Type of an attribute value, list of possible types:
      * boolean, number, string, json, asset, entity, rgb, rgba, vec2, vec3, vec4, curve
-     * @param {?} [args.default] Default attribute value
+     * @param {*} [args.default] Default attribute value
      * @param {String} [args.title] Title for Editor's for field UI
      * @param {String} [args.description] Description for Editor's for field UI
-     * @param {(String|String[])} [args.placeholder] Placeholder for Editor's for field UI.
+     * @param {String|String[]} [args.placeholder] Placeholder for Editor's for field UI.
      * For multi-field types, such as vec2, vec3, and others use array of strings.
      * @param {Boolean} [args.array] If attribute can hold single or multiple values
      * @param {Number} [args.size] If attribute is array, maximum number of values can be set
@@ -309,6 +309,7 @@ Object.assign(pc, function () {
         /**
          * @constructor
          * @name ScriptType
+         * @extends pc.EventHandler
          * @classdesc Represents the type of a script. It is returned by {@link pc.createScript}. Also referred to as Script Type.<br />
          * The type is to be extended using its JavaScript prototype. There is a <strong>list of methods</strong>
          * that will be executed by the engine on instances of this type, such as: <ul><li>initialize</li><li>postInitialize</li><li>update</li><li>postUpdate</li><li>swap</li></ul>
@@ -328,13 +329,13 @@ Object.assign(pc, function () {
          *
          */
         var script = function (args) {
+            pc.EventHandler.call(this);
+
             // #ifdef DEBUG
             if (!args || !args.app || !args.entity) {
                 console.warn('script \'' + name + '\' has missing arguments in constructor');
             }
             // #endif
-
-            pc.events.attach(this);
 
             this.app = args.app;
             this.entity = args.entity;
@@ -350,6 +351,8 @@ Object.assign(pc, function () {
             // other script instances in the component
             this.__executionOrder = -1;
         };
+        script.prototype = Object.create(pc.EventHandler.prototype);
+        script.prototype.constructor = script;
 
         /**
          * @private

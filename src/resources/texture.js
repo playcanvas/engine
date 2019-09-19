@@ -212,9 +212,7 @@ Object.assign(pc, function () {
         var downsample = function (width, height, data) {
             var sampledWidth = Math.max(1, width >> 1);
             var sampledHeight = Math.max(1, height >> 1);
-            var sampledData = data.subarray(0, sampledWidth * sampledHeight * 4).map(function (v) {
-                return 0;
-            });
+            var sampledData = new data.constructor(sampledWidth * sampledHeight * 4);
 
             var xs = Math.floor(width / sampledWidth);
             var ys = Math.floor(height / sampledHeight);
@@ -255,6 +253,15 @@ Object.assign(pc, function () {
         texture._levelsUpdated = texture._cubemap ? [[true, true, true, true, true, true]] : [true];
     };
 
+    /**
+     * @constructor
+     * @name pc.TextureHandler
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading 2D and 3D {@link pc.Texture} resources
+     * @param {pc.GraphicsDevice} device The graphics device
+     * @param {pc.AssetRegistry} assets The asset registry
+     * @param {pc.ResourceLoader} loader The resource loader
+     */
     var TextureHandler = function (device, assets, loader) {
         this._device = device;
         this._assets = assets;

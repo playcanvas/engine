@@ -16,6 +16,10 @@ Object.assign(pc, function () {
      * if no output is specified.
      * @description Creates new PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
+     * @property {pc.GraphicsDevice} device The graphics device of the application. [read only]
+     * @property {pc.VertexBuffer} vertexBuffer The vertex buffer for the fullscreen quad. Used when calling {@link pc.drawFullscreenQuad}. [read only]
+     * @property {pc.Shader|Null} shader The shader definition for the fullscreen quad. Needs to be set by the custom post effect (default is null). Used when calling {@link pc.drawFullscreenQuad}.
+     * @property {Boolean} needsDepthBuffer The property that should to be set to `true` (by the custom post effect) if a depth map is necessary (default is false).
      */
     var PostEffect = function (graphicsDevice) {
         this.device = graphicsDevice;
@@ -62,6 +66,17 @@ Object.assign(pc, function () {
         return vertexBuffer;
     }
 
+    /**
+     * @static
+     * @function
+     * @name pc.drawFullscreenQuad
+     * @description Draw a screen-space rectangle in a render target. Primarily meant to be used in custom post effects based on {@link pc.PostEffect}.
+     * @param {pc.GraphicsDevice} device The graphics device of the application.
+     * @param {pc.RenderTarget} target The output render target.
+     * @param {pc.VertexBuffer} vertexBuffer The vertex buffer for the rectangle mesh. When calling from a custom post effect, pass the field {@link pc.PostEffect#vertexBuffer}.
+     * @param {pc.Shader} shader The shader to be used for drawing the rectangle. When calling from a custom post effect, pass the field {@link pc.PostEffect#shader}.
+     * @param {pc.Vec4} [rect] The normalized screen-space position (rect.x, rect.y) and size (rect.z, rect.w) of the rectangle. Default is (0, 0, 1, 1);
+     */
     function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
         var oldRt = device.getRenderTarget();
         device.setRenderTarget(target);

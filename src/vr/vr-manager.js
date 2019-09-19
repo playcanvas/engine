@@ -2,25 +2,20 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.VrManager
+     * @extends pc.EventHandler
      * @classdesc Manage and update {@link pc.VrDisplay}s that are attached to this device.
      * @description Manage and update {@link pc.VrDisplay}s that are attached to this device.
      * @param {pc.Application} app The main application
      * @property {pc.VrDisplay[]} displays The list of {@link pc.VrDisplay}s that are attached to this device
      * @property {pc.VrDisplay} display The default {@link pc.VrDisplay} to be used. Usually the first in the `displays` list
      * @property {Boolean} isSupported Reports whether this device supports the WebVR API
-     * @property {Boolean} usesPolyfill Reports whether this device supports the WebVR API using a polyfill
      */
     var VrManager = function (app) {
-        pc.events.attach(this);
+        pc.EventHandler.call(this);
 
         var self = this;
 
         this.isSupported = VrManager.isSupported;
-        this.usesPolyfill = VrManager.usesPolyfill;
-
-        // if required initialize webvr polyfill
-        if (window.InitializeWebVRPolyfill)
-            window.InitializeWebVRPolyfill();
 
         this._index = { };
         this.displays = [];
@@ -47,6 +42,8 @@ Object.assign(pc, function () {
             }
         });
     };
+    VrManager.prototype = Object.create(pc.EventHandler.prototype);
+    VrManager.prototype.constructor = VrManager;
 
     /**
      * @event
@@ -77,14 +74,6 @@ Object.assign(pc, function () {
      * @description Reports whether this device supports the WebVR API
      */
     VrManager.isSupported = !!navigator.getVRDisplays;
-
-    /**
-     * @static
-     * @name pc.VrManager.usesPolyfill
-     * @type Boolean
-     * @description Reports whether this device supports the WebVR API using a polyfill
-     */
-    VrManager.usesPolyfill = !!window.InitializeWebVRPolyfill;
 
     Object.assign(VrManager.prototype, {
         _attach: function () {

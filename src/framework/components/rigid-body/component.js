@@ -7,6 +7,7 @@ Object.assign(pc, function () {
      * @component
      * @constructor
      * @name pc.RigidBodyComponent
+     * @extends pc.Component
      * @classdesc The rigidbody component, when combined with a {@link pc.CollisionComponent}, allows your
      * entities to be simulated using realistic physics.
      * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you
@@ -14,7 +15,6 @@ Object.assign(pc, function () {
      * @description Create a new RigidBodyComponent
      * @param {pc.RigidBodyComponentSystem} system The ComponentSystem that created this component
      * @param {pc.Entity} entity The entity this component is attached to
-     * @extends pc.Component
      * @property {Number} mass The mass of the body. This is only relevant for {@link pc.BODYTYPE_DYNAMIC}
      * bodies, other types have infinite mass. Defaults to 1.
      * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.

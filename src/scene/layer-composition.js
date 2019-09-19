@@ -3,18 +3,21 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.LayerComposition
+     * @extends pc.EventHandler
      * @classdesc Layer Composition is a collection of {@link pc.Layer} that is fed to {@link pc.Scene#layers} to define rendering order.
      * @description Create a new layer composition.
-     * @property {Array} layerList A read-only array of {@link pc.Layer} sorted in the order they will be rendered.
-     * @property {Array} subLayerList A read-only array of boolean values, matching {@link pc.Layer#layerList}.
+     * @property {pc.Layer[]} layerList A read-only array of {@link pc.Layer} sorted in the order they will be rendered.
+     * @property {Boolean[]} subLayerList A read-only array of boolean values, matching {@link pc.Layer#layerList}.
      * True means only semi-transparent objects are rendered, and false means opaque.
-     * @property {Array} subLayerEnabled A read-only array of boolean values, matching {@link pc.Layer#layerList}.
+     * @property {Boolean[]} subLayerEnabled A read-only array of boolean values, matching {@link pc.Layer#layerList}.
      * True means the layer is rendered, false means it's skipped.
-     * @property {Array} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering, e.g. inside
+     * @property {pc.CameraComponent[]} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering, e.g. inside
      * {@link pc.Layer#onPreCull}, {@link pc.Layer#onPostCull}, {@link pc.Layer#onPreRender}, {@link pc.Layer#onPostRender}.
      */
     // Composition can hold only 2 sublayers of each layer
     var LayerComposition = function () {
+        pc.EventHandler.call(this);
+
         this.layerList = [];
         this.subLayerList = [];
         this.subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
@@ -41,9 +44,9 @@ Object.assign(pc, function () {
         // identical otherwise
         this._renderList = []; // index to layerList/subLayerList
         this._renderListCamera = []; // index to layer.cameras
-
-        pc.events.attach(this);
     };
+    LayerComposition.prototype = Object.create(pc.EventHandler.prototype);
+    LayerComposition.prototype.constructor = LayerComposition;
 
     LayerComposition.prototype._sortLights = function (target) {
         var light;
@@ -111,11 +114,12 @@ Object.assign(pc, function () {
                     }
                 }
             }
-            // this._dirty = false;
+
             for (i = 0; i < len; i++) {
                 this.layerList[i]._dirty = false;
                 this.layerList[i]._version++;
             }
+            this._dirty = false;
         }
 
         if (this._dirtyBlend) {
@@ -155,8 +159,6 @@ Object.assign(pc, function () {
             this._dirtyBlend = false;
         }
 
-        this._dirty = false;
-
         var casters, lid, light;
         if (this._dirtyLights) {
             result |= pc.COMPUPDATED_LIGHTS;
@@ -182,9 +184,7 @@ Object.assign(pc, function () {
                     }
                 }
             }
-        }
 
-        if (this._dirtyLights) {
             this._sortLights(this);
             this._dirtyLights = false;
 
