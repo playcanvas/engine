@@ -596,7 +596,7 @@ Object.assign(pc, function () {
 
         // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
         // in this._hiddenAttr.
-        if (typeof document === 'object') {
+        if (typeof document !== 'undefined') {
             if (document.hidden !== undefined) {
                 this._hiddenAttr = 'hidden';
                 document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
