@@ -57,8 +57,8 @@ Object.assign(pc, (function () {
          * @description Get current time in milliseconds. Use it to measure time difference. Reference time may differ on different platforms.
          * @returns {Number} The time in milliseconds
          */
-        now: (!window.performance || !window.performance.now || !window.performance.timing) ? Date.now : function () {
+        now: (typeof window !== 'undefined') && window.performance && window.performance.now && window.performance.timing ? function () {
             return window.performance.now();
-        }
+        } : Date.now
     };
 }()));

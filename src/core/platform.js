@@ -91,7 +91,7 @@ Object.assign(pc, function () {
         workers: false
     };
 
-    if (typeof window === 'object') {
+    if (typeof navigator !== 'undefined') {
         var ua = navigator.userAgent;
 
         if (/(windows|mac os|linux|cros)/i.test(ua))
@@ -114,7 +114,9 @@ Object.assign(pc, function () {
             platform.ios = true;
         }
 
-        platform.touch = 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
+        if (typeof window !== 'undefined') {
+            platform.touch =  && 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
+        }
 
         platform.gamepads = 'getGamepads' in navigator;
 
