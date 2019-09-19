@@ -115,7 +115,7 @@ Object.assign(pc, function () {
         }
 
         if (typeof window !== 'undefined') {
-            platform.touch =  && 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
+            platform.touch = 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
         }
 
         platform.gamepads = 'getGamepads' in navigator;
