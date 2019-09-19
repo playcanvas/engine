@@ -249,19 +249,23 @@ Object.assign(pc, function () {
         }
     }
 
+    // this is the URL that is going to be used for workers
+    var workerUrl = null;
+
     // Convert the UntarScope function to a string and add
     // the onmessage handler for the worker to untar archives
-    var scopeToUrl = function () {
-        // execute UntarScope function in the worker
-        var code = '(' + UntarScope.toString() + ')(true)\n\n';
+    var getWorkerUrl = function () {
+        if (!workerUrl) {
+            // execute UntarScope function in the worker
+            var code = '(' + UntarScope.toString() + ')(true)\n\n';
 
-        // create blob URL for the code above to be used for the worker
-        var blob = new Blob([code], { type: 'application/javascript' });
-        return URL.createObjectURL(blob);
+            // create blob URL for the code above to be used for the worker
+            var blob = new Blob([code], { type: 'application/javascript' });
+
+            workerUrl = URL.createObjectURL(blob);
+        }
+        return workerUrl;
     };
-
-    // this is the URL that is going to be used for workers
-    var WORKER_URL = scopeToUrl();
 
     /**
     * @private
@@ -274,7 +278,7 @@ Object.assign(pc, function () {
         this._requestId = 0;
         this._pendingRequests = {};
         this._filenamePrefix = filenamePrefix;
-        this._worker = new Worker(WORKER_URL);
+        this._worker = new Worker(getWorkerUrl());
         this._worker.addEventListener('message', this._onMessage.bind(this));
     };
 
