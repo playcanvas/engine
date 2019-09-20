@@ -255,7 +255,7 @@ describe('pc.GraphNode', function () {
             error = e;
         }
 
-        equal(error.message, 'GraphNode cannot be a parent of itself');
+        equal(error.message, 'GraphNode cannot be a child of itself');
     });
 
     it('GraphNode: reparent error on descendant parent', function () {
@@ -273,7 +273,7 @@ describe('pc.GraphNode', function () {
             error = e;
         }
 
-        equal(error.message, 'GraphNode cannot set a descendant as parent');
+        equal(error.message, 'GraphNode cannot add an ancestor as a child');
     });
 
     it('GraphNode: children', function () {

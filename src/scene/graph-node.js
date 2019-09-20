@@ -745,16 +745,6 @@ Object.assign(pc, function () {
         reparent: function (parent, index) {
             var current = this._parent;
 
-            // #ifdef DEBUG
-            if (this === parent) {
-                throw new Error('GraphNode cannot be a parent of itself');
-            }
-
-            if (parent.isDescendantOf(this)) {
-                throw new Error('GraphNode cannot set a descendant as parent');
-            }
-            // #endif
-
             if (current)
                 current.removeChild(this);
 
