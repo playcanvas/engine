@@ -125,6 +125,37 @@ describe('pc.GraphNode', function () {
         equal(g1.children[0], g2);
     });
 
+    it('GraphNode: addChild error on self child', function () {
+        var g1 = new pc.GraphNode('g1');
+
+        var error = {};
+        try {
+            g1.addChild(g1);
+        } catch (e) {
+            error = e;
+        }
+
+        equal(error.message, 'GraphNode cannot be a child of itself');
+    });
+
+    it('GraphNode: addChild error on ancestral child', function () {
+        var g1 = new pc.GraphNode('g1');
+        var g2 = new pc.GraphNode('g2');
+        var g3 = new pc.GraphNode('g3');
+
+        g1.addChild(g2);
+        g2.addChild(g3);
+
+        var error = {};
+        try {
+            g3.addChild(g1);
+        } catch (e) {
+            error = e;
+        }
+
+        equal(error.message, 'GraphNode cannot add an ancestor as a child');
+    });
+
     it('GraphNode: insertChild', function () {
         var g1 = new pc.GraphNode('g1');
         var g2 = new pc.GraphNode('g2');
@@ -135,6 +166,37 @@ describe('pc.GraphNode', function () {
 
         equal(g1.children[0], g3);
         equal(g1.children[1], g2);
+    });
+
+    it('GraphNode: insertChild error on self child', function () {
+        var g1 = new pc.GraphNode('g1');
+
+        var error = {};
+        try {
+            g1.insertChild(g1, 0);
+        } catch (e) {
+            error = e;
+        }
+
+        equal(error.message, 'GraphNode cannot be a child of itself');
+    });
+
+    it('GraphNode: insertChild error on ancestral child', function () {
+        var g1 = new pc.GraphNode('g1');
+        var g2 = new pc.GraphNode('g2');
+        var g3 = new pc.GraphNode('g3');
+
+        g1.insertChild(g2, 0);
+        g2.insertChild(g3, 0);
+
+        var error = {};
+        try {
+            g3.insertChild(g1, 0);
+        } catch (e) {
+            error = e;
+        }
+
+        equal(error.message, 'GraphNode cannot add an ancestor as a child');
     });
 
     it('GraphNode: removeChild', function () {
@@ -193,7 +255,25 @@ describe('pc.GraphNode', function () {
             error = e;
         }
 
-        equal(error.message, 'GraphNode cannot be parented to self');
+        equal(error.message, 'GraphNode cannot be a parent of itself');
+    });
+
+    it('GraphNode: reparent error on descendant parent', function () {
+        var g1 = new pc.GraphNode('g1');
+        var g2 = new pc.GraphNode('g2');
+        var g3 = new pc.GraphNode('g3');
+
+        g1.addChild(g2);
+        g2.addChild(g3);
+
+        var error = {};
+        try {
+            g1.reparent(g3);
+        } catch (e) {
+            error = e;
+        }
+
+        equal(error.message, 'GraphNode cannot set a descendant as parent');
     });
 
     it('GraphNode: children', function () {
