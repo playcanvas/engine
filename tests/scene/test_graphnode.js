@@ -183,6 +183,19 @@ describe('pc.GraphNode', function () {
         equal(g3.children[1], g2);
     });
 
+    it('GraphNode: reparent error on self parent', function () {
+        var g1 = new pc.GraphNode('g1');
+
+        var error = {};
+        try {
+            g1.reparent(g1);
+        } catch (e) {
+            error = e;
+        }
+
+        equal(error.message, 'GraphNode cannot be parented to self');
+    });
+
     it('GraphNode: children', function () {
         var g1 = new pc.GraphNode('g1');
         var g2 = new pc.GraphNode('g2');
