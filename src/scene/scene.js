@@ -741,6 +741,7 @@ Object.assign(pc, function () {
      * pc.BAKE_COLORDIR.
      * @property {pc.LayerComposition} layers A {@link pc.LayerComposition} that defines rendering order of this scene.
      * @property {pc.StandardMaterial} defaultMaterial The default material used in case no other material is available.
+     * @property {pc.Entity} root The root entity of the scene, which is usually the only child to the Application root entity.
      */
     var Scene = function Scene() {
         pc.EventHandler.call(this);
