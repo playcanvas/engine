@@ -630,10 +630,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Texture#lock
          * @description Locks a miplevel of the texture, returning a typed array to be filled with pixel data.
-         * @param {Object} options Optional options object. Valid properties are as follows:
-         * @param {Number} options.level The mip level to lock with 0 being the top level. Defaults to 0.
-         * @param {Number} options.face If the texture is a cubemap, this is the index of the face to lock.
-         * @returns {ArrayBuffer} A typed array containing the pixel data of the locked mip level.
+         * @param {Object} [options] Optional options object. Valid properties are as follows:
+         * @param {Number} [options.level] The mip level to lock with 0 being the top level. Defaults to 0.
+         * @param {Number} [options.face] If the texture is a cubemap, this is the index of the face to lock.
+         * @returns {Uint8Array|Uint16Array|Float32Array} A typed array containing the pixel data of the locked mip level.
          */
         lock: function (options) {
             // Initialize options to some sensible defaults
