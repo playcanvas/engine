@@ -702,7 +702,7 @@ Object.assign(pc, function () {
          * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
          * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source A canvas, image or video element,
          * or an array of 6 canvas, image or video elements.
-         * @param {Number} mipLevel A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
+         * @param {Number} [mipLevel] A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
          * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
          */
         setSource: function (source, mipLevel) {
@@ -801,7 +801,7 @@ Object.assign(pc, function () {
          * @name pc.Texture#getSource
          * @description Get the pixel data of the texture. If this is a cubemap then an array of 6 images will be returned otherwise
          * a single image.
-         * @param {Number} mipLevel A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
+         * @param {Number} [mipLevel] A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
          * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
          * @returns {HTMLImageElement} The source image of this texture. Can be null if source not assigned for specific image level.
          */
