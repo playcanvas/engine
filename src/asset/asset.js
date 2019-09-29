@@ -6,11 +6,19 @@ Object.assign(pc, function () {
     var ABSOLUTE_URL = new RegExp(
         '^' + // beginning of the url
         '\\s*' +  // ignore leading spaces (some browsers trim the url automatically, but we can't assume that)
-        '(?:' +  // beginning of protocol scheme (non-captured regex group)
-        '[a-z]+[a-z0-9\\-\\+\\.]*' + // protocol scheme must (RFC 3986) consist of "a letter and followed by any combination of letters, digits, plus ("+"), period ("."), or hyphen ("-")."
-        ':' + // protocol scheme must end with colon character
-        ')?' + // end of optional scheme group, the group is optional since the string may be a protocol-relative absolute URL
-        '//', // a absolute url must always begin with two forward slash characters (ignoring any leading spaces and protocol scheme)
+        '(?:' +  // beginning of a non-captured regex group
+            // `{protocol}://`
+            '(?:' +  // beginning of protocol scheme (non-captured regex group)
+                '[a-z]+[a-z0-9\\-\\+\\.]*' + // protocol scheme must (RFC 3986) consist of "a letter and followed by any combination of letters, digits, plus ("+"), period ("."), or hyphen ("-")."
+                ':' + // protocol scheme must end with colon character
+            ')?' + // end of optional scheme group, the group is optional since the string may be a protocol-relative absolute URL
+            '//' + // an absolute url must always begin with two forward slash characters (ignoring any leading spaces and protocol scheme)
+
+            '|' + // or another option(s):
+
+            // Data URL (RFC 2397), simplified
+            'data:' +
+        ')',
         'i' // non case-sensitive flag
     );
 
@@ -26,6 +34,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Asset
+     * @extends pc.EventHandler
      * @classdesc An asset record of a file or data resource that can be loaded by the engine.
      * The asset contains three important fields:<br/>
      * <strong>file</strong>: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset<br/>
@@ -58,12 +67,14 @@ Object.assign(pc, function () {
      * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field
      * @property {Object} data JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
      * @property {Object} resource A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
-     * @property {Any[]} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
+     * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
      * @property {Boolean} preload If true the asset will be loaded during the preload phase of application set up.
      * @property {Boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
      * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
      */
     var Asset = function (name, type, file, data) {
+        pc.EventHandler.call(this);
+
         this._id = ++assetIdCounter;
 
         this.name = name || '';
@@ -89,10 +100,10 @@ Object.assign(pc, function () {
 
         this.registry = null;
 
-        pc.events.attach(this);
-
         if (file) this.file = file;
     };
+    Asset.prototype = Object.create(pc.EventHandler.prototype);
+    Asset.prototype.constructor = Asset;
 
     /**
      * @event
@@ -256,8 +267,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Asset#ready
          * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away
-         * @param {Function} callback The function called when the asset is ready. Passed the (asset) arguments
-         * @param {Object} scope Scope object to use when calling the callback
+         * @param {pc.callbacks.AssetReady} callback The function called when the asset is ready. Passed the (asset) arguments
+         * @param {Object} [scope] Scope object to use when calling the callback
          * @example
          * var asset = app.assets.find("My Asset");
          * asset.ready(function (asset) {
@@ -448,19 +459,99 @@ Object.assign(pc, function () {
 
     return {
         Asset: Asset,
+
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_ANIMATION
+         * @description Asset type name for animation.
+         */
         ASSET_ANIMATION: 'animation',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_AUDIO
+         * @description Asset type name for audio.
+         */
         ASSET_AUDIO: 'audio',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_IMAGE
+         * @description Asset type name for image.
+         */
         ASSET_IMAGE: 'image',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_JSON
+         * @description Asset type name for json.
+         */
         ASSET_JSON: 'json',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_MODEL
+         * @description Asset type name for model.
+         */
         ASSET_MODEL: 'model',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_MATERIAL
+         * @description Asset type name for material.
+         */
         ASSET_MATERIAL: 'material',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_TEXT
+         * @description Asset type name for text.
+         */
         ASSET_TEXT: 'text',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_TEXTURE
+         * @description Asset type name for texture.
+         */
         ASSET_TEXTURE: 'texture',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_CUBEMAP
+         * @description Asset type name for cubemap.
+         */
         ASSET_CUBEMAP: 'cubemap',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_SHADER
+         * @description Asset type name for shader.
+         */
         ASSET_SHADER: 'shader',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_CSS
+         * @description Asset type name for CSS.
+         */
         ASSET_CSS: 'css',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_HTML
+         * @description Asset type name for HTML.
+         */
         ASSET_HTML: 'html',
+        /**
+         * @constant
+         * @type {String}
+         * @name pc.ASSET_SCRIPT
+         * @description Asset type name for script.
+         */
         ASSET_SCRIPT: 'script',
+
         ABSOLUTE_URL: ABSOLUTE_URL
     };
 }());

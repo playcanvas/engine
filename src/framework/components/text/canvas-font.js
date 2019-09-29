@@ -6,6 +6,7 @@ Object.assign(pc, function () {
      * @private
      * @constructor
      * @name pc.CanvasFont
+     * @extends pc.EventHandler
      * @classdesc Represents the resource of a canvas font asset.
      * @param {pc.Application} app The application
      * @param {Object} options The font options
@@ -18,6 +19,8 @@ Object.assign(pc, function () {
      * @param {Number} [options.padding] Amount of glyph padding added to each glyph in the atlas
      */
     var CanvasFont = function (app, options) {
+        pc.EventHandler.call(this);
+
         this.type = "bitmap";
 
         this.app = app;
@@ -56,9 +59,9 @@ Object.assign(pc, function () {
 
         this.chars = "";
         this.data = {};
-
-        pc.events.attach(this);
     };
+    CanvasFont.prototype = Object.create(pc.EventHandler.prototype);
+    CanvasFont.prototype.constructor = CanvasFont;
 
     /**
      * @private

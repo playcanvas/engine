@@ -146,8 +146,10 @@ Object.assign(pc, (function () {
 
 
     /**
+     * @constructor
      * @name pc.Tags
-     * @class Set of tag names
+     * @extends pc.EventHandler
+     * @classdesc Set of tag names
      * @description Create an instance of a Tags.
      * @param {Object} [parent] Parent object who tags belong to.
      * Note: Tags are used as addition of `pc.Entity` and `pc.Asset` as `tags` field.
@@ -176,12 +178,14 @@ Object.assign(pc, (function () {
      */
 
     var Tags = function (parent) {
+        pc.EventHandler.call(this);
+
         this._index = { };
         this._list = [];
         this._parent = parent;
-
-        pc.events.attach(this);
     };
+    Tags.prototype = Object.create(pc.EventHandler.prototype);
+    Tags.prototype.constructor = Tags;
 
     Object.assign(Tags.prototype, {
         /**

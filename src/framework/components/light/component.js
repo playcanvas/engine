@@ -3,6 +3,7 @@ Object.assign(pc, function () {
      * @component
      * @constructor
      * @name pc.LightComponent
+     * @extends pc.Component
      * @classdesc The Light Component enables the Entity to light the scene. There are three types
      * of light: directional, point and spot. Directional lights are global in that they are
      * considered to be infinitely far away and light the entire scene. Point and spot lights
@@ -99,7 +100,6 @@ Object.assign(pc, function () {
      * @property {Boolean} isStatic Mark light as non-movable (optimization)
      * @property {Number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this light should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
-     * @extends pc.Component
      */
     var LightComponent = function LightComponent(system, entity) {
         pc.Component.call(this, system, entity);
@@ -466,6 +466,13 @@ Object.assign(pc, function () {
             }
 
             this.removeLightFromLayers();
+        },
+
+        onRemove: function () {
+            // destroy light node
+            this.light.destroy();
+            // remove cookie asset events
+            this.cookieAsset = null;
         }
 
     });

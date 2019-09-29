@@ -2,7 +2,8 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @interface pc.ResourceHandler
+     * @interface
+     * @name pc.ResourceHandler
      * @description Interface for ResourceHandlers used by {@link pc.ResourceLoader}.
      */
     var ResourceHandler = function () {};
@@ -15,7 +16,7 @@ Object.assign(pc, function () {
          * @description Load a resource from a remote URL. When loaded (or failed),
          * use the callback to return an the raw resource data (or error).
          * @param {String} url The URL of the resource to load.
-         * @param {Function} callback The callback used when the resource is loaded or an error occurs.
+         * @param {pc.callbacks.ResourceHandler} callback The callback used when the resource is loaded or an error occurs.
          * @param {pc.Asset} [asset] Optional asset that is passed by ResourceLoader.
          */
         load: function (url, callback, asset) {
@@ -38,12 +39,13 @@ Object.assign(pc, function () {
 
         /**
          * @function
-         * @name pc.ResourceHandler#patch
+         * @name pc.ResourceHandler#[patch]
          * @description Optional function to perform any operations on a resource, that requires a dependency on its asset data
          * or any other asset data.
          * @param {pc.Asset} asset The asset to patch.
          * @param {pc.AssetRegistry} assets The asset registry.
          */
+        // eslint-disable-next-line valid-jsdoc
         patch: function (asset, assets) {
             // optional function
         }

@@ -1,12 +1,13 @@
 Object.assign(pc, function () {
     /**
      * @component
+     * @constructor
      * @name pc.ScriptComponent
-     * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own Script Types defined in JavaScript files
+     * @extends pc.Component
+     * @classdesc The ScriptComponent allows you to extend the functionality of an Entity by attaching your own Script Types defined in JavaScript files
      * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
      * @param {pc.ScriptComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.Component
      * @property {pc.ScriptType[]} scripts An array of all script instances attached to an entity. This Array shall not be modified by developer.
      */
 
@@ -471,13 +472,7 @@ Object.assign(pc, function () {
          * }
          */
         has: function (name) {
-            var scriptType = name;
-
-            // shorthand using script name
-            if (typeof scriptType === 'string')
-                scriptType = this.system.app.scripts.get(scriptType);
-
-            return !!this._scriptsIndex[scriptType.__name];
+            return !!this._scriptsIndex[name];
         },
 
         /**

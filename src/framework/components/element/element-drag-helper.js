@@ -16,12 +16,15 @@ Object.assign(pc, function () {
      * @component
      * @constructor
      * @name pc.ElementDragHelper
+     * @extends pc.EventHandler
      * @description Create a new ElementDragHelper
      * @classdesc Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
      * @param {pc.ElementComponent} element The Element that should become draggable.
      * @param {String} [axis] Optional axis to constrain to, either 'x', 'y' or null.
      */
     var ElementDragHelper = function ElementDragHelper(element, axis) {
+        pc.EventHandler.call(this);
+
         if (!element || !(element instanceof pc.ElementComponent)) {
             throw new Error('Element was null or not an ElementComponent');
         }
@@ -41,10 +44,10 @@ Object.assign(pc, function () {
         this._deltaHandlePosition = new pc.Vec3();
         this._isDragging = false;
 
-        pc.events.attach(this);
-
         this._toggleLifecycleListeners('on');
     };
+    ElementDragHelper.prototype = Object.create(pc.EventHandler.prototype);
+    ElementDragHelper.prototype.constructor = ElementDragHelper;
 
     Object.assign(ElementDragHelper.prototype, {
         _toggleLifecycleListeners: function (onOrOff) {

@@ -155,6 +155,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.GraphicsDevice
+     * @extends pc.EventHandler
      * @classdesc The graphics device manages the underlying graphics context. It is responsible
      * for submitting render state changes and graphics primitives to the hardware. A graphics
      * device is tied to a specific canvas HTML element. It is valid to have more than one
@@ -163,8 +164,13 @@ Object.assign(pc, function () {
      * @param {HTMLCanvasElement} canvas The canvas to which the graphics device will render.
      * @param {Object} [options] Options passed when creating the WebGL context. More info {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext here}.
      * @property {HTMLCanvasElement} canvas The canvas DOM element that provides the underlying WebGL context used by the graphics device.
+     * @property {Boolean} textureFloatRenderable Determines if 32-bit floating-point textures can be used as frame buffer. [read only]
+     * @property {Boolean} textureHalfFloatRenderable Determines if 16-bit floating-point textures can be used as frame buffer. [read only]
+     * @property {pc.ScopeSpace} scope The scope namespace for shader attributes and variables. [read only]
      */
     var GraphicsDevice = function (canvas, options) {
+        pc.EventHandler.call(this);
+
         var i;
         this.canvas = canvas;
         this.shader = null;
@@ -504,8 +510,6 @@ Object.assign(pc, function () {
         for (var generator in pc.programlib)
             this.programLib.register(generator, pc.programlib[generator]);
 
-        pc.events.attach(this);
-
         this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
         this.useTexCubeLod = this.extTextureLod && this.maxTextures < 16;
 
@@ -587,6 +591,8 @@ Object.assign(pc, function () {
 
         this.createGrabPass(options.alpha);
     };
+    GraphicsDevice.prototype = Object.create(pc.EventHandler.prototype);
+    GraphicsDevice.prototype.constructor = GraphicsDevice;
 
     Object.assign(GraphicsDevice.prototype, {
         getPrecision: function () {
@@ -1958,17 +1964,17 @@ Object.assign(pc, function () {
          * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
          * @param {Number} primitive.type The type of primitive to render. Can be:
          * <ul>
-         *     <li>pc.PRIMITIVE_POINTS</li>
-         *     <li>pc.PRIMITIVE_LINES</li>
-         *     <li>pc.PRIMITIVE_LINELOOP</li>
-         *     <li>pc.PRIMITIVE_LINESTRIP</li>
-         *     <li>pc.PRIMITIVE_TRIANGLES</li>
-         *     <li>pc.PRIMITIVE_TRISTRIP</li>
-         *     <li>pc.PRIMITIVE_TRIFAN</li>
+         *     <li>{@link pc.PRIMITIVE_POINTS}</li>
+         *     <li>{@link pc.PRIMITIVE_LINES}</li>
+         *     <li>{@link pc.PRIMITIVE_LINELOOP}</li>
+         *     <li>{@link pc.PRIMITIVE_LINESTRIP}</li>
+         *     <li>{@link pc.PRIMITIVE_TRIANGLES}</li>
+         *     <li>{@link pc.PRIMITIVE_TRISTRIP}</li>
+         *     <li>{@link pc.PRIMITIVE_TRIFAN}</li>
          * </ul>
          * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
          * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
-         * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
+         * @param {Boolean} [primitive.indexed] True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
          * @param {Number} [numInstances=1] The number of instances to render when using ANGLE_instanced_arrays. Defaults to 1.
          * @example
          * // Render a single, unindexed triangle
@@ -3199,7 +3205,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphicsDevice#width
-     * @type Number
+     * @type {Number}
      * @description Width of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'width', {
@@ -3211,7 +3217,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphicsDevice#height
-     * @type Number
+     * @type {Number}
      * @description Height of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'height', {
@@ -3220,6 +3226,11 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @name pc.GraphicsDevice#fullscreen
+     * @type {Boolean}
+     * @description Fullscreen mode
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'fullscreen', {
         get: function () {
             return !!document.fullscreenElement;
@@ -3234,6 +3245,12 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @private
+     * @name pc.GraphicsDevice#enableAutoInstancing
+     * @type {Boolean}
+     * @description Automatic instancing
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'enableAutoInstancing', {
         get: function () {
             return this._enableAutoInstancing;
@@ -3243,6 +3260,11 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @name pc.GraphicsDevice#maxPixelRatio
+     * @type {Number}
+     * @description Maximum pixel ratio
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'maxPixelRatio', {
         get: function () {
             return this._maxPixelRatio;
@@ -3253,6 +3275,12 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @readonly
+     * @name pc.GraphicsDevice#textureFloatHighPrecision
+     * @type {Number}
+     * @description Check if high precision floating-point textures are supported
+     */
     Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
         get: function () {
             if (this._textureFloatHighPrecision === undefined) {

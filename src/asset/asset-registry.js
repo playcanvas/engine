@@ -2,6 +2,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.AssetRegistry
+     * @extends pc.EventHandler
      * @classdesc Container for all assets that are available to this application
      * @description Create an instance of an AssetRegistry.
      * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
@@ -9,6 +10,8 @@ Object.assign(pc, function () {
      * @property {String} prefix A URL prefix that will be added to all asset loading requests.
      */
     var AssetRegistry = function (loader) {
+        pc.EventHandler.call(this);
+
         this._loader = loader;
 
         this._assets = []; // list of all assets
@@ -18,9 +21,9 @@ Object.assign(pc, function () {
         this._urls = {}; // index for looking up assets by url
 
         this.prefix = null;
-
-        pc.events.attach(this);
     };
+    AssetRegistry.prototype = Object.create(pc.EventHandler.prototype);
+    AssetRegistry.prototype.constructor = AssetRegistry;
 
     /**
      * @event
@@ -439,7 +442,7 @@ Object.assign(pc, function () {
          * if you are not integrated with the PlayCanvas Editor
          * @param {String} url The url to load
          * @param {String} type The type of asset to load
-         * @param {Function} callback Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered
+         * @param {pc.callbacks.LoadAsset} callback Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered
          * @example
          * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
          *     var texture = asset.resource;
@@ -467,7 +470,17 @@ Object.assign(pc, function () {
             }
 
             asset.once("load", function (loadedAsset) {
-                callback(null, loadedAsset);
+                if (type === 'material') {
+                    self._loadTextures([loadedAsset], function (err, textures) {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            callback(null, loadedAsset);
+                        }
+                    });
+                } else {
+                    callback(null, loadedAsset);
+                }
             });
             asset.once("error", function (err) {
                 callback(err);
@@ -674,7 +687,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AssetRegistry#filter
          * @description Return all Assets that satisfy filter callback
-         * @param {Function} callback The callback function that is used to filter assets, return `true` to include asset to result list
+         * @param {pc.callbacks.FilterAsset} callback The callback function that is used to filter assets, return `true` to include asset to result list
          * @returns {pc.Asset[]} A list of all Assets found
          * @example
          * var assets = app.assets.filter(function(asset) {

@@ -1,6 +1,13 @@
 Object.assign(pc, (function () {
     'use strict';
 
+    /**
+     * @static
+     * @readonly
+     * @type {Object}
+     * @name pc.shaderChunks
+     * @description Object containing all default shader chunks used by shader generators.
+     */
     var shaderChunks = {};
 
     var attrib2Semantic = {

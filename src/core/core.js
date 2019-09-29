@@ -44,7 +44,7 @@ var pc = {
      * @description Convert an array-like object into a normal array.
      * For example, this is useful for converting the arguments object into an array.
      * @param {Object} arr The array to convert
-     * @returns {Any[]} An array
+     * @returns {Array} An array
      */
     makeArray: function (arr) {
         var i,

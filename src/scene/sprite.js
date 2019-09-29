@@ -2,14 +2,16 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @enum pc.SPRITE_RENDERMODE
+     * @constant
+     * @type {Number}
      * @name pc.SPRITE_RENDERMODE_SIMPLE
      * @description This mode renders a sprite as a simple quad.
      */
     pc.SPRITE_RENDERMODE_SIMPLE = 0;
 
     /**
-     * @enum pc.SPRITE_RENDERMODE
+     * @constant
+     * @type {Number}
      * @name pc.SPRITE_RENDERMODE_SLICED
      * @description This mode renders a sprite using 9-slicing in 'sliced' mode. Sliced mode stretches the
      * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
@@ -18,7 +20,8 @@ Object.assign(pc, function () {
     pc.SPRITE_RENDERMODE_SLICED = 1;
 
     /**
-     * @enum pc.SPRITE_RENDERMODE
+     * @constant
+     * @type {Number}
      * @name pc.SPRITE_RENDERMODE_TILED
      * @description This mode renders a sprite using 9-slicing in 'tiled' mode. Tiled mode tiles the
      * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
@@ -44,6 +47,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Sprite
+     * @extends pc.EventHandler
      * @classdesc A pc.Sprite is contains references to one or more frames of a {@link pc.TextureAtlas}. It can be used
      * by the {@link pc.SpriteComponent} or the {@link pc.ElementComponent} to render a single frame or a sprite animation.
      * @param {pc.GraphicsDevice} device The graphics device of the application.
@@ -59,6 +63,8 @@ Object.assign(pc, function () {
      * @property {pc.Mesh[]} meshes An array that contains a mesh for each frame.
      */
     var Sprite = function (device, options) {
+        pc.EventHandler.call(this);
+
         this._device = device;
         this._pixelsPerUnit = options && options.pixelsPerUnit !== undefined ? options.pixelsPerUnit : 1;
         this._renderMode = options && options.renderMode !== undefined ? options.renderMode : pc.SPRITE_RENDERMODE_SIMPLE;
@@ -72,12 +78,12 @@ Object.assign(pc, function () {
         // if true, endUpdate() will re-create meshes when it's called
         this._meshesDirty = false;
 
-        pc.events.attach(this);
-
         if (this._atlas && this._frameKeys) {
             this._createMeshes();
         }
     };
+    Sprite.prototype = Object.create(pc.EventHandler.prototype);
+    Sprite.prototype.constructor = Sprite;
 
     Sprite.prototype._createMeshes = function () {
         var i, len;

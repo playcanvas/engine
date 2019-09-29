@@ -3,11 +3,14 @@ Object.assign(pc, function () {
      * @private
      * @constructor
      * @name pc.AssetListLoader
+     * @extends pc.EventHandler
      * @classdesc Used to load a group of assets and fires a callback when all assets are loaded
      * @param {pc.Asset[] | Number[]} assetList An array of pc.Asset objects to load or an array of Asset IDs to load
      * @param {pc.AssetRegistry} assetRegistry The application's asset registry
      */
     var AssetListLoader = function (assetList, assetRegistry) {
+        pc.EventHandler.call(this);
+
         this._assets = [];
         this._registry = assetRegistry;
         this._loaded = false;
@@ -33,10 +36,9 @@ Object.assign(pc, function () {
 
             }
         }
-
-
-        pc.events.attach(this);
     };
+    AssetListLoader.prototype = Object.create(pc.EventHandler.prototype);
+    AssetListLoader.prototype.constructor = AssetListLoader;
 
     AssetListLoader.prototype.destroy = function () {
         // remove any outstanding listeners
@@ -60,7 +62,7 @@ Object.assign(pc, function () {
      * @name pc.AssetListLoader#load
      * @description  Start loading asset list, call done() when all assets have loaded or failed to load
      * @param {Function} done Callback called when all assets in the list are loaded. Passed (err, failed) where err is the undefined if no errors are encountered and failed contains a list of assets that failed to load
-     * @param {Object} scope Scope to use when calling callback
+     * @param {Object} [scope] Scope to use when calling callback
      *
      */
     AssetListLoader.prototype.load = function (done, scope) {
@@ -92,7 +94,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.AssetListLoader#ready
      * @param {Function} done Callback called when all assets in the list are loaded
-     * @param {Object} scope Scope to use when calling callback
+     * @param {Object} [scope] Scope to use when calling callback
      */
     AssetListLoader.prototype.ready = function (done, scope) {
         scope = scope || this;
@@ -193,5 +195,4 @@ Object.assign(pc, function () {
     return {
         AssetListLoader: AssetListLoader
     };
-
 }());

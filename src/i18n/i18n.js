@@ -144,6 +144,7 @@ Object.assign(pc, (function () {
      * @private
      * @constructor
      * @name pc.I18n
+     * @extends pc.EventHandler
      * @classdesc Handles localization. Responsible for loading localization assets
      * and returning translations for a certain key. Can also handle plural forms. To override
      * its default behaviour define a different implementation for {@link pc.I18n#getText} and {@link pc.I18n#getPluralText}.
@@ -154,7 +155,7 @@ Object.assign(pc, (function () {
      * translations from these assets as the assets are loaded and it will also automatically unload translations if the assets get removed or unloaded at runtime.
      */
     var I18n = function (app) {
-        pc.events.attach(this);
+        pc.EventHandler.call(this);
 
         this.locale = DEFAULT_LOCALE;
         this._translations = {};
@@ -163,6 +164,8 @@ Object.assign(pc, (function () {
         this._assets = [];
         this._parser = new pc.I18nParser();
     };
+    I18n.prototype = Object.create(pc.EventHandler.prototype);
+    I18n.prototype.constructor = I18n;
 
     /**
      * @private

@@ -13,6 +13,13 @@ Object.assign(pc, (function () {
         tex._levels[0][face] = pixels;
     }
 
+    /**
+     * @static
+     * @function
+     * @name pc.prefilterCubemap
+     * @description Prefilter a cubemap for use by a {@link pc.StandardMaterial} as an environment map. Should only be used for cubemaps that can't be prefiltered ahead of time (in the editor).
+     * @param {Object} options The options for how the cubemap is prefiltered.
+     */
     function prefilterCubemap(options) {
         var device = options.device;
         var sourceCubemap = options.sourceCubemap;
