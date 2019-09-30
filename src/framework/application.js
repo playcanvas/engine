@@ -596,18 +596,20 @@ Object.assign(pc, function () {
 
         // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
         // in this._hiddenAttr.
-        if (document.hidden !== undefined) {
-            this._hiddenAttr = 'hidden';
-            document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
-        } else if (document.mozHidden !== undefined) {
-            this._hiddenAttr = 'mozHidden';
-            document.addEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
-        } else if (document.msHidden !== undefined) {
-            this._hiddenAttr = 'msHidden';
-            document.addEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
-        } else if (document.webkitHidden !== undefined) {
-            this._hiddenAttr = 'webkitHidden';
-            document.addEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+        if (typeof document !== 'undefined') {
+            if (document.hidden !== undefined) {
+                this._hiddenAttr = 'hidden';
+                document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
+            } else if (document.mozHidden !== undefined) {
+                this._hiddenAttr = 'mozHidden';
+                document.addEventListener('mozvisibilitychange', this._visibilityChangeHandler, false);
+            } else if (document.msHidden !== undefined) {
+                this._hiddenAttr = 'msHidden';
+                document.addEventListener('msvisibilitychange', this._visibilityChangeHandler, false);
+            } else if (document.webkitHidden !== undefined) {
+                this._hiddenAttr = 'webkitHidden';
+                document.addEventListener('webkitvisibilitychange', this._visibilityChangeHandler, false);
+            }
         }
 
         // bind tick function to current scope
@@ -1386,37 +1388,30 @@ Object.assign(pc, function () {
             var windowWidth = window.innerWidth;
             var windowHeight = window.innerHeight;
 
-            if (navigator.isCocoonJS) {
+            if (this._fillMode === pc.FILLMODE_KEEP_ASPECT) {
+                var r = this.graphicsDevice.canvas.width / this.graphicsDevice.canvas.height;
+                var winR = windowWidth / windowHeight;
+
+                if (r > winR) {
+                    width = windowWidth;
+                    height = width / r;
+                } else {
+                    height = windowHeight;
+                    width = height * r;
+                }
+            } else if (this._fillMode === pc.FILLMODE_FILL_WINDOW) {
                 width = windowWidth;
                 height = windowHeight;
-
-                this.graphicsDevice.resizeCanvas(width, height);
             } else {
-                if (this._fillMode === pc.FILLMODE_KEEP_ASPECT) {
-                    var r = this.graphicsDevice.canvas.width / this.graphicsDevice.canvas.height;
-                    var winR = windowWidth / windowHeight;
+                // FILLMODE_NONE use width and height that are provided
+            }
 
-                    if (r > winR) {
-                        width = windowWidth;
-                        height = width / r;
-                    } else {
-                        height = windowHeight;
-                        width = height * r;
-                    }
-                } else if (this._fillMode === pc.FILLMODE_FILL_WINDOW) {
-                    width = windowWidth;
-                    height = windowHeight;
-                } else {
-                    // FILLMODE_NONE use width and height that are provided
-                }
+            this.graphicsDevice.canvas.style.width = width + 'px';
+            this.graphicsDevice.canvas.style.height = height + 'px';
 
-                this.graphicsDevice.canvas.style.width = width + 'px';
-                this.graphicsDevice.canvas.style.height = height + 'px';
-
-                // In AUTO mode the resolution is changed to match the canvas size
-                if (this._resolutionMode === pc.RESOLUTION_AUTO) {
-                    this.setCanvasResolution(pc.RESOLUTION_AUTO);
-                }
+            // In AUTO mode the resolution is changed to match the canvas size
+            if (this._resolutionMode === pc.RESOLUTION_AUTO) {
+                this.setCanvasResolution(pc.RESOLUTION_AUTO);
             }
 
             // return the final values calculated for width and height
@@ -1740,7 +1735,7 @@ Object.assign(pc, function () {
             if (app.vr && app.vr.display) {
                 app.vr.display.requestAnimationFrame(app.tick);
             } else {
-                window.requestAnimationFrame(app.tick);
+                requestAnimationFrame(app.tick);
             }
 
             if (app.graphicsDevice.contextLost) {

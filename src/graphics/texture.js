@@ -725,14 +725,14 @@ Object.assign(pc, function () {
                     height = source[0].height || 0;
 
                     for (i = 0; i < 6; i++) {
+                        var face = source[i];
                         // cubemap becomes invalid if any condition is not satisfied
-                        if (!source[i] || // face is missing
-                            source[i].width !== width || // face is different width
-                            source[i].height !== height || // face is different height
-                            (!(source[i] instanceof HTMLImageElement) && // not image and
-                            !(source[i] instanceof HTMLCanvasElement) && // not canvas and
-                            !(source[i] instanceof HTMLVideoElement))) { // not video
-
+                        if (!face ||                  // face is missing
+                            face.width !== width ||   // face is different width
+                            face.height !== height || // face is different height
+                            !((typeof HTMLImageElement !== 'undefined' && face instanceof HTMLImageElement) ||   // not image or
+                              (typeof HTMLCanvasElement !== 'undefined' && face instanceof HTMLCanvasElement) || // canvas or
+                              (typeof HTMLVideoElement !== 'undefined' && face instanceof HTMLVideoElement))) {  // video
                             invalid = true;
                             break;
                         }
@@ -751,7 +751,9 @@ Object.assign(pc, function () {
                 }
             } else {
                 // check if source is valid type of element
-                if (!(source instanceof HTMLImageElement) && !(source instanceof HTMLCanvasElement) && !(source instanceof HTMLVideoElement))
+                if (!((typeof HTMLImageElement !== 'undefined' && source instanceof HTMLImageElement) ||
+                      (typeof HTMLCanvasElement !== 'undefined' && source instanceof HTMLCanvasElement) ||
+                      (typeof HTMLVideoElement !== 'undefined' && source instanceof HTMLVideoElement)))
                     invalid = true;
 
                 if (!invalid) {

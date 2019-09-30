@@ -19,6 +19,10 @@ module.exports = function (config) {
         // base path that will be used to resolve all patterns (eg. files, exclude)
         basePath: '..',
 
+        client: {
+            args: process.argv
+        },
+
         // list of files / patterns to load in the browser
         files: sourceFiles.concat([
             // libraries

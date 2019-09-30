@@ -744,6 +744,7 @@ Object.assign(pc, function () {
          */
         reparent: function (parent, index) {
             var current = this._parent;
+
             if (current)
                 current.removeChild(this);
 
@@ -1044,11 +1045,19 @@ Object.assign(pc, function () {
             if (node._parent !== null)
                 throw new Error("GraphNode is already parented");
 
+            // #ifdef DEBUG
+            this._debugInsertChild(node);
+            // #endif
+
             this._children.push(node);
             this._onInsertChild(node);
         },
 
         addChildAndSaveTransform: function (node) {
+            // #ifdef DEBUG
+            this._debugInsertChild(node);
+            // #endif
+
             var wPos = node.getPosition();
             var wRot = node.getRotation();
 
@@ -1060,7 +1069,6 @@ Object.assign(pc, function () {
             node.setRotation(tmpQuat.copy(this.getRotation()).invert().mul(wRot));
 
             this._children.push(node);
-
             this._onInsertChild(node);
         },
 
@@ -1078,9 +1086,23 @@ Object.assign(pc, function () {
             if (node._parent !== null)
                 throw new Error("GraphNode is already parented");
 
+            // #ifdef DEBUG
+            this._debugInsertChild(node);
+            // #endif
+
             this._children.splice(index, 0, node);
             this._onInsertChild(node);
         },
+
+        // #ifdef DEBUG
+        _debugInsertChild: function (node) {
+            if (this === node)
+                throw new Error("GraphNode cannot be a child of itself");
+
+            if (this.isDescendantOf(node))
+                throw new Error("GraphNode cannot add an ancestor as a child");
+        },
+        // #endif
 
         _onInsertChild: function (node) {
             node._parent = this;
