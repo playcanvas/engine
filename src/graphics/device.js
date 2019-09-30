@@ -694,6 +694,8 @@ Object.assign(pc, function () {
             this.extCompressedTextureETC = getExtension('WEBGL_compressed_texture_etc');
             this.extCompressedTexturePVRTC = getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
             this.extCompressedTextureS3TC = getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
+            this.extCompressedTextureATC = getExtension('WEBGL_compressed_texture_atc');
+            this.extCompressedTextureASTC = getExtension('WEBGL_compressed_texture_astc');
             this.extParallelShaderCompile = getExtension('KHR_parallel_shader_compile');
         },
 
@@ -1377,6 +1379,21 @@ Object.assign(pc, function () {
                     ext = this.extCompressedTextureETC;
                     texture._glFormat = gl.RGBA;
                     texture._glInternalFormat = ext.COMPRESSED_RGBA8_ETC2_EAC;
+                    break;
+                case pc.PIXELFORMAT_ASTC_4x4:
+                    ext = this.extCompressedTextureASTC;
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = ext.COMPRESSED_RGBA_ASTC_4x4_KHR;
+                    break;
+                case pc.PIXELFORMAT_ATC_RGB:
+                    ext = this.extCompressedTextureATC;
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = ext.COMPRESSED_RGB_ATC_WEBGL;
+                    break;
+                case pc.PIXELFORMAT_ATC_RGBA:
+                    ext = this.extCompressedTextureATC;
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = ext.COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL;
                     break;
                 case pc.PIXELFORMAT_RGB16F:
                     // definition varies between WebGL1 and 2

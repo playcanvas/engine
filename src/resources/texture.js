@@ -291,7 +291,7 @@ Object.assign(pc, function () {
             var urlWithoutParams = url.original.indexOf('?') >= 0 ? url.original.split('?')[0] : url.original;
 
             var ext = pc.path.getExtension(urlWithoutParams).toLowerCase();
-            if (ext === '.dds' || ext === '.ktx') {
+            if (ext === '.dds' || ext === '.ktx' || ext === '.basis') {
                 var options = {
                     cache: true,
                     responseType: "arraybuffer",
@@ -413,6 +413,9 @@ Object.assign(pc, function () {
                             break;
                         case '.ktx':
                             textureData = new pc.KtxParser(data);
+                            break;
+                        case '.basis':
+                            textureData = new pc.BasisParser(data);
                             break;
                         case '.pvr':
                             console.warn('PVR container not supported.');
