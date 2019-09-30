@@ -329,7 +329,7 @@ Object.assign(pc, function () {
          *
          */
         var script = function (args) {
-            pc.GraphNode.call(this, name);
+            pc.EventHandler.call(this);
 
             // #ifdef DEBUG
             if (!args || !args.app || !args.entity) {
