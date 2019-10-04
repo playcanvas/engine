@@ -3,6 +3,10 @@ Object.assign(pc, function () {
 
     // checks if user is running IE
     var ie = (function () {
+        if (typeof window !== 'undefined') {
+            // When Node.js is not IE
+            return false
+        }
         var ua = window.navigator.userAgent;
 
         var msie = ua.indexOf('MSIE ');
