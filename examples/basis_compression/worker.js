@@ -9,7 +9,7 @@ var convert = function(basisu, name, buf) {
     basisu.FS.writeFile('input.png', new Int8Array(buf));
 
     // perform compression
-    basisu.callMain(['input.png', '-no_multithreading', '-mipmap']);
+    basisu.callMain(['input.png', '-no_multithreading', '-mipmap', '-y_flip']);
 
     // read the resulting file data
     var result = basisu.FS.readFile('input.basis', { encoding: 'binary' }).buffer;
