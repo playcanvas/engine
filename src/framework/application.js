@@ -565,6 +565,7 @@ Object.assign(pc, function () {
         this.loader.addHandler("binary", new pc.BinaryHandler());
         this.loader.addHandler("textureatlas", new pc.TextureAtlasHandler(this.loader));
         this.loader.addHandler("sprite", new pc.SpriteHandler(this.assets, this.graphicsDevice));
+        this.loader.addHandler("template", new pc.TemplateHandler(this));
 
         this.systems = new pc.ComponentSystemRegistry();
         this.systems.add(new pc.RigidBodyComponentSystem(this));
@@ -1704,6 +1705,18 @@ Object.assign(pc, function () {
             if (Application._currentApplication === this) {
                 Application._currentApplication = null;
             }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Application#getEntityFromIndex
+         * @description Get entity from the index by guid
+         * @param {String} guid The GUID to search for
+         * @returns {pc.Entity} The Entity with the GUID or null
+         */
+        getEntityFromIndex: function (guid) {
+            return this._entityIndex[guid];
         }
     });
 
