@@ -23,7 +23,7 @@ self.onmessage = (function() {
     var basisu = null;
     var queue = [];
 
-    return function (message) {
+    var performWasmCheck = function() {
         if (!loading) {
             loading = true;
             loadWasmModule(
@@ -38,7 +38,10 @@ self.onmessage = (function() {
                 }
             );
         }
+    };
 
+    return function (message) {
+        performWasmCheck();
         if (basisu) {
             convert(basisu, message.data.name, message.data.buf);
         } else {

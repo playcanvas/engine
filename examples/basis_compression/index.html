@@ -33,7 +33,7 @@
     <script>
 
         //-- handle construct conversion webworker
-        const worker = new Worker("worker.js");
+        const basisu = new Worker("basisu.js");
 
         var onImageCompressed = function (message) {
             var handler = app.loader.getHandler('texture');
@@ -42,7 +42,7 @@
             material.diffuseMap = texture;
             material.update();
         };
-        worker.addEventListener('message', onImageCompressed);
+        basisu.addEventListener('message', onImageCompressed);
 
         //-- handle drag and drop
         var dragOverHandler = function(event) {
@@ -61,7 +61,7 @@
                     var file = event.dataTransfer.files[i];
                     console.log('... file[' + i + '].name = ' + file.name);
                     var reader = new FileReader();
-                    reader.onload = function(event) { worker.postMessage({ name: file.name, buf: reader.result }, [ reader.result ]); }
+                    reader.onload = function(event) { basisu.postMessage({ name: file.name, buf: reader.result }, [ reader.result ]); }
                     reader.readAsArrayBuffer(file);
                 }
             }
