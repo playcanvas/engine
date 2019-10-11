@@ -26,10 +26,11 @@ Object.assign(pc, function () {
         pvr: 'extCompressedTexturePVRTC',
         dxt: 'extCompressedTextureS3TC',
         etc2: 'extCompressedTextureETC',
-        etc1: 'extCompressedTextureETC1'
+        etc1: 'extCompressedTextureETC1',
+        basis: 'canvas' // dummy, basis is always supported
     };
 
-    var VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1'];
+    var VARIANT_DEFAULT_PRIORITY = ['basis', 'pvr', 'dxt', 'etc2', 'etc1'];
 
     /**
      * @constructor
