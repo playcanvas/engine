@@ -806,7 +806,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Application#loadSceneSettings
-         * @description Load a scene file and apply the scene settings to the current scene
+         * @description Load a scene file and automatically apply the scene settings to the current scene.
          * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
          * @param {pc.callbacks.LoadSettings} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
          * @example
