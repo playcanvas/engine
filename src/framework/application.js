@@ -1439,7 +1439,47 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#applySceneSettings
          * @description Apply scene settings to the current scene. Useful when your scene settings are parsed or generated from a non-URL source.
-         * @param {Object} settings Scene settings object to be applied.
+         * @param {Object} settings The scene settings to be applied.
+         * @param {Object} settings.physics The physics settings to be applied.
+         * @param {Number[]} settings.physics.gravity The world space vector representing global gravity in the physics simulation. Must be an fixed size array with three number elements, corresponding to each axis [ X, Y, Z ].
+         * @param {Object} settings.render The rendering settings to be applied.
+         * @param {Number[]} settings.render.global_ambient The color of the scene's ambient light. Must be an fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
+         * @param {String} settings.render.fog The type of fog used by the scene. Can be:
+         * <ul>
+         *     <li>pc.FOG_NONE</li>
+         *     <li>pc.FOG_LINEAR</li>
+         *     <li>pc.FOG_EXP</li>
+         *     <li>pc.FOG_EXP2</li>
+         * </ul>
+         * @param {Number[]} settings.render.fog_color The color of the fog (if enabled). Must be an fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
+         * @param {Number} settings.render.fog_density The density of the fog (if enabled). This property is only valid if the fog property is set to pc.FOG_EXP or pc.FOG_EXP2.
+         * @param {Number} settings.render.fog_start The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to pc.FOG_LINEAR.
+         * @param {Number} settings.render.fog_end The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to pc.FOG_LINEAR.
+         * @param {Number} settings.render.gamma_correction The gamma correction to apply when rendering the scene. Can be:
+         * <ul>
+         *     <li>pc.GAMMA_NONE</li>
+         *     <li>pc.GAMMA_SRGB</li>
+         * </ul>
+         * @param {Number} settings.render.tonemapping The tonemapping transform to apply when writing fragments to the
+         * frame buffer. Can be:
+         * <ul>
+         *     <li>pc.TONEMAP_LINEAR</li>
+         *     <li>pc.TONEMAP_FILMIC</li>
+         *     <li>pc.TONEMAP_HEJL</li>
+         *     <li>pc.TONEMAP_ACES</li>
+         * </ul>
+         * @param {Number} settings.render.exposure The exposure value tweaks the overall brightness of the scene.
+         * @param {Number|Null} [settings.render.skybox] The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
+         * @param {Number} settings.render.skyboxIntensity Multiplier for skybox intensity.
+         * @param {Number} settings.render.skyboxMip The mip level of the skybox to be displayed. Only valid for prefiltered cubemap skyboxes.
+         * @param {Number} settings.render.lightmapSizeMultiplier The lightmap resolution multiplier.
+         * @param {Number} settings.render.lightmapMaxResolution The maximum lightmap resolution.
+         * @param {Number} settings.render.lightmapMode The lightmap baking mode. Can be:
+         * <ul>
+         *     <li>pc.BAKE_COLOR: single color lightmap
+         *     <li>pc.BAKE_COLORDIR: single color lightmap + dominant light direction (used for bump/specular)
+         * </ul>
+         * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
          * @example
          *
          * var settings = {
