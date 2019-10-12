@@ -1437,9 +1437,34 @@ Object.assign(pc, function () {
 
         /**
          * @function
-         * @name pc.SceneRegistry#applySceneSettings
+         * @name pc.Application#applySceneSettings
          * @description Apply scene settings to the current scene. Useful when your scene settings are parsed or generated from a non-URL source.
          * @param {Object} settings Scene settings object to be applied.
+         * @example
+         *
+         * var settings = {
+         *   physics: {
+         *     gravity: [ 0, -9.8, 0 ]
+         *   },
+         *   render: {
+         *     fog_end: 1000,
+         *     tonemapping: 0,
+         *     skybox: null,
+         *     fog_density: 0.01,
+         *     gamma_correction: 1,
+         *     exposure: 1,
+         *     fog_start: 1,
+         *     global_ambient: [ 0, 0, 0 ],
+         *     skyboxIntensity: 1,
+         *     fog_color: [ 0, 0, 0 ],
+         *     lightmapMode: 1,
+         *     fog: 'none',
+         *     lightmapMaxResolution: 2048,
+         *     skyboxMip: 2,
+         *     lightmapSizeMultiplier: 16
+         *   }
+         * };
+         * app.applySceneSettings(settings);
          */
         applySceneSettings: function (settings) {
             var asset;
