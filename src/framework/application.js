@@ -1441,9 +1441,9 @@ Object.assign(pc, function () {
          * @description Apply scene settings to the current scene. Useful when your scene settings are parsed or generated from a non-URL source.
          * @param {Object} settings The scene settings to be applied.
          * @param {Object} settings.physics The physics settings to be applied.
-         * @param {Number[]} settings.physics.gravity The world space vector representing global gravity in the physics simulation. Must be an fixed size array with three number elements, corresponding to each axis [ X, Y, Z ].
+         * @param {Number[]} settings.physics.gravity The world space vector representing global gravity in the physics simulation. Must be a fixed size array with three number elements, corresponding to each axis [ X, Y, Z ].
          * @param {Object} settings.render The rendering settings to be applied.
-         * @param {Number[]} settings.render.global_ambient The color of the scene's ambient light. Must be an fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
+         * @param {Number[]} settings.render.global_ambient The color of the scene's ambient light. Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
          * @param {String} settings.render.fog The type of fog used by the scene. Can be:
          * <ul>
          *     <li>pc.FOG_NONE</li>
@@ -1451,7 +1451,7 @@ Object.assign(pc, function () {
          *     <li>pc.FOG_EXP</li>
          *     <li>pc.FOG_EXP2</li>
          * </ul>
-         * @param {Number[]} settings.render.fog_color The color of the fog (if enabled). Must be an fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
+         * @param {Number[]} settings.render.fog_color The color of the fog (if enabled). Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
          * @param {Number} settings.render.fog_density The density of the fog (if enabled). This property is only valid if the fog property is set to pc.FOG_EXP or pc.FOG_EXP2.
          * @param {Number} settings.render.fog_start The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to pc.FOG_LINEAR.
          * @param {Number} settings.render.fog_end The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to pc.FOG_LINEAR.
