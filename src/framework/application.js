@@ -1435,6 +1435,12 @@ Object.assign(pc, function () {
             this.systems.collision.onLibraryLoaded();
         },
 
+        /**
+         * @function
+         * @name pc.SceneRegistry#applySceneSettings
+         * @description Apply scene settings to the current scene. Useful when your scene settings are parsed or generated from a non-URL source.
+         * @param {Object} settings Scene settings object to be applied.
+         */
         applySceneSettings: function (settings) {
             var asset;
 
