@@ -479,7 +479,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ScriptComponent#create
          * @description Create a script instance using name of a {@link ScriptType} and attach to an entity script component.
-         * @param {String|ScriptType} name The name of the Script Type (or alternatively the {@link ScriptType} to instantiate)
+         * @param {String} name The name of the Script Type
          * @param {Object} [args] Object with arguments for a script
          * @param {Boolean} [args.enabled] if script instance is enabled after creation
          * @param {Object} [args.attributes] Object with values for attributes, where key is name of an attribute
