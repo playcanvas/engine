@@ -47,6 +47,11 @@ vec3 customFace(vec3 InstanceCoords, vec2 quadXY) {
     return pos;
 }
 
+vec2 safeNormalize(vec2 v) {
+    float l = length(v);
+    return (l > 1e-06) ? v / l : v;
+}
+
 void main(void) {
     vec3 meshLocalPos = particle_vertexData.xyz;
     float id = floor(particle_vertexData.w);
@@ -60,7 +65,8 @@ void main(void) {
 #ifdef LOCAL_SPACE
     inVel = mat3(matrix_model) * inVel;
 #endif
-    vec2 velocityV = normalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
+    vec2 velocityV = safeNormalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
+
     float particleLifetime = lifetime;
 
     if (inLife <= 0.0 || inLife > particleLifetime || !inShow) meshLocalPos = vec3(0.0);

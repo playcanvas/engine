@@ -73,7 +73,11 @@ Object.assign(pc, function () {
      * @type Boolean
      * @description Reports whether this device supports the WebVR API
      */
-    VrManager.isSupported = !!navigator.getVRDisplays;
+    if (typeof navigator !== 'undefined') {
+        VrManager.isSupported = !!navigator.getVRDisplays;
+    } else {
+        VrManager.isSupported = false;
+    }
 
     Object.assign(VrManager.prototype, {
         _attach: function () {
