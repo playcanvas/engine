@@ -20,6 +20,7 @@ Object.assign(pc, function () {
     };
 
     /**
+     * @private
      * @function
      * @name pc.Template#instantiate
      * @description Create an instance of this template
