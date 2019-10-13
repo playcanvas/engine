@@ -726,6 +726,7 @@ Object.assign(pc, function () {
      *     <li>pc.TONEMAP_ACES</li>
      * </ul>
      * Defaults to pc.TONEMAP_LINEAR.
+     * @property {Number} exposure The exposure value tweaks the overall brightness of the scene. Defaults to 1.
      * @property {pc.Texture} skybox A cube map texture used as the scene's skybox. Defaults to null.
      * @property {Number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
      * @property {Number} skyboxMip The mip level of the skybox to be displayed. Only valid for prefiltered
@@ -741,6 +742,7 @@ Object.assign(pc, function () {
      * pc.BAKE_COLORDIR.
      * @property {pc.LayerComposition} layers A {@link pc.LayerComposition} that defines rendering order of this scene.
      * @property {pc.StandardMaterial} defaultMaterial The default material used in case no other material is available.
+     * @property {pc.Entity} root The root entity of the scene, which is usually the only child to the Application root entity.
      */
     var Scene = function Scene() {
         pc.EventHandler.call(this);
