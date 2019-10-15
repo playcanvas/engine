@@ -116,6 +116,8 @@
 ../src/bundles/bundle-registry.js
 ../src/i18n/i18n-parser.js
 ../src/i18n/i18n.js
+../src/templates/template.js
+../src/templates/template-utils.js
 ../src/framework/script.js
 ../src/framework/application.js
 ../src/framework/stats.js
@@ -229,6 +231,7 @@
 ../src/resources/scene.js
 ../src/resources/hierarchy.js
 ../src/resources/scene-settings.js
+../src/resources/template.js
 ../src/resources/folder.js
 ../src/resources/font.js
 ../src/resources/texture-atlas.js
