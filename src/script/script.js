@@ -40,7 +40,7 @@ Object.assign(pc, function () {
                 if (value instanceof pc.GraphNode) {
                     return value;
                 } else if (typeof value === 'string') {
-                    return app.root.findByGuid(value);
+                    return app.getEntityFromIndex(value);
                 }
                 return null;
             case 'rgb':

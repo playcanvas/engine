@@ -126,7 +126,7 @@ Object.assign(pc, function () {
          * @name pc.ComponentSystem#addComponent
          * @description Create new {@link pc.Component} and {@link pc.ComponentData} instances and attach them to the entity
          * @param {pc.Entity} entity The Entity to attach this component to
-         * @param {Object} data The source data with which to create the component
+         * @param {Object} [data] The source data with which to create the component
          * @returns {pc.Component} Returns a Component of type defined by the component system
          * @example
          *   var entity = new pc.Entity(app);

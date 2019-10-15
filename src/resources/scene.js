@@ -22,11 +22,16 @@ Object.assign(pc, function () {
                 };
             }
 
+            var assets = this._app.assets;
+
             pc.http.get(url.load, {
                 retry: this.retryRequests
             }, function (err, response) {
                 if (!err) {
-                    callback(null, response);
+                    pc.TemplateUtils.waitForTemplatesInScene(
+                        response,
+                        assets,
+                        callback);
                 } else {
                     var errMsg = 'Error while loading scene ' + url.original;
                     if (err.message) {
@@ -47,7 +52,7 @@ Object.assign(pc, function () {
             // prevent script initialization until entire scene is open
             this._app.systems.script.preloading = true;
 
-            var parser = new pc.SceneParser(this._app);
+            var parser = new pc.SceneParser(this._app, false);
             var parent = parser.parse(data);
 
             // set scene root

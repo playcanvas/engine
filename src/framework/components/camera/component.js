@@ -408,6 +408,7 @@ Object.assign(pc, function () {
         },
 
         onRemove: function () {
+            this.onDisable();
             this.off();
         },
 

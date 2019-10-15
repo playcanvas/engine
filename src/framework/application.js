@@ -565,6 +565,7 @@ Object.assign(pc, function () {
         this.loader.addHandler("binary", new pc.BinaryHandler());
         this.loader.addHandler("textureatlas", new pc.TextureAtlasHandler(this.loader));
         this.loader.addHandler("sprite", new pc.SpriteHandler(this.assets, this.graphicsDevice));
+        this.loader.addHandler("template", new pc.TemplateHandler(this));
 
         this.systems = new pc.ComponentSystemRegistry();
         this.systems.add(new pc.RigidBodyComponentSystem(this));
@@ -805,7 +806,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Application#loadSceneSettings
-         * @description Load a scene file and apply the scene settings to the current scene
+         * @description Load a scene file and automatically apply the scene settings to the current scene.
          * @param {String} url The URL of the scene file. Usually this will be "scene_id.json"
          * @param {pc.callbacks.LoadSettings} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
          * @example
@@ -1434,6 +1435,77 @@ Object.assign(pc, function () {
             this.systems.collision.onLibraryLoaded();
         },
 
+        /**
+         * @function
+         * @name pc.Application#applySceneSettings
+         * @description Apply scene settings to the current scene. Useful when your scene settings are parsed or generated from a non-URL source.
+         * @param {Object} settings The scene settings to be applied.
+         * @param {Object} settings.physics The physics settings to be applied.
+         * @param {Number[]} settings.physics.gravity The world space vector representing global gravity in the physics simulation. Must be a fixed size array with three number elements, corresponding to each axis [ X, Y, Z ].
+         * @param {Object} settings.render The rendering settings to be applied.
+         * @param {Number[]} settings.render.global_ambient The color of the scene's ambient light. Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
+         * @param {String} settings.render.fog The type of fog used by the scene. Can be:
+         * <ul>
+         *     <li>pc.FOG_NONE</li>
+         *     <li>pc.FOG_LINEAR</li>
+         *     <li>pc.FOG_EXP</li>
+         *     <li>pc.FOG_EXP2</li>
+         * </ul>
+         * @param {Number[]} settings.render.fog_color The color of the fog (if enabled). Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
+         * @param {Number} settings.render.fog_density The density of the fog (if enabled). This property is only valid if the fog property is set to pc.FOG_EXP or pc.FOG_EXP2.
+         * @param {Number} settings.render.fog_start The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to pc.FOG_LINEAR.
+         * @param {Number} settings.render.fog_end The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to pc.FOG_LINEAR.
+         * @param {Number} settings.render.gamma_correction The gamma correction to apply when rendering the scene. Can be:
+         * <ul>
+         *     <li>pc.GAMMA_NONE</li>
+         *     <li>pc.GAMMA_SRGB</li>
+         * </ul>
+         * @param {Number} settings.render.tonemapping The tonemapping transform to apply when writing fragments to the
+         * frame buffer. Can be:
+         * <ul>
+         *     <li>pc.TONEMAP_LINEAR</li>
+         *     <li>pc.TONEMAP_FILMIC</li>
+         *     <li>pc.TONEMAP_HEJL</li>
+         *     <li>pc.TONEMAP_ACES</li>
+         * </ul>
+         * @param {Number} settings.render.exposure The exposure value tweaks the overall brightness of the scene.
+         * @param {Number|Null} [settings.render.skybox] The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
+         * @param {Number} settings.render.skyboxIntensity Multiplier for skybox intensity.
+         * @param {Number} settings.render.skyboxMip The mip level of the skybox to be displayed. Only valid for prefiltered cubemap skyboxes.
+         * @param {Number} settings.render.lightmapSizeMultiplier The lightmap resolution multiplier.
+         * @param {Number} settings.render.lightmapMaxResolution The maximum lightmap resolution.
+         * @param {Number} settings.render.lightmapMode The lightmap baking mode. Can be:
+         * <ul>
+         *     <li>pc.BAKE_COLOR: single color lightmap
+         *     <li>pc.BAKE_COLORDIR: single color lightmap + dominant light direction (used for bump/specular)
+         * </ul>
+         * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
+         * @example
+         *
+         * var settings = {
+         *   physics: {
+         *     gravity: [ 0, -9.8, 0 ]
+         *   },
+         *   render: {
+         *     fog_end: 1000,
+         *     tonemapping: 0,
+         *     skybox: null,
+         *     fog_density: 0.01,
+         *     gamma_correction: 1,
+         *     exposure: 1,
+         *     fog_start: 1,
+         *     global_ambient: [ 0, 0, 0 ],
+         *     skyboxIntensity: 1,
+         *     fog_color: [ 0, 0, 0 ],
+         *     lightmapMode: 1,
+         *     fog: 'none',
+         *     lightmapMaxResolution: 2048,
+         *     skyboxMip: 2,
+         *     lightmapSizeMultiplier: 16
+         *   }
+         * };
+         * app.applySceneSettings(settings);
+         */
         applySceneSettings: function (settings) {
             var asset;
 
@@ -1704,6 +1776,18 @@ Object.assign(pc, function () {
             if (Application._currentApplication === this) {
                 Application._currentApplication = null;
             }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.Application#getEntityFromIndex
+         * @description Get entity from the index by guid
+         * @param {String} guid The GUID to search for
+         * @returns {pc.Entity} The Entity with the GUID or null
+         */
+        getEntityFromIndex: function (guid) {
+            return this._entityIndex[guid];
         }
     });
 

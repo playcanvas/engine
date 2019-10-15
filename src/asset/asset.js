@@ -45,7 +45,7 @@ Object.assign(pc, function () {
      * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
      * @param {String} name A non-unique but human-readable name which can be later used to retrieve the asset.
      * @param {String} type Type of asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
-     * @param {Object} file Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
+     * @param {Object} [file] Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
      * @example
      * var file = {
      *   filename: "filename.txt",
