@@ -16,18 +16,18 @@ Object.assign(pc, function () {
         cTFRGBA4444: 16         // rgbq 4444
     };
 
-    var DXT_FORMAT_MAP = {};
-    DXT_FORMAT_MAP[BASIS_FORMAT.cTFETC1] = pc.PIXELFORMAT_ETC1;
-    DXT_FORMAT_MAP[BASIS_FORMAT.cTFETC2] = pc.PIXELFORMAT_ETC2_RGBA;
-    DXT_FORMAT_MAP[BASIS_FORMAT.cTFBC1] = pc.PIXELFORMAT_DXT1;
-    DXT_FORMAT_MAP[BASIS_FORMAT.cTFBC3] = pc.PIXELFORMAT_DXT5;
-    DXT_FORMAT_MAP[BASIS_FORMAT.cTFPVRTC1_4_RGB] = pc.PIXELFORMAT_PVRTC_4BPP_RGB_1;
-    DXT_FORMAT_MAP[BASIS_FORMAT.cTFPVRTC1_4_RGBA] = pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1;
-    DXT_FORMAT_MAP[BASIS_FORMAT.cTFASTC_4x4] = pc.PIXELFORMAT_ASTC_4x4;
-    DXT_FORMAT_MAP[BASIS_FORMAT.cTFATC_RGB] = pc.PIXELFORMAT_ATC_RGB;
-    DXT_FORMAT_MAP[BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA] = pc.PIXELFORMAT_ATC_RGBA;
-    DXT_FORMAT_MAP[BASIS_FORMAT.cTFRGB565] = pc.PIXELFORMAT_R5_G6_B5;
-    DXT_FORMAT_MAP[BASIS_FORMAT.cTFRGBA4444] = pc.PIXELFORMAT_R4_G4_B4_A4;
+    var BASIS_TO_PIXEL = {};
+    BASIS_TO_PIXEL[BASIS_FORMAT.cTFETC1] = pc.PIXELFORMAT_ETC1;
+    BASIS_TO_PIXEL[BASIS_FORMAT.cTFETC2] = pc.PIXELFORMAT_ETC2_RGBA;
+    BASIS_TO_PIXEL[BASIS_FORMAT.cTFBC1] = pc.PIXELFORMAT_DXT1;
+    BASIS_TO_PIXEL[BASIS_FORMAT.cTFBC3] = pc.PIXELFORMAT_DXT5;
+    BASIS_TO_PIXEL[BASIS_FORMAT.cTFPVRTC1_4_RGB] = pc.PIXELFORMAT_PVRTC_4BPP_RGB_1;
+    BASIS_TO_PIXEL[BASIS_FORMAT.cTFPVRTC1_4_RGBA] = pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1;
+    BASIS_TO_PIXEL[BASIS_FORMAT.cTFASTC_4x4] = pc.PIXELFORMAT_ASTC_4x4;
+    BASIS_TO_PIXEL[BASIS_FORMAT.cTFATC_RGB] = pc.PIXELFORMAT_ATC_RGB;
+    BASIS_TO_PIXEL[BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA] = pc.PIXELFORMAT_ATC_RGBA;
+    BASIS_TO_PIXEL[BASIS_FORMAT.cTFRGB565] = pc.PIXELFORMAT_R5_G6_B5;
+    BASIS_TO_PIXEL[BASIS_FORMAT.cTFRGBA4444] = pc.PIXELFORMAT_R4_G4_B4_A4;
 
     var chooseBasisFormat = function (device, hasAlpha) {
         if (device.extCompressedTextureASTC) {
@@ -79,6 +79,8 @@ Object.assign(pc, function () {
         // TODO: is this the correct place to get the graphicsDevice?
         format = chooseBasisFormat(pc.app.graphicsDevice, hasAlpha);
 
+        console.log('width=' + width + ' height=' + height + ' levels=' + levels + ' format=' + format);
+
         if (!basisFile.startTranscoding()) {
             basisFile.close();
             basisFile.delete();
@@ -115,7 +117,7 @@ Object.assign(pc, function () {
         alignedWidth = (width + 3) & ~3;
         alignedHeight = (height + 3) & ~3;
 
-        this.format = DXT_FORMAT_MAP[format];
+        this.format = BASIS_TO_PIXEL[format];
         this.width = alignedWidth;
         this.height = alignedHeight;
         this.levels = levelData;
