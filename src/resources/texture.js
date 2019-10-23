@@ -291,20 +291,15 @@ Object.assign(pc, function () {
             var urlWithoutParams = url.original.indexOf('?') >= 0 ? url.original.split('?')[0] : url.original;
 
             var ext = pc.path.getExtension(urlWithoutParams).toLowerCase();
-            if (ext === '.dds' || ext === '.ktx' || ext === '.basis') {
+            if (ext === '.dds' || ext === '.ktx') {
                 var options = {
                     cache: true,
                     responseType: "arraybuffer",
                     retry: this.retryRequests
                 };
-
-                pc.http.get(url.load, options, function (err, response) {
-                    if (!err) {
-                        callback(null, response);
-                    } else {
-                        callback(err);
-                    }
-                });
+                pc.http.get(url.load, options, callback);
+            } else if (ext === '.basis') {
+                pc.Basis.getAndPrepare(url.load, callback);
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
                 var crossOrigin;
                 // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
