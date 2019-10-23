@@ -92,6 +92,7 @@ Object.assign(pc, function () {
             this._arrayBuffer = arrayBuffer || new ArrayBuffer(0);
             this._bufferView = new DataView(this._arrayBuffer);
             this._globalPaxHeader = null;
+            this._paxHeader = null;
             this._bytesRead = 0;
         };
 
@@ -130,7 +131,6 @@ Object.assign(pc, function () {
             var start = this._bytesRead;
             var url = null;
 
-            var paxHeader;
             var normalFile = false;
             switch (type) {
                 case "0": case "": // Normal file
@@ -146,7 +146,7 @@ Object.assign(pc, function () {
                     this._globalPaxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
                     break;
                 case "x": // PAX header
-                    paxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
+                    this._paxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
                     break;
                 case "1": // Link to another file already archived
                 case "2": // Symbolic link
@@ -189,8 +189,9 @@ Object.assign(pc, function () {
                 this._globalPaxHeader.applyHeader(file);
             }
 
-            if (paxHeader) {
-                paxHeader.applyHeader(file);
+            if (this._paxHeader) {
+                this._paxHeader.applyHeader(file);
+                this._paxHeader = null;
             }
 
             return file;
