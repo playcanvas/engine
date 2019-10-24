@@ -62,6 +62,7 @@
     "serve": "npm run build; ./node_modules/.bin/http-server build/output -a localhost -p 51000", 
     "closure": "java -jar node_modules/google-closure-compiler/compiler.jar --compilation_level=SIMPLE --warning_level=VERBOSE --jscomp_off=checkTypes --externs build/externs.js --language_in=ECMASCRIPT5_STRICT --js build/output/playcanvas-latest.js --js_output_file build/output/playcanvas.min.js", 
     "uglify": "uglifyjs build/output/playcanvas.js --compress --mangle --output build/output/playcanvas.min.js", 
+    
     "unzipbundle": "gzip -x tests/assets/bundle.gz", 
     "test": "karma start tests/karma.conf.js -- --single-run", 
     "test:release": "karma start tests/karma.conf.js -- --single-run --release", 

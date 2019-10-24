@@ -52,33 +52,6 @@ Object.assign(pc, function () {
         this.boneAabb = null;
     };
 
-    Object.assign(Mesh.prototype, {
-        destroy: function() {
-            this._refCount--;
-            if (this._refCount < 1) {
-                this.primitive = null;
-                this._aabb = null;
-                this.skin = null;
-                this.morph = null;
-                this.boneAabb = null;
-                if (this.vertexBuffer) {
-                    this.vertexBuffer.destroy();
-                    this.vertexBuffer = null;
-                }
-                if (this.indexBuffer) {
-                    var ib, j;
-                    for (j = 0; j < this.indexBuffer.length; j++) {
-                        ib = this.indexBuffer[j];
-                        if (!ib) continue;
-                        ib.destroy();
-                    }
-                    this.indexBuffer.length = 0;
-                    this.indexBuffer = null;
-                }
-            }
-        }
-    });
-
     Object.defineProperty(Mesh.prototype, 'aabb', {
         get: function () {
             return this.morph ? this.morph.aabb : this._aabb;
@@ -195,8 +168,7 @@ Object.assign(pc, function () {
             return this._mesh;
         },
         set: function (mesh) {
-            if(this._mesh === mesh) return;
-            if (this._mesh) this._mesh.destroy();
+            if (this._mesh) this._mesh._refCount--;
             this._mesh = mesh;
             if (mesh) mesh._refCount++;
         }
@@ -538,27 +510,6 @@ Object.assign(pc, function () {
     Object.assign(MeshInstance.prototype, {
         syncAabb: function () {
             // Deprecated
-        },
-
-        destroy: function() {
-            this.mesh = null;
-
-            if (this.skinInstance) {
-                var boneTex = this.skinInstance.boneTexture;
-                if (boneTex) {
-                    boneTex.destroy();
-                }
-                this.skinInstance = null;
-            }
-
-            if (this.morphInstance) {
-                this.morphInstance.destroy();
-                this.morphInstance = null;
-            }
-
-            this.material = null; // make sure instance and material clear references
-
-            this.node = null;
         },
 
         updateKey: function () {

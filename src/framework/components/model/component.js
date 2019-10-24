@@ -488,7 +488,6 @@ Object.assign(pc, function () {
                             system.box = pc.createBox(gd, {
                                 halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
                             });
-                            system.box._refCount++;
                         }
                         mesh = system.box;
                         this._area = { x: 2, y: 2, z: 2, uv: (2.0 / 3) };
@@ -499,7 +498,6 @@ Object.assign(pc, function () {
                                 radius: 0.5,
                                 height: 2
                             });
-                            system.capsule._refCount++;
                         }
                         mesh = system.capsule;
                         this._area = { x: (Math.PI * 2), y: Math.PI, z: (Math.PI * 2), uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
@@ -511,7 +509,6 @@ Object.assign(pc, function () {
                                 peakRadius: 0,
                                 height: 1
                             });
-                            system.cone._refCount++;
                         }
                         mesh = system.cone;
                         this._area = { x: 2.54, y: 2.54, z: 2.54, uv: (1.0 / 3 + (1.0 / 3) / 3) };
@@ -522,7 +519,6 @@ Object.assign(pc, function () {
                                 radius: 0.5,
                                 height: 1
                             });
-                            system.cylinder._refCount++;
                         }
                         mesh = system.cylinder;
                         this._area = { x: Math.PI, y: (0.79 * 2), z: Math.PI, uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
@@ -534,7 +530,6 @@ Object.assign(pc, function () {
                                 widthSegments: 1,
                                 lengthSegments: 1
                             });
-                            system.plane._refCount++;
                         }
                         mesh = system.plane;
                         this._area = { x: 0, y: 1, z: 0, uv: 1 };
@@ -544,7 +539,6 @@ Object.assign(pc, function () {
                             system.sphere = pc.createSphere(gd, {
                                 radius: 0.5
                             });
-                            system.sphere._refCount++;
                         }
                         mesh = system.sphere;
                         this._area = { x: Math.PI, y: Math.PI, z: Math.PI, uv: 1 };
@@ -557,11 +551,12 @@ Object.assign(pc, function () {
 
                 var model = new pc.Model();
                 model.graph = node;
+
                 model.meshInstances = [new pc.MeshInstance(node, mesh, this._material)];
 
                 if (system._inTools)
                     model.generateWireframe();
-                this._clonedModel = true;
+
                 this.model = model;
                 this._asset = null;
             }

@@ -219,8 +219,6 @@ Object.assign(pc, function () {
                 this._vertexBuffer.destroy();
                 this._vertexBuffer = null;
             }
-            this._vertexData = null;
-            this._weights = null;
         },
 
         /**
