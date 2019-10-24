@@ -4,11 +4,11 @@
 * Example usage:
 *
 * // regular release build
-* node build.js -l 0 -o output/playcanvas-latest.js
+* node build.js -l 0 -o output/playcanvas.js
 * // production minified build
-* node build.js -l 1 -o output/playcanvas-latest.min.js
+* node build.js -l 1 -o output/playcanvas.min.js
 * // include extra debug code
-* node build.js -l 0 -d -o output/playcanvas-latest.dbg.js
+* node build.js -l 0 -d -o output/playcanvas.dbg.js
 */
 
 var fs = require("fs");
@@ -36,7 +36,7 @@ try {
     process.exit(1);
 }
 
-var DEFAULT_OUTPUT = "output/playcanvas-latest.js";
+var DEFAULT_OUTPUT = "output/playcanvas.js";
 var DEFAULT_TEMP = "_tmp";
 var DEFAULT_SOURCE = "../src";
 var SRC_DIR = "../";
@@ -327,7 +327,7 @@ var arguments = function () {
             console.log("\t0: WHITESPACE_ONLY [default]");
             console.log("\t1: SIMPLE");
             console.log("\t2: ADVANCED OPTIMIZATIONS");
-            console.log("-o PATH: output file path [output/playcanvas-latest.js]");
+            console.log("-o PATH: output file path [output/playcanvas.js]");
             console.log("-d: build debug engine configuration");
             console.log("-p: build profiler engine configuration");
             console.log("-m SOURCE_PATH: build engine and generate source map next to output file. [../src]");

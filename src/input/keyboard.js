@@ -106,10 +106,11 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.Keyboard
+     * @extends pc.EventHandler
      * @classdesc A Keyboard device bound to an Element. Allows you to detect the state of the key presses.
      * Note, Keyboard object must be attached to an Element before it can detect any key presses.
      * @description Create a new Keyboard object
-     * @param {Element} [element] Element to attach Keyboard to. Note that elements like &lt;div&gt; can't
+     * @param {Element|Window} [element] Element to attach Keyboard to. Note that elements like &lt;div&gt; can't
      * accept focus by default. To use keyboard events on an element like this it must have a value of 'tabindex' e.g. tabindex="0". For more details: <a href="http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html">http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html</a>
      * @param {Object} [options] Optional options object.
      * @param {Boolean} [options.preventDefault] Call preventDefault() in key event handlers. This stops the default action of the event occurring. e.g. Ctrl+T will not open a new browser tab
@@ -118,14 +119,14 @@ Object.assign(pc, function () {
      * var keyboard = new pc.Keyboard(window); // attach keyboard listeners to the window
      */
     var Keyboard = function (element, options) {
+        pc.EventHandler.call(this);
+
         options = options || {};
         this._element = null;
 
         this._keyDownHandler = this._handleKeyDown.bind(this);
         this._keyUpHandler = this._handleKeyUp.bind(this);
         this._keyPressHandler = this._handleKeyPress.bind(this);
-
-        pc.events.attach(this);
 
         this._keymap = {};
         this._lastmap = {};
@@ -137,6 +138,8 @@ Object.assign(pc, function () {
         this.preventDefault = options.preventDefault || false;
         this.stopPropagation = options.stopPropagation || false;
     };
+    Keyboard.prototype = Object.create(pc.EventHandler.prototype);
+    Keyboard.prototype.constructor = Keyboard;
 
     /**
      * @function

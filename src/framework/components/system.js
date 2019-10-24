@@ -2,18 +2,21 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ComponentSystem
+     * @extends pc.EventHandler
      * @classdesc Component Systems contain the logic and functionality to update all Components of a particular type.
      * @param {pc.Application} app The application managing this system.
      */
     var ComponentSystem = function (app) {
+        pc.EventHandler.call(this);
+
         this.app = app;
 
         // The store where all pc.ComponentData objects are kept
         this.store = {};
         this.schema = [];
-
-        pc.events.attach(this);
     };
+    ComponentSystem.prototype = Object.create(pc.EventHandler.prototype);
+    ComponentSystem.prototype.constructor = ComponentSystem;
 
     // Class methods
     Object.assign(ComponentSystem, {
@@ -116,14 +119,14 @@ Object.assign(pc, function () {
     });
 
     // Instance methods
-    ComponentSystem.prototype = {
+    Object.assign(ComponentSystem.prototype, {
         /**
          * @private
          * @function
          * @name pc.ComponentSystem#addComponent
          * @description Create new {@link pc.Component} and {@link pc.ComponentData} instances and attach them to the entity
          * @param {pc.Entity} entity The Entity to attach this component to
-         * @param {Object} data The source data with which to create the component
+         * @param {Object} [data] The source data with which to create the component
          * @returns {pc.Component} Returns a Component of type defined by the component system
          * @example
          *   var entity = new pc.Entity(app);
@@ -194,7 +197,7 @@ Object.assign(pc, function () {
          * This can be overridden by derived Component Systems and either called by the derived System or replaced entirely
          * @param {pc.Component} component The component being initialized.
          * @param {Object} data The data block used to initialize the component.
-         * @param {Array} properties The array of property descriptors for the component. A descriptor can be either a plain property name, or an object specifying the name and type.
+         * @param {String[]|Object[]} properties The array of property descriptors for the component. A descriptor can be either a plain property name, or an object specifying the name and type.
          */
         initializeComponentData: function (component, data, properties) {
             data = data || {};
@@ -243,7 +246,7 @@ Object.assign(pc, function () {
          * @name pc.ComponentSystem#getPropertiesOfType
          * @description Searches the component schema for properties that match the specified type.
          * @param {String} type The type to search for
-         * @returns {Array} An array of property descriptors matching the specified type.
+         * @returns {String[]|Object[]} An array of property descriptors matching the specified type.
          */
         getPropertiesOfType: function (type) {
             var matchingProperties = [];
@@ -261,7 +264,7 @@ Object.assign(pc, function () {
         destroy: function () {
             this.off();
         }
-    };
+    });
 
     function convertValue(value, type) {
         if (!value) {

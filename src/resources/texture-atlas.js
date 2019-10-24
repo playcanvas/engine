@@ -16,6 +16,13 @@ Object.assign(pc, function () {
 
     var regexFrame = /^data\.frames\.(\d+)$/;
 
+    /**
+     * @constructor
+     * @name pc.TextureAtlasHandler
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading {@link pc.TextureAtlas} resources
+     * @param {pc.ResourceLoader} loader The resource loader
+     */
     var TextureAtlasHandler = function (loader) {
         this._loader = loader;
         this.retryRequests = false;

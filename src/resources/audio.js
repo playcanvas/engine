@@ -3,6 +3,10 @@ Object.assign(pc, function () {
 
     // checks if user is running IE
     var ie = (function () {
+        if (typeof window === 'undefined') {
+            // Node.js => return false
+            return false;
+        }
         var ua = window.navigator.userAgent;
 
         var msie = ua.indexOf('MSIE ');
@@ -21,6 +25,13 @@ Object.assign(pc, function () {
         return false;
     })();
 
+    /**
+     * @constructor
+     * @name pc.AudioHandler
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading {@link pc.Sound} resources
+     * @param {pc.SoundManager} manager The sound manager
+     */
     var AudioHandler = function (manager) {
         this.manager = manager;
         this.retryRequests = false;

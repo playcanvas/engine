@@ -92,6 +92,7 @@ Object.assign(pc, function () {
             this._arrayBuffer = arrayBuffer || new ArrayBuffer(0);
             this._bufferView = new DataView(this._arrayBuffer);
             this._globalPaxHeader = null;
+            this._paxHeader = null;
             this._bytesRead = 0;
         };
 
@@ -130,7 +131,6 @@ Object.assign(pc, function () {
             var start = this._bytesRead;
             var url = null;
 
-            var paxHeader;
             var normalFile = false;
             switch (type) {
                 case "0": case "": // Normal file
@@ -146,7 +146,7 @@ Object.assign(pc, function () {
                     this._globalPaxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
                     break;
                 case "x": // PAX header
-                    paxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
+                    this._paxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
                     break;
                 case "1": // Link to another file already archived
                 case "2": // Symbolic link
@@ -189,8 +189,9 @@ Object.assign(pc, function () {
                 this._globalPaxHeader.applyHeader(file);
             }
 
-            if (paxHeader) {
-                paxHeader.applyHeader(file);
+            if (this._paxHeader) {
+                this._paxHeader.applyHeader(file);
+                this._paxHeader = null;
             }
 
             return file;
@@ -249,19 +250,23 @@ Object.assign(pc, function () {
         }
     }
 
+    // this is the URL that is going to be used for workers
+    var workerUrl = null;
+
     // Convert the UntarScope function to a string and add
     // the onmessage handler for the worker to untar archives
-    var scopeToUrl = function () {
-        // execute UntarScope function in the worker
-        var code = '(' + UntarScope.toString() + ')(true)\n\n';
+    var getWorkerUrl = function () {
+        if (!workerUrl) {
+            // execute UntarScope function in the worker
+            var code = '(' + UntarScope.toString() + ')(true)\n\n';
 
-        // create blob URL for the code above to be used for the worker
-        var blob = new Blob([code], { type: 'application/javascript' });
-        return URL.createObjectURL(blob);
+            // create blob URL for the code above to be used for the worker
+            var blob = new Blob([code], { type: 'application/javascript' });
+
+            workerUrl = URL.createObjectURL(blob);
+        }
+        return workerUrl;
     };
-
-    // this is the URL that is going to be used for workers
-    var WORKER_URL = scopeToUrl();
 
     /**
     * @private
@@ -274,7 +279,7 @@ Object.assign(pc, function () {
         this._requestId = 0;
         this._pendingRequests = {};
         this._filenamePrefix = filenamePrefix;
-        this._worker = new Worker(WORKER_URL);
+        this._worker = new Worker(getWorkerUrl());
         this._worker.addEventListener('message', this._onMessage.bind(this));
     };
 

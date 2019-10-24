@@ -8,11 +8,11 @@ Object.assign(pc, function () {
      * Typically, the texel data represents an image that is mapped over geometry.
      * @description Creates a new texture.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this texture.
-     * @param {Object} options Object for passing optional arguments.
-     * @param {Number} options.width The width of the texture in pixels. Defaults to 4.
-     * @param {Number} options.height The height of the texture in pixels. Defaults to 4.
-     * @param {Number} options.depth The number of depth slices in a 3D texture (WebGL2 only). Defaults to 1 (single 2D image).
-     * @param {Number} options.format The pixel format of the texture. Can be:
+     * @param {Object} [options] Object for passing optional arguments.
+     * @param {Number} [options.width] The width of the texture in pixels. Defaults to 4.
+     * @param {Number} [options.height] The height of the texture in pixels. Defaults to 4.
+     * @param {Number} [options.depth] The number of depth slices in a 3D texture (WebGL2 only). Defaults to 1 (single 2D image).
+     * @param {Number} [options.format] The pixel format of the texture. Can be:
      * <ul>
      *     <li>{@link pc.PIXELFORMAT_A8}</li>
      *     <li>{@link pc.PIXELFORMAT_L8}</li>
@@ -37,26 +37,27 @@ Object.assign(pc, function () {
      *     <li>{@link pc.PIXELFORMAT_111110F}</li>
      * </ul>
      * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
-     * @param {Number} options.minFilter The minification filter type to use. Defaults to {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
-     * @param {Number} options.magFilter The magnification filter type to use. Defaults to {@link pc.FILTER_LINEAR}
-     * @param {Number} options.anisotropy The level of anisotropic filtering to use. Defaults to 1
-     * @param {Number} options.addressU The repeat mode to use in the U direction. Defaults to {@link pc.ADDRESS_REPEAT}
-     * @param {Number} options.addressV The repeat mode to use in the V direction. Defaults to {@link pc.ADDRESS_REPEAT}
-     * @param {Boolean} options.mipmaps When enabled try to generate or use mipmaps for this texture. Default is true
-     * @param {Boolean} options.cubemap Specifies whether the texture is to be a cubemap. Defaults to false.
-     * @param {Boolean} options.volume Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
-     * @param {Boolean} options.rgbm Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
-     * @param {Boolean} options.fixCubemapSeams Specifies whether this cubemap texture requires special
+     * @param {Number} [options.minFilter] The minification filter type to use. Defaults to {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
+     * @param {Number} [options.magFilter] The magnification filter type to use. Defaults to {@link pc.FILTER_LINEAR}
+     * @param {Number} [options.anisotropy] The level of anisotropic filtering to use. Defaults to 1
+     * @param {Number} [options.addressU] The repeat mode to use in the U direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {Number} [options.addressV] The repeat mode to use in the V direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {Number} [options.addressW] The repeat mode to use in the W direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {Boolean} [options.mipmaps] When enabled try to generate or use mipmaps for this texture. Default is true
+     * @param {Boolean} [options.cubemap] Specifies whether the texture is to be a cubemap. Defaults to false.
+     * @param {Boolean} [options.volume] Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
+     * @param {Boolean} [options.rgbm] Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
+     * @param {Boolean} [options.fixCubemapSeams] Specifies whether this cubemap texture requires special
      * seam fixing shader code to look right. Defaults to false.
-     * @param {Boolean} options.flipY Specifies whether the texture should be flipped in the Y-direction. Only affects textures
+     * @param {Boolean} [options.flipY] Specifies whether the texture should be flipped in the Y-direction. Only affects textures
      * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures or textures set from raw
      * pixel data. Defaults to true.
-     * @param {Boolean} options.premultiplyAlpha If true, the alpha channel of the texture (if present) is multiplied into the color
+     * @param {Boolean} [options.premultiplyAlpha] If true, the alpha channel of the texture (if present) is multiplied into the color
      * channels. Defaults to false.
-     * @param {Boolean} options.compareOnRead When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
+     * @param {Boolean} [options.compareOnRead] When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      * Defaults to false.
-     * @param {Number} options.compareFunc Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to pc.FUNC_LESS.
+     * @param {Number} [options.compareFunc] Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to pc.FUNC_LESS.
      * Possible values:
      * <ul>
      *     <li>pc.FUNC_LESS</li>
@@ -94,7 +95,6 @@ Object.assign(pc, function () {
         this._width = 4;
         this._height = 4;
         this._depth = 1;
-        this._pot = true;
 
         this._format = pc.PIXELFORMAT_R8_G8_B8_A8;
         this.rgbm = false;
@@ -124,7 +124,6 @@ Object.assign(pc, function () {
         if (options !== undefined) {
             this._width = (options.width !== undefined) ? options.width : this._width;
             this._height = (options.height !== undefined) ? options.height : this._height;
-            this._pot = pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
 
             this._format = (options.format !== undefined) ? options.format : this._format;
             this.rgbm = (options.rgbm !== undefined) ? options.rgbm : this.rgbm;
@@ -507,7 +506,7 @@ Object.assign(pc, function () {
             }
 
             var mips = 1;
-            if (this._pot && (this._mipmaps || this._minFilter === pc.FILTER_NEAREST_MIPMAP_NEAREST ||
+            if (this.pot && (this._mipmaps || this._minFilter === pc.FILTER_NEAREST_MIPMAP_NEAREST ||
                 this._minFilter === pc.FILTER_NEAREST_MIPMAP_LINEAR || this._minFilter === pc.FILTER_LINEAR_MIPMAP_NEAREST ||
                 this._minFilter === pc.FILTER_LINEAR_MIPMAP_LINEAR) && !(this._compressed && this._levels.length === 1)) {
 
@@ -589,6 +588,18 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @readonly
+     * @name pc.Texture#pot
+     * @type Boolean
+     * @description Returns true if all dimensions of the texture are power of two, and false otherwise.
+     */
+    Object.defineProperty(Texture.prototype, 'pot',  {
+        get: function () {
+            return pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
+        }
+    });
+
     // Public methods
     Object.assign(Texture.prototype, {
         /**
@@ -619,10 +630,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Texture#lock
          * @description Locks a miplevel of the texture, returning a typed array to be filled with pixel data.
-         * @param {Object} options Optional options object. Valid properties are as follows:
-         * @param {Number} options.level The mip level to lock with 0 being the top level. Defaults to 0.
-         * @param {Number} options.face If the texture is a cubemap, this is the index of the face to lock.
-         * @returns {ArrayBuffer} A typed array containing the pixel data of the locked mip level.
+         * @param {Object} [options] Optional options object. Valid properties are as follows:
+         * @param {Number} [options.level] The mip level to lock with 0 being the top level. Defaults to 0.
+         * @param {Number} [options.face] If the texture is a cubemap, this is the index of the face to lock.
+         * @returns {Uint8Array|Uint16Array|Float32Array} A typed array containing the pixel data of the locked mip level.
          */
         lock: function (options) {
             // Initialize options to some sensible defaults
@@ -689,9 +700,9 @@ Object.assign(pc, function () {
          * @name pc.Texture#setSource
          * @description Set the pixel data of the texture from a canvas, image, video DOM element. If the
          * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
-         * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|Array} source A canvas, image or video element,
+         * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source A canvas, image or video element,
          * or an array of 6 canvas, image or video elements.
-         * @param {Number} mipLevel A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
+         * @param {Number} [mipLevel] A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
          * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
          */
         setSource: function (source, mipLevel) {
@@ -708,14 +719,14 @@ Object.assign(pc, function () {
                     height = source[0].height || 0;
 
                     for (i = 0; i < 6; i++) {
+                        var face = source[i];
                         // cubemap becomes invalid if any condition is not satisfied
-                        if (!source[i] || // face is missing
-                            source[i].width !== width || // face is different width
-                            source[i].height !== height || // face is different height
-                            (!(source[i] instanceof HTMLImageElement) && // not image and
-                            !(source[i] instanceof HTMLCanvasElement) && // not canvas and
-                            !(source[i] instanceof HTMLVideoElement))) { // not video
-
+                        if (!face ||                  // face is missing
+                            face.width !== width ||   // face is different width
+                            face.height !== height || // face is different height
+                            !((typeof HTMLImageElement !== 'undefined' && face instanceof HTMLImageElement) ||   // not image or
+                              (typeof HTMLCanvasElement !== 'undefined' && face instanceof HTMLCanvasElement) || // canvas or
+                              (typeof HTMLVideoElement !== 'undefined' && face instanceof HTMLVideoElement))) {  // video
                             invalid = true;
                             break;
                         }
@@ -734,7 +745,9 @@ Object.assign(pc, function () {
                 }
             } else {
                 // check if source is valid type of element
-                if (!(source instanceof HTMLImageElement) && !(source instanceof HTMLCanvasElement) && !(source instanceof HTMLVideoElement))
+                if (!((typeof HTMLImageElement !== 'undefined' && source instanceof HTMLImageElement) ||
+                      (typeof HTMLCanvasElement !== 'undefined' && source instanceof HTMLCanvasElement) ||
+                      (typeof HTMLVideoElement !== 'undefined' && source instanceof HTMLVideoElement)))
                     invalid = true;
 
                 if (!invalid) {
@@ -753,7 +766,6 @@ Object.assign(pc, function () {
                 // default sizes
                 this._width = 4;
                 this._height = 4;
-                this._pot = true;
 
                 // remove levels
                 if (this._cubemap) {
@@ -771,7 +783,6 @@ Object.assign(pc, function () {
                     this._width = width;
                     this._height = height;
                 }
-                this._pot = pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
 
                 this._levels[mipLevel] = source;
             }
@@ -790,7 +801,7 @@ Object.assign(pc, function () {
          * @name pc.Texture#getSource
          * @description Get the pixel data of the texture. If this is a cubemap then an array of 6 images will be returned otherwise
          * a single image.
-         * @param {Number} mipLevel A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
+         * @param {Number} [mipLevel] A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
          * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
          * @returns {HTMLImageElement} The source image of this texture. Can be null if source not assigned for specific image level.
          */

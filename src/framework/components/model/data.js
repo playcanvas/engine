@@ -5,9 +5,9 @@ Object.assign(pc, function () {
      * @private
      * @constructor
      * @name pc.ModelComponentData
+     * @extends pc.ComponentData
      * @classdesc Data for a {@link pc.ModelComponent}
      * @description Create a new data object
-     * @extends pc.ComponentData
      */
     var ModelComponentData = function () {
         this.enabled = true;

@@ -3,8 +3,9 @@ Object.assign(pc, function () {
 
     /**
     * @private
+    * @constructor
     * @name pc.SortedLoopArray
-    * @class Helper class used to hold an array of items in a specific order. This array is safe to modify
+    * @classdesc Helper class used to hold an array of items in a specific order. This array is safe to modify
     * while we loop through it. The class assumes that it holds objects that need to be sorted based on
     * one of their fields.
     * @param {Object} args Arguments

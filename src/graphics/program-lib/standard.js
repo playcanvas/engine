@@ -234,10 +234,11 @@ pc.programlib.standard = {
         var uvChannel = options[uVPropName];
 
         var expression;
+        var isMainPass = (options.pass === pc.SHADER_FORWARD || options.pass === pc.SHADER_FORWARDHDR);
 
-        if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
+        if (isMainPass && options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
             expression = "nineSlicedUv";
-        } else if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
+        } else if (isMainPass && options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
             expression = "nineSlicedUv, -1000.0";
         } else {
             if (transformId === 0) {
@@ -716,7 +717,7 @@ pc.programlib.standard = {
 
         if (options.pass === pc.SHADER_PICK) {
             // ##### PICK PASS #####
-            code += "uniform vec4 uColor;";
+            code += "uniform vec4 uColor;\n";
             code += varyings;
             if (options.alphaTest) {
                 code += "float dAlpha;\n";
@@ -930,7 +931,7 @@ pc.programlib.standard = {
 
 
         var tbn;
-        if (!options.hasTangents) {
+        if (!options.hasTangents && device.extStandardDerivatives) {
             tbn = chunks.TBNderivativePS;
         } else if (options.fastTbn) {
             tbn = chunks.TBNfastPS;
