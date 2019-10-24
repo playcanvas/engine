@@ -4,6 +4,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.TextureAtlas
+     * @extends pc.EventHandler
      * @classdesc A pc.TextureAtlas contains a number of frames from a texture. Each frame defines a region in
      * a texture. The pc.TextureAtlas is referenced by {@link pc.Sprite}s.
      * @property {pc.Texture} texture The texture atlas.
@@ -29,10 +30,13 @@ Object.assign(pc, function () {
      * };
      */
     var TextureAtlas = function () {
+        pc.EventHandler.call(this);
+
         this._texture = null;
         this._frames = null;
-        pc.events.attach(this);
     };
+    TextureAtlas.prototype = Object.create(pc.EventHandler.prototype);
+    TextureAtlas.prototype.constructor = TextureAtlas;
 
     /**
      * @function

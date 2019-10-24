@@ -2,6 +2,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.VrDisplay
+     * @extends pc.EventHandler
      * @classdesc Represents a single Display for VR content. This could be a Head Mounted display that can present content on a separate screen
      * or a phone which can display content full screen on the same screen. This object contains the native `navigator.VRDisplay` object
      * from the WebVR API.
@@ -17,6 +18,8 @@ Object.assign(pc, function () {
      * This can be used to determine what features are available on this display.
      */
     var VrDisplay = function (app, display) {
+        pc.EventHandler.call(this);
+
         var self = this;
 
         this._app = app;
@@ -95,9 +98,9 @@ Object.assign(pc, function () {
             }
         };
         window.addEventListener('vrdisplaypresentchange', self._presentChange, false);
-
-        pc.events.attach(this);
     };
+    VrDisplay.prototype = Object.create(pc.EventHandler.prototype);
+    VrDisplay.prototype.constructor = VrDisplay;
 
     Object.assign(VrDisplay.prototype, {
         /**
@@ -213,7 +216,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.VrDisplay#requestPresent
          * @description Try to present full screen VR content on this display
-         * @param {Function} callback Called when the request is completed. Callback takes a single argument (err) that is the error message return
+         * @param {pc.callbacks.VrDisplay} callback Called when the request is completed. Callback takes a single argument (err) that is the error message return
          * if presenting fails, or null if the call succeeds. Usually called by {@link pc.CameraComponent#enterVr}.
          */
         requestPresent: function (callback) {
@@ -238,7 +241,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.VrDisplay#exitPresent
          * @description Try to stop presenting VR content on this display
-         * @param {Function} callback Called when the request is completed. Callback takes a single argument (err) that is the error message return
+         * @param {pc.callbacks.VrDisplay} callback Called when the request is completed. Callback takes a single argument (err) that is the error message return
          * if presenting fails, or null if the call succeeds. Usually called by {@link pc.CameraComponent#exitVr}.
          */
         exitPresent: function (callback) {
@@ -262,7 +265,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.VrDisplay#requestAnimationFrame
          * @description Used in the main application loop instead of the regular `window.requestAnimationFrame`. Usually only called from inside {@link pc.Application}
-         * @param {Function} fn Function called when it is time to update the frame.
+         * @param {pc.callbacks.VrFrame} fn Function called when it is time to update the frame.
          */
         requestAnimationFrame: function (fn) {
             if (this.display) this.display.requestAnimationFrame(fn);

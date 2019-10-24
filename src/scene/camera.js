@@ -260,7 +260,7 @@ Object.assign(pc, function () {
          * @param {Object} options The options determining the behaviour of subsequent render target clears.
          * @param {Number[]} options.color The options determining the behaviour of subsequent render target clears.
          * @param {Number} options.depth The options determining the behaviour of subsequent render target clears.
-         * @param {pc.CLEARFLAG} options.flags The options determining the behaviour of subsequent render target clears.
+         * @param {Number} options.flags The options determining the behaviour of subsequent render target clears.
          */
         setClearOptions: function (options) {
             this._clearOptions.color[0] = options.color[0];

@@ -61,7 +61,7 @@ Object.assign(pc, function () {
                 device.vbOffsets.length = 0;
                 device.attributesInvalidated = true;
                 for (var loc in device.enabledAttributes) {
-                    gl.disableVertexAttribArray(loc);
+                    gl.disableVertexAttribArray(Number(loc));
                 }
                 device.enabledAttributes = {};
             }

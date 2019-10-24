@@ -1,0 +1,11 @@
+{
+    "source": {
+        "include": ["src"]
+    },
+    "opts": {
+        "destination": "build/output",
+        "outFile": "playcanvas.d.ts",
+        "recurse": true,
+        "template": "node_modules/tsd-jsdoc/dist"
+    }
+}

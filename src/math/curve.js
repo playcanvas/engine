@@ -2,39 +2,45 @@ Object.assign(pc, (function () {
     'use strict';
 
     /**
-     * @enum pc.CURVE
+     * @constant
+     * @type {Number}
      * @name pc.CURVE_LINEAR
      * @description A linear interpolation scheme.
      */
     var CURVE_LINEAR = 0;
     /**
-     * @enum pc.CURVE
+     * @constant
+     * @type {Number}
      * @name pc.CURVE_SMOOTHSTEP
      * @description A smooth step interpolation scheme.
      */
     var CURVE_SMOOTHSTEP = 1;
     /**
      * @deprecated
-     * @enum pc.CURVE
+     * @constant
+     * @type {Number}
      * @name pc.CURVE_CATMULL
      * @description A Catmull-Rom spline interpolation scheme. This interpolation scheme is deprecated. Use CURVE_SPLINE instead.
      */
     var CURVE_CATMULL = 2;
     /**
      * @deprecated
-     * @enum pc.CURVE
+     * @constant
+     * @type {Number}
      * @name pc.CURVE_CARDINAL
      * @description A cardinal spline interpolation scheme. This interpolation scheme is deprecated. Use CURVE_SPLINE instead.
      */
     var CURVE_CARDINAL = 3;
     /**
-     * @enum pc.CURVE
+     * @constant
+     * @type {Number}
      * @name pc.CURVE_SPLINE
      * @description Cardinal spline interpolation scheme. For Catmull-Rom, specify curve tension 0.5.
      */
     var CURVE_SPLINE = 4;
     /**
-     * @enum pc.CURVE
+     * @constant
+     * @type {Number}
      * @name pc.CURVE_STEP
      * @description A stepped interpolater, free from the shackles of blending.
      */
@@ -49,6 +55,14 @@ Object.assign(pc, (function () {
      * @param {Number[]} [data] An array of keys (pairs of numbers with the time first and
      * value second)
      * @property {Number} length The number of keys in the curve. [read only]
+     * @property {Number} type The curve interpolation scheme. Can be:
+     * <ul>
+     *     <li>{@link pc.CURVE_LINEAR}</li>
+     *     <li>{@link pc.CURVE_SMOOTHSTEP}</li>
+     *     <li>{@link pc.CURVE_SPLINE}</li>
+     *     <li>{@link pc.CURVE_STEP}</li>
+     * </ul>
+     * Defaults to {@link pc.CURVE_SMOOTHSTEP};
      */
     var Curve = function (data) {
         this.keys = [];
@@ -164,7 +178,7 @@ Object.assign(pc, (function () {
          * @name pc.Curve#quantize
          * @description Sample the curve at regular intervals over the range [0..1]
          * @param {Number} precision The number of samples to return.
-         * @returns {Array} The set of quantized values.
+         * @returns {Float32Array} The set of quantized values.
          */
         quantize: function (precision) {
             precision = Math.max(precision, 2);
@@ -190,7 +204,7 @@ Object.assign(pc, (function () {
          * @param {Number} precision The number of samples to return.
          * @param {Number} min The minimum output value.
          * @param {Number} max The maximum output value.
-         * @returns {Array} The set of quantized values.
+         * @returns {Float32Array} The set of quantized values.
          */
         quantizeClamped: function (precision, min, max) {
             var result = this.quantize(precision);
