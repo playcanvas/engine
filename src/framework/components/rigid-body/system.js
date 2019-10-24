@@ -412,10 +412,12 @@ Object.assign(pc, function () {
                             others.splice(i, 1);
 
                             if (entity.trigger) {
+                                // handle a trigger entity
                                 if (entityCollision) {
                                     entityCollision.fire("triggerleave", other);
                                 }
                             } else if (!other.trigger) {
+                                // suppress events if the other entity is a trigger
                                 if (entityRigidbody) {
                                     entityRigidbody.fire("collisionend", other);
                                 }
