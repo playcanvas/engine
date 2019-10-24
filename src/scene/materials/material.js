@@ -166,7 +166,7 @@ Object.assign(pc, function () {
             return pc.BLEND_NORMAL;
         },
         set: function (type) {
-            var prevBlend = this.blend !== pc.BLEND_NONE;
+            var prevBlend = this.blend;
             switch (type) {
                 case pc.BLEND_NONE:
                     this.blend = false;
@@ -229,7 +229,7 @@ Object.assign(pc, function () {
                     this.blendEquation = pc.BLENDEQUATION_MAX;
                     break;
             }
-            if (prevBlend !== (this.blend !== pc.BLEND_NONE)) {
+            if (prevBlend !== this.blend) {
                 if (this._scene) {
                     this._scene.layers._dirtyBlend = true;
                 } else {
