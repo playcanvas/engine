@@ -306,15 +306,15 @@ Object.assign(pc, function () {
             } else if (ext === '.basis') {
                 if (this._basis === null) {
                     // search for wasm module
-                    var config = window.config;
-                    var wasmModule = config.wasmModules.find(function (m) {
+                    var modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
+                    var wasmModule = modules.find(function (m) {
                         return m.wasmUrl.indexOf('basist_all') !== -1;
                     });
                     if (wasmModule) {
                         this._basis = new pc.Basis(
-                            config.url.home + '/' + wasmModule.glueUrl,
-                            config.url.home + '/' + wasmModule.wasmUrl,
-                            wasmModule.fallbackUrl ? config.url.home + '/' + wasmModule.fallbackUrl : null);
+                            wasmModule.glueUrl,
+                            wasmModule.wasmUrl,
+                            wasmModule.fallbackUrl ? wasmModule.fallbackUrl : null);
                     }
                 }
                 if (this._basis) {
@@ -396,7 +396,6 @@ Object.assign(pc, function () {
             var ext = pc.path.getExtension(url).toLowerCase();
             var format = null;
 
-
             // Every browser seems to pass data as an Image type. For some reason, the XDK
             // passes an HTMLImageElement. TODO: figure out why!
             // DDS textures are ArrayBuffers
@@ -414,27 +413,27 @@ Object.assign(pc, function () {
                 });
                 texture.name = url;
                 texture.setSource(img);
-            } else if (data instanceof ArrayBuffer) { // Container format
-                var LEGACY = true;
+            } else { // Container format
 
-                if (LEGACY && ext === '.dds') {
+                if (ext === '.dds' && data instanceof ArrayBuffer) {
                     texture = _legacyDdsLoader(url, data, this._device);
                 } else {
                     var textureData;
 
-                    switch (ext) {
-                        case '.dds':
-                            textureData = new pc.DdsParser(data);
-                            break;
-                        case '.ktx':
-                            textureData = new pc.KtxParser(data);
-                            break;
-                        case '.basis':
-                            textureData = new pc.BasisParser(data);
-                            break;
-                        case '.pvr':
-                            console.warn('PVR container not supported.');
-                            break;
+                    if (ext === '.basis') {
+                        textureData = data;
+                    } else if (data instanceof ArrayBuffer) {
+                        switch (ext) {
+                            case '.dds':
+                                textureData = new pc.DdsParser(data);
+                                break;
+                            case '.ktx':
+                                textureData = new pc.KtxParser(data);
+                                break;
+                            case '.pvr':
+                                console.warn('PVR container not supported.');
+                                break;
+                        }
                     }
 
                     if (!textureData) {

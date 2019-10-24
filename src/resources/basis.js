@@ -106,7 +106,10 @@ Object.assign(pc, function () {
 
         // send result to the caller
         var send = function (url, data) {
-            self.postMessage( { url: url, data: data }, [data.levels]);
+            data.levels = data.levels.map(function (v) {
+                return v.buffer;
+            });
+            self.postMessage( { url: url, data: data }, data.levels);
         };
 
         // download and transcode the file given the basis module and
@@ -120,7 +123,7 @@ Object.assign(pc, function () {
                     send(url, transcode(basis, response));
                 });
             } catch (err) {
-                self.postMessage( { err: err } );
+                self.postMessage( { url: url, err: err } );
             }
         };
 
@@ -130,9 +133,9 @@ Object.assign(pc, function () {
         // handle incoming request to download and transcode
         self.onmessage = function (message) {
             if (basis) {
-                handle(basis, message.url);
+                handle(basis, message.data.url);
             } else {
-                queue.push(message.url);
+                queue.push(message.data.url);
             }
         };
 
@@ -171,6 +174,7 @@ Object.assign(pc, function () {
     var Basis = function (basisJs, basisWasm, basisAsm) {
         this.worker = null;
         this.callbacks = { };
+        this.urlBase = (window.ASSET_PREFIX ? window.ASSET_PREFIX : (window.location.origin + '/'));
 
         // create a set of two formats, one for the alpha and one for the non-alpha
         // basis formats
@@ -191,16 +195,24 @@ Object.assign(pc, function () {
             return [BASIS_FORMAT.cTFRGBA4444, BASIS_FORMAT.cTFRGB565];
         })(pc.app.graphicsDevice);
 
-        var code = '(' + BasisWorker.toString() + ')("' + basisJs + '","' + basisWasm + '","' + basisAsm + '",' + formats.toString() + ')\n\n';
+        var code = '(' + BasisWorker.toString() + ')("' +
+                    this.urlBase + basisJs + '","' +
+                    this.urlBase + basisWasm + '","' +
+                    this.urlBase + basisAsm + '",' +
+                    '[' + formats.toString() + ']' +
+                    ')\n\n';
         var blob = new Blob([code], { type: 'application/javascript' });
         var url = URL.createObjectURL(blob);
         this.worker = new Worker(url);
-        this.worker.addEventListener('message', this._handleWorkerResponse);
+        this.worker.addEventListener('message', this._handleWorkerResponse.bind(this));
     };
 
     // render thread worker manager
     Basis.prototype = {
         getAndPrepare: function (url, callback) {
+            if (this._isUrlRelative(url)) {
+                url = this.urlBase + url;
+            }
             if (!this.callbacks.hasOwnProperty(url)) {
                 // store url and kick off worker job
                 this.callbacks[url] = [callback];
@@ -214,16 +226,38 @@ Object.assign(pc, function () {
             }
         },
 
+        _isUrlRelative: function (url) {
+            return (url.indexOf('://')  <= 0 && url.indexOf('//') !== 0 );
+        },
+
         _handleWorkerResponse: function (message) {
-            var callbacks = this.callbacks[message.url];
+            var data = message.data;
+            var callbacks = this.callbacks[data.url];
             if (callbacks) {
-                for (var i = 0; i < callbacks.length; ++i) {
-                    if (message.err) {
-                        (callbacks[i])(message.err);
+                var i;
+                if (data.err) {
+                    for (i = 0; i < callbacks.length; ++i) {
+                        (callbacks[i])(data.err);
+                    }
+                } else {
+                    data = data.data;
+                    // (re)create typed array from the returned array buffers
+                    if (data.format === BASIS_FORMAT.cTFRGB565 || data.format === BASIS_FORMAT.cTFRGBA4444) {
+                        // handle 16 bit formats
+                        data.levels = data.levels.map(function (v) {
+                            return new Uint16Array(v);
+                        });
                     } else {
-                        // convert basis to pixel format
-                        message.data.format = this._basisToPixelFormat(message.data.format);
-                        (callbacks[i])(null, message.data);
+                        // all other
+                        data.levels = data.levels.map(function (v) {
+                            return new Uint8Array(v);
+                        });
+                    }
+
+                    // convert basis to pixel format
+                    data.format = this._basisToPixelFormat(data.format);
+                    for (i = 0; i < callbacks.length; ++i) {
+                        (callbacks[i])(null, data);
                     }
                 }
             } else {
