@@ -258,7 +258,6 @@ Object.assign(pc, function () {
         this._atlasRectUniform = new Float32Array(4);
 
         this._defaultMesh = this._createMesh();
-        this._defaultMesh._refCount++;
         this._renderable = new ImageRenderable(this._entity, this._defaultMesh, this._material);
 
         // set default colors
@@ -288,8 +287,8 @@ Object.assign(pc, function () {
             this.spriteAsset = null;
             this.materialAsset = null;
 
+            this._renderable.setMesh(this._defaultMesh);
             this._renderable.destroy();
-            this._defaultMesh.destroy();
             this._defaultMesh = null;
 
             this._element.off('resize', this._onParentResizeOrPivotChange, this);

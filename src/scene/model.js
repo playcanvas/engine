@@ -159,12 +159,47 @@ Object.assign(pc, function () {
          */
         destroy: function () {
             var meshInstances = this.meshInstances;
-            var meshInstance; 
+            var meshInstance, mesh, skin, morph, ib, boneTex, j;
+            var device;
             for (var i = 0; i < meshInstances.length; i++) {
                 meshInstance = meshInstances[i];
-                meshInstance.destroy();
+
+                mesh = meshInstance.mesh;
+                if (mesh) {
+                    mesh._refCount--;
+                    if (mesh._refCount < 1) {
+                        if (mesh.vertexBuffer) {
+                            device = device || mesh.vertexBuffer.device;
+                            mesh.vertexBuffer.destroy();
+                            mesh.vertexBuffer = null;
+                        }
+                        for (j = 0; j < mesh.indexBuffer.length; j++) {
+                            device = device || mesh.indexBuffer.device;
+                            ib = mesh.indexBuffer[j];
+                            if (!ib) continue;
+                            ib.destroy();
+                        }
+                        mesh.indexBuffer.length = 0;
+                    }
+                }
+
+                skin = meshInstance.skinInstance;
+                if (skin) {
+                    boneTex = skin.boneTexture;
+                    if (boneTex) {
+                        boneTex.destroy();
+                    }
+                }
+                meshInstance.skinInstance = null;
+
+                morph = meshInstance.morphInstance;
+                if (morph) {
+                    morph.destroy();
+                }
+                meshInstance.morphInstance = null;
+
+                meshInstance.material = null; // make sure instance and material clear references
             }
-            this.meshInstances = null;
         },
 
         /**
