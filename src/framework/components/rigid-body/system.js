@@ -400,6 +400,7 @@ Object.assign(pc, function () {
                     var collision = collisions[guid];
                     var entity = collision.entity;
                     var entityCollision = entity.collision;
+                    var entityRigidbody = entity.rigidbody;
                     var others = collision.others;
                     var length = others.length;
                     var i = length;
@@ -412,16 +413,13 @@ Object.assign(pc, function () {
 
                             if (entity.trigger) {
                                 if (entityCollision) {
-                                    // fire trigger event
                                     entityCollision.fire("triggerleave", other);
                                 }
-                            } else {
-                                // fire rigidbody event
-                                if (entity.rigidbody && other.rigidbody) {
-                                    entity.rigidbody.fire("collisionend", other);
+                            } else if (!other.trigger) {
+                                if (entityRigidbody) {
+                                    entityRigidbody.fire("collisionend", other);
                                 }
-                                // fire collision event
-                                if (entityCollision && other.collision) {
+                                if (entityCollision) {
                                     entityCollision.fire("collisionend", other);
                                 }
                             }
@@ -567,22 +565,18 @@ Object.assign(pc, function () {
 
                             if (e0Events) {
                                 var forwardResult = this._createContactResult(e1, forwardContacts);
+                                newCollision = this._storeCollision(e0, e1);
 
-                                // fire contact events on collision volume
                                 if (e0.collision) {
                                     e0.collision.fire("contact", forwardResult);
-                                }
-                                if (e0.rigidbody) {
-                                    e0.rigidbody.fire("contact", forwardResult);
-                                }
-
-                                // fire collisionstart events
-                                newCollision = this._storeCollision(e0, e1);
-                                if (newCollision) {
-                                    if (e0.collision) {
+                                    if (newCollision) {
                                         e0.collision.fire("collisionstart", forwardResult);
                                     }
-                                    if (e0.rigidbody) {
+                                }
+
+                                if (e0.rigidbody) {
+                                    e0.rigidbody.fire("contact", forwardResult);
+                                    if (newCollision) {
                                         e0.rigidbody.fire("collisionstart", forwardResult);
                                     }
                                 }
@@ -590,20 +584,18 @@ Object.assign(pc, function () {
 
                             if (e1Events) {
                                 var reverseResult = this._createContactResult(e0, reverseContacts);
+                                newCollision = this._storeCollision(e1, e0);
 
                                 if (e1.collision) {
                                     e1.collision.fire("contact", reverseResult);
-                                }
-                                if (e1.rigidbody) {
-                                    e1.rigidbody.fire("contact", reverseResult);
-                                }
-
-                                newCollision = this._storeCollision(e1, e0);
-                                if (newCollision) {
-                                    if (e1.collision) {
+                                    if (newCollision) {
                                         e1.collision.fire("collisionstart", reverseResult);
                                     }
-                                    if (e1.rigidbody) {
+                                }
+
+                                if (e1.rigidbody) {
+                                    e1.rigidbody.fire("contact", reverseResult);
+                                    if (newCollision) {
                                         e1.rigidbody.fire("collisionstart", reverseResult);
                                     }
                                 }
