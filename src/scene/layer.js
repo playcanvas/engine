@@ -374,7 +374,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#addMeshInstances
      * @description Adds an array of mesh instances to this layer.
-     * @param {Array} meshInstances Array of {@link pc.MeshInstance}.
+     * @param {pc.MeshInstance[]} meshInstances Array of {@link pc.MeshInstance}.
      * @param {Boolean} [skipShadowCasters] Set it to true if you don't want these mesh instances to cast shadows in this layer.
      */
     Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
@@ -407,7 +407,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#removeMeshInstances
      * @description Removes multiple mesh instances from this layer.
-     * @param {Array} meshInstances Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
+     * @param {pc.MeshInstance[]} meshInstances Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
      * @param {Boolean} [skipShadowCasters] Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
      */
     Layer.prototype.removeMeshInstances = function (meshInstances, skipShadowCasters) {
@@ -531,7 +531,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#addShadowCasters
      * @description Adds an array of mesh instances to this layer, but only as shadow casters (they will not be rendered anywhere, but only cast shadows on other objects).
-     * @param {Array} meshInstances Array of {@link pc.MeshInstance}.
+     * @param {pc.MeshInstance[]} meshInstances Array of {@link pc.MeshInstance}.
      */
     Layer.prototype.addShadowCasters = function (meshInstances) {
         var m;
@@ -548,7 +548,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#removeShadowCasters
      * @description Removes multiple mesh instances from the shadow casters list of this layer, meaning they will stop casting shadows.
-     * @param {Array} meshInstances Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
+     * @param {pc.MeshInstance[]} meshInstances Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
      */
     Layer.prototype.removeShadowCasters = function (meshInstances) {
         var id;

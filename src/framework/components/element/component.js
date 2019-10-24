@@ -4,19 +4,22 @@ Object.assign(pc, function () {
     // #endif
 
     /**
-     * @enum pc.ELEMENTTYPE
+     * @constant
+     * @type {String}
      * @name pc.ELEMENTTYPE_GROUP
      * @description A {@link pc.ElementComponent} that contains child {@link pc.ElementComponent}s.
      */
     pc.ELEMENTTYPE_GROUP = 'group';
     /**
-     * @enum pc.ELEMENTTYPE
+     * @constant
+     * @type {String}
      * @name pc.ELEMENTTYPE_IMAGE
      * @description A {@link pc.ElementComponent} that displays an image.
      */
     pc.ELEMENTTYPE_IMAGE = 'image';
     /**
-     * @enum pc.ELEMENTTYPE
+     * @constant
+     * @type {String}
      * @name pc.ELEMENTTYPE_TEXT
      * @description A {@link pc.ElementComponent} that displays text.
      */
@@ -100,7 +103,7 @@ Object.assign(pc, function () {
      * @property {Boolean} rtlReorder Reorder the text for RTL languages using a function registered by <code>app.systems.element.registerUnicodeConverter</code>.
      * @property {Boolean} unicodeConverter Convert unicode characters using a function registered by <code>app.systems.element.registerUnicodeConverter</code>.
      * @property {Number} batchGroupId Assign element to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
-     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
+     * @property {Number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this element should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      * @property {Boolean} enableMarkup Flag for enabling markup processing. Only works for {@link pc.ELEMENTTYPE_TEXT} types.
      * @property {Number} rangeStart Index of the first character to render. Only works for {@link pc.ELEMENTTYPE_TEXT} types.

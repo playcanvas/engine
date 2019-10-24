@@ -208,6 +208,37 @@ Object.assign(pc, function () {
         }
     });
 
+    // Cone Collision System
+    var CollisionConeSystemImpl = function (system) {
+        CollisionSystemImpl.call(this, system);
+    };
+    CollisionConeSystemImpl.prototype = Object.create(CollisionSystemImpl.prototype);
+    CollisionConeSystemImpl.prototype.constructor = CollisionConeSystemImpl;
+
+    Object.assign(CollisionConeSystemImpl.prototype, {
+        createPhysicalShape: function (entity, data) {
+            var shape = null;
+            var axis = (data.axis !== undefined) ? data.axis : 1;
+            var radius = (data.radius !== undefined) ? data.radius : 0.5;
+            var height = (data.height !== undefined) ? data.height : 1;
+
+            if (typeof Ammo !== 'undefined') {
+                switch (axis) {
+                    case 0:
+                        shape = new Ammo.btConeShapeX(radius, height);
+                        break;
+                    case 1:
+                        shape = new Ammo.btConeShape(radius, height);
+                        break;
+                    case 2:
+                        shape = new Ammo.btConeShapeZ(radius, height);
+                        break;
+                }
+            }
+            return shape;
+        }
+    });
+
     // Mesh Collision System
     var CollisionMeshSystemImpl = function (system) {
         CollisionSystemImpl.call(this, system);
@@ -375,10 +406,10 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.CollisionComponentSystem
+     * @extends pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.CollisionComponent}s.
      * @description Creates a new CollisionComponentSystem.
      * @param {pc.Application} app The running {pc.Application}
-     * @extends pc.ComponentSystem
      */
     var CollisionComponentSystem = function CollisionComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
@@ -472,6 +503,9 @@ Object.assign(pc, function () {
                         break;
                     case 'cylinder':
                         impl = new CollisionCylinderSystemImpl(this);
+                        break;
+                    case 'cone':
+                        impl = new CollisionConeSystemImpl(this);
                         break;
                     case 'mesh':
                         impl = new CollisionMeshSystemImpl(this);

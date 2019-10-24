@@ -24,6 +24,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.SoundSlot
+     * @extends pc.EventHandler
      * @classdesc The SoundSlot controls playback of an audio asset.
      * @description Create a new SoundSlot
      * @param {pc.SoundComponent} component The Component that created this slot.
@@ -53,6 +54,8 @@ Object.assign(pc, function () {
      * @property {pc.SoundInstance[]} instances An array that contains all the {@link pc.SoundInstance}s currently being played by the slot.
      */
     var SoundSlot = function (component, name, options) {
+        pc.EventHandler.call(this);
+
         options = options || {};
         this._component = component;
         this._assets = component.system.app.assets;
@@ -80,9 +83,9 @@ Object.assign(pc, function () {
         this._onInstanceEndHandler = this._onInstanceEnd.bind(this);
 
         this.instances = [];
-
-        pc.events.attach(this);
     };
+    SoundSlot.prototype = Object.create(pc.EventHandler.prototype);
+    SoundSlot.prototype.constructor = SoundSlot;
 
     Object.assign(SoundSlot.prototype, {
         /**

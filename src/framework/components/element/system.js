@@ -4,9 +4,9 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.ElementComponentSystem
+     * @extends pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.ElementComponent}s.
      * @param {pc.Application} app The application
-     * @extends pc.ComponentSystem
      */
     var ElementComponentSystem = function ElementComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
