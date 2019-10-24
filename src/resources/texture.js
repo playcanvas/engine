@@ -275,6 +275,11 @@ Object.assign(pc, function () {
         }
 
         this.retryRequests = false;
+
+        // initialize basis module
+        // FIXME: this should be optional
+        // FIXME: where do these modules come from?
+        this._basis = null;
     };
 
     Object.assign(TextureHandler.prototype, {
@@ -299,7 +304,22 @@ Object.assign(pc, function () {
                 };
                 pc.http.get(url.load, options, callback);
             } else if (ext === '.basis') {
-                pc.Basis.getAndPrepare(url.load, callback);
+                if (this._basis === null) {
+                    // search for wasm module
+                    var config = window.config;
+                    var wasmModule = config.wasmModules.find(function (m) {
+                        return m.wasmUrl.indexOf('basist_all') !== -1;
+                    });
+                    if (wasmModule) {
+                        this._basis = new pc.Basis(
+                            config.url.home + '/' + wasmModule.glueUrl,
+                            config.url.home + '/' + wasmModule.wasmUrl,
+                            wasmModule.fallbackUrl ? config.url.home + '/' + wasmModule.fallbackUrl : null);
+                    }
+                }
+                if (this._basis) {
+                    this._basis.getAndPrepare(url.load, callback);
+                }
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
                 var crossOrigin;
                 // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin

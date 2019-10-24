@@ -14,20 +14,6 @@ Object.assign(pc, function () {
             return false;
         })();
 
-        // load the basis wasm module
-        var loadBasisModule = function (doneCallback) {
-            var params = {
-                locateFile: function () {
-                    return binaryUrl;
-                }
-            };
-            self.importScripts(wasmSupported ? jsUrl : asmUrl);
-            self.BASIS(params).then( function (instance) {
-                self[BASIS] = instance;
-                doneCallback(instance);
-            } );
-        };
-
         // download the specified file and give it to the callback
         var download = function (url, callback) {
             var xhr = new XMLHttpRequest();
@@ -49,14 +35,14 @@ Object.assign(pc, function () {
                 }
             };
 
-            xhr.send(postdata);
+            xhr.send();
 
             return xhr;
         };
 
         // transcode the blob of binary data into a render-ready texture asset
-        var transcode = function (data) {
-            var basisFile = new BASIS.BasisFile(new Uint8Array(data));
+        var transcode = function (basis, data) {
+            var basisFile = new basis.BasisFile(new Uint8Array(data));
 
             var width = basisFile.getImageWidth(0, 0);
             var height = basisFile.getImageHeight(0, 0);
@@ -151,7 +137,13 @@ Object.assign(pc, function () {
         };
 
         // load basis transcoder at start of web worker
-        loadBasisModule( function (instance) {
+        var params = {
+            locateFile: function () {
+                return binaryUrl;
+            }
+        };
+        self.importScripts(wasmSupported ? jsUrl : asmUrl);
+        self.BASIS(params).then( function (instance) {
             basis = instance;
             basis.initializeBasis();
             for (var i = 0; i < queue.length; ++i) {
@@ -176,18 +168,39 @@ Object.assign(pc, function () {
         cTFRGBA4444: 16         // rgbq 4444
     };
 
-    var Basis = function () {
+    var Basis = function (basisJs, basisWasm, basisAsm) {
         this.worker = null;
         this.callbacks = { };
+
+        // create a set of two formats, one for the alpha and one for the non-alpha
+        // basis formats
+        var formats = (function (device) {
+            if (device.extCompressedTextureASTC) {
+                return [BASIS_FORMAT.cTFASTC_4x4, BASIS_FORMAT.cTFASTC_4x4];
+            } else if (device.extCompressedTextureS3TC) {
+                return [BASIS_FORMAT.cTFBC3, BASIS_FORMAT.cTFBC1];
+            } else if (device.extCompressedTextureETC) {                    // TODO: does the presence of etc support imply etc1 support?
+                return [BASIS_FORMAT.cTFETC2, BASIS_FORMAT.cTFETC1];
+            } else if (device.extCompressedTextureETC1) {
+                return [BASIS_FORMAT.cTFRGBA4444, BASIS_FORMAT.cTFETC1];    // TODO: fallback to 4444 or 8888?
+            } else if (device.extCompressedTexturePVRTC) {
+                return [BASIS_FORMAT.cTFPVRTC1_4_RGBA, BASIS_FORMAT.cTFPVRTC1_4_RGB];
+            } else if (device.extCompressedTextureATC) {
+                return [BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA, BASIS_FORMAT.cTFATC_RGB];
+            }
+            return [BASIS_FORMAT.cTFRGBA4444, BASIS_FORMAT.cTFRGB565];
+        })(pc.app.graphicsDevice);
+
+        var code = '(' + BasisWorker.toString() + ')("' + basisJs + '","' + basisWasm + '","' + basisAsm + '",' + formats.toString() + ')\n\n';
+        var blob = new Blob([code], { type: 'application/javascript' });
+        var url = URL.createObjectURL(blob);
+        this.worker = new Worker(url);
+        this.worker.addEventListener('message', this._handleWorkerResponse);
     };
 
     // render thread worker manager
     Basis.prototype = {
         getAndPrepare: function (url, callback) {
-            if (this.worker === null) {
-                this._init();
-            }
-
             if (!this.callbacks.hasOwnProperty(url)) {
                 // store url and kick off worker job
                 this.callbacks[url] = [callback];
@@ -199,33 +212,6 @@ Object.assign(pc, function () {
                 // a resource once)
                 this.callbacks[url].push(callback);
             }
-        },
-
-        _init: function () {
-            // create a set of two formats, one for the alpha and one for the non-alpha
-            // basis formats
-            var formats = (function (device) {
-                if (device.extCompressedTextureASTC) {
-                    return [BASIS_FORMAT.cTFASTC_4x4, BASIS_FORMAT.cTFASTC_4x4];
-                } else if (device.extCompressedTextureS3TC) {
-                    return [BASIS_FORMAT.cTFBC3, BASIS_FORMAT.cTFBC1];
-                } else if (device.extCompressedTextureETC) {                    // TODO: does the presence of etc support imply etc1 support?
-                    return [BASIS_FORMAT.cTFETC2, BASIS_FORMAT.cTFETC1];
-                } else if (device.extCompressedTextureETC1) {
-                    return [BASIS_FORMAT.cTFRGBA4444, BASIS_FORMAT.cTFETC1];    // TODO: fallback to 4444 or 8888?
-                } else if (device.extCompressedTexturePVRTC) {
-                    return [BASIS_FORMAT.cTFPVRTC1_4_RGBA, BASIS_FORMAT.cTFPVRTC1_4_RGB];
-                } else if (device.extCompressedTextureATC) {
-                    return [BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA, BASIS_FORMAT.cTFATC_RGB];
-                }
-                return [BASIS_FORMAT.cTFRGBA4444, BASIS_FORMAT.cTFRGB565];
-            })(pc.app.graphicsDevice);
-
-            var code = '(' + BasisWorker.toString() + ')(' + formats.toString() + ')\n\n';
-            var blob = new Blob([code], { type: 'application/javascript' });
-            var url = URL.createObjectURL(blob);
-            this.worker = new Worker(url);
-            this.worker.addEventListener(this._handleWorkerResponse);
         },
 
         _handleWorkerResponse: function (message) {
@@ -268,7 +254,7 @@ Object.assign(pc, function () {
     };
 
     return {
-        Basis: new Basis(),
+        Basis: Basis,
         BasisParser: BasisParser
     };
 }());
