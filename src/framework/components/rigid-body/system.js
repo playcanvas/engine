@@ -410,14 +410,19 @@ Object.assign(pc, function () {
                             // remove from others list
                             others.splice(i, 1);
 
-                            if (entityCollision && other.collision) {
-                                if (entity.rigidbody && other.rigidbody) {
-                                    // if both are rigidbodies fire collision end
-                                    entityCollision.fire("collisionend", other);
-                                    entity.rigidbody.fire("collisionend", other);
-                                } else if (entity.trigger) {
-                                    // if entity is a trigger
+                            if (entity.trigger) {
+                                if (entityCollision) {
+                                    // fire trigger event
                                     entityCollision.fire("triggerleave", other);
+                                }
+                            } else {
+                                // fire rigidbody event
+                                if (entity.rigidbody && other.rigidbody) {
+                                    entity.rigidbody.fire("collisionend", other);
+                                }
+                                // fire collision event
+                                if (entityCollision && other.collision) {
+                                    entityCollision.fire("collisionend", other);
                                 }
                             }
                         }
@@ -518,8 +523,8 @@ Object.assign(pc, function () {
                         e0Events = e0.collision ? e0.collision.hasEvent("triggerenter") || e0.collision.hasEvent("triggerleave") : false;
                         e1Events = e1.collision ? e1.collision.hasEvent("triggerenter") || e1.collision.hasEvent("triggerleave") : false;
 
+                        // fire triggerenter events
                         if (e0Events) {
-                            // fire triggerenter events
                             newCollision = this._storeCollision(e0, e1);
                             if (newCollision) {
                                 if (e0.collision && !(flags1 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
