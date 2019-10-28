@@ -74,7 +74,7 @@ Object.assign(pc, function () {
      *     default: 22.2
      * });
      */
-    ScriptType.attributes = new ScriptAttributes(ScriptType);
+    ScriptType.attributes = new pc.ScriptAttributes(ScriptType);
 
     // initialize attributes
     ScriptType.prototype.__initializeAttributes = function (force) {
