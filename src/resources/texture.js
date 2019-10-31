@@ -292,12 +292,13 @@ Object.assign(pc, function () {
             }
 
             var self = this;
+            var options;
 
             var urlWithoutParams = url.original.indexOf('?') >= 0 ? url.original.split('?')[0] : url.original;
 
             var ext = pc.path.getExtension(urlWithoutParams).toLowerCase();
             if (ext === '.dds' || ext === '.ktx') {
-                var options = {
+                options = {
                     cache: true,
                     responseType: "arraybuffer",
                     retry: this.retryRequests
@@ -305,21 +306,23 @@ Object.assign(pc, function () {
                 pc.http.get(url.load, options, callback);
             } else if (ext === '.basis') {
                 if (this._basis === null) {
-                    // search for wasm module
-                    var modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
-                    var wasmModule = modules.find(function (m) {
-                        return m.wasmUrl.indexOf('basist_all') !== -1;
+                    this._basis = new pc.Basis();
+                }
+                options = {
+                    cache: true,
+                    responseType: "arraybuffer",
+                    retry: this.retryRequests
+                };
+                pc.http.get(
+                    url.load,
+                    options,
+                    function (err, result) {
+                        if (err) {
+                            callback(err, result);
+                        } else {
+                            self._basis.transcode(url.load, result, callback);
+                        }
                     });
-                    if (wasmModule) {
-                        this._basis = new pc.Basis(
-                            wasmModule.glueUrl,
-                            wasmModule.wasmUrl,
-                            wasmModule.fallbackUrl ? wasmModule.fallbackUrl : null);
-                    }
-                }
-                if (this._basis) {
-                    this._basis.getAndPrepare(url.load, callback);
-                }
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
                 var crossOrigin;
                 // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
@@ -422,6 +425,8 @@ Object.assign(pc, function () {
 
                     if (ext === '.basis') {
                         textureData = data;
+
+                        console.log('transcode time=' + data.transcodeTime + ' url=' + data.url.split('#').shift().split('?').shift().split('/').pop());
                     } else if (data instanceof ArrayBuffer) {
                         switch (ext) {
                             case '.dds':
