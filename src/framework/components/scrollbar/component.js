@@ -1,6 +1,5 @@
 Object.assign(pc, function () {
     /**
-     * @private
      * @component
      * @name pc.ScrollbarComponent
      * @extends pc.Component
@@ -176,7 +175,6 @@ Object.assign(pc, function () {
 
 /**
  * @event
- * @private
  * @name pc.ScrollbarComponent#set:value
  * @description Fired whenever the scroll value changes.
  * @param {Number} value The current scroll value.
