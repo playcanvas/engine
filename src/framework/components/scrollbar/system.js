@@ -8,7 +8,6 @@ Object.assign(pc, function () {
     ];
 
     /**
-     * @private
      * @name pc.ScrollbarComponentSystem
      * @extends pc.ComponentSystem
      * @description Create a new ScrollbarComponentSystem
