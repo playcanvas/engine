@@ -71,8 +71,10 @@ Object.assign(pc, function () {
             // Note that we handle release events directly on the window object, rather than
             // on app.mouse or app.touch. This is in order to correctly handle cases where the
             // user releases the mouse/touch outside of the window.
-            this._app.mouse[onOrOff]('mousemove', this._onMove, this);
-            window[addOrRemoveEventListener]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            if (this._app.mouse) {
+                this._app.mouse[onOrOff]('mousemove', this._onMove, this);
+                window[addOrRemoveEventListener]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            }
 
             if (pc.platform.touch) {
                 this._app.touch[onOrOff]('touchmove', this._onMove, this);
