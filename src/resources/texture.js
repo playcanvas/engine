@@ -418,15 +418,14 @@ Object.assign(pc, function () {
                 texture.setSource(img);
             } else { // Container format
 
-                if (ext === '.dds' && data instanceof ArrayBuffer) {
+                if (ext === '.dds') {
                     texture = _legacyDdsLoader(url, data, this._device);
                 } else {
                     var textureData;
 
                     if (ext === '.basis') {
                         textureData = data;
-
-                        console.log('transcode time=' + data.transcodeTime + ' url=' + data.url.split('#').shift().split('?').shift().split('/').pop());
+                        // console.log('transcode time=' + data.transcodeTime + ' url=' + data.url.split('#').shift().split('?').shift().split('/').pop());
                     } else if (data instanceof ArrayBuffer) {
                         switch (ext) {
                             case '.dds':

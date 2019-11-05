@@ -23,7 +23,8 @@ Object.assign(pc, function () {
         MP3: "audio/mpeg",
         MP4: "audio/mp4",
         AAC: "audio/aac",
-        BIN: "application/octet-stream"
+        BIN: "application/octet-stream",
+        BASIS: "image/basis"
     };
 
     Http.ResponseType = {
@@ -414,7 +415,7 @@ Object.assign(pc, function () {
         },
 
         _isBinaryContentType: function (contentType) {
-            var binTypes = [Http.ContentType.MP4, Http.ContentType.WAV, Http.ContentType.OGG, Http.ContentType.MP3, Http.ContentType.BIN, Http.ContentType.DDS];
+            var binTypes = [Http.ContentType.MP4, Http.ContentType.WAV, Http.ContentType.OGG, Http.ContentType.MP3, Http.ContentType.BIN, Http.ContentType.DDS, Http.ContentType.BASIS];
             if (binTypes.indexOf(contentType) >= 0) {
                 return true;
             }
