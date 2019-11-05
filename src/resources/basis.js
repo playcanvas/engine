@@ -221,7 +221,7 @@ Object.assign(pc, function () {
         var wasmModule = modules.find(function (m) {
             return m.wasmUrl.indexOf(moduleName) !== -1;
         });
-        if (wasmModule === null) {
+        if (!wasmModule) {
             wasmModule = modules.find(function (m) {
                 return m.wasmUrl.indexOf('basist_all') !== -1;
             });

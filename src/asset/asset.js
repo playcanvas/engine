@@ -30,7 +30,7 @@ Object.assign(pc, function () {
         basis: 'canvas' // dummy, basis is always supported
     };
 
-    var VARIANT_DEFAULT_PRIORITY = ['basis', 'pvr', 'dxt', 'etc2', 'etc1'];
+    var VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
     /**
      * @constructor
