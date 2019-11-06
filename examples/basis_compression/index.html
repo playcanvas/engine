@@ -130,33 +130,35 @@
             box2.setEulerAngles(90-angle*12, 120-angle*8, 150-angle*10);
         });
 
-        loadWasmModuleAsync(
-            'BASIS',
-            '../../lib/basis_transcoder.js',
-            '../../lib/basis_transcoder.wasm',
-            function() {
-                // load a texture, create material and apply to box
-                app.assets.loadFromUrl(
-                    "../assets/sea.basis",
-                    "texture",
-                    function (err, asset) {
-                        var material = new pc.StandardMaterial();
-                        material.diffuseMap = asset.resource;
-                        material.update();
-                        box1.model.model.meshInstances[0].material = material;
-                    }
-                );
+        // configure wasm modules
+        window.config = {
+            wasmModules: [{
+                glueUrl: '../../lib/basist_all.wasm.js',
+                wasmUrl: '../../lib/basist_all.wasm.wasm',
+                fallbackUrl: '../../lib/basist_all.js',
+            }]
+        };
 
-                app.assets.loadFromUrl(
-                    "../assets/playcanvas.basis",
-                    "texture",
-                    function (err, asset) {
-                        var material = new pc.StandardMaterial();
-                        material.diffuseMap = asset.resource;
-                        material.update();
-                        box2.model.model.meshInstances[0].material = material;
-                    }
-                );
+        // load a texture, create material and apply to box
+        app.assets.loadFromUrl(
+            "../assets/sea.basis",
+            "texture",
+            function (err, asset) {
+                var material = new pc.StandardMaterial();
+                material.diffuseMap = asset.resource;
+                material.update();
+                box1.model.model.meshInstances[0].material = material;
+            }
+        );
+
+        app.assets.loadFromUrl(
+            "../assets/playcanvas.basis",
+            "texture",
+            function (err, asset) {
+                var material = new pc.StandardMaterial();
+                material.diffuseMap = asset.resource;
+                material.update();
+                box2.model.model.meshInstances[0].material = material;
             }
         );
     </script>
