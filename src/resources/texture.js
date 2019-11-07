@@ -276,9 +276,7 @@ Object.assign(pc, function () {
 
         this.retryRequests = false;
 
-        // initialize basis module
-        // FIXME: this should be optional
-        // FIXME: where do these modules come from?
+        // basis worker
         this._basis = null;
     };
 

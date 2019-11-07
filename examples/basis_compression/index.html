@@ -3,78 +3,11 @@
 <head>
     <script src="../../build/output/playcanvas.js"></script>
     <link href="../style.css" rel="stylesheet" />
-
-    <script>
-        var loadScriptAsync = function(url, doneCallback) {
-            var tag = document.createElement('script');
-            tag.onload = () => {
-                doneCallback();
-            };
-            tag.onerror = () => {
-                throw new Error('failed to load ' + url);
-            };
-            tag.async = true;
-            tag.src = url;
-            document.head.appendChild(tag);
-        };
-
-        // load and initialize a wasm module
-        var loadWasmModuleAsync = function(moduleName, jsUrl, binaryUrl, doneCallback) {
-            loadScriptAsync(jsUrl, function () {
-                var lib = window[moduleName];
-                window[moduleName + 'Lib'] = lib;
-                lib({ locateFile: () => binaryUrl }).then( function (instance) {
-                    window[moduleName] = instance;
-                    doneCallback();
-                });
-            });
-        };
-    </script>
-    <script>
-
-        //-- handle construct conversion webworker
-        const basisu = new Worker("basisu.js");
-
-        var onImageCompressed = function (message) {
-            var handler = app.loader.getHandler('texture');
-            var texture = handler.open('image.basis', message.data.buf);
-            var material = box1.model.model.meshInstances[0].material;
-            material.diffuseMap = texture;
-            material.update();
-        };
-        basisu.addEventListener('message', onImageCompressed);
-
-        //-- handle drag and drop
-        var dragOverHandler = function(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            event.dataTransfer.dropEffect = 'copy';
-        };
-
-        var dropHandler = function(event) {
-            console.log('File(s) dropped');
-            event.stopPropagation();
-            event.preventDefault();
-
-            if (event.dataTransfer.files) {
-                for (var i = 0; i < event.dataTransfer.files.length; i++) {
-                    var file = event.dataTransfer.files[i];
-                    console.log('... file[' + i + '].name = ' + file.name);
-                    var reader = new FileReader();
-                    reader.onload = function(event) { basisu.postMessage({ name: file.name, buf: reader.result }, [ reader.result ]); }
-                    reader.readAsArrayBuffer(file);
-                }
-            }
-        };
-    </script>
-
 </head>
 
 <body>
     <!-- The canvas element -->
-    <canvas id="application-canvas"
-            ondragover="dragOverHandler(event);"
-            ondrop="dropHandler(event);"></canvas>
+    <canvas id="application-canvas"></canvas>
 
     <!-- The script -->
     <script>
