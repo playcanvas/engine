@@ -876,9 +876,11 @@ Object.assign(pc, function () {
         },
 
         _dirtifyLocal: function () {
-            this._dirtyLocal = true;
-            if (!this._dirtyWorld)
-                this._dirtifyWorld();
+            if (!this._dirtyLocal) {
+                this._dirtyLocal = true;
+                if (!this._dirtyWorld)
+                    this._dirtifyWorld();
+            }
         },
 
         _unfreezeParentToRoot: function () {
