@@ -210,9 +210,9 @@ Object.assign(pc, function () {
             } else if (device.extCompressedTexturePVRTC) {
                 return [BASIS_FORMAT.cTFPVRTC1_4_RGBA, BASIS_FORMAT.cTFPVRTC1_4_RGB, 'pvr'];
             } else if (device.extCompressedTextureATC) {
-                return [BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA, BASIS_FORMAT.cTFATC_RGB, 'etc1'];
+                return [BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA, BASIS_FORMAT.cTFATC_RGB, 'atc'];
             }
-            return [BASIS_FORMAT.cTFRGBA4444, BASIS_FORMAT.cTFRGB565];
+            return [BASIS_FORMAT.cTFRGBA4444, BASIS_FORMAT.cTFRGB565, 'etc1'];
         })(pc.app.graphicsDevice);
 
         // search for wasm module
