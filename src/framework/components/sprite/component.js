@@ -2,7 +2,8 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @enum pc.SPRITETYPE
+     * @constant
+     * @type {String}
      * @name pc.SPRITETYPE_SIMPLE
      * @description A {@link pc.SpriteComponent} that displays a single frame from a sprite asset.
      */
@@ -10,7 +11,8 @@ Object.assign(pc, function () {
 
 
     /**
-     * @enum pc.SPRITETYPE
+     * @constant
+     * @type {String}
      * @name pc.SPRITETYPE_ANIMATED
      * @description A {@link pc.SpriteComponent} that renders sprite animations.
      */
@@ -49,7 +51,7 @@ Object.assign(pc, function () {
      * @property {Number} speed A global speed modifier used when playing sprite animation clips.
      * @property {Number} batchGroupId Assign sprite to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
      * @property {String} autoPlayClip The name of the clip to play automatically when the component is enabled and the clip exists.
-     * @property {Array} layers An array of layer IDs ({@link pc.Layer#id}) to which this sprite should belong.
+     * @property {Number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this sprite should belong.
      * @property {Number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components in the same layer.
      */
     var SpriteComponent = function SpriteComponent(system, entity) {

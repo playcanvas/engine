@@ -72,36 +72,47 @@ Object.assign(pc, function () {
                 result = uri.match(re);
 
             /**
+             * @private
              * @name pc.URI#scheme
              * @description The scheme. (e.g. http)
+             * @type String
              */
             this.scheme = result[2];
 
             /**
+             * @private
              * @name pc.URI#authority
              * @description The authority. (e.g. www.example.com)
+             * @type String
              */
             this.authority = result[4];
 
             /**
+             * @private
              * @name pc.URI#path
              * @description The path. (e.g. /users/example)
+             * @type String
              */
             this.path = result[5];
 
             /**
+             * @private
              * @name pc.URI#query
              * @description The query, the section after a ?. (e.g. search=value)
+             * @type String
              */
             this.query = result[7];
 
             /**
+             * @private
              * @name pc.URI#fragment
              * @description The fragment, the section after a #
+             * @type String
              */
             this.fragment = result[9];
 
             /**
+             * @private
              * @function
              * @name pc.URI#toString
              * @description Convert URI back to string
@@ -132,6 +143,7 @@ Object.assign(pc, function () {
             };
 
             /**
+             * @private
              * @function
              * @name pc.URI#getQuery
              * @description Returns the query parameters as an Object.
@@ -161,6 +173,7 @@ Object.assign(pc, function () {
             };
 
             /**
+             * @private
              * @function
              * @name pc.URI#setQuery
              * @description Set the query section of the URI from a Object

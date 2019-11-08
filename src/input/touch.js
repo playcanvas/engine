@@ -81,12 +81,15 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.TouchDevice
+     * @extends pc.EventHandler
      * @classdesc Attach a TouchDevice to an element and it will receive and fire events when the element is touched.
      * See also {@link pc.Touch} and {@link pc.TouchEvent}
      * @description Create a new touch device and attach it to an element
      * @param {Element} element The element to attach listen for events on
      */
     var TouchDevice = function (element) {
+        pc.EventHandler.call(this);
+
         this._element = null;
 
         this._startHandler = this._handleTouchStart.bind(this);
@@ -95,9 +98,9 @@ Object.assign(pc, function () {
         this._cancelHandler = this._handleTouchCancel.bind(this);
 
         this.attach(element);
-
-        pc.events.attach(this);
     };
+    TouchDevice.prototype = Object.create(pc.EventHandler.prototype);
+    TouchDevice.prototype.constructor = TouchDevice;
 
     Object.assign(TouchDevice.prototype, {
         /**

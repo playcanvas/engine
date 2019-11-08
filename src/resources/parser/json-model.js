@@ -84,8 +84,7 @@ Object.assign(pc, function () {
             for (i = 0; i < modelData.nodes.length; i++) {
                 var nodeData = modelData.nodes[i];
 
-                var node = new pc.GraphNode();
-                node.setName(nodeData.name);
+                var node = new pc.GraphNode(nodeData.name);
                 node.setLocalPosition(nodeData.position[0], nodeData.position[1], nodeData.position[2]);
                 node.setLocalEulerAngles(nodeData.rotation[0], nodeData.rotation[1], nodeData.rotation[2]);
                 node.setLocalScale(nodeData.scale[0], nodeData.scale[1], nodeData.scale[2]);

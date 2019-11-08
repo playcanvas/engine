@@ -14,13 +14,17 @@ Object.assign(pc, function () {
 
     /**
      * @component
+     * @constructor
      * @name pc.ElementDragHelper
+     * @extends pc.EventHandler
      * @description Create a new ElementDragHelper
      * @classdesc Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
      * @param {pc.ElementComponent} element The Element that should become draggable.
      * @param {String} [axis] Optional axis to constrain to, either 'x', 'y' or null.
      */
     var ElementDragHelper = function ElementDragHelper(element, axis) {
+        pc.EventHandler.call(this);
+
         if (!element || !(element instanceof pc.ElementComponent)) {
             throw new Error('Element was null or not an ElementComponent');
         }
@@ -40,10 +44,10 @@ Object.assign(pc, function () {
         this._deltaHandlePosition = new pc.Vec3();
         this._isDragging = false;
 
-        pc.events.attach(this);
-
         this._toggleLifecycleListeners('on');
     };
+    ElementDragHelper.prototype = Object.create(pc.EventHandler.prototype);
+    ElementDragHelper.prototype.constructor = ElementDragHelper;
 
     Object.assign(ElementDragHelper.prototype, {
         _toggleLifecycleListeners: function (onOrOff) {
@@ -67,8 +71,10 @@ Object.assign(pc, function () {
             // Note that we handle release events directly on the window object, rather than
             // on app.mouse or app.touch. This is in order to correctly handle cases where the
             // user releases the mouse/touch outside of the window.
-            this._app.mouse[onOrOff]('mousemove', this._onMove, this);
-            window[addOrRemoveEventListener]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            if (this._app.mouse) {
+                this._app.mouse[onOrOff]('mousemove', this._onMove, this);
+                window[addOrRemoveEventListener]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            }
 
             if (pc.platform.touch) {
                 this._app.touch[onOrOff]('touchmove', this._onMove, this);

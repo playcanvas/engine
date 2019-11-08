@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-    <script src="../../../build/output/playcanvas-latest.js"></script>
+    <script src="../../../build/output/playcanvas.js"></script>
     <script src="http://code.playcanvas.com/ammo.751ec5f.js"></script>
     <link href="../../style.css" rel="stylesheet" />
 </head>
@@ -26,7 +26,7 @@
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
     // Set the gravity for our rigid bodies
-    app.systems.rigidbody.setGravity(0, -9.8, 0);
+    app.systems.rigidbody.gravity.set(0, -9.81, 0);
 
     function createMaterial (color) {
         var material = new pc.StandardMaterial();

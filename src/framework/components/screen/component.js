@@ -1,12 +1,14 @@
 Object.assign(pc, function () {
     /**
-     * @enum pc.SCALEMODE
+     * @constant
+     * @type {String}
      * @name pc.SCALEMODE_NONE
      * @description Always use the application's resolution as the resolution for the {@link pc.ScreenComponent}.
      */
     pc.SCALEMODE_NONE = "none";
     /**
-     * @enum pc.SCALEMODE
+     * @constant
+     * @type {String}
      * @name pc.SCALEMODE_BLEND
      * @description Scale the {@link pc.ScreenComponent} when the application's resolution is different than the ScreenComponent's referenceResolution.
      */
@@ -17,11 +19,11 @@ Object.assign(pc, function () {
      * @component
      * @constructor
      * @name pc.ScreenComponent
+     * @extends pc.Component
      * @classdesc A ScreenComponent enables the Entity to render child {@link pc.ElementComponent}s using anchors and positions in the ScreenComponent's space.
      * @description Create a new ScreenComponent
      * @param {pc.ScreenComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.Component
      * @property {Boolean} screenSpace If true then the ScreenComponent will render its child {@link pc.ElementComponent}s in screen space instead of world space. Enable this to create 2D user interfaces.
      * @property {Boolean} cull If true then elements inside this screen will be not be rendered when outside of the screen (only valid when screenSpace is true)
      * @property {String} scaleMode Can either be {@link pc.SCALEMODE_NONE} or {@link pc.SCALEMODE_BLEND}. See the description of referenceResolution for more information.
@@ -79,7 +81,7 @@ Object.assign(pc, function () {
                 }
             }
 
-            var children = e.getChildren();
+            var children = e.children;
             for (var j = 0; j < children.length; j++) {
                 i = this._recurseDrawOrderSync(children[j], i);
             }

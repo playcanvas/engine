@@ -692,11 +692,21 @@ Object.assign(pc, function () {
                     }
 
                     if (data) {
+                        var kerning = 0;
+                        if (numCharsThisLine > 0) {
+                            var kernTable = this._font.data.kerning;
+                            if (kernTable) {
+                                var kernLeft = kernTable[pc.string.getCodePoint(this._symbols[i - 1]) || 0];
+                                if (kernLeft) {
+                                    kerning = kernLeft[pc.string.getCodePoint(this._symbols[i]) || 0] || 0;
+                                }
+                            }
+                        }
                         dataScale = data.scale || 1;
                         size = (data.width + data.height) / 2;
                         quadsize = scale * size / dataScale;
-                        advance = data.xadvance * scale;
-                        x = data.xoffset * scale;
+                        advance = (data.xadvance + kerning) * scale;
+                        x = (data.xoffset - kerning) * scale;
                         y = data.yoffset * scale;
                     } else {
                         console.error("Couldn't substitute missing character: '" + char + "'");
@@ -765,6 +775,15 @@ Object.assign(pc, function () {
                     var right = left + quadsize;
                     var bottom = _y - y;
                     var top = bottom + quadsize;
+
+                    if (this._rtl) {
+                        // rtl text will be flipped vertically before rendering and here we
+                        // account for the mis-alignment that would be introduced. shift is calculated
+                        // as the difference between the glyph's left and right offset.
+                        var shift = quadsize - x - this._spacing * advance - x;
+                        left -= shift;
+                        right -= shift;
+                    }
 
                     meshInfo.positions[quad * 4 * 3 + 0] = left;
                     meshInfo.positions[quad * 4 * 3 + 1] = bottom;
@@ -905,7 +924,7 @@ Object.assign(pc, function () {
                 for (var line in this._meshInfo[i].lines) {
                     var index = this._meshInfo[i].lines[line];
                     var lw = this._lineWidths[parseInt(line, 10)];
-                    var hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw);
+                    var hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw) * (this._rtl ? -1 : 1);
                     var voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
 
                     for (quad = prevQuad; quad <= index; quad++) {
@@ -920,14 +939,15 @@ Object.assign(pc, function () {
                         this._meshInfo[i].positions[quad * 4 * 3 + 10] += voffset;
                     }
 
-                    // flip characters when rendering RTL text
+                    // flip rtl characters
                     if (this._rtl) {
                         for (quad = prevQuad; quad <= index; quad++) {
                             var idx = quad * 4 * 3;
 
                             // flip the entire line horizontally
                             for (var vert = 0; vert < 4; ++vert) {
-                                this._meshInfo[i].positions[idx + vert * 3] = -(this._element.calculatedWidth + this._meshInfo[i].positions[idx + vert * 3]);
+                                this._meshInfo[i].positions[idx + vert * 3] =
+                                    this._element.calculatedWidth - this._meshInfo[i].positions[idx + vert * 3] + hoffset * 2;
                             }
 
                             // flip the character horizontally

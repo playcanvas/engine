@@ -215,6 +215,56 @@ describe("pc.ScriptComponent", function () {
                 },
                 "region": "eu-west-1",
                 "id": "8"
+            },
+            "9": {
+                "tags": [],
+                "name": "postCloner.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "scripts": {
+                        "postCloner": {
+                            "attributesOrder": [],
+                            "attributes": {}
+                      }
+                    },
+                    "loading": false
+                },
+                "type": "script",
+                "file": {
+                    "filename": "postCloner.js",
+                    "size": 1,
+                    "hash": "postCloner hash",
+                    "url": "base/tests/framework/components/script/postCloner.js"
+                },
+                "region": "eu-west-1",
+                "id": "9"
+            },
+            "10": {
+                "tags": [],
+                "name": "postInitializeReporter.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "scripts": {
+                        "postInitializeReporter": {
+                            "attributesOrder": [],
+                            "attributes": {}
+                      }
+                    },
+                    "loading": false
+                },
+                "type": "script",
+                "file": {
+                    "filename": "postInitializeReporter.js",
+                    "size": 1,
+                    "hash": "postInitializeReporter hash",
+                    "url": "base/tests/framework/components/script/postInitializeReporter.js"
+                },
+                "region": "eu-west-1",
+                "id": "10"
             }
         });
 
@@ -709,6 +759,46 @@ describe("pc.ScriptComponent", function () {
         checkInitCall(c3, ++idx, 'postInitialize scriptB');
         checkInitCall(c2, ++idx, 'postInitialize scriptA');
         checkInitCall(c2, ++idx, 'postInitialize scriptB');
+    });
+
+    it("postInitialize is called for entities that are cloned in another postInitialize", function () {
+        var src = new pc.Entity();
+        src.enabled = false;
+        src.addComponent('script', {
+            "enabled": true,
+            "order": [
+                "postInitializeReporter"
+            ],
+            "scripts": {
+                "postInitializeReporter": {
+                    "enabled": true,
+                    "attributes": {
+                    }
+                }
+            }
+        });
+
+        app.root.addChild(src);
+
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            "enabled": true,
+            "order": [
+                "postCloner"
+            ],
+            "scripts": {
+                "postCloner": {
+                    "enabled": true,
+                    "attributes": {
+                        "entityToClone": src.getGuid()
+                    }
+                }
+            }
+        });
+
+        app.root.addChild(e);
+
+        expect(window.initializeCalls.length).to.equal(1);
     });
 
     it("script attributes are initialized for enabled entity", function () {
@@ -3025,9 +3115,30 @@ describe("pc.ScriptComponent", function () {
 
                 done();
             });
-
         });
+    });
 
+    it('pc.ScriptComponent#has', function () {
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
 
+        expect(e.script.has('scriptA')).to.equal(true);
+        expect(e.script.has('scriptB')).to.equal(true);
+        expect(e.script.has('scriptC')).to.equal(false);
+        expect(e.script.has('')).to.equal(false);
+        expect(e.script.has(undefined)).to.equal(false);
+        expect(e.script.has(null)).to.equal(false);
     });
 });

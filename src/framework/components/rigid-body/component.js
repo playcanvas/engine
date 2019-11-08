@@ -7,6 +7,7 @@ Object.assign(pc, function () {
      * @component
      * @constructor
      * @name pc.RigidBodyComponent
+     * @extends pc.Component
      * @classdesc The rigidbody component, when combined with a {@link pc.CollisionComponent}, allows your
      * entities to be simulated using realistic physics.
      * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you
@@ -14,7 +15,6 @@ Object.assign(pc, function () {
      * @description Create a new RigidBodyComponent
      * @param {pc.RigidBodyComponentSystem} system The ComponentSystem that created this component
      * @param {pc.Entity} entity The entity this component is attached to
-     * @extends pc.Component
      * @property {Number} mass The mass of the body. This is only relevant for {@link pc.BODYTYPE_DYNAMIC}
      * bodies, other types have infinite mass. Defaults to 1.
      * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.
@@ -77,6 +77,28 @@ Object.assign(pc, function () {
     };
     RigidBodyComponent.prototype = Object.create(pc.Component.prototype);
     RigidBodyComponent.prototype.constructor = RigidBodyComponent;
+
+    // Events Documentation
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#contact
+     * @description The 'contact' event is fired when a contact occurs between two rigid bodies
+     * @param {pc.ContactResult} result Details of the contact between the two rigid bodies.
+     */
+
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#collisionstart
+     * @description The 'collisionstart' event is fired when two rigid bodies start touching.
+     * @param {pc.ContactResult} result Details of the contact between the two rigid bodies.
+     */
+
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#collisionend
+     * @description The 'collisionend' event is fired two rigid-bodies stop touching.
+     * @param {pc.Entity} other The {@link pc.Entity} that stopped touching this rigid body.
+     */
 
     Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
         get: function () {

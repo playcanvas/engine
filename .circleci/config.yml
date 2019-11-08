@@ -41,6 +41,10 @@ jobs:
           command: npm run test:release
 
       - run:
+          name: test-tsd
+          command: npm run test:tsd
+
+      - run:
           name: lint
           command: npm run lint
 

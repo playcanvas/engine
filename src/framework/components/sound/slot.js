@@ -24,6 +24,7 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.SoundSlot
+     * @extends pc.EventHandler
      * @classdesc The SoundSlot controls playback of an audio asset.
      * @description Create a new SoundSlot
      * @param {pc.SoundComponent} component The Component that created this slot.
@@ -53,6 +54,8 @@ Object.assign(pc, function () {
      * @property {pc.SoundInstance[]} instances An array that contains all the {@link pc.SoundInstance}s currently being played by the slot.
      */
     var SoundSlot = function (component, name, options) {
+        pc.EventHandler.call(this);
+
         options = options || {};
         this._component = component;
         this._assets = component.system.app.assets;
@@ -80,9 +83,9 @@ Object.assign(pc, function () {
         this._onInstanceEndHandler = this._onInstanceEnd.bind(this);
 
         this.instances = [];
-
-        pc.events.attach(this);
     };
+    SoundSlot.prototype = Object.create(pc.EventHandler.prototype);
+    SoundSlot.prototype.constructor = SoundSlot;
 
     Object.assign(SoundSlot.prototype, {
         /**
@@ -94,7 +97,7 @@ Object.assign(pc, function () {
          */
         play: function () {
             // stop if overlap is false
-            if (!this.overlap && (this.isPlaying || this.isPaused)) {
+            if (!this.overlap) {
                 this.stop();
             }
 
@@ -167,9 +170,13 @@ Object.assign(pc, function () {
         stop: function () {
             var stopped = false;
             var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
-                if (instances[i].stop())
-                    stopped = true;
+            var i = instances.length;
+            // do this in reverse order because as each instance
+            // is stopped it will be removed from the instances array
+            // by the instance stop event handler
+            while (i--) {
+                instances[i].stop();
+                stopped = true;
             }
 
             instances.length = 0;
@@ -369,6 +376,12 @@ Object.assign(pc, function () {
         },
 
         _onInstanceStop: function (instance) {
+            // remove instance that stopped
+            var idx = this.instances.indexOf(instance);
+            if (idx !== -1) {
+                this.instances.splice(idx, 1);
+            }
+
             // propagate event to slot
             this.fire('stop', instance);
 

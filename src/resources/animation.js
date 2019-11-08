@@ -1,6 +1,12 @@
 Object.assign(pc, function () {
     'use strict';
 
+    /**
+     * @constructor
+     * @name pc.AnimationHandler
+     * @implements {pc.ResourceHandler}
+     * @classdesc Resource handler used for loading {@link pc.Animation} resources
+     */
     var AnimationHandler = function () {
         this.retryRequests = false;
         this._glbParser = new pc.GlbAnimationsParser();

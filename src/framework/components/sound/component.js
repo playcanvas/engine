@@ -3,11 +3,11 @@ Object.assign(pc, function () {
      * @component
      * @constructor
      * @name pc.SoundComponent
+     * @extends pc.Component
      * @classdesc The Sound Component controls playback of {@link pc.Sound}s.
      * @description Create a new Sound Component.
      * @param {pc.SoundComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The entity that the Component is attached to
-     * @extends pc.Component
      * @property {Number} volume The volume modifier to play the audio with. In range 0-1.
      * @property {Number} pitch The pitch modifier to play the audio with. Must be larger than 0.01
      * @property {Boolean} positional If true the audio will play back at the location of the Entity in space, so the audio will be affect by the position of the {@link pc.AudioListenerComponent}.
@@ -245,7 +245,7 @@ Object.assign(pc, function () {
         addSlot: function (name, options) {
             var slots = this.data.slots;
             if (slots[name]) {
-                logWARNING('A sound slot with name ' + name + ' already exists on Entity ' + this.entity.getPath());
+                logWARNING('A sound slot with name ' + name + ' already exists on Entity ' + this.entity.path);
                 return null;
             }
 

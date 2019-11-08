@@ -12,6 +12,7 @@ Object.assign(pc, (function () {
 
     Object.assign(IndexedList.prototype, {
         /**
+         * @private
          * @function
          * @name pc.IndexedList#push
          * @description  Add a new item into the list with a index key
@@ -27,6 +28,7 @@ Object.assign(pc, (function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.IndexedList#has
          * @description Test whether a key has been added to the index
@@ -38,6 +40,7 @@ Object.assign(pc, (function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.IndexedList#get
          * @description Return the item indexed by a key
@@ -53,6 +56,7 @@ Object.assign(pc, (function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.IndexedList#remove
          * @description Remove the item indexed by key from the list
@@ -79,6 +83,7 @@ Object.assign(pc, (function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.IndexedList#list
          * @description Returns the list of items
@@ -89,6 +94,7 @@ Object.assign(pc, (function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.IndexedList#clear
          * @description Remove all items from the list

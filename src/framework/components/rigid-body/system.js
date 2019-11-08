@@ -4,7 +4,6 @@ Object.assign(pc, function () {
     var collisions = {};
     var frameCollisions = {};
 
-
     // DEPRECATED WARNINGS
     var WARNED_RAYCAST_CALLBACK = false;
 
@@ -135,11 +134,15 @@ Object.assign(pc, function () {
     /**
      * @constructor
      * @name pc.RigidBodyComponentSystem
-     * @classdesc The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies, it also controls global values for the world such as gravity.
-     * Note: The RigidBodyComponentSystem is only valid if 3D Physics is enabled in your application. You can enable this in the application settings for your Depot.
+     * @extends pc.ComponentSystem
+     * @classdesc The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies,
+     * it also controls global values for the world such as gravity. Note: The RigidBodyComponentSystem
+     * is only valid if 3D Physics is enabled in your application. You can enable this in the application
+     * settings for your project.
      * @description Create a new RigidBodyComponentSystem
      * @param {pc.Application} app The Application
-     * @extends pc.ComponentSystem
+     * @property {pc.Vec3} gravity The world space vector representing global gravity in the physics simulation.
+     * Defaults to [0, -9.81, 0] which is an approximation of the gravitational force on Earth.
      */
     var RigidBodyComponentSystem = function RigidBodyComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
@@ -159,6 +162,7 @@ Object.assign(pc, function () {
 
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1 / 60;
+        this.gravity = new pc.Vec3(0, -9.81, 0);
 
         this.on('remove', this.onRemove, this);
     };
@@ -176,9 +180,6 @@ Object.assign(pc, function () {
                 var overlappingPairCache = new Ammo.btDbvtBroadphase();
                 var solver = new Ammo.btSequentialImpulseConstraintSolver();
                 this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
-
-                this._ammoGravity = new Ammo.btVector3(0, -9.82, 0);
-                this.dynamicsWorld.setGravity(this._ammoGravity);
 
                 // Lazily create temp vars
                 ammoRayStart = new Ammo.btVector3();
@@ -265,37 +266,6 @@ Object.assign(pc, function () {
 
         removeConstraint: function (constraint) {
             this.dynamicsWorld.removeConstraint(constraint);
-        },
-
-        /**
-         * @function
-         * @name pc.RigidBodyComponentSystem#setGravity
-         * @description Set the gravity vector for the 3D physics world. This function has two valid signatures.
-         * You can either specify the gravity with a 3D-vector or 3 numbers.
-         * @param {pc.Vec3|Number} x The x-component of the gravity vector
-         * @param {Number} [y] The y-component of the gravity vector
-         * @param {Number} [z] The z-component of the gravity vector
-         * @example
-         * // Set via vector
-         * var gravity = new pc.Vec3(0, -9.81, 0);
-         * this.app.systems.rigidbody.setGravity(gravity);
-         * @example
-         * // Set via numbers
-         * this.app.systems.rigidbody.setGravity(0, -9.81, 0);
-         */
-        setGravity: function () {
-            var x, y, z;
-            if (arguments.length === 1) {
-                x = arguments[0].x;
-                y = arguments[0].y;
-                z = arguments[0].z;
-            } else {
-                x = arguments[0];
-                y = arguments[1];
-                z = arguments[2];
-            }
-            this._ammoGravity.setValue(x, y, z);
-            this.dynamicsWorld.setGravity(this._ammoGravity);
         },
 
         /**
@@ -426,25 +396,33 @@ Object.assign(pc, function () {
         _cleanOldCollisions: function () {
             for (var guid in collisions) {
                 if (collisions.hasOwnProperty(guid)) {
-                    var entity = collisions[guid].entity;
+                    var frameCollision = frameCollisions[guid];
+                    var collision = collisions[guid];
+                    var entity = collision.entity;
                     var entityCollision = entity.collision;
-                    var others = collisions[guid].others;
+                    var entityRigidbody = entity.rigidbody;
+                    var others = collision.others;
                     var length = others.length;
                     var i = length;
                     while (i--) {
                         var other = others[i];
                         // if the contact does not exist in the current frame collisions then fire event
-                        if (!frameCollisions[guid] || frameCollisions[guid].others.indexOf(other) < 0) {
+                        if (!frameCollision || frameCollision.others.indexOf(other) < 0) {
                             // remove from others list
                             others.splice(i, 1);
 
-                            if (entityCollision && other.collision) {
-                                if (entity.rigidbody && other.rigidbody) {
-                                    // if both are rigidbodies fire collision end
-                                    entityCollision.fire("collisionend", other);
-                                } else if (entity.trigger) {
-                                    // if entity is a trigger
+                            if (entity.trigger) {
+                                // handle a trigger entity
+                                if (entityCollision) {
                                     entityCollision.fire("triggerleave", other);
+                                }
+                            } else if (!other.trigger) {
+                                // suppress events if the other entity is a trigger
+                                if (entityRigidbody) {
+                                    entityRigidbody.fire("collisionend", other);
+                                }
+                                if (entityCollision) {
+                                    entityCollision.fire("collisionend", other);
                                 }
                             }
                         }
@@ -457,10 +435,35 @@ Object.assign(pc, function () {
             }
         },
 
+        /**
+         * @private
+         * @function
+         * @name pc.RigidBodyComponentSystem#_hasContactEvent
+         * @description Returns true if the entity has a contact event attached and false otherwise.
+         * @param {Object} entity Entity to test
+         * @returns {Boolean} True if the entity has a contact and false otherwise
+         */
+        _hasContactEvent: function (entity) {
+            var c = entity.collision;
+            if (c && (c.hasEvent("collisionstart") || c.hasEvent("collisionend") || c.hasEvent("contact"))) {
+                return true;
+            }
+
+            var r = entity.rigidbody;
+            return r && (r.hasEvent("collisionstart") || r.hasEvent("collisionend") || r.hasEvent("contact"));
+        },
+
         onUpdate: function (dt) {
             // #ifdef PROFILER
             this._stats.physicsStart = pc.now();
             // #endif
+
+            // Check to see whether we need to update gravity on the dynamics world
+            var gravity = this.dynamicsWorld.getGravity();
+            if (gravity.x() !== this.gravity.x || gravity.y() !== this.gravity.y || gravity.z() !== this.gravity.z) {
+                gravity.setValue(this.gravity.x, this.gravity.y, this.gravity.z);
+                this.dynamicsWorld.setGravity(gravity);
+            }
 
             // Update the transforms of all bodies
             this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
@@ -520,8 +523,8 @@ Object.assign(pc, function () {
                         e0Events = e0.collision ? e0.collision.hasEvent("triggerenter") || e0.collision.hasEvent("triggerleave") : false;
                         e1Events = e1.collision ? e1.collision.hasEvent("triggerenter") || e1.collision.hasEvent("triggerleave") : false;
 
+                        // fire triggerenter events
                         if (e0Events) {
-                            // fire triggerenter events
                             newCollision = this._storeCollision(e0, e1);
                             if (newCollision) {
                                 if (e0.collision && !(flags1 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
@@ -539,8 +542,8 @@ Object.assign(pc, function () {
                             }
                         }
                     } else {
-                        e0Events = e0.collision ? e0.collision.hasEvent("collisionstart")  || e0.collision.hasEvent("collisionend") || e0.collision.hasEvent("contact") : false;
-                        e1Events = e1.collision ? e1.collision.hasEvent("collisionstart") || e1.collision.hasEvent("collisionend") || e1.collision.hasEvent("contact") : false;
+                        e0Events = this._hasContactEvent(e0);
+                        e1Events = this._hasContactEvent(e1);
                         var globalEvents = this.hasEvent("contact");
 
                         if (globalEvents || e0Events || e1Events) {
@@ -564,29 +567,39 @@ Object.assign(pc, function () {
 
                             if (e0Events) {
                                 var forwardResult = this._createContactResult(e1, forwardContacts);
+                                newCollision = this._storeCollision(e0, e1);
 
-                                // fire contact events on collision volume
                                 if (e0.collision) {
                                     e0.collision.fire("contact", forwardResult);
+                                    if (newCollision) {
+                                        e0.collision.fire("collisionstart", forwardResult);
+                                    }
                                 }
 
-                                // fire collisionstart events
-                                newCollision = this._storeCollision(e0, e1);
-                                if (newCollision && e0.collision) {
-                                    e0.collision.fire("collisionstart", forwardResult);
+                                if (e0.rigidbody) {
+                                    e0.rigidbody.fire("contact", forwardResult);
+                                    if (newCollision) {
+                                        e0.rigidbody.fire("collisionstart", forwardResult);
+                                    }
                                 }
                             }
 
                             if (e1Events) {
                                 var reverseResult = this._createContactResult(e0, reverseContacts);
+                                newCollision = this._storeCollision(e1, e0);
 
                                 if (e1.collision) {
                                     e1.collision.fire("contact", reverseResult);
+                                    if (newCollision) {
+                                        e1.collision.fire("collisionstart", reverseResult);
+                                    }
                                 }
 
-                                newCollision = this._storeCollision(e1, e0);
-                                if (newCollision && e1.collision) {
-                                    e1.collision.fire("collisionstart", reverseResult);
+                                if (e1.rigidbody) {
+                                    e1.rigidbody.fire("contact", reverseResult);
+                                    if (newCollision) {
+                                        e1.rigidbody.fire("collisionstart", reverseResult);
+                                    }
                                 }
                             }
                         }

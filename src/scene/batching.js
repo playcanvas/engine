@@ -6,10 +6,10 @@ Object.assign(pc, function () {
      * @constructor
      * @name pc.Batch
      * @classdesc Holds information about batched mesh instances. Created in {@link pc.BatchManager#create}.
-     * @param {Array} meshInstances The mesh instances to be batched.
+     * @param {pc.MeshInstance[]} meshInstances The mesh instances to be batched.
      * @param {Boolean} dynamic Whether this batch is dynamic (supports transforming mesh instances at runtime).
      * @param {Number} batchGroupId Link this batch to a specific batch group. This is done automatically with default batches.
-     * @property {Array} origMeshInstances An array of original mesh instances, from which this batch was generated.
+     * @property {pc.MeshInstance[]} origMeshInstances An array of original mesh instances, from which this batch was generated.
      * @property {pc.MeshInstance} meshInstance A single combined mesh instance, the result of batching.
      * @property {pc.Model} model A handy model object
      * @property {Boolean} dynamic Whether this batch is dynamic (supports transforming mesh instances at runtime).
@@ -441,7 +441,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.BatchManager#generate
      * @description Destroys all batches and creates new based on scene models. Hides original models. Called by engine automatically on app start, and if batchGroupIds on models are changed.
-     * @param {Array} [groupIds] Optional array of batch group IDs to update. Otherwise all groups are updated.
+     * @param {Number[]} [groupIds] Optional array of batch group IDs to update. Otherwise all groups are updated.
      */
     BatchManager.prototype.generate = function (groupIds) {
         var i, j;
@@ -569,12 +569,12 @@ Object.assign(pc, function () {
      *     <li>Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024 on high-end)</li>
      *     <li>Bounding box of a batch is larger than maxAabbSize in any dimension</li>
      * </ul>
-     * @param {Array} meshInstances Input list of mesh instances
+     * @param {pc.MeshInstance[]} meshInstances Input list of mesh instances
      * @param {Boolean} dynamic Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
      * @param {Number} maxAabbSize Maximum size of any dimension of a bounding box around batched objects.
      * @param {Boolean} translucent Are we batching UI elements or sprites
      * This is useful to keep a balance between the number of draw calls and the number of drawn triangles, because smaller batches can be hidden when not visible in camera.
-     * @returns {Array} An array of arrays of mesh instances, each valid to pass to {@link pc.BatchManager#create}.
+     * @returns {pc.MeshInstance[]} An array of arrays of mesh instances, each valid to pass to {@link pc.BatchManager#create}.
      */
     BatchManager.prototype.prepare = function (meshInstances, dynamic, maxAabbSize, translucent) {
         if (meshInstances.length === 0) return [];
@@ -702,7 +702,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.BatchManager#create
      * @description Takes a mesh instance list that has been prepared by {@link pc.BatchManager#prepare}, and returns a {@link pc.Batch} object. This method assumes that all mesh instances provided can be rendered in a single draw call.
-     * @param {Array} meshInstances Input list of mesh instances
+     * @param {pc.MeshInstance[]} meshInstances Input list of mesh instances
      * @param {Boolean} dynamic Is it a static or dynamic batch? Will objects be transformed after batching?
      * @param {Number} [batchGroupId] Link this batch to a specific batch group. This is done automatically with default batches.
      * @returns {pc.Batch} The resulting batch object.
@@ -1090,7 +1090,7 @@ Object.assign(pc, function () {
      * @name pc.BatchManager#clone
      * @description Clones a batch. This method doesn't rebuild batch geometry, but only creates a new model and batch objects, linked to different source mesh instances.
      * @param {pc.Batch} batch A batch object
-     * @param {Array} clonedMeshInstances New mesh instances
+     * @param {pc.MeshInstance[]} clonedMeshInstances New mesh instances
      * @returns {pc.Batch} New batch object
      */
     BatchManager.prototype.clone = function (batch, clonedMeshInstances) {

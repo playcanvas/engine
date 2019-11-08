@@ -8,12 +8,11 @@ Object.assign(pc, function () {
     ];
 
     /**
-     * @private
      * @name pc.ScrollbarComponentSystem
+     * @extends pc.ComponentSystem
      * @description Create a new ScrollbarComponentSystem
      * @classdesc Manages creation of {@link pc.ScrollbarComponent}s.
      * @param {pc.Application} app The application
-     * @extends pc.ComponentSystem
      */
     var ScrollbarComponentSystem = function ScrollbarComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

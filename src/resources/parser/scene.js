@@ -1,8 +1,10 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var SceneParser = function (app) {
+    var SceneParser = function (app, isTemplate) {
         this._app = app;
+
+        this._isTemplate = isTemplate;
     };
 
     Object.assign(SceneParser.prototype, {
@@ -10,6 +12,10 @@ Object.assign(pc, function () {
             var entities = {};
             var id, i;
             var parent = null;
+
+            if (data.collapsedInstances) {
+                this._addCollapsedToEntities(this._app, data);
+            }
 
             // instantiate entities
             for (id in data.entities) {
@@ -50,7 +56,11 @@ Object.assign(pc, function () {
             entity.setLocalEulerAngles(r[0], r[1], r[2]);
             entity.setLocalScale(s[0], s[1], s[2]);
             entity._enabled = data.enabled !== undefined ? data.enabled : true;
-            entity._enabledInHierarchy = entity._enabled;
+
+            if (!this._isTemplate) {
+                entity._enabledInHierarchy = entity._enabled;
+            }
+
             entity.template = data.template;
 
             if (data.tags) {
@@ -90,6 +100,15 @@ Object.assign(pc, function () {
             }
 
             return entity;
+        },
+
+        _addCollapsedToEntities: function (app, data) {
+            data.collapsedInstances.forEach(function (h) {
+                var expanded = pc.TemplateUtils.expandTemplateEntities(
+                    app, h.instanceEntities);
+
+                Object.assign(data.entities, expanded);
+            });
         }
     });
 
