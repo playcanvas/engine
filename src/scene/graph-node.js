@@ -890,19 +890,16 @@ Object.assign(pc, function () {
         },
 
         _dirtifyWorld: function () {
-            if (!this._dirtyWorld)
-                this._unfreezeParentToRoot();
+            this._unfreezeParentToRoot();
             this._dirtifyWorldInternal();
         },
 
         _dirtifyWorldInternal: function () {
-            if (!this._dirtyWorld) {
-                this._frozen = false;
-                this._dirtyWorld = true;
-                for (var i = 0; i < this._children.length; i++) {
-                    if (!this._children[i]._dirtyWorld)
-                        this._children[i]._dirtifyWorldInternal();
-                }
+            this._frozen = false;
+            this._dirtyWorld = true;
+            for (var i = 0; i < this._children.length; i++) {
+                if (!this._children[i]._dirtyWorld)
+                    this._children[i]._dirtifyWorldInternal();
             }
             this._dirtyNormal = true;
             this._aabbVer++;
