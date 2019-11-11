@@ -1235,6 +1235,10 @@ Object.assign(pc, function () {
 
             this._calculateSize(false, false);
 
+            // we need to flag children as dirty too
+            // in order for them to update their position
+            this._flagChildrenAsDirty();
+
             this.fire('set:pivot', this._pivot);
         }
     });
