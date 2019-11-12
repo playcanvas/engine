@@ -16,7 +16,7 @@ Object.assign(pc, function () {
             if (!width || !height || !images || !levels) {
                 basisFile.close();
                 basisFile.delete();
-                throw new Error('Invalid image dimensions');
+                throw new Error('Invalid image dimensions url=' + url);
             }
 
             // select format based on supported formats
@@ -25,7 +25,7 @@ Object.assign(pc, function () {
             if (!basisFile.startTranscoding()) {
                 basisFile.close();
                 basisFile.delete();
-                throw new Error('Failed to start transcoding');
+                throw new Error('Failed to start transcoding url=' + url);
             }
 
             var levelData = [];
@@ -36,7 +36,7 @@ Object.assign(pc, function () {
                 if (!basisFile.transcodeImage(dst, 0, mip, format, 1, 0)) {
                     basisFile.close();
                     basisFile.delete();
-                    throw new Error('Failed to transcode image');
+                    throw new Error('Failed to transcode image url=' + url);
                 }
 
                 var i;
@@ -289,7 +289,7 @@ Object.assign(pc, function () {
             var callbacks = this.callbacks[url];
 
             if (!callbacks) {
-                console.error('internal logical error encountered');
+                console.error('internal logical error encountered in basis transcoder');
                 return;
             }
 
