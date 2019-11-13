@@ -130,7 +130,7 @@ Object.assign(pc, (function () {
 
     // polish
     definePluralFn([
-        'pl',
+        'pl'
     ], function (n) {
         if (Number.isInteger(n)) {
             if (n === 1) {
