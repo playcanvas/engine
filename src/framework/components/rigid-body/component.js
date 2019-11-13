@@ -203,7 +203,11 @@ Object.assign(pc, function () {
                 var motionState = new Ammo.btDefaultMotionState(startTransform);
                 var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
+                Ammo.destroy(localInertia);
+                Ammo.destroy(startTransform);
+
                 var body = new Ammo.btRigidBody(bodyInfo);
+                Ammo.destroy(bodyInfo);
 
                 body.setRestitution(this.restitution);
                 body.setFriction(this.friction);
@@ -719,6 +723,13 @@ Object.assign(pc, function () {
             this.disableSimulation();
         },
 
+        onRemove: function() {
+            if (this.body) {
+                this.system.removeBody(this.body);
+                Ammo.destroy(this.body);
+            }
+        },
+
         onSetMass: function (name, oldValue, newValue) {
             var body = this.data.body;
             if (body) {
@@ -732,6 +743,8 @@ Object.assign(pc, function () {
                 body.getCollisionShape().calculateLocalInertia(mass, localInertia);
                 body.setMassProps(mass, localInertia);
                 body.updateInertiaTensor();
+
+                Ammo.destroy(localInertia);
 
                 if (isEnabled) {
                     this.enableSimulation();
@@ -820,7 +833,6 @@ Object.assign(pc, function () {
                 this.body.activate();
             }
         }
-
     });
 
     return {
