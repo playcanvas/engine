@@ -52,8 +52,12 @@ Object.assign(pc, function () {
                 var motionState = new Ammo.btDefaultMotionState(startTransform);
                 var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
+                Ammo.destroy(localInertia);
+                Ammo.destroy(startTransform);
+
                 var body = new Ammo.btRigidBody(bodyInfo);
                 this.body = body;
+                Ammo.destroy(bodyInfo);
 
                 body.setRestitution(0);
                 body.setFriction(0);
@@ -74,6 +78,7 @@ Object.assign(pc, function () {
         destroy: function () {
             if (this.body) {
                 this.app.systems.rigidbody.removeBody(this.body);
+                Ammo.destroy(this.body);
             }
         },
 

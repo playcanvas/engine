@@ -43,6 +43,9 @@ Object.assign(pc, function () {
             var data = component.data;
 
             if (typeof Ammo !== 'undefined') {
+                if (data.shape)
+                    Ammo.destroy(data.shape);
+
                 data.shape = this.createPhysicalShape(component.entity, data);
                 if (entity.rigidbody) {
                     entity.rigidbody.disableSimulation();
@@ -76,6 +79,10 @@ Object.assign(pc, function () {
             if (entity.rigidbody && entity.rigidbody.body) {
                 app.systems.rigidbody.removeBody(entity.rigidbody.body);
                 entity.rigidbody.disableSimulation();
+            }
+
+            if (data.shape) {
+                Ammo.destroy(data.shape);
             }
 
             if (entity.trigger) {
@@ -120,7 +127,9 @@ Object.assign(pc, function () {
             if (typeof Ammo !== 'undefined') {
                 var he = data.halfExtents;
                 var ammoHe = new Ammo.btVector3(he ? he.x : 0.5, he ? he.y : 0.5, he ? he.z : 0.5);
-                return new Ammo.btBoxShape(ammoHe);
+                var shape = new Ammo.btBoxShape(ammoHe);
+                Ammo.destroy(ammoHe);
+                return shape;
             }
             return undefined;
         }
@@ -204,6 +213,10 @@ Object.assign(pc, function () {
                         break;
                 }
             }
+
+            if (halfExtents)
+                Ammo.destroy(halfExtents);
+
             return shape;
         }
     });
@@ -293,12 +306,19 @@ Object.assign(pc, function () {
                         triMesh.addTriangle(v1, v2, v3, true);
                     }
 
+                    Ammo.destroy(v1);
+                    Ammo.destroy(v2);
+                    Ammo.destroy(v3);
+
                     var useQuantizedAabbCompression = true;
                     var triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
+                    Ammo.destroy(triMesh);
 
                     var wtm = meshInstance.node.getWorldTransform();
                     var scl = wtm.getScale();
-                    triMeshShape.setLocalScaling(new Ammo.btVector3(scl.x, scl.y, scl.z));
+                    var scaling = new Ammo.btVector3(scl.x, scl.y, scl.z);
+                    triMeshShape.setLocalScaling(scaling);
+                    Ammo.destroy(scaling);
 
                     var pos = meshInstance.node.getPosition();
                     var rot = meshInstance.node.getRotation();
@@ -310,8 +330,11 @@ Object.assign(pc, function () {
                     var ammoQuat = new Ammo.btQuaternion();
                     ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
                     transform.setRotation(ammoQuat);
+                    Ammo.destroy(ammoQuat);
 
                     shape.addChildShape(transform, triMeshShape);
+                    Ammo.destroy(transform);
+                    Ammo.destroy(triMeshShape);
                 }
 
                 var entityTransform = entity.getWorldTransform();
@@ -319,6 +342,7 @@ Object.assign(pc, function () {
                 var vec = new Ammo.btVector3();
                 vec.setValue(scale.x, scale.y, scale.z);
                 shape.setLocalScaling(vec);
+                Ammo.destroy(vec);
 
                 return shape;
             }
@@ -364,9 +388,8 @@ Object.assign(pc, function () {
             var data = component.data;
 
             if (data.model) {
-                if (data.shape) {
+                if (data.shape)
                     Ammo.destroy(data.shape);
-                }
 
                 data.shape = this.createPhysicalShape(entity, data);
 
