@@ -31,7 +31,7 @@ Object.assign(pc, (function () {
         }
 
         return desiredLang;
-    }
+    };
 
     var DEFAULT_LOCALE = 'en-US';
 
