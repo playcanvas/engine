@@ -23,6 +23,16 @@ Object.assign(pc, (function () {
         return locale;
     };
 
+    // Replaces the language in the specified locale and returns the result
+    var replaceLang = function (locale, desiredLang) {
+        var idx = locale.indexOf('-');
+        if (idx !== -1) {
+            return desiredLang + locale.substring(idx);
+        }
+
+        return desiredLang;
+    }
+
     var DEFAULT_LOCALE = 'en-US';
 
     // default locale fallbacks if a specific locale
@@ -467,10 +477,22 @@ Object.assign(pc, (function () {
                 return;
             }
 
+            // replace 'in' language with 'id'
+            // for Indonesian because both codes are valid
+            // so that users only need to use the 'id' code
+            var lang = getLang(value);
+            if (lang === 'in') {
+                lang = 'id';
+                value = replaceLang(value, lang);
+                if (this._locale === value) {
+                    return;
+                }
+            }
+
             var old = this._locale;
             // cache locale, lang and plural function
             this._locale = value;
-            this._lang = getLang(value);
+            this._lang = lang;
             this._pluralFn = getPluralFn(this._lang);
 
             // raise event
