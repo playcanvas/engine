@@ -1,7 +1,7 @@
 Object.assign(pc, function () {
 
     // auto incrementing number for asset ids
-    var assetIdCounter = 0;
+    var assetIdCounter = -1;
 
     var ABSOLUTE_URL = new RegExp(
         '^' + // beginning of the url
@@ -76,7 +76,7 @@ Object.assign(pc, function () {
     var Asset = function (name, type, file, data) {
         pc.EventHandler.call(this);
 
-        this._id = ++assetIdCounter;
+        this._id = assetIdCounter--;
 
         this.name = name || '';
         this.type = type;
@@ -338,8 +338,6 @@ Object.assign(pc, function () {
 
         set: function (value) {
             this._id = value;
-            if (value > assetIdCounter)
-                assetIdCounter = value;
         }
     });
 
