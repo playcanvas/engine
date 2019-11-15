@@ -876,9 +876,11 @@ Object.assign(pc, function () {
         },
 
         _dirtifyLocal: function () {
-            this._dirtyLocal = true;
-            if (!this._dirtyWorld)
-                this._dirtifyWorld();
+            if (!this._dirtyLocal) {
+                this._dirtyLocal = true;
+                if (!this._dirtyWorld)
+                    this._dirtifyWorld();
+            }
         },
 
         _unfreezeParentToRoot: function () {
@@ -890,8 +892,10 @@ Object.assign(pc, function () {
         },
 
         _dirtifyWorld: function () {
-            this._unfreezeParentToRoot();
-            this._dirtifyWorldInternal();
+            if (!this._dirtyWorld) {
+                this._unfreezeParentToRoot();
+                this._dirtifyWorldInternal();
+            }
         },
 
         _dirtifyWorldInternal: function () {
