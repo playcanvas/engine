@@ -195,13 +195,16 @@ Object.assign(pc, function () {
 
                 var startTransform = new Ammo.btTransform();
                 startTransform.setIdentity();
-                startTransform.getOrigin().setValue(pos.x, pos.y, pos.z);
+                var origin = startTransform.getOrigin();
+                origin.setValue(pos.x, pos.y, pos.z);
                 startTransform.setRotation(ammoQuat);
 
                 var motionState = new Ammo.btDefaultMotionState(startTransform);
                 var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
+                delete Ammo.btDefaultMotionState.__cache__[motionState.ptr];
                 Ammo.destroy(localInertia);
+                Ammo.destroy(origin);
                 Ammo.destroy(startTransform);
 
                 var body = new Ammo.btRigidBody(bodyInfo);
@@ -594,7 +597,8 @@ Object.assign(pc, function () {
                 var rot = this.entity.getRotation();
 
                 var transform = body.getWorldTransform();
-                transform.getOrigin().setValue(pos.x, pos.y, pos.z);
+                var origin = transform.getOrigin();
+                origin.setValue(pos.x, pos.y, pos.z);
 
                 ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
                 transform.setRotation(ammoQuat);
@@ -607,6 +611,8 @@ Object.assign(pc, function () {
                     }
                 }
 
+                Ammo.destroy(origin);
+                Ammo.destroy(transform);
                 body.activate();
             }
         },

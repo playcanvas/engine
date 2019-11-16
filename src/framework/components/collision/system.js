@@ -324,7 +324,8 @@ Object.assign(pc, function () {
 
                     var transform = new Ammo.btTransform();
                     transform.setIdentity();
-                    transform.getOrigin().setValue(pos.x, pos.y, pos.z);
+                    var origin = transform.getOrigin();
+                    origin.setValue(pos.x, pos.y, pos.z);
 
                     var ammoQuat = new Ammo.btQuaternion();
                     ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
@@ -332,6 +333,7 @@ Object.assign(pc, function () {
                     Ammo.destroy(ammoQuat);
 
                     shape.addChildShape(transform, triMeshShape);
+                    Ammo.destroy(origin);
                     Ammo.destroy(transform);
                     Ammo.destroy(triMeshShape);
                 }

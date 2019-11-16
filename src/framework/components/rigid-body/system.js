@@ -256,6 +256,9 @@ Object.assign(pc, function () {
 
             if (Ammo.btRigidBody.__cache__[body.ptr])
                 Ammo.destroy(body);
+
+            var motionState = body.getMotionState();
+            delete Ammo.btMotionState.__cache__[motionState.ptr];
         },
 
         addConstraint: function (constraint) {
@@ -308,6 +311,8 @@ Object.assign(pc, function () {
                         }
                     }
                 }
+
+                Ammo.destroy(collisionObj);
             }
 
             Ammo.destroy(rayCallback);
@@ -494,10 +499,16 @@ Object.assign(pc, function () {
             // loop through the all contacts and fire events
             for (i = 0; i < numManifolds; i++) {
                 var manifold = dispatcher.getManifoldByIndexInternal(i);
+
                 var body0 = manifold.getBody0();
                 var body1 = manifold.getBody1();
+
                 var wb0 = Ammo.castObject(body0, Ammo.btRigidBody);
                 var wb1 = Ammo.castObject(body1, Ammo.btRigidBody);
+
+                delete Ammo.btCollisionObject.__cache__[body0.ptr];
+                delete Ammo.btCollisionObject.__cache__[body1.ptr];
+
                 var e0 = wb0.entity;
                 var e1 = wb1.entity;
 
@@ -506,8 +517,8 @@ Object.assign(pc, function () {
                     continue;
                 }
 
-                var flags0 = body0.getCollisionFlags();
-                var flags1 = body1.getCollisionFlags();
+                var flags0 = wb0.getCollisionFlags();
+                var flags1 = wb1.getCollisionFlags();
 
                 var numContacts = manifold.getNumContacts();
                 var forwardContacts = [];
@@ -603,7 +614,6 @@ Object.assign(pc, function () {
                             }
                         }
                     }
-
                 }
             }
 
@@ -619,8 +629,6 @@ Object.assign(pc, function () {
             this._stats.physicsTime = pc.now() - this._stats.physicsStart;
             // #endif
         }
-
-
     });
 
     return {
