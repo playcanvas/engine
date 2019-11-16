@@ -272,46 +272,53 @@ Object.assign(pc, function () {
                 for (i = 0; i < model.meshInstances.length; i++) {
                     var meshInstance = model.meshInstances[i];
                     var mesh = meshInstance.mesh;
-                    var ib = mesh.indexBuffer[pc.RENDERSTYLE_SOLID];
-                    var vb = mesh.vertexBuffer;
+                    var triMesh;
 
-                    var format = vb.getFormat();
-                    var stride = format.size / 4;
-                    var positions;
-                    for (j = 0; j < format.elements.length; j++) {
-                        var element = format.elements[j];
-                        if (element.name === pc.SEMANTIC_POSITION) {
-                            positions = new Float32Array(vb.lock(), element.offset);
+                    if (this.system._triMeshCache[mesh.id]) {
+                        triMesh = this.system._triMeshCache[mesh.id];
+                    } else {
+                        var ib = mesh.indexBuffer[pc.RENDERSTYLE_SOLID];
+                        var vb = mesh.vertexBuffer;
+
+                        var format = vb.getFormat();
+                        var stride = format.size / 4;
+                        var positions;
+                        for (j = 0; j < format.elements.length; j++) {
+                            var element = format.elements[j];
+                            if (element.name === pc.SEMANTIC_POSITION) {
+                                positions = new Float32Array(vb.lock(), element.offset);
+                            }
                         }
+
+                        var indices = new Uint16Array(ib.lock());
+                        var numTriangles = mesh.primitive[0].count / 3;
+
+                        var v1 = new Ammo.btVector3();
+                        var v2 = new Ammo.btVector3();
+                        var v3 = new Ammo.btVector3();
+                        var i1, i2, i3;
+
+                        var base = mesh.primitive[0].base;
+                        triMesh = new Ammo.btTriangleMesh();
+                        this.system._triMeshCache[mesh.id] = triMesh;
+
+                        for (j = 0; j < numTriangles; j++) {
+                            i1 = indices[base + j * 3] * stride;
+                            i2 = indices[base + j * 3 + 1] * stride;
+                            i3 = indices[base + j * 3 + 2] * stride;
+                            v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
+                            v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
+                            v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
+                            triMesh.addTriangle(v1, v2, v3, true);
+                        }
+
+                        Ammo.destroy(v1);
+                        Ammo.destroy(v2);
+                        Ammo.destroy(v3);
                     }
-
-                    var indices = new Uint16Array(ib.lock());
-                    var numTriangles = mesh.primitive[0].count / 3;
-
-                    var v1 = new Ammo.btVector3();
-                    var v2 = new Ammo.btVector3();
-                    var v3 = new Ammo.btVector3();
-                    var i1, i2, i3;
-
-                    var base = mesh.primitive[0].base;
-                    var triMesh = new Ammo.btTriangleMesh();
-                    for (j = 0; j < numTriangles; j++) {
-                        i1 = indices[base + j * 3] * stride;
-                        i2 = indices[base + j * 3 + 1] * stride;
-                        i3 = indices[base + j * 3 + 2] * stride;
-                        v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
-                        v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
-                        v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
-                        triMesh.addTriangle(v1, v2, v3, true);
-                    }
-
-                    Ammo.destroy(v1);
-                    Ammo.destroy(v2);
-                    Ammo.destroy(v3);
 
                     var useQuantizedAabbCompression = true;
                     var triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
-                    Ammo.destroy(triMesh);
 
                     var wtm = meshInstance.node.getWorldTransform();
                     var scl = wtm.getScale();
@@ -335,7 +342,6 @@ Object.assign(pc, function () {
                     shape.addChildShape(transform, triMeshShape);
                     Ammo.destroy(origin);
                     Ammo.destroy(transform);
-                    Ammo.destroy(triMeshShape);
                 }
 
                 var entityTransform = entity.getWorldTransform();
@@ -424,6 +430,19 @@ Object.assign(pc, function () {
             }
 
             pc.CollisionSystemImpl.prototype.updateTransform.call(this, component, position, rotation, scale);
+        },
+
+        remove: function(entity, data) {
+            if (data.shape) {
+                var numShapes = data.shape.getNumChildShapes();
+                for(var i = 0; i < numShapes; i++) {
+                    var shape = data.shape.getChildShape(i);
+                    delete Ammo.btBvhTriangleMeshShape.__cache__[shape.ptr];
+                    Ammo.destroy(shape);
+                }
+            }
+
+            CollisionSystemImpl.prototype.remove.call(this, entity, data);
         }
     });
 
@@ -447,6 +466,8 @@ Object.assign(pc, function () {
         this.schema = _schema;
 
         this.implementations = { };
+
+        this._triMeshCache = { };
 
         this.on('remove', this.onRemove, this);
 
