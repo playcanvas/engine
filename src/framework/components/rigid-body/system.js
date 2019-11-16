@@ -237,12 +237,8 @@ Object.assign(pc, function () {
         },
 
         onRemove: function (entity, data) {
-            if (data.body) {
+            if (data.body)
                 this.removeBody(data.body);
-                Ammo.destroy(data.body);
-            }
-
-            data.body = null;
         },
 
         addBody: function (body, group, mask) {
@@ -257,6 +253,9 @@ Object.assign(pc, function () {
 
         removeBody: function (body) {
             this.dynamicsWorld.removeRigidBody(body);
+
+            if (Ammo.btRigidBody.__cache__[body.ptr])
+                Ammo.destroy(body);
         },
 
         addConstraint: function (constraint) {

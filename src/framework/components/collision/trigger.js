@@ -76,10 +76,8 @@ Object.assign(pc, function () {
         },
 
         destroy: function () {
-            if (this.body) {
+            if (this.body)
                 this.app.systems.rigidbody.removeBody(this.body);
-                Ammo.destroy(this.body);
-            }
         },
 
         syncEntityToBody: function () {
