@@ -237,8 +237,16 @@ Object.assign(pc, function () {
         },
 
         onRemove: function (entity, data) {
-            if (data.body)
+            if (data.body) {
                 this.removeBody(data.body);
+
+                Ammo.destroy(data.body);
+
+                var motionState = data.body.getMotionState();
+                delete Ammo.btMotionState.__cache__[motionState.ptr];
+
+                data.body = null;
+            }
         },
 
         addBody: function (body, group, mask) {
@@ -253,12 +261,6 @@ Object.assign(pc, function () {
 
         removeBody: function (body) {
             this.dynamicsWorld.removeRigidBody(body);
-
-            if (Ammo.btRigidBody.__cache__[body.ptr])
-                Ammo.destroy(body);
-
-            var motionState = body.getMotionState();
-            delete Ammo.btMotionState.__cache__[motionState.ptr];
         },
 
         addConstraint: function (constraint) {
@@ -300,6 +302,9 @@ Object.assign(pc, function () {
                         new pc.Vec3(normal.x(), normal.y(), normal.z())
                     );
 
+                    Ammo.destroy(point);
+                    Ammo.destroy(normal);
+
                     // keeping for backwards compatibility
                     if (arguments.length > 2) {
                         var callback = arguments[2];
@@ -311,8 +316,6 @@ Object.assign(pc, function () {
                         }
                     }
                 }
-
-                Ammo.destroy(collisionObj);
             }
 
             Ammo.destroy(rayCallback);

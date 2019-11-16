@@ -117,6 +117,7 @@ Object.assign(pc, function () {
                 if (this.body) {
                     var vel = this.body.getLinearVelocity();
                     this._linearVelocity.set(vel.x(), vel.y(), vel.z());
+                    Ammo.destroy(vel);
                 }
             }
             return this._linearVelocity;
@@ -139,6 +140,7 @@ Object.assign(pc, function () {
                 if (this.body) {
                     var vel = this.body.getAngularVelocity();
                     this._angularVelocity.set(vel.x(), vel.y(), vel.z());
+                    Ammo.destroy(vel);
                 }
             }
             return this._angularVelocity;
@@ -179,7 +181,7 @@ Object.assign(pc, function () {
 
             if (shape) {
                 if (this.body)
-                    this.system.removeBody(this.body);
+                    this.system.onRemove(this.entity, this);
 
                 var isStaticOrKinematic = this.isStaticOrKinematic();
                 var mass = isStaticOrKinematic ? 0 : this.mass;
