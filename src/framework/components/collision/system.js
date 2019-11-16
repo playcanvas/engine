@@ -81,8 +81,9 @@ Object.assign(pc, function () {
                 entity.rigidbody.disableSimulation();
             }
 
-            if (data.shape)
+            if (data.shape) {
                 Ammo.destroy(data.shape);
+            }
 
             if (entity.trigger) {
                 entity.trigger.destroy();

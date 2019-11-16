@@ -1542,7 +1542,7 @@ Object.assign(pc, function () {
         set: function (value) {
             if (this._unicodeConverter !== value) {
                 this._unicodeConverter = value;
-                this._setText(this._text);
+                this.text = this._text;
             }
         }
     });

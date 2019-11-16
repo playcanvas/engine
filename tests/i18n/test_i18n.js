@@ -598,25 +598,4 @@ describe('I18n tests', function () {
         app.assets.add(asset);
         app.assets.load(asset);
     });
-
-    it('locale for Indonesian should always start with "id"', function () {
-        app.i18n.locale = 'id';
-        expect(app.i18n.locale).to.equal('id');
-
-        app.i18n.locale = 'id-ID';
-        expect(app.i18n.locale).to.equal('id-ID');
-
-        app.i18n.locale = 'in';
-        expect(app.i18n.locale).to.equal('id');
-
-        app.i18n.locale = 'in-ID';
-        expect(app.i18n.locale).to.equal('id-ID');
-
-        // sanity checks
-        app.i18n.locale = 'en';
-        expect(app.i18n.locale).to.equal('en');
-
-        app.i18n.locale = 'en-US';
-        expect(app.i18n.locale).to.equal('en-US');
-    });
 });

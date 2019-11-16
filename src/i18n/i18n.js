@@ -23,16 +23,6 @@ Object.assign(pc, (function () {
         return locale;
     };
 
-    // Replaces the language in the specified locale and returns the result
-    var replaceLang = function (locale, desiredLang) {
-        var idx = locale.indexOf('-');
-        if (idx !== -1) {
-            return desiredLang + locale.substring(idx);
-        }
-
-        return desiredLang;
-    };
-
     var DEFAULT_LOCALE = 'en-US';
 
     // default locale fallbacks if a specific locale
@@ -56,8 +46,7 @@ Object.assign(pc, (function () {
         'ko',
         'th',
         'vi',
-        'zh',
-        'id'
+        'zh'
     ], function (n) {
         return 0;
     });
@@ -74,23 +63,10 @@ Object.assign(pc, (function () {
         return 1; // other
     });
 
-    // from Unicode rules: i = 0..1
     definePluralFn([
-        'fr',
-        'pt'
+        'fr'
     ], function (n) {
         if (n >= 0 && n < 2) {
-            return 0; // one
-        }
-
-        return 1; // other
-    });
-
-    // danish
-    definePluralFn([
-        'da'
-    ], function (n) {
-        if (n === 1 || !Number.isInteger(n) && n >= 0 && n <= 1) {
             return 0; // one
         }
 
@@ -103,12 +79,7 @@ Object.assign(pc, (function () {
         'it',
         'el',
         'es',
-        'tr',
-        'fi',
-        'sv',
-        'nb',
-        'no',
-        'ur'
+        'tr'
     ], function (n) {
         if (n === 1)  {
             return 0; // one
@@ -131,27 +102,6 @@ Object.assign(pc, (function () {
             } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
                 return 1; // few
             } else if (mod10 === 0 || mod10 >= 5 && mod10 <= 9 || mod100 >= 11 && mod100 <= 14) {
-                return 2; // many
-            }
-        }
-
-        return 3; // other
-    });
-
-    // polish
-    definePluralFn([
-        'pl'
-    ], function (n) {
-        if (Number.isInteger(n)) {
-            if (n === 1) {
-                return 0; // one
-            }
-            var mod10 = n % 10;
-            var mod100 = n % 100;
-
-            if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-                return 1; // few
-            } else if (mod10 >= 0 && mod10 <= 1 || mod10 >= 5 && mod10 <= 9 || mod100 >= 12 && mod100 <= 14) {
                 return 2; // many
             }
         }
@@ -477,22 +427,10 @@ Object.assign(pc, (function () {
                 return;
             }
 
-            // replace 'in' language with 'id'
-            // for Indonesian because both codes are valid
-            // so that users only need to use the 'id' code
-            var lang = getLang(value);
-            if (lang === 'in') {
-                lang = 'id';
-                value = replaceLang(value, lang);
-                if (this._locale === value) {
-                    return;
-                }
-            }
-
             var old = this._locale;
             // cache locale, lang and plural function
             this._locale = value;
-            this._lang = lang;
+            this._lang = getLang(value);
             this._pluralFn = getPluralFn(this._lang);
 
             // raise event

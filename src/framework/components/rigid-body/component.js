@@ -178,8 +178,10 @@ Object.assign(pc, function () {
             }
 
             if (shape) {
-                if (this.body)
+                if (this.body) {
                     this.system.removeBody(this.body);
+                    Ammo.destroy(this.body);
+                }
 
                 var isStaticOrKinematic = this.isStaticOrKinematic();
                 var mass = isStaticOrKinematic ? 0 : this.mass;
@@ -719,6 +721,13 @@ Object.assign(pc, function () {
 
         onDisable: function () {
             this.disableSimulation();
+        },
+
+        onRemove: function() {
+            if (this.body) {
+                this.system.removeBody(this.body);
+                Ammo.destroy(this.body);
+            }
         },
 
         onSetMass: function (name, oldValue, newValue) {
