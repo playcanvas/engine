@@ -204,7 +204,6 @@ Object.assign(pc, function () {
                 var motionState = new Ammo.btDefaultMotionState(startTransform);
                 var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
-                delete Ammo.btDefaultMotionState.__cache__[motionState.ptr];
                 Ammo.destroy(localInertia);
                 Ammo.destroy(origin);
                 Ammo.destroy(startTransform);

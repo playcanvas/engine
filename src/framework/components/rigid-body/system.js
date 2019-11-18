@@ -242,9 +242,6 @@ Object.assign(pc, function () {
 
                 Ammo.destroy(data.body);
 
-                var motionState = data.body.getMotionState();
-                delete Ammo.btMotionState.__cache__[motionState.ptr];
-
                 data.body = null;
             }
         },
@@ -508,9 +505,6 @@ Object.assign(pc, function () {
 
                 var wb0 = Ammo.castObject(body0, Ammo.btRigidBody);
                 var wb1 = Ammo.castObject(body1, Ammo.btRigidBody);
-
-                delete Ammo.btCollisionObject.__cache__[body0.ptr];
-                delete Ammo.btCollisionObject.__cache__[body1.ptr];
 
                 var e0 = wb0.entity;
                 var e1 = wb1.entity;

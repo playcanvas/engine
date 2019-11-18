@@ -437,7 +437,6 @@ Object.assign(pc, function () {
                 var numShapes = data.shape.getNumChildShapes();
                 for(var i = 0; i < numShapes; i++) {
                     var shape = data.shape.getChildShape(i);
-                    delete Ammo.btBvhTriangleMeshShape.__cache__[shape.ptr];
                     Ammo.destroy(shape);
                 }
             }
