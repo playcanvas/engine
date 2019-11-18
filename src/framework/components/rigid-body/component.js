@@ -117,7 +117,6 @@ Object.assign(pc, function () {
                 if (this.body) {
                     var vel = this.body.getLinearVelocity();
                     this._linearVelocity.set(vel.x(), vel.y(), vel.z());
-                    Ammo.destroy(vel);
                 }
             }
             return this._linearVelocity;
@@ -140,7 +139,6 @@ Object.assign(pc, function () {
                 if (this.body) {
                     var vel = this.body.getAngularVelocity();
                     this._angularVelocity.set(vel.x(), vel.y(), vel.z());
-                    Ammo.destroy(vel);
                 }
             }
             return this._angularVelocity;
