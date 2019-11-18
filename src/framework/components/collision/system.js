@@ -43,6 +43,9 @@ Object.assign(pc, function () {
             var data = component.data;
 
             if (typeof Ammo !== 'undefined') {
+                if (data.shape)
+                    Ammo.destroy(data.shape);
+
                 data.shape = this.createPhysicalShape(component.entity, data);
                 if (entity.rigidbody) {
                     entity.rigidbody.disableSimulation();
@@ -77,6 +80,9 @@ Object.assign(pc, function () {
                 app.systems.rigidbody.removeBody(entity.rigidbody.body);
                 entity.rigidbody.disableSimulation();
             }
+
+            if (data.shape)
+                Ammo.destroy(data.shape);
 
             if (entity.trigger) {
                 entity.trigger.destroy();
@@ -120,7 +126,9 @@ Object.assign(pc, function () {
             if (typeof Ammo !== 'undefined') {
                 var he = data.halfExtents;
                 var ammoHe = new Ammo.btVector3(he ? he.x : 0.5, he ? he.y : 0.5, he ? he.z : 0.5);
-                return new Ammo.btBoxShape(ammoHe);
+                var shape = new Ammo.btBoxShape(ammoHe);
+                Ammo.destroy(ammoHe);
+                return shape;
             }
             return undefined;
         }
@@ -204,6 +212,10 @@ Object.assign(pc, function () {
                         break;
                 }
             }
+
+            if (halfExtents)
+                Ammo.destroy(halfExtents);
+
             return shape;
         }
     });
@@ -260,37 +272,49 @@ Object.assign(pc, function () {
                 for (i = 0; i < model.meshInstances.length; i++) {
                     var meshInstance = model.meshInstances[i];
                     var mesh = meshInstance.mesh;
-                    var ib = mesh.indexBuffer[pc.RENDERSTYLE_SOLID];
-                    var vb = mesh.vertexBuffer;
+                    var triMesh;
 
-                    var format = vb.getFormat();
-                    var stride = format.size / 4;
-                    var positions;
-                    for (j = 0; j < format.elements.length; j++) {
-                        var element = format.elements[j];
-                        if (element.name === pc.SEMANTIC_POSITION) {
-                            positions = new Float32Array(vb.lock(), element.offset);
+                    if (this.system._triMeshCache[mesh.id]) {
+                        triMesh = this.system._triMeshCache[mesh.id];
+                    } else {
+                        var ib = mesh.indexBuffer[pc.RENDERSTYLE_SOLID];
+                        var vb = mesh.vertexBuffer;
+
+                        var format = vb.getFormat();
+                        var stride = format.size / 4;
+                        var positions;
+                        for (j = 0; j < format.elements.length; j++) {
+                            var element = format.elements[j];
+                            if (element.name === pc.SEMANTIC_POSITION) {
+                                positions = new Float32Array(vb.lock(), element.offset);
+                            }
                         }
-                    }
 
-                    var indices = new Uint16Array(ib.lock());
-                    var numTriangles = mesh.primitive[0].count / 3;
+                        var indices = new Uint16Array(ib.lock());
+                        var numTriangles = mesh.primitive[0].count / 3;
 
-                    var v1 = new Ammo.btVector3();
-                    var v2 = new Ammo.btVector3();
-                    var v3 = new Ammo.btVector3();
-                    var i1, i2, i3;
+                        var v1 = new Ammo.btVector3();
+                        var v2 = new Ammo.btVector3();
+                        var v3 = new Ammo.btVector3();
+                        var i1, i2, i3;
 
-                    var base = mesh.primitive[0].base;
-                    var triMesh = new Ammo.btTriangleMesh();
-                    for (j = 0; j < numTriangles; j++) {
-                        i1 = indices[base + j * 3] * stride;
-                        i2 = indices[base + j * 3 + 1] * stride;
-                        i3 = indices[base + j * 3 + 2] * stride;
-                        v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
-                        v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
-                        v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
-                        triMesh.addTriangle(v1, v2, v3, true);
+                        var base = mesh.primitive[0].base;
+                        triMesh = new Ammo.btTriangleMesh();
+                        this.system._triMeshCache[mesh.id] = triMesh;
+
+                        for (j = 0; j < numTriangles; j++) {
+                            i1 = indices[base + j * 3] * stride;
+                            i2 = indices[base + j * 3 + 1] * stride;
+                            i3 = indices[base + j * 3 + 2] * stride;
+                            v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
+                            v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
+                            v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
+                            triMesh.addTriangle(v1, v2, v3, true);
+                        }
+
+                        Ammo.destroy(v1);
+                        Ammo.destroy(v2);
+                        Ammo.destroy(v3);
                     }
 
                     var useQuantizedAabbCompression = true;
@@ -298,20 +322,26 @@ Object.assign(pc, function () {
 
                     var wtm = meshInstance.node.getWorldTransform();
                     var scl = wtm.getScale();
-                    triMeshShape.setLocalScaling(new Ammo.btVector3(scl.x, scl.y, scl.z));
+                    var scaling = new Ammo.btVector3(scl.x, scl.y, scl.z);
+                    triMeshShape.setLocalScaling(scaling);
+                    Ammo.destroy(scaling);
 
                     var pos = meshInstance.node.getPosition();
                     var rot = meshInstance.node.getRotation();
 
                     var transform = new Ammo.btTransform();
                     transform.setIdentity();
-                    transform.getOrigin().setValue(pos.x, pos.y, pos.z);
+                    var origin = transform.getOrigin();
+                    origin.setValue(pos.x, pos.y, pos.z);
 
                     var ammoQuat = new Ammo.btQuaternion();
                     ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
                     transform.setRotation(ammoQuat);
+                    Ammo.destroy(ammoQuat);
 
                     shape.addChildShape(transform, triMeshShape);
+                    Ammo.destroy(origin);
+                    Ammo.destroy(transform);
                 }
 
                 var entityTransform = entity.getWorldTransform();
@@ -319,6 +349,7 @@ Object.assign(pc, function () {
                 var vec = new Ammo.btVector3();
                 vec.setValue(scale.x, scale.y, scale.z);
                 shape.setLocalScaling(vec);
+                Ammo.destroy(vec);
 
                 return shape;
             }
@@ -364,9 +395,8 @@ Object.assign(pc, function () {
             var data = component.data;
 
             if (data.model) {
-                if (data.shape) {
+                if (data.shape)
                     Ammo.destroy(data.shape);
-                }
 
                 data.shape = this.createPhysicalShape(entity, data);
 
@@ -400,6 +430,18 @@ Object.assign(pc, function () {
             }
 
             pc.CollisionSystemImpl.prototype.updateTransform.call(this, component, position, rotation, scale);
+        },
+
+        remove: function(entity, data) {
+            if (data.shape) {
+                var numShapes = data.shape.getNumChildShapes();
+                for(var i = 0; i < numShapes; i++) {
+                    var shape = data.shape.getChildShape(i);
+                    Ammo.destroy(shape);
+                }
+            }
+
+            CollisionSystemImpl.prototype.remove.call(this, entity, data);
         }
     });
 
@@ -423,6 +465,8 @@ Object.assign(pc, function () {
         this.schema = _schema;
 
         this.implementations = { };
+
+        this._triMeshCache = { };
 
         this.on('remove', this.onRemove, this);
 
@@ -563,6 +607,16 @@ Object.assign(pc, function () {
         // Recreates rigid bodies or triggers for the specified component
         recreatePhysicalShapes: function (component) {
             this.implementations[component.data.type].recreatePhysicalShapes(component);
+        },
+
+        destroy: function() {
+            for(var key in this._triMeshCache) {
+                Ammo.destroy(this._triMeshCache[key]);
+            }
+
+            this._triMeshCache = null;
+
+            pc.ComponentSystem.prototype.destroy.call(this);
         }
     });
 
