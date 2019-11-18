@@ -607,6 +607,16 @@ Object.assign(pc, function () {
         // Recreates rigid bodies or triggers for the specified component
         recreatePhysicalShapes: function (component) {
             this.implementations[component.data.type].recreatePhysicalShapes(component);
+        },
+
+        destroy: function() {
+            for(var key in this._triMeshCache) {
+                Ammo.destroy(this._triMeshCache[key]);
+            }
+
+            this._triMeshCache = null;
+
+            pc.ComponentSystem.prototype.destroy.call(this);
         }
     });
 
