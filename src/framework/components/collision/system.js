@@ -432,10 +432,10 @@ Object.assign(pc, function () {
             pc.CollisionSystemImpl.prototype.updateTransform.call(this, component, position, rotation, scale);
         },
 
-        remove: function(entity, data) {
+        remove: function (entity, data) {
             if (data.shape) {
                 var numShapes = data.shape.getNumChildShapes();
-                for(var i = 0; i < numShapes; i++) {
+                for (var i = 0; i < numShapes; i++) {
                     var shape = data.shape.getChildShape(i);
                     Ammo.destroy(shape);
                 }
@@ -609,8 +609,8 @@ Object.assign(pc, function () {
             this.implementations[component.data.type].recreatePhysicalShapes(component);
         },
 
-        destroy: function() {
-            for(var key in this._triMeshCache) {
+        destroy: function () {
+            for (var key in this._triMeshCache) {
                 Ammo.destroy(this._triMeshCache[key]);
             }
 
