@@ -70,7 +70,10 @@ Object.assign(pc, function () {
     var CollisionComponent = function CollisionComponent(system, entity) {
         pc.Component.call(this, system, entity);
 
+        this._compoundParent = null;
+
         this.on('set_type', this.onSetType, this);
+        this.on("set_compound", this.onSetCompound, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         this.on('set_radius', this.onSetRadius, this);
         this.on('set_height', this.onSetHeight, this);
@@ -124,6 +127,12 @@ Object.assign(pc, function () {
         onSetType: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
                 this.system.changeType(this, oldValue, newValue);
+            }
+        },
+
+        onSetCompound: function(name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                this.system.changeCompound(this, oldValue, newValue);
             }
         },
 

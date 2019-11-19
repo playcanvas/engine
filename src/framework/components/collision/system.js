@@ -1,7 +1,13 @@
 Object.assign(pc, function () {
+    var mat4A = new pc.Mat4();
+    var mat4B = new pc.Mat4();
+    var vec3 = new pc.Vec3();
+    var quat = new pc.Quat();
+
     var _schema = [
         'enabled',
         'type',
+        'compound',
         'halfExtents',
         'radius',
         'axis',
@@ -19,7 +25,7 @@ Object.assign(pc, function () {
     Object.assign(CollisionSystemImpl.prototype, {
         // Called before the call to system.super.initializeComponentData is made
         beforeInitialize: function (component, data) {
-            data.shape = this.createPhysicalShape(component.entity, data);
+            data.shape = null;
 
             data.model = new pc.Model();
             data.model.graph = new pc.GraphNode();
@@ -46,10 +52,55 @@ Object.assign(pc, function () {
                 if (data.shape)
                     Ammo.destroy(data.shape);
 
-                data.shape = this.createPhysicalShape(component.entity, data);
+                var shape = this.createPhysicalShape(component.entity, data);
+
+                if (data.compound && (! component._compoundParent || component === component._compoundParent)) {
+                    component._compoundParent = component;
+
+                    data.shape = new Ammo.btCompoundShape();
+
+                    var transform = new Ammo.btTransform();
+                    transform.setIdentity();
+                    data.shape.addChildShape(transform, shape);
+                    Ammo.destroy(transform);
+
+                    entity.forEach(function(child) {
+                        if (! child.collision || child.rigidbody)
+                            return;
+
+                        child.collision._compoundParent = this;
+
+                        if (child !== this.entity) {
+                            child.collision.system.recreatePhysicalShapes(child.collision);
+                        }
+                    }, component);
+                } else {
+                    if (! data.compound && component === component._compoundParent) {
+                        entity.forEach(function(child) {
+                            if (! child.collision)
+                                return;
+
+                            if (child.collision._compoundParent !== this)
+                                return;
+
+                            child.collision._compoundParent = null;
+
+                            if (child !== this.entity && ! child.rigidbody) {
+                                child.collision.system.recreatePhysicalShapes(child.collision);
+                            }
+                        }, component);
+                    }
+
+                    data.shape = shape;
+                }
+
                 if (entity.rigidbody) {
                     entity.rigidbody.disableSimulation();
                     entity.rigidbody.createBody();
+                } else if (component._compoundParent) {
+                    var transform = this.getNodeTransform(entity, component._compoundParent.entity);
+                    component._compoundParent.shape.addChildShape(transform, data.shape);
+                    Ammo.destroy(transform);
                 } else {
                     if (!entity.trigger) {
                         entity.trigger = new pc.Trigger(this.system.app, component, data);
@@ -71,6 +122,43 @@ Object.assign(pc, function () {
             if (component.entity.trigger) {
                 component.entity.trigger.syncEntityToBody();
             }
+        },
+
+        getNodeScaling: function(node) {
+            var wtm = node.getWorldTransform();
+            var scl = wtm.getScale();
+            return new Ammo.btVector3(scl.x, scl.y, scl.z);
+        },
+
+        getNodeTransform: function(node, relative) {
+            var pos, rot;
+
+            if (relative) {
+                mat4A.copy(relative.getWorldTransform()).invert();
+                mat4B.copy(node.getWorldTransform());
+                mat4A.mul(mat4B);
+
+                pos = vec3;
+                rot = quat;
+                mat4A.getTranslation(pos);
+                rot.setFromMat4(mat4A);
+            } else {
+                pos = node.getPosition();
+                rot = node.getRotation();
+            }
+
+            var transform = new Ammo.btTransform();
+            transform.setIdentity();
+            var origin = transform.getOrigin();
+            origin.setValue(pos.x, pos.y, pos.z);
+
+            var ammoQuat = new Ammo.btQuaternion();
+            ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+            transform.setRotation(ammoQuat);
+            Ammo.destroy(ammoQuat);
+            Ammo.destroy(origin);
+
+            return transform;
         },
 
         // Called when the collision is removed
@@ -102,6 +190,7 @@ Object.assign(pc, function () {
             var data = {
                 enabled: src.data.enabled,
                 type: src.data.type,
+                compound: src.data.compound,
                 halfExtents: [src.data.halfExtents.x, src.data.halfExtents.y, src.data.halfExtents.z],
                 radius: src.data.radius,
                 axis: src.data.axis,
@@ -320,27 +409,12 @@ Object.assign(pc, function () {
                     var useQuantizedAabbCompression = true;
                     var triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
 
-                    var wtm = meshInstance.node.getWorldTransform();
-                    var scl = wtm.getScale();
-                    var scaling = new Ammo.btVector3(scl.x, scl.y, scl.z);
+                    var scaling = this.getNodeScaling(meshInstance.node);
                     triMeshShape.setLocalScaling(scaling);
                     Ammo.destroy(scaling);
 
-                    var pos = meshInstance.node.getPosition();
-                    var rot = meshInstance.node.getRotation();
-
-                    var transform = new Ammo.btTransform();
-                    transform.setIdentity();
-                    var origin = transform.getOrigin();
-                    origin.setValue(pos.x, pos.y, pos.z);
-
-                    var ammoQuat = new Ammo.btQuaternion();
-                    ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
-                    transform.setRotation(ammoQuat);
-                    Ammo.destroy(ammoQuat);
-
+                    var transform = this.getNodeTransform(meshInstance.node);
                     shape.addChildShape(transform, triMeshShape);
-                    Ammo.destroy(origin);
                     Ammo.destroy(transform);
                 }
 
@@ -488,7 +562,7 @@ Object.assign(pc, function () {
         },
 
         initializeComponentData: function (component, _data, properties) {
-            properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
+            properties = ['type', 'compound', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
 
             // duplicate the input data because we are modifying it
             var data = {};
@@ -517,6 +591,11 @@ Object.assign(pc, function () {
                 data.type = component.data.type;
             }
             component.data.type = data.type;
+
+            if (data.compound === undefined) {
+                data.compound = component.data.compound;
+            }
+            component.data.compound = data.compound;
 
             if (data.halfExtents && pc.type(data.halfExtents) === 'array') {
                 data.halfExtents = new pc.Vec3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]);
@@ -602,6 +681,10 @@ Object.assign(pc, function () {
         changeType: function (component, previousType, newType) {
             this.implementations[previousType].remove( component.entity, component.data);
             this._createImplementation(newType).reset(component, component.data);
+        },
+
+        changeCompound: function(component, oldValue, newValue) {
+            this.recreatePhysicalShapes(component);
         },
 
         // Recreates rigid bodies or triggers for the specified component
