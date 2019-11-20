@@ -1,4 +1,65 @@
 Object.assign(pc, function () {
+
+    var StatGraph = function (width, height) {
+        this.width = width || 256;
+        this.height = height || 144;
+
+        this.styles = ['rgb(255,255,255)', 'rgb(255,64,64)', 'rgb(64,255,64)', 'rgb(64,64,255)'];
+
+        // create canvas
+        this.canvas = document.createElement('canvas');
+        this.canvas.style.width = this.width / window.devicePixelRatio + 'px';
+        this.canvas.style.height = this.height / window.devicePixelRatio + 'px';
+        this.canvas.style.display = 'block';
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+
+        // get context and clear
+        this.ctx = this.canvas.getContext('2d');
+        this.ctx.fillStyle = 'rgb(0,0,0)';
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.ctx.lineWidth = 1;
+
+        // create parent and add to the document
+        this.div = document.createElement('div');
+        this.div.style.cssText = 'position:fixed;top:0;left:0;border:2px solid #606060';
+        this.div.appendChild(this.canvas);
+        document.body.appendChild(this.div);
+    };
+
+    StatGraph.prototype = {
+        update: function (values, prevValues) {
+            var w = this.width;
+            var h = this.height;
+
+            // shift contents left one pixel
+            this.ctx.drawImage(this.canvas, 1, 0, w - 1, h, 0, 0, w - 1, h);
+
+            // clear background
+            var yMid = this._mapY(1000.0 / 60.0);
+            this.ctx.fillStyle = 'rgb(0,0,0)';
+            this.ctx.fillRect(w - 1, 0, 1, yMid);
+            this.ctx.fillStyle = 'rgb(48,48,48)';
+            this.ctx.fillRect(w - 1, yMid, 1, h - yMid);
+
+            // render values
+            for (var i = values.length - 1; i >= 0; --i) {
+                var y1 = this._mapY(prevValues[i]);
+                var y2 = this._mapY(values[i]);
+
+                this.ctx.strokeStyle = this.styles[i % this.styles.length];
+                this.ctx.beginPath();
+                this.ctx.moveTo(w - 2, y1);
+                this.ctx.lineTo(w - 1, y2);
+                this.ctx.stroke();
+            }
+        },
+
+        _mapY: function (value) {
+            return (this.height - 1) * (1.0 - value / 48.0);
+        }
+    };
+
     /**
      * @constructor
      * @name pc.Application
@@ -262,6 +323,14 @@ Object.assign(pc, function () {
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this._audioManager = new pc.SoundManager(options);
         this.loader = new pc.ResourceLoader(this);
+
+        // create frame stats
+        this._statGraph = new StatGraph();
+        this._prevMs = 0;
+        this._prevUpdateMs = 0;
+        this._prevRenderMs = 0;
+        this._prevOtherMs = 0;
+        this._prevRenderNow = 0;
 
         // stores all entities that have been created
         // for this app by guid
@@ -1823,6 +1892,7 @@ Object.assign(pc, function () {
             }
 
             if (app.graphicsDevice.contextLost) {
+                console.log('lost context');
                 return;
             }
 
@@ -1830,12 +1900,18 @@ Object.assign(pc, function () {
             app._fillFrameStats(now, dt, ms);
             // #endif
 
+            var startNow = pc.now();
+
             app.update(dt);
+
+            var updateNow = pc.now();
 
             if (app.autoRender || app.renderNextFrame) {
                 app.render();
                 app.renderNextFrame = false;
             }
+
+            var renderNow = pc.now();
 
             // set event data
             _frameEndData.timestamp = pc.now();
@@ -1846,6 +1922,22 @@ Object.assign(pc, function () {
 
             if (app.vr && app.vr.display && app.vr.display.presenting) {
                 app.vr.display.submitFrame();
+            }
+
+            // update stat graph
+            if (app._statGraph) {
+                var updateMs = updateNow - startNow;
+                var renderMs = renderNow - updateNow;
+                var otherMs = startNow - app._prevRenderNow;
+
+                app._statGraph.update([ms, updateMs, renderMs, otherMs],
+                                      [app._prevMs, app._prevUpdateMs, app._prevRenderMs, app._prevOtherMs]);
+
+                app._prevMs = ms;
+                app._prevUpdateMs = updateMs;
+                app._prevRenderMs = renderMs;
+                app._prevOtherMs = otherMs;
+                app._prevRenderNow = renderNow;
             }
         };
     };
