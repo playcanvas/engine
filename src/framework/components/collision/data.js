@@ -2,7 +2,6 @@ Object.assign(pc, function () {
     var CollisionComponentData = function () {
         this.enabled = true;
         this.type = 'box';
-        this.compound = false;
         this.halfExtents = new pc.Vec3(0.5, 0.5, 0.5);
         this.radius = 0.5;
         this.axis = 1;
