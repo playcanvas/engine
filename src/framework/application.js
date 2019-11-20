@@ -330,7 +330,7 @@ Object.assign(pc, function () {
         this._prevUpdateMs = 0;
         this._prevRenderMs = 0;
         this._prevOtherMs = 0;
-        this._prevRenderNow = 0;
+        this._prevRenderTimestamp = 0;
 
         // stores all entities that have been created
         // for this app by guid
@@ -1900,18 +1900,29 @@ Object.assign(pc, function () {
             app._fillFrameStats(now, dt, ms);
             // #endif
 
-            var startNow = pc.now();
+            var gpuTimer = app.graphicsDevice.gpuTimer;
+
+            var startTimestamp = pc.now();
+            if (gpuTimer) {
+                gpuTimer.begin('other');
+            }
 
             app.update(dt);
 
-            var updateNow = pc.now();
+            var updateTimestamp = pc.now();
+            if (gpuTimer) {
+                gpuTimer.mark('update');
+            }
 
             if (app.autoRender || app.renderNextFrame) {
                 app.render();
                 app.renderNextFrame = false;
             }
 
-            var renderNow = pc.now();
+            var renderTimestamp = pc.now();
+            if (gpuTimer) {
+                gpuTimer.mark('render');
+            }
 
             // set event data
             _frameEndData.timestamp = pc.now();
@@ -1926,18 +1937,24 @@ Object.assign(pc, function () {
 
             // update stat graph
             if (app._statGraph) {
-                var updateMs = updateNow - startNow;
-                var renderMs = renderNow - updateNow;
-                var otherMs = startNow - app._prevRenderNow;
+                if (gpuTimer) {
+                    var timings = [gpuTimer._timings.other, gpuTimer._timings.update, gpuTimer._timings.render];
+                    var prevTimings = [gpuTimer._prevTimings.other, gpuTimer._prevTimings.update, gpuTimer._prevTimings.render];
+                    app._statGraph.update(timings, prevTimings);
+                } else {
+                    var updateMs = updateTimestamp - startTimestamp;
+                    var renderMs = renderTimestamp - updateTimestamp;
+                    var otherMs = startTimestamp - app._prevRenderTimestamp;
 
-                app._statGraph.update([ms, updateMs, renderMs, otherMs],
-                                      [app._prevMs, app._prevUpdateMs, app._prevRenderMs, app._prevOtherMs]);
+                    app._statGraph.update([ms, updateMs, renderMs, otherMs],
+                                          [app._prevMs, app._prevUpdateMs, app._prevRenderMs, app._prevOtherMs]);
 
-                app._prevMs = ms;
-                app._prevUpdateMs = updateMs;
-                app._prevRenderMs = renderMs;
-                app._prevOtherMs = otherMs;
-                app._prevRenderNow = renderNow;
+                    app._prevMs = ms;
+                    app._prevUpdateMs = updateMs;
+                    app._prevRenderMs = renderMs;
+                    app._prevOtherMs = otherMs;
+                    app._prevRenderTimestamp = renderTimestamp;
+                }
             }
         };
     };
