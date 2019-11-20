@@ -761,7 +761,8 @@ Object.assign(pc, function () {
 
         _calculateNodeRelativeTransform: function(node, relative) {
             if (node === relative) {
-                mat4.setIdentity();
+                var scale = node.getWorldTransform().getScale();
+                mat4.setScale(scale.x, scale.y, scale.z);
             } else {
                 this._calculateNodeRelativeTransform(node.parent, relative);
                 mat4.mul(node.getLocalTransform());
