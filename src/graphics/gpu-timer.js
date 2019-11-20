@@ -12,6 +12,8 @@ Object.assign(pc, function () {
         this._prevFrameEndTimestamp = 0;
         this._timings = { };
         this._prevTimings = { };
+
+        console.log("bits=" + gl.getQuery(ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT));
     };
 
     Object.assign(GpuTimer.prototype, {
