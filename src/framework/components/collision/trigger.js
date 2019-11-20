@@ -46,14 +46,20 @@ Object.assign(pc, function () {
 
                 var startTransform = new Ammo.btTransform();
                 startTransform.setIdentity();
-                startTransform.getOrigin().setValue(pos.x, pos.y, pos.z);
+                var origin = startTransform.getOrigin();
+                origin.setValue(pos.x, pos.y, pos.z);
                 startTransform.setRotation(ammoQuat);
 
                 var motionState = new Ammo.btDefaultMotionState(startTransform);
                 var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
+                Ammo.destroy(localInertia);
+                Ammo.destroy(origin);
+                Ammo.destroy(startTransform);
+
                 var body = new Ammo.btRigidBody(bodyInfo);
                 this.body = body;
+                Ammo.destroy(bodyInfo);
 
                 body.setRestitution(0);
                 body.setFriction(0);
@@ -72,9 +78,8 @@ Object.assign(pc, function () {
         },
 
         destroy: function () {
-            if (this.body) {
+            if (this.body)
                 this.app.systems.rigidbody.removeBody(this.body);
-            }
         },
 
         syncEntityToBody: function () {
@@ -84,11 +89,15 @@ Object.assign(pc, function () {
                 var rotation = this.entity.getRotation();
 
                 var transform = body.getWorldTransform();
-                transform.getOrigin().setValue(position.x, position.y, position.z);
+                var origin = transform.getOrigin();
+                origin.setValue(position.x, position.y, position.z);
 
                 ammoQuat.setValue(rotation.x, rotation.y, rotation.z, rotation.w);
                 transform.setRotation(ammoQuat);
                 body.activate();
+
+                Ammo.destroy(origin);
+                Ammo.destroy(transform);
             }
         },
 
