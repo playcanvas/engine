@@ -239,10 +239,11 @@ Object.assign(pc, function () {
         onRemove: function (entity, data) {
             if (data.body) {
                 this.removeBody(data.body);
-                Ammo.destroy(data.body);
-            }
 
-            data.body = null;
+                Ammo.destroy(data.body);
+
+                data.body = null;
+            }
         },
 
         addBody: function (body, group, mask) {
@@ -297,6 +298,9 @@ Object.assign(pc, function () {
                         new pc.Vec3(point.x(), point.y(), point.z()),
                         new pc.Vec3(normal.x(), normal.y(), normal.z())
                     );
+
+                    Ammo.destroy(point);
+                    Ammo.destroy(normal);
 
                     // keeping for backwards compatibility
                     if (arguments.length > 2) {
@@ -495,10 +499,13 @@ Object.assign(pc, function () {
             // loop through the all contacts and fire events
             for (i = 0; i < numManifolds; i++) {
                 var manifold = dispatcher.getManifoldByIndexInternal(i);
+
                 var body0 = manifold.getBody0();
                 var body1 = manifold.getBody1();
+
                 var wb0 = Ammo.castObject(body0, Ammo.btRigidBody);
                 var wb1 = Ammo.castObject(body1, Ammo.btRigidBody);
+
                 var e0 = wb0.entity;
                 var e1 = wb1.entity;
 
@@ -507,8 +514,8 @@ Object.assign(pc, function () {
                     continue;
                 }
 
-                var flags0 = body0.getCollisionFlags();
-                var flags1 = body1.getCollisionFlags();
+                var flags0 = wb0.getCollisionFlags();
+                var flags1 = wb1.getCollisionFlags();
 
                 var numContacts = manifold.getNumContacts();
                 var forwardContacts = [];
@@ -604,7 +611,6 @@ Object.assign(pc, function () {
                             }
                         }
                     }
-
                 }
             }
 
@@ -620,8 +626,6 @@ Object.assign(pc, function () {
             this._stats.physicsTime = pc.now() - this._stats.physicsStart;
             // #endif
         }
-
-
     });
 
     return {
