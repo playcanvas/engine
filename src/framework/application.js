@@ -282,8 +282,10 @@ Object.assign(pc, function () {
             };
 
             // update stat graphs
-            update(app._cpuGraph, app._cpuTimer);
-            update(app._gpuGraph, app._gpuTimer);
+            update(this._cpuGraph, this._cpuTimer);
+            if (this._gpuGraph) {
+                update(this._gpuGraph, this._gpuTimer);
+            }
         });
         this.on('framerender', function () {
             this._cpuTimer.mark('render');
@@ -1854,7 +1856,6 @@ Object.assign(pc, function () {
             }
 
             if (app.graphicsDevice.contextLost) {
-                console.log('lost context');
                 return;
             }
 

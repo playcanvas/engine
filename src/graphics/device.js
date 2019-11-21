@@ -686,7 +686,7 @@ Object.assign(pc, function () {
                     gl.bindVertexArray = ext.bindVertexArrayOES.bind(ext);
                 }
                 this.extColorBufferFloat = null;
-                this.extDisjointTimerQuery = null;
+                this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query');
             }
 
             this.extDebugRendererInfo = getExtension('WEBGL_debug_renderer_info');
