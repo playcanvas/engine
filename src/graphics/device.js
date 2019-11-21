@@ -590,8 +590,6 @@ Object.assign(pc, function () {
         this._textureFloatHighPrecision = undefined;
 
         this.createGrabPass(options.alpha);
-
-        this.gpuTimer = this.webgl2 ? new pc.GpuTimer(this) : null;
     };
     GraphicsDevice.prototype = Object.create(pc.EventHandler.prototype);
     GraphicsDevice.prototype.constructor = GraphicsDevice;
@@ -659,7 +657,7 @@ Object.assign(pc, function () {
                 this.extUintElement = true;
                 this.extVertexArrayObject = true;
                 this.extColorBufferFloat = getExtension('EXT_color_buffer_float');
-                this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query_webgl2');
+                this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query_webgl2') || getExtension('EXT_disjoint_timer_query');
             } else {
                 this.extBlendMinmax = getExtension("EXT_blend_minmax");
                 this.extDrawBuffers = getExtension('EXT_draw_buffers');

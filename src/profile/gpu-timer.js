@@ -5,15 +5,12 @@ Object.assign(pc, function () {
         this._gl = device.gl;
         this._ext = device.extDisjointTimerQuery;
 
-        this._freeQueries = [];             // pool of free queries
-        this._frameQueries = [];            // current frame's queries
-        this._frames = [];                  // list of previous frame queries
+        this._freeQueries = [];                     // pool of free queries
+        this._frameQueries = [];                    // current frame's queries
+        this._frames = [];                          // list of previous frame queries
 
-        this._prevFrameEndTimestamp = 0;
-        this._timings = { };
-        this._prevTimings = { };
-
-        console.log("bits=" + gl.getQuery(ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT));
+        this._timings = [];
+        this._prevTimings = [];
     };
 
     Object.assign(GpuTimer.prototype, {
@@ -23,14 +20,15 @@ Object.assign(pc, function () {
                 return;
             }
 
-            // check if all in-flight queries have been invalidated
-            this._checkDisjoint();
-
             // store previous frame's queries
             if (this._frameQueries.length > 0) {
+                this._gl.endQuery(this._ext.TIME_ELAPSED_EXT);
                 this._frames.push(this._frameQueries);
                 this._frameQueries = [];
             }
+
+            // check if all in-flight queries have been invalidated
+            this._checkDisjoint();
 
             // resolve previous frame timings
             if (this._frames.length > 0) {
@@ -48,15 +46,21 @@ Object.assign(pc, function () {
             this.mark(name);
         },
 
-        // mark middle of a frame
+        // mark
         mark: function (name) {
             if (!this._ext) {
                 return;
             }
 
+            // end previous query
+            if (this._frameQueries.length > 0) {
+                this._gl.endQuery(this._ext.TIME_ELAPSED_EXT);
+            }
+
+            // allocate new query and begin
             var query = this._allocateQuery();
             query[0] = name;
-            this._ext.queryCounterEXT(query[1], this._ext.TIMESTAMP_EXT);
+            this._gl.beginQuery(this._ext.TIME_ELAPSED_EXT, query[1]);
             this._frameQueries.push(query);
         },
 
@@ -80,18 +84,13 @@ Object.assign(pc, function () {
 
         // attempt to resolve one frame's worth of timings
         _resolveFrameTimings: function (frame, timings) {
-            var last = frame[frame.length - 1];
-            console.log('isquery=' + this._gl.isQuery(last[1]));
             // wait for the last query in the frame to be available
-            if (!this._gl.getQueryParameter(last[1], this._gl.QUERY_RESULT_AVAILABLE)) {
+            if (!this._gl.getQueryParameter(frame[frame.length - 1][1], this._gl.QUERY_RESULT_AVAILABLE)) {
                 return false;
             }
 
             for (var i = 0; i < frame.length; ++i) {
-                var query = frame[i];
-                var timestamp = this._gl.getQueryParameter(query[1], this._gl.QUERY_RESULT);
-                timings[query[0]] = timestamp - this._prevFrameEndTimestamp;
-                this._prevFrameEndTimestamp = timestamp;
+                timings[i] = [frame[i][0], this._gl.getQueryParameter(frame[i][1], this._gl.QUERY_RESULT) * 0.000001];
             }
 
             return true;

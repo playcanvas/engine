@@ -1,65 +1,5 @@
 Object.assign(pc, function () {
 
-    var StatGraph = function (width, height) {
-        this.width = width || 256;
-        this.height = height || 144;
-
-        this.styles = ['rgb(255,255,255)', 'rgb(255,64,64)', 'rgb(64,255,64)', 'rgb(64,64,255)'];
-
-        // create canvas
-        this.canvas = document.createElement('canvas');
-        this.canvas.style.width = this.width / window.devicePixelRatio + 'px';
-        this.canvas.style.height = this.height / window.devicePixelRatio + 'px';
-        this.canvas.style.display = 'block';
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
-
-        // get context and clear
-        this.ctx = this.canvas.getContext('2d');
-        this.ctx.fillStyle = 'rgb(0,0,0)';
-        this.ctx.fillRect(0, 0, this.width, this.height);
-        this.ctx.lineWidth = 1;
-
-        // create parent and add to the document
-        this.div = document.createElement('div');
-        this.div.style.cssText = 'position:fixed;top:0;left:0;border:2px solid #606060';
-        this.div.appendChild(this.canvas);
-        document.body.appendChild(this.div);
-    };
-
-    StatGraph.prototype = {
-        update: function (values, prevValues) {
-            var w = this.width;
-            var h = this.height;
-
-            // shift contents left one pixel
-            this.ctx.drawImage(this.canvas, 1, 0, w - 1, h, 0, 0, w - 1, h);
-
-            // clear background
-            var yMid = this._mapY(1000.0 / 60.0);
-            this.ctx.fillStyle = 'rgb(0,0,0)';
-            this.ctx.fillRect(w - 1, 0, 1, yMid);
-            this.ctx.fillStyle = 'rgb(48,48,48)';
-            this.ctx.fillRect(w - 1, yMid, 1, h - yMid);
-
-            // render values
-            for (var i = values.length - 1; i >= 0; --i) {
-                var y1 = this._mapY(prevValues[i]);
-                var y2 = this._mapY(values[i]);
-
-                this.ctx.strokeStyle = this.styles[i % this.styles.length];
-                this.ctx.beginPath();
-                this.ctx.moveTo(w - 2, y1);
-                this.ctx.lineTo(w - 1, y2);
-                this.ctx.stroke();
-            }
-        },
-
-        _mapY: function (value) {
-            return (this.height - 1) * (1.0 - value / 48.0);
-        }
-    };
-
     /**
      * @constructor
      * @name pc.Application
@@ -324,13 +264,35 @@ Object.assign(pc, function () {
         this._audioManager = new pc.SoundManager(options);
         this.loader = new pc.ResourceLoader(this);
 
-        // create frame stats
-        this._statGraph = new StatGraph();
-        this._prevMs = 0;
-        this._prevUpdateMs = 0;
-        this._prevRenderMs = 0;
-        this._prevOtherMs = 0;
-        this._prevRenderTimestamp = 0;
+        // profiling
+        this._cpuTimer = new pc.CpuTimer();
+        this._gpuTimer = new pc.GpuTimer(this.graphicsDevice);
+        this._cpuGraph = new pc.StatGraph();
+        this._gpuGraph = this.graphicsDevice.extDisjointTimerQuery ? new pc.StatGraph() : null;
+
+        this.on('framestart', function () {
+            this._cpuTimer.begin('update');
+            this._gpuTimer.begin('update');
+
+            var update = function (graph, timer) {
+                var extractTiming = function (v) {
+                    return v[1];
+                };
+                graph.update(timer._timings.map(extractTiming), timer._prevTimings.map(extractTiming));
+            };
+
+            // update stat graphs
+            update(app._cpuGraph, app._cpuTimer);
+            update(app._gpuGraph, app._gpuTimer);
+        });
+        this.on('framerender', function () {
+            this._cpuTimer.mark('render');
+            this._gpuTimer.mark('render');
+        });
+        this.on('frameend', function () {
+            this._cpuTimer.mark('other');
+            this._gpuTimer.mark('other');
+        });
 
         // stores all entities that have been created
         // for this app by guid
@@ -1900,28 +1862,15 @@ Object.assign(pc, function () {
             app._fillFrameStats(now, dt, ms);
             // #endif
 
-            var gpuTimer = app.graphicsDevice.gpuTimer;
-
-            var startTimestamp = pc.now();
-            if (gpuTimer) {
-                gpuTimer.begin('other');
-            }
+            app.fire("framestart");
 
             app.update(dt);
 
-            var updateTimestamp = pc.now();
-            if (gpuTimer) {
-                gpuTimer.mark('update');
-            }
+            app.fire("framerender");
 
             if (app.autoRender || app.renderNextFrame) {
                 app.render();
                 app.renderNextFrame = false;
-            }
-
-            var renderTimestamp = pc.now();
-            if (gpuTimer) {
-                gpuTimer.mark('render');
             }
 
             // set event data
@@ -1933,28 +1882,6 @@ Object.assign(pc, function () {
 
             if (app.vr && app.vr.display && app.vr.display.presenting) {
                 app.vr.display.submitFrame();
-            }
-
-            // update stat graph
-            if (app._statGraph) {
-                if (gpuTimer) {
-                    var timings = [gpuTimer._timings.other, gpuTimer._timings.update, gpuTimer._timings.render];
-                    var prevTimings = [gpuTimer._prevTimings.other, gpuTimer._prevTimings.update, gpuTimer._prevTimings.render];
-                    app._statGraph.update(timings, prevTimings);
-                } else {
-                    var updateMs = updateTimestamp - startTimestamp;
-                    var renderMs = renderTimestamp - updateTimestamp;
-                    var otherMs = startTimestamp - app._prevRenderTimestamp;
-
-                    app._statGraph.update([ms, updateMs, renderMs, otherMs],
-                                          [app._prevMs, app._prevUpdateMs, app._prevRenderMs, app._prevOtherMs]);
-
-                    app._prevMs = ms;
-                    app._prevUpdateMs = updateMs;
-                    app._prevRenderMs = renderMs;
-                    app._prevOtherMs = otherMs;
-                    app._prevRenderTimestamp = renderTimestamp;
-                }
             }
         };
     };
