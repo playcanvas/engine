@@ -23,7 +23,8 @@ Object.assign(pc, function () {
         MP3: "audio/mpeg",
         MP4: "audio/mp4",
         AAC: "audio/aac",
-        BIN: "application/octet-stream"
+        BIN: "application/octet-stream",
+        BASIS: "image/basis"
     };
 
     Http.ResponseType = {
@@ -76,7 +77,7 @@ Object.assign(pc, function () {
          * @param {Object} [options.headers] HTTP headers to add to the request
          * @param {Boolean} [options.async] Make the request asynchronously. Defaults to true.
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
-         * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
+         * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to false.
          * @param {String} [options.responseType] Override the response type
          * @param {Document | Object} [options.postdata] Data to send in the body of the request.
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
@@ -125,7 +126,7 @@ Object.assign(pc, function () {
          * @param {Object} [options.headers] HTTP headers to add to the request
          * @param {Boolean} [options.async] Make the request asynchronously. Defaults to true.
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
-         * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
+         * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to false.
          * @param {String} [options.responseType] Override the response type
          * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
          * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
@@ -171,7 +172,7 @@ Object.assign(pc, function () {
          * @param {Object} [options.headers] HTTP headers to add to the request
          * @param {Boolean} [options.async] Make the request asynchronously. Defaults to true.
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
-         * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
+         * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to false.
          * @param {String} [options.responseType] Override the response type
          * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
          * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
@@ -209,7 +210,7 @@ Object.assign(pc, function () {
          * @param {Object} [options.headers] HTTP headers to add to the request
          * @param {Boolean} [options.async] Make the request asynchronously. Defaults to true.
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
-         * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
+         * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to false.
          * @param {String} [options.responseType] Override the response type
          * @param {Document | Object} [options.postdata] Data to send in the body of the request.
          * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
@@ -252,7 +253,7 @@ Object.assign(pc, function () {
          * @param {Object} [options.headers] HTTP headers to add to the request
          * @param {Boolean} [options.async] Make the request asynchronously. Defaults to true.
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
-         * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to true.
+         * @param {Boolean} [options.withCredentials] Send cookies with this request. Defaults to false.
          * @param {Boolean} [options.retry] If true then if the request fails it will be retried with an exponential backoff.
          * @param {Number} [options.maxRetries] If options.retry is true this specifies the maximum number of retries. Defaults to 5.
          * @param {Number} [options.maxRetryDelay] If options.retry is true this specifies the maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
@@ -414,7 +415,7 @@ Object.assign(pc, function () {
         },
 
         _isBinaryContentType: function (contentType) {
-            var binTypes = [Http.ContentType.MP4, Http.ContentType.WAV, Http.ContentType.OGG, Http.ContentType.MP3, Http.ContentType.BIN, Http.ContentType.DDS];
+            var binTypes = [Http.ContentType.MP4, Http.ContentType.WAV, Http.ContentType.OGG, Http.ContentType.MP3, Http.ContentType.BIN, Http.ContentType.DDS, Http.ContentType.BASIS];
             if (binTypes.indexOf(contentType) >= 0) {
                 return true;
             }
