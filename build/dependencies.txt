@@ -239,6 +239,7 @@
 ../src/resources/parser/json-model.js
 ../src/resources/parser/scene.js
 ../src/resources/parser/material/json-standard-material.js
+../src/resources/basis.js
 ../src/asset/asset.js
 ../src/asset/asset-variants.js
 ../src/asset/asset-registry.js
