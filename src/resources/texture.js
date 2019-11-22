@@ -275,6 +275,9 @@ Object.assign(pc, function () {
         }
 
         this.retryRequests = false;
+
+        // basis worker
+        this._basis = null;
     };
 
     Object.assign(TextureHandler.prototype, {
@@ -287,24 +290,37 @@ Object.assign(pc, function () {
             }
 
             var self = this;
+            var options;
 
             var urlWithoutParams = url.original.indexOf('?') >= 0 ? url.original.split('?')[0] : url.original;
 
             var ext = pc.path.getExtension(urlWithoutParams).toLowerCase();
             if (ext === '.dds' || ext === '.ktx') {
-                var options = {
+                options = {
                     cache: true,
                     responseType: "arraybuffer",
                     retry: this.retryRequests
                 };
-
-                pc.http.get(url.load, options, function (err, response) {
-                    if (!err) {
-                        callback(null, response);
-                    } else {
-                        callback(err);
-                    }
-                });
+                pc.http.get(url.load, options, callback);
+            } else if (ext === '.basis') {
+                if (this._basis === null) {
+                    this._basis = new pc.Basis();
+                }
+                options = {
+                    cache: true,
+                    responseType: "arraybuffer",
+                    retry: this.retryRequests
+                };
+                pc.http.get(
+                    url.load,
+                    options,
+                    function (err, result) {
+                        if (err) {
+                            callback(err, result);
+                        } else {
+                            self._basis.transcode(url.load, result, callback);
+                        }
+                    });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
                 var crossOrigin;
                 // only apply cross-origin setting if this is an absolute URL, relative URLs can never be cross-origin
@@ -381,7 +397,6 @@ Object.assign(pc, function () {
             var ext = pc.path.getExtension(url).toLowerCase();
             var format = null;
 
-
             // Every browser seems to pass data as an Image type. For some reason, the XDK
             // passes an HTMLImageElement. TODO: figure out why!
             // DDS textures are ArrayBuffers
@@ -399,24 +414,28 @@ Object.assign(pc, function () {
                 });
                 texture.name = url;
                 texture.setSource(img);
-            } else if (data instanceof ArrayBuffer) { // Container format
-                var LEGACY = true;
+            } else { // Container format
 
-                if (LEGACY && ext === '.dds') {
+                if (ext === '.dds') {
                     texture = _legacyDdsLoader(url, data, this._device);
                 } else {
                     var textureData;
 
-                    switch (ext) {
-                        case '.dds':
-                            textureData = new pc.DdsParser(data);
-                            break;
-                        case '.ktx':
-                            textureData = new pc.KtxParser(data);
-                            break;
-                        case '.pvr':
-                            console.warn('PVR container not supported.');
-                            break;
+                    if (ext === '.basis') {
+                        textureData = data;
+                        // console.log('transcode time=' + data.transcodeTime + ' url=' + data.url.split('#').shift().split('?').shift().split('/').pop());
+                    } else if (data instanceof ArrayBuffer) {
+                        switch (ext) {
+                            case '.dds':
+                                textureData = new pc.DdsParser(data);
+                                break;
+                            case '.ktx':
+                                textureData = new pc.KtxParser(data);
+                                break;
+                            case '.pvr':
+                                console.warn('PVR container not supported.');
+                                break;
+                        }
                     }
 
                     if (!textureData) {
