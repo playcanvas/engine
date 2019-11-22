@@ -648,11 +648,11 @@
         /**
          * @constant
          * @type {Number}
-         * @name pc.PIXELFORMAT_ASTC_4x4:
+         * @name pc.PIXELFORMAT_ASTC_4x4
          * @description ATC compressed format with alpha channel in blocks of 4x4.
          */
         PIXELFORMAT_ASTC_4x4: 28,
-    
+
         /**
          * @constant
          * @type {Number}
@@ -668,7 +668,7 @@
          * @description ATC compressed format with alpha channel.
          */
         PIXELFORMAT_ATC_RGBA: 30,
-    
+
         // only add compressed formats next
 
         /**
