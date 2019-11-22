@@ -44,6 +44,7 @@ Object.assign(pc, (function () {
         'es': 'en-ES',
         'zh': 'zh-CN',
         'zh-HK': 'zh-TW',
+        'zh-TW': 'zh-HK',
         'fr': 'fr-FR',
         'de': 'de-DE',
         'it': 'it-IT',

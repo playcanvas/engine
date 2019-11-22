@@ -635,6 +635,13 @@ describe('I18n tests', function () {
         expect(app.i18n.getText('key')).to.equal('hk');
     });
 
+    it('getText() zh-TW should fall back to zh-HK', function () {
+        addText('zh-CN', 'key', 'cn');
+        addText('zh-HK', 'key', 'tw');
+        app.i18n.locale = 'zh-TW';
+        expect(app.i18n.getText('key')).to.equal('tw');
+    });
+
     it('getText() zh-SG should fall back to zh-CN', function () {
         addText('zh-HK', 'key', 'hk');
         addText('zh-CN', 'key', 'cn');
@@ -656,6 +663,13 @@ describe('I18n tests', function () {
         addText('zh-TW', 'key', ['hk']);
         app.i18n.locale = 'zh-HK';
         expect(app.i18n.getPluralText('key')).to.equal('hk');
+    });
+
+    it('getPluralText() zh-TW should fall back to zh-HK', function () {
+        addText('zh-CN', 'key', ['cn']);
+        addText('zh-HK', 'key', ['tw']);
+        app.i18n.locale = 'zh-TW';
+        expect(app.i18n.getPluralText('key')).to.equal('tw');
     });
 
     it('getPluralText() zh-SG should fall back to zh-CN', function () {
@@ -738,6 +752,15 @@ describe('I18n tests', function () {
         asset.addLocalizedAssetId('zh-TW', 2);
 
         expect(asset.getLocalizedAssetId('zh-HK')).to.equal(2);
+    });
+
+    it('pc.Asset#getLocalizedAssetId zh-TW should fallback to zh-HK', function () {
+        var asset = new pc.Asset('asset', 'font');
+
+        asset.addLocalizedAssetId('zh-CN', 1);
+        asset.addLocalizedAssetId('zh-HK', 2);
+
+        expect(asset.getLocalizedAssetId('zh-TW')).to.equal(2);
     });
 
     it('pc.Asset#getLocalizedAssetId zh-SG should fallback to zh-CN', function () {
