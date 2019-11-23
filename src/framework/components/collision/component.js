@@ -282,10 +282,12 @@ Object.assign(pc, function () {
             if (this.entity.rigidbody) {
                 this.entity.rigidbody.disableSimulation();
             } else if (this._compoundParent && this !== this._compoundParent) {
-                this.system._removeCompoundChild(this._compoundParent, this.data.shape);
+                if (! this._compoundParent.entity._destroying) {
+                    this.system._removeCompoundChild(this._compoundParent, this.data.shape);
 
-                if (this._compoundParent.entity.rigidbody)
-                    this._compoundParent.entity.rigidbody.activate();
+                    if (this._compoundParent.entity.rigidbody)
+                        this._compoundParent.entity.rigidbody.activate();
+                }
             } else if (this.entity.trigger) {
                 this.entity.trigger.disable();
             }

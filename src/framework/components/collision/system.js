@@ -127,7 +127,7 @@ Object.assign(pc, function () {
 
         beforeRemove: function(entity, component) {
             if (component.data.shape) {
-                if (component._compoundParent) {
+                if (component._compoundParent && ! component._compoundParent.entity._destroying) {
                     this.system._removeCompoundChild(component._compoundParent, component.data.shape);
 
                     if (component._compoundParent.entity.rigidbody)
