@@ -76,7 +76,7 @@
         light.addComponent("audiolistener");
 
         var requests = [{
-            url: "../../assets/footsteps_gravel_01.mp3",
+            url: "../../assets/sounds/footsteps.mp3",
             type: "audio"
         }, {
             url: "../../assets/Playbot/Playbot.json",
@@ -92,7 +92,7 @@
             app.assets.loadFromUrl(requests[i].url, requests[i].type, function (err, asset) {
                 count--;
                 if (count === 0) {
-                    var gravel = app.assets.find("footsteps_gravel_01.mp3");
+                    var gravel = app.assets.find("footsteps.mp3");
                     var model = app.assets.find("Playbot.json");
                     var anim = app.assets.find("Playbot_run.json");
 
