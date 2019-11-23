@@ -235,7 +235,11 @@ Object.assign(pc, function () {
                 var ancestor = this.entity.parent;
                 while(ancestor) {
                     if (ancestor.collision && ancestor.collision.type === 'compound') {
-                        this.system.recreatePhysicalShapes(this);
+                        if (ancestor.collision.shape.getNumChildShapes() === 0) {
+                            this.system.recreatePhysicalShapes(ancestor.collision);
+                        } else {
+                            this.system.recreatePhysicalShapes(this);
+                        }
                         break;
                     }
                     ancestor = ancestor.parent;
@@ -259,12 +263,16 @@ Object.assign(pc, function () {
                     this.entity.rigidbody.enableSimulation();
                 }
             } else if (this._compoundParent && this !== this._compoundParent) {
-                var transform = this.system._getNodeTransform(this.entity, this._compoundParent.entity);
-                this._compoundParent.shape.addChildShape(transform, this.data.shape);
-                Ammo.destroy(transform);
+                if (this._compoundParent.shape.getNumChildShapes() === 0) {
+                    this.system.recreatePhysicalShapes(this._compoundParent);
+                } else {
+                    var transform = this.system._getNodeTransform(this.entity, this._compoundParent.entity);
+                    this._compoundParent.shape.addChildShape(transform, this.data.shape);
+                    Ammo.destroy(transform);
 
-                if (this._compoundParent.entity.rigidbody)
-                    this._compoundParent.entity.rigidbody.activate();
+                    if (this._compoundParent.entity.rigidbody)
+                        this._compoundParent.entity.rigidbody.activate();
+                }
             } else if (this.entity.trigger) {
                 this.entity.trigger.enable();
             }

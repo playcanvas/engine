@@ -90,17 +90,19 @@ Object.assign(pc, function () {
                     }
                 }
 
-                if (entity.rigidbody) {
-                    entity.rigidbody.disableSimulation();
-                    entity.rigidbody.createBody();
-                } else if (component._compoundParent) {
+                if (component._compoundParent) {
                     if (component !== component._compoundParent) {
                         this.system.updateCompoundChildTransform(entity);
 
                         if (component._compoundParent.entity.rigidbody)
                             component._compoundParent.entity.rigidbody.activate();
                     }
-                } else {
+                }
+
+                if (entity.rigidbody) {
+                    entity.rigidbody.disableSimulation();
+                    entity.rigidbody.createBody();
+                } else if (! component._compoundParent) {
                     if (! entity.trigger) {
                         entity.trigger = new pc.Trigger(this.system.app, component, data);
                     } else {
