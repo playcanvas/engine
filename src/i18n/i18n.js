@@ -43,6 +43,8 @@ Object.assign(pc, (function () {
         'en': 'en-US',
         'es': 'en-ES',
         'zh': 'zh-CN',
+        'zh-HK': 'zh-TW',
+        'zh-TW': 'zh-HK',
         'fr': 'fr-FR',
         'de': 'de-DE',
         'it': 'it-IT',
@@ -232,9 +234,14 @@ Object.assign(pc, (function () {
             return desiredLocale;
         }
 
+        var fallback = DEFAULT_LOCALE_FALLBACKS[desiredLocale];
+        if (fallback && availableLocales[fallback]) {
+            return fallback;
+        }
+
         var lang = getLang(desiredLocale);
 
-        var fallback = DEFAULT_LOCALE_FALLBACKS[lang];
+        fallback = DEFAULT_LOCALE_FALLBACKS[lang];
         if (availableLocales[fallback]) {
             return fallback;
         }
@@ -276,7 +283,7 @@ Object.assign(pc, (function () {
                 lang = getLang(locale);
             }
 
-            locale = this._findFallbackLocale(lang);
+            locale = this._findFallbackLocale(locale, lang);
             translations = this._translations[locale];
         }
 
@@ -330,7 +337,7 @@ Object.assign(pc, (function () {
 
         var translations = this._translations[locale];
         if (!translations) {
-            locale = this._findFallbackLocale(lang);
+            locale = this._findFallbackLocale(locale, lang);
             lang = getLang(locale);
             pluralFn = getPluralFn(lang);
             translations = this._translations[locale];
@@ -548,12 +555,17 @@ Object.assign(pc, (function () {
         }
     });
 
-    // Finds a fallback locale for the specified language.
+    // Finds a fallback locale for the specified locale and language.
     // 1) First tries DEFAULT_LOCALE_FALLBACKS
     // 2) If no translation exists for that locale return the first locale available for that language.
     // 3) If no translation exists for that either then return the DEFAULT_LOCALE
-    I18n.prototype._findFallbackLocale = function (lang) {
-        var result = DEFAULT_LOCALE_FALLBACKS[lang];
+    I18n.prototype._findFallbackLocale = function (locale, lang) {
+        var result = DEFAULT_LOCALE_FALLBACKS[locale];
+        if (result && this._translations[result]) {
+            return result;
+        }
+
+        result = DEFAULT_LOCALE_FALLBACKS[lang];
         if (result && this._translations[result]) {
             return result;
         }
