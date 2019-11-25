@@ -265,36 +265,38 @@ Object.assign(pc, function () {
         this.loader = new pc.ResourceLoader(this);
 
         // profiling
-        this._cpuTimer = new pc.CpuTimer();
-        this._gpuTimer = new pc.GpuTimer(this.graphicsDevice);
-        this._cpuGraph = new pc.StatGraph();
-        this._gpuGraph = this.graphicsDevice.extDisjointTimerQuery ? new pc.StatGraph() : null;
+        if (options.statGraph) {
+            this._cpuTimer = new pc.CpuTimer();
+            this._gpuTimer = new pc.GpuTimer(this.graphicsDevice);
+            this._cpuGraph = new pc.StatGraph();
+            this._gpuGraph = this.graphicsDevice.extDisjointTimerQuery ? new pc.StatGraph() : null;
 
-        this.on('framestart', function () {
-            this._cpuTimer.begin('update');
-            this._gpuTimer.begin('update');
+            this.on('framestart', function () {
+                this._cpuTimer.begin('update');
+                this._gpuTimer.begin('update');
 
-            var update = function (graph, timer) {
-                var extractTiming = function (v) {
-                    return v[1];
+                var update = function (graph, timer) {
+                    var extractTiming = function (v) {
+                        return v[1];
+                    };
+                    graph.update(timer._timings.map(extractTiming), timer._prevTimings.map(extractTiming));
                 };
-                graph.update(timer._timings.map(extractTiming), timer._prevTimings.map(extractTiming));
-            };
 
-            // update stat graphs
-            update(this._cpuGraph, this._cpuTimer);
-            if (this._gpuGraph) {
-                update(this._gpuGraph, this._gpuTimer);
-            }
-        });
-        this.on('framerender', function () {
-            this._cpuTimer.mark('render');
-            this._gpuTimer.mark('render');
-        });
-        this.on('frameend', function () {
-            this._cpuTimer.mark('other');
-            this._gpuTimer.mark('other');
-        });
+                // update stat graphs
+                update(this._cpuGraph, this._cpuTimer);
+                if (this._gpuGraph) {
+                    update(this._gpuGraph, this._gpuTimer);
+                }
+            });
+            this.on('framerender', function () {
+                this._cpuTimer.mark('render');
+                this._gpuTimer.mark('render');
+            });
+            this.on('frameend', function () {
+                this._cpuTimer.mark('other');
+                this._gpuTimer.mark('other');
+            });
+        }
 
         // stores all entities that have been created
         // for this app by guid

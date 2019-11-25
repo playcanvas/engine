@@ -34,7 +34,7 @@ Object.assign(pc, function () {
                 prev = this._frameTimings[this._frameIndex - 1];
                 prev[1] = timestamp - prev[1];
             } else if (this._timings.length > 0) {
-                prev = this._timings[this._timings.length - 1]
+                prev = this._timings[this._timings.length - 1];
                 prev[1] = timestamp - prev[1];
             }
 

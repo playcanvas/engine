@@ -4,7 +4,7 @@ Object.assign(pc, function () {
     var graphDiv = null;
 
     var StatGraph = function (width, height) {
-        width = width || 16;//256;
+        width = width || 16;
         height = height || 144;
 
         this.styles = ['rgb(255,96,96)', 'rgb(96,255,96)', 'rgb(96,96,255)', 'rgb(196,196,196)'];
