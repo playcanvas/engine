@@ -70,22 +70,20 @@ Object.assign(pc, function () {
                     component._compoundParent = component;
 
                     entity.forEach(this._addEachDescendant, component);
-                } else {
-                    if (data.type !== 'compound') {
-                        if (component._compoundParent && component === component._compoundParent) {
-                            entity.forEach(this.system.implementations.compound._updateEachDescendant, component);
-                        }
+                } else if (data.type !== 'compound') {
+                    if (component._compoundParent && component === component._compoundParent) {
+                        entity.forEach(this.system.implementations.compound._updateEachDescendant, component);
+                    }
 
-                        if (! component.rigidbody) {
-                            component._compoundParent = null;
-                            var parent = entity.parent;
-                            while (parent) {
-                                if (parent.collision && parent.collision.type === 'compound') {
-                                    component._compoundParent = parent.collision;
-                                    break;
-                                }
-                                parent = parent.parent;
+                    if (! component.rigidbody) {
+                        component._compoundParent = null;
+                        var parent = entity.parent;
+                        while (parent) {
+                            if (parent.collision && parent.collision.type === 'compound') {
+                                component._compoundParent = parent.collision;
+                                break;
                             }
+                            parent = parent.parent;
                         }
                     }
                 }
@@ -102,6 +100,10 @@ Object.assign(pc, function () {
                 if (entity.rigidbody) {
                     entity.rigidbody.disableSimulation();
                     entity.rigidbody.createBody();
+
+                    if (entity.enabled && entity.rigidbody.enabled) {
+                        entity.rigidbody.enableSimulation();
+                    }
                 } else if (! component._compoundParent) {
                     if (! entity.trigger) {
                         entity.trigger = new pc.Trigger(this.system.app, component, data);
@@ -134,11 +136,11 @@ Object.assign(pc, function () {
                         component._compoundParent.entity.rigidbody.activate();
                 }
 
+                component._compoundParent = null;
+
                 Ammo.destroy(component.data.shape);
                 component.data.shape = null;
             }
-
-            component.onBeforeRemove();
         },
 
         // Called when the collision is removed
@@ -453,7 +455,12 @@ Object.assign(pc, function () {
                 data.shape = this.createPhysicalShape(entity, data);
 
                 if (entity.rigidbody) {
+                    entity.rigidbody.disableSimulation();
                     entity.rigidbody.createBody();
+
+                    if (entity.enabled && entity.rigidbody.enabled) {
+                        entity.rigidbody.enableSimulation();
+                    }
                 } else {
                     if (!entity.trigger) {
                         entity.trigger = new pc.Trigger(this.system.app, component, data);
