@@ -209,11 +209,11 @@ Object.assign(pc, function () {
             }
         },
 
-        _getCompoundChildShapeIndex: function(shape) {
+        _getCompoundChildShapeIndex: function (shape) {
             var compound = this.data.shape;
             var shapes = compound.getNumChildShapes();
 
-            for(var i = 0; i < shapes; i++) {
+            for (var i = 0; i < shapes; i++) {
                 var childShape = compound.getChildShape(i);
                 if (childShape.ptr === shape.ptr) {
                     return i;
@@ -223,7 +223,7 @@ Object.assign(pc, function () {
             return null;
         },
 
-        _onInsert: function(parent) {
+        _onInsert: function (parent) {
             // TODO
             // if is child of compound shape
             // and there is no change of compoundParent, then update child transform
@@ -233,7 +233,7 @@ Object.assign(pc, function () {
                 this.system.recreatePhysicalShapes(this);
             } else if (! this.entity.rigidbody) {
                 var ancestor = this.entity.parent;
-                while(ancestor) {
+                while (ancestor) {
                     if (ancestor.collision && ancestor.collision.type === 'compound') {
                         if (ancestor.collision.shape.getNumChildShapes() === 0) {
                             this.system.recreatePhysicalShapes(ancestor.collision);
@@ -293,7 +293,7 @@ Object.assign(pc, function () {
             }
         },
 
-        onBeforeRemove: function() {
+        onBeforeRemove: function () {
             this.entity.off('insert', this._onInsert, this);
         }
     });

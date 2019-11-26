@@ -79,7 +79,7 @@ Object.assign(pc, function () {
                         if (! component.rigidbody) {
                             component._compoundParent = null;
                             var parent = entity.parent;
-                            while(parent) {
+                            while (parent) {
                                 if (parent.collision && parent.collision.type === 'compound') {
                                     component._compoundParent = parent.collision;
                                     break;
@@ -125,7 +125,7 @@ Object.assign(pc, function () {
             }
         },
 
-        beforeRemove: function(entity, component) {
+        beforeRemove: function (entity, component) {
             if (component.data.shape) {
                 if (component._compoundParent && ! component._compoundParent.entity._destroying) {
                     this.system._removeCompoundChild(component._compoundParent, component.data.shape);
@@ -512,7 +512,7 @@ Object.assign(pc, function () {
             return undefined;
         },
 
-        _addEachDescendant: function(entity) {
+        _addEachDescendant: function (entity) {
             if (! entity.collision || entity.rigidbody)
                 return;
 
@@ -523,7 +523,7 @@ Object.assign(pc, function () {
             }
         },
 
-        _updateEachDescendant: function(entity) {
+        _updateEachDescendant: function (entity) {
             if (! entity.collision)
                 return;
 
@@ -537,7 +537,7 @@ Object.assign(pc, function () {
             }
         },
 
-        _updateEachDescendantTransform: function(entity) {
+        _updateEachDescendantTransform: function (entity) {
             if (! entity.collision || entity.collision._compoundParent !== this.collision._compoundParent)
                 return;
 
@@ -678,7 +678,7 @@ Object.assign(pc, function () {
             return this._getImplementation(entity).clone(entity, clone);
         },
 
-        onBeforeRemove: function(entity, component) {
+        onBeforeRemove: function (entity, component) {
             this.implementations[component.data.type].beforeRemove(entity, component);
             component.onBeforeRemove();
         },
@@ -700,7 +700,7 @@ Object.assign(pc, function () {
                         if (entity.collision._compoundParent && entity._dirtyWorld) {
                             var dirty = entity._dirtyLocal;
                             var parent = entity;
-                            while(parent && ! dirty) {
+                            while (parent && ! dirty) {
                                 if (parent.collision && parent.collision == entity.collision._compoundParent)
                                     break;
 
@@ -724,7 +724,7 @@ Object.assign(pc, function () {
             }
         },
 
-        updateCompoundChildTransform: function(entity) {
+        updateCompoundChildTransform: function (entity) {
             // TODO
             // use updateChildTransform once it is exposed in ammo.js
 
@@ -737,7 +737,7 @@ Object.assign(pc, function () {
             }
         },
 
-        _removeCompoundChild: function(collision, shape) {
+        _removeCompoundChild: function (collision, shape) {
             // TODO
             // use removeChildShape once it is exposed in ammo.js
             var ind = collision._getCompoundChildShapeIndex(shape);
@@ -761,7 +761,7 @@ Object.assign(pc, function () {
             this.implementations[component.data.type].recreatePhysicalShapes(component);
         },
 
-        _calculateNodeRelativeTransform: function(node, relative) {
+        _calculateNodeRelativeTransform: function (node, relative) {
             if (node === relative) {
                 var scale = node.getWorldTransform().getScale();
                 mat4.setScale(scale.x, scale.y, scale.z);
@@ -771,13 +771,13 @@ Object.assign(pc, function () {
             }
         },
 
-        _getNodeScaling: function(node) {
+        _getNodeScaling: function (node) {
             var wtm = node.getWorldTransform();
             var scl = wtm.getScale();
             return new Ammo.btVector3(scl.x, scl.y, scl.z);
         },
 
-        _getNodeTransform: function(node, relative) {
+        _getNodeTransform: function (node, relative) {
             var pos, rot;
 
             if (relative) {
