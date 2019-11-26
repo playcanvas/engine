@@ -307,7 +307,7 @@ Object.assign(pc, (function () {
      * @description Returns the pluralized translation for the specified key, number n and locale. If the locale is not specified
      * it will use the current locale.
      * @param {String} key The localization key
-     * @param {Nubmer} n The number used to determine which plural form to use. E.g. for the phrase "5 Apples" n equals 5.
+     * @param {Number} n The number used to determine which plural form to use. E.g. for the phrase "5 Apples" n equals 5.
      * @param {String} [locale] The desired locale.
      * @returns {String} The translated text. If no translations are found at all for the locale then it will return
      * the en-US translation. If no translation exists for that key then it will return the localization key.
