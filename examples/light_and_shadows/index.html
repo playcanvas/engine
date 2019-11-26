@@ -70,7 +70,7 @@
             ambient: new pc.Color(0.1, 0.4, 0.1),
             diffuse: new pc.Color(0.1, 0.4, 0.1),
         });
-        ground.model.model.meshInstances[0].material = material;
+        ground.model.material = material;
 
         // Create an spot light
         var light = new pc.Entity();
@@ -91,7 +91,7 @@
         cone.addComponent("model", {
             type: "cone"
         });
-        cone.model.model.meshInstances[0].material = createMaterial({emissive: new pc.Color(1,1,1)})
+        cone.model.material = createMaterial({emissive: new pc.Color(1,1,1)})
         light.addChild(cone);
 
         // Create a point light
@@ -105,7 +105,7 @@
         pointlight.addComponent("model", {
             type: "sphere"
         });
-        pointlight.model.model.meshInstances[0].material = createMaterial({diffuse: new pc.Color(0,0,0), emissive: new pc.Color(0,0,1)});
+        pointlight.model.material = createMaterial({diffuse: new pc.Color(0,0,0), emissive: new pc.Color(0,0,1)});
 
         // Add Entities into the scene hierarchy
         app.root.addChild(camera);

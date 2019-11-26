@@ -1,7 +1,7 @@
 Object.assign(pc, function () {
 
     // auto incrementing number for asset ids
-    var assetIdCounter = 0;
+    var assetIdCounter = -1;
 
     var ABSOLUTE_URL = new RegExp(
         '^' + // beginning of the url
@@ -26,10 +26,11 @@ Object.assign(pc, function () {
         pvr: 'extCompressedTexturePVRTC',
         dxt: 'extCompressedTextureS3TC',
         etc2: 'extCompressedTextureETC',
-        etc1: 'extCompressedTextureETC1'
+        etc1: 'extCompressedTextureETC1',
+        basis: 'canvas' // dummy, basis is always supported
     };
 
-    var VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1'];
+    var VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
     /**
      * @constructor
@@ -75,7 +76,7 @@ Object.assign(pc, function () {
     var Asset = function (name, type, file, data) {
         pc.EventHandler.call(this);
 
-        this._id = ++assetIdCounter;
+        this._id = assetIdCounter--;
 
         this.name = name || '';
         this.type = type;
@@ -337,8 +338,6 @@ Object.assign(pc, function () {
 
         set: function (value) {
             this._id = value;
-            if (value > assetIdCounter)
-                assetIdCounter = value;
         }
     });
 
