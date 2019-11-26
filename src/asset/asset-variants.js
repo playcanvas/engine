@@ -45,6 +45,7 @@ Object.assign(pc, function () {
     defineVariantProperty('pvr');
     defineVariantProperty('etc1');
     defineVariantProperty('etc2');
+    defineVariantProperty('basis');
 
     AssetVariants.prototype.clear = function () {
         for (var i = 0; i < properties.length; i++)
