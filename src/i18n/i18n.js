@@ -193,7 +193,6 @@ Object.assign(pc, (function () {
     };
 
     /**
-     * @private
      * @constructor
      * @name pc.I18n
      * @extends pc.EventHandler
@@ -220,7 +219,6 @@ Object.assign(pc, (function () {
     I18n.prototype.constructor = I18n;
 
     /**
-     * @private
      * @function
      * @name pc.I18n#findAvailableLocale
      * @description Returns the first available locale based on the desired locale specified. First
@@ -254,7 +252,6 @@ Object.assign(pc, (function () {
     };
 
     /**
-     * @private
      * @function
      * @name pc.I18n#getText
      * @description Returns the translation for the specified key and locale. If the locale is not specified
@@ -305,7 +302,6 @@ Object.assign(pc, (function () {
     };
 
     /**
-     * @private
      * @function
      * @name pc.I18n#getPluralText
      * @description Returns the pluralized translation for the specified key, number n and locale. If the locale is not specified
@@ -357,7 +353,6 @@ Object.assign(pc, (function () {
     };
 
     /**
-     * @private
      * @function
      * @name pc.I18n#addData
      * @description Adds localization data. If the locale and key for a translation already exists it will be overwritten.
@@ -417,7 +412,6 @@ Object.assign(pc, (function () {
     };
 
     /**
-     * @private
      * @function
      * @name pc.I18n#removeData
      * @description Removes localization data.
@@ -462,7 +456,6 @@ Object.assign(pc, (function () {
     };
 
     /**
-     * @private
      * @function
      * @name pc.I18n#destroy
      * @description Frees up memory.
