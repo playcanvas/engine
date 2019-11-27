@@ -54,11 +54,13 @@ Object.assign(pc, function () {
      * @property {String} type The type of the collision volume. Defaults to 'box'. Can be one of the following:
      * <ul>
      * <li><strong>box</strong>: A box-shaped collision volume.</li>
-     * <li><strong>sphere</strong>: A sphere-shaped collision volume.</li>
      * <li><strong>capsule</strong>: A capsule-shaped collision volume.</li>
-     * <li><strong>cylinder</strong>: A cylinder-shaped collision volume.</li>
+     * <li><strong>compound</strong>: A compound shape. Any descendent entities with a collision component
+     * of type box, capsule, cone, cylinder or sphere will be combined into a single, rigid shape.</li>
      * <li><strong>cone</strong>: A cone-shaped collision volume.</li>
+     * <li><strong>cylinder</strong>: A cylinder-shaped collision volume.</li>
      * <li><strong>mesh</strong>: A collision volume that uses a model asset as its shape.</li>
+     * <li><strong>sphere</strong>: A sphere-shaped collision volume.</li>
      * </ul>
      * @property {pc.Vec3} halfExtents The half-extents of the box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5]
      * @property {Number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision volumes. Defaults to 0.5
