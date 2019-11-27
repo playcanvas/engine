@@ -265,11 +265,11 @@ Object.assign(pc, function () {
         this.loader = new pc.ResourceLoader(this);
 
         // profiling
-        if (options.stats) {
+        if (true || options.stats) {
             this._cpuTimer = new pc.CpuTimer();
-            this._gpuTimer = new pc.GpuTimer(this.graphicsDevice);
-            this._cpuGraph = new pc.StatGraph();
-            this._gpuGraph = this.graphicsDevice.extDisjointTimerQuery ? new pc.StatGraph() : null;
+            this._gpuTimer = new pc.GpuTimer(this.graphicsDevice.gl, this.graphicsDevice.extDisjointTimerQuery);
+            this._cpuGraph = new pc.StatGraph('cpu');
+            this._gpuGraph = this.graphicsDevice.extDisjointTimerQuery ? new pc.StatGraph('gpu') : null;
 
             this.on('framestart', function () {
                 this._cpuTimer.begin('update');

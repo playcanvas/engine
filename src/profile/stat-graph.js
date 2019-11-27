@@ -2,42 +2,65 @@ Object.assign(pc, function () {
     'use strict';
 
     var graphDiv = null;
+    var styles = ['rgb(255,96,96)', 'rgb(96,255,96)', 'rgb(96,96,255)', 'rgb(196,196,196)'];
+    var width = 256;//16;
+    var height = 114;
+    var pixelRatio = window.devicePixelRatio;
 
-    var StatGraph = function (width, height) {
-        width = width || 16;
-        height = height || 144;
+    var updateLayout = function (child) {
+        child.style.width = Math.floor(width / pixelRatio) + 'px';
+        if (child.tagName === 'CANVAS') {
+            child.style.height = Math.floor(height / pixelRatio) + 'px';
+        }
+        child.width = width;
+        if (child.tagName === 'CANVAS') {
+            child.height = height;
+        }
+    };
 
-        this.styles = ['rgb(255,96,96)', 'rgb(96,255,96)', 'rgb(96,96,255)', 'rgb(196,196,196)'];
+    var updateLayouts = function () {
+        for (var i = 0; i < graphDiv.children.length; ++i) {
+            updateLayout(graphDiv.children[i]);
+        }
+    };
+
+    var StatGraph = function (label) {
+        // create parent and add to the document
+        if (graphDiv === null) {
+            graphDiv = document.createElement('div');
+            graphDiv.style.cssText = 'position:fixed;top:0;left:0;background:gray';
+            document.body.appendChild(graphDiv);
+
+            graphDiv.addEventListener('click', function (event) {
+                event.preventDefault();
+                if (event.metaKey || event.ctrlKey) {
+                    pixelRatio = pixelRatio === 1 ? window.devicePixelRatio : 1;
+                } else {
+                    width = width === 16 ? 256 : 16;
+                }
+                updateLayouts();
+            });
+        }
+
+        // create info div
+        this.div = document.createElement('div');
+        this.div.style.cssText = 'display:block;margin:0px;background-color:gray;color:white;font:bold 10px Helvetica,Arial,sans-serif';
+        this.div.width = width;
+        this.div.height = 12;
+        this.div.innerHTML = label;
+        graphDiv.appendChild(this.div);
 
         // create canvas
         this.canvas = document.createElement('canvas');
         this.canvas.style.cssText = 'display:block;margin:2px;background:black';
-        this.canvas.style.width = Math.floor(width / window.devicePixelRatio) + 'px';
-        this.canvas.style.height = Math.floor(height / window.devicePixelRatio) + 'px';
-        this.canvas.width = width;
-        this.canvas.height = height;
+        updateLayout(this.canvas);
 
-        // get context and clear
+        // get the graph's 2d context and clear it
         this.ctx = this.canvas.getContext('2d');
         this.ctx.fillStyle = 'rgb(0,0,0)';
         this.ctx.fillRect(0, 0, width, height);
         this.ctx.lineWidth = 1;
 
-        // create parent and add to the document
-        if (graphDiv === null) {
-            graphDiv = document.createElement('div');
-            graphDiv.style.cssText = 'position:fixed;top:0;left:0;background:#606060;';
-            document.body.appendChild(graphDiv);
-
-            graphDiv.addEventListener('click', function (event) {
-                event.preventDefault();
-                for (var i = graphDiv.children.length - 1; i >= 0; --i) {
-                    var child = graphDiv.children[i];
-                    child.width = child.width === 16 ? 256 : 16;
-                    child.style.width = Math.floor(child.width / window.devicePixelRatio) + 'px';
-                }
-            });
-        }
         graphDiv.appendChild(this.canvas);
     };
 
@@ -67,7 +90,7 @@ Object.assign(pc, function () {
                 var y1 = this._mapY(prevValues[i]);
                 var y2 = this._mapY(values[i]);
 
-                this.ctx.strokeStyle = this.styles[i % this.styles.length];
+                this.ctx.strokeStyle = styles[i % styles.length];
                 this.ctx.beginPath();
                 this.ctx.moveTo(w - 2, y1);
                 this.ctx.lineTo(w - 1, y2);
@@ -82,7 +105,7 @@ Object.assign(pc, function () {
             for (var i = 0; i < values.length; ++i) {
                 var value = h * values[i] / 48.0;
                 curY -= value;
-                this.ctx.fillStyle = this.styles[i % this.styles.length];
+                this.ctx.fillStyle = styles[i % styles.length];
                 this.ctx.fillRect(w - 1, curY, 1, value);
             }
         },

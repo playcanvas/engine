@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var GpuTimer = function (device) {
-        this._gl = device.gl;
-        this._ext = device.extDisjointTimerQuery;
+    var GpuTimer = function (gl, extDisjointTimer) {
+        this._gl = gl;
+        this._ext = extDisjointTimer;
 
         this._freeQueries = [];                     // pool of free queries
         this._frameQueries = [];                    // current frame's queries
