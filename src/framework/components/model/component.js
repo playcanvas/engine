@@ -22,9 +22,12 @@ Object.assign(pc, function () {
      * @property {pc.Asset|Number} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
-     * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
+     * @property {pc.Material} material The material {@link pc.Material} that will be used to render the model. Setting
+     * this property will apply the material to all mesh instances of the model.
+     * @property {pc.Asset|Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
      * @property {pc.Model} model The model that is added to the scene graph. It can be not set or loaded, so will return null.
-     * @property {Object} mapping A dictionary that holds material overrides for each mesh instance. Only applies to model components of type 'asset'. The mapping contains pairs of mesh instance index - material asset id.
+     * @property {Object} mapping A dictionary that holds material overrides for each mesh instance. Only applies to model
+     * components of type 'asset'. The mapping contains pairs of mesh instance index - material asset id.
      * @property {Boolean} castShadowsLightmap If true, this model will cast shadows when rendering lightmaps
      * @property {Boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake()
      * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
