@@ -281,11 +281,13 @@ Object.assign(pc, function () {
                         wasmUrl,
                         { cache: true, responseType: "arraybuffer", retry: false },
                         function (err, result) {
-                            WebAssembly.compile(result)
-                                .then(function (result) {
-                                    compiledModule = result;
-                                    downloadCompleted();
-                                });
+                            if (result) {
+                                WebAssembly.compile(result)
+                                    .then(function (result) {
+                                        compiledModule = result;
+                                        downloadCompleted();
+                                    });
+                            }
                         });
                 });
 
