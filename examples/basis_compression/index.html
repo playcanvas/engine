@@ -11,89 +11,89 @@
 
     <!-- The script -->
     <script>
-        var canvas = document.getElementById("application-canvas");
 
-        // Create the application and start the update loop
-        var app = new pc.Application(canvas);
-        app.start();
+        pc.basisDownload(
+            '../../lib/basis.wasm.js',
+            '../../lib/basis.wasm.wasm',
+            '../../lib/basis.js',
+            function () {
 
-        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+                var canvas = document.getElementById("application-canvas");
 
-        app.scene.ambientLight = new pc.Color(1, 1, 1);
+                // Create the application and start the update loop
+                var app = new pc.Application(canvas);
 
-        // Create a Entity with a Box model component
-        var box1 = new pc.Entity();
-        box1.addComponent("model", { type: "box", });
+                app.start();
 
-        var box2 = new pc.Entity();
-        box2.addComponent("model", { type: "box", });
+                // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+                app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+                app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        // Create an Entity with a camera component
-        var camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0.4, 0.45, 0.5)
-        });
+                app.scene.ambientLight = new pc.Color(1, 1, 1);
 
-        // Add the new Entities to the hierarchy
-        app.root.addChild(box1);
-        app.root.addChild(box2);
-        app.root.addChild(camera);
+                // Create a Entity with a Box model component
+                var box1 = new pc.Entity();
+                box1.addComponent("model", { type: "box", });
 
-        box1.setPosition(-1, 0, 0);
-        box2.setPosition( 1, 0, 0);
+                var box2 = new pc.Entity();
+                box2.addComponent("model", { type: "box", });
 
-        // Move the camera 10m along the z-axis
-        camera.translate(0, 0, 4);
+                // Create an Entity with a camera component
+                var camera = new pc.Entity();
+                camera.addComponent("camera", {
+                    clearColor: new pc.Color(0.4, 0.45, 0.5)
+                });
 
-        // Set an update function on the app's update event
-        var angle = 0;
-        app.on("update", function (dt) {
-            angle += dt;
-            if (angle > 360) {
-                angle = 0;
-            }
+                // Add the new Entities to the hierarchy
+                app.root.addChild(box1);
+                app.root.addChild(box2);
+                app.root.addChild(camera);
 
-            // Move the light in a circle
-            // light.setLocalPosition(3 * Math.sin(angle), 0, 3);
+                box1.setPosition(-1, 0, 0);
+                box2.setPosition( 1, 0, 0);
 
-            // Rotate the box
-            box1.setEulerAngles(angle*2, angle*4, angle*8);
-            box2.setEulerAngles(90-angle*12, 120-angle*8, 150-angle*10);
-        });
+                // Move the camera 10m along the z-axis
+                camera.translate(0, 0, 4);
 
-        // configure wasm modules
-        window.config = {
-            wasmModules: [{
-                glueUrl: '../../lib/basist_all.wasm.js',
-                wasmUrl: '../../lib/basist_all.wasm.wasm',
-                fallbackUrl: '../../lib/basist_all.js',
-            }]
-        };
+                // Set an update function on the app's update event
+                var angle = 0;
+                app.on("update", function (dt) {
+                    angle += dt;
+                    if (angle > 360) {
+                        angle = 0;
+                    }
 
-        // load a texture, create material and apply to box
-        app.assets.loadFromUrl(
-            "../assets/sea.basis",
-            "texture",
-            function (err, asset) {
-                var material = new pc.StandardMaterial();
-                material.diffuseMap = asset.resource;
-                material.update();
-                box1.model.model.meshInstances[0].material = material;
-            }
-        );
+                    // Move the light in a circle
+                    // light.setLocalPosition(3 * Math.sin(angle), 0, 3);
 
-        app.assets.loadFromUrl(
-            "../assets/playcanvas.basis",
-            "texture",
-            function (err, asset) {
-                var material = new pc.StandardMaterial();
-                material.diffuseMap = asset.resource;
-                material.update();
-                box2.model.model.meshInstances[0].material = material;
-            }
-        );
+                    // Rotate the box
+                    box1.setEulerAngles(angle*2, angle*4, angle*8);
+                    box2.setEulerAngles(90-angle*12, 120-angle*8, 150-angle*10);
+                });
+
+                // load a texture, create material and apply to box
+                app.assets.loadFromUrl(
+                    "../assets/sea.basis",
+                    "texture",
+                    function (err, asset) {
+                        var material = new pc.StandardMaterial();
+                        material.diffuseMap = asset.resource;
+                        material.update();
+                        box1.model.model.meshInstances[0].material = material;
+                    }
+                );
+
+                app.assets.loadFromUrl(
+                    "../assets/playcanvas.basis",
+                    "texture",
+                    function (err, asset) {
+                        var material = new pc.StandardMaterial();
+                        material.diffuseMap = asset.resource;
+                        material.update();
+                        box2.model.model.meshInstances[0].material = material;
+                    }
+                );
+            });
     </script>
 </body>
 </html>

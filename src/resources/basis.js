@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
 
-    var BasisWorker = function (worker, jsUrl, binaryUrl, asmUrl, formats) {
+    var BasisWorker = function () {
 
         // transcode the basis super-compressed data into one of the runtime gpu native formats
-        var transcode = function (basis, url, data) {
+        var transcode = function (basis, url, formats, data) {
             var funcStart = performance.now();
             var basisFile = new basis.BasisFile(new Uint8Array(data));
 
@@ -69,107 +69,59 @@ Object.assign(pc, function () {
             };
         };
 
-        // check for wasm module support
-        var wasmSupported = (function () {
-            try {
-                if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
-                    var module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
-                    if (module instanceof WebAssembly.Module)
-                        return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
-                }
-            } catch (e) { }
-            return false;
-        })();
-
-        var params = {
-            locateFile: function () {
-                return binaryUrl;
-            }
-        };
         var basis = null;
         var queue = [];
 
-        if (worker) {
-            // download and transcode the file given the basis module and
-            // file url
-            var handler = function (url, data) {
-                if (basis) {
-                    try {
-                        // texture data has been provided
-                        var result = transcode(basis, url, data);
-                        result.levels = result.levels.map(function (v) {
-                            return v.buffer;
-                        });
-                        self.postMessage( { url: url, data: result }, result.levels);
-                    } catch (err) {
-                        self.postMessage( { url: url, err: err } );
-                    }
-                } else {
-                    queue.push([url, data]);
-                }
-            };
-
-            // load basis transcoder
-            self.importScripts(wasmSupported ? jsUrl : asmUrl);
-            self.BASIS(params).then( function (instance) {
-                basis = instance;
-                basis.initializeBasis();
-                for (var i = 0; i < queue.length; ++i) {
-                    handler(queue[i][0], queue[i][1]);
-                }
-                queue = null;
-            });
-
-            // handle incoming worker requests
-            self.onmessage = function (message) {
-                handler(message.data.url, message.data.data);
-            };
-        } else {
-            var loadScriptAsync = function (url, callback) {
-                var tag = document.createElement('script');
-                tag.onload = function () {
-                    callback();
-                };
-                tag.onerror = function () {
-                    throw new Error('failed to load ' + url);
-                };
-                tag.async = true;
-                tag.src = url;
-                document.head.appendChild(tag);
-            };
-
-            var loadWasmModuleAsync = function (moduleName, jsUrl, binaryUrl, callback) {
-                loadScriptAsync(jsUrl, function () {
-                    window[moduleName](params).then( function (instance) {
-                        callback(instance);
+        // download and transcode the file given the basis module and
+        // file url
+        var workerTranscode = function (url, formats, data) {
+            if (basis) {
+                try {
+                    // texture data has been provided
+                    var result = transcode(basis, url, formats, data);
+                    result.levels = result.levels.map(function (v) {
+                        return v.buffer;
                     });
-                });
-            };
-
-            var inlineHandler = function (url, data, callback) {
-                if (basis) {
-                    try {
-                        callback(null, transcode(basis, url, data));
-                    } catch (err) {
-                        callback(err, null);
-                    }
-                } else {
-                    queue.push([url, data, callback]);
+                    self.postMessage( { url: url, data: result }, result.levels);
+                } catch (err) {
+                    self.postMessage( { url: url, err: err } );
                 }
+            } else {
+                queue.push([url, data]);
+            }
+        };
+
+        var workerInit = function (basisModule) {
+            var instantiateWasmFunc = function (imports, successCallback) {
+                WebAssembly.instantiate(basisModule, imports)
+                    .then( function (result) {
+                        successCallback(result);
+                    });
+                return {};
             };
 
-            loadWasmModuleAsync('BASIS', wasmSupported ? jsUrl : asmUrl, binaryUrl, function (instance) {
+            self.BASIS(basisModule ? { instantiateWasm: instantiateWasmFunc } : null).then( function (instance) {
                 basis = instance;
                 basis.initializeBasis();
                 for (var i = 0; i < queue.length; ++i) {
-                    inlineHandler(queue[i][0], queue[i][1], queue[i][2]);
+                    workerTranscode(queue[i][0], queue[i][1]);
                 }
                 queue = null;
-            });
+            } );
+        };
 
-            // not running in a worker, caller can use the handler directly
-            return inlineHandler;
-        }
+        // handle incoming worker requests
+        self.onmessage = function (message) {
+            var data = message.data;
+            switch (data.type) {
+                case 'init':
+                    workerInit(data.module);
+                    break;
+                case 'transcode':
+                    workerTranscode(data.url, data.formats, data.data);
+                    break;
+            }
+        };
     };
 
     var BASIS_FORMAT = {
@@ -188,162 +140,189 @@ Object.assign(pc, function () {
         cTFRGBA4444: 16         // rgbq 4444
     };
 
-    var Basis = function () {
-        this.worker = null;
-        this.transcoder = null;
-        this.callbacks = { };
-        this.urlBase = (window.ASSET_PREFIX ? window.ASSET_PREFIX : (window.location.origin + '/'));
+    var worker = null;
+    var callbacks = { };
+    var formats = null;
 
-        // given the device's texture compression support, select the basis texture format to use
-        // for alpha and opaque textures and also the version of the basis module to load and use.
-        // returns [basis semitrans format, basis opaque format, flavour of basis module required]
-        var formats = (function (device) {
-            // these are tested in order of priority
-            if (device.extCompressedTextureASTC) {
-                return [BASIS_FORMAT.cTFASTC_4x4, BASIS_FORMAT.cTFASTC_4x4, 'astc'];
-            } else if (device.extCompressedTextureS3TC) {
-                return [BASIS_FORMAT.cTFBC3, BASIS_FORMAT.cTFBC1, 'dxt'];
-            } else if (device.extCompressedTextureETC) {                    // TODO: does the presence of etc support imply etc1 support?
-                return [BASIS_FORMAT.cTFETC2, BASIS_FORMAT.cTFETC1, 'etc2'];
-            } else if (device.extCompressedTextureETC1) {
-                return [BASIS_FORMAT.cTFRGBA4444, BASIS_FORMAT.cTFETC1, 'etc1'];    // TODO: fallback to 4444 or 8888?
-            } else if (device.extCompressedTexturePVRTC) {
-                return [BASIS_FORMAT.cTFPVRTC1_4_RGBA, BASIS_FORMAT.cTFPVRTC1_4_RGB, 'pvr'];
-            } else if (device.extCompressedTextureATC) {
-                return [BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA, BASIS_FORMAT.cTFATC_RGB, 'atc'];
+    // check for wasm module support
+    var wasmSupported = (function () {
+        try {
+            if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
+                var module = new WebAssembly.Module(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
+                if (module instanceof WebAssembly.Module)
+                    return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
             }
-            return [BASIS_FORMAT.cTFRGBA4444, BASIS_FORMAT.cTFRGB565, 'etc1'];
-        })(pc.app.graphicsDevice);
+        } catch (e) { }
+        return false;
+    })();
 
-        // search for wasm module
-        var modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
-        var moduleName = 'basist_' + formats[2];
-        var wasmModule = modules.find(function (m) {
-            return m.wasmUrl.indexOf(moduleName) !== -1;
-        });
-        if (!wasmModule) {
-            wasmModule = modules.find(function (m) {
-                return m.wasmUrl.indexOf('basist_all') !== -1;
+    var basisToPixelFormat = function (format) {
+        switch (format) {
+            case BASIS_FORMAT.cTFETC1: return pc.PIXELFORMAT_ETC1;
+            case BASIS_FORMAT.cTFETC2: return pc.PIXELFORMAT_ETC2_RGBA;
+            case BASIS_FORMAT.cTFBC1: return pc.PIXELFORMAT_DXT1;
+            case BASIS_FORMAT.cTFBC3: return pc.PIXELFORMAT_DXT5;
+            case BASIS_FORMAT.cTFPVRTC1_4_RGB: return pc.PIXELFORMAT_PVRTC_4BPP_RGB_1;
+            case BASIS_FORMAT.cTFPVRTC1_4_RGBA: return pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1;
+            case BASIS_FORMAT.cTFASTC_4x4: return pc.PIXELFORMAT_ASTC_4x4;
+            case BASIS_FORMAT.cTFATC_RGB: return pc.PIXELFORMAT_ATC_RGB;
+            case BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA: return pc.PIXELFORMAT_ATC_RGBA;
+            case BASIS_FORMAT.cTFRGB565: return pc.PIXELFORMAT_R5_G6_B5;
+            case BASIS_FORMAT.cTFRGBA4444: return pc.PIXELFORMAT_R4_G4_B4_A4;
+        }
+    };
+
+    var handleWorkerResponse = function (message) {
+        var url = message.data.url;
+        var err = message.data.err;
+        var data = message.data.data;
+        var callback = callbacks[url];
+
+        if (!callback) {
+            console.error('internal logical error encountered in basis transcoder');
+            return;
+        }
+
+        var i;
+        if (err) {
+            for (i = 0; i < callback.length; ++i) {
+                (callback[i])(err);
+            }
+            return;
+        }
+
+        // (re)create typed array from the returned array buffers
+        if (data.format === BASIS_FORMAT.cTFRGB565 || data.format === BASIS_FORMAT.cTFRGBA4444) {
+            // handle 16 bit formats
+            data.levels = data.levels.map(function (v) {
+                return new Uint16Array(v);
+            });
+        } else {
+            // all other
+            data.levels = data.levels.map(function (v) {
+                return new Uint8Array(v);
             });
         }
 
-        if (pc.platform.workers) {
-            var code = '(' + BasisWorker.toString() + ')(' +
-                        'true,"' +
-                        this.urlBase + wasmModule.glueUrl + '","' +
-                        this.urlBase + wasmModule.wasmUrl + '","' +
-                        this.urlBase + wasmModule.fallbackUrl + '",' +
-                        '[' + formats.slice(0, 2).toString() + ']' +
-                        ')\n\n';
-            var blob = new Blob([code], { type: 'application/javascript' });
-            var url = URL.createObjectURL(blob);
-            this.worker = new Worker(url);
-            this.worker.addEventListener('message', this._handleWorkerResponse.bind(this));
+        // convert basis to pixel format
+        data.format = basisToPixelFormat(data.format);
+        for (i = 0; i < callback.length; ++i) {
+            (callback[i])(null, data);
+        }
+    };
+
+    // initialize the basis module given the module glue (or fallback) script and the optional
+    // accompanying wasm module.
+    var basisInitialize = function (basisCode, basisModule, callback) {
+        var code = [
+            "/* basis.js */",
+            basisCode,
+            " /* worker */",
+            '(' + BasisWorker.toString() + ')()\n\n'
+        ].join('\n');
+        var blob = new Blob([code], { type: 'application/javascript' });
+        var url = URL.createObjectURL(blob);
+        worker = new Worker(url);
+        worker.addEventListener('message', handleWorkerResponse);
+        worker.postMessage({ type: 'init', module: basisModule });
+        if (callback) {
+            callback();
+        }
+    };
+
+    // helper function which downloads and then initializes the basis module
+    var basisDownload = function (glueUrl, wasmUrl, fallbackUrl, callback) {
+        if (wasmSupported) {
+            var glueCode = null;
+            var compiledModule = null;
+
+            var downloadCompleted = function () {
+                if (glueCode && compiledModule) {
+                    basisInitialize(glueCode, compiledModule, callback);
+                }
+            };
+
+            // download and compile wasm module
+            WebAssembly.compileStreaming(fetch(wasmUrl))
+                .then(function (result) {
+                    compiledModule = result;
+                    downloadCompleted();
+                });
+
+            // download glue script
+            pc.http.get(
+                glueUrl,
+                { cache: true, responseType: "text", retry: false },
+                function (err, result) {
+                    glueCode = result;
+                    downloadCompleted();
+                });
         } else {
-            this.transcoder = new BasisWorker(
-                false,
-                this.urlBase + wasmModule.glueUrl,
-                this.urlBase + wasmModule.wasmUrl,
-                this.urlBase + wasmModule.fallbackUrl,
-                formats.slice(0, 2));
+            // download fallback script
+            pc.http.get(
+                fallbackUrl,
+                { cache: true, responseType: "text", retry: false },
+                function (err, result) {
+                    if (result) {
+                        basisInitialize(result, null, callback);
+                    }
+                });
+        }
+    };
+
+    // select the most desirable gpu texture compression format given the device's capabilities
+    var selectTextureCompressionFormat = function (device) {
+        if (device.extCompressedTextureASTC) {
+            return 'astc';
+        } else if (device.extCompressedTextureS3TC) {
+            return 'dxt';
+        } else if (device.extCompressedTextureETC) {
+            return 'etc2';
+        } else if (device.extCompressedTextureETC1) {
+            return 'etc1';
+        } else if (device.extCompressedTexturePVRTC) {
+            return 'pvr';
+        } else if (device.extCompressedTextureATC) {
+            return 'atc';
+        }
+        return '';
+    };
+
+    // given the device's texture compression format, select the basis pixel format to use
+    // for alpha and opaque textures.
+    // returns [basis semitrans format, basis opaque format]
+    var getBasisPixelFormats = function (format) {
+        switch (format) {
+            case 'astc': return [BASIS_FORMAT.cTFASTC_4x4, BASIS_FORMAT.cTFASTC_4x4];
+            case 'dxt': return [BASIS_FORMAT.cTFBC3, BASIS_FORMAT.cTFBC1];
+            case 'etc2': return [BASIS_FORMAT.cTFETC2, BASIS_FORMAT.cTFETC1];
+            case 'etc1': return [BASIS_FORMAT.cTFRGBA4444, BASIS_FORMAT.cTFETC1];    // TODO: fallback to 4444 or 8888?
+            case 'pvr': return [BASIS_FORMAT.cTFPVRTC1_4_RGBA, BASIS_FORMAT.cTFPVRTC1_4_RGB];
+            case 'atc': return [BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA, BASIS_FORMAT.cTFATC_RGB];
+            default: return [BASIS_FORMAT.cTFRGBA4444, BASIS_FORMAT.cTFRGB565];
         }
     };
 
     // render thread worker manager
-    Basis.prototype = {
-        transcode: function (url, data, callback) {
-            if (this._isUrlRelative(url)) {
-                url = this.urlBase + url;
+    var basisTranscode = function (url, data, callback) {
+        if (!callbacks.hasOwnProperty(url)) {
+            if (!formats) {
+                formats = getBasisPixelFormats(selectTextureCompressionFormat(pc.app.graphicsDevice));
             }
-            if (this.worker) {
-                if (!this.callbacks.hasOwnProperty(url)) {
-                    // store url and kick off worker job
-                    this.callbacks[url] = [callback];
-                    this.worker.postMessage({ url: url, data: data }, [data]);
-                } else {
-                    // the basis worker is already busy processing this url, store callback
-                    // (this shouldn't really happen since the asset system only requests
-                    // a resource once)
-                    this.callbacks[url].push(callback);
-                }
-            } else {
-                this.transcoder(url, data, function (err, data) {
-                    if (err) {
-                        callback(err, null);
-                    } else {
-                        data.format = this._basisToPixelFormat(data.format);
-                        callback(null, data);
-                    }
-                }.bind(this));
-            }
-        },
-
-        _isUrlRelative: function (url) {
-            return (url.indexOf('://')  <= 0 && url.indexOf('//') !== 0 );
-        },
-
-        _handleWorkerResponse: function (message) {
-            var url = message.data.url;
-            var err = message.data.err;
-            var data = message.data.data;
-            var callbacks = this.callbacks[url];
-
-            if (!callbacks) {
-                console.error('internal logical error encountered in basis transcoder');
-                return;
-            }
-
-            var i;
-            if (err) {
-                for (i = 0; i < callbacks.length; ++i) {
-                    (callbacks[i])(err);
-                }
-                return;
-            }
-
-            // (re)create typed array from the returned array buffers
-            if (data.format === BASIS_FORMAT.cTFRGB565 || data.format === BASIS_FORMAT.cTFRGBA4444) {
-                // handle 16 bit formats
-                data.levels = data.levels.map(function (v) {
-                    return new Uint16Array(v);
-                });
-            } else {
-                // all other
-                data.levels = data.levels.map(function (v) {
-                    return new Uint8Array(v);
-                });
-            }
-
-            // convert basis to pixel format
-            data.format = this._basisToPixelFormat(data.format);
-            for (i = 0; i < callbacks.length; ++i) {
-                (callbacks[i])(null, data);
-            }
-        },
-
-        _basisToPixelFormat: function (format) {
-            switch (format) {
-                case BASIS_FORMAT.cTFETC1: return pc.PIXELFORMAT_ETC1;
-                case BASIS_FORMAT.cTFETC2: return pc.PIXELFORMAT_ETC2_RGBA;
-                case BASIS_FORMAT.cTFBC1: return pc.PIXELFORMAT_DXT1;
-                case BASIS_FORMAT.cTFBC3: return pc.PIXELFORMAT_DXT5;
-                case BASIS_FORMAT.cTFPVRTC1_4_RGB: return pc.PIXELFORMAT_PVRTC_4BPP_RGB_1;
-                case BASIS_FORMAT.cTFPVRTC1_4_RGBA: return pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1;
-                case BASIS_FORMAT.cTFASTC_4x4: return pc.PIXELFORMAT_ASTC_4x4;
-                case BASIS_FORMAT.cTFATC_RGB: return pc.PIXELFORMAT_ATC_RGB;
-                case BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA: return pc.PIXELFORMAT_ATC_RGBA;
-                case BASIS_FORMAT.cTFRGB565: return pc.PIXELFORMAT_R5_G6_B5;
-                case BASIS_FORMAT.cTFRGBA4444: return pc.PIXELFORMAT_R4_G4_B4_A4;
-            }
+            // store url and kick off worker job
+            callbacks[url] = [callback];
+            worker.postMessage({ type: 'transcode', url: url, formats: formats, data: data }, [data]);
+        } else {
+            // the basis worker is already busy processing this url, store callback
+            // (this shouldn't really happen since the asset system only requests
+            // a resource once)
+            callbacks[url].push(callback);
         }
     };
 
-    var BasisParser = function (data) {
-        return data;
-    };
-
     return {
-        Basis: Basis,
-        BasisParser: BasisParser
+        basisInitialize: basisInitialize,
+        basisDownload: basisDownload,
+        basisTranscode: basisTranscode
     };
 }());
