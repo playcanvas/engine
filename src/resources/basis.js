@@ -273,7 +273,9 @@ Object.assign(pc, function () {
                     compiledModule = result;
                     downloadCompleted();
                 })
-                .catch(function () {
+                .catch(function (reason) {
+                    console.error(reason);
+                    console.warn('compileStreaming() failed for ' + wasmUrl + ', falling back to arraybuffer download...');
                     // failed to stream download, attempt arraybuffer download
                     pc.http.get(
                         wasmUrl,
