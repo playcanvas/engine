@@ -188,11 +188,11 @@ Object.assign(pc, function () {
             if (this._attached) return;
             this._attached = true;
 
-            window.addEventListener("mouseup", this._upHandler, _passiveSupported ? { passive: true } : false);
-            window.addEventListener("mousedown", this._downHandler, _passiveSupported ? { passive: true } : false);
-            window.addEventListener("mousemove", this._moveHandler, _passiveSupported ? { passive: true } : false);
-            window.addEventListener("mousewheel", this._wheelHandler, _passiveSupported ? { passive: true } : false); // WekKit
-            window.addEventListener("DOMMouseScroll", this._wheelHandler, _passiveSupported ? { passive: true } : false); // Gecko
+            window.addEventListener("mouseup", this._upHandler, _passiveSupported ? { passive: false } : false);
+            window.addEventListener("mousedown", this._downHandler, _passiveSupported ? { passive: false } : false);
+            window.addEventListener("mousemove", this._moveHandler, _passiveSupported ? { passive: false } : false);
+            window.addEventListener("mousewheel", this._wheelHandler, _passiveSupported ? { passive: false } : false); // WekKit
+            window.addEventListener("DOMMouseScroll", this._wheelHandler, _passiveSupported ? { passive: false } : false); // Gecko
         },
 
         /**
@@ -220,11 +220,11 @@ Object.assign(pc, function () {
             this._attached = false;
             this._target = null;
 
-            window.removeEventListener("mouseup", this._upHandler, _passiveSupported ? { passive: true } : false);
-            window.removeEventListener("mousedown", this._downHandler, _passiveSupported ? { passive: true } : false);
-            window.removeEventListener("mousemove", this._moveHandler, _passiveSupported ? { passive: true } : false);
-            window.removeEventListener("mousewheel", this._wheelHandler, _passiveSupported ? { passive: true } : false); // WekKit
-            window.removeEventListener("DOMMouseScroll", this._wheelHandler, _passiveSupported ? { passive: true } : false); // Gecko
+            window.removeEventListener("mouseup", this._upHandler, _passiveSupported ? { passive: false } : false);
+            window.removeEventListener("mousedown", this._downHandler, _passiveSupported ? { passive: false } : false);
+            window.removeEventListener("mousemove", this._moveHandler, _passiveSupported ? { passive: false } : false);
+            window.removeEventListener("mousewheel", this._wheelHandler, _passiveSupported ? { passive: false } : false); // WekKit
+            window.removeEventListener("DOMMouseScroll", this._wheelHandler, _passiveSupported ? { passive: false } : false); // Gecko
         },
 
         /**
