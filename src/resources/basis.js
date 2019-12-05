@@ -272,6 +272,23 @@ Object.assign(pc, function () {
                 .then(function (result) {
                     compiledModule = result;
                     downloadCompleted();
+                })
+                .catch(function (reason) {
+                    console.error(reason);
+                    console.warn('compileStreaming() failed for ' + wasmUrl + ', falling back to arraybuffer download...');
+                    // failed to stream download, attempt arraybuffer download
+                    pc.http.get(
+                        wasmUrl,
+                        { cache: true, responseType: "arraybuffer", retry: false },
+                        function (err, result) {
+                            if (result) {
+                                WebAssembly.compile(result)
+                                    .then(function (result) {
+                                        compiledModule = result;
+                                        downloadCompleted();
+                                    });
+                            }
+                        });
                 });
 
             // download glue script

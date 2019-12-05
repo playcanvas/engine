@@ -448,12 +448,14 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ScriptType#[update]
          * @description Called for enabled (running state) scripts on each tick.
+         * @param {Number} dt The delta time in seconds since the last frame.
          */
 
         /**
          * @function
          * @name pc.ScriptType#[postUpdate]
          * @description Called for enabled (running state) scripts on each tick, after update.
+         * @param {Number} dt The delta time in seconds since the last frame.
          */
 
         /**
