@@ -185,8 +185,8 @@ Object.assign(pc, function () {
      * @description Create a new pc.ElementInput instance.
      * @param {Element} domElement The DOM element
      * @param {Object} [options] Optional arguments
-     * @param {Object} [options.useMouse] Whether to allow mouse input. Defaults to true.
-     * @param {Object} [options.useTouch] Whether to allow touch input. Defaults to true.
+     * @param {Boolean} [options.useMouse] Whether to allow mouse input. Defaults to true.
+     * @param {Boolean} [options.useTouch] Whether to allow touch input. Defaults to true.
      */
     var ElementInput = function (domElement, options) {
         this._app = null;
