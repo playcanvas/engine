@@ -369,7 +369,7 @@ Object.assign(pc, function () {
          * @static
          * @readonly
          * @type pc.ScriptAttributes
-         * @name pc.ScriptType.attributes
+         * @name pc.ScriptType#attributes
          * @description The interface to define attributes for Script Types. Refer to {@link pc.ScriptAttributes}
          * @example
          * var PlayerController = pc.createScript('playerController');
