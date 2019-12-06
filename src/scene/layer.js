@@ -153,7 +153,7 @@ Object.assign(pc, function () {
      * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
      * @property {Function} onDrawCall Custom function that is called before every mesh instance in this layer is rendered.
      * It is not recommended to set this function when rendering many objects every frame due to performance reasons.
-     * @property {Function} id A unique ID of the layer.
+     * @property {Number} id A unique ID of the layer.
      * Layer IDs are stored inside {@link pc.ModelComponent#layers}, {@link pc.CameraComponent#layers}, {@link pc.LightComponent#layers} and {@link pc.ElementComponent#layers} instead of names.
      * Can be used in {@link pc.LayerComposition#getLayerById}.
      */
