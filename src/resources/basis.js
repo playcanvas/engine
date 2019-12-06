@@ -179,11 +179,6 @@ Object.assign(pc, function () {
         };
     };
 
-    var worker = null;
-    var callbacks = { };
-    var format = null;
-    var transcodeQueue = null;
-
     // check for wasm module support
     var wasmSupported = (function () {
         try {
@@ -195,6 +190,31 @@ Object.assign(pc, function () {
         } catch (e) { }
         return false;
     })();
+
+    // select the most desirable gpu texture compression format given the device's capabilities
+    var selectTextureCompressionFormat = function (device) {
+        if (device.extCompressedTextureASTC) {
+            return 'astc';
+        } else if (device.extCompressedTextureS3TC) {
+            return 'dxt';
+        } else if (device.extCompressedTextureETC) {
+            return 'etc2';
+        } else if (device.extCompressedTextureETC1) {
+            return 'etc1';
+        } else if (device.extCompressedTexturePVRTC) {
+            return 'pvr';
+        } else if (device.extCompressedTextureATC) {
+            return 'atc';
+        }
+        return 'none';
+    };
+
+    // global state
+    var downloadInitiated = false;
+    var worker = null;
+    var callbacks = { };
+    var format = null;
+    var transcodeQueue = [];
 
     var handleWorkerResponse = function (message) {
         var url = message.data.url;
@@ -233,8 +253,25 @@ Object.assign(pc, function () {
         }
     };
 
-    // initialize the basis module given the module glue (or fallback) script and the optional
-    // accompanying wasm module.
+    // post a transcode job to the web worker
+    var transcode = function (url, data, callback) {
+        if (!callbacks.hasOwnProperty(url)) {
+            if (!format) {
+                format = selectTextureCompressionFormat(pc.app.graphicsDevice);
+            }
+            // store url and kick off worker job
+            callbacks[url] = [callback];
+            worker.postMessage({ type: 'transcode', url: url, format: format, data: data }, [data]);
+        } else {
+            // the basis worker is already busy processing this url, store callback
+            // (this shouldn't really happen since the asset system only requests
+            // a resource once)
+            callbacks[url].push(callback);
+        }
+    };
+
+    // initialize the basis worker given the basis module script (glue or fallback)
+    // and the optional accompanying wasm binary.
     var basisInitialize = function (basisCode, basisModule, callback) {
         var code = [
             "/* basis.js */",
@@ -254,10 +291,19 @@ Object.assign(pc, function () {
         if (callback) {
             callback();
         }
+        // module is initialized, initiate queued jobs
+        for (var i = 0; i < transcodeQueue.length; ++i) {
+            var entry = transcodeQueue[i];
+            transcode(entry[0], entry[1], entry[2]);
+        }
     };
 
-    // helper function which downloads and then initializes the basis module
+    // download the module files and initialize the basis worker
     var basisDownload = function (glueUrl, wasmUrl, fallbackUrl, callback) {
+        if (downloadInitiated) {
+            console.warn('basis module is being downloaded more than once');
+        }
+        downloadInitiated = true;
         if (wasmSupported) {
             var glueCode = null;
             var compiledModule = null;
@@ -325,53 +371,17 @@ Object.assign(pc, function () {
         }
     };
 
-    // select the most desirable gpu texture compression format given the device's capabilities
-    var selectTextureCompressionFormat = function (device) {
-        if (device.extCompressedTextureASTC) {
-            return 'astc';
-        } else if (device.extCompressedTextureS3TC) {
-            return 'dxt';
-        } else if (device.extCompressedTextureETC) {
-            return 'etc2';
-        } else if (device.extCompressedTextureETC1) {
-            return 'etc1';
-        } else if (device.extCompressedTexturePVRTC) {
-            return 'pvr';
-        } else if (device.extCompressedTextureATC) {
-            return 'atc';
-        }
-        return 'none';
-    };
-
     // render thread worker manager
     var basisTranscode = function (url, data, callback) {
         if (!worker) {
-            if (transcodeQueue === null) {
-                transcodeQueue = [[url, data, callback]];
-                basisDownloadFromConfig(function () {
-                    for (var i = 0; i < transcodeQueue.length; ++i) {
-                        var entry = transcodeQueue[i];
-                        basisTranscode(entry[0], entry[1], entry[2]);
-                    }
-                });
-            } else {
-                transcodeQueue.push([url, data, callback]);
+            // store transcode job if no worker exists
+            transcodeQueue.push([url, data, callback]);
+            // if the basis module download has not yet been initiated, do so now
+            if (!downloadInitiated) {
+                basisDownloadFromConfig();
             }
-            // console.error('call pc.basisInitialize before loading basis textures');
-            return;
-        }
-        if (!callbacks.hasOwnProperty(url)) {
-            if (!format) {
-                format = selectTextureCompressionFormat(pc.app.graphicsDevice);
-            }
-            // store url and kick off worker job
-            callbacks[url] = [callback];
-            worker.postMessage({ type: 'transcode', url: url, format: format, data: data }, [data]);
         } else {
-            // the basis worker is already busy processing this url, store callback
-            // (this shouldn't really happen since the asset system only requests
-            // a resource once)
-            callbacks[url].push(callback);
+            transcode(url, data, callback);
         }
     };
 
