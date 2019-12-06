@@ -110,7 +110,7 @@ Object.assign(pc, function () {
      *   <li>"sound" - see {@link pc.SoundComponent}</li>
      *   <li>"sprite" - see {@link pc.SpriteComponent}</li>
      * </ul>
-     * @param {Object} data The initialization data for the specific component type. Refer to each
+     * @param {Object} [data] The initialization data for the specific component type. Refer to each
      * specific component's API reference page for details on valid values for this parameter.
      * @returns {pc.Component} The new Component that was attached to the entity or null if there
      * was an error.
