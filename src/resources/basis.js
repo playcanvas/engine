@@ -182,6 +182,7 @@ Object.assign(pc, function () {
     var worker = null;
     var callbacks = { };
     var format = null;
+    var transcodeQueue = null;
 
     // check for wasm module support
     var wasmSupported = (function () {
@@ -312,6 +313,18 @@ Object.assign(pc, function () {
         }
     };
 
+    // search for wasm module in the global config and initialize basis
+    var basisDownloadFromConfig = function (callback) {
+        var modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
+        var wasmModule = modules.find(function (m) {
+            return m.moduleName === 'BASIS';
+        });
+        if (wasmModule) {
+            var urlBase = window.ASSET_PREFIX ? window.ASSET_PREFIX : "";
+            basisDownload(urlBase + wasmModule.glueUrl, urlBase + wasmModule.wasmUrl, urlBase + wasmModule.fallbackUrl, callback);
+        }
+    };
+
     // select the most desirable gpu texture compression format given the device's capabilities
     var selectTextureCompressionFormat = function (device) {
         if (device.extCompressedTextureASTC) {
@@ -333,7 +346,18 @@ Object.assign(pc, function () {
     // render thread worker manager
     var basisTranscode = function (url, data, callback) {
         if (!worker) {
-            console.error('call pc.basisInitialize before loading basis textures');
+            if (transcodeQueue === null) {
+                transcodeQueue = [[url, data, callback]];
+                basisDownloadFromConfig(function () {
+                    for (var i = 0; i < transcodeQueue.length; ++i) {
+                        var entry = transcodeQueue[i];
+                        basisTranscode(entry[0], entry[1], entry[2]);
+                    }
+                });
+            } else {
+                transcodeQueue.push([url, data, callback]);
+            }
+            // console.error('call pc.basisInitialize before loading basis textures');
             return;
         }
         if (!callbacks.hasOwnProperty(url)) {
@@ -354,6 +378,7 @@ Object.assign(pc, function () {
     return {
         basisInitialize: basisInitialize,
         basisDownload: basisDownload,
+        basisDownloadFromConfig: basisDownloadFromConfig,
         basisTranscode: basisTranscode
     };
 }());
