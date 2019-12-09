@@ -367,7 +367,10 @@ Object.assign(pc, function () {
         });
         if (wasmModule) {
             var urlBase = window.ASSET_PREFIX ? window.ASSET_PREFIX : "";
-            basisDownload(urlBase + wasmModule.glueUrl, urlBase + wasmModule.wasmUrl, urlBase + wasmModule.fallbackUrl, callback);
+            basisDownload(urlBase + wasmModule.glueUrl,
+                          urlBase + wasmModule.wasmUrl,
+                          urlBase + wasmModule.fallbackUrl,
+                          callback);
         }
     };
 
