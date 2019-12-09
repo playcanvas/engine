@@ -211,7 +211,6 @@ Object.assign(pc, function () {
      */
 
      /**
-     * @private
      * @name pc.Application#i18n
      * @type {pc.I18n}
      * @description Handles localization

@@ -275,9 +275,6 @@ Object.assign(pc, function () {
         }
 
         this.retryRequests = false;
-
-        // basis worker
-        this._basis = null;
     };
 
     Object.assign(TextureHandler.prototype, {
@@ -303,9 +300,6 @@ Object.assign(pc, function () {
                 };
                 pc.http.get(url.load, options, callback);
             } else if (ext === '.basis') {
-                if (this._basis === null) {
-                    this._basis = new pc.Basis();
-                }
                 options = {
                     cache: true,
                     responseType: "arraybuffer",
@@ -318,7 +312,7 @@ Object.assign(pc, function () {
                         if (err) {
                             callback(err, result);
                         } else {
-                            self._basis.transcode(url.load, result, callback);
+                            pc.basisTranscode(url.load, result, callback);
                         }
                     });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
