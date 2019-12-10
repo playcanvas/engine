@@ -1,8 +1,8 @@
 <!doctype html>
 <html>
 <head>
-    <script src="../../../build/output/playcanvas.js"></script>
-    <link href="../../style.css" rel="stylesheet" />
+    <script src="../../build/output/playcanvas.js"></script>
+    <link href="../style.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -44,7 +44,7 @@
         app.root.addChild(camera);
         app.root.addChild(light);
 
-        var url = "../../assets/statue/Statue_1.json";
+        var url = "../assets/statue/Statue_1.json";
         app.assets.loadFromUrl(url, "model", function (err, asset) {
             entity = new pc.Entity();
 
@@ -56,13 +56,20 @@
             app.root.addChild(entity);
         });
 
-        var keyboard = new pc.Keyboard(document.body);
+        var gamepads = new pc.GamePads();
         app.on("update", function () {
-            if (keyboard.isPressed(pc.KEY_LEFT)) {
+            gamepads.update();
+            if (gamepads.isPressed(pc.PAD_1, pc.PAD_LEFT)) {
                 entity.rotate(0, -1, 0)
             }
-            if (keyboard.isPressed(pc.KEY_RIGHT)) {
+            if (gamepads.isPressed(pc.PAD_1, pc.PAD_RIGHT)) {
                 entity.rotate(0, 1, 0)
+            }
+            if (gamepads.wasPressed(pc.PAD_1, pc.PAD_UP)) {
+                entity.rotate(-1, 0, 0)
+            }
+            if (gamepads.wasPressed(pc.PAD_1, pc.PAD_DOWN)) {
+                entity.rotate(1, 0, 0)
             }
         });
     </script>

@@ -1,8 +1,8 @@
 <!doctype html>
 <html>
 <head>
-    <script src="../../../build/output/playcanvas.js"></script>
-    <link href="../../style.css" rel="stylesheet" />
+    <script src="../../build/output/playcanvas.js"></script>
+    <link href="../style.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -80,7 +80,7 @@
         app.root.addChild(camera);
         app.root.addChild(light);
 
-        var url = "../../assets/statue/Statue_1.json";
+        var url = "../assets/statue/Statue_1.json";
         app.assets.loadFromUrl(url, "model", function (err, asset) {
             entity = new pc.Entity();
 
