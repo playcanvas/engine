@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+    <head>
+        <link href="examples.css" rel="stylesheet" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        <div class="sidenav">
+        </div>
+        <iframe id="example" src="ui/text-basic.html"></iframe>
+
+        <script src="examples.js"></script>
+        <script>
+            function titleCase(string) {
+                var sentence = string.toLowerCase().split("-");
+                for(var i = 0; i < sentence.length; i++){
+                    sentence[i] = sentence[i][0].toUpperCase() + sentence[i].slice(1);
+                }
+                return sentence.join(" ");
+            }
+
+            let sidenav = document.querySelector(".sidenav");
+            Object.keys(examples).forEach(category => {
+                let categoryEntry = document.createElement('p');
+                categoryEntry.innerText = titleCase(category);
+                sidenav.appendChild(categoryEntry);
+
+                examples[category].forEach(example => {
+                    let exampleEntry = document.createElement('a');
+                    exampleEntry.addEventListener("click", () => {
+                        let iframe = document.getElementsByTagName('iframe')[0];
+                        iframe.src = category + '/' + example + '.html';
+                    }, false);
+                    exampleEntry.innerText = titleCase(example);
+                    sidenav.appendChild(exampleEntry);
+                });
+            });
+        </script>
+    </body>
+</html>
