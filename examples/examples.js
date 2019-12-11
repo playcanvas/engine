@@ -1,4 +1,7 @@
 var examples = {
+    animation: [
+        "blend"
+    ],
     graphics: [
         "model-asset",
         "model-box",
@@ -14,6 +17,9 @@ var examples = {
     ],
     physics: [
         "falling-shapes"
+    ],
+    sound: [
+        "positional"
     ],
     ui: [
         "button-basic",
