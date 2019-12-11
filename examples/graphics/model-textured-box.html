@@ -72,7 +72,7 @@
         });
 
         // load a texture, create material and apply to box
-        app.assets.loadFromUrl("../assets/clouds.jpg", "texture", function (err, asset) {
+        app.assets.loadFromUrl("../assets/textures/clouds.jpg", "texture", function (err, asset) {
             var material = new pc.StandardMaterial();
             material.diffuseMap = asset.resource;
             material.update();

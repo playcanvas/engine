@@ -91,7 +91,7 @@
         var url = "../assets/statue/Statue_1.json";
         app.assets.loadFromUrl(url, "model", function (err, asset) {
             var model = asset;
-            app.assets.loadFromUrl('../assets/clouds.jpg', 'texture', function (err, asset) {
+            app.assets.loadFromUrl('../assets/textures/clouds.jpg', 'texture', function (err, asset) {
                 heightMap = asset.resource;
 
                 entity = new pc.Entity();

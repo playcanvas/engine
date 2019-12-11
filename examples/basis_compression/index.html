@@ -73,24 +73,24 @@
 
                 // load a texture, create material and apply to box
                 app.assets.loadFromUrl(
-                    "../assets/sea.basis",
+                    "../assets/textures/sea.basis",
                     "texture",
                     function (err, asset) {
                         var material = new pc.StandardMaterial();
                         material.diffuseMap = asset.resource;
                         material.update();
-                        box1.model.model.meshInstances[0].material = material;
+                        box1.model.meshInstances[0].material = material;
                     }
                 );
 
                 app.assets.loadFromUrl(
-                    "../assets/playcanvas.basis",
+                    "../assets/textures/playcanvas.basis",
                     "texture",
                     function (err, asset) {
                         var material = new pc.StandardMaterial();
                         material.diffuseMap = asset.resource;
                         material.update();
-                        box2.model.model.meshInstances[0].material = material;
+                        box2.model.meshInstances[0].material = material;
                     }
                 );
             });
