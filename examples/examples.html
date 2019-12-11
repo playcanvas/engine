@@ -7,7 +7,7 @@
     <body>
         <div class="sidenav">
         </div>
-        <iframe id="example" src="ui/text-basic.html"></iframe>
+        <iframe id="example" src="user-interface/text-basic.html"></iframe>
 
         <script src="examples.js"></script>
         <script>
@@ -20,16 +20,16 @@
             }
 
             let sidenav = document.querySelector(".sidenav");
-            Object.keys(examples).forEach(category => {
+            categories.forEach(category => {
                 let categoryEntry = document.createElement('p');
-                categoryEntry.innerText = titleCase(category);
+                categoryEntry.innerText = titleCase(category.name);
                 sidenav.appendChild(categoryEntry);
 
-                examples[category].forEach(example => {
+                category.examples.forEach(example => {
                     let exampleEntry = document.createElement('a');
                     exampleEntry.addEventListener("click", () => {
                         let iframe = document.getElementsByTagName('iframe')[0];
-                        iframe.src = category + '/' + example + '.html';
+                        iframe.src = category.name + '/' + example + '.html';
                     }, false);
                     exampleEntry.innerText = titleCase(example);
                     sidenav.appendChild(exampleEntry);
