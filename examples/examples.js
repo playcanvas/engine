@@ -6,9 +6,11 @@ var examples = {
         "model-asset",
         "model-box",
         "model-textured-box",
+        "portal",
         "shader-burn",
         "shader-toon",
-        "shader-wobble"
+        "shader-wobble",
+        "texture-basis"
     ],
     input: [
         "gamepad",
