@@ -265,12 +265,13 @@ Object.assign(pc, function () {
 
         // profiling
         if (true || options.stats) {
+            this._frameGraph = new pc.StatGraph('Frame');
             this._cpuTimer = new pc.CpuTimer();
             this._gpuTimer = new pc.GpuTimer(this.graphicsDevice.gl, this.graphicsDevice.extDisjointTimerQuery);
-            this._cpuGraph = new pc.StatGraph('cpu');
-            this._gpuGraph = this.graphicsDevice.extDisjointTimerQuery ? new pc.StatGraph('gpu') : null;
+            this._cpuGraph = new pc.StatGraph('CPU');
+            this._gpuGraph = this.graphicsDevice.extDisjointTimerQuery ? new pc.StatGraph('GPU') : null;
 
-            this.on('framestart', function () {
+            this.on('framestart', function (ms) {
                 this._cpuTimer.begin('update');
                 this._gpuTimer.begin('update');
 
@@ -278,10 +279,11 @@ Object.assign(pc, function () {
                     var extractTiming = function (v) {
                         return v[1];
                     };
-                    graph.update(timer._timings.map(extractTiming), timer._prevTimings.map(extractTiming));
+                    graph.update(ms, timer.timings.map(extractTiming));
                 };
 
                 // update stat graphs
+                this._frameGraph.update(ms, [ms], [ms]);
                 update(this._cpuGraph, this._cpuTimer);
                 if (this._gpuGraph) {
                     update(this._gpuGraph, this._gpuTimer);
@@ -1864,7 +1866,7 @@ Object.assign(pc, function () {
             app._fillFrameStats(now, dt, ms);
             // #endif
 
-            app.fire("framestart");
+            app.fire("framestart", ms);
 
             app.update(dt);
 

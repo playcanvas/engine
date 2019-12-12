@@ -97,6 +97,12 @@ Object.assign(pc, function () {
         }
     });
 
+    Object.defineProperty(GpuTimer.prototype, 'timings', {
+        get: function () {
+            return this._timings;
+        }
+    });
+
     return {
         GpuTimer: GpuTimer
     };

@@ -49,6 +49,12 @@ Object.assign(pc, function () {
         }
     });
 
+    Object.defineProperty(CpuTimer.prototype, 'timings', {
+        get: function () {
+            return this._timings.slice(0, -1);
+        }
+    });
+
     return {
         CpuTimer: CpuTimer
     };
