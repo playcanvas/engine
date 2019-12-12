@@ -6,15 +6,15 @@ Object.assign(pc, function () {
     // StatContainer
 
     var STATES = {
-        collapsed: { width: 32, height: 114, pixelRatio: 1, opacity: 0.5, showLabel: true, showGraph: false },
-        small: { width: 256, height: 114, pixelRatio: 1, opacity: 0.5, showLabel: true, showGraph: true },
-        large: { width: 256, height: 114, pixelRatio: 2, opacity: 0.5, showLabel: true, showGraph: true }
+        collapsed: { width: 32, height: 114, pixelRatio: 1, opacity: 0.6, showLabel: true, showGraph: false },
+        small: { width: 256, height: 114, pixelRatio: 1, opacity: 0.6, showLabel: true, showGraph: true },
+        large: { width: 256, height: 114, pixelRatio: 2, opacity: 0.6, showLabel: true, showGraph: true }
     };
 
     var STATE_ORDER = ['collapsed', 'small', 'large'];
 
     var StatContainer = function () {
-        this.state = 1;
+        this.state = 0;
         this.children = [];
         this.parent = document.createElement('div');
         this.parent.style.cssText = 'position:fixed;top:0;left:0;background:transparent;border:1px solid black';
@@ -38,7 +38,7 @@ Object.assign(pc, function () {
     Object.assign(StatContainer.prototype, {
         addChild: function (stat) {
             if (this.children.length > 0) {
-                stat.parent.style = 'border-top:2px solid gray;';
+                stat.parent.style.borderTop = '2px solid gray';
             }
             this.children.push(stat);
             this.parent.appendChild(stat.parent);
@@ -93,8 +93,6 @@ Object.assign(pc, function () {
             statContainer = new StatContainer();
         }
 
-        //var first = statContainer.numChildren() === 0;
-
         this.label = label;
         this.avg = 0;
         this.avgTotal = 0;
@@ -103,10 +101,6 @@ Object.assign(pc, function () {
 
         // create parent div
         this.parent = document.createElement('div');
-        //this.parent.style.cssText = 'position:relative;';
-        //if (!first) {
-            //this.parent.style.cssText = 'border-top:2px solid gray;';
-        //}
 
         // create text div
         this.text = document.createElement('div');
@@ -122,7 +116,7 @@ Object.assign(pc, function () {
 
         // get the graph's 2d context and clear it
         this.ctx = this.canvas.getContext('2d');
-        this.ctx.fillStyle = 'rgb(0,0,0)';
+        this.ctx.fillStyle = 'black';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.lineWidth = 1;
 
@@ -169,7 +163,7 @@ Object.assign(pc, function () {
 
                 // overlay 60hz frame marker
                 var yMid = this._mapY(1000.0 / 60.0);
-                this.ctx.fillStyle = 'rgb(255,255,0, 0.5)';
+                this.ctx.fillStyle = 'rgb(255,255,0, 0.6)';
                 this.ctx.fillRect(w - 1, yMid, 1, 1);
             }
         },

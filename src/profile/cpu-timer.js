@@ -51,6 +51,8 @@ Object.assign(pc, function () {
 
     Object.defineProperty(CpuTimer.prototype, 'timings', {
         get: function () {
+            // remove the last time point from the list (which is the time spent outside
+            // of playcanvas)
             return this._timings.slice(0, -1);
         }
     });
