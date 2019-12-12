@@ -20,24 +20,16 @@ Object.assign(pc, function () {
         this.parent.style.cssText = 'position:fixed;top:0;left:0;background:transparent;border:1px solid black';
 
         this.parent.addEventListener('mouseenter', function (event) {
-            for (var i = 0; i < this.children.length; ++i) {
-                this.children[i].parent.style.opacity = 1.0;
-            }
-            this.parent.style.borderColor = 'darkorange';
+            this.activate();
         }.bind(this));
 
         this.parent.addEventListener('mouseleave', function (event) {
-            var state = this._getState();
-            for (var i = 0; i < this.children.length; ++i) {
-                this.children[i].parent.style.opacity = state.opacity;
-            }
-            this.parent.style.borderColor = 'black';
+            this.deactivate();
         }.bind(this));
 
         this.parent.addEventListener('click', function (event) {
             event.preventDefault();
-            this.state = (this.state + 1) % STATE_ORDER.length;
-            this._updateLayouts();
+            this.nextState();
         }.bind(this));
 
         document.body.appendChild(this.parent);
@@ -45,6 +37,9 @@ Object.assign(pc, function () {
 
     Object.assign(StatContainer.prototype, {
         addChild: function (stat) {
+            if (this.children.length > 0) {
+                stat.parent.style = 'border-top:2px solid gray;';
+            }
             this.children.push(stat);
             this.parent.appendChild(stat.parent);
 
@@ -55,6 +50,26 @@ Object.assign(pc, function () {
 
         numChildren: function () {
             return this.children.length;
+        },
+
+        nextState: function () {
+            this.state = (this.state + 1) % STATE_ORDER.length;
+            this._updateLayouts();
+        },
+
+        activate: function () {
+            for (var i = 0; i < this.children.length; ++i) {
+                this.children[i].parent.style.opacity = 1.0;
+            }
+            this.parent.style.borderColor = 'darkorange';
+        },
+
+        deactivate: function () {
+            var state = this._getState();
+            for (var i = 0; i < this.children.length; ++i) {
+                this.children[i].parent.style.opacity = state.opacity;
+            }
+            this.parent.style.borderColor = 'black';
         },
 
         _updateLayouts: function () {
@@ -78,7 +93,7 @@ Object.assign(pc, function () {
             statContainer = new StatContainer();
         }
 
-        var first = statContainer.numChildren() === 0;
+        //var first = statContainer.numChildren() === 0;
 
         this.label = label;
         this.avg = 0;
@@ -88,10 +103,10 @@ Object.assign(pc, function () {
 
         // create parent div
         this.parent = document.createElement('div');
-        if (!first) {
-            this.parent.style.cssText = 'border-top: 2px solid gray;';
-        }
         //this.parent.style.cssText = 'position:relative;';
+        //if (!first) {
+            //this.parent.style.cssText = 'border-top:2px solid gray;';
+        //}
 
         // create text div
         this.text = document.createElement('div');
@@ -116,25 +131,12 @@ Object.assign(pc, function () {
 
     Object.assign(StatGraph.prototype, {
         update: function (ms, values) {
-            var w = this.canvas.width;
-            var h = this.canvas.height;
-
-            // shift graph contents left one pixel
-            this.ctx.drawImage(this.canvas, 1, 0, w - 1, h, 0, 0, w - 1, h);
-
-            // clear background
-            //var yMid = this._mapY(1000.0 / 60.0);
-            this.ctx.fillStyle = 'rgb(0,0,0)';
-            //this.ctx.fillRect(w - 1, 0, 1, yMid);
-            //this.ctx.fillStyle = 'rgb(48,48,48)';
-            //this.ctx.fillRect(w - 1, yMid, 1, h - yMid);
-            this.ctx.fillRect(w - 1, 0, 1, h);
-
             // calculate stacked total
             var total = values.reduce(function (a, v) {
                 return a + v;
             }, 0);
 
+            // update averages
             this.avgTotal += total;
             this.avgTimer += ms;
             this.avgCount++;
@@ -143,32 +145,34 @@ Object.assign(pc, function () {
                 this.avgTimer = 0;
                 this.avgTotal = 0;
                 this.avgCount = 0;
+
+                // update display text
+                if (this.text.style.display !== 'none') {
+                    this.text.innerHTML = this.label + ' ' + this.avg.toFixed(1) + 'ms';
+                }
             }
 
-            // update display text
-            if (this.text.style.display !== 'none') {
-                this.text.innerHTML = this.label + ' ' + this.avg.toFixed(1) + 'ms';
-            }
+            // update graph canvas
+            if (this.canvas.style.display !== 'none') {
+                var w = this.canvas.width;
+                var h = this.canvas.height;
 
-            // render values
-            this._renderStacked(values);
+                // shift graph contents left one pixel
+                this.ctx.drawImage(this.canvas, 1, 0, w - 1, h, 0, 0, w - 1, h);
+
+                // clear background
+                this.ctx.fillStyle = 'black';
+                this.ctx.fillRect(w - 1, 0, 1, h);
+
+                // render values
+                this._renderStacked(values);
+
+                // overlay 60hz frame marker
+                var yMid = this._mapY(1000.0 / 60.0);
+                this.ctx.fillStyle = 'rgb(255,255,0, 0.5)';
+                this.ctx.fillRect(w - 1, yMid, 1, 1);
+            }
         },
-
-        /*
-        _renderLines: function (values, prevValues) {
-            var w = this.canvas.width;
-            for (var i = values.length - 1; i >= 0; --i) {
-                var y1 = this._mapY(prevValues[i]);
-                var y2 = this._mapY(values[i]);
-
-                this.ctx.strokeStyle = STYLES[i % STYLES.length];
-                this.ctx.beginPath();
-                this.ctx.moveTo(w - 2, y1);
-                this.ctx.lineTo(w - 1, y2);
-                this.ctx.stroke();
-            }
-        },
-        */
 
         _renderStacked: function (values) {
             var w = this.canvas.width;
@@ -197,6 +201,11 @@ Object.assign(pc, function () {
     });
 
     return {
-        StatGraph: StatGraph
+        StatGraph: StatGraph,
+        toggleMiniStats: function () {
+            if (statContainer) {
+                statContainer.nextState();
+            }
+        }
     };
 }());
