@@ -29,7 +29,7 @@ Object.assign(pc, function () {
 
         this.parent.addEventListener('click', function (event) {
             event.preventDefault();
-            this.nextState();
+            this.toggle();
         }.bind(this));
 
         document.body.appendChild(this.parent);
@@ -48,13 +48,17 @@ Object.assign(pc, function () {
             stat._updateLayout(state);
         },
 
-        numChildren: function () {
-            return this.children.length;
-        },
-
-        nextState: function () {
+        toggle: function () {
             this.state = (this.state + 1) % STATE_ORDER.length;
             this._updateLayouts();
+        },
+
+        show: function () {
+            this.parent.style.display = 'block';
+        },
+
+        hide: function () {
+            this.parent.style.display = 'none';
         },
 
         activate: function () {
@@ -198,7 +202,17 @@ Object.assign(pc, function () {
         StatGraph: StatGraph,
         toggleMiniStats: function () {
             if (statContainer) {
-                statContainer.nextState();
+                statContainer.toggle();
+            }
+        },
+        showMiniStats: function () {
+            if (statContainer) {
+                statContainer.show();
+            }
+        },
+        hideMiniStats: function () {
+            if (statContainer) {
+                statContainer.hide();
             }
         }
     };
