@@ -35,7 +35,7 @@ describe("async pc.AnimationComponent", function () {
                 url: 'base/examples/assets/models/playbot/playbot.json'
             }),
             new pc.Asset('playbot-idle.json', 'animation', {
-                url: 'base/examples/assets/playbot/playbot-idle.json'
+                url: 'base/examples/assets/animations/playbot/playbot-idle.json'
             })
         ];
 
