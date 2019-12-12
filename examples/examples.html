@@ -5,15 +5,14 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
     <body>
-        <div class="sidenav">
-        </div>
+        <div class="sidenav"></div>
         <iframe id="example" src="user-interface/text-basic.html"></iframe>
 
         <script src="examples.js"></script>
         <script>
             function titleCase(string) {
-                var sentence = string.toLowerCase().split("-");
-                for(var i = 0; i < sentence.length; i++){
+                let sentence = string.toLowerCase().split("-");
+                for(let i = 0; i < sentence.length; i++){
                     sentence[i] = sentence[i][0].toUpperCase() + sentence[i].slice(1);
                 }
                 return sentence.join(" ");
