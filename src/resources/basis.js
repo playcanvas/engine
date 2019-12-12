@@ -71,7 +71,7 @@ Object.assign(pc, function () {
             if (!width || !height || !images || !levels) {
                 basisFile.close();
                 basisFile.delete();
-                throw new Error('Invalid image dimensions url=' + url);
+                throw new Error('Invalid image dimensions url=' + url + ' width=' + width + ' height=' + height + ' images=' + images + ' levels=' + levels);
             }
 
             // select format based on supported formats
@@ -137,10 +137,10 @@ Object.assign(pc, function () {
                     });
                     self.postMessage( { url: url, data: result }, result.levels);
                 } catch (err) {
-                    self.postMessage( { url: url, err: err } );
+                    self.postMessage( { url: url.toString(), err: err.toString() } );
                 }
             } else {
-                queue.push([url, data]);
+                queue.push([url, format, data]);
             }
         };
 
@@ -159,7 +159,7 @@ Object.assign(pc, function () {
                 basis = instance;
                 basis.initializeBasis();
                 for (var i = 0; i < queue.length; ++i) {
-                    workerTranscode(queue[i][0], queue[i][1]);
+                    workerTranscode(queue[i][0], queue[i][1], queue[i][2]);
                 }
                 queue = null;
             } );
@@ -314,29 +314,39 @@ Object.assign(pc, function () {
                 }
             };
 
+            // perform the fallback http download if compileStreaming isn't
+            // available or fails
+            var performHttpDownload = function () {
+                pc.http.get(
+                    wasmUrl,
+                    { cache: true, responseType: "arraybuffer", retry: false },
+                    function (err, result) {
+                        if (result) {
+                            WebAssembly.compile(result)
+                                .then(function (result) {
+                                    compiledModule = result;
+                                    downloadCompleted();
+                                });
+                        }
+                    });
+            };
+
             // download and compile wasm module
-            WebAssembly.compileStreaming(fetch(wasmUrl))
-                .then(function (result) {
-                    compiledModule = result;
-                    downloadCompleted();
-                })
-                .catch(function (reason) {
-                    console.error(reason);
-                    console.warn('compileStreaming() failed for ' + wasmUrl + ', falling back to arraybuffer download...');
-                    // failed to stream download, attempt arraybuffer download
-                    pc.http.get(
-                        wasmUrl,
-                        { cache: true, responseType: "arraybuffer", retry: false },
-                        function (err, result) {
-                            if (result) {
-                                WebAssembly.compile(result)
-                                    .then(function (result) {
-                                        compiledModule = result;
-                                        downloadCompleted();
-                                    });
-                            }
-                        });
-                });
+            if (WebAssembly.compileStreaming) {
+                WebAssembly.compileStreaming(fetch(wasmUrl))
+                    .then(function (result) {
+                        compiledModule = result;
+                        downloadCompleted();
+                    })
+                    .catch(function (reason) {
+                        console.error(reason);
+                        console.warn('compileStreaming() failed for ' + wasmUrl + ', falling back to arraybuffer download...');
+                        // failed to stream download, attempt arraybuffer download
+                        performHttpDownload();
+                    });
+            } else {
+                performHttpDownload();
+            }
 
             // download glue script
             pc.http.get(
