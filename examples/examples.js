@@ -10,6 +10,7 @@ var categories = [
             "camera-fly",
             "layers",
             "lights",
+            "loader-obj",
             "model-asset",
             "model-box",
             "model-textured-box",
@@ -57,7 +58,8 @@ var categories = [
             "text-markup",
             "text-outline",
             "text-typewriter",
-            "text-wrap"
+            "text-wrap",
+            "various"
         ]
     }
 ];

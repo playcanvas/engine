@@ -1,24 +1,18 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
     <script src="../../build/output/playcanvas.js"></script>
-    <link href="../style.css" rel="stylesheet" />
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
 </head>
 
 <body>
     <!-- The canvas element -->
     <canvas id="application-canvas"></canvas>
-
-    <script>
-        function createMaterial(colors) {
-            var material = new pc.StandardMaterial();
-            for (var param in colors) {
-                material[param] = colors[param];
-            }
-            material.update();
-            return material;
-        }
-    </script>
 
     <!-- The script -->
     <script>
