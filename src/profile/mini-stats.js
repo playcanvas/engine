@@ -108,7 +108,6 @@ Object.assign(pc, function () {
 
         // create text div
         this.text = document.createElement('div');
-        // position:absolute;top:5px;left:5px;
         this.text.style.cssText = 'background:black;color:rgba(255,255,255,0.5);font:10px "Lucida Console", Monaco, monospace';
         this.text.innerHTML = label;
         this.parent.appendChild(this.text);
