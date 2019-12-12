@@ -7,6 +7,9 @@ var categories = [
     }, {
         name: "graphics",
         examples: [
+            "camera-fly",
+            "layers",
+            "lights",
             "model-asset",
             "model-box",
             "model-textured-box",
@@ -17,7 +20,8 @@ var categories = [
             "shader-burn",
             "shader-toon",
             "shader-wobble",
-            "texture-basis"
+            "texture-basis",
+            "virtual-reality"
         ]
     }, {
         name: "input",
@@ -25,6 +29,11 @@ var categories = [
             "gamepad",
             "keyboard",
             "mouse"
+        ]
+    }, {
+        name: "misc",
+        examples: [
+            "multi-application"
         ]
     }, {
         name: "physics",

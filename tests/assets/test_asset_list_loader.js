@@ -6,20 +6,20 @@ describe('pc.AssetListLoader', function () {
         app = new pc.Application(document.createElement('canvas'));
 
         assetList = [
-            new pc.Asset('Statue_1.json', 'model', {
-                url: 'base/examples/assets/statue/Statue_1.json'
+            new pc.Asset('statue.json', 'model', {
+                url: 'base/examples/assets/models/statue/statue.json'
             }),
-            new pc.Asset('Statue_Material', 'material', {
-                url: 'base/examples/assets/statue/11268/phong9.json'
+            new pc.Asset('stone.json', 'material', {
+                url: 'base/examples/assets/models/statue/26109516/stone.json'
             }),
-            new pc.Asset('Statue_Diffuse', 'texture', {
-                url: 'base/examples/assets/statue/11270/Statue_1_C.jpg'
+            new pc.Asset('statue-diffuse.jpg', 'texture', {
+                url: 'base/examples/assets/models/statue/26111213/statue-diffuse.jpg'
             }),
-            new pc.Asset('Statue_Normal', 'texture', {
-                url: 'base/examples/assets/statue/11273/Statue_1_N.jpg'
+            new pc.Asset('statue-normal.jpg', 'texture', {
+                url: 'base/examples/assets/models/statue/26111212/statue-normal.jpg'
             }),
-            new pc.Asset('Statue_Spec', 'texture', {
-                url: 'base/examples/assets/statue/11274/Statue_1_S.jpg'
+            new pc.Asset('statue-specular.jpg', 'texture', {
+                url: 'base/examples/assets/models/statue/26111214/statue-specular.jpg'
             })
         ];
 

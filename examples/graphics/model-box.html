@@ -70,6 +70,10 @@
             // Rotate the box
             box.setEulerAngles(angle*2, angle*4, angle*8);
         });
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
     </script>
 </body>
 </html>

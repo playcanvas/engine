@@ -1,11 +1,11 @@
-var FirstPersonCamera = pc.createScript('firstPersonCamera')
+var FlyCamera = pc.createScript('flyCamera')
 
-FirstPersonCamera.attributes.add('speed', {
+FlyCamera.attributes.add('speed', {
     type: 'number',
     default: 10
 });
 
-FirstPersonCamera.prototype.initialize = function () {
+FlyCamera.prototype.initialize = function () {
     // Camera euler angle rotation around x and y axes
     var eulers = this.entity.getLocalEulerAngles()
     this.ex = eulers.x;
@@ -19,7 +19,7 @@ FirstPersonCamera.prototype.initialize = function () {
     mouse.on(pc.EVENT_MOUSEDOWN, this.onMouseDown, this);
 };
 
-FirstPersonCamera.prototype.update = function (dt) {
+FlyCamera.prototype.update = function (dt) {
     // Update the camera's orientation
     this.entity.setLocalEulerAngles(this.ex, this.ey, 0);
 
@@ -43,7 +43,7 @@ FirstPersonCamera.prototype.update = function (dt) {
     }
 };
 
-FirstPersonCamera.prototype.onMouseMove = function (event) {
+FlyCamera.prototype.onMouseMove = function (event) {
     // Update the current Euler angles, clamp the pitch.
     if (pc.Mouse.isPointerLocked()) {
         this.ex -= event.dy / 5;
@@ -52,7 +52,7 @@ FirstPersonCamera.prototype.onMouseMove = function (event) {
     }
 };
 
-FirstPersonCamera.prototype.onMouseDown = function (event) {
+FlyCamera.prototype.onMouseDown = function (event) {
     // When the mouse button is clicked try and capture the pointer
     if (!pc.Mouse.isPointerLocked()) {
         this.app.mouse.enablePointerLock();
