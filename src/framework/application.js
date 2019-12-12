@@ -264,7 +264,7 @@ Object.assign(pc, function () {
         this.loader = new pc.ResourceLoader(this);
 
         // profiling
-        if (true || options.stats) {
+        if (options.stats) {
             this._frameGraph = new pc.StatGraph('Frame');
             this._cpuTimer = new pc.CpuTimer();
             this._gpuTimer = new pc.GpuTimer(this.graphicsDevice.gl, this.graphicsDevice.extDisjointTimerQuery);
