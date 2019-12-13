@@ -7,18 +7,38 @@
     </head>
     <body>
         <div class="sidenav"></div>
-        <iframe id="example" src="user-interface/text-basic.html"></iframe>
+        <iframe id="example"></iframe>
 
         <script src="examples.js"></script>
         <script>
             function titleCase(string) {
-                let sentence = string.toLowerCase().split("-");
+                let sentence = string.toLowerCase().split('-');
                 for(let i = 0; i < sentence.length; i++){
                     sentence[i] = sentence[i][0].toUpperCase() + sentence[i].slice(1);
                 }
-                return sentence.join(" ");
+                return sentence.join(' ');
             }
 
+            function loadExample(example) {
+                let iframe = document.getElementById('example');
+                iframe.src = example;
+                location.href = location.protocol +'//' +
+                                location.host +
+                                location.pathname +
+                                '#' +
+                                example;
+            }
+
+            // Load the initial example (loading the first one if none is specified)
+            let url = location.href;
+            let hashIndex = url.indexOf('#');
+            if (hashIndex === -1) {
+                loadExample(categories[0].name + '/' + categories[0].examples[0] + '.html');
+            } else {
+                loadExample(url.substring(hashIndex + 1));
+            }
+
+            // Procedurally build the navigation sidebar
             let sidenav = document.querySelector(".sidenav");
             categories.forEach(category => {
                 let categoryEntry = document.createElement('p');
@@ -27,9 +47,8 @@
 
                 category.examples.forEach(example => {
                     let exampleEntry = document.createElement('a');
-                    exampleEntry.addEventListener("click", () => {
-                        let iframe = document.getElementsByTagName('iframe')[0];
-                        iframe.src = category.name + '/' + example + '.html';
+                    exampleEntry.addEventListener("click", event => {
+                        loadExample(category.name + '/' + example + '.html')
                     }, false);
                     exampleEntry.innerText = titleCase(example);
                     sidenav.appendChild(exampleEntry);
