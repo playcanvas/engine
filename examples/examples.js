@@ -11,6 +11,7 @@ var categories = [
             "layers",
             "lights",
             "loader-obj",
+            "material-physical",
             "model-asset",
             "model-box",
             "model-textured-box",
