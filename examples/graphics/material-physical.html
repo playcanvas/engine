@@ -33,6 +33,7 @@
 
         app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
+        // Set the skybox to the 128x128 cubemap mipmap level
         app.scene.skyboxMip = 1;
 
         // Create an entity with a camera component
@@ -41,24 +42,18 @@
         camera.translate(0, 0, 9);
         app.root.addChild(camera);
 
-        var cubemapAsset = new pc.Asset('helipad', 'cubemap', {
-            url: "../assets/cubemaps/helipad/6079289/helipad.dds"
-        }, {
-            "textures": [
-                "../assets/cubemaps/helipad/6079292/helipad-posx.png",
-                "../assets/cubemaps/helipad/6079290/helipad-negx.png",
-                "../assets/cubemaps/helipad/6079293/helipad-posy.png",
-                "../assets/cubemaps/helipad/6079298/helipad-negy.png",
-                "../assets/cubemaps/helipad/6079294/helipad-posz.png",
-                "../assets/cubemaps/helipad/6079300/helipad-negz.png"
-            ],
-            "name": "helipad",
-            "rgbm": true,
-            "prefiltered": "helipad.dds"
+        // Load a cubemap asset. This DDS file was 'prefiltered' in the
+        // PlayCanvas Editor and then downloaded.
+        var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
+            url: "../assets/cubemaps/helipad.dds"
         });
         app.assets.add(cubemapAsset);
         app.assets.load(cubemapAsset);
         cubemapAsset.ready(function () {
+            // Mark the cubemaps as RGBM format since it's an HDR cubemap
+            cubemapAsset.resources.forEach(function (cubemap) {
+                cubemap.rgbm = true;
+            });
             app.scene.setSkybox(cubemapAsset.resources);
         });
 

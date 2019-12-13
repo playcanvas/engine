@@ -19,8 +19,6 @@
     <script>
         // ***********    Initialize application   *******************
         var canvas = document.getElementById("application-canvas");
-        // focus the canvas for keyboard input
-        canvas.focus();
 
         // Create the application and start the update loop
         var app = new pc.Application(canvas, {
@@ -37,11 +35,7 @@
         });
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
-    </script>
 
-    <script src="fly-camera.js"></script>
-
-    <script>        
         app.start();
 
         // ***********    Helper functions    *******************
@@ -99,9 +93,6 @@
         });
         light.setLocalPosition(0, 0, 2);
 
-        // set the direction for our light
-        // light.setLocalEulerAngles(45, 30, 0);
-
         // add the light to the hierarchy
         app.root.addChild(light);
 
@@ -116,15 +107,16 @@
         });
 
         // add the fly camera script to the camera
-        camera.addComponent("script");
-        camera.script.create("flyCamera");
+        app.assets.loadFromUrl('../../extras/camera/fly-camera.js', 'script', function (err, asset) {
+            camera.addComponent("script");
+            camera.script.create("flyCamera");
+        });
 
         // add the camera to the hierarchy
         app.root.addChild(camera);
 
         // Move the camera a little further away
         camera.translate(0, 0, 2);
-
     </script>
 </body>
 </html>
