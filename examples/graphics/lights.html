@@ -40,6 +40,10 @@
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
         app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
 
         var entity, light, camera;

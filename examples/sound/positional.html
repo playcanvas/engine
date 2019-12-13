@@ -27,6 +27,10 @@
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
         // Create an Entity with a camera component
         var camera = new pc.Entity();
         camera.addComponent("camera", {

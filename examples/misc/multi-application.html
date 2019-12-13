@@ -68,9 +68,7 @@
                 entity.rotate(0,10*dt,0);
             }
         });
-    </script>
 
-     <script>
         var canvas = document.getElementById("canvas-2");
 
         // Create the app and start the update loop
@@ -112,6 +110,11 @@
             if (entity) {
                 entity.rotate(0,10*dt,0);
             }
+        });
+
+        window.addEventListener("resize", function () {
+            app1.resizeCanvas(canvas.width, canvas.height);
+            app2.resizeCanvas(canvas.width, canvas.height);
         });
     </script>
 </body>
