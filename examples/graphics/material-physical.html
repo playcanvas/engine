@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Physical Material</title>
+    <script src="../../build/output/playcanvas.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        app.scene.gammaCorrection = pc.GAMMA_SRGB;
+        app.scene.toneMapping = pc.TONEMAP_ACES;
+        app.scene.skyboxMip = 1;
+
+        // Create an entity with a camera component
+        var camera = new pc.Entity();
+        camera.addComponent("camera");
+        camera.translate(0, 0, 9);
+        app.root.addChild(camera);
+
+        var cubemapAsset = new pc.Asset('helipad', 'cubemap', {
+            url: "../assets/cubemaps/helipad/6079289/helipad.dds"
+        }, {
+            "textures": [
+                "../assets/cubemaps/helipad/6079292/helipad-posx.png",
+                "../assets/cubemaps/helipad/6079290/helipad-negx.png",
+                "../assets/cubemaps/helipad/6079293/helipad-posy.png",
+                "../assets/cubemaps/helipad/6079298/helipad-negy.png",
+                "../assets/cubemaps/helipad/6079294/helipad-posz.png",
+                "../assets/cubemaps/helipad/6079300/helipad-negz.png"
+            ],
+            "name": "helipad",
+            "rgbm": true,
+            "prefiltered": "helipad.dds"
+        });
+        app.assets.add(cubemapAsset);
+        app.assets.load(cubemapAsset);
+        cubemapAsset.ready(function () {
+            app.scene.setSkybox(cubemapAsset.resources);
+        });
+
+        var NUM_SPHERES = 5;
+
+        var createSphere = function (x, y, z) {
+            var material = new pc.StandardMaterial();
+            material.metalness = y / (NUM_SPHERES - 1);
+            material.shininess = x / (NUM_SPHERES - 1) * 100;
+            material.useMetalness = true;
+            material.update();
+
+            var sphere = new pc.Entity();
+            sphere.addComponent("model", {
+                material: material,
+                type: "sphere"
+            });
+            sphere.setLocalPosition(x - (NUM_SPHERES - 1) * 0.5, y - (NUM_SPHERES - 1) * 0.5, z);
+            sphere.setLocalScale(0.9, 0.9, 0.9);
+            app.root.addChild(sphere);
+        }
+
+        var createText = function (fontAsset, message, x, y, z, rot) {
+            // Create a text element-based entity
+            var text = new pc.Entity();
+            text.addComponent("element", {
+                anchor: [ 0.5, 0.5, 0.5, 0.5 ],
+                fontAsset: fontAsset,
+                fontSize: 0.5,
+                pivot: [ 0.5, 0.5 ],
+                text: message,
+                type: pc.ELEMENTTYPE_TEXT
+            });
+            text.setLocalPosition(x, y, z);
+            text.setLocalEulerAngles(0, 0, rot);
+            app.root.addChild(text);
+        }
+
+        for (var i = 0; i < NUM_SPHERES; i++) {
+            for (var j = 0; j < NUM_SPHERES; j++) {
+                createSphere(j, i, 0);
+            }
+        }
+
+        // Load a font
+        var fontAsset = new pc.Asset('arial.json', "font", {url: "../assets/fonts/arial.json"});
+        fontAsset.on('load', function () {
+            createText(fontAsset, 'Glossiness', 0, -(NUM_SPHERES + 1) * 0.5, 0, 0);
+            createText(fontAsset, 'Metalness', -(NUM_SPHERES + 1) * 0.5, 0, 0, 90);
+        });
+        app.assets.add(fontAsset);
+        app.assets.load(fontAsset);
+    </script>
+</body>
+</html>

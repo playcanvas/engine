@@ -30,6 +30,10 @@
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
+
             // use device pixel ratio
             app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
@@ -206,15 +210,6 @@
                 p = createPanel(parent);
                 var panel1 = app.root.findByName("Panel1");
             }
-
-            // update every frame
-            app.on("update", function (dt) {
-            });
-
-            // hook up window resize events
-            window.addEventListener("resize", function () {
-                app.resizeCanvas(canvas.width, canvas.height);
-            });
         </script>
     </body>
 </html>

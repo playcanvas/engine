@@ -26,6 +26,10 @@
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
+
             // use device pixel ratio
             app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
@@ -45,7 +49,7 @@
             var assetsToLoad = [
                 new pc.Asset('red_button_atlas.json', "textureatlas", {url: "../assets/button/red_button_atlas.json"}),
                 new pc.Asset('red_button_sprite', "sprite", {url: "../assets/button/red_button_sprite.json"}),
-                new pc.Asset('snowflake.png', "texture", {url: "../assets/snowflake.png"})
+                new pc.Asset('snowflake.png', "texture", {url: "../assets/textures/snowflake.png"})
             ]
 
             var count =0;
@@ -192,16 +196,6 @@
             app.on("update", function (dt) {
                 picker.prepare(cam.camera, app.scene, app.scene.layers.getLayerById(pc.LAYERID_WORLD));
                 picker.getSelection(250,250);
-                // var block = app.root.findByName("RedBlock1");
-
-                // block.element.rect.set(pc.math.random(0,1), pc.math.random(0,1), pc.math.random(0,1), pc.math.random(0,1));
-                // block.element.rect = block.element.rect;
-
-            });
-
-            // hook up window resize events
-            window.addEventListener("resize", function () {
-                app.resizeCanvas(canvas.width, canvas.height);
             });
         </script>
     </body>
