@@ -22,9 +22,9 @@
     <!-- The script -->
     <script>
     if (wasmSupported()) {
-        loadWasmModuleAsync('Ammo', '../../lib/ammo/ammo.wasm.js', '../../lib/ammo/ammo.wasm.wasm', demo);
+        loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.wasm.js', '../lib/ammo/ammo.wasm.wasm', demo);
     } else {
-        loadWasmModuleAsync('Ammo', '../../lib/ammo/ammo.js', '', demo);
+        loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.js', '', demo);
     }
 
     function demo() {
