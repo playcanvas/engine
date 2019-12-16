@@ -2,6 +2,9 @@
 <html>
 <head>
     <title>PlayCanvas Fly Camera</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
     <script src="../../build/output/playcanvas.js"></script>
     <style>
         body { 
@@ -107,7 +110,7 @@
         });
 
         // add the fly camera script to the camera
-        app.assets.loadFromUrl('../../extras/camera/fly-camera.js', 'script', function (err, asset) {
+        app.assets.loadFromUrl('../assets/scripts/camera/fly-camera.js', 'script', function (err, asset) {
             camera.addComponent("script");
             camera.script.create("flyCamera");
         });
