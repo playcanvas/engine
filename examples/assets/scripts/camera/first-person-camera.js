@@ -9,7 +9,7 @@ FirstPersonCamera.attributes.add('camera', {
     type: 'entity'
 });
 
-FirstPersonCamera.prototype.initialize = function() {
+FirstPersonCamera.prototype.initialize = function () {
     var app = this.app;
 
     // Check the user has set a camera entity for the FPS view
@@ -62,7 +62,7 @@ FirstPersonCamera.prototype.initialize = function() {
     }, this);
 };
 
-FirstPersonCamera.prototype.postUpdate = function(dt) {
+FirstPersonCamera.prototype.postUpdate = function (dt) {
     // Update the camera's orientation
     this.camera.setEulerAngles(this.elevation, this.azimuth, 0);
 
@@ -111,7 +111,7 @@ FirstPersonCamera.prototype.postUpdate = function(dt) {
 ////////////////////////////////////////////////////////////////////////////////
 var KeyboardInput = pc.createScript('keyboardInput');
 
-KeyboardInput.prototype.initialize = function() {
+KeyboardInput.prototype.initialize = function () {
     var app = this.app;
 
     var updateMovement = function (keyCode, value) {
@@ -161,7 +161,7 @@ KeyboardInput.prototype.initialize = function() {
 
     this.on('enable', addEventListeners);
     this.on('disable', removeEventListeners);
-    
+
     addEventListeners();
 };
 
@@ -171,7 +171,7 @@ KeyboardInput.prototype.initialize = function() {
 ////////////////////////////////////////////////////////////////////////////////
 var MouseInput = pc.createScript('mouseInput');
 
-MouseInput.prototype.initialize = function() {
+MouseInput.prototype.initialize = function () {
     var app = this.app;
     var canvas = app.graphicsDevice.canvas;
 
@@ -202,7 +202,7 @@ MouseInput.prototype.initialize = function() {
 
     this.on('enable', addEventListeners);
     this.on('disable', removeEventListeners);
-    
+
     addEventListeners();
 };
 
@@ -212,11 +212,11 @@ MouseInput.prototype.initialize = function() {
 // range from 0 to 1.
 function applyRadialDeadZone(pos, remappedPos, deadZoneLow, deadZoneHigh) {
     var magnitude = pos.length();
- 
+
     if (magnitude > deadZoneLow) {
         var legalRange = 1 - deadZoneHigh - deadZoneLow;
         var normalizedMag = Math.min(1, (magnitude - deadZoneLow) / legalRange);
-        var scale = normalizedMag / magnitude; 
+        var scale = normalizedMag / magnitude;
         remappedPos.copy(pos).scale(scale);
     } else {
         remappedPos.set(0, 0);
@@ -255,13 +255,13 @@ TouchInput.attributes.add('doubleTapInterval', {
     default: 300
 });
 
-TouchInput.prototype.initialize = function() {
+TouchInput.prototype.initialize = function () {
     var app = this.app;
     var graphicsDevice = app.graphicsDevice;
     var canvas = graphicsDevice.canvas;
 
     this.remappedPos = new pc.Vec2();
-    
+
     this.leftStick = {
         identifier: -1,
         center: new pc.Vec2(),
@@ -272,7 +272,7 @@ TouchInput.prototype.initialize = function() {
         center: new pc.Vec2(),
         pos: new pc.Vec2()
     };
-    
+
     this.lastRightTap = 0;
 
     var touchStart = function (e) {
@@ -284,7 +284,7 @@ TouchInput.prototype.initialize = function() {
         var touches = e.changedTouches;
         for (var i = 0; i < touches.length; i++) {
             var touch = touches[i];
-            
+
             if (touch.pageX <= canvas.clientWidth / 2 && this.leftStick.identifier === -1) {
                 // If the user touches the left half of the screen, create a left virtual joystick...
                 this.leftStick.identifier = touch.identifier;
@@ -297,7 +297,7 @@ TouchInput.prototype.initialize = function() {
                 this.rightStick.center.set(touch.pageX, touch.pageY);
                 this.rightStick.pos.set(0, 0);
                 app.fire('rightjoystick:enable', touch.pageX * xFactor, touch.pageY * yFactor);
-                
+
                 // See how long since the last tap of the right virtual joystick to detect a double tap (jump)
                 var now = Date.now();
                 if (now - this.lastRightTap < this.doubleTapInterval) {
@@ -313,7 +313,7 @@ TouchInput.prototype.initialize = function() {
 
         var xFactor = graphicsDevice.width / canvas.clientWidth;
         var yFactor = graphicsDevice.height / canvas.clientHeight;
-        
+
         var touches = e.changedTouches;
         for (var i = 0; i < touches.length; i++) {
             var touch = touches[i];
@@ -367,13 +367,13 @@ TouchInput.prototype.initialize = function() {
 
     this.on('enable', addEventListeners);
     this.on('disable', removeEventListeners);
-    
+
     addEventListeners();
 };
 
-TouchInput.prototype.update = function(dt) {
+TouchInput.prototype.update = function (dt) {
     var app = this.app;
-    
+
     // Moving
     if (this.leftStick.identifier !== -1) {
         // Apply a lower radial dead zone. We don't need an upper zone like with a real joypad
@@ -408,7 +408,7 @@ TouchInput.prototype.update = function(dt) {
 ////////////////////////////////////////////////////////////////////////////////
 var GamePadInput = pc.createScript('gamePadInput');
 
-GamePadInput.attributes.add('deadZoneLow', { 
+GamePadInput.attributes.add('deadZoneLow', {
     title: 'Low Dead Zone',
     description: 'Radial thickness of inner dead zone of pad\'s joysticks. This dead zone ensures that all pads report a value of 0 for each joystick axis when untouched.',
     type: 'number',
@@ -431,15 +431,13 @@ GamePadInput.attributes.add('turnSpeed', {
     default: 90
 });
 
-GamePadInput.prototype.initialize = function() {
-    var app = this.app;
-
+GamePadInput.prototype.initialize = function () {
     this.lastStrafe = 0;
     this.lastForward = 0;
     this.lastJump = false;
 
     this.remappedPos = new pc.Vec2();
-    
+
     this.leftStick = {
         center: new pc.Vec2(),
         pos: new pc.Vec2()
@@ -451,21 +449,21 @@ GamePadInput.prototype.initialize = function() {
 
     // Manage DOM event listeners
     var addEventListeners = function () {
-        window.addEventListener("gamepadconnected", function(e) {});
-        window.addEventListener("gamepaddisconnected", function(e) {});
+        window.addEventListener("gamepadconnected", function (e) {});
+        window.addEventListener("gamepaddisconnected", function (e) {});
     };
     var removeEventListeners = function () {
-        window.removeEventListener("gamepadconnected", function(e) {});
-        window.removeEventListener("gamepaddisconnected", function(e) {});
+        window.removeEventListener("gamepadconnected", function (e) {});
+        window.removeEventListener("gamepaddisconnected", function (e) {});
     };
 
     this.on('enable', addEventListeners);
     this.on('disable', removeEventListeners);
-    
+
     addEventListeners();
 };
 
-GamePadInput.prototype.update = function(dt) {
+GamePadInput.prototype.update = function (dt) {
     var app = this.app;
 
     var gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
