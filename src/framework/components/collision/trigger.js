@@ -17,7 +17,7 @@ Object.assign(pc, function () {
         this.component = component;
         this.app = app;
 
-        if (typeof Ammo !== 'undefined') {
+        if (typeof Ammo !== 'undefined' && ! ammoVec1) {
             ammoVec1 = new Ammo.btVector3();
             ammoQuat = new Ammo.btQuaternion();
         }
@@ -78,8 +78,10 @@ Object.assign(pc, function () {
         },
 
         destroy: function () {
-            if (this.body)
+            if (this.body) {
                 this.app.systems.rigidbody.removeBody(this.body);
+                Ammo.destroy(this.body);
+            }
         },
 
         syncEntityToBody: function () {

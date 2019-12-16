@@ -54,11 +54,13 @@ Object.assign(pc, function () {
      * @property {String} type The type of the collision volume. Defaults to 'box'. Can be one of the following:
      * <ul>
      * <li><strong>box</strong>: A box-shaped collision volume.</li>
-     * <li><strong>sphere</strong>: A sphere-shaped collision volume.</li>
      * <li><strong>capsule</strong>: A capsule-shaped collision volume.</li>
-     * <li><strong>cylinder</strong>: A cylinder-shaped collision volume.</li>
+     * <li><strong>compound</strong>: A compound shape. Any descendent entities with a collision component
+     * of type box, capsule, cone, cylinder or sphere will be combined into a single, rigid shape.</li>
      * <li><strong>cone</strong>: A cone-shaped collision volume.</li>
+     * <li><strong>cylinder</strong>: A cylinder-shaped collision volume.</li>
      * <li><strong>mesh</strong>: A collision volume that uses a model asset as its shape.</li>
+     * <li><strong>sphere</strong>: A sphere-shaped collision volume.</li>
      * </ul>
      * @property {pc.Vec3} halfExtents The half-extents of the box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5]
      * @property {Number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision volumes. Defaults to 0.5
@@ -69,6 +71,10 @@ Object.assign(pc, function () {
      */
     var CollisionComponent = function CollisionComponent(system, entity) {
         pc.Component.call(this, system, entity);
+
+        this._compoundParent = null;
+
+        this.entity.on('insert', this._onInsert, this);
 
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
@@ -120,7 +126,6 @@ Object.assign(pc, function () {
      */
 
     Object.assign(CollisionComponent.prototype, {
-
         onSetType: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
                 this.system.changeType(this, oldValue, newValue);
@@ -206,6 +211,44 @@ Object.assign(pc, function () {
             }
         },
 
+        _getCompoundChildShapeIndex: function (shape) {
+            var compound = this.data.shape;
+            var shapes = compound.getNumChildShapes();
+
+            for (var i = 0; i < shapes; i++) {
+                var childShape = compound.getChildShape(i);
+                if (childShape.ptr === shape.ptr) {
+                    return i;
+                }
+            }
+
+            return null;
+        },
+
+        _onInsert: function (parent) {
+            // TODO
+            // if is child of compound shape
+            // and there is no change of compoundParent, then update child transform
+            // once updateChildTransform is exposed in ammo.js
+
+            if (this._compoundParent) {
+                this.system.recreatePhysicalShapes(this);
+            } else if (! this.entity.rigidbody) {
+                var ancestor = this.entity.parent;
+                while (ancestor) {
+                    if (ancestor.collision && ancestor.collision.type === 'compound') {
+                        if (ancestor.collision.shape.getNumChildShapes() === 0) {
+                            this.system.recreatePhysicalShapes(ancestor.collision);
+                        } else {
+                            this.system.recreatePhysicalShapes(this);
+                        }
+                        break;
+                    }
+                    ancestor = ancestor.parent;
+                }
+            }
+        },
+
         onEnable: function () {
             if (this.data.type === 'mesh' && this.data.asset && this.data.initialized) {
                 var asset = this.system.app.assets.get(this.data.asset);
@@ -217,21 +260,43 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (this.entity.trigger) {
-                this.entity.trigger.enable();
-            } else if (this.entity.rigidbody) {
+            if (this.entity.rigidbody) {
                 if (this.entity.rigidbody.enabled) {
                     this.entity.rigidbody.enableSimulation();
                 }
+            } else if (this._compoundParent && this !== this._compoundParent) {
+                if (this._compoundParent.shape.getNumChildShapes() === 0) {
+                    this.system.recreatePhysicalShapes(this._compoundParent);
+                } else {
+                    var transform = this.system._getNodeTransform(this.entity, this._compoundParent.entity);
+                    this._compoundParent.shape.addChildShape(transform, this.data.shape);
+                    Ammo.destroy(transform);
+
+                    if (this._compoundParent.entity.rigidbody)
+                        this._compoundParent.entity.rigidbody.activate();
+                }
+            } else if (this.entity.trigger) {
+                this.entity.trigger.enable();
             }
         },
 
         onDisable: function () {
-            if (this.entity.trigger) {
-                this.entity.trigger.disable();
-            } else if (this.entity.rigidbody) {
+            if (this.entity.rigidbody) {
                 this.entity.rigidbody.disableSimulation();
+            } else if (this._compoundParent && this !== this._compoundParent) {
+                if (! this._compoundParent.entity._destroying) {
+                    this.system._removeCompoundChild(this._compoundParent, this.data.shape);
+
+                    if (this._compoundParent.entity.rigidbody)
+                        this._compoundParent.entity.rigidbody.activate();
+                }
+            } else if (this.entity.trigger) {
+                this.entity.trigger.disable();
             }
+        },
+
+        onBeforeRemove: function () {
+            this.entity.off('insert', this._onInsert, this);
         }
     });
 

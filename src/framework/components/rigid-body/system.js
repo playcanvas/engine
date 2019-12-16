@@ -239,7 +239,6 @@ Object.assign(pc, function () {
         onRemove: function (entity, data) {
             if (data.body) {
                 this.removeBody(data.body);
-
                 Ammo.destroy(data.body);
 
                 data.body = null;
@@ -347,25 +346,34 @@ Object.assign(pc, function () {
         },
 
         _createContactPointFromAmmo: function (contactPoint) {
+            var localPointA = contactPoint.get_m_localPointA();
+            var localPointB = contactPoint.get_m_localPointB();
+            var positionWorldOnA = contactPoint.getPositionWorldOnA();
+            var positionWorldOnB = contactPoint.getPositionWorldOnB();
+            var normalWorldOnB = contactPoint.get_m_normalWorldOnB();
+
             var contact = this.contactPointPool.allocate();
-
-            contact.localPoint.set(contactPoint.get_m_localPointA().x(), contactPoint.get_m_localPointA().y(), contactPoint.get_m_localPointA().z());
-            contact.localPointOther.set(contactPoint.get_m_localPointB().x(), contactPoint.get_m_localPointB().y(), contactPoint.get_m_localPointB().z());
-            contact.point.set(contactPoint.getPositionWorldOnA().x(), contactPoint.getPositionWorldOnA().y(), contactPoint.getPositionWorldOnA().z());
-            contact.pointOther.set(contactPoint.getPositionWorldOnB().x(), contactPoint.getPositionWorldOnB().y(), contactPoint.getPositionWorldOnB().z());
-            contact.normal.set(contactPoint.get_m_normalWorldOnB().x(), contactPoint.get_m_normalWorldOnB().y(), contactPoint.get_m_normalWorldOnB().z());
-
+            contact.localPoint.set(localPointA.x(), localPointA.y(), localPointA.z());
+            contact.localPointOther.set(localPointB.x(), localPointB.y(), localPointB.z());
+            contact.point.set(positionWorldOnA.x(), positionWorldOnA.y(), positionWorldOnA.z());
+            contact.pointOther.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
+            contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
             return contact;
         },
 
         _createReverseContactPointFromAmmo: function (contactPoint) {
-            var contact = this.contactPointPool.allocate();
+            var localPointA = contactPoint.get_m_localPointA();
+            var localPointB = contactPoint.get_m_localPointB();
+            var positionWorldOnA = contactPoint.getPositionWorldOnA();
+            var positionWorldOnB = contactPoint.getPositionWorldOnB();
+            var normalWorldOnB = contactPoint.get_m_normalWorldOnB();
 
-            contact.localPointOther.set(contactPoint.get_m_localPointA().x(), contactPoint.get_m_localPointA().y(), contactPoint.get_m_localPointA().z());
-            contact.localPoint.set(contactPoint.get_m_localPointB().x(), contactPoint.get_m_localPointB().y(), contactPoint.get_m_localPointB().z());
-            contact.pointOther.set(contactPoint.getPositionWorldOnA().x(), contactPoint.getPositionWorldOnA().y(), contactPoint.getPositionWorldOnA().z());
-            contact.point.set(contactPoint.getPositionWorldOnB().x(), contactPoint.getPositionWorldOnB().y(), contactPoint.getPositionWorldOnB().z());
-            contact.normal.set(contactPoint.get_m_normalWorldOnB().x(), contactPoint.get_m_normalWorldOnB().y(), contactPoint.get_m_normalWorldOnB().z());
+            var contact = this.contactPointPool.allocate();
+            contact.localPointOther.set(localPointA.x(), localPointA.y(), localPointA.z());
+            contact.localPoint.set(localPointB.x(), localPointB.y(), localPointB.z());
+            contact.pointOther.set(positionWorldOnA.x(), positionWorldOnA.y(), positionWorldOnA.z());
+            contact.point.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
+            contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
             return contact;
         },
 
