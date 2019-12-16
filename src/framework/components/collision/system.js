@@ -745,11 +745,14 @@ Object.assign(pc, function () {
         },
 
         _removeCompoundChild: function (collision, shape) {
-            // TODO
-            // use removeChildShape once it is exposed in ammo.js
-            var ind = collision._getCompoundChildShapeIndex(shape);
-            if (ind !== null)
-                collision.shape.removeChildShapeByIndex(ind);
+            if (collision.shape.removeChildShape) {
+                collision.shape.removeChildShape(shape);
+            } else {
+                var ind = collision._getCompoundChildShapeIndex(shape);
+                if (ind !== null) {
+                    collision.shape.removeChildShapeByIndex(ind);
+                }
+            }
         },
 
         onTransformChanged: function (component, position, rotation, scale) {
@@ -792,6 +795,7 @@ Object.assign(pc, function () {
 
                 pos = vec3;
                 rot = quat;
+
                 mat4.getTranslation(pos);
                 rot.setFromMat4(mat4);
             } else {
