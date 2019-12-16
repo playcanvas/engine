@@ -14,6 +14,7 @@ var categories = [
             "material-physical",
             "model-asset",
             "model-box",
+            "model-shapes",
             "model-textured-box",
             "portal",
             "particles-snow",
