@@ -1,7 +1,6 @@
 Object.assign(pc, function () {
 
-    // Basis worker function. The function assumes BASIS module is loaded as well as the format
-    // mappings above.
+    // Basis worker function. The function assumes pc.PIXELFORMAT_ enums are available.
     var BasisWorker = function () {
 
         // Basis compression format enums
