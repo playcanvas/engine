@@ -231,6 +231,9 @@ Object.assign(pc, function () {
             // and there is no change of compoundParent, then update child transform
             // once updateChildTransform is exposed in ammo.js
 
+            if (typeof Ammo === 'undefined')
+                return;
+
             if (this._compoundParent) {
                 this.system.recreatePhysicalShapes(this);
             } else if (! this.entity.rigidbody) {

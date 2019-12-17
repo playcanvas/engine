@@ -66,6 +66,8 @@ Object.assign(pc, function () {
 
                 data.shape = this.createPhysicalShape(component.entity, data);
 
+                var firstCompoundChild = ! component._compoundParent;
+
                 if (data.type === 'compound' && (! component._compoundParent || component === component._compoundParent)) {
                     component._compoundParent = component;
 
@@ -90,10 +92,14 @@ Object.assign(pc, function () {
 
                 if (component._compoundParent) {
                     if (component !== component._compoundParent) {
-                        this.system.updateCompoundChildTransform(entity);
+                        if (firstCompoundChild && component._compoundParent.shape.getNumChildShapes() === 0) {
+                            this.system.recreatePhysicalShapes(component._compoundParent);
+                        } else {
+                            this.system.updateCompoundChildTransform(entity);
 
-                        if (component._compoundParent.entity.rigidbody)
-                            component._compoundParent.entity.rigidbody.activate();
+                            if (component._compoundParent.entity.rigidbody)
+                                component._compoundParent.entity.rigidbody.activate();
+                        }
                     }
                 }
 
@@ -745,11 +751,14 @@ Object.assign(pc, function () {
         },
 
         _removeCompoundChild: function (collision, shape) {
-            // TODO
-            // use removeChildShape once it is exposed in ammo.js
-            var ind = collision._getCompoundChildShapeIndex(shape);
-            if (ind !== null)
-                collision.shape.removeChildShapeByIndex(ind);
+            if (collision.shape.removeChildShape) {
+                collision.shape.removeChildShape(shape);
+            } else {
+                var ind = collision._getCompoundChildShapeIndex(shape);
+                if (ind !== null) {
+                    collision.shape.removeChildShapeByIndex(ind);
+                }
+            }
         },
 
         onTransformChanged: function (component, position, rotation, scale) {
@@ -792,6 +801,7 @@ Object.assign(pc, function () {
 
                 pos = vec3;
                 rot = quat;
+
                 mat4.getTranslation(pos);
                 rot.setFromMat4(mat4);
             } else {
