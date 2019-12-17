@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PlayCanvas Mouse</title>
+    <title>PlayCanvas Model Shapes</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
@@ -34,55 +34,41 @@
             app.resizeCanvas(canvas.width, canvas.height);
         });
 
-        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+        // All model component primitive shape types
+        var shapes = [ "box", "plane", "cone", "cylinder", "sphere", "capsule" ];
+        var x = -1, y = -1;
 
-        var entity, light, camera;
+        shapes.forEach(function (shape) {
+            // Create an entity with a model component
+            var entity = new pc.Entity();
+            entity.addComponent("model", {
+                type: shape
+            });
+            app.root.addChild(entity);
 
-        // Create an Entity with a camera component
+            // Lay out the 6 primitives in two rows, 3 per row
+            entity.setLocalPosition(x * 1.2, y, 0);
+            if (x++ === 1) {
+                x = -1;
+                y = 1;
+            }
+        });
+
+        // Create an entity with a directional light component
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "directional"
+        });
+        app.root.addChild(light);
+        light.setLocalEulerAngles(45, 30, 0);
+
+        // Create an entity with a camera component
         var camera = new pc.Entity();
         camera.addComponent("camera", {
             clearColor: new pc.Color(0.4, 0.45, 0.5)
         });
-        camera.translate(0, 7, 25);
-
-        // Create an Entity with a point light component and a sphere model component.
-        var light = new pc.Entity();
-        light.addComponent("light", {
-            type: "point",
-            color: new pc.Color(1, 1, 1),
-            range: 100
-        });
-        light.translate(5, 5, 10);
-
         app.root.addChild(camera);
-        app.root.addChild(light);
-
-        var url = "../assets/models/statue/statue.json";
-        app.assets.loadFromUrl(url, "model", function (err, asset) {
-            entity = new pc.Entity();
-
-            entity.addComponent("model", {
-                type: "asset",
-                asset: asset
-            });
-
-            app.root.addChild(entity);
-        });
-
-
-        var mouse = new pc.Mouse(document.body);
-
-        var x = 0;
-        var y = 0;
-
-        mouse.on('mousemove', function (event) {
-            if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
-                x += event.dx;
-
-                entity.setLocalEulerAngles(0, 0.2*x, 0);
-            }
-        });
-
+        camera.setLocalPosition(0, 0, 5);
     </script>
 </body>
 </html>

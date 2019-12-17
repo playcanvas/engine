@@ -1,3 +1,6 @@
+////////////////////////////////////////////////////////////////////////////////
+//                             Orbit Camera Script                            //
+////////////////////////////////////////////////////////////////////////////////
 var OrbitCamera = pc.createScript('orbitCamera');
 
 OrbitCamera.attributes.add('distanceMax', { type: 'number', default: 0, title: 'Distance Max', description: 'Setting this at 0 will give an infinite distance limit' });
@@ -341,4 +344,274 @@ OrbitCamera.prototype._calcPitch = function (quat, yaw) {
     quatWithoutYaw.transformVector(pc.Vec3.FORWARD, transformedForward);
 
     return Math.atan2(transformedForward.y, -transformedForward.z) * pc.math.RAD_TO_DEG;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//                       Orbit Camera Mouse Input Script                      //
+////////////////////////////////////////////////////////////////////////////////
+var OrbitCameraInputMouse = pc.createScript('orbitCameraInputMouse');
+
+OrbitCameraInputMouse.attributes.add('orbitSensitivity', {
+    type: 'number',
+    default: 0.3,
+    title: 'Orbit Sensitivity',
+    description: 'How fast the camera moves around the orbit. Higher is faster'
+});
+
+OrbitCameraInputMouse.attributes.add('distanceSensitivity', {
+    type: 'number',
+    default: 0.15,
+    title: 'Distance Sensitivity',
+    description: 'How fast the camera moves in and out. Higher is faster'
+});
+
+// initialize code called once per entity
+OrbitCameraInputMouse.prototype.initialize = function () {
+    this.orbitCamera = this.entity.script.orbitCamera;
+
+    if (this.orbitCamera) {
+        var self = this;
+
+        var onMouseOut = function (e) {
+            self.onMouseOut(e);
+        };
+
+        this.app.mouse.on(pc.EVENT_MOUSEDOWN, this.onMouseDown, this);
+        this.app.mouse.on(pc.EVENT_MOUSEUP, this.onMouseUp, this);
+        this.app.mouse.on(pc.EVENT_MOUSEMOVE, this.onMouseMove, this);
+        this.app.mouse.on(pc.EVENT_MOUSEWHEEL, this.onMouseWheel, this);
+
+        // Listen to when the mouse travels out of the window
+        window.addEventListener('mouseout', onMouseOut, false);
+
+        // Remove the listeners so if this entity is destroyed
+        this.on('destroy', function () {
+            this.app.mouse.off(pc.EVENT_MOUSEDOWN, this.onMouseDown, this);
+            this.app.mouse.off(pc.EVENT_MOUSEUP, this.onMouseUp, this);
+            this.app.mouse.off(pc.EVENT_MOUSEMOVE, this.onMouseMove, this);
+            this.app.mouse.off(pc.EVENT_MOUSEWHEEL, this.onMouseWheel, this);
+
+            window.removeEventListener('mouseout', onMouseOut, false);
+        });
+    }
+
+    // Disabling the context menu stops the browser displaying a menu when
+    // you right-click the page
+    this.app.mouse.disableContextMenu();
+
+    this.lookButtonDown = false;
+    this.panButtonDown = false;
+    this.lastPoint = new pc.Vec2();
+};
+
+
+OrbitCameraInputMouse.fromWorldPoint = new pc.Vec3();
+OrbitCameraInputMouse.toWorldPoint = new pc.Vec3();
+OrbitCameraInputMouse.worldDiff = new pc.Vec3();
+
+
+OrbitCameraInputMouse.prototype.pan = function (screenPoint) {
+    var fromWorldPoint = OrbitCameraInputMouse.fromWorldPoint;
+    var toWorldPoint = OrbitCameraInputMouse.toWorldPoint;
+    var worldDiff = OrbitCameraInputMouse.worldDiff;
+
+    // For panning to work at any zoom level, we use screen point to world projection
+    // to work out how far we need to pan the pivotEntity in world space
+    var camera = this.entity.camera;
+    var distance = this.orbitCamera.distance;
+
+    camera.screenToWorld(screenPoint.x, screenPoint.y, distance, fromWorldPoint);
+    camera.screenToWorld(this.lastPoint.x, this.lastPoint.y, distance, toWorldPoint);
+
+    worldDiff.sub2(toWorldPoint, fromWorldPoint);
+
+    this.orbitCamera.pivotPoint.add(worldDiff);
+};
+
+
+OrbitCameraInputMouse.prototype.onMouseDown = function (event) {
+    switch (event.button) {
+        case pc.MOUSEBUTTON_LEFT:
+            this.lookButtonDown = true;
+            break;
+        case pc.MOUSEBUTTON_MIDDLE:
+        case pc.MOUSEBUTTON_RIGHT:
+            this.panButtonDown = true;
+            break;
+    }
+};
+
+
+OrbitCameraInputMouse.prototype.onMouseUp = function (event) {
+    switch (event.button) {
+        case pc.MOUSEBUTTON_LEFT:
+            this.lookButtonDown = false;
+            break;
+        case pc.MOUSEBUTTON_MIDDLE:
+        case pc.MOUSEBUTTON_RIGHT:
+            this.panButtonDown = false;
+            break;
+    }
+};
+
+
+OrbitCameraInputMouse.prototype.onMouseMove = function (event) {
+    if (this.lookButtonDown) {
+        this.orbitCamera.pitch -= event.dy * this.orbitSensitivity;
+        this.orbitCamera.yaw -= event.dx * this.orbitSensitivity;
+
+    } else if (this.panButtonDown) {
+        this.pan(event);
+    }
+
+    this.lastPoint.set(event.x, event.y);
+};
+
+
+OrbitCameraInputMouse.prototype.onMouseWheel = function (event) {
+    this.orbitCamera.distance -= event.wheel * this.distanceSensitivity * (this.orbitCamera.distance * 0.1);
+    event.event.preventDefault();
+};
+
+
+OrbitCameraInputMouse.prototype.onMouseOut = function (event) {
+    this.lookButtonDown = false;
+    this.panButtonDown = false;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//                       Orbit Camera Touch Input Script                      //
+////////////////////////////////////////////////////////////////////////////////
+var OrbitCameraInputTouch = pc.createScript('orbitCameraInputTouch');
+
+OrbitCameraInputTouch.attributes.add('orbitSensitivity', {
+    type: 'number',
+    default: 0.4,
+    title: 'Orbit Sensitivity',
+    description: 'How fast the camera moves around the orbit. Higher is faster'
+});
+
+OrbitCameraInputTouch.attributes.add('distanceSensitivity', {
+    type: 'number',
+    default: 0.2,
+    title: 'Distance Sensitivity',
+    description: 'How fast the camera moves in and out. Higher is faster'
+});
+
+// initialize code called once per entity
+OrbitCameraInputTouch.prototype.initialize = function () {
+    this.orbitCamera = this.entity.script.orbitCamera;
+
+    // Store the position of the touch so we can calculate the distance moved
+    this.lastTouchPoint = new pc.Vec2();
+    this.lastPinchMidPoint = new pc.Vec2();
+    this.lastPinchDistance = 0;
+
+    if (this.orbitCamera && this.app.touch) {
+        // Use the same callback for the touchStart, touchEnd and touchCancel events as they
+        // all do the same thing which is to deal the possible multiple touches to the screen
+        this.app.touch.on(pc.EVENT_TOUCHSTART, this.onTouchStartEndCancel, this);
+        this.app.touch.on(pc.EVENT_TOUCHEND, this.onTouchStartEndCancel, this);
+        this.app.touch.on(pc.EVENT_TOUCHCANCEL, this.onTouchStartEndCancel, this);
+
+        this.app.touch.on(pc.EVENT_TOUCHMOVE, this.onTouchMove, this);
+
+        this.on('destroy', function () {
+            this.app.touch.off(pc.EVENT_TOUCHSTART, this.onTouchStartEndCancel, this);
+            this.app.touch.off(pc.EVENT_TOUCHEND, this.onTouchStartEndCancel, this);
+            this.app.touch.off(pc.EVENT_TOUCHCANCEL, this.onTouchStartEndCancel, this);
+
+            this.app.touch.off(pc.EVENT_TOUCHMOVE, this.onTouchMove, this);
+        });
+    }
+};
+
+
+OrbitCameraInputTouch.prototype.getPinchDistance = function (pointA, pointB) {
+    // Return the distance between the two points
+    var dx = pointA.x - pointB.x;
+    var dy = pointA.y - pointB.y;
+
+    return Math.sqrt((dx * dx) + (dy * dy));
+};
+
+
+OrbitCameraInputTouch.prototype.calcMidPoint = function (pointA, pointB, result) {
+    result.set(pointB.x - pointA.x, pointB.y - pointA.y);
+    result.scale(0.5);
+    result.x += pointA.x;
+    result.y += pointA.y;
+};
+
+
+OrbitCameraInputTouch.prototype.onTouchStartEndCancel = function (event) {
+    // We only care about the first touch for camera rotation. As the user touches the screen,
+    // we stored the current touch position
+    var touches = event.touches;
+    if (touches.length == 1) {
+        this.lastTouchPoint.set(touches[0].x, touches[0].y);
+
+    } else if (touches.length == 2) {
+        // If there are 2 touches on the screen, then set the pinch distance
+        this.lastPinchDistance = this.getPinchDistance(touches[0], touches[1]);
+        this.calcMidPoint(touches[0], touches[1], this.lastPinchMidPoint);
+    }
+};
+
+
+OrbitCameraInputTouch.fromWorldPoint = new pc.Vec3();
+OrbitCameraInputTouch.toWorldPoint = new pc.Vec3();
+OrbitCameraInputTouch.worldDiff = new pc.Vec3();
+
+
+OrbitCameraInputTouch.prototype.pan = function (midPoint) {
+    var fromWorldPoint = OrbitCameraInputTouch.fromWorldPoint;
+    var toWorldPoint = OrbitCameraInputTouch.toWorldPoint;
+    var worldDiff = OrbitCameraInputTouch.worldDiff;
+
+    // For panning to work at any zoom level, we use screen point to world projection
+    // to work out how far we need to pan the pivotEntity in world space
+    var camera = this.entity.camera;
+    var distance = this.orbitCamera.distance;
+
+    camera.screenToWorld(midPoint.x, midPoint.y, distance, fromWorldPoint);
+    camera.screenToWorld(this.lastPinchMidPoint.x, this.lastPinchMidPoint.y, distance, toWorldPoint);
+
+    worldDiff.sub2(toWorldPoint, fromWorldPoint);
+
+    this.orbitCamera.pivotPoint.add(worldDiff);
+};
+
+
+OrbitCameraInputTouch.pinchMidPoint = new pc.Vec2();
+
+OrbitCameraInputTouch.prototype.onTouchMove = function (event) {
+    var pinchMidPoint = OrbitCameraInputTouch.pinchMidPoint;
+
+    // We only care about the first touch for camera rotation. Work out the difference moved since the last event
+    // and use that to update the camera target position
+    var touches = event.touches;
+    if (touches.length == 1) {
+        var touch = touches[0];
+
+        this.orbitCamera.pitch -= (touch.y - this.lastTouchPoint.y) * this.orbitSensitivity;
+        this.orbitCamera.yaw -= (touch.x - this.lastTouchPoint.x) * this.orbitSensitivity;
+
+        this.lastTouchPoint.set(touch.x, touch.y);
+
+    } else if (touches.length == 2) {
+        // Calculate the difference in pinch distance since the last event
+        var currentPinchDistance = this.getPinchDistance(touches[0], touches[1]);
+        var diffInPinchDistance = currentPinchDistance - this.lastPinchDistance;
+        this.lastPinchDistance = currentPinchDistance;
+
+        this.orbitCamera.distance -= (diffInPinchDistance * this.distanceSensitivity * 0.1) * (this.orbitCamera.distance * 0.1);
+
+        // Calculate pan difference
+        this.calcMidPoint(touches[0], touches[1], pinchMidPoint);
+        this.pan(pinchMidPoint);
+        this.lastPinchMidPoint.copy(pinchMidPoint);
+    }
 };
