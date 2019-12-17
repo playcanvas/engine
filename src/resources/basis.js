@@ -21,23 +21,6 @@ Object.assign(pc, function () {
             cTFRGBA4444: 16                     // rgbq 4444
         };
 
-        /*
-        // duplicate mappings from pc.enums (see graphics.js)
-        var pc = {
-            PIXELFORMAT_R5_G6_B5: 3,
-            PIXELFORMAT_R4_G4_B4_A4: 5,
-            PIXELFORMAT_DXT1: 8,
-            PIXELFORMAT_DXT5: 10,
-            PIXELFORMAT_ETC1: 21,
-            PIXELFORMAT_ETC2_RGBA: 23,
-            PIXELFORMAT_PVRTC_4BPP_RGB_1: 26,
-            PIXELFORMAT_PVRTC_4BPP_RGBA_1: 27,
-            PIXELFORMAT_ASTC_4x4: 28,
-            PIXELFORMAT_ATC_RGB: 29,
-            PIXELFORMAT_ATC_RGBA: 30
-        };
-        */
-
         // Map GPU to basis format for textures without alpha
         var opaqueMapping = {
             astc: BASIS_FORMAT.cTFASTC_4x4,
