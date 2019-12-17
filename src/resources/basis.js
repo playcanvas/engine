@@ -1,61 +1,78 @@
 Object.assign(pc, function () {
 
-    // Basis compression format enums
-    // Note: these must match definitions in the BASIS module
-    var BASIS_FORMAT = {
-        cTFETC1: 0,                         // etc1
-        cTFETC2: 1,                         // etc2
-        cTFBC1: 2,                          // dxt1
-        cTFBC3: 3,                          // dxt5
-        cTFPVRTC1_4_RGB: 8,                 // PVRTC1 rgb
-        cTFPVRTC1_4_RGBA: 9,                // PVRTC1 rgba
-        cTFASTC_4x4: 10,                    // ASTC
-        cTFATC_RGB: 11,                     // ATC rgb
-        cTFATC_RGBA_INTERPOLATED_ALPHA: 12, // ATC rgba
-        // uncompressed (fallback) formats
-        cTFRGB565: 14,                      // rgb 565
-        cTFRGBA4444: 16                     // rgbq 4444
-    };
-
-    // Map GPU to basis format for textures without alpha
-    var opaqueMapping = {
-        astc: BASIS_FORMAT.cTFASTC_4x4,
-        dxt: BASIS_FORMAT.cTFBC1,
-        etc2: BASIS_FORMAT.cTFETC1,
-        etc1: BASIS_FORMAT.cTFETC1,
-        pvr: BASIS_FORMAT.cTFPVRTC1_4_RGB,
-        atc: BASIS_FORMAT.cTFATC_RGB,
-        none: BASIS_FORMAT.cTFRGB565
-    };
-
-    // Map GPU to basis format for textures with alpha
-    var alphaMapping = {
-        astc: BASIS_FORMAT.cTFASTC_4x4,
-        dxt: BASIS_FORMAT.cTFBC3,
-        etc2: BASIS_FORMAT.cTFETC2,
-        etc1: BASIS_FORMAT.cTFRGBA4444,
-        pvr: BASIS_FORMAT.cTFPVRTC1_4_RGBA,
-        atc: BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA,
-        none: BASIS_FORMAT.cTFRGBA4444
-    };
-
-    // Map basis format to engine pixel format
-    var basisToEngineMapping = { };
-    basisToEngineMapping[BASIS_FORMAT.cTFETC1]          = pc.PIXELFORMAT_ETC1;
-    basisToEngineMapping[BASIS_FORMAT.cTFETC2]          = pc.PIXELFORMAT_ETC2_RGBA;
-    basisToEngineMapping[BASIS_FORMAT.cTFBC1]           = pc.PIXELFORMAT_DXT1;
-    basisToEngineMapping[BASIS_FORMAT.cTFBC3]           = pc.PIXELFORMAT_DXT5;
-    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGB]  = pc.PIXELFORMAT_PVRTC_4BPP_RGB_1;
-    basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGBA] = pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1;
-    basisToEngineMapping[BASIS_FORMAT.cTFASTC_4x4]      = pc.PIXELFORMAT_ASTC_4x4;
-    basisToEngineMapping[BASIS_FORMAT.cTFATC_RGB]       = pc.PIXELFORMAT_ATC_RGB;
-    basisToEngineMapping[BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA] = pc.PIXELFORMAT_ATC_RGBA;
-    basisToEngineMapping[BASIS_FORMAT.cTFRGB565]        = pc.PIXELFORMAT_R5_G6_B5;
-    basisToEngineMapping[BASIS_FORMAT.cTFRGBA4444]      = pc.PIXELFORMAT_R4_G4_B4_A4;
-
     // Basis worker function. The function assumes BASIS module is loaded as well as the format
     // mappings above.
     var BasisWorker = function () {
+
+        // Basis compression format enums
+        // Note: these must match definitions in the BASIS module
+        var BASIS_FORMAT = {
+            cTFETC1: 0,                         // etc1
+            cTFETC2: 1,                         // etc2
+            cTFBC1: 2,                          // dxt1
+            cTFBC3: 3,                          // dxt5
+            cTFPVRTC1_4_RGB: 8,                 // PVRTC1 rgb
+            cTFPVRTC1_4_RGBA: 9,                // PVRTC1 rgba
+            cTFASTC_4x4: 10,                    // ASTC
+            cTFATC_RGB: 11,                     // ATC rgb
+            cTFATC_RGBA_INTERPOLATED_ALPHA: 12, // ATC rgba
+            // uncompressed (fallback) formats
+            cTFRGB565: 14,                      // rgb 565
+            cTFRGBA4444: 16                     // rgbq 4444
+        };
+
+        /*
+        // duplicate mappings from pc.enums (see graphics.js)
+        var pc = {
+            PIXELFORMAT_R5_G6_B5: 3,
+            PIXELFORMAT_R4_G4_B4_A4: 5,
+            PIXELFORMAT_DXT1: 8,
+            PIXELFORMAT_DXT5: 10,
+            PIXELFORMAT_ETC1: 21,
+            PIXELFORMAT_ETC2_RGBA: 23,
+            PIXELFORMAT_PVRTC_4BPP_RGB_1: 26,
+            PIXELFORMAT_PVRTC_4BPP_RGBA_1: 27,
+            PIXELFORMAT_ASTC_4x4: 28,
+            PIXELFORMAT_ATC_RGB: 29,
+            PIXELFORMAT_ATC_RGBA: 30
+        };
+        */
+
+        // Map GPU to basis format for textures without alpha
+        var opaqueMapping = {
+            astc: BASIS_FORMAT.cTFASTC_4x4,
+            dxt: BASIS_FORMAT.cTFBC1,
+            etc2: BASIS_FORMAT.cTFETC1,
+            etc1: BASIS_FORMAT.cTFETC1,
+            pvr: BASIS_FORMAT.cTFPVRTC1_4_RGB,
+            atc: BASIS_FORMAT.cTFATC_RGB,
+            none: BASIS_FORMAT.cTFRGB565
+        };
+
+        // Map GPU to basis format for textures with alpha
+        var alphaMapping = {
+            astc: BASIS_FORMAT.cTFASTC_4x4,
+            dxt: BASIS_FORMAT.cTFBC3,
+            etc2: BASIS_FORMAT.cTFETC2,
+            etc1: BASIS_FORMAT.cTFRGBA4444,
+            pvr: BASIS_FORMAT.cTFPVRTC1_4_RGBA,
+            atc: BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA,
+            none: BASIS_FORMAT.cTFRGBA4444
+        };
+
+        // Map basis format to engine pixel format
+        var basisToEngineMapping = { };
+        basisToEngineMapping[BASIS_FORMAT.cTFETC1]          = pc.PIXELFORMAT_ETC1;
+        basisToEngineMapping[BASIS_FORMAT.cTFETC2]          = pc.PIXELFORMAT_ETC2_RGBA;
+        basisToEngineMapping[BASIS_FORMAT.cTFBC1]           = pc.PIXELFORMAT_DXT1;
+        basisToEngineMapping[BASIS_FORMAT.cTFBC3]           = pc.PIXELFORMAT_DXT5;
+        basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGB]  = pc.PIXELFORMAT_PVRTC_4BPP_RGB_1;
+        basisToEngineMapping[BASIS_FORMAT.cTFPVRTC1_4_RGBA] = pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1;
+        basisToEngineMapping[BASIS_FORMAT.cTFASTC_4x4]      = pc.PIXELFORMAT_ASTC_4x4;
+        basisToEngineMapping[BASIS_FORMAT.cTFATC_RGB]       = pc.PIXELFORMAT_ATC_RGB;
+        basisToEngineMapping[BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA] = pc.PIXELFORMAT_ATC_RGBA;
+        basisToEngineMapping[BASIS_FORMAT.cTFRGB565]        = pc.PIXELFORMAT_R5_G6_B5;
+        basisToEngineMapping[BASIS_FORMAT.cTFRGBA4444]      = pc.PIXELFORMAT_R4_G4_B4_A4;
 
         // transcode the basis super-compressed data into one of the runtime gpu native formats
         var transcode = function (basis, url, format, data) {
@@ -270,6 +287,16 @@ Object.assign(pc, function () {
         }
     };
 
+    var extractPixelFormats = function () {
+        var result = { };
+        for (var key in pc) {
+            if (pc.hasOwnProperty(key) && key.startsWith('PIXELFORMAT_')) {
+                result[key] = pc[key];
+            }
+        }
+        return result;
+    };
+
     // initialize the basis worker given the basis module script (glue or fallback)
     // and the optional accompanying wasm binary.
     var basisInitialize = function (basisCode, basisModule, callback) {
@@ -277,9 +304,7 @@ Object.assign(pc, function () {
             "/* basis.js */",
             basisCode,
             "/* mappings */",
-            "var opaqueMapping=" + JSON.stringify(opaqueMapping) + ";",
-            "var alphaMapping=" + JSON.stringify(alphaMapping) + ";",
-            "var basisToEngineMapping=" + JSON.stringify(basisToEngineMapping) + ";",
+            "var pc=" + JSON.stringify(extractPixelFormats()) + ";\n",
             " /* worker */",
             '(' + BasisWorker.toString() + ')()\n\n'
         ].join('\n');
