@@ -7,7 +7,7 @@ CharacterController.attributes.add('speed', { type: 'number', default: 5 });
 CharacterController.attributes.add('jumpImpulse', { type: 'number', default: 400 });
 
 // initialize code called once per entity
-CharacterController.prototype.initialize = function() {
+CharacterController.prototype.initialize = function () {
     this.groundCheckRay = new pc.Vec3(0, -1.2, 0);
     this.rayEnd = new pc.Vec3();
 
@@ -42,11 +42,11 @@ CharacterController.prototype.jump = function () {
 };
 
 // update code called every frame
-CharacterController.prototype.update = function(dt) {
+CharacterController.prototype.update = function (dt) {
     var pos = this.entity.getPosition();
     this.rayEnd.add2(pos, this.groundCheckRay);
 
-    // Fire a ray straight down to just below the bottom of the rigid body, 
+    // Fire a ray straight down to just below the bottom of the rigid body,
     // if it hits something then the character is standing on something.
     var result = this.app.systems.rigidbody.raycastFirst(pos, this.rayEnd);
     this.onGround = !!result;
