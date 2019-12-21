@@ -494,8 +494,8 @@ Object.assign(pc, function () {
             pc.CollisionSystemImpl.prototype.updateTransform.call(this, component, position, rotation, scale);
         },
 
-        destroyShape: function(data) {
-            if (! data.shape)
+        destroyShape: function (data) {
+            if (!data.shape)
                 return;
 
             var numShapes = data.shape.getNumChildShapes();
