@@ -453,10 +453,7 @@ Object.assign(pc, function () {
             var data = component.data;
 
             if (data.model) {
-                if (data.shape) {
-                    Ammo.destroy(data.shape);
-                    data.shape = null;
-                }
+                this.destroyShape(data);
 
                 data.shape = this.createPhysicalShape(entity, data);
 
@@ -497,15 +494,22 @@ Object.assign(pc, function () {
             pc.CollisionSystemImpl.prototype.updateTransform.call(this, component, position, rotation, scale);
         },
 
-        remove: function (entity, data) {
-            if (data.shape) {
-                var numShapes = data.shape.getNumChildShapes();
-                for (var i = 0; i < numShapes; i++) {
-                    var shape = data.shape.getChildShape(i);
-                    Ammo.destroy(shape);
-                }
+        destroyShape: function(data) {
+            if (! data.shape)
+                return;
+
+            var numShapes = data.shape.getNumChildShapes();
+            for (var i = 0; i < numShapes; i++) {
+                var shape = data.shape.getChildShape(i);
+                Ammo.destroy(shape);
             }
 
+            Ammo.destroy(data.shape);
+            data.shape = null;
+        },
+
+        remove: function (entity, data) {
+            this.destroyShape(data);
             CollisionSystemImpl.prototype.remove.call(this, entity, data);
         }
     });
