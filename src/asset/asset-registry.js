@@ -536,12 +536,6 @@ Object.assign(pc, function () {
             var count = mapping.mapping.length;
             var materials = [];
 
-            var done = function (err, loadedMaterials) {
-                self._loadTextures(loadedMaterials, function (e, textures) {
-                    callback(null, loadedMaterials);
-                });
-            };
-
             if (count === 0) {
                 callback(null, materials);
             }
@@ -550,7 +544,7 @@ Object.assign(pc, function () {
                 materials.push(asset);
                 count--;
                 if (count === 0)
-                    done(null, materials);
+                    callback(null, materials);
             };
 
             for (i = 0; i < mapping.mapping.length; i++) {
