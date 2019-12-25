@@ -104,7 +104,6 @@ Object.assign(pc, function () {
      * @event
      * @name pc.RigidBodyComponent#triggerenter
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
-     * a {@link pc.CollisionComponent} attached.
      * @param {pc.Entity} other The {@link pc.Entity} with trigger volume that this rigidbody entered.
      */
 
@@ -112,7 +111,6 @@ Object.assign(pc, function () {
      * @event
      * @name pc.RigidBodyComponent#triggerleave
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
-     * a {@link pc.CollisionComponent} attached.
      * @param {pc.Entity} other The {@link pc.Entity} with trigger volume that this rigidbody exited.
      */
 
