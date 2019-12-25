@@ -531,6 +531,13 @@ Object.assign(pc, function () {
 
         // private method used for engine-only loading of model data
         _loadMaterials: function (dir, mapping, callback) {
+            if (dir) {
+                dir += '/';
+                if (this.prefix && dir.startsWith(this.prefix)) {
+                    dir = dir.slice(this.prefix.length);
+                }
+            }
+
             var self = this;
             var i;
             var count = mapping.mapping.length;
@@ -582,6 +589,14 @@ Object.assign(pc, function () {
 
                 var url = materialAssets[i].getFileUrl();
                 var dir = pc.path.getDirectory(url);
+                if (dir) {
+                    dir += '/';
+
+                    if (this.prefix && dir.startsWith(this.prefix)) {
+                        dir = dir.slice(this.prefix.length);
+                    }
+                }
+
                 var textureUrl;
 
                 for (var pi = 0; pi < pc.StandardMaterial.TEXTURE_PARAMETERS.length; pi++) {
