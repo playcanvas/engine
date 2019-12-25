@@ -1171,6 +1171,9 @@ Object.assign(pc, function () {
                     // Clear parent
                     child._parent = null;
 
+                    // alert child that it has been removed
+                    if (child.fire) child.fire('remove', this);
+
                     // alert the parent that it has had a child removed
                     if (this.fire) this.fire('childremove', child);
 
