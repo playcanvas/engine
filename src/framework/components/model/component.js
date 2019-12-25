@@ -609,9 +609,10 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
-            if (this._model === value) {
+            var i;
+
+            if (this._model === value)
                 return;
-            }
 
             if (this._model) {
                 this.removeModelFromLayers(this._model);
@@ -622,7 +623,7 @@ Object.assign(pc, function () {
                     this._model.destroy();
                     this._clonedModel = false;
                 } else if (this._model) {
-                    for(var i = 0; i < this._model.meshInstances.length; i++) {
+                    for (i = 0; i < this._model.meshInstances.length; i++) {
                         var mesh = this._model.meshInstances[i];
                         if (! mesh._material) continue;
 
@@ -639,7 +640,7 @@ Object.assign(pc, function () {
             if (this._model) {
                 var meshInstances = this._model.meshInstances;
 
-                for (var i = 0; i < meshInstances.length; i++) {
+                for (i = 0; i < meshInstances.length; i++) {
                     meshInstances[i].castShadow = this._castShadows;
                     meshInstances[i].receiveShadow = this._receiveShadows;
                     meshInstances[i].isStatic = this._isStatic;
