@@ -532,8 +532,8 @@ Object.assign(pc, function () {
         // private method used for engine-only loading of model data
         _loadMaterials: function (dir, mapping, callback) {
             if (dir) {
-                // dir is generated from a call to pc.path.getDirectory never returns a path
-                // ending in a forward slash so add one here
+                // dir is generated from a call to pc.path.getDirectory which never returns
+                // a path ending in a forward slash so add one here
                 dir += '/';
                 if (this.prefix && dir.startsWith(this.prefix)) {
                     dir = dir.slice(this.prefix.length);
