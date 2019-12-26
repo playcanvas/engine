@@ -457,7 +457,7 @@ Object.assign(pc, function () {
             this.model = null;
         },
 
-        _setMaterial: function(material) {
+        _setMaterial: function (material) {
             if (this._material === material)
                 return;
 
