@@ -77,6 +77,8 @@ Object.assign(pc, function () {
         this._batchGroup = null;
         // #endif
 
+        entity.on('remove', this.onRemoveChild, this);
+        entity.on('insert', this.onInsertChild, this);
     };
     ModelComponent.prototype = Object.create(pc.Component.prototype);
     ModelComponent.prototype.constructor = ModelComponent;
@@ -98,15 +100,25 @@ Object.assign(pc, function () {
             }
         },
 
-        removeModelFromLayers: function (model) {
+        removeModelFromLayers: function () {
             var layer;
             var layers = this.system.app.scene.layers;
 
             for (var i = 0; i < this._layers.length; i++) {
                 layer = layers.getLayerById(this._layers[i]);
                 if (!layer) continue;
-                layer.removeMeshInstances(model.meshInstances);
+                layer.removeMeshInstances(this.meshInstances);
             }
+        },
+
+        onRemoveChild: function () {
+            if (! this._model) return;
+            this.removeModelFromLayers();
+        },
+
+        onInsertChild: function () {
+            if (! this._model) return;
+            this.addModelToLayers();
         },
 
         onRemove: function () {
@@ -117,6 +129,9 @@ Object.assign(pc, function () {
             }
             this.materialAsset = null;
             this._unsetMaterialEvents();
+
+            this.entity.off('remove', this.onRemoveChild, this);
+            this.entity.off('insert', this.onInsertChild, this);
         },
 
         onLayersChanged: function (oldComp, newComp) {
@@ -291,7 +306,7 @@ Object.assign(pc, function () {
             }
 
             if (this._model) {
-                this.removeModelFromLayers(this._model);
+                this.removeModelFromLayers();
             }
         },
 
@@ -629,7 +644,7 @@ Object.assign(pc, function () {
             }
 
             if (this._model) {
-                this.removeModelFromLayers(this._model);
+                this.removeModelFromLayers();
                 this.entity.removeChild(this._model.getGraph());
                 delete this._model._entity;
 
