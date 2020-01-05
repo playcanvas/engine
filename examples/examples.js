@@ -16,6 +16,7 @@ var categories = [
         examples: [
             "layers",
             "lights",
+            "lights-baked",
             "loader-obj",
             "material-physical",
             "model-asset",

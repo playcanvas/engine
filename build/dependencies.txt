@@ -1,4 +1,5 @@
 ../src/polyfill/math-log2.js
+../src/polyfill/math-sign.js
 ../src/polyfill/object-assign.js
 ../src/polyfill/pointer-lock.js
 ../src/polyfill/request-animation-frame.js
