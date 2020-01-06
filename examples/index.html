@@ -74,11 +74,7 @@
             // Navigation
             let navigationToggle = document.querySelector(".sidenav-toggle");
             navigationToggle.addEventListener("click", function (event){
-                if (sidenav.className === "sidenav closed") {
-                    sidenav.classList.remove("closed")
-                } else {
-                    sidenav.classList.add("closed")
-                }
+                sidenav.classList.toggle("closed");
             })
         </script>
     </body>
