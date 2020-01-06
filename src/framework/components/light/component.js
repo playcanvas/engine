@@ -376,7 +376,10 @@ Object.assign(pc, function () {
             var name;
             for (var i = 0; i < _props.length; i++) {
                 name = _props[i];
+
+                /* eslint-disable no-self-assign */
                 this[name] = this[name];
+                /* eslint-enable no-self-assign */
             }
             if (this.enabled && this.entity.enabled)
                 this.onEnable();
