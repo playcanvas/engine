@@ -50,6 +50,7 @@ Object.assign(pc, function () {
      * @param {Boolean} [options.cubemap] Specifies whether the texture is to be a cubemap. Defaults to false.
      * @param {Boolean} [options.volume] Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
      * @param {Boolean} [options.rgbm] Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
+     * @param {Boolean} [options.swizzleGGGR] Flag the texture as containing YYYX data for tangent space normal maps
      * @param {Boolean} [options.fixCubemapSeams] Specifies whether this cubemap texture requires special
      * seam fixing shader code to look right. Defaults to false.
      * @param {Boolean} [options.flipY] Specifies whether the texture should be flipped in the Y-direction. Only affects textures
@@ -101,6 +102,7 @@ Object.assign(pc, function () {
 
         this._format = pc.PIXELFORMAT_R8_G8_B8_A8;
         this.rgbm = false;
+        this.swizzleGGGR = false;
 
         this._cubemap = false;
         this._volume = false;
@@ -130,6 +132,7 @@ Object.assign(pc, function () {
 
             this._format = (options.format !== undefined) ? options.format : this._format;
             this.rgbm = (options.rgbm !== undefined) ? options.rgbm : this.rgbm;
+            this.swizzleGGGR = (options.swizzleGGGR !== undefined) ? options.swizzleGGGR : this.swizzleGGGR;
 
             if (options.mipmaps !== undefined) {
                 this._mipmaps = options.mipmaps;
