@@ -112,13 +112,13 @@ Object.assign(pc, function () {
         },
 
         onRemoveChild: function () {
-            if (! this._model) return;
-            this.removeModelFromLayers();
+            if (this._model)
+                this.removeModelFromLayers();
         },
 
         onInsertChild: function () {
-            if (! this._model) return;
-            this.addModelToLayers();
+            if (this._model && this.enabled && this.entity.enabled)
+                this.addModelToLayers();
         },
 
         onRemove: function () {
