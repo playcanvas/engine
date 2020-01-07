@@ -117,7 +117,7 @@ Object.assign(pc, function () {
         },
 
         onInsertChild: function () {
-            if (! this._model) return;
+            if (! this.entity.enabled || ! this.enabled || ! this._model) return;
             this.addModelToLayers();
         },
 
