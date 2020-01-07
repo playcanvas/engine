@@ -624,13 +624,7 @@ Object.assign(pc, function () {
                     this._clonedModel = false;
                 } else if (this._model) {
                     for (i = 0; i < this._model.meshInstances.length; i++) {
-                        var mesh = this._model.meshInstances[i];
-                        if (! mesh._material) continue;
-
-                        var ind = mesh._material.meshInstances.indexOf(mesh);
-                        if (ind === -1) continue;
-
-                        mesh._material.meshInstances.splice(i, 1);
+                        this._model.meshInstances[i].material = null;
                     }
                 }
             }
