@@ -1,4 +1,8 @@
 Object.assign(pc, function () {
+    var mat4 = new pc.Mat4();
+    var vec3 = new pc.Vec3();
+    var quat = new pc.Quat();
+
     var _schema = [
         'enabled',
         'type',
@@ -19,7 +23,7 @@ Object.assign(pc, function () {
     Object.assign(CollisionSystemImpl.prototype, {
         // Called before the call to system.super.initializeComponentData is made
         beforeInitialize: function (component, data) {
-            data.shape = this.createPhysicalShape(component.entity, data);
+            data.shape = null;
 
             data.model = new pc.Model();
             data.model.graph = new pc.GraphNode();
@@ -43,12 +47,71 @@ Object.assign(pc, function () {
             var data = component.data;
 
             if (typeof Ammo !== 'undefined') {
+                if (entity.trigger) {
+                    entity.trigger.destroy();
+                    delete entity.trigger;
+                }
+
+                if (data.shape) {
+                    if (component._compoundParent) {
+                        this.system._removeCompoundChild(component._compoundParent, data.shape);
+
+                        if (component._compoundParent.entity.rigidbody)
+                            component._compoundParent.entity.rigidbody.activate();
+                    }
+
+                    Ammo.destroy(data.shape);
+                    data.shape = null;
+                }
+
                 data.shape = this.createPhysicalShape(component.entity, data);
+
+                var firstCompoundChild = ! component._compoundParent;
+
+                if (data.type === 'compound' && (! component._compoundParent || component === component._compoundParent)) {
+                    component._compoundParent = component;
+
+                    entity.forEach(this._addEachDescendant, component);
+                } else if (data.type !== 'compound') {
+                    if (component._compoundParent && component === component._compoundParent) {
+                        entity.forEach(this.system.implementations.compound._updateEachDescendant, component);
+                    }
+
+                    if (! component.rigidbody) {
+                        component._compoundParent = null;
+                        var parent = entity.parent;
+                        while (parent) {
+                            if (parent.collision && parent.collision.type === 'compound') {
+                                component._compoundParent = parent.collision;
+                                break;
+                            }
+                            parent = parent.parent;
+                        }
+                    }
+                }
+
+                if (component._compoundParent) {
+                    if (component !== component._compoundParent) {
+                        if (firstCompoundChild && component._compoundParent.shape.getNumChildShapes() === 0) {
+                            this.system.recreatePhysicalShapes(component._compoundParent);
+                        } else {
+                            this.system.updateCompoundChildTransform(entity);
+
+                            if (component._compoundParent.entity.rigidbody)
+                                component._compoundParent.entity.rigidbody.activate();
+                        }
+                    }
+                }
+
                 if (entity.rigidbody) {
                     entity.rigidbody.disableSimulation();
                     entity.rigidbody.createBody();
-                } else {
-                    if (!entity.trigger) {
+
+                    if (entity.enabled && entity.rigidbody.enabled) {
+                        entity.rigidbody.enableSimulation();
+                    }
+                } else if (! component._compoundParent) {
+                    if (! entity.trigger) {
                         entity.trigger = new pc.Trigger(this.system.app, component, data);
                     } else {
                         entity.trigger.initialize(data);
@@ -67,6 +130,22 @@ Object.assign(pc, function () {
         updateTransform: function (component, position, rotation, scale) {
             if (component.entity.trigger) {
                 component.entity.trigger.syncEntityToBody();
+            }
+        },
+
+        beforeRemove: function (entity, component) {
+            if (component.data.shape) {
+                if (component._compoundParent && ! component._compoundParent.entity._destroying) {
+                    this.system._removeCompoundChild(component._compoundParent, component.data.shape);
+
+                    if (component._compoundParent.entity.rigidbody)
+                        component._compoundParent.entity.rigidbody.activate();
+                }
+
+                component._compoundParent = null;
+
+                Ammo.destroy(component.data.shape);
+                component.data.shape = null;
             }
         },
 
@@ -120,7 +199,9 @@ Object.assign(pc, function () {
             if (typeof Ammo !== 'undefined') {
                 var he = data.halfExtents;
                 var ammoHe = new Ammo.btVector3(he ? he.x : 0.5, he ? he.y : 0.5, he ? he.z : 0.5);
-                return new Ammo.btBoxShape(ammoHe);
+                var shape = new Ammo.btBoxShape(ammoHe);
+                Ammo.destroy(ammoHe);
+                return shape;
             }
             return undefined;
         }
@@ -204,6 +285,10 @@ Object.assign(pc, function () {
                         break;
                 }
             }
+
+            if (halfExtents)
+                Ammo.destroy(halfExtents);
+
             return shape;
         }
     });
@@ -260,58 +345,61 @@ Object.assign(pc, function () {
                 for (i = 0; i < model.meshInstances.length; i++) {
                     var meshInstance = model.meshInstances[i];
                     var mesh = meshInstance.mesh;
-                    var ib = mesh.indexBuffer[pc.RENDERSTYLE_SOLID];
-                    var vb = mesh.vertexBuffer;
+                    var triMesh;
 
-                    var format = vb.getFormat();
-                    var stride = format.size / 4;
-                    var positions;
-                    for (j = 0; j < format.elements.length; j++) {
-                        var element = format.elements[j];
-                        if (element.name === pc.SEMANTIC_POSITION) {
-                            positions = new Float32Array(vb.lock(), element.offset);
+                    if (this.system._triMeshCache[mesh.id]) {
+                        triMesh = this.system._triMeshCache[mesh.id];
+                    } else {
+                        var ib = mesh.indexBuffer[pc.RENDERSTYLE_SOLID];
+                        var vb = mesh.vertexBuffer;
+
+                        var format = vb.getFormat();
+                        var stride = format.size / 4;
+                        var positions;
+                        for (j = 0; j < format.elements.length; j++) {
+                            var element = format.elements[j];
+                            if (element.name === pc.SEMANTIC_POSITION) {
+                                positions = new Float32Array(vb.lock(), element.offset);
+                            }
                         }
-                    }
 
-                    var indices = new Uint16Array(ib.lock());
-                    var numTriangles = mesh.primitive[0].count / 3;
+                        var indices = new Uint16Array(ib.lock());
+                        var numTriangles = mesh.primitive[0].count / 3;
 
-                    var v1 = new Ammo.btVector3();
-                    var v2 = new Ammo.btVector3();
-                    var v3 = new Ammo.btVector3();
-                    var i1, i2, i3;
+                        var v1 = new Ammo.btVector3();
+                        var v2 = new Ammo.btVector3();
+                        var v3 = new Ammo.btVector3();
+                        var i1, i2, i3;
 
-                    var base = mesh.primitive[0].base;
-                    var triMesh = new Ammo.btTriangleMesh();
-                    for (j = 0; j < numTriangles; j++) {
-                        i1 = indices[base + j * 3] * stride;
-                        i2 = indices[base + j * 3 + 1] * stride;
-                        i3 = indices[base + j * 3 + 2] * stride;
-                        v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
-                        v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
-                        v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
-                        triMesh.addTriangle(v1, v2, v3, true);
+                        var base = mesh.primitive[0].base;
+                        triMesh = new Ammo.btTriangleMesh();
+                        this.system._triMeshCache[mesh.id] = triMesh;
+
+                        for (j = 0; j < numTriangles; j++) {
+                            i1 = indices[base + j * 3] * stride;
+                            i2 = indices[base + j * 3 + 1] * stride;
+                            i3 = indices[base + j * 3 + 2] * stride;
+                            v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
+                            v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
+                            v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
+                            triMesh.addTriangle(v1, v2, v3, true);
+                        }
+
+                        Ammo.destroy(v1);
+                        Ammo.destroy(v2);
+                        Ammo.destroy(v3);
                     }
 
                     var useQuantizedAabbCompression = true;
                     var triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
 
-                    var wtm = meshInstance.node.getWorldTransform();
-                    var scl = wtm.getScale();
-                    triMeshShape.setLocalScaling(new Ammo.btVector3(scl.x, scl.y, scl.z));
+                    var scaling = this.system._getNodeScaling(meshInstance.node);
+                    triMeshShape.setLocalScaling(scaling);
+                    Ammo.destroy(scaling);
 
-                    var pos = meshInstance.node.getPosition();
-                    var rot = meshInstance.node.getRotation();
-
-                    var transform = new Ammo.btTransform();
-                    transform.setIdentity();
-                    transform.getOrigin().setValue(pos.x, pos.y, pos.z);
-
-                    var ammoQuat = new Ammo.btQuaternion();
-                    ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
-                    transform.setRotation(ammoQuat);
-
+                    var transform = this.system._getNodeTransform(meshInstance.node);
                     shape.addChildShape(transform, triMeshShape);
+                    Ammo.destroy(transform);
                 }
 
                 var entityTransform = entity.getWorldTransform();
@@ -319,6 +407,7 @@ Object.assign(pc, function () {
                 var vec = new Ammo.btVector3();
                 vec.setValue(scale.x, scale.y, scale.z);
                 shape.setLocalScaling(vec);
+                Ammo.destroy(vec);
 
                 return shape;
             }
@@ -364,23 +453,26 @@ Object.assign(pc, function () {
             var data = component.data;
 
             if (data.model) {
-                if (data.shape) {
-                    Ammo.destroy(data.shape);
-                }
+                this.destroyShape(data);
 
                 data.shape = this.createPhysicalShape(entity, data);
 
                 if (entity.rigidbody) {
+                    entity.rigidbody.disableSimulation();
                     entity.rigidbody.createBody();
+
+                    if (entity.enabled && entity.rigidbody.enabled) {
+                        entity.rigidbody.enableSimulation();
+                    }
                 } else {
                     if (!entity.trigger) {
                         entity.trigger = new pc.Trigger(this.system.app, component, data);
                     } else {
                         entity.trigger.initialize(data);
                     }
-
                 }
             } else {
+                this.beforeRemove(entity, component);
                 this.remove(entity, data);
             }
         },
@@ -400,6 +492,73 @@ Object.assign(pc, function () {
             }
 
             pc.CollisionSystemImpl.prototype.updateTransform.call(this, component, position, rotation, scale);
+        },
+
+        destroyShape: function (data) {
+            if (!data.shape)
+                return;
+
+            var numShapes = data.shape.getNumChildShapes();
+            for (var i = 0; i < numShapes; i++) {
+                var shape = data.shape.getChildShape(i);
+                Ammo.destroy(shape);
+            }
+
+            Ammo.destroy(data.shape);
+            data.shape = null;
+        },
+
+        remove: function (entity, data) {
+            this.destroyShape(data);
+            CollisionSystemImpl.prototype.remove.call(this, entity, data);
+        }
+    });
+
+    // Compound Collision System
+    var CollisionCompoundSystemImpl = function (system) {
+        CollisionSystemImpl.call(this, system);
+    };
+    CollisionCompoundSystemImpl.prototype = Object.create(CollisionSystemImpl.prototype);
+    CollisionCompoundSystemImpl.prototype.constructor = CollisionCompoundSystemImpl;
+
+    Object.assign(CollisionCompoundSystemImpl.prototype, {
+        createPhysicalShape: function (entity, data) {
+            if (typeof Ammo !== 'undefined') {
+                return new Ammo.btCompoundShape();
+            }
+            return undefined;
+        },
+
+        _addEachDescendant: function (entity) {
+            if (! entity.collision || entity.rigidbody)
+                return;
+
+            entity.collision._compoundParent = this;
+
+            if (entity !== this.entity) {
+                entity.collision.system.recreatePhysicalShapes(entity.collision);
+            }
+        },
+
+        _updateEachDescendant: function (entity) {
+            if (! entity.collision)
+                return;
+
+            if (entity.collision._compoundParent !== this)
+                return;
+
+            entity.collision._compoundParent = null;
+
+            if (entity !== this.entity && ! entity.rigidbody) {
+                entity.collision.system.recreatePhysicalShapes(entity.collision);
+            }
+        },
+
+        _updateEachDescendantTransform: function (entity) {
+            if (! entity.collision || entity.collision._compoundParent !== this.collision._compoundParent)
+                return;
+
+            this.collision.system.updateCompoundChildTransform(entity);
         }
     });
 
@@ -424,6 +583,9 @@ Object.assign(pc, function () {
 
         this.implementations = { };
 
+        this._triMeshCache = { };
+
+        this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
 
         pc.ComponentSystem.bind('update', this.onUpdate, this);
@@ -510,6 +672,9 @@ Object.assign(pc, function () {
                     case 'mesh':
                         impl = new CollisionMeshSystemImpl(this);
                         break;
+                    case 'compound':
+                        impl = new CollisionCompoundSystemImpl(this);
+                        break;
                     default:
                         // #ifdef DEBUG
                         console.error("_createImplementation: Invalid collision system type: " + type);
@@ -530,6 +695,11 @@ Object.assign(pc, function () {
             return this._getImplementation(entity).clone(entity, clone);
         },
 
+        onBeforeRemove: function (entity, component) {
+            this.implementations[component.data.type].beforeRemove(entity, component);
+            component.onBeforeRemove();
+        },
+
         onRemove: function (entity, data) {
             this.implementations[data.type].remove(entity, data);
         },
@@ -543,9 +713,54 @@ Object.assign(pc, function () {
                 data = components[id].data;
 
                 if (data.enabled && entity.enabled) {
-                    if (!entity.rigidbody && entity.trigger) {
-                        entity.trigger.syncEntityToBody();
+                    if (! entity.rigidbody) {
+                        if (entity.collision._compoundParent && entity._dirtyWorld) {
+                            var dirty = entity._dirtyLocal;
+                            var parent = entity;
+                            while (parent && ! dirty) {
+                                if (parent.collision && parent.collision == entity.collision._compoundParent)
+                                    break;
+
+                                if (parent._dirtyLocal)
+                                    dirty = true;
+
+                                parent = parent.parent;
+                            }
+
+                            if (dirty) {
+                                entity.forEach(this.implementations.compound._updateEachDescendantTransform, entity);
+
+                                if (entity.collision._compoundParent.entity.rigidbody)
+                                    entity.collision._compoundParent.entity.rigidbody.activate();
+                            }
+                        } else if (entity.trigger) {
+                            entity.trigger.syncEntityToBody();
+                        }
                     }
+                }
+            }
+        },
+
+        updateCompoundChildTransform: function (entity) {
+            // TODO
+            // use updateChildTransform once it is exposed in ammo.js
+
+            this._removeCompoundChild(entity.collision._compoundParent, entity.collision.data.shape);
+
+            if (entity.enabled && entity.collision.enabled) {
+                var transform = this._getNodeTransform(entity, entity.collision._compoundParent.entity);
+                entity.collision._compoundParent.shape.addChildShape(transform, entity.collision.data.shape);
+                Ammo.destroy(transform);
+            }
+        },
+
+        _removeCompoundChild: function (collision, shape) {
+            if (collision.shape.removeChildShape) {
+                collision.shape.removeChildShape(shape);
+            } else {
+                var ind = collision._getCompoundChildShapeIndex(shape);
+                if (ind !== null) {
+                    collision.shape.removeChildShapeByIndex(ind);
                 }
             }
         },
@@ -556,13 +771,70 @@ Object.assign(pc, function () {
 
         // Destroys the previous collision type and creates a new one based on the new type provided
         changeType: function (component, previousType, newType) {
-            this.implementations[previousType].remove( component.entity, component.data);
+            this.implementations[previousType].beforeRemove(component.entity, component);
+            this.implementations[previousType].remove(component.entity, component.data);
             this._createImplementation(newType).reset(component, component.data);
         },
 
         // Recreates rigid bodies or triggers for the specified component
         recreatePhysicalShapes: function (component) {
             this.implementations[component.data.type].recreatePhysicalShapes(component);
+        },
+
+        _calculateNodeRelativeTransform: function (node, relative) {
+            if (node === relative) {
+                var scale = node.getWorldTransform().getScale();
+                mat4.setScale(scale.x, scale.y, scale.z);
+            } else {
+                this._calculateNodeRelativeTransform(node.parent, relative);
+                mat4.mul(node.getLocalTransform());
+            }
+        },
+
+        _getNodeScaling: function (node) {
+            var wtm = node.getWorldTransform();
+            var scl = wtm.getScale();
+            return new Ammo.btVector3(scl.x, scl.y, scl.z);
+        },
+
+        _getNodeTransform: function (node, relative) {
+            var pos, rot;
+
+            if (relative) {
+                this._calculateNodeRelativeTransform(node, relative);
+
+                pos = vec3;
+                rot = quat;
+
+                mat4.getTranslation(pos);
+                rot.setFromMat4(mat4);
+            } else {
+                pos = node.getPosition();
+                rot = node.getRotation();
+            }
+
+            var transform = new Ammo.btTransform();
+            transform.setIdentity();
+            var origin = transform.getOrigin();
+            origin.setValue(pos.x, pos.y, pos.z);
+
+            var ammoQuat = new Ammo.btQuaternion();
+            ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+            transform.setRotation(ammoQuat);
+            Ammo.destroy(ammoQuat);
+            Ammo.destroy(origin);
+
+            return transform;
+        },
+
+        destroy: function () {
+            for (var key in this._triMeshCache) {
+                Ammo.destroy(this._triMeshCache[key]);
+            }
+
+            this._triMeshCache = null;
+
+            pc.ComponentSystem.prototype.destroy.call(this);
         }
     });
 

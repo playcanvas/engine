@@ -22,9 +22,12 @@ Object.assign(pc, function () {
      * @property {pc.Asset|Number} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
-     * @property {Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
+     * @property {pc.Material} material The material {@link pc.Material} that will be used to render the model. Setting
+     * this property will apply the material to all mesh instances of the model.
+     * @property {pc.Asset|Number} materialAsset The material {@link pc.Asset} that will be used to render the model (not used on models of type 'asset')
      * @property {pc.Model} model The model that is added to the scene graph. It can be not set or loaded, so will return null.
-     * @property {Object} mapping A dictionary that holds material overrides for each mesh instance. Only applies to model components of type 'asset'. The mapping contains pairs of mesh instance index - material asset id.
+     * @property {Object} mapping A dictionary that holds material overrides for each mesh instance. Only applies to model
+     * components of type 'asset'. The mapping contains pairs of mesh instance index - material asset id.
      * @property {Boolean} castShadowsLightmap If true, this model will cast shadows when rendering lightmaps
      * @property {Boolean} lightmapped If true, this model will be lightmapped after using lightmapper.bake()
      * @property {Number} lightmapSizeMultiplier Lightmap resolution multiplier
@@ -74,6 +77,8 @@ Object.assign(pc, function () {
         this._batchGroup = null;
         // #endif
 
+        entity.on('remove', this.onRemoveChild, this);
+        entity.on('insert', this.onInsertChild, this);
     };
     ModelComponent.prototype = Object.create(pc.Component.prototype);
     ModelComponent.prototype.constructor = ModelComponent;
@@ -95,15 +100,25 @@ Object.assign(pc, function () {
             }
         },
 
-        removeModelFromLayers: function (model) {
+        removeModelFromLayers: function () {
             var layer;
             var layers = this.system.app.scene.layers;
 
             for (var i = 0; i < this._layers.length; i++) {
                 layer = layers.getLayerById(this._layers[i]);
                 if (!layer) continue;
-                layer.removeMeshInstances(model.meshInstances);
+                layer.removeMeshInstances(this.meshInstances);
             }
+        },
+
+        onRemoveChild: function () {
+            if (this._model)
+                this.removeModelFromLayers();
+        },
+
+        onInsertChild: function () {
+            if (this._model && this.enabled && this.entity.enabled)
+                this.addModelToLayers();
         },
 
         onRemove: function () {
@@ -114,6 +129,9 @@ Object.assign(pc, function () {
             }
             this.materialAsset = null;
             this._unsetMaterialEvents();
+
+            this.entity.off('remove', this.onRemoveChild, this);
+            this.entity.off('insert', this.onInsertChild, this);
         },
 
         onLayersChanged: function (oldComp, newComp) {
@@ -202,25 +220,23 @@ Object.assign(pc, function () {
             if (!materialAsset)
                 return;
 
-            if (materialAsset) {
-                if (materialAsset.resource) {
-                    meshInstance.material = materialAsset.resource;
+            if (materialAsset.resource) {
+                meshInstance.material = materialAsset.resource;
+
+                this._setMaterialEvent(index, 'remove', materialAsset.id, function () {
+                    meshInstance.material = this.system.defaultMaterial;
+                });
+            } else {
+                this._setMaterialEvent(index, 'load', materialAsset.id, function (asset) {
+                    meshInstance.material = asset.resource;
 
                     this._setMaterialEvent(index, 'remove', materialAsset.id, function () {
                         meshInstance.material = this.system.defaultMaterial;
                     });
-                } else {
-                    this._setMaterialEvent(index, 'load', materialAsset.id, function (asset) {
-                        meshInstance.material = asset.resource;
+                });
 
-                        this._setMaterialEvent(index, 'remove', materialAsset.id, function () {
-                            meshInstance.material = this.system.defaultMaterial;
-                        });
-                    });
-
-                    if (this.enabled && this.entity.enabled)
-                        assets.load(materialAsset);
-                }
+                if (this.enabled && this.entity.enabled)
+                    assets.load(materialAsset);
             }
         },
 
@@ -290,7 +306,7 @@ Object.assign(pc, function () {
             }
 
             if (this._model) {
-                this.removeModelFromLayers(this._model);
+                this.removeModelFromLayers();
             }
         },
 
@@ -376,11 +392,11 @@ Object.assign(pc, function () {
         },
 
         _onMaterialAssetLoad: function (asset) {
-            this.material = asset.resource;
+            this._setMaterial(asset.resource);
         },
 
         _onMaterialAssetUnload: function (asset) {
-            this.material = this.system.defaultMaterial;
+            this._setMaterial(this.system.defaultMaterial);
         },
 
         _onMaterialAssetRemove: function (asset) {
@@ -439,8 +455,22 @@ Object.assign(pc, function () {
 
         _onModelAssetRemove: function (asset) {
             this.model = null;
-        }
+        },
 
+        _setMaterial: function (material) {
+            if (this._material === material)
+                return;
+
+            this._material = material;
+
+            var model = this._model;
+            if (model && this._type !== 'asset') {
+                var meshInstances = model.meshInstances;
+                for (var i = 0, len = meshInstances.length; i < len; i++) {
+                    meshInstances[i].material = material;
+                }
+            }
+        }
     });
 
     Object.defineProperty(ModelComponent.prototype, "meshInstances", {
@@ -615,7 +645,7 @@ Object.assign(pc, function () {
                 return;
 
             if (this._model) {
-                this.removeModelFromLayers(this._model);
+                this.removeModelFromLayers();
                 this.entity.removeChild(this._model.getGraph());
                 delete this._model._entity;
 
@@ -890,13 +920,13 @@ Object.assign(pc, function () {
                 if (this._materialAsset) {
                     var asset = assets.get(this._materialAsset);
                     if (!asset) {
-                        this.material = this.system.defaultMaterial;
+                        this._setMaterial(this.system.defaultMaterial);
                         assets.on('add:' + this._materialAsset, this._onMaterialAssetAdd, this);
                     } else {
                         this._bindMaterialAsset(asset);
                     }
                 } else {
-                    this.material = this.system.defaultMaterial;
+                    this._setMaterial(this.system.defaultMaterial);
                 }
             }
         }
@@ -908,17 +938,12 @@ Object.assign(pc, function () {
         },
 
         set: function (value) {
-            if (this._material !== value) {
-                this._material = value;
+            if (this._material === value)
+                return;
 
-                var model = this._model;
-                if (model && this._type !== 'asset') {
-                    var meshInstances = model.meshInstances;
-                    for (var i = 0, len = meshInstances.length; i < len; i++) {
-                        meshInstances[i].material = value;
-                    }
-                }
-            }
+            this.materialAsset = null;
+
+            this._setMaterial(value);
         }
     });
 

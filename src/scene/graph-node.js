@@ -740,7 +740,7 @@ Object.assign(pc, function () {
          * @name pc.GraphNode#reparent
          * @description Remove graph node from current parent and add as child to new parent
          * @param {pc.GraphNode} parent New parent to attach graph node to
-         * @param {Number} index (optional) The child index where the child node should be placed.
+         * @param {Number} [index] The child index where the child node should be placed.
          */
         reparent: function (parent, index) {
             var current = this._parent;
@@ -1170,6 +1170,9 @@ Object.assign(pc, function () {
 
                     // Clear parent
                     child._parent = null;
+
+                    // alert child that it has been removed
+                    if (child.fire) child.fire('remove', this);
 
                     // alert the parent that it has had a child removed
                     if (this.fire) this.fire('childremove', child);

@@ -1056,7 +1056,6 @@ Object.assign(pc, function () {
                 this.skyboxModel = model;
 
                 skyLayer.addMeshInstances(model.meshInstances);
-                skyLayer.enabled = true;
                 this.skyLayer = skyLayer;
 
                 this.fire("set:skybox", usedTex);
@@ -1067,7 +1066,6 @@ Object.assign(pc, function () {
     Scene.prototype._resetSkyboxModel = function () {
         if (this.skyboxModel) {
             this.skyLayer.removeMeshInstances(this.skyboxModel.meshInstances);
-            this.skyLayer.enabled = false;
             this.skyboxModel.destroy();
         }
         this.skyboxModel = null;

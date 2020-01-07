@@ -100,6 +100,20 @@ Object.assign(pc, function () {
      * @param {pc.Entity} other The {@link pc.Entity} that stopped touching this rigid body.
      */
 
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#triggerenter
+     * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
+     * @param {pc.Entity} other The {@link pc.Entity} with trigger volume that this rigidbody entered.
+     */
+
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#triggerleave
+     * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
+     * @param {pc.Entity} other The {@link pc.Entity} with trigger volume that this rigidbody exited.
+     */
+
     Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
         get: function () {
             console.warn("WARNING: bodyType: Function is deprecated. Query type property instead.");
@@ -178,10 +192,8 @@ Object.assign(pc, function () {
             }
 
             if (shape) {
-                if (this.body) {
-                    this.system.removeBody(this.body);
-                    Ammo.destroy(this.body);
-                }
+                if (this.body)
+                    this.system.onRemove(this.entity, this);
 
                 var isStaticOrKinematic = this.isStaticOrKinematic();
                 var mass = isStaticOrKinematic ? 0 : this.mass;
@@ -197,13 +209,19 @@ Object.assign(pc, function () {
 
                 var startTransform = new Ammo.btTransform();
                 startTransform.setIdentity();
-                startTransform.getOrigin().setValue(pos.x, pos.y, pos.z);
+                var origin = startTransform.getOrigin();
+                origin.setValue(pos.x, pos.y, pos.z);
                 startTransform.setRotation(ammoQuat);
 
                 var motionState = new Ammo.btDefaultMotionState(startTransform);
                 var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
+                Ammo.destroy(localInertia);
+                Ammo.destroy(origin);
+                Ammo.destroy(startTransform);
+
                 var body = new Ammo.btRigidBody(bodyInfo);
+                Ammo.destroy(bodyInfo);
 
                 body.setRestitution(this.restitution);
                 body.setFriction(this.friction);
@@ -592,7 +610,8 @@ Object.assign(pc, function () {
                 var rot = this.entity.getRotation();
 
                 var transform = body.getWorldTransform();
-                transform.getOrigin().setValue(pos.x, pos.y, pos.z);
+                var origin = transform.getOrigin();
+                origin.setValue(pos.x, pos.y, pos.z);
 
                 ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
                 transform.setRotation(ammoQuat);
@@ -605,6 +624,8 @@ Object.assign(pc, function () {
                     }
                 }
 
+                Ammo.destroy(origin);
+                Ammo.destroy(transform);
                 body.activate();
             }
         },
@@ -733,6 +754,8 @@ Object.assign(pc, function () {
                 body.setMassProps(mass, localInertia);
                 body.updateInertiaTensor();
 
+                Ammo.destroy(localInertia);
+
                 if (isEnabled) {
                     this.enableSimulation();
                 }
@@ -820,7 +843,6 @@ Object.assign(pc, function () {
                 this.body.activate();
             }
         }
-
     });
 
     return {

@@ -240,9 +240,9 @@ Object.assign(pc, function () {
             if (data.body) {
                 this.removeBody(data.body);
                 Ammo.destroy(data.body);
-            }
 
-            data.body = null;
+                data.body = null;
+            }
         },
 
         addBody: function (body, group, mask) {
@@ -298,6 +298,9 @@ Object.assign(pc, function () {
                         new pc.Vec3(normal.x(), normal.y(), normal.z())
                     );
 
+                    Ammo.destroy(point);
+                    Ammo.destroy(normal);
+
                     // keeping for backwards compatibility
                     if (arguments.length > 2) {
                         var callback = arguments[2];
@@ -343,25 +346,34 @@ Object.assign(pc, function () {
         },
 
         _createContactPointFromAmmo: function (contactPoint) {
+            var localPointA = contactPoint.get_m_localPointA();
+            var localPointB = contactPoint.get_m_localPointB();
+            var positionWorldOnA = contactPoint.getPositionWorldOnA();
+            var positionWorldOnB = contactPoint.getPositionWorldOnB();
+            var normalWorldOnB = contactPoint.get_m_normalWorldOnB();
+
             var contact = this.contactPointPool.allocate();
-
-            contact.localPoint.set(contactPoint.get_m_localPointA().x(), contactPoint.get_m_localPointA().y(), contactPoint.get_m_localPointA().z());
-            contact.localPointOther.set(contactPoint.get_m_localPointB().x(), contactPoint.get_m_localPointB().y(), contactPoint.get_m_localPointB().z());
-            contact.point.set(contactPoint.getPositionWorldOnA().x(), contactPoint.getPositionWorldOnA().y(), contactPoint.getPositionWorldOnA().z());
-            contact.pointOther.set(contactPoint.getPositionWorldOnB().x(), contactPoint.getPositionWorldOnB().y(), contactPoint.getPositionWorldOnB().z());
-            contact.normal.set(contactPoint.get_m_normalWorldOnB().x(), contactPoint.get_m_normalWorldOnB().y(), contactPoint.get_m_normalWorldOnB().z());
-
+            contact.localPoint.set(localPointA.x(), localPointA.y(), localPointA.z());
+            contact.localPointOther.set(localPointB.x(), localPointB.y(), localPointB.z());
+            contact.point.set(positionWorldOnA.x(), positionWorldOnA.y(), positionWorldOnA.z());
+            contact.pointOther.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
+            contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
             return contact;
         },
 
         _createReverseContactPointFromAmmo: function (contactPoint) {
-            var contact = this.contactPointPool.allocate();
+            var localPointA = contactPoint.get_m_localPointA();
+            var localPointB = contactPoint.get_m_localPointB();
+            var positionWorldOnA = contactPoint.getPositionWorldOnA();
+            var positionWorldOnB = contactPoint.getPositionWorldOnB();
+            var normalWorldOnB = contactPoint.get_m_normalWorldOnB();
 
-            contact.localPointOther.set(contactPoint.get_m_localPointA().x(), contactPoint.get_m_localPointA().y(), contactPoint.get_m_localPointA().z());
-            contact.localPoint.set(contactPoint.get_m_localPointB().x(), contactPoint.get_m_localPointB().y(), contactPoint.get_m_localPointB().z());
-            contact.pointOther.set(contactPoint.getPositionWorldOnA().x(), contactPoint.getPositionWorldOnA().y(), contactPoint.getPositionWorldOnA().z());
-            contact.point.set(contactPoint.getPositionWorldOnB().x(), contactPoint.getPositionWorldOnB().y(), contactPoint.getPositionWorldOnB().z());
-            contact.normal.set(contactPoint.get_m_normalWorldOnB().x(), contactPoint.get_m_normalWorldOnB().y(), contactPoint.get_m_normalWorldOnB().z());
+            var contact = this.contactPointPool.allocate();
+            contact.localPointOther.set(localPointA.x(), localPointA.y(), localPointA.z());
+            contact.localPoint.set(localPointB.x(), localPointB.y(), localPointB.z());
+            contact.pointOther.set(positionWorldOnA.x(), positionWorldOnA.y(), positionWorldOnA.z());
+            contact.point.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
+            contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
             return contact;
         },
 
@@ -415,6 +427,9 @@ Object.assign(pc, function () {
                                 // handle a trigger entity
                                 if (entityCollision) {
                                     entityCollision.fire("triggerleave", other);
+                                }
+                                if (other.rigidbody) {
+                                    other.rigidbody.fire('triggerleave', entity);
                                 }
                             } else if (!other.trigger) {
                                 // suppress events if the other entity is a trigger
@@ -495,10 +510,13 @@ Object.assign(pc, function () {
             // loop through the all contacts and fire events
             for (i = 0; i < numManifolds; i++) {
                 var manifold = dispatcher.getManifoldByIndexInternal(i);
+
                 var body0 = manifold.getBody0();
                 var body1 = manifold.getBody1();
+
                 var wb0 = Ammo.castObject(body0, Ammo.btRigidBody);
                 var wb1 = Ammo.castObject(body1, Ammo.btRigidBody);
+
                 var e0 = wb0.entity;
                 var e1 = wb1.entity;
 
@@ -507,38 +525,57 @@ Object.assign(pc, function () {
                     continue;
                 }
 
-                var flags0 = body0.getCollisionFlags();
-                var flags1 = body1.getCollisionFlags();
+                var flags0 = wb0.getCollisionFlags();
+                var flags1 = wb1.getCollisionFlags();
 
                 var numContacts = manifold.getNumContacts();
                 var forwardContacts = [];
                 var reverseContacts = [];
-                var newCollision, e0Events, e1Events;
+                var newCollision, e0Events, e1Events, e0BodyEvents, e1BodyEvents;
 
                 if (numContacts > 0) {
                     // don't fire contact events for triggers
                     if ((flags0 & pc.BODYFLAG_NORESPONSE_OBJECT) ||
                         (flags1 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
 
-                        e0Events = e0.collision ? e0.collision.hasEvent("triggerenter") || e0.collision.hasEvent("triggerleave") : false;
-                        e1Events = e1.collision ? e1.collision.hasEvent("triggerenter") || e1.collision.hasEvent("triggerleave") : false;
+                        e0Events = e0.collision && (e0.collision.hasEvent("triggerenter") || e0.collision.hasEvent("triggerleave"));
+                        e1Events = e1.collision && (e1.collision.hasEvent("triggerenter") || e1.collision.hasEvent("triggerleave"));
+                        e0BodyEvents = e0.rigidbody && (e0.rigidbody.hasEvent("triggerenter") || e0.rigidbody.hasEvent("triggerleave"));
+                        e1BodyEvents = e1.rigidbody && (e1.rigidbody.hasEvent("triggerenter") || e1.rigidbody.hasEvent("triggerleave"));
 
-                        // fire triggerenter events
+                        // fire triggerenter events for triggers
                         if (e0Events) {
                             newCollision = this._storeCollision(e0, e1);
-                            if (newCollision) {
-                                if (e0.collision && !(flags1 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
-                                    e0.collision.fire("triggerenter", e1);
-                                }
+                            if (newCollision && !(flags1 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
+                                e0.collision.fire("triggerenter", e1);
                             }
                         }
 
                         if (e1Events) {
                             newCollision = this._storeCollision(e1, e0);
+                            if (newCollision && !(flags0 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
+                                e1.collision.fire("triggerenter", e0);
+                            }
+                        }
+
+                        // fire triggerenter events for rigidbodies
+                        if (e0BodyEvents) {
+                            if (! newCollision) {
+                                newCollision = this._storeCollision(e1, e0);
+                            }
+
                             if (newCollision) {
-                                if (e1.collision && !(flags0 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
-                                    e1.collision.fire("triggerenter", e0);
-                                }
+                                e0.rigidbody.fire("triggerenter", e1);
+                            }
+                        }
+
+                        if (e1BodyEvents) {
+                            if (! newCollision) {
+                                newCollision = this._storeCollision(e0, e1);
+                            }
+
+                            if (newCollision) {
+                                e1.rigidbody.fire("triggerenter", e0);
                             }
                         }
                     } else {
@@ -604,7 +641,6 @@ Object.assign(pc, function () {
                             }
                         }
                     }
-
                 }
             }
 
@@ -620,8 +656,6 @@ Object.assign(pc, function () {
             this._stats.physicsTime = pc.now() - this._stats.physicsStart;
             // #endif
         }
-
-
     });
 
     return {

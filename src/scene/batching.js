@@ -363,7 +363,7 @@ Object.assign(pc, function () {
             arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
         }
 
-        node.model.removeModelFromLayers(node.model.model);
+        node.model.removeModelFromLayers();
 
         // #ifdef DEBUG
         node.model._batchGroup = group;

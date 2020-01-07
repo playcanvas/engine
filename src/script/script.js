@@ -133,8 +133,7 @@ Object.assign(pc, function () {
      * @description Add Attribute
      * @param {String} name Name of an attribute
      * @param {Object} args Object with Arguments for an attribute
-     * @param {String} args.type Type of an attribute value, list of possible types:
-     * boolean, number, string, json, asset, entity, rgb, rgba, vec2, vec3, vec4, curve
+     * @param {("boolean"|"number"|"string"|"json"|"asset"|"entity"|"rgb"|"rgba"|"vec2"|"vec3"|"vec4"|"curve")} args.type Type of an attribute value
      * @param {*} [args.default] Default attribute value
      * @param {String} [args.title] Title for Editor's for field UI
      * @param {String} [args.description] Description for Editor's for field UI
@@ -369,7 +368,7 @@ Object.assign(pc, function () {
          * @static
          * @readonly
          * @type pc.ScriptAttributes
-         * @name pc.ScriptType.attributes
+         * @name pc.ScriptType#attributes
          * @description The interface to define attributes for Script Types. Refer to {@link pc.ScriptAttributes}
          * @example
          * var PlayerController = pc.createScript('playerController');
@@ -448,12 +447,14 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ScriptType#[update]
          * @description Called for enabled (running state) scripts on each tick.
+         * @param {Number} dt The delta time in seconds since the last frame.
          */
 
         /**
          * @function
          * @name pc.ScriptType#[postUpdate]
          * @description Called for enabled (running state) scripts on each tick, after update.
+         * @param {Number} dt The delta time in seconds since the last frame.
          */
 
         /**
