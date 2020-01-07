@@ -51,7 +51,7 @@ Object.assign(pc, function () {
      * @param {Boolean} [options.volume] Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
      * @param {Boolean} [options.rgbm] Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
      * @param {Boolean} [options.swizzleGGGR] Specifies whether the texture contains swizzled GGGR data for use with tangent space normal
-     * maps. The R component is stored in alpha and Y is stored in RGB. This packing can result in higher quality when the texture data
+     * maps. The R component is stored in alpha and G is stored in RGB. This packing can result in higher quality when the texture data
      * is compressed.
      * @param {Boolean} [options.fixCubemapSeams] Specifies whether this cubemap texture requires special
      * seam fixing shader code to look right. Defaults to false.
