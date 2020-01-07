@@ -300,6 +300,21 @@ Object.assign(pc, function () {
 
         onBeforeRemove: function () {
             this.entity.off('insert', this._onInsert, this);
+        },
+
+        /**
+         * @name pc.CollisionComponent#destroyTriMesh
+         * @function
+         * @description Destroy TriMesh object from Ammo memory and pc.CollisionComponentSystem cache.
+         */
+        destroyTriMesh: function () {
+            if (this.data.type !== 'mesh' || ! this.data.model)
+                return;
+
+            for (var i = 0; i < this.data.model.meshInstances.length; i++) {
+                var mesh = this.data.model.meshInstances[i].mesh;
+                this.system.destroyTriMesh(mesh);
+            }
         }
     });
 

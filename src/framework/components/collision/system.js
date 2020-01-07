@@ -835,6 +835,21 @@ Object.assign(pc, function () {
             this._triMeshCache = null;
 
             pc.ComponentSystem.prototype.destroy.call(this);
+        },
+
+        /**
+         * @name pc.CollisionComponentSystem#destroyTriMesh
+         * @function
+         * @param {pc.Mesh} mesh Mesh that TriMesh was generated from.
+         * @description Destroy TriMesh object from Ammo memory and pc.CollisionComponentSystem cache.
+         */
+        destroyTriMesh: function (mesh) {
+            var triMesh = this._triMeshCache[mesh.id];
+            if (! triMesh)
+                return;
+
+            Ammo.destroy(triMesh);
+            delete this._triMeshCache[mesh.id];
         }
     });
 
