@@ -52,7 +52,7 @@ Object.assign(pc, function () {
      * @param {Boolean} [options.rgbm] Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
      * @param {Boolean} [options.swizzleGGGR] Specifies whether the texture contains swizzled GGGR data for use with tangent space normal
      * maps. The R component is stored in alpha and G is stored in RGB. This packing can result in higher quality when the texture data
-     * is compressed.
+     * is compressed. Defaults to false.
      * @param {Boolean} [options.fixCubemapSeams] Specifies whether this cubemap texture requires special
      * seam fixing shader code to look right. Defaults to false.
      * @param {Boolean} [options.flipY] Specifies whether the texture should be flipped in the Y-direction. Only affects textures
