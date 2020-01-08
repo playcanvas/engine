@@ -106,7 +106,7 @@ Object.assign(pc, function () {
         options.occludeDirect = stdMat.occludeDirect;
         options.shadingModel = stdMat.shadingModel;
         options.fresnelModel = stdMat.fresnelModel;
-        options.packedNormal = stdMat.normalMap ? (stdMat.normalMap.format === pc.PIXELFORMAT_DXT5) : false;
+        options.packedNormal = stdMat.normalMap ? (stdMat.normalMap.format === pc.PIXELFORMAT_DXT5 || stdMat.normalMap.swizzleGGGR) : false;
         options.fastTbn = stdMat.fastTbn;
         options.cubeMapProjection = stdMat.cubeMapProjection;
         options.customFragmentShader = stdMat.customFragmentShader;
