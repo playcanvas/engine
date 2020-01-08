@@ -501,6 +501,15 @@ Object.assign(pc, function () {
             var rgbm = !!asset.data.rgbm;
             if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== rgbm)
                 texture.rgbm = rgbm;
+
+            if (asset.file && asset.getPreferredFile) {
+                var preferredFile = asset.getPreferredFile();
+                if (preferredFile) {
+                    if (preferredFile.opt && ((preferredFile.opt & 8) !== 0)) {
+                        texture.swizzleGGGR = true;
+                    }
+                }
+            }
         }
     });
 
