@@ -505,7 +505,7 @@ Object.assign(pc, function () {
             if (asset.file && asset.getPreferredFile) {
                 var preferredFile = asset.getPreferredFile();
                 if (preferredFile) {
-                    if (preferredFile.opt && ((preferredFile.opt & 8) != 0)) {
+                    if (preferredFile.opt && ((preferredFile.opt & 8) !== 0)) {
                         texture.swizzleGGGR = true;
                     }
                 }
