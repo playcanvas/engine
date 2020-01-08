@@ -1,4 +1,19 @@
 Object.assign(pc, function () {
+    var _passiveSupported = false;
+
+    try {
+        var options = {
+            get passive() {
+                _passiveSupported = true;
+                return false;
+            }
+        };
+        window.addEventListener("test", null, options);
+        window.removeEventListener("test", null, options);
+    } catch(err) {
+        _passiveSupported = false;
+    }
+
     /**
      * @constructor
      * @name pc.MouseEvent
@@ -168,21 +183,6 @@ Object.assign(pc, function () {
          * @param {Element} element The DOM element to attach the mouse to.
          */
         attach: function (element) {
-            var _passiveSupported = false;
-            
-            try {
-                var options = {
-                    get passive() {
-                        _passiveSupported = true;
-                        return false;
-                    }
-                };
-                window.addEventListener("test", null, options);
-                window.removeEventListener("test", null, options);
-            } catch(err) {
-                _passiveSupported = false;
-            }
-
             this._target = element;
 
             if (this._attached) return;
@@ -201,21 +201,6 @@ Object.assign(pc, function () {
          * @description Remove mouse events from the element that it is attached to
          */
         detach: function () {
-            var _passiveSupported = false;
-
-            try {
-                var options = {
-                    get passive() {
-                        _passiveSupported = true;
-                        return false;
-                    }
-                };
-                window.addEventListener("test", null, options);
-                window.removeEventListener("test", null, options);
-            } catch(err) {
-                _passiveSupported = false;
-            }
-
             if (!this._attached) return;
             this._attached = false;
             this._target = null;
