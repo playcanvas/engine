@@ -147,6 +147,20 @@ pc.path = function () {
             return "";
         },
 
+        /**
+         * @function
+         * @name pc.path.isRelativePath
+         * @description Check if a string s is relative path.
+         * @param {String} s The path to process.
+         * @returns {Boolean} True if s doesn't start with slash and doesn't include colon and double slash.
+         * @example
+         * pc.path.isRelativePath("file.txt"); // returns true
+         * pc.path.isRelativePath("path/to/file.txt"); // returns true
+         * pc.path.isRelativePath("./path/to/file.txt"); // returns true
+         * pc.path.isRelativePath("../path/to/file.jpg"); // returns true
+         * pc.path.isRelativePath("/path/to/file.jpg"); // returns false
+         * pc.path.isRelativePath("http://path/to/file.jpg"); // returns false
+         */
         isRelativePath: function (s) {
             return s.charAt(0) !== "/" && s.match(/:\/\//) === null;
         },
