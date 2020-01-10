@@ -165,6 +165,15 @@ pc.path = function () {
             return s.charAt(0) !== "/" && s.match(/:\/\//) === null;
         },
 
+        /**
+         * @function
+         * @name pc.path.extractPath
+         * @description Return the path without file name. if path is relative path, start with period.
+         * @param {String} s The full path to process.
+         * @returns {String} The path without a last element from list split by slash.
+         * @example
+         * pc.path.extractPath("path/to/file.txt"); // returns "./path/to"
+         */
         extractPath: function (s) {
             var path = ".",
                 parts = s.split("/"),
