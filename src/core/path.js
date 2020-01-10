@@ -128,7 +128,17 @@ pc.path = function () {
             var parts = path.split(pc.path.delimiter);
             return parts.slice(0, parts.length - 1).join(pc.path.delimiter);
         },
-
+        /**
+         * @function
+         * @name pc.path.getExtension
+         * @description Return the extension of the path. Pop the last value of a list after path is split by question mark and comma.
+         * @param {String} path The path to process.
+         * @returns {String} The extension.
+         * @example
+         * pc.path.getExtension("/path/to/file.txt"); // returns ".txt"
+         * pc.path.getExtension("/path/to/file.jpg"); // returns ".jpg"
+         * pc.path.getExtension("/path/to/file.txt?function=getExtension"); // returns ".txt"
+         */
         getExtension: function (path) {
             var ext = path.split('?')[0].split('.').pop();
             if (ext !== path) {
