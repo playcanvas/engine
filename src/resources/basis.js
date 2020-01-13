@@ -379,16 +379,19 @@ Object.assign(pc, function () {
     // search for wasm module in the global config and initialize basis
     var basisDownloadFromConfig = function (callback) {
         var modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
-        var wasmModule = modules.find(function (m) {
-            return m.moduleName === 'BASIS';
-        });
-        if (wasmModule) {
-            var urlBase = window.ASSET_PREFIX ? window.ASSET_PREFIX : "";
-            basisDownload(urlBase + wasmModule.glueUrl,
-                          urlBase + wasmModule.wasmUrl,
-                          urlBase + wasmModule.fallbackUrl,
-                          callback);
+        for (var i = 0; i < modules.length; ++i) {
+            if (modules[i].moduleName === 'BASIS') {
+                var urlBase = window.ASSET_PREFIX ? window.ASSET_PREFIX : "";
+                var wasmModule = modules[i];
+                basisDownload(urlBase + wasmModule.glueUrl,
+                              urlBase + wasmModule.wasmUrl,
+                              urlBase + wasmModule.fallbackUrl,
+                              callback);
+                return;
+            }
         }
+
+        console.error('basis download requested, but module config not found');
     };
 
     // render thread worker manager
