@@ -464,12 +464,7 @@ Object.assign(pc, function () {
                 self.add(asset);
             }
 
-            if (type === 'model') {
-                self._loadModel(asset, callback);
-                return;
-            }
-
-            asset.once("load", function (loadedAsset) {
+            var onLoadAsset = function (loadedAsset) {
                 if (type === 'material') {
                     self._loadTextures([loadedAsset], function (err, textures) {
                         if (err) {
@@ -481,7 +476,19 @@ Object.assign(pc, function () {
                 } else {
                     callback(null, loadedAsset);
                 }
-            });
+            };
+
+            if (asset.resource) {
+                onLoadAsset(asset);
+                return;
+            }
+
+            if (type === 'model') {
+                self._loadModel(asset, callback);
+                return;
+            }
+
+            asset.once("load", onLoadAsset);
             asset.once("error", function (err) {
                 callback(err);
             });
