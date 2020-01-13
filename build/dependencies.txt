@@ -1,3 +1,4 @@
+../src/polyfill/array-find.js
 ../src/polyfill/math-log2.js
 ../src/polyfill/math-sign.js
 ../src/polyfill/object-assign.js
