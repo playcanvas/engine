@@ -128,7 +128,17 @@ pc.path = function () {
             var parts = path.split(pc.path.delimiter);
             return parts.slice(0, parts.length - 1).join(pc.path.delimiter);
         },
-
+        /**
+         * @function
+         * @name pc.path.getExtension
+         * @description Return the extension of the path. Pop the last value of a list after path is split by question mark and comma.
+         * @param {String} path The path to process.
+         * @returns {String} The extension.
+         * @example
+         * pc.path.getExtension("/path/to/file.txt"); // returns ".txt"
+         * pc.path.getExtension("/path/to/file.jpg"); // returns ".jpg"
+         * pc.path.getExtension("/path/to/file.txt?function=getExtension"); // returns ".txt"
+         */
         getExtension: function (path) {
             var ext = path.split('?')[0].split('.').pop();
             if (ext !== path) {
@@ -137,10 +147,33 @@ pc.path = function () {
             return "";
         },
 
+        /**
+         * @function
+         * @name pc.path.isRelativePath
+         * @description Check if a string s is relative path.
+         * @param {String} s The path to process.
+         * @returns {Boolean} True if s doesn't start with slash and doesn't include colon and double slash.
+         * @example
+         * pc.path.isRelativePath("file.txt"); // returns true
+         * pc.path.isRelativePath("path/to/file.txt"); // returns true
+         * pc.path.isRelativePath("./path/to/file.txt"); // returns true
+         * pc.path.isRelativePath("../path/to/file.jpg"); // returns true
+         * pc.path.isRelativePath("/path/to/file.jpg"); // returns false
+         * pc.path.isRelativePath("http://path/to/file.jpg"); // returns false
+         */
         isRelativePath: function (s) {
             return s.charAt(0) !== "/" && s.match(/:\/\//) === null;
         },
 
+        /**
+         * @function
+         * @name pc.path.extractPath
+         * @description Return the path without file name. if path is relative path, start with period.
+         * @param {String} s The full path to process.
+         * @returns {String} The path without a last element from list split by slash.
+         * @example
+         * pc.path.extractPath("path/to/file.txt"); // returns "./path/to"
+         */
         extractPath: function (s) {
             var path = ".",
                 parts = s.split("/"),

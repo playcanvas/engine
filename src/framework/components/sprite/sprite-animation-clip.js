@@ -173,7 +173,7 @@ Object.assign(pc, function () {
                 }
             } else if (this._time > duration) {
                 if (this.loop) {
-                    this._time = this._time % duration;
+                    this._time %= duration;
                 } else {
                     this._time = duration;
                 }
@@ -363,6 +363,8 @@ Object.assign(pc, function () {
 
                     // if we have a time then force update
                     // frame based on the time (check if fps is not 0 otherwise time will be Infinity)
+
+                    /* eslint-disable no-self-assign */
                     if (this.time && this.fps) {
                         this.time = this.time;
                     } else {
@@ -370,6 +372,7 @@ Object.assign(pc, function () {
                         // then force update frame counter
                         this.frame = this.frame;
                     }
+                    /* eslint-enable no-self-assign */
                 }
             }
         }
