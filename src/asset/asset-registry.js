@@ -599,7 +599,7 @@ Object.assign(pc, function () {
                 for (var pi = 0; pi < pc.StandardMaterial.TEXTURE_PARAMETERS.length; pi++) {
                     var paramName = pc.StandardMaterial.TEXTURE_PARAMETERS[pi];
 
-                    if (materialData[paramName]) {
+                    if (materialData[paramName] && typeof(materialData[paramName]) === 'string') {
                         var texturePath = materialData[paramName];
                         textureUrl = pc.path.join(dir, texturePath);
                         if (!used[textureUrl]) {
