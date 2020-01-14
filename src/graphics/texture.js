@@ -500,7 +500,7 @@ Object.assign(pc, function () {
                         this._minFilter === pc.FILTER_LINEAR_MIPMAP_LINEAR) &&
                         !(this._compressed && this._levels.length === 1);
 
-            return Texture.calcGpuSize(this._width, this._height, this._depth, this._format, this._cubemap, mips);
+            return Texture.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
         }
     });
 
