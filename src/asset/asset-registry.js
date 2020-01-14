@@ -464,12 +464,7 @@ Object.assign(pc, function () {
                 self.add(asset);
             }
 
-            if (type === 'model') {
-                self._loadModel(asset, callback);
-                return;
-            }
-
-            asset.once("load", function (loadedAsset) {
+            var onLoadAsset = function (loadedAsset) {
                 if (type === 'material') {
                     self._loadTextures([loadedAsset], function (err, textures) {
                         if (err) {
@@ -481,7 +476,19 @@ Object.assign(pc, function () {
                 } else {
                     callback(null, loadedAsset);
                 }
-            });
+            };
+
+            if (asset.resource) {
+                onLoadAsset(asset);
+                return;
+            }
+
+            if (type === 'model') {
+                self._loadModel(asset, callback);
+                return;
+            }
+
+            asset.once("load", onLoadAsset);
             asset.once("error", function (err) {
                 callback(err);
             });
@@ -531,16 +538,19 @@ Object.assign(pc, function () {
 
         // private method used for engine-only loading of model data
         _loadMaterials: function (dir, mapping, callback) {
+            if (dir) {
+                // dir is generated from a call to pc.path.getDirectory which never returns
+                // a path ending in a forward slash so add one here
+                dir += '/';
+                if (this.prefix && dir.startsWith(this.prefix)) {
+                    dir = dir.slice(this.prefix.length);
+                }
+            }
+
             var self = this;
             var i;
             var count = mapping.mapping.length;
             var materials = [];
-
-            var done = function (err, loadedMaterials) {
-                self._loadTextures(loadedMaterials, function (e, textures) {
-                    callback(null, loadedMaterials);
-                });
-            };
 
             if (count === 0) {
                 callback(null, materials);
@@ -550,7 +560,7 @@ Object.assign(pc, function () {
                 materials.push(asset);
                 count--;
                 if (count === 0)
-                    done(null, materials);
+                    callback(null, materials);
             };
 
             for (i = 0; i < mapping.mapping.length; i++) {
@@ -582,12 +592,21 @@ Object.assign(pc, function () {
 
                 var url = materialAssets[i].getFileUrl();
                 var dir = pc.path.getDirectory(url);
+                if (dir) {
+                    // pc.path.getDirectory never returns a path ending in a forward slash so add one
+                    dir += '/';
+
+                    if (this.prefix && dir.startsWith(this.prefix)) {
+                        dir = dir.slice(this.prefix.length);
+                    }
+                }
+
                 var textureUrl;
 
                 for (var pi = 0; pi < pc.StandardMaterial.TEXTURE_PARAMETERS.length; pi++) {
                     var paramName = pc.StandardMaterial.TEXTURE_PARAMETERS[pi];
 
-                    if (materialData[paramName]) {
+                    if (materialData[paramName] && typeof(materialData[paramName]) === 'string') {
                         var texturePath = materialData[paramName];
                         textureUrl = pc.path.join(dir, texturePath);
                         if (!used[textureUrl]) {

@@ -101,6 +101,14 @@ Object.assign(pc, function () {
                 this.stop();
             }
 
+            // If not loaded and doesn't have asset - then we cannot play it.  Warn and exit.
+            if (!this.isLoaded && !this._hasAsset()) {
+                // #ifdef DEBUG
+                console.warn("Trying to play SoundSlot " + this._name + " but it is not loaded and doesn't have an asset.");
+                // #endif
+                return;
+            }
+
             var instance = this._createInstance();
             this.instances.push(instance);
 

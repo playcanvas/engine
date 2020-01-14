@@ -163,8 +163,8 @@ Object.assign(pc, function () {
      * @param {Number} x The x coordinate of the touch that triggered the event
      * @param {Number} y The y coordinate of the touch that triggered the event
      * @param {pc.ElementInput} input The pc.ElementInput instance
-     * @property {Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
-     * @property {Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
+     * @property {pc.Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
+     * @property {pc.Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
      */
     var ElementTouchEvent = function (event, element, camera, x, y, input) {
         ElementInputEvent.call(this, event, element, camera);
@@ -185,8 +185,8 @@ Object.assign(pc, function () {
      * @description Create a new pc.ElementInput instance.
      * @param {Element} domElement The DOM element
      * @param {Object} [options] Optional arguments
-     * @param {Object} [options.useMouse] Whether to allow mouse input. Defaults to true.
-     * @param {Object} [options.useTouch] Whether to allow touch input. Defaults to true.
+     * @param {Boolean} [options.useMouse] Whether to allow mouse input. Defaults to true.
+     * @param {Boolean} [options.useTouch] Whether to allow touch input. Defaults to true.
      */
     var ElementInput = function (domElement, options) {
         this._app = null;

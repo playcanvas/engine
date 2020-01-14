@@ -1,8 +1,10 @@
 <!doctype html>
 <html>
     <head>
-        <meta charset="UTF-8">
         <title>PlayCanvas UI Example</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
         <script src="../../build/output/playcanvas.js"></script>
         <style>
             body {
@@ -24,6 +26,10 @@
             });
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
 
             // use device pixel ratio
             app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
@@ -223,18 +229,6 @@
 
                 // var panel1 = app.root.findByName("Panel1");
             }
-
-            var a =0;
-            // update every frame
-            app.on("update", function (dt) {
-                // a += dt;
-                // p2.setLocalPosition(300*Math.sin(a), 0, 0);
-            });
-
-            // hook up window resize events
-            window.addEventListener("resize", function () {
-                app.resizeCanvas(canvas.width, canvas.height);
-            });
         </script>
     </body>
 </html>

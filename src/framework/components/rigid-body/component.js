@@ -100,6 +100,20 @@ Object.assign(pc, function () {
      * @param {pc.Entity} other The {@link pc.Entity} that stopped touching this rigid body.
      */
 
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#triggerenter
+     * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
+     * @param {pc.Entity} other The {@link pc.Entity} with trigger volume that this rigidbody entered.
+     */
+
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#triggerleave
+     * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
+     * @param {pc.Entity} other The {@link pc.Entity} with trigger volume that this rigidbody exited.
+     */
+
     Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
         get: function () {
             console.warn("WARNING: bodyType: Function is deprecated. Query type property instead.");
