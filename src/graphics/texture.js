@@ -490,69 +490,17 @@ Object.assign(pc, function () {
         }
     });
 
-    var _pixelFormat2Size = null;
-
     Object.defineProperty(Texture.prototype, 'gpuSize', {
         get: function () {
-            if (!_pixelFormat2Size) {
-                _pixelFormat2Size = [];
-                _pixelFormat2Size[pc.PIXELFORMAT_A8] = 1;
-                _pixelFormat2Size[pc.PIXELFORMAT_L8] = 1;
-                _pixelFormat2Size[pc.PIXELFORMAT_L8_A8] = 1;
-                _pixelFormat2Size[pc.PIXELFORMAT_R5_G6_B5] = 2;
-                _pixelFormat2Size[pc.PIXELFORMAT_R5_G5_B5_A1] = 2;
-                _pixelFormat2Size[pc.PIXELFORMAT_R4_G4_B4_A4] = 2;
-                _pixelFormat2Size[pc.PIXELFORMAT_R8_G8_B8] = 4;
-                _pixelFormat2Size[pc.PIXELFORMAT_R8_G8_B8_A8] = 4;
-                _pixelFormat2Size[pc.PIXELFORMAT_RGB16F] = 8;
-                _pixelFormat2Size[pc.PIXELFORMAT_RGBA16F] = 8;
-                _pixelFormat2Size[pc.PIXELFORMAT_RGB32F] = 16;
-                _pixelFormat2Size[pc.PIXELFORMAT_RGBA32F] = 16;
-                _pixelFormat2Size[pc.PIXELFORMAT_R32F] = 4;
-                _pixelFormat2Size[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
-                _pixelFormat2Size[pc.PIXELFORMAT_DEPTHSTENCIL] = 4;
-                _pixelFormat2Size[pc.PIXELFORMAT_111110F] = 4;
-                _pixelFormat2Size[pc.PIXELFORMAT_SRGB] = 4;
-                _pixelFormat2Size[pc.PIXELFORMAT_SRGBA] = 4;
-            }
+            var mips = this.pot &&
+                       (this._mipmaps ||
+                        this._minFilter === pc.FILTER_NEAREST_MIPMAP_NEAREST ||
+                        this._minFilter === pc.FILTER_NEAREST_MIPMAP_LINEAR ||
+                        this._minFilter === pc.FILTER_LINEAR_MIPMAP_NEAREST ||
+                        this._minFilter === pc.FILTER_LINEAR_MIPMAP_LINEAR) &&
+                        !(this._compressed && this._levels.length === 1);
 
-            var mips = 1;
-            if (this.pot && (this._mipmaps || this._minFilter === pc.FILTER_NEAREST_MIPMAP_NEAREST ||
-                this._minFilter === pc.FILTER_NEAREST_MIPMAP_LINEAR || this._minFilter === pc.FILTER_LINEAR_MIPMAP_NEAREST ||
-                this._minFilter === pc.FILTER_LINEAR_MIPMAP_LINEAR) && !(this._compressed && this._levels.length === 1)) {
-
-                mips = Math.round(Math.log2(Math.max(this._width, this._height)) + 1);
-            }
-            var mipWidth = this._width;
-            var mipHeight = this._height;
-            var mipDepth = this._depth;
-            var size = 0;
-
-            for (var i = 0; i < mips; i++) {
-                if (!this._compressed) {
-                    size += mipWidth * mipHeight * mipDepth * _pixelFormat2Size[this._format];
-                } else if (this._format === pc.PIXELFORMAT_ETC1) {
-                    size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8 * mipDepth;
-                } else if (this._format === pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || this._format === pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
-                    size += Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4 * mipDepth;
-                } else if (this._format === pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || this._format === pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
-                    size += Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2 * mipDepth;
-                } else {
-                    var DXT_BLOCK_WIDTH = 4;
-                    var DXT_BLOCK_HEIGHT = 4;
-                    var blockSize = this._format === pc.PIXELFORMAT_DXT1 ? 8 : 16;
-                    var numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
-                    var numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
-                    var numBlocks = numBlocksAcross * numBlocksDown;
-                    size += numBlocks * blockSize * mipDepth;
-                }
-                mipWidth = Math.max(mipWidth * 0.5, 1);
-                mipHeight = Math.max(mipHeight * 0.5, 1);
-                mipDepth = Math.max(mipDepth * 0.5, 1);
-            }
-
-            if (this._cubemap) size *= 6;
-            return size;
+            return Texture.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
         }
     });
 
@@ -608,6 +556,98 @@ Object.assign(pc, function () {
     Object.defineProperty(Texture.prototype, 'pot',  {
         get: function () {
             return pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
+        }
+    });
+
+    var _pixelSizeTable = null;
+    var _blockSizeTable = null;
+
+    // static functions
+    Object.assign(Texture, {
+        /**
+         * @private
+         * @function
+         * @name pc.Texture.calcGpuSize
+         * @description Calculate the GPU memory required for a texture
+         * @param {Number} [width] Texture's width
+         * @param {Number} [height] Texture's height
+         * @param {Number} [depth] Texture's depth
+         * @param {Number} [format] Texture's pixel format (pc.PIXELFORMAT_***)
+         * @param {Boolean} [mipmaps] True if the texture includes mipmaps, false otherwise
+         * @param {Boolean} [cubemap] True is the texture is a cubemap, false otherwise
+         * @returns {Number} The amount of GPU memory required for the texture, in bytes
+         */
+        calcGpuSize: function (width, height, depth, format, mipmaps, cubemap) {
+            if (!_pixelSizeTable) {
+                _pixelSizeTable = [];
+                _pixelSizeTable[pc.PIXELFORMAT_A8] = 1;
+                _pixelSizeTable[pc.PIXELFORMAT_L8] = 1;
+                _pixelSizeTable[pc.PIXELFORMAT_L8_A8] = 1;
+                _pixelSizeTable[pc.PIXELFORMAT_R5_G6_B5] = 2;
+                _pixelSizeTable[pc.PIXELFORMAT_R5_G5_B5_A1] = 2;
+                _pixelSizeTable[pc.PIXELFORMAT_R4_G4_B4_A4] = 2;
+                _pixelSizeTable[pc.PIXELFORMAT_R8_G8_B8] = 4;
+                _pixelSizeTable[pc.PIXELFORMAT_R8_G8_B8_A8] = 4;
+                _pixelSizeTable[pc.PIXELFORMAT_RGB16F] = 8;
+                _pixelSizeTable[pc.PIXELFORMAT_RGBA16F] = 8;
+                _pixelSizeTable[pc.PIXELFORMAT_RGB32F] = 16;
+                _pixelSizeTable[pc.PIXELFORMAT_RGBA32F] = 16;
+                _pixelSizeTable[pc.PIXELFORMAT_R32F] = 4;
+                _pixelSizeTable[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
+                _pixelSizeTable[pc.PIXELFORMAT_DEPTHSTENCIL] = 4;
+                _pixelSizeTable[pc.PIXELFORMAT_111110F] = 4;
+                _pixelSizeTable[pc.PIXELFORMAT_SRGB] = 4;
+                _pixelSizeTable[pc.PIXELFORMAT_SRGBA] = 4;
+            }
+
+            if (!_blockSizeTable) {
+                _blockSizeTable = [];
+                _blockSizeTable[pc.PIXELFORMAT_ETC1] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_ETC2_RGB] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_PVRTC_2BPP_RGB_1] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_PVRTC_4BPP_RGB_1] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_DXT1] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_ATC_RGB] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_ETC2_RGBA] = 16;
+                _blockSizeTable[pc.PIXELFORMAT_DXT3] = 16;
+                _blockSizeTable[pc.PIXELFORMAT_DXT5] = 16;
+                _blockSizeTable[pc.PIXELFORMAT_ASTC_4x4] = 16;
+                _blockSizeTable[pc.PIXELFORMAT_ATC_RGBA] = 16;
+            }
+
+            var pixelSize = _pixelSizeTable.hasOwnProperty(format) ? _pixelSizeTable[format] : 0;
+            var blockSize = _blockSizeTable.hasOwnProperty(format) ? _blockSizeTable[format] : 0;
+            var result = 0;
+
+            while (1) {
+                if (pixelSize > 0) {
+                    // handle uncompressed formats
+                    result += width * height * depth * pixelSize;
+                } else {
+                    // handle block formats
+                    var blockWidth = Math.floor((width + 3) / 4);
+                    var blockHeight = Math.floor((height + 3) / 4);
+                    var blockDepth = Math.floor((depth + 3) / 4);
+
+                    if (format === pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
+                        format === pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
+                        blockWidth = Math.floor(blockWidth / 2, 1);
+                    }
+
+                    result += blockWidth * blockHeight * blockDepth * blockSize;
+                }
+                // we're done if mipmaps aren't required or we've calculated the smallest mipmap level
+                if (!mipmaps || ((width === 1) && (height === 1) && (depth === 1))) {
+                    break;
+                }
+                width = Math.max(Math.floor(width / 2), 1);
+                height = Math.max(Math.floor(height / 2), 1);
+                depth = Math.max(Math.floor(depth / 2), 1);
+            }
+
+            return result * (cubemap ? 6 : 1);
         }
     });
 
