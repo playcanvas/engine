@@ -115,44 +115,28 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @typedef {'boolean'|'number'|'string'|'json'|'asset'|'entity'|'rgb'|'rgba'|'vec2'|'vec3'|'vec4'|'curve' } pc.ScriptAttributesType
+     * @typedef {'boolean'|'number'|'string'|'json'|'asset'|'entity'|'rgb'|'rgba'|'vec2'|'vec3'|'vec4'|'curve'} pc.ScriptAttributesType
      */
 
     /**
-     * @constructor
-     * @name pc.ScriptAttributes
-     * @classdesc Container of Script Attribute definitions. Implements an interface to add/remove attributes and store their definition for a {@link pc.ScriptType}.
-     * Note: An instance of pc.ScriptAttributes is created automatically by each {@link pc.ScriptType}.
-     * @param {pc.ScriptType} scriptType Script Type that attributes relate to.
-     */
-    var ScriptAttributes = function (scriptType) {
-        this.scriptType = scriptType;
-        this.index = { };
-    };
-
-    /**
-     * @function
-     * @name pc.ScriptAttributes#add
-     * @description Add Attribute
-     * @param {String} name Name of an attribute
-     * @param {Object} args Object with Arguments for an attribute
-     * @param {pc.ScriptAttributesType} args.type Type of an attribute value
-     * @param {*} [args.default] Default attribute value
-     * @param {String} [args.title] Title for Editor's for field UI
-     * @param {String} [args.description] Description for Editor's for field UI
-     * @param {String|String[]} [args.placeholder] Placeholder for Editor's for field UI.
+     * @typedef {Object} pc.ScriptAttributeArgs
+     * @property {pc.ScriptAttributesType} type Type of an attribute value
+     * @property {*} [default] Default attribute value
+     * @property {String} [title] Title for Editor's for field UI
+     * @property {String} [description] Description for Editor's for field UI
+     * @property {String|String[]} [placeholder] Placeholder for Editor's for field UI.
      * For multi-field types, such as vec2, vec3, and others use array of strings.
-     * @param {Boolean} [args.array] If attribute can hold single or multiple values
-     * @param {Number} [args.size] If attribute is array, maximum number of values can be set
-     * @param {Number} [args.min] Minimum value for type 'number', if max and min defined, slider will be rendered in Editor's UI
-     * @param {Number} [args.max] Maximum value for type 'number', if max and min defined, slider will be rendered in Editor's UI
-     * @param {Number} [args.precision] Level of precision for field type 'number' with floating values
-     * @param {Number} [args.step] Step value for type 'number'. The amount used to increment the value when using the arrow keys in the Editor's UI.
-     * @param {String} [args.assetType] Name of asset type to be used in 'asset' type attribute picker in Editor's UI, defaults to '*' (all)
-     * @param {String[]} [args.curves] List of names for Curves for field type 'curve'
-     * @param {String} [args.color] String of color channels for Curves for field type 'curve', can be any combination of `rgba` characters.
+     * @property {Boolean} [array] If attribute can hold single or multiple values
+     * @property {Number} [size] If attribute is array, maximum number of values can be set
+     * @property {Number} [min] Minimum value for type 'number', if max and min defined, slider will be rendered in Editor's UI
+     * @property {Number} [max] Maximum value for type 'number', if max and min defined, slider will be rendered in Editor's UI
+     * @property {Number} [precision] Level of precision for field type 'number' with floating values
+     * @property {Number} [step] Step value for type 'number'. The amount used to increment the value when using the arrow keys in the Editor's UI.
+     * @property {String} [assetType] Name of asset type to be used in 'asset' type attribute picker in Editor's UI, defaults to '*' (all)
+     * @property {String[]} [curves] List of names for Curves for field type 'curve'
+     * @property {String} [color] String of color channels for Curves for field type 'curve', can be any combination of `rgba` characters.
      * Defining this property will render Gradient in Editor's field UI
-     * @param {Object[]} [args.enum] List of fixed choices for field, defined as array of objects, where key in object is a title of an option
+     * @property {Object[]} [enum] List of fixed choices for field, defined as array of objects, where key in object is a title of an option
      * @example
      * PlayerController.attributes.add('fullName', {
      *     type: 'string',
@@ -174,6 +158,26 @@ Object.assign(pc, function () {
      *        { '128x128': 128 }
      *     ]
      * });
+    */
+
+    /**
+     * @constructor
+     * @name pc.ScriptAttributes
+     * @classdesc Container of Script Attribute definitions. Implements an interface to add/remove attributes and store their definition for a {@link pc.ScriptType}.
+     * Note: An instance of pc.ScriptAttributes is created automatically by each {@link pc.ScriptType}.
+     * @param {pc.ScriptType} scriptType Script Type that attributes relate to.
+     */
+    var ScriptAttributes = function (scriptType) {
+        this.scriptType = scriptType;
+        this.index = { };
+    };
+
+    /**
+     * @function
+     * @name pc.ScriptAttributes#add
+     * @description Add Attribute
+     * @param {String} name Name of an attribute
+     * @param {pc.ScriptAttributeArgs} args Object with Arguments for an attribute
      */
     ScriptAttributes.prototype.add = function (name, args) {
         if (this.index[name]) {
