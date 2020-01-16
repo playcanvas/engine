@@ -114,6 +114,9 @@ Object.assign(pc, function () {
         return value;
     };
 
+    /**
+     * @typedef {'boolean'|'number'|'string'|'json'|'asset'|'entity'|'rgb'|'rgba'|'vec2'|'vec3'|'vec4'|'curve' } pc.ScriptAttributesType
+     */
 
     /**
      * @constructor
@@ -133,7 +136,7 @@ Object.assign(pc, function () {
      * @description Add Attribute
      * @param {String} name Name of an attribute
      * @param {Object} args Object with Arguments for an attribute
-     * @param {("boolean"|"number"|"string"|"json"|"asset"|"entity"|"rgb"|"rgba"|"vec2"|"vec3"|"vec4"|"curve")} args.type Type of an attribute value
+     * @param {pc.ScriptAttributesType} args.type Type of an attribute value
      * @param {*} [args.default] Default attribute value
      * @param {String} [args.title] Title for Editor's for field UI
      * @param {String} [args.description] Description for Editor's for field UI
