@@ -11,9 +11,9 @@ Object.assign(pc, function () {
      * @property {Number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation
      * @property {Boolean} loop If true the animation will restart from the beginning when it reaches the end
      * @property {Boolean} activate If true the first animation asset will begin playing when the scene is loaded
-     * @property {pc.Asset[]} assets The array of animation assets - can also be an array of asset ids.
-     * @property {Number} currentTime Get or Set the current time position (in seconds) of the animation
-     * @property {Number} duration Get the duration in seconds of the current animation.
+     * @property {pc.Asset[]|number[]} assets The array of animation assets - can also be an array of asset ids.
+     * @property {number} currentTime Get or Set the current time position (in seconds) of the animation
+     * @property {number} duration Get the duration in seconds of the current animation.
      */
     var AnimationComponent = function (system, entity) {
         pc.Component.call(this, system, entity);
