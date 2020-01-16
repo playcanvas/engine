@@ -23,6 +23,20 @@ Object.assign(pc, function () {
     Object.assign(BoundingBox.prototype, {
 
         /**
+        * @member
+        * @name pc.BoundingBox#center
+        * @type {pc.Vec3}
+        * @description Center of box.
+        */
+
+        /**
+        * @member
+        * @name pc.BoundingBox#halfExtents
+        * @type {pc.Vec3}
+        * @description Half the distance across the box in each axis.
+        */
+
+        /**
          * @function
          * @name pc.BoundingBox#add
          * @description Combines two bounding boxes into one, enclosing both.
