@@ -260,7 +260,7 @@ Object.assign(pc, function () {
      * @description Get object with attribute arguments.
      * Note: Changing argument properties will not affect existing Script Instances.
      * @param {String} name Name of an attribute
-     * @returns {?Object} Arguments with attribute properties
+     * @returns {pc.ScriptAttributeArgs|null} Arguments with attribute properties
      * @example
      * // changing default value for an attribute 'fullName'
      * var attr = PlayerController.attributes.get('fullName');
