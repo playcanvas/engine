@@ -70,7 +70,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Animation#nodes
-     * @type pc.Node[]
+     * @type {pc.Node[]}
      * @description A read-only property to get array of animation nodes
      */
     Object.defineProperty(Animation.prototype, 'nodes', {

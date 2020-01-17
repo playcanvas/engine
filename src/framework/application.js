@@ -168,13 +168,13 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Application#scripts
-     * @type pc.ScriptRegistry
+     * @type {pc.ScriptRegistry}
      * @description The application's script registry.
      */
 
     /**
      * @name pc.Application#batcher
-     * @type pc.BatchManager
+     * @type {pc.BatchManager}
      * @description The application's batch manager. The batch manager is used to
      * merge mesh instances in the scene, which reduces the overall number of draw
      * calls, thereby boosting performance.
@@ -182,7 +182,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Application#autoRender
-     * @type Boolean
+     * @type {boolean}
      * @description When true, the application's render function is called every frame.
      * Setting autoRender to false is useful to applications where the rendered image
      * may often be unchanged over time. This can heavily reduce the application's
@@ -197,7 +197,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Application#renderNextFrame
-     * @type Boolean
+     * @type {boolean}
      * @description Set to true to render the scene on the next iteration of the main loop.
      * This only has an effect if {@link pc.Application#autoRender} is set to false. The
      * value of renderNextFrame is set back to false again as soon as the scene has been
@@ -230,8 +230,8 @@ Object.assign(pc, function () {
         /**
          * @private
          * @static
-         * @type {pc.Application|undefined}
          * @name pc.app
+         * @type {pc.Application|undefined}
          * @description Gets the current application, if any.
          */
         pc.app = this;

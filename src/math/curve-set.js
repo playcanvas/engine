@@ -131,7 +131,7 @@ Object.assign(pc, (function () {
     /**
      * @readonly
      * @name pc.CurveSet#length
-     * @type Number
+     * @type {number}
      * @description The number of curves in the curve set.
      */
     Object.defineProperty(CurveSet.prototype, 'length', {
@@ -142,7 +142,7 @@ Object.assign(pc, (function () {
 
     /**
      * @name pc.CurveSet#type
-     * @type Number
+     * @type {number}
      * @description The interpolation scheme applied to all curves in the curve set. Can be:
      * <ul>
      *     <li>{@link pc.CURVE_LINEAR}</li>

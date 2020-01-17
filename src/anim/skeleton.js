@@ -190,7 +190,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Skeleton#animation
-     * @type pc.Animation
+     * @type {pc.Animation}
      * @description Animation currently assigned to skeleton.
      */
     Object.defineProperty(Skeleton.prototype, 'animation', {
@@ -217,7 +217,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Skeleton#currentTime
-     * @type Number
+     * @type {number}
      * @description Current time of currently active animation in seconds.
      * This value is between zero and the duration of the animation.
      */
@@ -270,7 +270,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Skeleton#numNodes
-     * @type Number
+     * @type {number}
      * @description Read-only property that returns number of nodes of a skeleton.
      */
     Object.defineProperty(Skeleton.prototype, 'numNodes', {

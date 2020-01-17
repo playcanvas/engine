@@ -1237,8 +1237,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Mat4
      * @name pc.Mat4.IDENTITY
+     * @type {pc.Mat4}
      * @description A constant matrix set to the identity.
      */
     Object.defineProperty(Mat4, 'IDENTITY', {
@@ -1254,8 +1254,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Mat4
      * @name pc.Mat4.ZERO
+     * @type {pc.Mat4}
      * @description A constant matrix with all elements set to 0.
      */
     Object.defineProperty(Mat4, 'ZERO', {

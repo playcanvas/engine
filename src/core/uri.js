@@ -74,40 +74,40 @@ Object.assign(pc, function () {
             /**
              * @private
              * @name pc.URI#scheme
+             * @type {string}
              * @description The scheme. (e.g. http)
-             * @type String
              */
             this.scheme = result[2];
 
             /**
              * @private
              * @name pc.URI#authority
+             * @type {string}
              * @description The authority. (e.g. www.example.com)
-             * @type String
              */
             this.authority = result[4];
 
             /**
              * @private
              * @name pc.URI#path
+             * @type {string}
              * @description The path. (e.g. /users/example)
-             * @type String
              */
             this.path = result[5];
 
             /**
              * @private
              * @name pc.URI#query
+             * @type {string}
              * @description The query, the section after a ?. (e.g. search=value)
-             * @type String
              */
             this.query = result[7];
 
             /**
              * @private
              * @name pc.URI#fragment
+             * @type {string}
              * @description The fragment, the section after a #
-             * @type String
              */
             this.fragment = result[9];
 

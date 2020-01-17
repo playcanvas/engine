@@ -98,7 +98,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.CameraComponent#projectionMatrix
-     * @type pc.Mat4
+     * @type {pc.Mat4}
      * @description Queries the camera's projection matrix.
      */
     Object.defineProperty(CameraComponent.prototype, "projectionMatrix", {
@@ -110,7 +110,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.CameraComponent#viewMatrix
-     * @type pc.Mat4
+     * @type {pc.Mat4}
      * @description Queries the camera's view matrix.
      */
     Object.defineProperty(CameraComponent.prototype, "viewMatrix", {
@@ -122,7 +122,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.CameraComponent#frustum
-     * @type pc.Frustum
+     * @type {pc.Frustum}
      * @description Queries the camera's frustum shape.
      */
     Object.defineProperty(CameraComponent.prototype, "frustum", {
@@ -133,7 +133,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.CameraComponent#vrDisplay
-     * @type pc.VrDisplay
+     * @type {pc.VrDisplay}
      * @description The {@link pc.VrDisplay} that the camera is current displaying to. This is set automatically by calls to {@link pc.CameraComponent#enterVr}
      * or {@link pc.CameraComponent#exitVr}. Setting this property to a display directly enables the camera to use the transformation information
      * from a display without rendering stereo to it, e.g. for "magic window" style experiences.
@@ -165,7 +165,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.CameraComponent#node
-     * @type pc.GraphNode
+     * @type {pc.GraphNode}
      * @description Queries the camera's GraphNode. Can be used to get position and rotation.
      */
     Object.defineProperty(CameraComponent.prototype, "node", {

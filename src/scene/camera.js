@@ -297,8 +297,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#aspectRatio
+     * @type {number}
      * @description Camera's aspect ratio.
      */
     Object.defineProperty(Camera.prototype, 'aspectRatio', {
@@ -315,8 +315,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#projection
+     * @type {number}
      * @description Camera's projection type, to specify whether projection is orthographic (parallel projection) or perspective. Can be:
      * <ul>
      *     <li>{@link pc.PROJECTION_PERSPECTIVE}</li>
@@ -337,8 +337,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#nearClip
+     * @type {number}
      * @description Camera's distance to near clipping plane
      */
     Object.defineProperty(Camera.prototype, 'nearClip', {
@@ -355,8 +355,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#farClip
+     * @type {number}
      * @description Camera's distance to far clipping plane
      */
     Object.defineProperty(Camera.prototype, 'farClip', {
@@ -373,8 +373,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#fov
+     * @type {number}
      * @description Camera's field of view in degrees. This angle is in degrees
      * and is measured vertically or horizontally between the sides of camera planes.
      * hirozontalFov property defines the fov axis - vertical or horizontal.
@@ -393,8 +393,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Boolean
      * @name pc.Camera#horizontalFov
+     * @type {boolean}
      * @description Camera's horizontal or vertical field of view.
      */
     Object.defineProperty(Camera.prototype, 'horizontalFov', {
@@ -411,8 +411,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#orthoHeight
+     * @type {number}
      * @description Camera's half height of the orthographics view.
      */
     Object.defineProperty(Camera.prototype, 'orthoHeight', {
@@ -429,8 +429,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Array
      * @name pc.Camera#clearColor
+     * @type {number[]}
      * @description Camera's clear color.
      */
     Object.defineProperty(Camera.prototype, 'clearColor', {
@@ -447,8 +447,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#clearDepth
+     * @type {number}
      * @description Camera's clear depth value.
      */
     Object.defineProperty(Camera.prototype, 'clearDepth', {
@@ -462,8 +462,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#clearStencil
+     * @type {number}
      * @description Camera's clear stencil value.
      */
     Object.defineProperty(Camera.prototype, 'clearStencil', {
@@ -477,8 +477,8 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @type Number
      * @name pc.Camera#clearFlags
+     * @type {number}
      * @description Camera's clear flags bits value.
      */
     Object.defineProperty(Camera.prototype, 'clearFlags', {

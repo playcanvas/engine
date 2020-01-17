@@ -401,8 +401,8 @@ Object.assign(pc, (function () {
 
     /**
      * @field
-     * @type Number
      * @name pc.Vec4#x
+     * @type {number}
      * @description The first component of the vector.
      * @example
      * var vec = new pc.Vec4(10, 20, 30, 40);
@@ -415,8 +415,8 @@ Object.assign(pc, (function () {
      */
     /**
      * @field
-     * @type Number
      * @name pc.Vec4#y
+     * @type {number}
      * @description The second component of the vector.
      * @example
      * var vec = new pc.Vec4(10, 20, 30, 40);
@@ -429,8 +429,8 @@ Object.assign(pc, (function () {
      */
     /**
      * @field
-     * @type Number
      * @name pc.Vec4#z
+     * @type {number}
      * @description The third component of the vector.
      * @example
      * var vec = new pc.Vec4(10, 20, 30, 40);
@@ -443,8 +443,8 @@ Object.assign(pc, (function () {
      */
     /**
      * @field
-     * @type Number
      * @name pc.Vec4#w
+     * @type {number}
      * @description The fourth component of the vector.
      * @example
      * var vec = new pc.Vec4(10, 20, 30, 40);
@@ -460,8 +460,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Vec4
      * @name pc.Vec4.ONE
+     * @type {pc.Vec4}
      * @description A constant vector set to [1, 1, 1, 1].
      */
     Object.defineProperty(Vec4, 'ONE', {
@@ -477,8 +477,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Vec4
      * @name pc.Vec4.ZERO
+     * @type {pc.Vec4}
      * @description A constant vector set to [0, 0, 0, 0].
      */
     Object.defineProperty(Vec4, 'ZERO', {

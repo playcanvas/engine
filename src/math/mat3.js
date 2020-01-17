@@ -208,8 +208,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Mat3
      * @name pc.Mat3.IDENTITY
+     * @type {pc.Mat3}
      * @description A constant matrix set to the identity.
      */
     Object.defineProperty(Mat3, 'IDENTITY', {
@@ -225,8 +225,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Mat3
      * @name pc.Mat3.ZERO
+     * @type {pc.Mat3}
      * @description A constant matrix with all elements set to 0.
      */
     Object.defineProperty(Mat3, 'ZERO', {

@@ -389,8 +389,8 @@ Object.assign(pc, (function () {
 
     /**
      * @field
-     * @type Number
      * @name pc.Vec2#x
+     * @type {number}
      * @description The first element of the vector.
      * @example
      * var vec = new pc.Vec2(10, 20);
@@ -403,8 +403,8 @@ Object.assign(pc, (function () {
      */
     /**
      * @field
-     * @type Number
      * @name pc.Vec2#y
+     * @type {number}
      * @description The second element of the vector.
      * @example
      * var vec = new pc.Vec2(10, 20);
@@ -420,8 +420,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Vec2
      * @name pc.Vec2.ONE
+     * @type {pc.Vec2}
      * @description A constant vector set to [1, 1].
      */
     Object.defineProperty(Vec2, 'ONE', {
@@ -437,8 +437,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Vec2
      * @name pc.Vec2.RIGHT
+     * @type {pc.Vec2}
      * @description A constant vector set to [1, 0].
      */
     Object.defineProperty(Vec2, 'RIGHT', {
@@ -454,8 +454,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Vec2
      * @name pc.Vec2.UP
+     * @type {pc.Vec2}
      * @description A constant vector set to [0, 1].
      */
     Object.defineProperty(Vec2, 'UP', {
@@ -471,8 +471,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Vec2
      * @name pc.Vec2.ZERO
+     * @type {pc.Vec2}
      * @description A constant vector set to [0, 0].
      */
     Object.defineProperty(Vec2, 'ZERO', {

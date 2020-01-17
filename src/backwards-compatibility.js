@@ -143,8 +143,8 @@ Object.assign(pc.input, {
  * @private
  * @deprecated
  * @name pc.math.INV_LOG2
+ * @type {number}
  * @description Inverse log 2. Use Math.LOG2E instead.
- * @type Number
  */
 pc.math.INV_LOG2 = Math.LOG2E;
 

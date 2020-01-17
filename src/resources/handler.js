@@ -32,10 +32,11 @@ Object.assign(pc, function () {
          * @param {pc.Asset} [asset] Optional asset that is passed by ResourceLoader.
          * @returns {*} The parsed resource data.
          */
-        // eslint-disable-next-line valid-jsdoc
+        /* eslint-disable jsdoc/require-returns-check */
         open: function (url, data, asset) {
             throw new Error('not implemented');
         },
+        /* eslint-enable jsdoc/require-returns-check */
 
         /**
          * @function
@@ -45,7 +46,6 @@ Object.assign(pc, function () {
          * @param {pc.Asset} asset The asset to patch.
          * @param {pc.AssetRegistry} assets The asset registry.
          */
-        // eslint-disable-next-line valid-jsdoc
         patch: function (asset, assets) {
             // optional function
         }

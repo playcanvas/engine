@@ -491,7 +491,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.MeshInstance#mask
-     * @type Number
+     * @type {number}
      * @description Mask controlling which {@link pc.LightComponent}s light this mesh instance, which {@link pc.CameraComponent} sees it and in which {@link pc.Layer} it is rendered.
      * Defaults to 1.
      */

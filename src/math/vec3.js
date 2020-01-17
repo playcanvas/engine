@@ -459,7 +459,7 @@ Object.assign(pc, (function () {
 
     /**
      * @name pc.Vec3#x
-     * @type Number
+     * @type {number}
      * @description The first component of the vector.
      * @example
      * var vec = new pc.Vec3(10, 20, 30);
@@ -472,7 +472,7 @@ Object.assign(pc, (function () {
      */
     /**
      * @name pc.Vec3#y
-     * @type Number
+     * @type {number}
      * @description The second component of the vector.
      * @example
      * var vec = new pc.Vec3(10, 20, 30);
@@ -485,7 +485,7 @@ Object.assign(pc, (function () {
      */
     /**
      * @name pc.Vec3#z
-     * @type Number
+     * @type {number}
      * @description The third component of the vector.
      * @example
      * var vec = new pc.Vec3(10, 20, 30);
@@ -500,8 +500,8 @@ Object.assign(pc, (function () {
     /**
      * @static
      * @readonly
-     * @type pc.Vec3
      * @name pc.Vec3.BACK
+     * @type {pc.Vec3}
      * @description A constant vector set to [0, 0, 1].
      */
     Object.defineProperty(Vec3, 'BACK', {
@@ -516,8 +516,8 @@ Object.assign(pc, (function () {
     /**
      * @static
      * @readonly
-     * @type pc.Vec3
      * @name pc.Vec3.DOWN
+     * @type {pc.Vec3}
      * @description A constant vector set to [0, -1, 0].
      */
     Object.defineProperty(Vec3, 'DOWN', {
@@ -532,8 +532,8 @@ Object.assign(pc, (function () {
     /**
      * @static
      * @readonly
-     * @type pc.Vec3
      * @name pc.Vec3.FORWARD
+     * @type {pc.Vec3}
      * @description A constant vector set to [0, 0, -1].
      */
     Object.defineProperty(Vec3, 'FORWARD', {
@@ -549,8 +549,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Vec3
      * @name pc.Vec3.LEFT
+     * @type {pc.Vec3}
      * @description A constant vector set to [-1, 0, 0].
      */
     Object.defineProperty(Vec3, 'LEFT', {
@@ -566,8 +566,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Vec3
      * @name pc.Vec3.ONE
+     * @type {pc.Vec3}
      * @description A constant vector set to [1, 1, 1].
      */
     Object.defineProperty(Vec3, 'ONE', {
@@ -583,8 +583,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Vec3
      * @name pc.Vec3.RIGHT
+     * @type {pc.Vec3}
      * @description A constant vector set to [1, 0, 0].
      */
     Object.defineProperty(Vec3, 'RIGHT', {
@@ -600,8 +600,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Vec3
      * @name pc.Vec3.UP
+     * @type {pc.Vec3}
      * @description A constant vector set to [0, 1, 0].
      */
     Object.defineProperty(Vec3, 'UP', {
@@ -617,8 +617,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Vec3
      * @name pc.Vec3.ZERO
+     * @type {pc.Vec3}
      * @description A constant vector set to [0, 0, 0].
      */
     Object.defineProperty(Vec3, 'ZERO', {

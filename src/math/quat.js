@@ -27,8 +27,8 @@ Object.assign(pc, (function () {
 
     /**
      * @field
-     * @type Number
      * @name pc.Quat#x
+     * @type {number}
      * @description The x component of the quaternion.
      * @example
      * var quat = new pc.Quat();
@@ -41,8 +41,8 @@ Object.assign(pc, (function () {
      */
     /**
      * @field
-     * @type Number
      * @name pc.Quat#y
+     * @type {number}
      * @description The y component of the quaternion.
      * @example
      * var quat = new pc.Quat();
@@ -55,8 +55,8 @@ Object.assign(pc, (function () {
      */
     /**
      * @field
-     * @type Number
      * @name pc.Quat#z
+     * @type {number}
      * @description The z component of the quaternion.
      * @example
      * var quat = new pc.Quat();
@@ -69,8 +69,8 @@ Object.assign(pc, (function () {
      */
     /**
      * @field
-     * @type Number
      * @name pc.Quat#w
+     * @type {number}
      * @description The w component of the quaternion.
      * @example
      * var quat = new pc.Quat();
@@ -709,8 +709,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Quat
      * @name pc.Quat.IDENTITY
+     * @type {pc.Quat}
      * @description A constant quaternion set to [0, 0, 0, 1] (the identity).
      */
     Object.defineProperty(Quat, 'IDENTITY', {
@@ -726,8 +726,8 @@ Object.assign(pc, (function () {
      * @field
      * @static
      * @readonly
-     * @type pc.Quat
      * @name pc.Quat.ZERO
+     * @type {pc.Quat}
      * @description A constant quaternion set to [0, 0, 0, 0].
      */
     Object.defineProperty(Quat, 'ZERO', {

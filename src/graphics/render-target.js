@@ -195,7 +195,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.RenderTarget#colorBuffer
-     * @type pc.Texture
+     * @type {pc.Texture}
      * @description Color buffer set up on the render target.
      */
     Object.defineProperty(RenderTarget.prototype, 'colorBuffer', {
@@ -207,7 +207,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.RenderTarget#depthBuffer
-     * @type pc.Texture
+     * @type {pc.Texture}
      * @description Depth buffer set up on the render target. Only available, if depthBuffer was set in constructor.
      * Not available, if depth property was used instead.
      */
@@ -220,7 +220,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.RenderTarget#face
-     * @type Number
+     * @type {number}
      * @description If the render target is bound to a cubemap, this property
      * specifies which face of the cubemap is rendered to. Can be:
      * <ul>
@@ -241,7 +241,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.RenderTarget#width
-     * @type Number
+     * @type {number}
      * @description Width of the render target in pixels.
      */
     Object.defineProperty(RenderTarget.prototype, 'width', {
@@ -253,7 +253,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.RenderTarget#height
-     * @type Number
+     * @type {number}
      * @description Height of the render target in pixels.
      */
     Object.defineProperty(RenderTarget.prototype, 'height', {

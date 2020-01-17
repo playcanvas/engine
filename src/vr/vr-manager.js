@@ -70,7 +70,7 @@ Object.assign(pc, function () {
     /**
      * @static
      * @name pc.VrManager.isSupported
-     * @type Boolean
+     * @type {boolean}
      * @description Reports whether this device supports the WebVR API
      */
     if (typeof navigator !== 'undefined') {

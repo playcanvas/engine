@@ -117,31 +117,31 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphicsDevice#precision
-     * @type String
+     * @type {string}
      * @description The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or 'lowp'.
      */
     /**
      * @readonly
      * @name pc.GraphicsDevice#maxCubeMapSize
-     * @type Number
+     * @type {number}
      * @description The maximum supported dimension of a cube map.
      */
     /**
      * @readonly
      * @name pc.GraphicsDevice#maxTextureSize
-     * @type Number
+     * @type {number}
      * @description The maximum supported dimension of a texture.
      */
     /**
      * @readonly
      * @name pc.GraphicsDevice#maxVolumeSize
-     * @type Number
+     * @type {number}
      * @description The maximum supported dimension of a 3D texture (any axis).
      */
     /**
      * @readonly
      * @name pc.GraphicsDevice#maxAnisotropy
-     * @type Number
+     * @type {number}
      * @description The maximum supported texture anisotropy setting.
      */
     /**

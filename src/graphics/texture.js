@@ -190,7 +190,7 @@ Object.assign(pc, function () {
     // Public properties
     /**
      * @name pc.Texture#minFilter
-     * @type Number
+     * @type {number}
      * @description The minification filter to be applied to the texture. Can be:
      * <ul>
      *     <li>{@link pc.FILTER_NEAREST}</li>
@@ -215,7 +215,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#magFilter
-     * @type Number
+     * @type {number}
      * @description The magnification filter to be applied to the texture. Can be:
      * <ul>
      *     <li>{@link pc.FILTER_NEAREST}</li>
@@ -236,7 +236,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#addressU
-     * @type Number
+     * @type {number}
      * @description The addressing mode to be applied to the texture horizontally. Can be:
      * <ul>
      *     <li>{@link pc.ADDRESS_REPEAT}</li>
@@ -258,7 +258,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#addressV
-     * @type Number
+     * @type {number}
      * @description The addressing mode to be applied to the texture vertically. Can be:
      * <ul>
      *     <li>{@link pc.ADDRESS_REPEAT}</li>
@@ -280,7 +280,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#addressW
-     * @type Number
+     * @type {number}
      * @description The addressing mode to be applied to the 3D texture depth (WebGL2 only). Can be:
      * <ul>
      *     <li>{@link pc.ADDRESS_REPEAT}</li>
@@ -309,7 +309,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#compareOnRead
-     * @type Boolean
+     * @type {boolean}
      * @description When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      */
@@ -327,7 +327,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#compareFunc
-     * @type Number
+     * @type {number}
      * @description Comparison function when compareOnRead is enabled (WebGL2 only).
      * Possible values:
      * <ul>
@@ -353,7 +353,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#anisotropy
-     * @type Number
+     * @type {number}
      * @description Integer value specifying the level of anisotropic to apply to the texture
      * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
      */
@@ -373,7 +373,7 @@ Object.assign(pc, function () {
      * @private
      * @deprecated
      * @name pc.Texture#autoMipmap
-     * @type Boolean
+     * @type {boolean}
      * @description Toggles automatic mipmap generation. Can't be used on non power of two textures.
      */
     Object.defineProperty(Texture.prototype, 'autoMipmap', {
@@ -387,7 +387,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#mipmaps
-     * @type Boolean
+     * @type {boolean}
      * @description Defines if texture should generate/upload mipmaps if possible.
      */
     Object.defineProperty(Texture.prototype, 'mipmaps', {
@@ -407,7 +407,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Texture#width
-     * @type Number
+     * @type {number}
      * @description The width of the texture in pixels.
      */
     Object.defineProperty(Texture.prototype, 'width', {
@@ -419,7 +419,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Texture#height
-     * @type Number
+     * @type {number}
      * @description The height of the texture in pixels.
      */
     Object.defineProperty(Texture.prototype, 'height', {
@@ -431,7 +431,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Texture#depth
-     * @type Number
+     * @type {number}
      * @description The number of depth slices in a 3D texture (WebGL2 only).
      */
     Object.defineProperty(Texture.prototype, 'depth', {
@@ -443,7 +443,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Texture#format
-     * @type Number
+     * @type {number}
      * @description The pixel format of the texture. Can be:
      * <ul>
      *     <li>{@link pc.PIXELFORMAT_A8}</li>
@@ -481,7 +481,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Texture#cubemap
-     * @type Boolean
+     * @type {boolean}
      * @description Returns true if this texture is a cube map and false otherwise.
      */
     Object.defineProperty(Texture.prototype, 'cubemap', {
@@ -507,7 +507,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Texture#volume
-     * @type Boolean
+     * @type {boolean}
      * @description Returns true if this texture is a 3D volume and false otherwise.
      */
     Object.defineProperty(Texture.prototype, 'volume', {
@@ -518,7 +518,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#flipY
-     * @type Boolean
+     * @type {boolean}
      * @description Specifies whether the texture should be flipped in the Y-direction. Only affects textures
      * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures
      * or textures set from raw pixel data. Defaults to true.
@@ -550,7 +550,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Texture#pot
-     * @type Boolean
+     * @type {boolean}
      * @description Returns true if all dimensions of the texture are power of two, and false otherwise.
      */
     Object.defineProperty(Texture.prototype, 'pot',  {

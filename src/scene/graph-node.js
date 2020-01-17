@@ -71,8 +71,8 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphNode#right
+     * @type {pc.Vec3}
      * @description The normalized local space X-axis vector of the graph node in world space.
-     * @type pc.Vec3
      */
     Object.defineProperty(GraphNode.prototype, 'right', {
         get: function () {
@@ -86,8 +86,8 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphNode#up
+     * @type {pc.Vec3}
      * @description The normalized local space Y-axis vector of the graph node in world space.
-     * @type pc.Vec3
      */
     Object.defineProperty(GraphNode.prototype, 'up', {
         get: function () {
@@ -101,8 +101,8 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphNode#forward
+     * @type {pc.Vec3}
      * @description The normalized local space negative Z-axis vector of the graph node in world space.
-     * @type pc.Vec3
      */
     Object.defineProperty(GraphNode.prototype, 'forward', {
         get: function () {
@@ -115,7 +115,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.GraphNode#enabled
-     * @type Boolean
+     * @type {boolean}
      * @description Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
      * there will be no other side effects. If all the parents are enabled then
      * the new value will activate / deactivate all the enabled children of the GraphNode.
@@ -141,7 +141,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphNode#parent
-     * @type pc.GraphNode
+     * @type {pc.GraphNode}
      * @description A read-only property to get a parent graph node
      */
     Object.defineProperty(GraphNode.prototype, 'parent', {
@@ -153,7 +153,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphNode#path
-     * @type pc.GraphNode
+     * @type {string}
      * @description A read-only property to get the path of the graph node relative to
      * the root of the hierarchy
      */
@@ -178,7 +178,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphNode#root
-     * @type pc.GraphNode
+     * @type {pc.GraphNode}
      * @description A read-only property to get highest graph node from current node
      */
     Object.defineProperty(GraphNode.prototype, 'root', {
@@ -197,7 +197,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphNode#children
-     * @type pc.GraphNode[]
+     * @type {pc.GraphNode[]}
      * @description A read-only property to get the children of this graph node.
      */
     Object.defineProperty(GraphNode.prototype, 'children', {
@@ -209,7 +209,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphNode#graphDepth
-     * @type Number
+     * @type {number}
      * @description A read-only property to get the depth of this child within the graph. Note that for performance reasons this is only recalculated when a node is added to a new parent, i.e. it is not recalculated when a node is simply removed from the graph.
      */
     Object.defineProperty(GraphNode.prototype, 'graphDepth', {

@@ -144,7 +144,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.TransformFeedback#inputBuffer
-     * @type pc.VertexBuffer
+     * @type {pc.VertexBuffer}
      * @description The current input buffer
      */
     Object.defineProperty(TransformFeedback.prototype, 'inputBuffer', {
@@ -156,7 +156,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.TransformFeedback#outputBuffer
-     * @type pc.VertexBuffer
+     * @type {pc.VertexBuffer}
      * @description The current output buffer
      */
     Object.defineProperty(TransformFeedback.prototype, 'outputBuffer', {

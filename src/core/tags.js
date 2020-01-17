@@ -401,8 +401,8 @@ Object.assign(pc, (function () {
     /**
      * @field
      * @readonly
-     * @type Number
      * @name pc.Tags#size
+     * @type {number}
      * @description Number of tags in set
      */
     Object.defineProperty(Tags.prototype, 'size', {
