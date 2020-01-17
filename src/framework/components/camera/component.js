@@ -465,7 +465,8 @@ Object.assign(pc, function () {
          *         // in VR!
          *     }
          * });
-         *//**
+         */
+        /**
          * @function
          * @name pc.CameraComponent#enterVr
          * @variation 2

@@ -2,28 +2,28 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-    * @private
-    * @constructor
-    * @name pc.SortedLoopArray
-    * @classdesc Helper class used to hold an array of items in a specific order. This array is safe to modify
-    * while we loop through it. The class assumes that it holds objects that need to be sorted based on
-    * one of their fields.
-    * @param {Object} args Arguments
-    * @param {String} args.sortBy The name of the field that each element in the array is going to be sorted by
-    * @property {Number} loopIndex The current index used to loop through the array. This gets modified if we
-    * add or remove elements from the array while looping. See the example to see how to loop through this array.
-    * @property {Number} length The number of elements in the array.
-    * @property {Object[]} items The internal array that holds the actual array elements.
-    * @example
-    * var array = new pc.SortedLoopArray({ sortBy: 'priority' });
-    * array.insert(item); // adds item to the right slot based on item.priority
-    * array.append(item); // adds item to the end of the array
-    * array.remove(item); // removes item from array
-    * for (array.loopIndex = 0; array.loopIndex < array.length; array.loopIndex++) {
-    *   // do things with array elements
-    *   // safe to remove and add elements into the array while looping
-    * }
-    */
+     * @private
+     * @constructor
+     * @name pc.SortedLoopArray
+     * @classdesc Helper class used to hold an array of items in a specific order. This array is safe to modify
+     * while we loop through it. The class assumes that it holds objects that need to be sorted based on
+     * one of their fields.
+     * @param {Object} args Arguments
+     * @param {String} args.sortBy The name of the field that each element in the array is going to be sorted by
+     * @property {Number} loopIndex The current index used to loop through the array. This gets modified if we
+     * add or remove elements from the array while looping. See the example to see how to loop through this array.
+     * @property {Number} length The number of elements in the array.
+     * @property {Object[]} items The internal array that holds the actual array elements.
+     * @example
+     * var array = new pc.SortedLoopArray({ sortBy: 'priority' });
+     * array.insert(item); // adds item to the right slot based on item.priority
+     * array.append(item); // adds item to the end of the array
+     * array.remove(item); // removes item from array
+     * for (array.loopIndex = 0; array.loopIndex < array.length; array.loopIndex++) {
+     *   // do things with array elements
+     *   // safe to remove and add elements into the array while looping
+     * }
+     */
 
     var SortedLoopArray = function (args) {
         this._sortBy = args.sortBy;

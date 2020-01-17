@@ -67,7 +67,8 @@ Object.assign(pc, function () {
          *     console.log(response);
          * });
          * @returns {XMLHttpRequest} The request object.
-         *//**
+         */
+        /**
          * @function
          * @name pc.Http#get
          * @variation 2
@@ -112,7 +113,8 @@ Object.assign(pc, function () {
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @returns {XMLHttpRequest} The request object.
-         *//**
+         */
+        /**
          * @function
          * @name pc.Http#post
          * @variation 2
@@ -158,7 +160,8 @@ Object.assign(pc, function () {
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @returns {XMLHttpRequest} The request object.
-         *//**
+         */
+        /**
          * @function
          * @name pc.Http#put
          * @variation 2
@@ -200,7 +203,8 @@ Object.assign(pc, function () {
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @returns {XMLHttpRequest} The request object.
-         *//**
+         */
+        /**
          * @function
          * @name pc.Http#del
          * @variation 2
@@ -242,7 +246,8 @@ Object.assign(pc, function () {
          * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
          * err is the error code.
          * @returns {XMLHttpRequest} The request object.
-         *//**
+         */
+        /**
          * @function
          * @name pc.Http#request
          * @variation 2

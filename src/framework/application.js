@@ -210,10 +210,10 @@ Object.assign(pc, function () {
      */
 
      /**
-     * @name pc.Application#i18n
-     * @type {pc.I18n}
-     * @description Handles localization
-     */
+      * @name pc.Application#i18n
+      * @type {pc.I18n}
+      * @description Handles localization
+      */
 
     var Application = function (canvas, options) {
         pc.EventHandler.call(this);

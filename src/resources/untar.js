@@ -269,12 +269,12 @@ Object.assign(pc, function () {
     };
 
     /**
-    * @private
-    * @name pc.UntarWorker
-    * @classdesc Wraps untar'ing a tar archive with a Web Worker.
-    * @description Creates new instance of a pc.UntarWorker.
-    * @param {String} [filenamePrefix] The prefix that should be added to each file name in the archive. This is usually the {@link pc.AssetRegistry} prefix.
-    */
+     * @private
+     * @name pc.UntarWorker
+     * @classdesc Wraps untar'ing a tar archive with a Web Worker.
+     * @description Creates new instance of a pc.UntarWorker.
+     * @param {String} [filenamePrefix] The prefix that should be added to each file name in the archive. This is usually the {@link pc.AssetRegistry} prefix.
+     */
     var UntarWorker = function (filenamePrefix) {
         this._requestId = 0;
         this._pendingRequests = {};
