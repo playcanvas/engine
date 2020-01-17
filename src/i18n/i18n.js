@@ -359,26 +359,26 @@ Object.assign(pc, (function () {
      * @param {Object} data The localization data. See example for the expected format of the data.
      * @example
      * this.app.i18n.addData({
-     *   header: {
-     *      version: 1
-     *   },
-     *   data: [{
-     *      info: {
-     *          locale: 'en-US'
-     *      },
-     *      messages: {
-     *          "key": "translation",
-     *           // The number of plural forms depends on the locale. See the manual for more information.
-     *          "plural_key": ["one item", "more than one items"]
-     *      }
-     *   }, {
-     *      info: {
-     *          locale: 'fr-FR'
-     *      },
-     *      messages: {
-     *         // ...
-     *      }
-     *   }]
+     *     header: {
+     *         version: 1
+     *     },
+     *     data: [{
+     *         info: {
+     *             locale: 'en-US'
+     *         },
+     *         messages: {
+     *             "key": "translation",
+     *             // The number of plural forms depends on the locale. See the manual for more information.
+     *             "plural_key": ["one item", "more than one items"]
+     *         }
+     *     }, {
+     *         info: {
+     *             locale: 'fr-FR'
+     *         },
+     *         messages: {
+     *             // ...
+     *         }
+     *     }]
      * });
      */
     I18n.prototype.addData = function (data) {

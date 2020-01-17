@@ -43,7 +43,7 @@ Object.assign(pc, function () {
      *     ].join("\n")
      * };
      *
-     * shader = new pc.Shader(graphicsDevice, shaderDefinition);
+     * var shader = new pc.Shader(graphicsDevice, shaderDefinition);
      */
     var Shader = function (graphicsDevice, definition) {
         this.device = graphicsDevice;

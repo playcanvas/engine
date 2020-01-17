@@ -146,7 +146,7 @@ Object.assign(pc, function () {
      *
      * var camera = this.entity.camera;
      * camera.enterVr(function (err) {
-     * if (err) { return; }
+     *     if (err) return;
      *     var display = camera.vrDisplay; // access presenting pc.VrDisplay
      * });
      */
@@ -460,7 +460,6 @@ Object.assign(pc, function () {
          * this.entity.camera.enterVr(function (err) {
          *     if (err) {
          *         console.error(err);
-         *         return;
          *     } else {
          *         // in VR!
          *     }
@@ -479,7 +478,6 @@ Object.assign(pc, function () {
          * this.entity.camera.enterVr(function (err) {
          *     if (err) {
          *         console.error(err);
-         *         return;
          *     } else {
          *         // in VR!
          *     }
@@ -539,7 +537,7 @@ Object.assign(pc, function () {
          *     if (err) {
          *         console.error(err);
          *     } else {
-         *
+         *         // exited successfully
          *     }
          * });
          */

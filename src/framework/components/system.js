@@ -129,9 +129,9 @@ Object.assign(pc, function () {
          * @param {Object} [data] The source data with which to create the component
          * @returns {pc.Component} Returns a Component of type defined by the component system
          * @example
-         *   var entity = new pc.Entity(app);
-         *   app.systems.model.addComponent(entity, { type: 'box' });
-         *   // entity.model is now set to a pc.ModelComponent
+         * var entity = new pc.Entity(app);
+         * app.systems.model.addComponent(entity, { type: 'box' });
+         * // entity.model is now set to a pc.ModelComponent
          */
         addComponent: function (entity, data) {
             var component = new this.ComponentType(this, entity);

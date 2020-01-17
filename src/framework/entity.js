@@ -32,15 +32,13 @@ Object.assign(pc, function () {
      * @property {pc.SoundComponent} [sound] Gets the {@link pc.SoundComponent} attached to this entity. [read only]
      * @property {pc.SpriteComponent} [sprite] Gets the {@link pc.SpriteComponent} attached to this entity. [read only]
      * @example
-     * var app = ... // Get the pc.Application
-     *
      * var entity = new pc.Entity();
      *
      * // Add a Component to the Entity
      * entity.addComponent("camera", {
-     *   fov: 45,
-     *   nearClip: 1,
-     *   farClip: 10000
+     *     fov: 45,
+     *     nearClip: 1,
+     *     farClip: 10000
      * });
      *
      * // Add the Entity into the scene graph
@@ -116,10 +114,14 @@ Object.assign(pc, function () {
      * was an error.
      * @example
      * var entity = new pc.Entity();
-     * entity.addComponent("light"); // Add a light component with default properties
-     * entity.addComponent("camera", { // Add a camera component with some specified properties
-     *   fov: 45,
-     *   clearColor: new pc.Color(1,0,0),
+     *
+     * // Add a light component with default properties
+     * entity.addComponent("light");
+     *
+     * // Add a camera component with some specified properties
+     * entity.addComponent("camera", {
+     *     fov: 45,
+     *     clearColor: new pc.Color(1, 0, 0)
      * });
      */
     Entity.prototype.addComponent = function (type, data) {
@@ -147,7 +149,7 @@ Object.assign(pc, function () {
      * @example
      * var entity = new pc.Entity();
      * entity.addComponent("light"); // add new light component
-     * //...
+     *
      * entity.removeComponent("light"); // remove light component
      */
     Entity.prototype.removeComponent = function (type) {
@@ -406,8 +408,10 @@ Object.assign(pc, function () {
      * Note, this Entity is not in the hierarchy and must be added manually.
      * @returns {pc.Entity} A new Entity which is a deep copy of the original.
      * @example
-     *   var e = this.entity.clone(); // Clone Entity
-     *   this.entity.parent.addChild(e); // Add it as a sibling to the original
+     * var e = this.entity.clone();
+     *
+     * // Add clone as a sibling to the original
+     * this.entity.parent.addChild(e);
      */
     Entity.prototype.clone = function () {
         var duplicatedIdsMap = {};

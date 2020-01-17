@@ -1,6 +1,7 @@
 Object.assign(pc, function () {
     'use strict';
 
+    /* eslint-disable jsdoc/check-examples */
     /**
      * @constructor
      * @name pc.TransformFeedback
@@ -65,6 +66,7 @@ Object.assign(pc, function () {
      * @param {pc.VertexBuffer} inputBuffer The input vertex buffer
      * @param {Number} [usage] The optional usage type of the output vertex buffer (see pc.BUFFER_*). pc.BUFFER_GPUDYNAMIC is recommended for continuous update, and is the default value.
      */
+    /* eslint-enable jsdoc/check-examples */
     var TransformFeedback = function (inputBuffer, usage) {
         usage = usage || pc.BUFFER_GPUDYNAMIC;
         this.device = inputBuffer.device;

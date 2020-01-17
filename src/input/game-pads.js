@@ -132,9 +132,8 @@ Object.assign(pc, function () {
          * @description Poll for the latest data from the gamepad API.
          * @returns {Object[]} An array of gamepads and mappings for the model of gamepad that is attached
          * @example
-         *   var gamepads = new pc.GamePads();
-         *   var pads = gamepads.poll();
-         *   // pads[0] = { map: <map>, pad: <pad> }
+         * var gamepads = new pc.GamePads();
+         * var pads = gamepads.poll();
          */
         poll: function () {
             var pads = [];

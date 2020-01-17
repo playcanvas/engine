@@ -89,10 +89,18 @@ var pc = {
      * @param {Object} ex The object that is merged with target
      * @returns {Object} The target object
      * @example
-     * var A = {a: function() {console.log(this.a}};
-     * var B = {b: function() {console.log(this.b}};
+     * var A = {
+     *     a: function () {
+     *         console.log(this.a);
+     *     }
+     * };
+     * var B = {
+     *     b: function () {
+     *         console.log(this.b);
+     *     }
+     * };
      *
-     * pc.extend(A,B);
+     * pc.extend(A, B);
      * A.a();
      * // logs "a"
      * A.b();

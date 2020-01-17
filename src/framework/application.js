@@ -39,7 +39,7 @@ Object.assign(pc, function () {
      * var app = new pc.Application(canvas, options);
      *
      * // Start the application's main loop
-     * app.start()
+     * app.start();
      */
 
     // PROPERTIES
@@ -205,7 +205,7 @@ Object.assign(pc, function () {
      * @example
      * // Render the scene only while space key is pressed
      * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
-     *    this.app.renderNextFrame = true;
+     *     this.app.renderNextFrame = true;
      * }
      */
 
@@ -791,11 +791,10 @@ Object.assign(pc, function () {
          *
          * app.loadSceneHierarchy("1000.json", function (err, entity) {
          *     if (!err) {
-         *       var e = app.root.find("My New Entity");
+         *         var e = app.root.find("My New Entity");
          *     } else {
-         *       // error
+         *         // error
          *     }
-         *   }
          * });
          */
         loadSceneHierarchy: function (url, callback) {
@@ -815,7 +814,6 @@ Object.assign(pc, function () {
          *     } else {
          *       // error
          *     }
-         *   }
          * });
          */
         loadSceneSettings: function (url, callback) {
@@ -832,12 +830,11 @@ Object.assign(pc, function () {
          * @example
          *
          * app.loadScene("1000.json", function (err, entity) {
-         *     if (!err) {""
-         *       var e = app.root.find("My New Entity");
+         *     if (!err) {
+         *         var e = app.root.find("My New Entity");
          *     } else {
-         *       // error
+         *         // error
          *     }
-         *   }
          * });
          */
         loadScene: function (url, callback) {
@@ -1482,26 +1479,26 @@ Object.assign(pc, function () {
          * @example
          *
          * var settings = {
-         *   physics: {
-         *     gravity: [ 0, -9.8, 0 ]
-         *   },
-         *   render: {
-         *     fog_end: 1000,
-         *     tonemapping: 0,
-         *     skybox: null,
-         *     fog_density: 0.01,
-         *     gamma_correction: 1,
-         *     exposure: 1,
-         *     fog_start: 1,
-         *     global_ambient: [ 0, 0, 0 ],
-         *     skyboxIntensity: 1,
-         *     fog_color: [ 0, 0, 0 ],
-         *     lightmapMode: 1,
-         *     fog: 'none',
-         *     lightmapMaxResolution: 2048,
-         *     skyboxMip: 2,
-         *     lightmapSizeMultiplier: 16
-         *   }
+         *     physics: {
+         *         gravity: [0, -9.8, 0]
+         *     },
+         *     render: {
+         *         fog_end: 1000,
+         *         tonemapping: 0,
+         *         skybox: null,
+         *         fog_density: 0.01,
+         *         gamma_correction: 1,
+         *         exposure: 1,
+         *         fog_start: 1,
+         *         global_ambient: [0, 0, 0],
+         *         skyboxIntensity: 1,
+         *         fog_color: [0, 0, 0],
+         *         lightmapMode: 1,
+         *         fog: 'none',
+         *         lightmapMaxResolution: 2048,
+         *         skyboxMip: 2,
+         *         lightmapSizeMultiplier: 16
+         *     }
          * };
          * app.applySceneSettings(settings);
          */

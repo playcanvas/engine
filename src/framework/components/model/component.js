@@ -318,21 +318,21 @@ Object.assign(pc, function () {
          * Note, this does not remove the model or mesh instances from the scene hierarchy or draw call list.
          * So the model component still incurs some CPU overhead.
          * @example
-         *   this.timer = 0;
-         *   this.visible = true;
-         *   // ...
-         *   // blink model every 0.1 seconds
-         *   this.timer += dt;
-         *   if (this.timer > 0.1) {
-         *       if (!this.visible) {
-         *           this.entity.model.show();
-         *           this.visible = true;
-         *       } else {
-         *           this.entity.model.hide();
-         *           this.visible = false;
-         *       }
-         *       this.timer = 0;
-         *   }
+         * this.timer = 0;
+         * this.visible = true;
+         * // ...
+         * // blink model every 0.1 seconds
+         * this.timer += dt;
+         * if (this.timer > 0.1) {
+         *     if (!this.visible) {
+         *         this.entity.model.show();
+         *         this.visible = true;
+         *     } else {
+         *         this.entity.model.hide();
+         *         this.visible = false;
+         *     }
+         *     this.timer = 0;
+         * }
          */
         hide: function () {
             if (this._model) {

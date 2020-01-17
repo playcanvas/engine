@@ -30,7 +30,7 @@ Object.assign(pc, (function () {
          *
          * m.add2(pc.Mat4.IDENTITY, pc.Mat4.ONE);
          *
-         * console.log("The result of the addition is: " a.toString());
+         * console.log("The result of the addition is: " + m.toString());
          */
         add2: function (lhs, rhs) {
             var a = lhs.data,
@@ -68,7 +68,7 @@ Object.assign(pc, (function () {
          *
          * m.add(pc.Mat4.ONE);
          *
-         * console.log("The result of the addition is: " a.toString());
+         * console.log("The result of the addition is: " + m.toString());
          */
         add: function (rhs) {
             return this.add2(this, rhs);
@@ -203,7 +203,7 @@ Object.assign(pc, (function () {
          * // r = a * b
          * r.mul2(a, b);
          *
-         * console.log("The result of the multiplication is: " r.toString());
+         * console.log("The result of the multiplication is: " + r.toString());
          */
         mul2: function (lhs, rhs) {
             var a00, a01, a02, a03,
@@ -284,7 +284,7 @@ Object.assign(pc, (function () {
          * // a = a * b
          * a.mul(b);
          *
-         * console.log("The result of the multiplication is: " a.toString());
+         * console.log("The result of the multiplication is: " + a.toString());
          */
         mul: function (rhs) {
             return this.mul2(this, rhs);

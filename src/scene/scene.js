@@ -1160,20 +1160,20 @@ Object.assign(pc, function () {
  * @param {pc.LayerComposition} oldComp Previously used {@link pc.LayerComposition}.
  * @param {pc.LayerComposition} newComp Newly set {@link pc.LayerComposition}.
  * @example
- *   this.app.scene.on('set:layers', function(oldComp, newComp) {
- *       var list = newComp.layerList;
- *       var layer;
- *       for(var i=0; i<list.length; i++) {
- *           layer = list[i];
- *           switch(layer.name) {
- *               case 'MyLayer':
- *                   layer.onEnable = myOnEnableFunction;
- *                   layer.onDisable = myOnDisableFunction;
- *                   break;
- *               case 'MyOtherLayer':
- *                   layer.shaderPass = myShaderPass;
- *                   break;
- *           }
- *       }
- *   });
+ * this.app.scene.on('set:layers', function (oldComp, newComp) {
+ *     var list = newComp.layerList;
+ *     var layer;
+ *     for (var i = 0; i < list.length; i++) {
+ *         layer = list[i];
+ *         switch (layer.name) {
+ *             case 'MyLayer':
+ *                 layer.onEnable = myOnEnableFunction;
+ *                 layer.onDisable = myOnDisableFunction;
+ *                 break;
+ *             case 'MyOtherLayer':
+ *                 layer.shaderPass = myShaderPass;
+ *                 break;
+ *         }
+ *     }
+ * });
  */

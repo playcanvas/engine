@@ -10,7 +10,7 @@ Object.assign(pc, (function () {
      * var obj = new EventHandlerSubclass();
      *
      * // subscribe to an event
-     * obj.on('hello', function(str) {
+     * obj.on('hello', function (str) {
      *     console.log('event hello is fired', str);
      * });
      *

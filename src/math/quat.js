@@ -158,7 +158,7 @@ Object.assign(pc, (function () {
          * var v = new pc.Vec3();
          * var angle = q.getAxisAngle(v);
          * // Should output 90
-         * console.log(angle)
+         * console.log(angle);
          * // Should output [0, 1, 0]
          * console.log(v.toString());
          */
@@ -281,7 +281,7 @@ Object.assign(pc, (function () {
          * // In other words, a = a * b
          * a.mul(b);
          *
-         * console.log("The result of the multiplication is: " a.toString());
+         * console.log("The result of the multiplication is: " + a.toString());
          */
         mul: function (rhs) {
             var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w;
@@ -320,7 +320,7 @@ Object.assign(pc, (function () {
          * // In other words, r = a * b
          * r.mul2(a, b);
          *
-         * console.log("The result of the multiplication is: " r.toString());
+         * console.log("The result of the multiplication is: " + r.toString());
          */
         mul2: function (lhs, rhs) {
             var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w;
@@ -586,8 +586,8 @@ Object.assign(pc, (function () {
          * in between generating a spherical interpolation between the two.
          * @returns {pc.Quat} Self for chaining.
          * @example
-         * var q1 = new pc.Quat(-0.11,-0.15,-0.46,0.87);
-         * var q2 = new pc.Quat(-0.21,-0.21,-0.67,0.68);
+         * var q1 = new pc.Quat(-0.11, -0.15, -0.46, 0.87);
+         * var q2 = new pc.Quat(-0.21, -0.21, -0.67, 0.68);
          *
          * var result;
          * result = new pc.Quat().slerp(q1, q2, 0);   // Return q1

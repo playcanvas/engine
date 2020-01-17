@@ -12,16 +12,16 @@ Object.assign(pc, function () {
          * @param {Function} Super Constructor of base class
          * @returns {Function} New instance of Self which inherits from Super
          * @example
-         * Base = function () {};
+         * var Base = function () {};
          * Base.prototype.fn = function () {
-         *   console.log('base');
+         *     console.log('base');
          * };
-         * Class = function () {}
+         * var Class = function () {};
          * Class = pc.inherits(Class, Base);
          * Class.prototype.fn = function () {
-         *   // Call overridden method
-         *   Class._super.fn();
-         *   console.log('class');
+         *     // Call overridden method
+         *     Class._super.fn();
+         *     console.log('class');
          * };
          *
          * var c = new Class();

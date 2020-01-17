@@ -286,8 +286,8 @@ Object.assign(pc.Application.prototype, function () {
      * @param {Object} [options] Options to set rendering properties
      * @param {pc.Layer} [options.layer] The layer to render the line into
      * @example
-     * var points = [new pc.Vec3(0,0,0), new pc.Vec3(1,0,0), new pc.Vec3(1,1,0), new pc.Vec3(1,1,1)];
-     * var colors = [new pc.Color(1,0,0), new pc.Color(1,1,0), new pc.Color(0,1,1), new pc.Color(0,0,1)];
+     * var points = [new pc.Vec3(0, 0, 0), new pc.Vec3(1, 0, 0), new pc.Vec3(1, 1, 0), new pc.Vec3(1, 1, 1)];
+     * var colors = [new pc.Color(1, 0, 0), new pc.Color(1, 1, 0), new pc.Color(0, 1, 1), new pc.Color(0, 0, 1)];
      * app.renderLines(points, colors);
      */
     function renderLines(position, color, options) {

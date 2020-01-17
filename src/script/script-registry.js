@@ -35,7 +35,7 @@ Object.assign(pc, function () {
      * @example
      * var PlayerController = pc.createScript('playerController');
      * // playerController Script Type will be added to pc.ScriptRegistry automatically
-     * app.scripts.has('playerController') === true; // true
+     * console.log(app.scripts.has('playerController')); // outputs true
      */
     ScriptRegistry.prototype.add = function (script) {
         var self = this;
@@ -196,7 +196,7 @@ Object.assign(pc, function () {
      * @returns {pc.ScriptType[]} list of all {@link pc.ScriptType}s in registry
      * @example
      * // logs array of all Script Type names available in registry
-     * console.log(app.scripts.list().map(function(o) {
+     * console.log(app.scripts.list().map(function (o) {
      *     return o.name;
      * }));
      */

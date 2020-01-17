@@ -26,17 +26,19 @@ pc.script = (function () {
          * which is used to access Entities and Components, and should return the Type of the script resource
          * to be instanced for each Entity.
          * @example
-         * pc.script.create( function (app) {
-         *  var Scriptable = function (entity) {
-         *      // store entity
-         *      this.entity = entity;
+         * pc.script.create(function (app) {
+         *     var Scriptable = function (entity) {
+         *         // store entity
+         *         this.entity = entity;
          *
-         *      // use app
-         *      app.components.model.addComponent(entity, {...});
-         *  };
+         *         // use app
+         *         app.components.model.addComponent(entity, {
+         *             // component properties
+         *         });
+         *     };
          *
-         *  return Scriptable;
-         * }
+         *     return Scriptable;
+         * });
          */
         create: function (name, callback) {
             if (!_legacy)
@@ -77,16 +79,16 @@ pc.script = (function () {
          * @example
          * pc.script.attribute('speed', 'number', 5);
          * pc.script.attribute('message', 'string', "My message");
-         * pc.script.attribute('enemyPosition', 'vector', [1,0,0]);
+         * pc.script.attribute('enemyPosition', 'vector', [1, 0, 0]);
          * pc.script.attribute('spellType', 'enumeration', 0, {
          *     enumerations: [{
-         *        name: "Fire",
-         *        value: 0
+         *         name: "Fire",
+         *         value: 0
          *     }, {
-         *        name: "Ice",
-         *        value: 1
+         *         name: "Ice",
+         *         value: 1
          *     }]
-         *  });
+         * });
          * pc.script.attribute('enemy', 'entity');
          * pc.script.attribute('enemySpeed', 'curve');
          * pc.script.attribute('enemyPosition', 'curve', null, {
@@ -97,13 +99,13 @@ pc.script = (function () {
          * });
          *
          * pc.script.create('scriptable', function (app) {
-         *  var Scriptable = function (entity) {
-         *      // store entity
-         *      this.entity = entity;
-         *  };
+         *     var Scriptable = function (entity) {
+         *         // store entity
+         *         this.entity = entity;
+         *     };
          *
-         *  return Scriptable;
-         * }
+         *     return Scriptable;
+         * });
          */
         attribute: function (name, type, defaultValue, options) {
             // only works when parsing the script...
@@ -118,9 +120,9 @@ pc.script = (function () {
          * @param  {pc.callbacks.CreateScreen} callback A function which can set up and tear down a customised loading screen.
          * @example
          * pc.script.createLoadingScreen(function (app) {
-         *     var showSplashScreen = function () { // }
-         *     var hideSplashScreen = function () { // }
-         *     var showProgress = function (progress) { // }
+         *     var showSplashScreen = function () {};
+         *     var hideSplashScreen = function () {};
+         *     var showProgress = function (progress) {};
          *     app.on("preload:start", showSplashScreen);
          *     app.on("preload:progress", showProgress);
          *     app.on("start", hideSplashScreen);

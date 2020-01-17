@@ -1999,7 +1999,7 @@ Object.assign(pc, function () {
          *     base: 0,
          *     count: 3,
          *     indexed: false
-         * )};
+         * });
          */
         draw: function (primitive, numInstances) {
             var gl = this.gl;

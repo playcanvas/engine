@@ -178,7 +178,9 @@ Object.assign(pc, function () {
          * @description Add an asset to the registry
          * @param {pc.Asset} asset The asset to add
          * @example
-         * var asset = new pc.Asset("My Asset", "texture", {url: "../path/to/image.jpg"});
+         * var asset = new pc.Asset("My Asset", "texture", {
+         *     url: "../path/to/image.jpg"
+         * });
          * app.assets.add(asset);
          */
         add: function (asset) {
@@ -307,18 +309,20 @@ Object.assign(pc, function () {
          * @param {pc.Asset} asset The asset to load
          * @example
          * // load some assets
-         * var toload = [app.assets.find("My Asset"), app.assets.find("Another Asset")]
+         * var assetsToLoad = [
+         *     app.assets.find("My Asset"),
+         *     app.assets.find("Another Asset")
+         * ];
          * var count = 0;
-         * for (var i = 0; i < toload.length; i++) {
-         *     var asset = toload[i];
-         *     asset.ready(function (asset) {
+         * assetsToLoad.forEach(function (assetToLoad) {
+         *     assetToLoad.ready(function (asset) {
          *         count++;
-         *         if (count === toload.length) {
+         *         if (count === assetsToLoad.length) {
          *             // done
          *         }
          *     });
-         *     app.assets.load(asset)
-         * }
+         *     app.assets.load(assetToLoad);
+         * });
          */
         load: function (asset) {
             if (asset.loading)
@@ -692,10 +696,10 @@ Object.assign(pc, function () {
          * var assets = app.assets.findByTag("level-1", "level-2");
          * // returns all assets that tagged by `level-1` OR `level-2`
          * @example
-         * var assets = app.assets.findByTag([ "level-1", "monster" ]);
+         * var assets = app.assets.findByTag(["level-1", "monster"]);
          * // returns all assets that tagged by `level-1` AND `monster`
          * @example
-         * var assets = app.assets.findByTag([ "level-1", "monster" ], [ "level-2", "monster" ]);
+         * var assets = app.assets.findByTag(["level-1", "monster"], ["level-2", "monster"]);
          * // returns all assets that tagged by (`level-1` AND `monster`) OR (`level-2` AND `monster`)
          */
         findByTag: function () {
@@ -709,7 +713,7 @@ Object.assign(pc, function () {
          * @param {pc.callbacks.FilterAsset} callback The callback function that is used to filter assets, return `true` to include asset to result list
          * @returns {pc.Asset[]} A list of all Assets found
          * @example
-         * var assets = app.assets.filter(function(asset) {
+         * var assets = app.assets.filter(function (asset) {
          *     return asset.name.indexOf('monster') !== -1;
          * });
          * console.log("Found " + assets.length + " assets, where names contains 'monster'");

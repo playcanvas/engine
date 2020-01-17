@@ -56,7 +56,7 @@ Object.assign(pc, function () {
      * @example
      * // Specify 3-component positions (x, y, z)
      * var vertexFormat = new pc.VertexFormat(graphicsDevice, [
-     *     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 },
+     *     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 }
      * ]);
      * @example
      * // Specify 2-component positions (x, y), a texture coordinate (u, v) and a vertex color (r, g, b, a)

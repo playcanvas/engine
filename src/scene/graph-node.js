@@ -298,7 +298,7 @@ Object.assign(pc, function () {
          * @returns {pc.GraphNode[]} The array of graph nodes that match the search criteria.
          * @example
          * // Finds all nodes that have a model component and have `door` in their lower-cased name
-         * var doors = house.find(function(node) {
+         * var doors = house.find(function (node) {
          *     return node.model && node.name.toLowerCase().indexOf('door') !== -1;
          * });
          * @example
@@ -360,7 +360,7 @@ Object.assign(pc, function () {
          * @returns {pc.GraphNode} A graph node that match the search criteria.
          * @example
          * // Find the first node that is called `head` and has a model component
-         * var head = player.findOne(function(node) {
+         * var head = player.findOne(function (node) {
          *     return node.model && node.name === 'head';
          * });
          * @example
@@ -424,10 +424,10 @@ Object.assign(pc, function () {
          * var birdsAndMammals = node.findByTag("bird", "mammal");
          * @example
          * // Return all assets that tagged by `carnivore` AND `mammal`
-         * var meatEatingMammals = node.findByTag([ "carnivore", "mammal" ]);
+         * var meatEatingMammals = node.findByTag(["carnivore", "mammal"]);
          * @example
          * // Return all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
-         * var meatEatingMammalsAndReptiles = node.findByTag([ "carnivore", "mammal" ], [ "carnivore", "reptile" ]);
+         * var meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
          */
         findByTag: function () {
             var tags = this.tags._processArguments(arguments);
@@ -803,7 +803,7 @@ Object.assign(pc, function () {
          * @example
          * // Set via vector
          * var pos = new pc.Vec3(0, 10, 0);
-         * this.entity.setLocalPosition(pos)
+         * this.entity.setLocalPosition(pos);
          */
         setLocalPosition: function (x, y, z) {
             if (x instanceof pc.Vec3) {

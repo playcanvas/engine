@@ -49,9 +49,9 @@ Object.assign(pc, function () {
      * @param {Object} [file] Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
      * @example
      * var file = {
-     *   filename: "filename.txt",
-     *   url: "/example/filename.txt",
-     * }
+     *     filename: "filename.txt",
+     *     url: "/example/filename.txt"
+     * };
      * @param {Object} [data] JSON object with additional data about the asset (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of materials)
      * @example
      * var asset = new pc.Asset("a texture", "texture", {

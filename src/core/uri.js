@@ -181,7 +181,10 @@ Object.assign(pc, function () {
              * @example
              * var s = "http://example.com";
              * var uri = new pc.URI(s);
-             * uri.setQuery({"a":1,"b":2});
+             * uri.setQuery({
+             *     "a": 1,
+             *     "b": 2
+             * });
              * console.log(uri.toString()); // logs "http://example.com?a=1&b=2
              */
             this.setQuery = function (params) {

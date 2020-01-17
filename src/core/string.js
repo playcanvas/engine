@@ -157,7 +157,7 @@ pc.string = function () {
          * @example
          * var s = "abc";
          * if (pc.string.startsWith(s, "a")) {
-         *   console.log('Starts with a');
+         *     console.log('Starts with a');
          * }
          */
         startsWith: function (s, subs) {

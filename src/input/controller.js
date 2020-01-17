@@ -12,7 +12,7 @@ Object.assign(pc, function () {
      * @param {pc.Mouse} [options.mouse] A Mouse object to use.
      * @param {pc.GamePads} [options.gamepads] A Gamepads object to use.
      * @example
-     * var c = new pc.Controller(document)
+     * var c = new pc.Controller(document);
      *
      * // Register the "fire" action and assign it to both the Enter key and the Spacebar.
      * c.registerKeys("fire", [pc.KEY_ENTER, pc.KEY_SPACE]);

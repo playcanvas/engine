@@ -152,7 +152,7 @@ Object.assign(pc, function () {
      * @param {Object[]} [args.enum] List of fixed choices for field, defined as array of objects, where key in object is a title of an option
      * @example
      * PlayerController.attributes.add('fullName', {
-     *     type: 'string',
+     *     type: 'string'
      * });
      * @example
      * PlayerController.attributes.add('speed', {
@@ -166,9 +166,9 @@ Object.assign(pc, function () {
      *     type: 'number',
      *     default: 32,
      *     enum: [
-     *        { '32x32': 32 },
-     *        { '64x64': 64 },
-     *        { '128x128': 128 }
+     *         { '32x32': 32 },
+     *         { '64x64': 64 },
+     *         { '128x128': 128 }
      *     ]
      * });
      */
@@ -240,8 +240,8 @@ Object.assign(pc, function () {
      * @returns {Boolean} True if Attribute is defined
      * @example
      * if (PlayerController.attributes.has('fullName')) {
-     *     // attribute `fullName` is defined
-     * });
+     *     // attribute fullName is defined
+     * }
      */
     ScriptAttributes.prototype.has = function (name) {
         return !!this.index[name];
@@ -290,7 +290,7 @@ Object.assign(pc, function () {
      * });
      *
      * // runs every tick
-     * Turning.prototype.update = function(dt) {
+     * Turning.prototype.update = function (dt) {
      *     this.entity.rotate(0, this.speed * dt, 0);
      * };
      */
@@ -414,13 +414,13 @@ Object.assign(pc, function () {
          * var PlayerController = pc.createScript('playerController');
          *
          * PlayerController.extend({
-         *     initialize: function() {
+         *     initialize: function () {
          *         // called once on initialize
          *     },
-         *     update: function(dt) {
+         *     update: function (dt) {
          *         // called each tick
          *     }
-         * })
+         * });
          */
         script.extend = function (methods) {
             for (var key in methods) {
@@ -470,8 +470,8 @@ Object.assign(pc, function () {
          * @name pc.ScriptType#enable
          * @description Fired when a script instance becomes enabled
          * @example
-         * PlayerController.prototype.initialize = function() {
-         *     this.on('enable', function() {
+         * PlayerController.prototype.initialize = function () {
+         *     this.on('enable', function () {
          *         // Script Instance is now enabled
          *     });
          * };
@@ -482,8 +482,8 @@ Object.assign(pc, function () {
          * @name pc.ScriptType#disable
          * @description Fired when a script instance becomes disabled
          * @example
-         * PlayerController.prototype.initialize = function() {
-         *     this.on('disable', function() {
+         * PlayerController.prototype.initialize = function () {
+         *     this.on('disable', function () {
          *         // Script Instance is now disabled
          *     });
          * };
@@ -495,8 +495,8 @@ Object.assign(pc, function () {
          * @description Fired when a script instance changes state to enabled or disabled
          * @param {Boolean} enabled True if now enabled, False if disabled
          * @example
-         * PlayerController.prototype.initialize = function() {
-         *     this.on('state', function(enabled) {
+         * PlayerController.prototype.initialize = function () {
+         *     this.on('state', function (enabled) {
          *         console.log('Script Instance is now ' + (enabled ? 'enabled' : 'disabled'));
          *     });
          * };
@@ -507,8 +507,8 @@ Object.assign(pc, function () {
          * @name pc.ScriptType#destroy
          * @description Fired when a script instance is destroyed and removed from component
          * @example
-         * PlayerController.prototype.initialize = function() {
-         *     this.on('destroy', function() {
+         * PlayerController.prototype.initialize = function () {
+         *     this.on('destroy', function () {
          *         // no more part of an entity
          *         // good place to cleanup entity from destroyed script
          *     });
@@ -523,8 +523,8 @@ Object.assign(pc, function () {
          * @param {Object} value New value
          * @param {Object} valueOld Old value
          * @example
-         * PlayerController.prototype.initialize = function() {
-         *     this.on('attr', function(name, value, valueOld) {
+         * PlayerController.prototype.initialize = function () {
+         *     this.on('attr', function (name, value, valueOld) {
          *         console.log(name + ' been changed from ' + valueOld + ' to ' + value);
          *     });
          * };
@@ -537,8 +537,8 @@ Object.assign(pc, function () {
          * @param {Object} value New value
          * @param {Object} valueOld Old value
          * @example
-         * PlayerController.prototype.initialize = function() {
-         *     this.on('attr:speed', function(value, valueOld) {
+         * PlayerController.prototype.initialize = function () {
+         *     this.on('attr:speed', function (value, valueOld) {
          *         console.log('speed been changed from ' + valueOld + ' to ' + value);
          *     });
          * };
@@ -551,8 +551,8 @@ Object.assign(pc, function () {
          * @param {Error} err Native JavaScript Error object with details of error
          * @param {String} method The method of the script instance that the exception originated from.
          * @example
-         * PlayerController.prototype.initialize = function() {
-         *     this.on('error', function(err, method) {
+         * PlayerController.prototype.initialize = function () {
+         *     this.on('error', function (err, method) {
          *         // caught an exception
          *         console.log(err.stack);
          *     });

@@ -199,7 +199,7 @@ Object.assign(pc, (function () {
          * @example
          * tags.add('ui', 'settings');
          * @example
-         * tags.add([ 'level-2', 'mob' ]);
+         * tags.add(['level-2', 'mob']);
          */
         add: function () {
             var changed = false;
@@ -238,7 +238,7 @@ Object.assign(pc, (function () {
          * @example
          * tags.remove('ui', 'settings');
          * @example
-         * tags.remove([ 'level-2', 'mob' ]);
+         * tags.remove(['level-2', 'mob']);
          */
         remove: function () {
             var changed = false;
@@ -307,9 +307,9 @@ Object.assign(pc, (function () {
          * @example
          * tags.has('mob', 'player'); // player OR mob
          * @example
-         * tags.has([ 'level-1', 'mob' ]); // monster AND level-1
+         * tags.has(['level-1', 'mob']); // monster AND level-1
          * @example
-         * tags.has([ 'ui', 'settings' ], [ 'ui', 'levels' ]); // (ui AND settings) OR (ui AND levels)
+         * tags.has(['ui', 'settings'], ['ui', 'levels']); // (ui AND settings) OR (ui AND levels)
          */
         has: function () {
             if (!this._list.length)

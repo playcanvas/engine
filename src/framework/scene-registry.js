@@ -141,11 +141,10 @@ Object.assign(pc, function () {
      * var url = app.getSceneUrl("Scene Name");
      * app.loadSceneHierarchy(url, function (err, entity) {
      *     if (!err) {
-     *       var e = app.root.find("My New Entity");
+     *         var e = app.root.find("My New Entity");
      *     } else {
-     *       // error
+     *         // error
      *     }
-     *   }
      * });
      */
     SceneRegistry.prototype.loadSceneHierarchy = function (url, callback) {
@@ -206,7 +205,6 @@ Object.assign(pc, function () {
      *     } else {
      *       // error
      *     }
-     *   }
      * });
      */
     SceneRegistry.prototype.loadSceneSettings = function (url, callback) {
