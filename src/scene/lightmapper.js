@@ -166,7 +166,7 @@ Object.assign(pc, function () {
          * @name pc.Lightmapper#bake
          * @description Generates and applies the lightmaps.
          * @param {pc.Entity} nodes An array of models to render lightmaps for. If not supplied, full scene will be baked.
-         * @param {Number} mode Baking mode. Possible values:
+         * @param {number} mode Baking mode. Possible values:
          * <ul>
          *     <li>pc.BAKE_COLOR: single color lightmap
          *     <li>pc.BAKE_COLORDIR: single color lightmap + dominant light direction (used for bump/specular)

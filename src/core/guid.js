@@ -10,7 +10,7 @@ pc.guid = function () {
          * @function
          * @name pc.guid.create
          * @description Create an RFC4122 version 4 compliant GUID
-         * @returns {String} A new GUID
+         * @returns {string} A new GUID
          */
         create: function () {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {

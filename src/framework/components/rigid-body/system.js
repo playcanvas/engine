@@ -326,7 +326,7 @@ Object.assign(pc, function () {
          * @description Stores a collision between the entity and other in the contacts map and returns true if it is a new collision
          * @param {pc.Entity} entity The entity
          * @param {pc.Entity} other The entity that collides with the first entity
-         * @returns {Boolean} true if this is a new collision, false otherwise.
+         * @returns {boolean} true if this is a new collision, false otherwise.
          */
         _storeCollision: function (entity, other) {
             var isNewCollision = false;
@@ -455,8 +455,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.RigidBodyComponentSystem#_hasContactEvent
          * @description Returns true if the entity has a contact event attached and false otherwise.
-         * @param {Object} entity Entity to test
-         * @returns {Boolean} True if the entity has a contact and false otherwise
+         * @param {object} entity Entity to test
+         * @returns {boolean} True if the entity has a contact and false otherwise
          */
         _hasContactEvent: function (entity) {
             var c = entity.collision;

@@ -3,7 +3,7 @@ Object.assign(pc, function () {
 
     /**
      * @constant
-     * @type {Number}
+     * @type {number}
      * @name pc.SPRITE_RENDERMODE_SIMPLE
      * @description This mode renders a sprite as a simple quad.
      */
@@ -11,7 +11,7 @@ Object.assign(pc, function () {
 
     /**
      * @constant
-     * @type {Number}
+     * @type {number}
      * @name pc.SPRITE_RENDERMODE_SLICED
      * @description This mode renders a sprite using 9-slicing in 'sliced' mode. Sliced mode stretches the
      * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
@@ -21,7 +21,7 @@ Object.assign(pc, function () {
 
     /**
      * @constant
-     * @type {Number}
+     * @type {number}
      * @name pc.SPRITE_RENDERMODE_TILED
      * @description This mode renders a sprite using 9-slicing in 'tiled' mode. Tiled mode tiles the
      * top and bottom regions of the sprite horizontally, the left and right regions vertically and the middle region
@@ -52,10 +52,10 @@ Object.assign(pc, function () {
      * It can be used by the {@link pc.SpriteComponent} or the {@link pc.ElementComponent} to render a
      * single frame or a sprite animation.
      * @param {pc.GraphicsDevice} device The graphics device of the application.
-     * @param {Object} [options] Options for creating the pc.Sprite.
-     * @param {Number} [options.pixelsPerUnit] The number of pixels that map to one PlayCanvas unit.
+     * @param {object} [options] Options for creating the pc.Sprite.
+     * @param {number} [options.pixelsPerUnit] The number of pixels that map to one PlayCanvas unit.
      * Defaults to 1.
-     * @param {Number} [options.renderMode] The rendering mode of the sprite. Can be:
+     * @param {number} [options.renderMode] The rendering mode of the sprite. Can be:
      * <ul>
      *     <li>{@link pc.SPRITE_RENDERMODE_SIMPLE}</li>
      *     <li>{@link pc.SPRITE_RENDERMODE_SLICED}</li>
@@ -63,17 +63,17 @@ Object.assign(pc, function () {
      * </ul>
      * Defaults to pc.SPRITE_RENDERMODE_SIMPLE.
      * @param {pc.TextureAtlas} [options.atlas] The texture atlas. Defaults to null.
-     * @param {String[]} [options.frameKeys] The keys of the frames in the sprite atlas that this sprite is
+     * @param {string[]} [options.frameKeys] The keys of the frames in the sprite atlas that this sprite is
      * using. Defaults to null.
-     * @property {Number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
+     * @property {number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
      * @property {pc.TextureAtlas} atlas The texture atlas.
-     * @property {Number} renderMode The rendering mode of the sprite. Can be:
+     * @property {number} renderMode The rendering mode of the sprite. Can be:
      * <ul>
      *     <li>{@link pc.SPRITE_RENDERMODE_SIMPLE}</li>
      *     <li>{@link pc.SPRITE_RENDERMODE_SLICED}</li>
      *     <li>{@link pc.SPRITE_RENDERMODE_TILED}</li>
      * </ul>
-     * @property {String[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
+     * @property {string[]} frameKeys The keys of the frames in the sprite atlas that this sprite is using.
      * @property {pc.Mesh[]} meshes An array that contains a mesh for each frame.
      */
     var Sprite = function (device, options) {

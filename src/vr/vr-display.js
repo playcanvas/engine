@@ -11,9 +11,9 @@ Object.assign(pc, function () {
      * from the WebVR API.
      * @param {pc.Application} app The application outputting to this VR display.
      * @param {VRDisplay} display The native VRDisplay object from the WebVR API.
-     * @property {Number} id An identifier for this distinct VRDisplay
+     * @property {number} id An identifier for this distinct VRDisplay
      * @property {VRDisplay} display The native VRDisplay object from the WebVR API
-     * @property {Boolean} presenting True if this display is currently presenting VR content
+     * @property {boolean} presenting True if this display is currently presenting VR content
      * @property {VRDisplayCapabilities} capabilities Returns the <a href="https://w3c.github.io/webvr/#interface-vrdisplaycapabilities" target="_blank">VRDisplayCapabilities</a> object from the VRDisplay.
      * This can be used to determine what features are available on this display.
      */
@@ -294,8 +294,8 @@ Object.assign(pc, function () {
          * @name pc.VrDisplay#setClipPlanes
          * @description Set the near and far depth plans of the display. This enables mapping of values in the
          * render target depth attachment to scene coordinates
-         * @param {Number} n The near depth distance
-         * @param {Number} f The far depth distance
+         * @param {number} n The near depth distance
+         * @param {number} f The far depth distance
          */
         setClipPlanes: function (n, f) {
             if (this.display) {

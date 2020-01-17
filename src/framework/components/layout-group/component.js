@@ -8,13 +8,13 @@ Object.assign(pc, function () {
      * @classdesc A LayoutGroupComponent enables the Entity to position and scale child {@link pc.ElementComponent}s according to configurable layout rules.
      * @param {pc.LayoutGroupComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @property {Number} orientation Whether the layout should run horizontally or vertically.
-     * @property {Boolean} reverseX Reverses the order of children along the x axis.
-     * @property {Boolean} reverseY Reverses the order of children along the y axis.
+     * @property {number} orientation Whether the layout should run horizontally or vertically.
+     * @property {boolean} reverseX Reverses the order of children along the x axis.
+     * @property {boolean} reverseY Reverses the order of children along the y axis.
      * @property {pc.Vec2} alignment Specifies the horizontal and vertical alignment of child elements. Values range from 0 to 1 where [0,0] is the bottom left and [1,1] is the top right.
      * @property {pc.Vec4} padding Padding to be applied inside the container before positioning any children. Specified as left, bottom, right and top values.
      * @property {pc.Vec2} spacing Spacing to be applied between each child element.
-     * @property {Number} widthFitting Fitting logic to be applied when positioning and scaling child elements. Can be one of the following:
+     * @property {number} widthFitting Fitting logic to be applied when positioning and scaling child elements. Can be one of the following:
      * <ul>
      *     <li>{@link pc.FITTING_NONE}: Child elements will be rendered at their natural size.</li>
      *     <li>
@@ -36,8 +36,8 @@ Object.assign(pc, function () {
      *     <li>{@link pc.FITTING_BOTH}: Applies both STRETCH and SHRINK logic as necessary.</li>
      * </ul>
      * <ul>
-     * @property {Number} heightFitting Identical to {@link pc.LayoutGroupComponent#widthFitting} but for the Y axis.
-     * @property {Boolean} wrap Whether or not to wrap children onto a new row/column when the size of the container is exceeded. Defaults to false, which means that children will be be rendered in a single row (horizontal orientation) or column (vertical orientation).<br><br><em>Note that setting wrap to true makes it impossible for the {@link pc.FITTING_BOTH} fitting mode to operate in any logical manner. For this reason, when wrap is true, a {@link pc.LayoutGroupComponent#widthFitting} or {@link pc.LayoutGroupComponent#heightFitting} mode of {@link pc.FITTING_BOTH} will be coerced to {@link pc.FITTING_STRETCH}.<em>
+     * @property {number} heightFitting Identical to {@link pc.LayoutGroupComponent#widthFitting} but for the Y axis.
+     * @property {boolean} wrap Whether or not to wrap children onto a new row/column when the size of the container is exceeded. Defaults to false, which means that children will be be rendered in a single row (horizontal orientation) or column (vertical orientation).<br><br><em>Note that setting wrap to true makes it impossible for the {@link pc.FITTING_BOTH} fitting mode to operate in any logical manner. For this reason, when wrap is true, a {@link pc.LayoutGroupComponent#widthFitting} or {@link pc.LayoutGroupComponent#heightFitting} mode of {@link pc.FITTING_BOTH} will be coerced to {@link pc.FITTING_STRETCH}.<em>
      */
     var LayoutGroupComponent = function LayoutGroupComponent(system, entity) {
         pc.Component.call(this, system, entity);

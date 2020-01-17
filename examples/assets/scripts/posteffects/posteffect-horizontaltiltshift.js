@@ -8,7 +8,7 @@ Object.assign(pc, function () {
      * @description Creates new instance of the post effect.
      * @augments pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
-     * @property {Number} focus Controls where the "focused" vertical line lies
+     * @property {number} focus Controls where the "focused" vertical line lies
      */
     var HorizontalTiltShiftEffect = function (graphicsDevice) {
         pc.PostEffect.call(this, graphicsDevice);

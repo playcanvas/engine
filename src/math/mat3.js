@@ -65,7 +65,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat3#set
          * @description Copies the contents of a source array[9] to a destination 3x3 matrix.
-         * @param {Number[]} src An array[9] to be copied.
+         * @param {number[]} src An array[9] to be copied.
          * @returns {pc.Mat3} Self for chaining
          * @example
          * var dst = new pc.Mat3();
@@ -92,7 +92,7 @@ Object.assign(pc, (function () {
          * @name pc.Mat3#equals
          * @param {pc.Mat3} rhs The other matrix.
          * @description Reports whether two matrices are equal.
-         * @returns {Boolean} true if the matrices are equal and false otherwise.
+         * @returns {boolean} true if the matrices are equal and false otherwise.
          * @example
          * var a = new pc.Mat3().translate(10, 20, 30);
          * var b = new pc.Mat3();
@@ -117,7 +117,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat3#isIdentity
          * @description Reports whether the specified matrix is the identity matrix.
-         * @returns {Boolean} true if the matrix is identity and false otherwise.
+         * @returns {boolean} true if the matrix is identity and false otherwise.
          * @example
          * var m = new pc.Mat3();
          * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
@@ -165,7 +165,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat3#toString
          * @description Converts the matrix to string form.
-         * @returns {String} The matrix in string form.
+         * @returns {string} The matrix in string form.
          * @example
          * var m = new pc.Mat3();
          * // Should output '[1, 0, 0, 0, 1, 0, 0, 0, 1]'

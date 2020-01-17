@@ -53,7 +53,7 @@ Object.assign(pc, function () {
      * @name pc.ZoneComponent#state
      * @description Fired when Component changes state to enabled or disabled
      * Note: this event does not take in account entity or any of its parent enabled state
-     * @param {Boolean} enabled True if now enabled, False if disabled
+     * @param {boolean} enabled True if now enabled, False if disabled
      * @example
      * entity.zone.on('state', function (enabled) {
      *     // component changed state

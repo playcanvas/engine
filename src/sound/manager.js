@@ -6,7 +6,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.SoundManager.hasAudio
      * @description Reports whether this device supports the HTML5 Audio tag API
-     * @returns {Boolean} true if HTML5 Audio tag API is supported and false otherwise
+     * @returns {boolean} true if HTML5 Audio tag API is supported and false otherwise
      */
     function hasAudio() {
         return (typeof Audio !== 'undefined');
@@ -17,7 +17,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.SoundManager.hasAudioContext
      * @description Reports whether this device supports the Web Audio API
-     * @returns {Boolean} true if Web Audio is supported and false otherwise
+     * @returns {boolean} true if Web Audio is supported and false otherwise
      */
     function hasAudioContext() {
         return !!(typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined');
@@ -30,9 +30,9 @@ Object.assign(pc, function () {
      * @classdesc The SoundManager is used to load and play audio. As well as apply system-wide settings
      * like global volume, suspend and resume.
      * @description Creates a new sound manager.
-     * @param {Object} [options] Options options object.
-     * @param {Boolean} [options.forceWebAudioApi] Always use the Web Audio API even check indicates that it if not available
-     * @property {Number} volume Global volume for the manager. All {@link pc.SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
+     * @param {object} [options] Options options object.
+     * @param {boolean} [options.forceWebAudioApi] Always use the Web Audio API even check indicates that it if not available
+     * @property {number} volume Global volume for the manager. All {@link pc.SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
      */
     var SoundManager = function (options) {
         pc.EventHandler.call(this);
@@ -137,9 +137,9 @@ Object.assign(pc, function () {
          * @name pc.SoundManager#playSound
          * @description Create a new pc.Channel and begin playback of the sound.
          * @param {pc.Sound} sound The Sound object to play.
-         * @param {Object} options Optional options object.
-         * @param {Number} [options.volume] The volume to playback at, between 0 and 1.
-         * @param {Boolean} [options.loop] Whether to loop the sound when it reaches the end.
+         * @param {object} options Optional options object.
+         * @param {number} [options.volume] The volume to playback at, between 0 and 1.
+         * @param {boolean} [options.loop] Whether to loop the sound when it reaches the end.
          * @returns {pc.Channel} The channel playing the sound.
          */
         playSound: function (sound, options) {
@@ -159,9 +159,9 @@ Object.assign(pc, function () {
          * @description Create a new pc.Channel3d and begin playback of the sound at the position specified
          * @param {pc.Sound} sound The Sound object to play.
          * @param {pc.Vec3} position The position of the sound in 3D space.
-         * @param {Object} options Optional options object.
-         * @param {Number} [options.volume] The volume to playback at, between 0 and 1.
-         * @param {Boolean} [options.loop] Whether to loop the sound when it reaches the end.
+         * @param {object} options Optional options object.
+         * @param {number} [options.volume] The volume to playback at, between 0 and 1.
+         * @param {boolean} [options.loop] Whether to loop the sound when it reaches the end.
          * @returns {pc.Channel3d} The 3D channel playing the sound.
          */
         playSound3d: function (sound, position, options) {

@@ -16,7 +16,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ComponentSystemRegistry#add
          * @description Add a component system to the registry.
-         * @param {Object} system The {pc.ComponentSystem} instance
+         * @param {object} system The {pc.ComponentSystem} instance
          */
         add: function (system) {
             var id = system.id;
@@ -35,7 +35,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ComponentSystemRegistry#remove
          * @description Remove a component system from the registry.
-         * @param {Object} system The {pc.ComponentSystem} instance
+         * @param {object} system The {pc.ComponentSystem} instance
          */
         remove: function (system) {
             var id = system.id;

@@ -7,7 +7,7 @@ Object.assign(pc, function () {
      * Inverse bind matrices are instrumental in the mathematics of vertex skinning.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this skin.
      * @param {pc.Mat4[]} ibp The array of inverse bind matrices.
-     * @param {String[]} boneNames The array of bone names for the bones referenced by this skin.
+     * @param {string[]} boneNames The array of bone names for the bones referenced by this skin.
      */
 
     var _invMatrix = new pc.Mat4();

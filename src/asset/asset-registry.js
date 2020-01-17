@@ -7,7 +7,7 @@ Object.assign(pc, function () {
      * @description Create an instance of an AssetRegistry.
      * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
      * @param {pc.ResourceLoader} loader The ResourceLoader used to load the asset files.
-     * @property {String} prefix A URL prefix that will be added to all asset loading requests.
+     * @property {string} prefix A URL prefix that will be added to all asset loading requests.
      */
     var AssetRegistry = function (loader) {
         pc.EventHandler.call(this);
@@ -128,7 +128,7 @@ Object.assign(pc, function () {
      * @event
      * @name pc.AssetRegistry#error
      * @description Fired when an error occurs during asset loading
-     * @param {String} err The error message
+     * @param {string} err The error message
      * @param {pc.Asset} asset The asset that generated the error
      * @example
      * var id = 123456;
@@ -158,7 +158,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AssetRegistry#list
          * @description Create a filtered list of assets from the registry
-         * @param {Object} filters Properties to filter on, currently supports: 'preload: true|false'
+         * @param {object} filters Properties to filter on, currently supports: 'preload: true|false'
          * @returns {pc.Asset[]} The filtered list of assets.
          */
         list: function (filters) {
@@ -219,7 +219,7 @@ Object.assign(pc, function () {
          * @name pc.AssetRegistry#remove
          * @description Remove an asset from the registry
          * @param {pc.Asset} asset The asset to remove
-         * @returns {Boolean} True if the asset was successfully removed and false otherwise
+         * @returns {boolean} True if the asset was successfully removed and false otherwise
          * @example
          * var asset = app.assets.get(100);
          * app.assets.remove(asset);
@@ -278,7 +278,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AssetRegistry#get
          * @description Retrieve an asset from the registry by its id field
-         * @param {Number} id the id of the asset to get
+         * @param {number} id the id of the asset to get
          * @returns {pc.Asset} The asset
          * @example
          * var asset = app.assets.get(100);
@@ -292,7 +292,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AssetRegistry#getByUrl
          * @description Retrieve an asset from the registry by it's file's URL field
-         * @param {String} url The url of the asset to get
+         * @param {string} url The url of the asset to get
          * @returns {pc.Asset} The asset
          * @example
          * var asset = app.assets.getByUrl("../path/to/image.jpg");
@@ -444,8 +444,8 @@ Object.assign(pc, function () {
          * @name pc.AssetRegistry#loadFromUrl
          * @description Use this to load and create an asset if you don't have assets created. Usually you would only use this
          * if you are not integrated with the PlayCanvas Editor
-         * @param {String} url The url to load
-         * @param {String} type The type of asset to load
+         * @param {string} url The url to load
+         * @param {string} type The type of asset to load
          * @param {pc.callbacks.LoadAsset} callback Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered
          * @example
          * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
@@ -645,8 +645,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AssetRegistry#findAll
          * @description Return all Assets with the specified name and type found in the registry
-         * @param {String} name The name of the Assets to find
-         * @param {String} [type] The type of the Assets to find
+         * @param {string} name The name of the Assets to find
+         * @param {string} [type] The type of the Assets to find
          * @returns {pc.Asset[]} A list of all Assets found
          * @example
          * var assets = app.assets.findAll("myTextureAsset", "texture");
@@ -687,7 +687,7 @@ Object.assign(pc, function () {
          * Query can be simply a string, or comma separated strings,
          * to have inclusive results of assets that match at least one query.
          * A query that consists of an array of tags can be used to match assets that have each tag of array
-         * @param {String} tag Name of a tag or array of tags
+         * @param {string} tag Name of a tag or array of tags
          * @returns {pc.Asset[]} A list of all Assets matched query
          * @example
          * var assets = app.assets.findByTag("level-1");
@@ -731,8 +731,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AssetRegistry#find
          * @description Return the first Asset with the specified name and type found in the registry
-         * @param {String} name The name of the Asset to find
-         * @param {String} [type] The type of the Asset to find
+         * @param {string} name The name of the Asset to find
+         * @param {string} [type] The type of the Asset to find
          * @returns {pc.Asset} A single Asset or null if no Asset is found
          * @example
          * var asset = app.assets.find("myTextureAsset", "texture");

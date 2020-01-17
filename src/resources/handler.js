@@ -15,7 +15,7 @@ Object.assign(pc, function () {
          * @name pc.ResourceHandler#load
          * @description Load a resource from a remote URL. When loaded (or failed),
          * use the callback to return an the raw resource data (or error).
-         * @param {String} url The URL of the resource to load.
+         * @param {string} url The URL of the resource to load.
          * @param {pc.callbacks.ResourceHandler} callback The callback used when the resource is loaded or an error occurs.
          * @param {pc.Asset} [asset] Optional asset that is passed by ResourceLoader.
          */
@@ -27,7 +27,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ResourceHandler#open
          * @description Convert raw resource data into a resource instance. e.g. take 3D model format JSON and return a pc.Model.
-         * @param {String} url The URL of the resource to open.
+         * @param {string} url The URL of the resource to open.
          * @param {*} data The raw resource data passed by callback from {@link pc.ResourceHandler#load}.
          * @param {pc.Asset} [asset] Optional asset that is passed by ResourceLoader.
          * @returns {*} The parsed resource data.

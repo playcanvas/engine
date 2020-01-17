@@ -12,9 +12,9 @@ Object.assign(pc, function () {
      * // The buffer is marked as static, hinting that the buffer will never be modified
      * var indexBuffer = new pc.IndexBuffer(graphicsDevice, pc.INDEXFORMAT_UINT16, 3, pc.BUFFER_STATIC);
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this index buffer.
-     * @param {Number} format The type of each index to be stored in the index buffer (see pc.INDEXFORMAT_*).
-     * @param {Number} numIndices The number of indices to be stored in the index buffer.
-     * @param {Number} [usage] The usage type of the vertex buffer (see pc.BUFFER_*).
+     * @param {number} format The type of each index to be stored in the index buffer (see pc.INDEXFORMAT_*).
+     * @param {number} numIndices The number of indices to be stored in the index buffer.
+     * @param {number} [usage] The usage type of the vertex buffer (see pc.BUFFER_*).
      * @param {ArrayBuffer} [initialData] Initial data.
      */
     var IndexBuffer = function (graphicsDevice, format, numIndices, usage, initialData) {
@@ -82,7 +82,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.IndexBuffer#getFormat
          * @description Returns the data format of the specified index buffer.
-         * @returns {Number} The data format of the specified index buffer (see pc.INDEXFORMAT_*).
+         * @returns {number} The data format of the specified index buffer (see pc.INDEXFORMAT_*).
          */
         getFormat: function () {
             return this.format;
@@ -92,7 +92,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.IndexBuffer#getNumIndices
          * @description Returns the number of indices stored in the specified index buffer.
-         * @returns {Number} The number of indices stored in the specified index buffer.
+         * @returns {number} The number of indices stored in the specified index buffer.
          */
         getNumIndices: function () {
             return this.numIndices;

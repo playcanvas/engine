@@ -12,7 +12,7 @@ Object.assign(pc, function () {
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.desktop
          * @description is it a desktop or laptop device
          */
@@ -21,7 +21,7 @@ Object.assign(pc, function () {
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.mobile
          * @description is it a mobile or tablet device
          */
@@ -30,7 +30,7 @@ Object.assign(pc, function () {
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.ios
          * @description if it is iOS
          */
@@ -39,7 +39,7 @@ Object.assign(pc, function () {
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.android
          * @description if it is Android
          */
@@ -48,7 +48,7 @@ Object.assign(pc, function () {
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.windows
          * @description if it is Windows
          */
@@ -57,7 +57,7 @@ Object.assign(pc, function () {
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.xbox
          * @description if it is Xbox
          */
@@ -66,7 +66,7 @@ Object.assign(pc, function () {
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.gamepads
          * @description if platform supports gamepads
          */
@@ -75,7 +75,7 @@ Object.assign(pc, function () {
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.touch
          * @description if platform supports touch input
          */
@@ -84,7 +84,7 @@ Object.assign(pc, function () {
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.workers
          * @description if the platform supports Web Workers
          */

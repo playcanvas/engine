@@ -24,31 +24,31 @@ Object.assign(pc, function () {
      * @example
      * // Update a property on a camera component
      * entity.camera.nearClip = 2;
-     * @property {Number} projection The type of projection used to render the camera. Can be:
+     * @property {number} projection The type of projection used to render the camera. Can be:
      * <ul>
      *     <li>{@link pc.PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum resembles a truncated pyramid.</li>
      *     <li>{@link pc.PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera frustum is a cuboid.</li>
      * </ul>
      * Defaults to pc.PROJECTION_PERSPECTIVE.
-     * @property {Number} nearClip The distance from the camera before which no rendering will take place.
-     * @property {Number} farClip The distance from the camera after which no rendering will take place.
-     * @property {Number} aspectRatioMode The aspect ratio mode of the camera. Can be pc.ASPECT_AUTO (default) or pc.ASPECT_MANUAL. ASPECT_AUTO will always be current render target's width divided by height. ASPECT_MANUAL will use the aspectRatio value instead.
-     * @property {Number} aspectRatio The aspect ratio (width divided by height) of the camera. If aspectRatioMode is ASPECT_AUTO, then this value will be automatically calculated every frame, and you can only read it. If it's ASPECT_MANUAL, you can set the value.
-     * @property {Boolean} horizontalFov Set which axis to use for the Field of View calculation. Defaults to false (use Y-axis).
-     * @property {Number} fov The field of view of the camera in degrees. Usually this is the Y-axis field of
+     * @property {number} nearClip The distance from the camera before which no rendering will take place.
+     * @property {number} farClip The distance from the camera after which no rendering will take place.
+     * @property {number} aspectRatioMode The aspect ratio mode of the camera. Can be pc.ASPECT_AUTO (default) or pc.ASPECT_MANUAL. ASPECT_AUTO will always be current render target's width divided by height. ASPECT_MANUAL will use the aspectRatio value instead.
+     * @property {number} aspectRatio The aspect ratio (width divided by height) of the camera. If aspectRatioMode is ASPECT_AUTO, then this value will be automatically calculated every frame, and you can only read it. If it's ASPECT_MANUAL, you can set the value.
+     * @property {boolean} horizontalFov Set which axis to use for the Field of View calculation. Defaults to false (use Y-axis).
+     * @property {number} fov The field of view of the camera in degrees. Usually this is the Y-axis field of
      * view, see {@link pc.CameraComponent#horizontalFov}. Used for {@link pc.PROJECTION_PERSPECTIVE} cameras only. Defaults to 45.
-     * @property {Number} orthoHeight The half-height of the orthographic view window (in the Y-axis). Used for
+     * @property {number} orthoHeight The half-height of the orthographic view window (in the Y-axis). Used for
      * {@link pc.PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
-     * @property {Number} priority Controls the order in which cameras are rendered. Cameras with smaller values for priority are rendered first.
+     * @property {number} priority Controls the order in which cameras are rendered. Cameras with smaller values for priority are rendered first.
      * @property {pc.Color} clearColor The color used to clear the canvas to before the camera starts to render.
-     * @property {Boolean} clearColorBuffer If true the camera will clear the color buffer to the color set in clearColor.
-     * @property {Boolean} clearDepthBuffer If true the camera will clear the depth buffer.
-     * @property {Boolean} clearStencilBuffer If true the camera will clear the stencil buffer.
+     * @property {boolean} clearColorBuffer If true the camera will clear the color buffer to the color set in clearColor.
+     * @property {boolean} clearDepthBuffer If true the camera will clear the depth buffer.
+     * @property {boolean} clearStencilBuffer If true the camera will clear the stencil buffer.
      * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates.
      * @property {pc.Vec4} scissorRect Clips all pixels which are not in the rectangle.
      * The order of the values is [x, y, width, height].
      * @property {pc.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add or remove post effects from the camera.
-     * @property {Boolean} frustumCulling Controls the culling of mesh instances against the camera frustum, i.e. if objects outside of camera should be omitted from rendering.
+     * @property {boolean} frustumCulling Controls the culling of mesh instances against the camera frustum, i.e. if objects outside of camera should be omitted from rendering.
      * If true, culling is enabled.
      * If false, all mesh instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
      * @property {pc.callbacks.CalculateMatrix} calculateTransform Custom function you can provide to calculate the camera transformation matrix manually. Can be used for complex effects like reflections. Function is called using component's scope.
@@ -59,9 +59,9 @@ Object.assign(pc, function () {
      * Arguments:
      *     <li>{pc.Mat4} transformMatrix: output of the function</li>
      *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
-     * @property {Boolean} cullFaces If true the camera will take material.cull into account. Otherwise both front and back faces will be rendered.
-     * @property {Boolean} flipFaces If true the camera will invert front and back faces. Can be useful for reflection rendering.
-     * @property {Number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this camera should belong.
+     * @property {boolean} cullFaces If true the camera will take material.cull into account. Otherwise both front and back faces will be rendered.
+     * @property {boolean} flipFaces If true the camera will invert front and back faces. Can be useful for reflection rendering.
+     * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this camera should belong.
      * Don't push/pop/splice or modify this array, if you want to change it - set a new one instead.
      */
     var CameraComponent = function CameraComponent(system, entity) {
@@ -179,9 +179,9 @@ Object.assign(pc, function () {
          * @function
          * @name pc.CameraComponent#screenToWorld
          * @description Convert a point from 2D screen space to 3D world space.
-         * @param {Number} screenx x coordinate on PlayCanvas' canvas element.
-         * @param {Number} screeny y coordinate on PlayCanvas' canvas element.
-         * @param {Number} cameraz The distance from the camera in world space to create the new point.
+         * @param {number} screenx x coordinate on PlayCanvas' canvas element.
+         * @param {number} screeny y coordinate on PlayCanvas' canvas element.
+         * @param {number} cameraz The distance from the camera in world space to create the new point.
          * @param {pc.Vec3} [worldCoord] 3D vector to receive world coordinate result.
          * @example
          * // Get the start and end points of a 3D ray fired from a screen click position
@@ -417,7 +417,7 @@ Object.assign(pc, function () {
          * @name pc.CameraComponent#calculateAspectRatio
          * @description Calculates aspect ratio value for a given render target.
          * @param {pc.RenderTarget} [rt] Optional render target. If unspecified, the backbuffer is assumed.
-         * @returns {Number} The aspect ratio of the render target (or backbuffer).
+         * @returns {number} The aspect ratio of the render target (or backbuffer).
          */
         calculateAspectRatio: function (rt) {
             var src = rt ? rt : this.system.app.graphicsDevice;

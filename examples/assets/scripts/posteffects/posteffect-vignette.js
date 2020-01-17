@@ -8,8 +8,8 @@ Object.assign(pc, function () {
      * @description Creates new instance of the post effect.
      * @augments pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
-     * @property {Number} offset Controls the offset of the effect.
-     * @property {Number} darkness Controls the darkness of the effect.
+     * @property {number} offset Controls the offset of the effect.
+     * @property {number} darkness Controls the darkness of the effect.
      */
     var VignetteEffect = function (graphicsDevice) {
         pc.PostEffect.call(this, graphicsDevice);

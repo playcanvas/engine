@@ -8,7 +8,7 @@ Object.assign(pc, function () {
      * @param {pc.Application} app The main application
      * @property {pc.VrDisplay[]} displays The list of {@link pc.VrDisplay}s that are attached to this device
      * @property {pc.VrDisplay} display The default {@link pc.VrDisplay} to be used. Usually the first in the `displays` list
-     * @property {Boolean} isSupported Reports whether this device supports the WebVR API
+     * @property {boolean} isSupported Reports whether this device supports the WebVR API
      */
     var VrManager = function (app) {
         pc.EventHandler.call(this);

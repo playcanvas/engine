@@ -16,8 +16,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.IndexedList#push
          * @description  Add a new item into the list with a index key
-         * @param {String} key  Key used to look up item in index
-         * @param {Object} item Item to be stored
+         * @param {string} key  Key used to look up item in index
+         * @param {object} item Item to be stored
          */
         push: function (key, item) {
             if (this._index[key]) {
@@ -32,8 +32,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.IndexedList#has
          * @description Test whether a key has been added to the index
-         * @param {String} key The key to test
-         * @returns {Boolean} Returns true if key is in the index, false if not
+         * @param {string} key The key to test
+         * @returns {boolean} Returns true if key is in the index, false if not
          */
         has: function (key) {
             return this._index[key] !== undefined;
@@ -44,8 +44,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.IndexedList#get
          * @description Return the item indexed by a key
-         * @param {String} key The key of the item to retrieve
-         * @returns {Object} The item stored at key
+         * @param {string} key The key of the item to retrieve
+         * @returns {object} The item stored at key
          */
         get: function (key) {
             var location = this._index[key];
@@ -60,8 +60,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.IndexedList#remove
          * @description Remove the item indexed by key from the list
-         * @param {String} key The key at which to remove the item
-         * @returns {Boolean} Returns true if the key exists and an item was removed, returns false if no item was removed
+         * @param {string} key The key at which to remove the item
+         * @returns {boolean} Returns true if the key exists and an item was removed, returns false if no item was removed
          */
         remove: function (key) {
             var location = this._index[key];
@@ -87,7 +87,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.IndexedList#list
          * @description Returns the list of items
-         * @returns {Object[]} The list of items
+         * @returns {object[]} The list of items
          */
         list: function () {
             return this._list;

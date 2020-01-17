@@ -5,8 +5,8 @@ Object.assign(pc, function () {
      * @class
      * @name pc.ScopeId
      * @classdesc The scope for a variable.
-     * @param {String} name The variable name.
-     * @property {String} name The variable name.
+     * @param {string} name The variable name.
+     * @property {string} name The variable name.
      */
     var ScopeId = function (name) {
         // Set the name

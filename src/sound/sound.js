@@ -9,7 +9,7 @@ Object.assign(pc, function () {
      * an Audio object.
      * @property {AudioBuffer} buffer If the Web Audio API is supported this contains the audio data
      * @property {HTMLAudioElement} audio If the Web Audio API is not supported this contains the audio data
-     * @property {Number} duration Returns the duration of the sound. If the sound is not loaded it returns 0.
+     * @property {number} duration Returns the duration of the sound. If the sound is not loaded it returns 0.
      */
     var Sound = function (resource) {
         if (resource instanceof Audio) {

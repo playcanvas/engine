@@ -5,7 +5,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.log.write
          * @description Write text to the console
-         * @param {String} text The text to log.
+         * @param {string} text The text to log.
          */
         write: function (text) {
             console.log(text);
@@ -26,7 +26,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.log.info
          * @description Write text to the log preceded by 'INFO:'
-         * @param {String} text The text to log.
+         * @param {string} text The text to log.
          */
         info: function (text) {
             console.info("INFO:    " + text);
@@ -37,7 +37,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.log.debug
          * @description Write text to the log preceded by 'DEBUG:'
-         * @param {String} text The text to log.
+         * @param {string} text The text to log.
          */
         debug: function (text) {
             console.debug("DEBUG:   " + text);
@@ -48,7 +48,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.log.error
          * @description Write text to the log preceded by 'ERROR:'
-         * @param {String} text The text to log.
+         * @param {string} text The text to log.
          */
         error: function (text) {
             console.error("ERROR:   " + text);
@@ -59,7 +59,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.log.warning
          * @description Write text to the log preceded by 'WARNING:'
-         * @param {String} text The text to log.
+         * @param {string} text The text to log.
          */
         warning: function (text) {
             console.warn("WARNING: " + text);
@@ -70,7 +70,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.log.alert
          * @description Write text to the log preceded by 'ALERT:' and pop up an alert dialog box with the text
-         * @param {String} text The text to show in the alert.
+         * @param {string} text The text to show in the alert.
          */
         alert: function (text) {
             pc.log.write("ALERT:   " + text);
@@ -82,8 +82,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.log.assert
          * @description If condition is false, then write text to the log preceded by 'ASSERT:'.
-         * @param {Boolean} condition The condition to test.
-         * @param {String} text The text to show if the condition is false.
+         * @param {boolean} condition The condition to test.
+         * @param {string} text The text to show if the condition is false.
          */
         assert: function (condition, text) {
             if (condition === false) {

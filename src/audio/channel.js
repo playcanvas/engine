@@ -12,10 +12,10 @@ Object.assign(pc, function () {
          * pc.AudioManager#playSound or pc.AudioManager#playSound3d. Developers usually won't have to create Channels manually.
          * @param {pc.AudioManager} manager The AudioManager instance
          * @param {pc.Sound} sound The sound to playback
-         * @param {Object} [options] Optional options object.
-         * @param {Number} [options.volume=1] The playback volume, between 0 and 1.
-         * @param {Number} [options.pitch=1] The relative pitch, default of 1, plays at normal pitch.
-         * @param {Boolean} [options.loop=false] Whether the sound should loop when it reaches the end or not.
+         * @param {object} [options] Optional options object.
+         * @param {number} [options.volume=1] The playback volume, between 0 and 1.
+         * @param {number} [options.pitch=1] The relative pitch, default of 1, plays at normal pitch.
+         * @param {boolean} [options.loop=false] Whether the sound should loop when it reaches the end or not.
          */
         Channel = function (manager, sound, options) {
             options = options || {};
@@ -139,7 +139,7 @@ Object.assign(pc, function () {
              * @function
              * @name pc.Channel#setLoop
              * @description Enable/disable the loop property to make the sound restart from the beginning when it reaches the end.
-             * @param {Boolean} loop true to loop the sound, false otherwise.
+             * @param {boolean} loop true to loop the sound, false otherwise.
              */
             setLoop: function (loop) {
                 this.loop = loop;
@@ -153,7 +153,7 @@ Object.assign(pc, function () {
              * @function
              * @name pc.Channel#setVolume
              * @description Set the volume of playback between 0 and 1.
-             * @param {Number} volume The volume of the sound. Will be clamped between 0 and 1.
+             * @param {number} volume The volume of the sound. Will be clamped between 0 and 1.
              */
             setVolume: function (volume) {
                 volume = pc.math.clamp(volume, 0, 1);
@@ -301,7 +301,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Channel#getVolume
          * @description Get the current value for the volume. Between 0 and 1.
-         * @returns {Number} The volume of the channel.
+         * @returns {number} The volume of the channel.
          */
         getVolume: function () {
             return this.volume;
@@ -312,7 +312,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Channel#getLoop
          * @description Get the current looping state of the Channel
-         * @returns {Boolean} The loop property for the channel.
+         * @returns {boolean} The loop property for the channel.
          */
         getLoop: function () {
             return this.loop;
@@ -323,7 +323,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Channel#getPitch
          * @description Get the current pitch of the Channel
-         * @returns {Number} The pitch of the channel.
+         * @returns {number} The pitch of the channel.
          */
         getPitch: function () {
             return this.pitch;

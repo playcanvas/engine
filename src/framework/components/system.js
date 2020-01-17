@@ -126,7 +126,7 @@ Object.assign(pc, function () {
          * @name pc.ComponentSystem#addComponent
          * @description Create new {@link pc.Component} and {@link pc.ComponentData} instances and attach them to the entity
          * @param {pc.Entity} entity The Entity to attach this component to
-         * @param {Object} [data] The source data with which to create the component
+         * @param {object} [data] The source data with which to create the component
          * @returns {pc.Component} Returns a Component of type defined by the component system
          * @example
          * var entity = new pc.Entity(app);
@@ -196,8 +196,8 @@ Object.assign(pc, function () {
          * @description Called during {@link pc.ComponentSystem#addComponent} to initialize the {@link pc.ComponentData} in the store
          * This can be overridden by derived Component Systems and either called by the derived System or replaced entirely
          * @param {pc.Component} component The component being initialized.
-         * @param {Object} data The data block used to initialize the component.
-         * @param {String[]|Object[]} properties The array of property descriptors for the component. A descriptor can be either a plain property name, or an object specifying the name and type.
+         * @param {object} data The data block used to initialize the component.
+         * @param {string[]|object[]} properties The array of property descriptors for the component. A descriptor can be either a plain property name, or an object specifying the name and type.
          */
         initializeComponentData: function (component, data, properties) {
             data = data || {};
@@ -245,8 +245,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ComponentSystem#getPropertiesOfType
          * @description Searches the component schema for properties that match the specified type.
-         * @param {String} type The type to search for
-         * @returns {String[]|Object[]} An array of property descriptors matching the specified type.
+         * @param {string} type The type to search for
+         * @returns {string[]|object[]} An array of property descriptors matching the specified type.
          */
         getPropertiesOfType: function (type) {
             var matchingProperties = [];

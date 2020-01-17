@@ -200,9 +200,9 @@ Object.assign(pc, (function () {
      * and returning translations for a certain key. Can also handle plural forms. To override
      * its default behaviour define a different implementation for {@link pc.I18n#getText} and {@link pc.I18n#getPluralText}.
      * @param {pc.Application} app The application.
-     * @property {String} locale The current locale for example "en-US". Changing the locale will raise an event which will cause localized Text Elements to
+     * @property {string} locale The current locale for example "en-US". Changing the locale will raise an event which will cause localized Text Elements to
      * change language to the new locale.
-     * @property {Number[]|pc.Asset[]} assets An array of asset ids or assets that contain localization data in the expected format. I18n will automatically load
+     * @property {number[]|pc.Asset[]} assets An array of asset ids or assets that contain localization data in the expected format. I18n will automatically load
      * translations from these assets as the assets are loaded and it will also automatically unload translations if the assets get removed or unloaded at runtime.
      */
     var I18n = function (app) {
@@ -223,9 +223,9 @@ Object.assign(pc, (function () {
      * @name pc.I18n#findAvailableLocale
      * @description Returns the first available locale based on the desired locale specified. First
      * tries to find the desired locale and then tries to find an alternative locale based on the language.
-     * @param {String} desiredLocale The desired locale e.g. en-US.
-     * @param {Object} availableLocales A dictionary where each key is an available locale.
-     * @returns {String} The locale found or if no locale is available returns the default en-US locale.
+     * @param {string} desiredLocale The desired locale e.g. en-US.
+     * @param {object} availableLocales A dictionary where each key is an available locale.
+     * @returns {string} The locale found or if no locale is available returns the default en-US locale.
      */
     I18n.findAvailableLocale = function (desiredLocale, availableLocales) {
         if (availableLocales[desiredLocale]) {
@@ -256,9 +256,9 @@ Object.assign(pc, (function () {
      * @name pc.I18n#getText
      * @description Returns the translation for the specified key and locale. If the locale is not specified
      * it will use the current locale.
-     * @param {String} key The localization key
-     * @param {String} [locale] The desired locale.
-     * @returns {String} The translated text. If no translations are found at all for the locale then it will return
+     * @param {string} key The localization key
+     * @param {string} [locale] The desired locale.
+     * @returns {string} The translated text. If no translations are found at all for the locale then it will return
      * the en-US translation. If no translation exists for that key then it will return the localization key.
      * @example
      * var localized = this.app.i18n.getText('localization-key');
@@ -306,10 +306,10 @@ Object.assign(pc, (function () {
      * @name pc.I18n#getPluralText
      * @description Returns the pluralized translation for the specified key, number n and locale. If the locale is not specified
      * it will use the current locale.
-     * @param {String} key The localization key
-     * @param {Number} n The number used to determine which plural form to use. E.g. for the phrase "5 Apples" n equals 5.
-     * @param {String} [locale] The desired locale.
-     * @returns {String} The translated text. If no translations are found at all for the locale then it will return
+     * @param {string} key The localization key
+     * @param {number} n The number used to determine which plural form to use. E.g. for the phrase "5 Apples" n equals 5.
+     * @param {string} [locale] The desired locale.
+     * @returns {string} The translated text. If no translations are found at all for the locale then it will return
      * the en-US translation. If no translation exists for that key then it will return the localization key.
      * @example
      * // manually replace {number} in the resulting translation with our number
@@ -356,7 +356,7 @@ Object.assign(pc, (function () {
      * @function
      * @name pc.I18n#addData
      * @description Adds localization data. If the locale and key for a translation already exists it will be overwritten.
-     * @param {Object} data The localization data. See example for the expected format of the data.
+     * @param {object} data The localization data. See example for the expected format of the data.
      * @example
      * this.app.i18n.addData({
      *     header: {
@@ -415,7 +415,7 @@ Object.assign(pc, (function () {
      * @function
      * @name pc.I18n#removeData
      * @description Removes localization data.
-     * @param {Object} data The localization data. The data is expected to be in the same format as {@link pc.I18n#addData}.
+     * @param {object} data The localization data. The data is expected to be in the same format as {@link pc.I18n#addData}.
      */
     I18n.prototype.removeData = function (data) {
         var parsed;

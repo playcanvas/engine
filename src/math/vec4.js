@@ -6,10 +6,10 @@ Object.assign(pc, (function () {
      * @name pc.Vec4
      * @classdesc A 4-dimensional vector.
      * @description Creates a new Vec4 object.
-     * @param {Number|Number[]} [x] The x value. If x is an array of length 4, the array will be used to populate all components.
-     * @param {Number} [y] The y value.
-     * @param {Number} [z] The z value.
-     * @param {Number} [w] The w value.
+     * @param {number|number[]} [x] The x value. If x is an array of length 4, the array will be used to populate all components.
+     * @param {number} [y] The y value.
+     * @param {number} [z] The z value.
+     * @param {number} [w] The w value.
      * @example
      * var v = new pc.Vec4(1, 2, 3, 4);
      */
@@ -120,7 +120,7 @@ Object.assign(pc, (function () {
          * @name pc.Vec4#dot
          * @description Returns the result of a dot product operation performed on the two specified 4-dimensional vectors.
          * @param {pc.Vec4} rhs The second 4-dimensional vector operand of the dot product.
-         * @returns {Number} The result of the dot product operation.
+         * @returns {number} The result of the dot product operation.
          * @example
          * var v1 = new pc.Vec4(5, 10, 20, 40);
          * var v2 = new pc.Vec4(10, 20, 40, 80);
@@ -136,7 +136,7 @@ Object.assign(pc, (function () {
          * @name pc.Vec4#equals
          * @description Reports whether two vectors are equal.
          * @param {pc.Vec4} rhs The vector to compare to the specified vector.
-         * @returns {Boolean} true if the vectors are equal and false otherwise.
+         * @returns {boolean} true if the vectors are equal and false otherwise.
          * @example
          * var a = new pc.Vec4(1, 2, 3, 4);
          * var b = new pc.Vec4(5, 6, 7, 8);
@@ -150,7 +150,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Vec4#length
          * @description Returns the magnitude of the specified 4-dimensional vector.
-         * @returns {Number} The magnitude of the specified 4-dimensional vector.
+         * @returns {number} The magnitude of the specified 4-dimensional vector.
          * @example
          * var vec = new pc.Vec4(3, 4, 0, 0);
          * var len = vec.length();
@@ -165,7 +165,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Vec4#lengthSq
          * @description Returns the magnitude squared of the specified 4-dimensional vector.
-         * @returns {Number} The magnitude of the specified 4-dimensional vector.
+         * @returns {number} The magnitude of the specified 4-dimensional vector.
          * @example
          * var vec = new pc.Vec4(3, 4, 0);
          * var len = vec.lengthSq();
@@ -182,7 +182,7 @@ Object.assign(pc, (function () {
          * @description Returns the result of a linear interpolation between two specified 4-dimensional vectors.
          * @param {pc.Vec4} lhs The 4-dimensional to interpolate from.
          * @param {pc.Vec4} rhs The 4-dimensional to interpolate to.
-         * @param {Number} alpha The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
+         * @param {number} alpha The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
          * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
          * a ray extrapolated from this line.
          * @returns {pc.Vec4} Self for chaining.
@@ -286,7 +286,7 @@ Object.assign(pc, (function () {
          * @name pc.Vec4#scale
          * @description Scales each dimension of the specified 4-dimensional vector by the supplied
          * scalar value.
-         * @param {Number} scalar The value by which each vector component is multiplied.
+         * @param {number} scalar The value by which each vector component is multiplied.
          * @returns {pc.Vec4} Self for chaining.
          * @example
          * var v = new pc.Vec4(2, 4, 8, 16);
@@ -313,10 +313,10 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Vec4#set
          * @description Sets the specified 4-dimensional vector to the supplied numerical values.
-         * @param {Number} x The value to set on the first component of the vector.
-         * @param {Number} y The value to set on the second component of the vector.
-         * @param {Number} z The value to set on the third component of the vector.
-         * @param {Number} w The value to set on the fourth component of the vector.
+         * @param {number} x The value to set on the first component of the vector.
+         * @param {number} y The value to set on the second component of the vector.
+         * @param {number} z The value to set on the third component of the vector.
+         * @param {number} w The value to set on the fourth component of the vector.
          * @returns {pc.Vec4} Self for chaining.
          * @example
          * var v = new pc.Vec4();
@@ -388,7 +388,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Vec4#toString
          * @description Converts the vector to string form.
-         * @returns {String} The vector in string form.
+         * @returns {string} The vector in string form.
          * @example
          * var v = new pc.Vec4(20, 10, 5, 0);
          * // Should output '[20, 10, 5, 0]'

@@ -6,22 +6,22 @@ Object.assign(pc, function () {
      * @description Create an new MouseEvent
      * @param {pc.Mouse} mouse The Mouse device that is firing this event
      * @param {MouseEvent} event The original browser event that fired
-     * @property {Number} x The x co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to
-     * @property {Number} y The y co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to
-     * @property {Number} dx The change in x co-ordinate since the last mouse event
-     * @property {Number} dy The change in y co-ordinate since the last mouse event
-     * @property {Number} button The mouse button associated with this event. Can be:
+     * @property {number} x The x co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to
+     * @property {number} y The y co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to
+     * @property {number} dx The change in x co-ordinate since the last mouse event
+     * @property {number} dy The change in y co-ordinate since the last mouse event
+     * @property {number} button The mouse button associated with this event. Can be:
      * <ul>
      *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
      *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
      *     <li>{@link pc.MOUSEBUTTON_RIGHT}</li>
      * </ul>
-     * @property {Number} wheel A value representing the amount the mouse wheel has moved, only valid for {@link mousemove} events
+     * @property {number} wheel A value representing the amount the mouse wheel has moved, only valid for {@link mousemove} events
      * @property {Element} element The element that the mouse was fired from
-     * @property {Boolean} ctrlKey True if the ctrl key was pressed when this event was fired
-     * @property {Boolean} shiftKey True if the shift key was pressed when this event was fired
-     * @property {Boolean} altKey True if the alt key was pressed when this event was fired
-     * @property {Boolean} metaKey True if the meta key was pressed when this event was fired
+     * @property {boolean} ctrlKey True if the ctrl key was pressed when this event was fired
+     * @property {boolean} shiftKey True if the shift key was pressed when this event was fired
+     * @property {boolean} altKey True if the alt key was pressed when this event was fired
+     * @property {boolean} metaKey True if the meta key was pressed when this event was fired
      * @property {MouseEvent} event The original browser event
      * @since 0.88.0
      */
@@ -154,7 +154,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Mouse.isPointerLocked
      * @description Check if the mouse pointer has been locked, using {@link pc.Mouse#enabledPointerLock}
-     * @returns {Boolean} True if locked
+     * @returns {boolean} True if locked
      */
     Mouse.isPointerLocked = function () {
         return !!(document.pointerLockElement || document.mozPointerLockElement || document.webkitPointerLockElement);
@@ -295,13 +295,13 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Mouse#isPressed
          * @description Returns true if the mouse button is currently pressed
-         * @param {Number} button The mouse button to test. Can be:
+         * @param {number} button The mouse button to test. Can be:
          * <ul>
          *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
          *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
          *     <li>{@link pc.MOUSEBUTTON_RIGHT}</li>
          * </ul>
-         * @returns {Boolean} True if the mouse button is current pressed
+         * @returns {boolean} True if the mouse button is current pressed
          */
         isPressed: function (button) {
             return this._buttons[button];
@@ -311,13 +311,13 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Mouse#wasPressed
          * @description Returns true if the mouse button was pressed this frame (since the last call to update).
-         * @param {Number} button The mouse button to test. Can be:
+         * @param {number} button The mouse button to test. Can be:
          * <ul>
          *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
          *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
          *     <li>{@link pc.MOUSEBUTTON_RIGHT}</li>
          * </ul>
-         * @returns {Boolean} True if the mouse button was pressed since the last update
+         * @returns {boolean} True if the mouse button was pressed since the last update
          */
         wasPressed: function (button) {
             return (this._buttons[button] && !this._lastbuttons[button]);
@@ -327,13 +327,13 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Mouse#wasReleased
          * @description Returns true if the mouse button was released this frame (since the last call to update).
-         * @param {Number} button The mouse button to test. Can be:
+         * @param {number} button The mouse button to test. Can be:
          * <ul>
          *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
          *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
          *     <li>{@link pc.MOUSEBUTTON_RIGHT}</li>
          * </ul>
-         * @returns {Boolean} True if the mouse button was released since the last update
+         * @returns {boolean} True if the mouse button was released since the last update
          */
         wasReleased: function (button) {
             return (!this._buttons[button] && this._lastbuttons[button]);

@@ -14,9 +14,9 @@ Object.assign(pc, function () {
      * be empty. The first index buffer in the array is used by {@link pc.MeshInstance}s with a renderStyle
      * property set to pc.RENDERSTYLE_SOLID. The second index buffer in the array is used if renderStyle is
      * set to pc.RENDERSTYLE_WIREFRAME.
-     * @property {Object[]} primitive Array of primitive objects defining how vertex (and index) data in the
+     * @property {object[]} primitive Array of primitive objects defining how vertex (and index) data in the
      * mesh should be interpreted by the graphics device. For details on the primitive object, see
-     * @property {Number} primitive[].type The type of primitive to render. Can be:
+     * @property {number} primitive[].type The type of primitive to render. Can be:
      * <ul>
      *     <li>{@link pc.PRIMITIVE_POINTS}</li>
      *     <li>{@link pc.PRIMITIVE_LINES}</li>
@@ -26,9 +26,9 @@ Object.assign(pc, function () {
      *     <li>{@link pc.PRIMITIVE_TRISTRIP}</li>
      *     <li>{@link pc.PRIMITIVE_TRIFAN}</li>
      * </ul>
-     * @property {Number} primitive[].base The offset of the first index or vertex to dispatch in the draw call.
-     * @property {Number} primitive[].count The number of indices or vertices to dispatch in the draw call.
-     * @property {Boolean} [primitive[].indexed] True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
+     * @property {number} primitive[].base The offset of the first index or vertex to dispatch in the draw call.
+     * @property {number} primitive[].count The number of indices or vertices to dispatch in the draw call.
+     * @property {boolean} [primitive[].indexed] True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
      * {@link pc.GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer property.
      * @property {pc.BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this mesh.
      */
@@ -83,24 +83,24 @@ Object.assign(pc, function () {
      * var meshInstance = new pc.MeshInstance(node, mesh, material);
      * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this
      * mesh instance.
-     * @property {Boolean} castShadow Controls whether the mesh instance casts shadows.
+     * @property {boolean} castShadow Controls whether the mesh instance casts shadows.
      * Defaults to false.
-     * @property {Boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
+     * @property {boolean} visible Enable rendering for this mesh instance. Use visible property to enable/disable rendering without overhead of removing from scene.
      * But note that the mesh instance is still in the hierarchy and still in the draw call list.
      * @property {pc.GraphNode} node The graph node defining the transform for this instance.
      * @property {pc.Mesh} mesh The graphics mesh being instanced.
      * @property {pc.Material} material The material used by this mesh instance.
-     * @property {Number} renderStyle The render style of the mesh instance. Can be:
+     * @property {number} renderStyle The render style of the mesh instance. Can be:
      * <ul>
      *     <li>pc.RENDERSTYLE_SOLID</li>
      *     <li>pc.RENDERSTYLE_WIREFRAME</li>
      *     <li>pc.RENDERSTYLE_POINTS</li>
      * </ul>
      * Defaults to pc.RENDERSTYLE_SOLID.
-     * @property {Boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link pc.CameraComponent#frustumCulling}).
-     * @property {Number} drawOrder Use this value to affect rendering order of mesh instances.
+     * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link pc.CameraComponent#frustumCulling}).
+     * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
      * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
-     * @property {Boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
+     * @property {boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this._key = [0, 0];

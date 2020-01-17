@@ -58,9 +58,9 @@ Object.assign(pc, function () {
      * @description Creates new instance of the post effect.
      * @augments pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
-     * @property {Number} bloomThreshold Only pixels brighter then this threshold will be processed. Ranges from 0 to 1
-     * @property {Number} blurAmount Controls the amount of blurring.
-     * @property {Number} bloomIntensity The intensity of the effect.
+     * @property {number} bloomThreshold Only pixels brighter then this threshold will be processed. Ranges from 0 to 1
+     * @property {number} blurAmount Controls the amount of blurring.
+     * @property {number} bloomIntensity The intensity of the effect.
      */
     var BloomEffect = function (graphicsDevice) {
         pc.PostEffect.call(this, graphicsDevice);

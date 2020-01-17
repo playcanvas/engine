@@ -89,7 +89,7 @@ Object.assign(pc, function () {
          * @name pc.BoundingBox#intersects
          * @description Test whether two axis-aligned bounding boxes intersect.
          * @param {pc.BoundingBox} other Bounding box to test against.
-         * @returns {Boolean} True if there is an intersection.
+         * @returns {boolean} True if there is an intersection.
          */
         intersects: function (other) {
             var aMax = this.getMax();
@@ -188,7 +188,7 @@ Object.assign(pc, function () {
          * @description Test if a ray intersects with the AABB.
          * @param {pc.Ray} ray Ray to test against (direction must be normalized).
          * @param {pc.Vec3} [point] If there is an intersection, the intersection point will be copied into here.
-         * @returns {Boolean} True if there is an intersection.
+         * @returns {boolean} True if there is an intersection.
          */
         intersectsRay: function (ray, point) {
             if (point) {
@@ -228,7 +228,7 @@ Object.assign(pc, function () {
          * @name pc.BoundingBox#containsPoint
          * @description Test if a point is inside a AABB.
          * @param {pc.Vec3} point Point to test.
-         * @returns {Boolean} true if the point is inside the AABB and false otherwise.
+         * @returns {boolean} true if the point is inside the AABB and false otherwise.
          */
         containsPoint: function (point) {
             var min = this.getMin();
@@ -316,7 +316,7 @@ Object.assign(pc, function () {
          * @name pc.BoundingBox#intersectsBoundingSphere
          * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this AABB.
          * @param {pc.BoundingSphere} sphere Bounding Sphere to test.
-         * @returns {Boolean} true if the Bounding Sphere is overlapping, enveloping, or inside the AABB and false otherwise.
+         * @returns {boolean} true if the Bounding Sphere is overlapping, enveloping, or inside the AABB and false otherwise.
          */
         intersectsBoundingSphere: function (sphere) {
             var sq = this._distanceToBoundingSphereSq(sphere);

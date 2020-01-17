@@ -6,8 +6,8 @@ Object.assign(pc, (function () {
      * @name pc.Vec2
      * @classdesc A 2-dimensional vector.
      * @description Creates a new Vec2 object.
-     * @param {Number|Number[]} [x] The x value. If x is an array of length 2, the array will be used to populate all components.
-     * @param {Number} [y] The y value.
+     * @param {number|number[]} [x] The x value. If x is an array of length 2, the array will be used to populate all components.
+     * @param {number} [y] The y value.
      * @example
      * var v = new pc.Vec2(1, 2);
      */
@@ -108,7 +108,7 @@ Object.assign(pc, (function () {
          * @name pc.Vec2#distance
          * @description Returns the distance between the two specified 2-dimensional vectors.
          * @param {pc.Vec2} rhs The second 2-dimensional vector to test.
-         * @returns {Number} The distance between the two vectors.
+         * @returns {number} The distance between the two vectors.
          * @example
          * var v1 = new pc.Vec2(5, 10);
          * var v2 = new pc.Vec2(10, 20);
@@ -126,7 +126,7 @@ Object.assign(pc, (function () {
          * @name pc.Vec2#dot
          * @description Returns the result of a dot product operation performed on the two specified 2-dimensional vectors.
          * @param {pc.Vec2} rhs The second 2-dimensional vector operand of the dot product.
-         * @returns {Number} The result of the dot product operation.
+         * @returns {number} The result of the dot product operation.
          * @example
          * var v1 = new pc.Vec2(5, 10);
          * var v2 = new pc.Vec2(10, 20);
@@ -142,7 +142,7 @@ Object.assign(pc, (function () {
          * @name pc.Vec2#equals
          * @description Reports whether two vectors are equal.
          * @param {pc.Vec2} rhs The vector to compare to the specified vector.
-         * @returns {Boolean} true if the vectors are equal and false otherwise.
+         * @returns {boolean} true if the vectors are equal and false otherwise.
          * @example
          * var a = new pc.Vec2(1, 2);
          * var b = new pc.Vec2(4, 5);
@@ -156,7 +156,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Vec2#length
          * @description Returns the magnitude of the specified 2-dimensional vector.
-         * @returns {Number} The magnitude of the specified 2-dimensional vector.
+         * @returns {number} The magnitude of the specified 2-dimensional vector.
          * @example
          * var vec = new pc.Vec2(3, 4);
          * var len = vec.length();
@@ -171,7 +171,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Vec2#lengthSq
          * @description Returns the magnitude squared of the specified 2-dimensional vector.
-         * @returns {Number} The magnitude of the specified 2-dimensional vector.
+         * @returns {number} The magnitude of the specified 2-dimensional vector.
          * @example
          * var vec = new pc.Vec2(3, 4);
          * var len = vec.lengthSq();
@@ -188,7 +188,7 @@ Object.assign(pc, (function () {
          * @description Returns the result of a linear interpolation between two specified 2-dimensional vectors.
          * @param {pc.Vec2} lhs The 2-dimensional to interpolate from.
          * @param {pc.Vec2} rhs The 2-dimensional to interpolate to.
-         * @param {Number} alpha The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
+         * @param {number} alpha The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
          * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
          * a ray extrapolated from this line.
          * @returns {pc.Vec2} Self for chaining.
@@ -284,7 +284,7 @@ Object.assign(pc, (function () {
          * @name pc.Vec2#scale
          * @description Scales each component of the specified 2-dimensional vector by the supplied
          * scalar value.
-         * @param {Number} scalar The value by which each vector component is multiplied.
+         * @param {number} scalar The value by which each vector component is multiplied.
          * @returns {pc.Vec2} Self for chaining.
          * @example
          * var v = new pc.Vec2(2, 4);
@@ -309,8 +309,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Vec2#set
          * @description Sets the specified 2-dimensional vector to the supplied numerical values.
-         * @param {Number} x The value to set on the first component of the vector.
-         * @param {Number} y The value to set on the second component of the vector.
+         * @param {number} x The value to set on the first component of the vector.
+         * @param {number} y The value to set on the second component of the vector.
          * @returns {pc.Vec2} Self for chaining.
          * @example
          * var v = new pc.Vec2();
@@ -376,7 +376,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Vec2#toString
          * @description Converts the vector to string form.
-         * @returns {String} The vector in string form.
+         * @returns {string} The vector in string form.
          * @example
          * var v = new pc.Vec2(20, 10);
          * // Should output '[20, 10]'

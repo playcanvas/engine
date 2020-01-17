@@ -5,9 +5,9 @@ Object.assign(pc, function () {
      * @classdesc A instance of a single point touch on a {@link pc.TouchDevice}
      * @description Create a new Touch object from the browser Touch
      * @param {Touch} touch The browser Touch object
-     * @property {Number} id The identifier of the touch
-     * @property {Number} x The x co-ordinate relative to the element that the TouchDevice is attached to
-     * @property {Number} y The y co-ordinate relative to the element that the TouchDevice is attached to
+     * @property {number} id The identifier of the touch
+     * @property {number} x The x co-ordinate relative to the element that the TouchDevice is attached to
+     * @property {number} y The y co-ordinate relative to the element that the TouchDevice is attached to
      * @property {Element} target The target element of the touch event
      * @property {Touch} touch The original browser Touch object
      */
@@ -62,7 +62,7 @@ Object.assign(pc, function () {
          * @name pc.TouchEvent#getTouchById
          * @description Get an event from one of the touch lists by the id. It is useful to access
          * touches by their id so that you can be sure you are referencing the same touch.
-         * @param {Number} id The identifier of the touch.
+         * @param {number} id The identifier of the touch.
          * @param {pc.Touch[]} list An array of touches to search.
          * @returns {pc.Touch} The {@link pc.Touch} object or null.
          */
@@ -166,7 +166,7 @@ Object.assign(pc, function () {
          * This function takes a browser Touch object and returns the co-ordinates of the
          * touch relative to the target element.
          * @param {Touch} touch The browser Touch object
-         * @returns {Object} The co-ordinates of the touch relative to the touch.target element. In the format {x, y}
+         * @returns {object} The co-ordinates of the touch relative to the touch.target element. In the format {x, y}
          */
         getTouchTargetCoords: function (touch) {
             var totalOffsetX = 0;

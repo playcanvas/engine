@@ -103,8 +103,8 @@ Object.assign(pc, function () {
      * of the parent component – you should never have to worry about manually calling <code>Function.bind()</code>.
      *
      * @param {pc.Component} parentComponent A reference to the parent component that owns this entity reference.
-     * @param {String} entityPropertyName The name of the component property that contains the entity guid.
-     * @param {Object<String, Function>} [eventConfig] A map of event listener configurations.
+     * @param {string} entityPropertyName The name of the component property that contains the entity guid.
+     * @param {object<string, Function>} [eventConfig] A map of event listener configurations.
      * @property {Entity} entity A reference to the entity, if present.
      */
     function EntityReference(parentComponent, entityPropertyName, eventConfig) {
@@ -392,8 +392,8 @@ Object.assign(pc, function () {
          * @name pc.EntityReference#hasComponent
          * @description Convenience method indicating whether the entity exists and has a
          * component of the provided type.
-         * @param {String} componentName Name of the component.
-         * @returns {Boolean} True if the entity exists and has a component of the provided type.
+         * @param {string} componentName Name of the component.
+         * @returns {boolean} True if the entity exists and has a component of the provided type.
          */
         hasComponent: function (componentName) {
             return (this._entity && this._entity.c) ? !!this._entity.c[componentName] : false;

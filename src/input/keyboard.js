@@ -6,7 +6,7 @@ Object.assign(pc, function () {
      * @description Create a new KeyboardEvent
      * @param {pc.Keyboard} keyboard The keyboard object which is firing the event.
      * @param {KeyboardEvent} event The original browser event that was fired.
-     * @property {Number} key The keyCode of the key that has changed. See the pc.KEY_* constants.
+     * @property {number} key The keyCode of the key that has changed. See the pc.KEY_* constants.
      * @property {Element} element The element that fired the keyboard event.
      * @property {KeyboardEvent} event The original browser event which was fired.
      * @example
@@ -45,8 +45,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.toKeyCode
      * @description Convert a string or keycode to a keycode
-     * @param {String | Number} s Either a character code or the key character.
-     * @returns {Number} The character code.
+     * @param {string|number} s Either a character code or the key character.
+     * @returns {number} The character code.
      */
     function toKeyCode(s){
         if (typeof s === "string") {
@@ -112,9 +112,9 @@ Object.assign(pc, function () {
      * @description Create a new Keyboard object
      * @param {Element|Window} [element] Element to attach Keyboard to. Note that elements like &lt;div&gt; can't
      * accept focus by default. To use keyboard events on an element like this it must have a value of 'tabindex' e.g. tabindex="0". For more details: <a href="http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html">http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html</a>
-     * @param {Object} [options] Optional options object.
-     * @param {Boolean} [options.preventDefault] Call preventDefault() in key event handlers. This stops the default action of the event occurring. e.g. Ctrl+T will not open a new browser tab
-     * @param {Boolean} [options.stopPropagation] Call stopPropagation() in key event handlers. This stops the event bubbling up the DOM so no parent handlers will be notified of the event
+     * @param {object} [options] Optional options object.
+     * @param {boolean} [options.preventDefault] Call preventDefault() in key event handlers. This stops the default action of the event occurring. e.g. Ctrl+T will not open a new browser tab
+     * @param {boolean} [options.stopPropagation] Call stopPropagation() in key event handlers. This stops the event bubbling up the DOM so no parent handlers will be notified of the event
      * @example
      * var keyboard = new pc.Keyboard(window); // attach keyboard listeners to the window
      */
@@ -175,8 +175,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Keyboard#toKeyIdentifier
      * @description Convert a key code into a key identifier
-     * @param {Number} keyCode The key code.
-     * @returns {String} The key identifier.
+     * @param {number} keyCode The key code.
+     * @returns {string} The key identifier.
      */
     Keyboard.prototype.toKeyIdentifier = function (keyCode){
         keyCode = toKeyCode(keyCode);
@@ -281,8 +281,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Keyboard#isPressed
      * @description Return true if the key is currently down.
-     * @param {Number} key The keyCode of the key to test. See the pc.KEY_* constants.
-     * @returns {Boolean} True if the key was pressed, false if not.
+     * @param {number} key The keyCode of the key to test. See the pc.KEY_* constants.
+     * @returns {boolean} True if the key was pressed, false if not.
      */
     Keyboard.prototype.isPressed = function (key) {
         var keyCode = toKeyCode(key);
@@ -295,8 +295,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Keyboard#wasPressed
      * @description Returns true if the key was pressed since the last update.
-     * @param {Number} key The keyCode of the key to test. See the pc.KEY_* constants.
-     * @returns {Boolean} true if the key was pressed.
+     * @param {number} key The keyCode of the key to test. See the pc.KEY_* constants.
+     * @returns {boolean} true if the key was pressed.
      */
     Keyboard.prototype.wasPressed = function (key) {
         var keyCode = toKeyCode(key);
@@ -309,8 +309,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Keyboard#wasReleased
      * @description Returns true if the key was released since the last update.
-     * @param {Number} key The keyCode of the key to test. See the pc.KEY_* constants.
-     * @returns {Boolean} true if the key was pressed.
+     * @param {number} key The keyCode of the key to test. See the pc.KEY_* constants.
+     * @returns {boolean} true if the key was pressed.
      */
     Keyboard.prototype.wasReleased = function (key) {
         var keyCode = toKeyCode(key);

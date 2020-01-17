@@ -23,7 +23,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ModelHandler#load
          * @description Fetch model data from a remote url
-         * @param {String} url The URL of the model data.
+         * @param {string} url The URL of the model data.
          * @param {pc.callbacks.ResourceHandler} callback Callback function called when the load completes. The
          * callback is of the form fn(err, response), where err is a String error message in
          * the case where the load fails, and response is the model data that has been
@@ -62,8 +62,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ModelHandler#open
          * @description Process data in deserialized format into a pc.Model object.
-         * @param {String} url The URL of the model data.
-         * @param {Object} data The data from model file deserialized into a JavaScript Object.
+         * @param {string} url The URL of the model data.
+         * @param {object} data The data from model file deserialized into a JavaScript Object.
          * @returns {pc.Model} The loaded model.
          */
         open: function (url, data) {
@@ -144,7 +144,7 @@ Object.assign(pc, function () {
          * @name pc.ModelHandler#addParser
          * @description Add a parser that converts raw data into a {@link pc.Model}
          * Default parser is for JSON models
-         * @param {Object} parser See JsonModelParser for example
+         * @param {object} parser See JsonModelParser for example
          * @param {pc.callbacks.AddParser} decider Function that decides on which parser to use.
          * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link pc.Model}.
          * The first parser to return true is used.

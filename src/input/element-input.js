@@ -104,18 +104,18 @@ Object.assign(pc, function () {
      * @param {MouseEvent} event The MouseEvent that was originally raised.
      * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
      * @param {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
-     * @param {Number} x The x coordinate
-     * @param {Number} y The y coordinate
-     * @param {Number} lastX The last x coordinate
-     * @param {Number} lastY The last y coordinate
-     * @property {Boolean} ctrlKey Whether the ctrl key was pressed
-     * @property {Boolean} altKey Whether the alt key was pressed
-     * @property {Boolean} shiftKey Whether the shift key was pressed
-     * @property {Boolean} metaKey Whether the meta key was pressed
-     * @property {Number} button The mouse button
-     * @property {Number} dx The amount of horizontal movement of the cursor
-     * @property {Number} dy The amount of vertical movement of the cursor
-     * @property {Number} wheel The amount of the wheel movement
+     * @param {number} x The x coordinate
+     * @param {number} y The y coordinate
+     * @param {number} lastX The last x coordinate
+     * @param {number} lastY The last y coordinate
+     * @property {boolean} ctrlKey Whether the ctrl key was pressed
+     * @property {boolean} altKey Whether the alt key was pressed
+     * @property {boolean} shiftKey Whether the shift key was pressed
+     * @property {boolean} metaKey Whether the meta key was pressed
+     * @property {number} button The mouse button
+     * @property {number} dx The amount of horizontal movement of the cursor
+     * @property {number} dy The amount of vertical movement of the cursor
+     * @property {number} wheel The amount of the wheel movement
      */
     var ElementMouseEvent = function (event, element, camera, x, y, lastX, lastY) {
         ElementInputEvent.call(this, event, element, camera);
@@ -160,8 +160,8 @@ Object.assign(pc, function () {
      * @param {TouchEvent} event The TouchEvent that was originally raised.
      * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
      * @param {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
-     * @param {Number} x The x coordinate of the touch that triggered the event
-     * @param {Number} y The y coordinate of the touch that triggered the event
+     * @param {number} x The x coordinate of the touch that triggered the event
+     * @param {number} y The y coordinate of the touch that triggered the event
      * @param {pc.ElementInput} input The pc.ElementInput instance
      * @property {pc.Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
      * @property {pc.Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
@@ -184,9 +184,9 @@ Object.assign(pc, function () {
      * occur on an ElementComponent this fires the appropriate events on the ElementComponent.
      * @description Create a new pc.ElementInput instance.
      * @param {Element} domElement The DOM element
-     * @param {Object} [options] Optional arguments
-     * @param {Boolean} [options.useMouse] Whether to allow mouse input. Defaults to true.
-     * @param {Boolean} [options.useTouch] Whether to allow touch input. Defaults to true.
+     * @param {object} [options] Optional arguments
+     * @param {boolean} [options.useMouse] Whether to allow mouse input. Defaults to true.
+     * @param {boolean} [options.useTouch] Whether to allow touch input. Defaults to true.
      */
     var ElementInput = function (domElement, options) {
         this._app = null;

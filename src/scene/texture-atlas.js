@@ -8,7 +8,7 @@ Object.assign(pc, function () {
      * @classdesc A pc.TextureAtlas contains a number of frames from a texture. Each frame
      * defines a region in a texture. The pc.TextureAtlas is referenced by {@link pc.Sprite}s.
      * @property {pc.Texture} texture The texture atlas.
-     * @property {Object} frames Contains frames which define portions of the texture atlas.
+     * @property {object} frames Contains frames which define portions of the texture atlas.
      * @example
      * var atlas = new pc.TextureAtlas();
      * atlas.frames = {
@@ -40,8 +40,8 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.TextureAtlas#setFrame
-     * @param {String} key The key of the frame.
-     * @param {Object} data The properties of the frame.
+     * @param {string} key The key of the frame.
+     * @param {object} data The properties of the frame.
      * @param {pc.Vec4} data.rect The u, v, width, height properties of the frame in pixels.
      * @param {pc.Vec2} data.pivot The pivot of the frame - values are between 0-1.
      * @param {pc.Vec4} data.border The border of the frame for 9-slicing. Values are ordered
@@ -74,7 +74,7 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.TextureAtlas#removeFrame
-     * @param {String} key The key of the frame.
+     * @param {string} key The key of the frame.
      * @example
      * atlas.removeFrame('1');
      */

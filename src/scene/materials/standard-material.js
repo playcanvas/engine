@@ -13,101 +13,101 @@ Object.assign(pc, function () {
      * @property {pc.Color} diffuse The diffuse color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * Defines basic surface color (aka albedo).
-     * @property {Boolean} diffuseTint Multiply diffuse map and/or diffuse vertex color by the constant diffuse value.
-     * @property {pc.Texture|Null} diffuseMap The diffuse map of the material (default is null).
-     * @property {Number} diffuseMapUv Diffuse map UV channel
+     * @property {boolean} diffuseTint Multiply diffuse map and/or diffuse vertex color by the constant diffuse value.
+     * @property {pc.Texture|null} diffuseMap The diffuse map of the material (default is null).
+     * @property {number} diffuseMapUv Diffuse map UV channel
      * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the diffuse map.
      * @property {pc.Vec2} diffuseMapOffset Controls the 2D offset of the diffuse map. Each component is between 0 and 1.
-     * @property {String} diffuseMapChannel Color channels of the diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
-     * @property {Boolean} diffuseVertexColor Use mesh vertex colors for diffuse. If diffuseMap or are diffuseTint are set, they'll be multiplied by vertex colors.
-     * @property {String} diffuseVertexColorChannel Vertex color channels to use for diffuse. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {string} diffuseMapChannel Color channels of the diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {boolean} diffuseVertexColor Use mesh vertex colors for diffuse. If diffuseMap or are diffuseTint are set, they'll be multiplied by vertex colors.
+     * @property {string} diffuseVertexColorChannel Vertex color channels to use for diffuse. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      *
      * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * Defines surface reflection/specular color. Affects specular intensity and tint.
-     * @property {Boolean} specularTint Multiply specular map and/or specular vertex color by the constant specular value.
-     * @property {pc.Texture|Null} specularMap The specular map of the material (default is null).
-     * @property {Number} specularMapUv Specular map UV channel
+     * @property {boolean} specularTint Multiply specular map and/or specular vertex color by the constant specular value.
+     * @property {pc.Texture|null} specularMap The specular map of the material (default is null).
+     * @property {number} specularMapUv Specular map UV channel
      * @property {pc.Vec2} specularMapTiling Controls the 2D tiling of the specular map.
      * @property {pc.Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
-     * @property {String} specularMapChannel Color channels of the specular map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
-     * @property {Boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be multiplied by vertex colors.
-     * @property {String} specularVertexColorChannel Vertex color channels to use for specular. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {string} specularMapChannel Color channels of the specular map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be multiplied by vertex colors.
+     * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      *
-     * @property {Boolean} useMetalness Use metalness properties instead of specular.
+     * @property {boolean} useMetalness Use metalness properties instead of specular.
      * When enabled, diffuse colors also affect specular instead of the dedicated specular map.
      * This can be used as alternative to specular color to save space.
      * With metaless == 0, the pixel is assumed to be dielectric, and diffuse color is used as normal.
      * With metaless == 1, the pixel is fully metallic, and diffuse color is used as specular color instead.
-     * @property {Number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1 (metal).
-     * @property {pc.Texture|Null} metalnessMap Monochrome metalness map (default is null).
-     * @property {Number} metalnessMapUv Metalness map UV channel
+     * @property {number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1 (metal).
+     * @property {pc.Texture|null} metalnessMap Monochrome metalness map (default is null).
+     * @property {number} metalnessMapUv Metalness map UV channel
      * @property {pc.Vec2} metalnessMapTiling Controls the 2D tiling of the metalness map.
      * @property {pc.Vec2} metalnessMapOffset Controls the 2D offset of the metalness map. Each component is between 0 and 1.
-     * @property {String} metalnessMapChannel Color channel of the metalness map to use. Can be "r", "g", "b" or "a".
-     * @property {Boolean} metalnessVertexColor Use mesh vertex colors for metalness. If metalnessMap is set, it'll be multiplied by vertex colors.
-     * @property {String} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be "r", "g", "b" or "a".
+     * @property {string} metalnessMapChannel Color channel of the metalness map to use. Can be "r", "g", "b" or "a".
+     * @property {boolean} metalnessVertexColor Use mesh vertex colors for metalness. If metalnessMap is set, it'll be multiplied by vertex colors.
+     * @property {string} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be "r", "g", "b" or "a".
      *
-     * @property {Number} shininess Defines glossiness of the material from 0 (rough) to 100 (shiny mirror).
+     * @property {number} shininess Defines glossiness of the material from 0 (rough) to 100 (shiny mirror).
      * A higher shininess value results in a more focused specular highlight.
      * Glossiness map/vertex colors are always multiplied by this value (normalized to 0 - 1 range), or it is used directly as constant output.
-     * @property {pc.Texture|Null} glossMap Glossiness map (default is null). If specified, will be multiplied by normalized 'shininess' value and/or vertex colors.
-     * @property {Number} glossMapUv Gloss map UV channel
-     * @property {String} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b" or "a".
+     * @property {pc.Texture|null} glossMap Glossiness map (default is null). If specified, will be multiplied by normalized 'shininess' value and/or vertex colors.
+     * @property {number} glossMapUv Gloss map UV channel
+     * @property {string} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
      * @property {pc.Vec2} glossMapOffset Controls the 2D offset of the gloss map. Each component is between 0 and 1.
-     * @property {Boolean} glossVertexColor Use mesh vertex colors for glossiness. If glossMap is set, it'll be multiplied by vertex colors.
-     * @property {String} glossVertexColorChannel Vertex color channel to use for glossiness. Can be "r", "g", "b" or "a".
+     * @property {boolean} glossVertexColor Use mesh vertex colors for glossiness. If glossMap is set, it'll be multiplied by vertex colors.
+     * @property {string} glossVertexColorChannel Vertex color channel to use for glossiness. Can be "r", "g", "b" or "a".
      *
-     * @property {Number} refraction Defines the visibility of refraction. Material can refract the same cube map as used for reflections.
-     * @property {Number} refractionIndex Defines the index of refraction, i.e. the amount of distortion.
+     * @property {number} refraction Defines the visibility of refraction. Material can refract the same cube map as used for reflections.
+     * @property {number} refractionIndex Defines the index of refraction, i.e. the amount of distortion.
      * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of it's own surface.
      * In most situations outer medium is air, so outerIor will be approximately 1. Then you only need to do (1.0 / surfaceIor).
      *
      * @property {pc.Color} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
-     * @property {Boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the constant emissive value.
-     * @property {pc.Texture|Null} emissiveMap The emissive map of the material (default is null). Can be HDR.
-     * @property {Number} emissiveIntensity Emissive color multiplier.
-     * @property {Number} emissiveMapUv Emissive map UV channel.
+     * @property {boolean} emissiveTint Multiply emissive map and/or emissive vertex color by the constant emissive value.
+     * @property {pc.Texture|null} emissiveMap The emissive map of the material (default is null). Can be HDR.
+     * @property {number} emissiveIntensity Emissive color multiplier.
+     * @property {number} emissiveMapUv Emissive map UV channel.
      * @property {pc.Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
      * @property {pc.Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is between 0 and 1.
-     * @property {String} emissiveMapChannel Color channels of the emissive map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
-     * @property {Boolean} emissiveVertexColor Use mesh vertex colors for emission. If emissiveMap or emissiveTint are set, they'll be multiplied by vertex colors.
-     * @property {String} emissiveVertexColorChannel Vertex color channels to use for emission. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {string} emissiveMapChannel Color channels of the emissive map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {boolean} emissiveVertexColor Use mesh vertex colors for emission. If emissiveMap or emissiveTint are set, they'll be multiplied by vertex colors.
+     * @property {string} emissiveVertexColorChannel Vertex color channels to use for emission. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      *
-     * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
+     * @property {number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
      * transparent and 1 is fully opaque. If you want the material to be semi-transparent you also need to
      * set the {@link pc.Material#blendType} to pc.BLEND_NORMAL, pc.BLEND_ADDITIVE or any other mode.
      * Also note that for most semi-transparent objects you want {@link pc.Material#depthWrite} to be false, otherwise they can fully occlude objects behind them.
-     * @property {pc.Texture|Null} opacityMap The opacity map of the material (default is null).
-     * @property {Number} opacityMapUv Opacity map UV channel
-     * @property {String} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g", "b" or "a".
+     * @property {pc.Texture|null} opacityMap The opacity map of the material (default is null).
+     * @property {number} opacityMapUv Opacity map UV channel
+     * @property {string} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
      * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
-     * @property {Boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
-     * @property {String} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
+     * @property {boolean} opacityVertexColor Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
+     * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be "r", "g", "b" or "a".
      *
-     * @property {pc.Texture|Null} normalMap The normal map of the material (default is null).
+     * @property {pc.Texture|null} normalMap The normal map of the material (default is null).
      * The texture must contains normalized, tangent space normals.
-     * @property {Number} normalMapUv Normal map UV channel
+     * @property {number} normalMapUv Normal map UV channel
      * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
      * @property {pc.Vec2} normalMapOffset Controls the 2D offset of the normal map. Each component is between 0 and 1.
-     * @property {Number} bumpiness The bumpiness of the material. This value scales the assigned normal map.
+     * @property {number} bumpiness The bumpiness of the material. This value scales the assigned normal map.
      * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
      *
-     * @property {pc.Texture|Null} heightMap The height map of the material (default is null). Used for a view-dependent parallax effect.
+     * @property {pc.Texture|null} heightMap The height map of the material (default is null). Used for a view-dependent parallax effect.
      * The texture must represent the height of the surface where darker pixels are lower and lighter pixels are higher.
      * It is recommended to use it together with a normal map.
-     * @property {Number} heightMapUv Height map UV channel
-     * @property {String} heightMapChannel Color channel of the height map to use. Can be "r", "g", "b" or "a".
+     * @property {number} heightMapUv Height map UV channel
+     * @property {string} heightMapChannel Color channel of the height map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} heightMapTiling Controls the 2D tiling of the height map.
      * @property {pc.Vec2} heightMapOffset Controls the 2D offset of the height map. Each component is between 0 and 1.
-     * @property {Number} heightMapFactor Height map multiplier. Affects the strength of the parallax effect.
+     * @property {number} heightMapFactor Height map multiplier. Affects the strength of the parallax effect.
      *
-     * @property {pc.Texture|Null} sphereMap The spherical environment map of the material (default is null). Affects reflections.
-     * @property {pc.Texture|Null} cubeMap The cubic environment map of the material (default is null). Overrides sphereMap. Affects reflections. If cubemap is prefiltered, will also affect ambient color.
-     * @property {Number} cubeMapProjection The type of projection applied to the cubeMap property:
+     * @property {pc.Texture|null} sphereMap The spherical environment map of the material (default is null). Affects reflections.
+     * @property {pc.Texture|null} cubeMap The cubic environment map of the material (default is null). Overrides sphereMap. Affects reflections. If cubemap is prefiltered, will also affect ambient color.
+     * @property {number} cubeMapProjection The type of projection applied to the cubeMap property:
      * <ul>
      *     <li>{@link pc.CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.</li>
      *     <li>{@link pc.CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.</li>
@@ -115,55 +115,55 @@ Object.assign(pc, function () {
      * Defaults to pc.CUBEPROJ_NONE.
      * @property {pc.BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box defining the
      * box-projection used for the cubeMap property. Only used when cubeMapProjection is set to pc.CUBEPROJ_BOX.
-     * @property {Number} reflectivity Environment map intensity.
+     * @property {number} reflectivity Environment map intensity.
      *
-     * @property {pc.Texture|Null} lightMap A custom lightmap of the material (default is null). Lightmaps are textures that contain pre-rendered lighting. Can be HDR.
-     * @property {Number} lightMapUv Lightmap UV channel
-     * @property {String} lightMapChannel Color channels of the lightmap to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {pc.Texture|null} lightMap A custom lightmap of the material (default is null). Lightmaps are textures that contain pre-rendered lighting. Can be HDR.
+     * @property {number} lightMapUv Lightmap UV channel
+     * @property {string} lightMapChannel Color channels of the lightmap to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      * @property {pc.Vec2} lightMapTiling Controls the 2D tiling of the lightmap.
      * @property {pc.Vec2} lightMapOffset Controls the 2D offset of the lightmap. Each component is between 0 and 1.
-     * @property {Boolean} lightVertexColor Use baked vertex lighting. If lightMap is set, it'll be multiplied by vertex colors.
-     * @property {String} lightVertexColorChannel Vertex color channels to use for baked lighting. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * @property {boolean} lightVertexColor Use baked vertex lighting. If lightMap is set, it'll be multiplied by vertex colors.
+     * @property {string} lightVertexColorChannel Vertex color channels to use for baked lighting. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
      *
-     * @property {Boolean} ambientTint Enables scene ambient multiplication by material ambient color.
-     * @property {pc.Texture|Null} aoMap Baked ambient occlusion (AO) map (default is null). Modulates ambient color.
-     * @property {Number} aoMapUv AO map UV channel
-     * @property {String} aoMapChannel Color channel of the AO map to use. Can be "r", "g", "b" or "a".
+     * @property {boolean} ambientTint Enables scene ambient multiplication by material ambient color.
+     * @property {pc.Texture|null} aoMap Baked ambient occlusion (AO) map (default is null). Modulates ambient color.
+     * @property {number} aoMapUv AO map UV channel
+     * @property {string} aoMapChannel Color channel of the AO map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} aoMapTiling Controls the 2D tiling of the AO map.
      * @property {pc.Vec2} aoMapOffset Controls the 2D offset of the AO map. Each component is between 0 and 1.
-     * @property {Boolean} aoVertexColor Use mesh vertex colors for AO. If aoMap is set, it'll be multiplied by vertex colors.
-     * @property {String} aoVertexColorChannel Vertex color channels to use for AO. Can be "r", "g", "b" or "a".
-     * @property {Number} occludeSpecular Uses ambient occlusion to darken specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it can be better than nothing.
+     * @property {boolean} aoVertexColor Use mesh vertex colors for AO. If aoMap is set, it'll be multiplied by vertex colors.
+     * @property {string} aoVertexColorChannel Vertex color channels to use for AO. Can be "r", "g", "b" or "a".
+     * @property {number} occludeSpecular Uses ambient occlusion to darken specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it can be better than nothing.
      * <ul>
      *     <li>{@link pc.SPECOCC_NONE}: No specular occlusion</li>
      *     <li>{@link pc.SPECOCC_AO}: Use AO directly to occlude specular.</li>
      *     <li>{@link pc.SPECOCC_GLOSSDEPENDENT}: Modify AO based on material glossiness/view angle to occlude specular.</li>
      * </ul>
-     * @property {Number} occludeSpecularIntensity Controls visibility of specular occlusion.
-     * @property {Number} occludeDirect Tells if AO should darken directional lighting.
+     * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
+     * @property {number} occludeDirect Tells if AO should darken directional lighting.
      *
-     * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
-     * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
+     * @property {boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
+     * @property {boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
      * It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
-     * @property {Number} shadingModel Defines the shading model.
+     * @property {number} shadingModel Defines the shading model.
      * <ul>
      *     <li>{@link pc.SPECULAR_PHONG}: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.</li>
      *     <li>{@link pc.SPECULAR_BLINN}: Energy-conserving Blinn-Phong.</li>
      * </ul>
-     * @property {Number} fresnelModel Defines the formula used for Fresnel effect.
+     * @property {number} fresnelModel Defines the formula used for Fresnel effect.
      * As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
      * When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
      * <ul>
      *     <li>{@link pc.FRESNEL_NONE}: No Fresnel.</li>
      *     <li>{@link pc.FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.</li>
      * </ul>
-     * @property {Boolean} useFog Apply fogging (as configured in scene settings)
-     * @property {Boolean} useLighting Apply lighting
-     * @property {Boolean} useSkybox Apply scene skybox as prefiltered environment map
-     * @property {Boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in scene settings)
-     * @property {Boolean} pixelSnap Align vertices to pixel co-ordinates when rendering. Useful for pixel perfect 2D graphics
-     * @property {Boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on backfaces
-     * @property {Object} chunks Object containing custom shader chunks that will replace default ones.
+     * @property {boolean} useFog Apply fogging (as configured in scene settings)
+     * @property {boolean} useLighting Apply lighting
+     * @property {boolean} useSkybox Apply scene skybox as prefiltered environment map
+     * @property {boolean} useGammaTonemap Apply gamma correction and tonemapping (as configured in scene settings)
+     * @property {boolean} pixelSnap Align vertices to pixel co-ordinates when rendering. Useful for pixel perfect 2D graphics
+     * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on backfaces
+     * @property {object} chunks Object containing custom shader chunks that will replace default ones.
      *
      * @property {pc.callbacks.UpdateShader} onUpdateShader A custom function that will be called after all shader generator properties are collected and before shader code is generated.
      * This function will receive an object with shader generator settings (based on current material and scene properties), that you can change and then return.

@@ -5,15 +5,15 @@ Object.assign(pc, function () {
          * @function
          * @name pc.createURI
          * @description Create a URI object from constituent parts
-         * @param {Object} options Parts of the URI to build
-         * @param {String} [options.scheme] The URI scheme (e.g. http)
-         * @param {String} [options.authority] The URI authority (e.g. www.example.com)
-         * @param {String} [options.host] Combination of scheme and authority (e.g. http://www.example.com)
-         * @param {String} [options.path] The URI path (e.g. /users/example)
-         * @param {String} [options.hostpath] Combination of scheme, authority and path (e.g. http://www.example.com/users/example)
-         * @param {String} [options.query] The query section, after the ?(e.g. http://example.com?<b>key=value&another=123</b>)
-         * @param {String} [options.fragment] The fragment section, after the # (e.g. http://example.com#<b>fragment/data</b>)
-         * @returns {String} A URI string
+         * @param {object} options Parts of the URI to build
+         * @param {string} [options.scheme] The URI scheme (e.g. http)
+         * @param {string} [options.authority] The URI authority (e.g. www.example.com)
+         * @param {string} [options.host] Combination of scheme and authority (e.g. http://www.example.com)
+         * @param {string} [options.path] The URI path (e.g. /users/example)
+         * @param {string} [options.hostpath] Combination of scheme, authority and path (e.g. http://www.example.com/users/example)
+         * @param {string} [options.query] The query section, after the ?(e.g. http://example.com?<b>key=value&another=123</b>)
+         * @param {string} [options.fragment] The fragment section, after the # (e.g. http://example.com#<b>fragment/data</b>)
+         * @returns {string} A URI string
          */
         createURI: function (options) {
             var s = "";
@@ -64,7 +64,7 @@ Object.assign(pc, function () {
          * @name pc.URI
          * @description Create a new URI object
          * @classdesc A URI object
-         * @param {String} uri URI string
+         * @param {string} uri URI string
          */
         URI: function (uri) {
             // See http://tools.ietf.org/html/rfc2396#appendix-B for details of RegExp
@@ -116,7 +116,7 @@ Object.assign(pc, function () {
              * @function
              * @name pc.URI#toString
              * @description Convert URI back to string
-             * @returns {String} The URI as a string.
+             * @returns {string} The URI as a string.
              */
             this.toString = function () {
                 var s = "";
@@ -147,7 +147,7 @@ Object.assign(pc, function () {
              * @function
              * @name pc.URI#getQuery
              * @description Returns the query parameters as an Object.
-             * @returns {Object} The URI's query parameters converted to an Object.
+             * @returns {object} The URI's query parameters converted to an Object.
              * @example
              * var s = "http://example.com?a=1&b=2&c=3";
              * var uri = new pc.URI(s);
@@ -177,7 +177,7 @@ Object.assign(pc, function () {
              * @function
              * @name pc.URI#setQuery
              * @description Set the query section of the URI from a Object
-             * @param {Object} params Key-Value pairs to encode into the query string
+             * @param {object} params Key-Value pairs to encode into the query string
              * @example
              * var s = "http://example.com";
              * var uri = new pc.URI(s);

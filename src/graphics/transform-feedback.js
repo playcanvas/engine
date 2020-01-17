@@ -64,7 +64,7 @@ Object.assign(pc, function () {
      *     this.tf.process(this.shader);
      * };
      * @param {pc.VertexBuffer} inputBuffer The input vertex buffer
-     * @param {Number} [usage] The optional usage type of the output vertex buffer (see pc.BUFFER_*). pc.BUFFER_GPUDYNAMIC is recommended for continuous update, and is the default value.
+     * @param {number} [usage] The optional usage type of the output vertex buffer (see pc.BUFFER_*). pc.BUFFER_GPUDYNAMIC is recommended for continuous update, and is the default value.
      */
     /* eslint-enable jsdoc/check-examples */
     var TransformFeedback = function (inputBuffer, usage) {
@@ -87,8 +87,8 @@ Object.assign(pc, function () {
      * @name pc.TransformFeedback#createShader
      * @description Creates a transform feedback ready vertex shader from code.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used by the renderer.
-     * @param {String} vsCode Vertex shader code. Should contain output variables starting with "out_".
-     * @param {String} name Unique name for caching the shader.
+     * @param {string} vsCode Vertex shader code. Should contain output variables starting with "out_".
+     * @param {string} name Unique name for caching the shader.
      * @returns {pc.Shader} A shader to use in the process() function.
      */
     TransformFeedback.createShader = function (graphicsDevice, vsCode, name) {
@@ -110,7 +110,7 @@ Object.assign(pc, function () {
          * @name pc.TransformFeedback#process
          * @description Runs the specified shader on the input buffer, writes results into the new buffer, then optionally swaps input/output.
          * @param {pc.Shader} shader A vertex shader to run. Should be created with pc.TransformFeedback.createShader.
-         * @param {Boolean} [swap] Swap input/output buffer data. Useful for continuous buffer processing. Default is true.
+         * @param {boolean} [swap] Swap input/output buffer data. Useful for continuous buffer processing. Default is true.
          */
         process: function (shader, swap) {
             if (swap === undefined) swap = true;

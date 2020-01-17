@@ -70,10 +70,10 @@ Object.assign(pc, function () {
      * their render settings and also defines custom callbacks before, after or during rendering.
      * Layers are organized inside {@link pc.LayerComposition} in a desired order.
      * @description Create a new layer.
-     * @param {Object} options Object for passing optional arguments. These arguments are the same as properties of the Layer.
-     * @property {Boolean} enabled Enable the layer. Disabled layers are skipped. Defaults to true.
-     * @property {String} name Name of the layer. Can be used in {@link pc.LayerComposition#getLayerByName}.
-     * @property {Number} opaqueSortMode Defines the method used for sorting opaque (that is, not semi-transparent) mesh instances before rendering.
+     * @param {object} options Object for passing optional arguments. These arguments are the same as properties of the Layer.
+     * @property {boolean} enabled Enable the layer. Disabled layers are skipped. Defaults to true.
+     * @property {string} name Name of the layer. Can be used in {@link pc.LayerComposition#getLayerByName}.
+     * @property {number} opaqueSortMode Defines the method used for sorting opaque (that is, not semi-transparent) mesh instances before rendering.
      * Possible values are:
      * <ul>
      *     <li>{@link pc.SORTMODE_NONE}</li>
@@ -83,7 +83,7 @@ Object.assign(pc, function () {
      *     <li>{@link pc.SORTMODE_FRONT2BACK}</li>
      * </ul>
      * Defaults to pc.SORTMODE_MATERIALMESH.
-     * @property {Number} transparentSortMode Defines the method used for sorting semi-transparent mesh instances before rendering.
+     * @property {number} transparentSortMode Defines the method used for sorting semi-transparent mesh instances before rendering.
      * Possible values are:
      * <ul>
      *     <li>{@link pc.SORTMODE_NONE}</li>
@@ -94,7 +94,7 @@ Object.assign(pc, function () {
      * </ul>
      * Defaults to pc.SORTMODE_BACK2FRONT.
      * @property {pc.RenderTarget} renderTarget Render target to which rendering is performed. If not set, will render simply to the screen.
-     * @property {Number} shaderPass A type of shader to use during rendering. Possible values are:
+     * @property {number} shaderPass A type of shader to use during rendering. Possible values are:
      * <ul>
      *     <li>{@link pc.SHADER_FORWARD}</li>
      *     <li>{@link pc.SHADER_FORWARDHDR}</li>
@@ -102,14 +102,14 @@ Object.assign(pc, function () {
      *     <li>Your own custom value. Should be in 19 - 31 range. Use {@link pc.StandardMaterial#onUpdateShader} to apply shader modifications based on this value.</li>
      * </ul>
      * Defaults to pc.SHADER_FORWARD.
-     * @property {Boolean} passThrough Tells that this layer is simple and needs to just render a bunch of mesh instances without lighting, skinning and morphing (faster).
+     * @property {boolean} passThrough Tells that this layer is simple and needs to just render a bunch of mesh instances without lighting, skinning and morphing (faster).
      *
-     * @property {Boolean} overrideClear Defines if layer should use camera clear parameters (true) or ignore them and use {@link pc.Layer#clearColor}, {@link pc.Layer#clearColorBuffer},
+     * @property {boolean} overrideClear Defines if layer should use camera clear parameters (true) or ignore them and use {@link pc.Layer#clearColor}, {@link pc.Layer#clearColorBuffer},
      * {@link pc.Layer#clearDepthBuffer} and {@link pc.Layer#clearStencilBuffer}.
      * @property {pc.Color} clearColor The color used to clear the canvas to before each camera starts to render.
-     * @property {Boolean} clearColorBuffer If true cameras will clear the color buffer to the color set in clearColor.
-     * @property {Boolean} clearDepthBuffer If true cameras will clear the depth buffer.
-     * @property {Boolean} clearStencilBuffer If true cameras will clear the stencil buffer.
+     * @property {boolean} clearColorBuffer If true cameras will clear the color buffer to the color set in clearColor.
+     * @property {boolean} clearDepthBuffer If true cameras will clear the depth buffer.
+     * @property {boolean} clearStencilBuffer If true cameras will clear the stencil buffer.
      *
      * @property {pc.Layer} layerReference Make this layer render the same mesh instances that another layer does instead of having its own mesh instance list.
      * Both layers must share cameras. Frustum culling is only performed for one layer.
@@ -153,7 +153,7 @@ Object.assign(pc, function () {
      * This function will receive camera index as the only argument. You can get the actual camera being used by looking up {@link pc.LayerComposition#cameras} with this index.
      * @property {Function} onDrawCall Custom function that is called before every mesh instance in this layer is rendered.
      * It is not recommended to set this function when rendering many objects every frame due to performance reasons.
-     * @property {Number} id A unique ID of the layer.
+     * @property {number} id A unique ID of the layer.
      * Layer IDs are stored inside {@link pc.ModelComponent#layers}, {@link pc.CameraComponent#layers}, {@link pc.LightComponent#layers} and {@link pc.ElementComponent#layers} instead of names.
      * Can be used in {@link pc.LayerComposition#getLayerById}.
      */
@@ -375,7 +375,7 @@ Object.assign(pc, function () {
      * @name pc.Layer#addMeshInstances
      * @description Adds an array of mesh instances to this layer.
      * @param {pc.MeshInstance[]} meshInstances Array of {@link pc.MeshInstance}.
-     * @param {Boolean} [skipShadowCasters] Set it to true if you don't want these mesh instances to cast shadows in this layer.
+     * @param {boolean} [skipShadowCasters] Set it to true if you don't want these mesh instances to cast shadows in this layer.
      */
     Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
         var sceneShaderVer = this._shaderVersion;
@@ -408,7 +408,7 @@ Object.assign(pc, function () {
      * @name pc.Layer#removeMeshInstances
      * @description Removes multiple mesh instances from this layer.
      * @param {pc.MeshInstance[]} meshInstances Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
-     * @param {Boolean} [skipShadowCasters] Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
+     * @param {boolean} [skipShadowCasters] Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
      */
     Layer.prototype.removeMeshInstances = function (meshInstances, skipShadowCasters) {
 
@@ -472,7 +472,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#clearMeshInstances
      * @description Removes all mesh instances from this layer.
-     * @param {Boolean} [skipShadowCasters] Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
+     * @param {boolean} [skipShadowCasters] Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
      */
     Layer.prototype.clearMeshInstances = function (skipShadowCasters) {
         if (this.opaqueMeshInstances.length === 0 && this.transparentMeshInstances.length === 0) {

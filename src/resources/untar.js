@@ -105,7 +105,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Untar#_hasNext
          * @description Whether we have more files to untar
-         * @returns {Boolean} Returns true or false
+         * @returns {boolean} Returns true or false
          */
         UntarInternal.prototype._hasNext = function () {
             return this._bytesRead + 4 < this._arrayBuffer.byteLength && this._bufferView.getUint32(this._bytesRead) !== 0;
@@ -116,7 +116,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Untar#_readNextFile
          * @description Untars the next file in the archive
-         * @returns {Object} Returns a file descriptor in the following format:
+         * @returns {object} Returns a file descriptor in the following format:
          * {name, size, start, url}
          */
         UntarInternal.prototype._readNextFile = function () {
@@ -202,8 +202,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Untar#untar
          * @description Untars the array buffer provided in the constructor.
-         * @param {String} [filenamePrefix] The prefix for each filename in the tar archive. This is usually the {@link pc.AssetRegistry} prefix.
-         * @returns {Object[]} An array of files in this format {name, start, size, url}
+         * @param {string} [filenamePrefix] The prefix for each filename in the tar archive. This is usually the {@link pc.AssetRegistry} prefix.
+         * @returns {object[]} An array of files in this format {name, start, size, url}
          */
         UntarInternal.prototype.untar = function (filenamePrefix) {
             if (! utfDecoder) {
@@ -273,7 +273,7 @@ Object.assign(pc, function () {
      * @name pc.UntarWorker
      * @classdesc Wraps untar'ing a tar archive with a Web Worker.
      * @description Creates new instance of a pc.UntarWorker.
-     * @param {String} [filenamePrefix] The prefix that should be added to each file name in the archive. This is usually the {@link pc.AssetRegistry} prefix.
+     * @param {string} [filenamePrefix] The prefix that should be added to each file name in the archive. This is usually the {@link pc.AssetRegistry} prefix.
      */
     var UntarWorker = function (filenamePrefix) {
         this._requestId = 0;
@@ -338,7 +338,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.UntarWorker#hasPendingRequests
      * @description Returns whether the worker has pending requests to untar array buffers
-     * @returns {Boolean} Returns true of false
+     * @returns {boolean} Returns true of false
      */
     UntarWorker.prototype.hasPendingRequests = function () {
         for (var key in this._pendingRequests) {

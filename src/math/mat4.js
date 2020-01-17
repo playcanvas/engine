@@ -129,7 +129,7 @@ Object.assign(pc, (function () {
          * @name pc.Mat4#equals
          * @description Reports whether two matrices are equal.
          * @param {pc.Mat4} rhs The other matrix.
-         * @returns {Boolean} true if the matrices are equal and false otherwise.
+         * @returns {boolean} true if the matrices are equal and false otherwise.
          * @example
          * var a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          * var b = new pc.Mat4();
@@ -161,7 +161,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat4#isIdentity
          * @description Reports whether the specified matrix is the identity matrix.
-         * @returns {Boolean} true if the matrix is identity and false otherwise.
+         * @returns {boolean} true if the matrix is identity and false otherwise.
          * @example
          * var m = new pc.Mat4();
          * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
@@ -458,12 +458,12 @@ Object.assign(pc, (function () {
          * @name pc.Mat4#setFrustum
          * @description Sets the specified matrix to a perspective projection matrix. The function's parameters define
          * the shape of a frustum.
-         * @param {Number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
-         * @param {Number} right The x-coordinate for the right edge of the camera's projection plane in eye space.
-         * @param {Number} bottom The y-coordinate for the bottom edge of the camera's projection plane in eye space.
-         * @param {Number} top The y-coordinate for the top edge of the camera's projection plane in eye space.
-         * @param {Number} znear The near clip plane in eye coordinates.
-         * @param {Number} zfar The far clip plane in eye coordinates.
+         * @param {number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
+         * @param {number} right The x-coordinate for the right edge of the camera's projection plane in eye space.
+         * @param {number} bottom The y-coordinate for the bottom edge of the camera's projection plane in eye space.
+         * @param {number} top The y-coordinate for the top edge of the camera's projection plane in eye space.
+         * @param {number} znear The near clip plane in eye coordinates.
+         * @param {number} zfar The far clip plane in eye coordinates.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 perspective projection matrix
@@ -503,13 +503,13 @@ Object.assign(pc, (function () {
          * @name pc.Mat4#setPerspective
          * @description Sets the specified matrix to a perspective projection matrix. The function's
          * parameters define the shape of a frustum.
-         * @param {Number} fov The frustum's field of view in degrees. The fovIsHorizontal parameter
+         * @param {number} fov The frustum's field of view in degrees. The fovIsHorizontal parameter
          * controls whether this is a vertical or horizontal field of view. By default, it's a vertical
          * field of view.
-         * @param {Number} aspect The aspect ratio of the frustum's projection plane (width / height).
-         * @param {Number} znear The near clip plane in eye coordinates.
-         * @param {Number} zfar The far clip plane in eye coordinates.
-         * @param {Boolean} [fovIsHorizontal=false] Set to true to treat the fov as horizontal (x-axis)
+         * @param {number} aspect The aspect ratio of the frustum's projection plane (width / height).
+         * @param {number} znear The near clip plane in eye coordinates.
+         * @param {number} zfar The far clip plane in eye coordinates.
+         * @param {boolean} [fovIsHorizontal=false] Set to true to treat the fov as horizontal (x-axis)
          * and false for vertical (y-axis). Defaults to false.
          * @returns {pc.Mat4} Self for chaining.
          * @example
@@ -535,12 +535,12 @@ Object.assign(pc, (function () {
          * @name pc.Mat4#setOrtho
          * @description Sets the specified matrix to an orthographic projection matrix. The function's parameters
          * define the shape of a cuboid-shaped frustum.
-         * @param {Number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
-         * @param {Number} right The x-coordinate for the right edge of the camera's projection plane in eye space.
-         * @param {Number} bottom The y-coordinate for the bottom edge of the camera's projection plane in eye space.
-         * @param {Number} top The y-coordinate for the top edge of the camera's projection plane in eye space.
-         * @param {Number} near The near clip plane in eye coordinates.
-         * @param {Number} far The far clip plane in eye coordinates.
+         * @param {number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
+         * @param {number} right The x-coordinate for the right edge of the camera's projection plane in eye space.
+         * @param {number} bottom The y-coordinate for the bottom edge of the camera's projection plane in eye space.
+         * @param {number} top The y-coordinate for the top edge of the camera's projection plane in eye space.
+         * @param {number} near The near clip plane in eye coordinates.
+         * @param {number} far The far clip plane in eye coordinates.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 orthographic projection matrix
@@ -575,7 +575,7 @@ Object.assign(pc, (function () {
          * @description Sets the specified matrix to a rotation matrix equivalent to a rotation around
          * an axis. The axis must be normalized (unit length) and the angle must be specified in degrees.
          * @param {pc.Vec3} axis The normalized axis vector around which to rotate.
-         * @param {Number} angle The angle of rotation in degrees.
+         * @param {number} angle The angle of rotation in degrees.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 rotation matrix
@@ -621,9 +621,9 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat4#setTranslate
          * @description Sets the specified matrix to a translation matrix.
-         * @param {Number} x The x-component of the translation.
-         * @param {Number} y The y-component of the translation.
-         * @param {Number} z The z-component of the translation.
+         * @param {number} x The x-component of the translation.
+         * @param {number} y The y-component of the translation.
+         * @param {number} z The z-component of the translation.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 translation matrix
@@ -657,9 +657,9 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat4#setScale
          * @description Sets the specified matrix to a scale matrix.
-         * @param {Number} x The x-component of the scale.
-         * @param {Number} y The y-component of the scale.
-         * @param {Number} z The z-component of the scale.
+         * @param {number} x The x-component of the scale.
+         * @param {number} y The y-component of the scale.
+         * @param {number} z The z-component of the scale.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 scale matrix
@@ -773,7 +773,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat4#set
          * @description Sets matrix data from an array.
-         * @param {Number[]} src Source array. Must have 16 values.
+         * @param {number[]} src Source array. Must have 16 values.
          * @returns {pc.Mat4} Self for chaining.
          */
         set: function (src) {
@@ -1108,9 +1108,9 @@ Object.assign(pc, (function () {
          * @name pc.Mat4#setFromEulerAngles
          * @description Sets the specified matrix to a rotation matrix defined by
          * Euler angles. The Euler angles are specified in XYZ order and in degrees.
-         * @param {Number} ex Angle to rotate around X axis in degrees.
-         * @param {Number} ey Angle to rotate around Y axis in degrees.
-         * @param {Number} ez Angle to rotate around Z axis in degrees.
+         * @param {number} ex Angle to rotate around X axis in degrees.
+         * @param {number} ey Angle to rotate around Y axis in degrees.
+         * @param {number} ez Angle to rotate around Z axis in degrees.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * var m = new pc.Mat4();
@@ -1214,7 +1214,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat4#toString
          * @description Converts the specified matrix to string form.
-         * @returns {String} The matrix in string form.
+         * @returns {string} The matrix in string form.
          * @example
          * var m = new pc.Mat4();
          * // Should output '[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]'

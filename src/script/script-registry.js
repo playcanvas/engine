@@ -31,7 +31,7 @@ Object.assign(pc, function () {
      * If a script already exists in registry, and the new script has a `swap` method defined,
      * it will perform code hot swapping automatically in async manner.
      * @param {pc.ScriptType} script Script Type that is created using {@link pc.createScript}
-     * @returns {Boolean} True if added for the first time or false if script already exists
+     * @returns {boolean} True if added for the first time or false if script already exists
      * @example
      * var PlayerController = pc.createScript('playerController');
      * // playerController Script Type will be added to pc.ScriptRegistry automatically
@@ -137,8 +137,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.ScriptRegistry#remove
      * @description Remove {@link pc.ScriptType}.
-     * @param {String} name Name of a {@link pc.ScriptType} to remove
-     * @returns {Boolean} True if removed or False if already not in registry
+     * @param {string} name Name of a {@link pc.ScriptType} to remove
+     * @returns {boolean} True if removed or False if already not in registry
      * @example
      * app.scripts.remove('playerController');
      */
@@ -165,7 +165,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.ScriptRegistry#get
      * @description Get {@link pc.ScriptType} by name.
-     * @param {String} name Name of a {@link pc.ScriptType}.
+     * @param {string} name Name of a {@link pc.ScriptType}.
      * @returns {pc.ScriptType} The Script Type if it exists in the registry or null otherwise.
      * @example
      * var PlayerController = app.scripts.get('playerController');
@@ -178,8 +178,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.ScriptRegistry#has
      * @description Check if a {@link pc.ScriptType} with the specified name is in the registry.
-     * @param {String} name Name of a {@link pc.ScriptType}
-     * @returns {Boolean} True if {@link pc.ScriptType} is in registry
+     * @param {string} name Name of a {@link pc.ScriptType}
+     * @returns {boolean} True if {@link pc.ScriptType} is in registry
      * @example
      * if (app.scripts.has('playerController')) {
      *     // playerController is in pc.ScriptRegistry

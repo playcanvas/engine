@@ -7,7 +7,7 @@ Object.assign(pc, function () {
      * This allows you to define input handlers separately to defining keyboard/mouse configurations.
      * @description Create a new instance of a Controller.
      * @param {Element} [element] Element to attach Controller to.
-     * @param {Object} [options] Optional arguments.
+     * @param {object} [options] Optional arguments.
      * @param {pc.Keyboard} [options.keyboard] A Keyboard object to use.
      * @param {pc.Mouse} [options.mouse] A Mouse object to use.
      * @param {pc.GamePads} [options.gamepads] A Gamepads object to use.
@@ -96,7 +96,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Controller#update
      * @description Update the Keyboard and Mouse handlers
-     * @param {Object} dt The time since the last frame
+     * @param {object} dt The time since the last frame
      */
     Controller.prototype.update = function (dt) {
         if (this._keyboard) {
@@ -122,8 +122,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Controller#registerKeys
      * @description Create or update a action which is enabled when the supplied keys are pressed.
-     * @param {String} action The name of the action
-     * @param {Number[]} keys A list of keycodes
+     * @param {string} action The name of the action
+     * @param {number[]} keys A list of keycodes
      */
     Controller.prototype.registerKeys = function (action, keys) {
         if (!this._keyboard) {
@@ -159,8 +159,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Controller#registerMouse
      * @description Create or update an action which is enabled when the supplied mouse button is pressed
-     * @param {String} action The name of the action
-     * @param {Number} button The mouse button
+     * @param {string} action The name of the action
+     * @param {number} button The mouse button
      */
     Controller.prototype.registerMouse = function (action, button) {
         if (!this._mouse) {
@@ -189,9 +189,9 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Controller#registerPadButton
      * @description Create or update an action which is enabled when the gamepad button is pressed
-     * @param {String} action The name of the action
-     * @param {Number} pad The index of the pad to register (use pc.PAD_1, etc)
-     * @param {Number} button The pad button
+     * @param {string} action The name of the action
+     * @param {number} pad The index of the pad to register (use pc.PAD_1, etc)
+     * @param {number} button The pad button
      */
     Controller.prototype.registerPadButton = function (action, pad, button) {
         if (button === undefined) {
@@ -216,8 +216,8 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.Controller#registerAxis
-     * @param {Object} [options] Optional options object.
-     * @param {Object} [options.pad] The index of the game pad to register for (use pc.PAD_1, etc)
+     * @param {object} [options] Optional options object.
+     * @param {object} [options.pad] The index of the game pad to register for (use pc.PAD_1, etc)
      */
     Controller.prototype.registerAxis = function (options) {
         var name = options.name;
@@ -283,8 +283,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Controller#isPressed
      * @description Returns true if the current action is enabled.
-     * @param {String} actionName The name of the action.
-     * @returns {Boolean} True if the action is enabled.
+     * @param {string} actionName The name of the action.
+     * @returns {boolean} True if the action is enabled.
      */
     Controller.prototype.isPressed = function (actionName) {
         if (!this._actions[actionName]) {
@@ -327,8 +327,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Controller#wasPressed
      * @description Returns true if the action was enabled this since the last update.
-     * @param {String} actionName The name of the action.
-     * @returns {Boolean} True if the action was enabled this since the last update.
+     * @param {string} actionName The name of the action.
+     * @returns {boolean} True if the action was enabled this since the last update.
      */
     Controller.prototype.wasPressed = function (actionName) {
         if (!this._actions[actionName]) {

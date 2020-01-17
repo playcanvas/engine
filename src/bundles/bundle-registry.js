@@ -285,8 +285,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.BundleRegistry#hasUrl
          * @description Returns true if there is a bundle that contains the specified URL
-         * @param {String} url The url
-         * @returns {Boolean} True or false
+         * @param {string} url The url
+         * @returns {boolean} True or false
          */
         hasUrl: function (url) {
             return !!this._urlsInBundles[url];
@@ -298,8 +298,8 @@ Object.assign(pc, function () {
          * @name pc.BundleRegistry#canLoadUrl
          * @description Returns true if there is a bundle that contains the specified URL
          * and that bundle is either loaded or currently being loaded.
-         * @param {String} url The url
-         * @returns {Boolean} True or false
+         * @param {string} url The url
+         * @returns {boolean} True or false
          */
         canLoadUrl: function (url) {
             return !!this._findLoadedOrLoadingBundleForUrl(url);
@@ -310,7 +310,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.BundleRegistry#loadUrl
          * @description Loads the specified file URL from a bundle that is either loaded or currently being loaded.
-         * @param {String} url The URL. Make sure you are using a relative URL that does not contain any query parameters.
+         * @param {string} url The URL. Make sure you are using a relative URL that does not contain any query parameters.
          * @param {Function} callback The callback is called when the file has been loaded or if an error occures. The callback
          * expects the first argment to be the error message (if any) and the second argument is the file blob URL.
          * @example

@@ -22,7 +22,7 @@
 /**
  * @callback pc.callbacks.LoadAsset
  * @description Callback used by {@link pc.AssetRegistry#loadFromUrl} and called when an asset is loaded (or an error occurs).
- * @param {String|Null} err The error message is null if no errors were encountered.
+ * @param {string|null} err The error message is null if no errors were encountered.
  * @param {pc.Asset} [asset] The loaded asset if no errors were encountered.
  */
 
@@ -30,7 +30,7 @@
  * @callback pc.callbacks.FilterAsset
  * @description Callback used by {@link pc.AssetRegistry#filter} to filter assets.
  * @param {pc.Asset} asset The current asset to filter.
- * @returns {Boolean} Return `true` to include asset to result list.
+ * @returns {boolean} Return `true` to include asset to result list.
  */
 
 /**
@@ -42,7 +42,7 @@
 /**
  * @callback pc.callbacks.ConfigureApp
  * @description Callback used by {@link pc.Application#configure} when configuration file is loaded and parsed (or an error occurs).
- * @param {String|Null} err The error message in the case where the loading or parsing fails.
+ * @param {string|null} err The error message in the case where the loading or parsing fails.
  */
 
 /**
@@ -53,21 +53,21 @@
 /**
  * @callback pc.callbacks.LoadHierarchy
  * @description Callback used by {@link pc.Application#loadSceneHierarchy}.
- * @param {String|Null} err The error message in the case where the loading or parsing fails.
+ * @param {string|null} err The error message in the case where the loading or parsing fails.
  * @param {pc.Entity} [entity] The loaded root entity if no errors were encountered.
  */
 
 /**
  * @callback pc.callbacks.LoadSettings
  * @description Callback used by {@link pc.Application#loadSceneSettings}.
- * @param {String|Null} err The error message in the case where the loading or parsing fails.
+ * @param {string|null} err The error message in the case where the loading or parsing fails.
  */
 
 /**
  * @private
  * @callback pc.callbacks.LoadScene
  * @description Callback used by {@link pc.Application#loadScene}.
- * @param {String|Null} err The error message in the case where the loading or parsing fails.
+ * @param {string|null} err The error message in the case where the loading or parsing fails.
  * @param {pc.Entity} [entity] The loaded root entity if no errors were encountered.
  */
 
@@ -75,13 +75,13 @@
  * @callback pc.callbacks.CalculateMatrix
  * @description Callback used by {@link pc.CameraComponent#calculateTransform} and {@link pc.CameraComponent#calculateProjection}.
  * @param {pc.Mat4} transformMatrix Output of the function.
- * @param {Number} view Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.
+ * @param {number} view Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.
  */
 
 /**
  * @callback pc.callbacks.VrCamera
  * @description Callback used by {@link pc.CameraComponent#enterVr} and {@link pc.CameraComponent#exitVr}.
- * @param {String|Null} err On success it is null on failure it is the error message.
+ * @param {string|null} err On success it is null on failure it is the error message.
  */
 
 /**
@@ -89,7 +89,7 @@
  * @callback pc.callbacks.CreateScript
  * @description Callback used by {@link pc.script.create}.
  * @param {pc.Application} app The application.
- * @returns {Object} Return the Type of the script resource to be instanced for each Entity.
+ * @returns {object} Return the Type of the script resource to be instanced for each Entity.
  */
 
 /**
@@ -106,37 +106,37 @@
 /**
  * @callback pc.callbacks.HttpResponse
  * @description Callback used by {@link pc.Http#get}, {@link pc.Http#post}, {@link pc.Http#put}, {@link pc.Http#del}, and {@link pc.Http#request}.
- * @param {Number|String|Error|Null} err The error code, message, or exception in the case where the request fails.
+ * @param {number|string|Error|null} err The error code, message, or exception in the case where the request fails.
  * @param {*} [response] The response data if no errors were encountered. (format depends on response type: text, Object, ArrayBuffer, XML).
  */
 
 /**
  * @callback pc.callbacks.ResourceHandler
  * @description Callback used by {@link pc.ResourceHandler#load} when a resource is loaded (or an error occurs).
- * @param {String|Null} err The error message in the case where the load fails.
+ * @param {string|null} err The error message in the case where the load fails.
  * @param {*} [response] The raw data that has been successfully loaded.
  */
 
 /**
  * @callback pc.callbacks.ResourceLoader
  * @description Callback used by {@link pc.ResourceLoader#load} when a resource is loaded (or an error occurs).
- * @param {String|Null} err The error message in the case where the load fails.
+ * @param {string|null} err The error message in the case where the load fails.
  * @param {*} [resource] The resource that has been successfully loaded.
  */
 
 /**
  * @callback pc.callbacks.AddParser
  * @description Callback used by {@link pc.ModelHandler#addParser} to decide on which parser to use.
- * @param {String} url The resource url.
- * @param {Object} data The raw model data.
- * @returns {Boolean} Return true if this parser should be used to parse the data into a {@link pc.Model}
+ * @param {string} url The resource url.
+ * @param {object} data The raw model data.
+ * @returns {boolean} Return true if this parser should be used to parse the data into a {@link pc.Model}
  */
 
 /**
  * @callback pc.callbacks.FindNode
  * @description Callback used by {@link pc.GraphNode#find} and {@link pc.GraphNode#findOne} to search through a graph node and all of its descendants.
  * @param {pc.GraphNode} node The current graph node.
- * @returns {Boolean} Returning `true` will result in that node being returned from {@link pc.GraphNode#find} or {@link pc.GraphNode#findOne}.
+ * @returns {boolean} Returning `true` will result in that node being returned from {@link pc.GraphNode#find} or {@link pc.GraphNode#findOne}.
  */
 
 /**
@@ -148,15 +148,15 @@
 /**
  * @callback pc.callbacks.UpdateShader
  * @description Callback used by {@link pc.StandardMaterial#onUpdateShader}.
- * @param {Object} options An object with shader generator settings (based on current material and scene properties), that you can change and then return.
+ * @param {object} options An object with shader generator settings (based on current material and scene properties), that you can change and then return.
  * Properties of the object passed into this function are documented in {@link pc.StandardMaterial#onUpdateShader}.
- * @returns {Object} Returned settings will be used by the shader.
+ * @returns {object} Returned settings will be used by the shader.
  */
 
 /**
  * @callback pc.callbacks.VrDisplay
  * @description Callback used by {@link pc.VrDisplay#requestPresent} and {@link pc.VrDisplay#exitPresent}.
- * @param {String|Null} err The error message if presenting fails, or null if the call succeeds.
+ * @param {string|null} err The error message if presenting fails, or null if the call succeeds.
  */
 
 /**

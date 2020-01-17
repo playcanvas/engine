@@ -22,8 +22,8 @@ Object.assign(pc, function () {
      * @name pc.Animation
      * @classdesc An animation is a sequence of keyframe arrays which map to the nodes of a skeletal hierarchy.
      * It controls how the nodes of the hierarchy are transformed over time.
-     * @property {String} name Human-readable name of the animation
-     * @property {Number} duration Duration of the animation in seconds.
+     * @property {string} name Human-readable name of the animation
+     * @property {number} duration Duration of the animation in seconds.
      */
     var Animation = function Animation() {
         this.name = '';
@@ -38,7 +38,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Animation#getDuration
      * @description Returns the duration of the animation in seconds.
-     * @returns {Number} The duration of the animation in seconds.
+     * @returns {number} The duration of the animation in seconds.
      */
     Animation.prototype.getDuration = function () {
         return this.duration;
@@ -50,7 +50,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Animation#getName
      * @description Returns the human-readable name of the animation.
-     * @returns {String} The name of the animation.
+     * @returns {string} The name of the animation.
      */
     Animation.prototype.getName = function () {
         return this.name;
@@ -60,7 +60,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Animation#getNode
      * @description Gets a {@link pc.Node} by name
-     * @param {String} name The name of the pc.Node
+     * @param {string} name The name of the pc.Node
      * @returns {pc.Node} The pc.Node with the specified name
      */
     Animation.prototype.getNode = function (name) {
@@ -97,7 +97,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Animation#setDuration
      * @description Sets the duration of the specified animation in seconds.
-     * @param {Number} duration The duration of the animation in seconds.
+     * @param {number} duration The duration of the animation in seconds.
      */
     Animation.prototype.setDuration = function (duration) {
         this.duration = duration;
@@ -109,7 +109,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Animation#setName
      * @description Sets the human-readable name of the specified animation.
-     * @param {String} name The new name for the animation.
+     * @param {string} name The new name for the animation.
      */
     Animation.prototype.setName = function (name) {
         this.name = name;

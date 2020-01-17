@@ -40,7 +40,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Timer#getMilliseconds
          * @description Get the number of milliseconds that passed between start() and stop() being called
-         * @returns {Number} The elapsed milliseconds.
+         * @returns {number} The elapsed milliseconds.
          */
         getMilliseconds: function () {
             return this._b - this._a;
@@ -55,7 +55,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.now
          * @description Get current time in milliseconds. Use it to measure time difference. Reference time may differ on different platforms.
-         * @returns {Number} The time in milliseconds
+         * @returns {number} The time in milliseconds
          */
         now: (typeof window !== 'undefined') && window.performance && window.performance.now && window.performance.timing ? function () {
             return window.performance.now();

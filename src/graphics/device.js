@@ -148,8 +148,8 @@ Object.assign(pc, function () {
      * @event
      * @name pc.GraphicsDevice#resizecanvas
      * @description The 'resizecanvas' event is fired when the canvas is resized
-     * @param {Number} width The new width of the canvas in pixels
-     * @param {Number} height The new height of the canvas in pixels
+     * @param {number} width The new width of the canvas in pixels
+     * @param {number} height The new height of the canvas in pixels
      */
 
     /**
@@ -162,10 +162,10 @@ Object.assign(pc, function () {
      * canvas element per page and create a new graphics device against each.
      * @description Creates a new graphics device.
      * @param {HTMLCanvasElement} canvas The canvas to which the graphics device will render.
-     * @param {Object} [options] Options passed when creating the WebGL context. More info {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext here}.
+     * @param {object} [options] Options passed when creating the WebGL context. More info {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext here}.
      * @property {HTMLCanvasElement} canvas The canvas DOM element that provides the underlying WebGL context used by the graphics device.
-     * @property {Boolean} textureFloatRenderable Determines if 32-bit floating-point textures can be used as frame buffer. [read only]
-     * @property {Boolean} textureHalfFloatRenderable Determines if 16-bit floating-point textures can be used as frame buffer. [read only]
+     * @property {boolean} textureFloatRenderable Determines if 32-bit floating-point textures can be used as frame buffer. [read only]
+     * @property {boolean} textureHalfFloatRenderable Determines if 16-bit floating-point textures can be used as frame buffer. [read only]
      * @property {pc.ScopeSpace} scope The scope namespace for shader attributes and variables. [read only]
      */
     var GraphicsDevice = function (canvas, options) {
@@ -936,10 +936,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setViewport
          * @description Set the active rectangle for rendering on the specified device.
-         * @param {Number} x The pixel space x-coordinate of the bottom left corner of the viewport.
-         * @param {Number} y The pixel space y-coordinate of the bottom left corner of the viewport.
-         * @param {Number} w The width of the viewport in pixels.
-         * @param {Number} h The height of the viewport in pixels.
+         * @param {number} x The pixel space x-coordinate of the bottom left corner of the viewport.
+         * @param {number} y The pixel space y-coordinate of the bottom left corner of the viewport.
+         * @param {number} w The width of the viewport in pixels.
+         * @param {number} h The height of the viewport in pixels.
          */
         setViewport: function (x, y, w, h) {
             if ((this.vx !== x) || (this.vy !== y) || (this.vw !== w) || (this.vh !== h)) {
@@ -955,10 +955,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setScissor
          * @description Set the active scissor rectangle on the specified device.
-         * @param {Number} x The pixel space x-coordinate of the bottom left corner of the scissor rectangle.
-         * @param {Number} y The pixel space y-coordinate of the bottom left corner of the scissor rectangle.
-         * @param {Number} w The width of the scissor rectangle in pixels.
-         * @param {Number} h The height of the scissor rectangle in pixels.
+         * @param {number} x The pixel space x-coordinate of the bottom left corner of the scissor rectangle.
+         * @param {number} y The pixel space y-coordinate of the bottom left corner of the scissor rectangle.
+         * @param {number} w The width of the scissor rectangle in pixels.
+         * @param {number} h The height of the scissor rectangle in pixels.
          */
         setScissor: function (x, y, w, h) {
             if ((this.sx !== x) || (this.sy !== y) || (this.sw !== w) || (this.sh !== h)) {
@@ -1977,8 +1977,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#draw
          * @description Submits a graphical primitive to the hardware for immediate rendering.
-         * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
-         * @param {Number} primitive.type The type of primitive to render. Can be:
+         * @param {object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
+         * @param {number} primitive.type The type of primitive to render. Can be:
          * <ul>
          *     <li>{@link pc.PRIMITIVE_POINTS}</li>
          *     <li>{@link pc.PRIMITIVE_LINES}</li>
@@ -1988,10 +1988,10 @@ Object.assign(pc, function () {
          *     <li>{@link pc.PRIMITIVE_TRISTRIP}</li>
          *     <li>{@link pc.PRIMITIVE_TRIFAN}</li>
          * </ul>
-         * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
-         * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
-         * @param {Boolean} [primitive.indexed] True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
-         * @param {Number} [numInstances=1] The number of instances to render when using ANGLE_instanced_arrays. Defaults to 1.
+         * @param {number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
+         * @param {number} primitive.count The number of indices or vertices to dispatch in the draw call.
+         * @param {boolean} [primitive.indexed] True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
+         * @param {number} [numInstances=1] The number of instances to render when using ANGLE_instanced_arrays. Defaults to 1.
          * @example
          * // Render a single, unindexed triangle
          * device.draw({
@@ -2128,10 +2128,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#clear
          * @description Clears the frame buffer of the currently set render target.
-         * @param {Object} options Optional options object that controls the behavior of the clear operation defined as follows:
-         * @param {Number[]} options.color The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
-         * @param {Number} options.depth The depth value to clear the depth buffer to in the range 0.0 to 1.0.
-         * @param {Number} options.flags The buffers to clear (the types being color, depth and stencil). Can be any bitwise
+         * @param {object} options Optional options object that controls the behavior of the clear operation defined as follows:
+         * @param {number[]} options.color The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
+         * @param {number} options.depth The depth value to clear the depth buffer to in the range 0.0 to 1.0.
+         * @param {number} options.flags The buffers to clear (the types being color, depth and stencil). Can be any bitwise
          * combination of:
          * <ul>
          *     <li>pc.CLEARFLAG_COLOR</li>
@@ -2259,7 +2259,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#getDepthTest
          * @description Queries whether depth testing is enabled.
-         * @returns {Boolean} true if depth testing is enabled and false otherwise.
+         * @returns {boolean} true if depth testing is enabled and false otherwise.
          * @example
          * var depthTest = device.getDepthTest();
          * console.log('Depth testing is ' + depthTest ? 'enabled' : 'disabled');
@@ -2273,7 +2273,7 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setDepthTest
          * @description Enables or disables depth testing of fragments. Once this state
          * is set, it persists until it is changed. By default, depth testing is enabled.
-         * @param {Boolean} depthTest true to enable depth testing and false otherwise.
+         * @param {boolean} depthTest true to enable depth testing and false otherwise.
          * @example
          * device.setDepthTest(true);
          */
@@ -2293,7 +2293,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setDepthFunc
          * @description Configures the depth test.
-         * @param {Number} func A function to compare a new depth value with an existing z-buffer value and decide if to write a pixel. Can be:
+         * @param {number} func A function to compare a new depth value with an existing z-buffer value and decide if to write a pixel. Can be:
          * <ul>
          *     <li>pc.FUNC_NEVER: don't draw</li>
          *     <li>pc.FUNC_LESS: draw if new depth < depth buffer</li>
@@ -2315,7 +2315,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#getDepthWrite
          * @description Queries whether writes to the depth buffer are enabled.
-         * @returns {Boolean} true if depth writing is enabled and false otherwise.
+         * @returns {boolean} true if depth writing is enabled and false otherwise.
          * @example
          * var depthWrite = device.getDepthWrite();
          * console.log('Depth writing is ' + depthWrite ? 'enabled' : 'disabled');
@@ -2329,7 +2329,7 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setDepthWrite
          * @description Enables or disables writes to the depth buffer. Once this state
          * is set, it persists until it is changed. By default, depth writes are enabled.
-         * @param {Boolean} writeDepth true to enable depth writing and false otherwise.
+         * @param {boolean} writeDepth true to enable depth writing and false otherwise.
          * @example
          * device.setDepthWrite(true);
          */
@@ -2346,10 +2346,10 @@ Object.assign(pc, function () {
          * @description Enables or disables writes to the color buffer. Once this state
          * is set, it persists until it is changed. By default, color writes are enabled
          * for all color channels.
-         * @param {Boolean} writeRed true to enable writing of the red channel and false otherwise.
-         * @param {Boolean} writeGreen true to enable writing of the green channel and false otherwise.
-         * @param {Boolean} writeBlue true to enable writing of the blue channel and false otherwise.
-         * @param {Boolean} writeAlpha true to enable writing of the alpha channel and false otherwise.
+         * @param {boolean} writeRed true to enable writing of the red channel and false otherwise.
+         * @param {boolean} writeGreen true to enable writing of the green channel and false otherwise.
+         * @param {boolean} writeBlue true to enable writing of the blue channel and false otherwise.
+         * @param {boolean} writeAlpha true to enable writing of the alpha channel and false otherwise.
          * @example
          * // Just write alpha into the frame buffer
          * device.setColorWrite(false, false, false, true);
@@ -2372,7 +2372,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setAlphaToCoverage
          * @description Enables or disables alpha to coverage (WebGL2 only).
-         * @param {Boolean} state True to enable alpha to coverage and false to disable it.
+         * @param {boolean} state True to enable alpha to coverage and false to disable it.
          */
         setAlphaToCoverage: function (state) {
             if (!this.webgl2) return;
@@ -2417,7 +2417,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setRaster
          * @description Enables or disables rasterization. Useful with transform feedback, when you only need to process the data without drawing.
-         * @param {Boolean} on True to enable rasterization and false to disable it.
+         * @param {boolean} on True to enable rasterization and false to disable it.
          */
         setRaster: function (on) {
             if (this.raster === on) return;
@@ -2453,7 +2453,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#getBlending
          * @description Queries whether blending is enabled.
-         * @returns {Boolean} True if blending is enabled and false otherwise.
+         * @returns {boolean} True if blending is enabled and false otherwise.
          */
         getBlending: function () {
             return this.blending;
@@ -2463,7 +2463,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setBlending
          * @description Enables or disables blending.
-         * @param {Boolean} blending True to enable blending and false to disable it.
+         * @param {boolean} blending True to enable blending and false to disable it.
          */
         setBlending: function (blending) {
             if (this.blending !== blending) {
@@ -2481,7 +2481,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setStencilTest
          * @description Enables or disables stencil test.
-         * @param {Boolean} enable True to enable stencil test and false to disable it.
+         * @param {boolean} enable True to enable stencil test and false to disable it.
          */
         setStencilTest: function (enable) {
             if (this.stencil !== enable) {
@@ -2499,7 +2499,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setStencilFunc
          * @description Configures stencil test for both front and back faces.
-         * @param {Number} func A comparison function that decides if the pixel should be written, based on the current stencil buffer value,
+         * @param {number} func A comparison function that decides if the pixel should be written, based on the current stencil buffer value,
          * reference value, and mask value. Can be:
          * <ul>
          *     <li>pc.FUNC_NEVER: never pass</li>
@@ -2511,8 +2511,8 @@ Object.assign(pc, function () {
          *     <li>pc.FUNC_GREATEREQUAL: pass if (ref & mask) >= (stencil & mask)</li>
          *     <li>pc.FUNC_ALWAYS: always pass</li>
          * </ul>
-         * @param {Number} ref Reference value used in comparison.
-         * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
+         * @param {number} ref Reference value used in comparison.
+         * @param {number} mask Mask applied to stencil buffer value and reference value before comparison.
          */
         setStencilFunc: function (func, ref, mask) {
             if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask ||
@@ -2529,7 +2529,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setStencilFuncFront
          * @description Configures stencil test for front faces.
-         * @param {Number} func A comparison function that decides if the pixel should be written,
+         * @param {number} func A comparison function that decides if the pixel should be written,
          * based on the current stencil buffer value, reference value, and mask value. Can be:
          * <ul>
          *     <li>pc.FUNC_NEVER: never pass</li>
@@ -2541,8 +2541,8 @@ Object.assign(pc, function () {
          *     <li>pc.FUNC_GREATEREQUAL: pass if (ref & mask) >= (stencil & mask)</li>
          *     <li>pc.FUNC_ALWAYS: always pass</li>
          * </ul>
-         * @param {Number} ref Reference value used in comparison.
-         * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
+         * @param {number} ref Reference value used in comparison.
+         * @param {number} mask Mask applied to stencil buffer value and reference value before comparison.
          */
         setStencilFuncFront: function (func, ref, mask) {
             if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask) {
@@ -2558,7 +2558,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setStencilFuncBack
          * @description Configures stencil test for back faces.
-         * @param {Number} func A comparison function that decides if the pixel should be written,
+         * @param {number} func A comparison function that decides if the pixel should be written,
          * based on the current stencil buffer value, reference value, and mask value. Can be:
          * <ul>
          *     <li>pc.FUNC_NEVER: never pass</li>
@@ -2570,8 +2570,8 @@ Object.assign(pc, function () {
          *     <li>pc.FUNC_GREATEREQUAL: pass if (ref & mask) >= (stencil & mask)</li>
          *     <li>pc.FUNC_ALWAYS: always pass</li>
          * </ul>
-         * @param {Number} ref Reference value used in comparison.
-         * @param {Number} mask Mask applied to stencil buffer value and reference value before comparison.
+         * @param {number} ref Reference value used in comparison.
+         * @param {number} mask Mask applied to stencil buffer value and reference value before comparison.
          */
         setStencilFuncBack: function (func, ref, mask) {
             if (this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
@@ -2588,9 +2588,9 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setStencilOperation
          * @description Configures how stencil buffer values should be modified based on the result
          * of depth/stencil tests. Works for both front and back faces.
-         * @param {Number} fail Action to take if stencil test is failed
-         * @param {Number} zfail Action to take if depth test is failed
-         * @param {Number} zpass Action to take if both depth and stencil test are passed
+         * @param {number} fail Action to take if stencil test is failed
+         * @param {number} zfail Action to take if depth test is failed
+         * @param {number} zpass Action to take if both depth and stencil test are passed
          * All arguments can be:
          * <ul>
          *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
@@ -2602,7 +2602,7 @@ Object.assign(pc, function () {
          *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
          *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
          * </ul>
-         * @param {Number} writeMask A bit mask applied to the reference value, when written.
+         * @param {number} writeMask A bit mask applied to the reference value, when written.
          */
         setStencilOperation: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass ||
@@ -2624,9 +2624,9 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setStencilOperationFront
          * @description Configures how stencil buffer values should be modified based on the result
          * of depth/stencil tests. Works for front faces.
-         * @param {Number} fail Action to take if stencil test is failed
-         * @param {Number} zfail Action to take if depth test is failed
-         * @param {Number} zpass Action to take if both depth and stencil test are passed
+         * @param {number} fail Action to take if stencil test is failed
+         * @param {number} zfail Action to take if depth test is failed
+         * @param {number} zpass Action to take if both depth and stencil test are passed
          * All arguments can be:
          * <ul>
          *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
@@ -2638,7 +2638,7 @@ Object.assign(pc, function () {
          *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
          *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
          * </ul>
-         * @param {Number} writeMask A bit mask applied to the reference value, when written.
+         * @param {number} writeMask A bit mask applied to the reference value, when written.
          */
         setStencilOperationFront: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass) {
@@ -2658,9 +2658,9 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setStencilOperationBack
          * @description Configures how stencil buffer values should be modified based on the result
          * of depth/stencil tests. Works for back faces.
-         * @param {Number} fail Action to take if stencil test is failed
-         * @param {Number} zfail Action to take if depth test is failed
-         * @param {Number} zpass Action to take if both depth and stencil test are passed
+         * @param {number} fail Action to take if stencil test is failed
+         * @param {number} zfail Action to take if depth test is failed
+         * @param {number} zpass Action to take if both depth and stencil test are passed
          * All arguments can be:
          * <ul>
          *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
@@ -2672,7 +2672,7 @@ Object.assign(pc, function () {
          *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
          *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
          * </ul>
-         * @param {Number} writeMask A bit mask applied to the reference value, when written.
+         * @param {number} writeMask A bit mask applied to the reference value, when written.
          */
         setStencilOperationBack: function (fail, zfail, zpass, writeMask) {
             if (this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
@@ -2705,8 +2705,8 @@ Object.assign(pc, function () {
          *     <li>pc.BLENDMODE_DST_ALPHA</li>
          *     <li>pc.BLENDMODE_ONE_MINUS_DST_ALPHA</li>
          * </ul>
-         * @param {Number} blendSrc The source blend function.
-         * @param {Number} blendDst The destination blend function.
+         * @param {number} blendSrc The source blend function.
+         * @param {number} blendDst The destination blend function.
          */
         setBlendFunction: function (blendSrc, blendDst) {
             if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.separateAlphaBlend) {
@@ -2735,10 +2735,10 @@ Object.assign(pc, function () {
          *     <li>pc.BLENDMODE_DST_ALPHA</li>
          *     <li>pc.BLENDMODE_ONE_MINUS_DST_ALPHA</li>
          * </ul>
-         * @param {Number} blendSrc The source blend function.
-         * @param {Number} blendDst The destination blend function.
-         * @param {Number} blendSrcAlpha The separate source blend function for the alpha channel.
-         * @param {Number} blendDstAlpha The separate destination blend function for the alpha channel.
+         * @param {number} blendSrc The source blend function.
+         * @param {number} blendDst The destination blend function.
+         * @param {number} blendSrcAlpha The separate source blend function for the alpha channel.
+         * @param {number} blendDstAlpha The separate destination blend function for the alpha channel.
          */
         setBlendFunctionSeparate: function (blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
             if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.blendSrcAlpha !== blendSrcAlpha || this.blendDstAlpha !== blendDstAlpha || !this.separateAlphaBlend) {
@@ -2757,7 +2757,7 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setBlendEquation
          * @description Configures the blending equation. The default blend equation is
          * pc.BLENDEQUATION_ADD.
-         * @param {Number} blendEquation The blend equation. Can be:
+         * @param {number} blendEquation The blend equation. Can be:
          * <ul>
          *     <li>pc.BLENDEQUATION_ADD</li>
          *     <li>pc.BLENDEQUATION_SUBTRACT</li>
@@ -2780,7 +2780,7 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setBlendEquationSeparate
          * @description Configures the blending equation. The default blend equation is
          * pc.BLENDEQUATION_ADD.
-         * @param {Number} blendEquation The blend equation. Can be:
+         * @param {number} blendEquation The blend equation. Can be:
          * <ul>
          *     <li>pc.BLENDEQUATION_ADD</li>
          *     <li>pc.BLENDEQUATION_SUBTRACT</li>
@@ -2788,7 +2788,7 @@ Object.assign(pc, function () {
          *     <li>pc.BLENDEQUATION_MIN</li>
          *     <li>pc.BLENDEQUATION_MAX</li>
          * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
-         * @param {Number} blendAlphaEquation A separate blend equation for the alpha channel. Accepts same values as blendEquation.
+         * @param {number} blendAlphaEquation A separate blend equation for the alpha channel. Accepts same values as blendEquation.
          * </ul>
          */
         setBlendEquationSeparate: function (blendEquation, blendAlphaEquation) {
@@ -2805,7 +2805,7 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setCullMode
          * @description Controls how triangles are culled based on their face direction.
          * The default cull mode is pc.CULLFACE_BACK.
-         * @param {Number} cullMode The cull mode to set. Can be:
+         * @param {number} cullMode The cull mode to set. Can be:
          * <ul>
          *     <li>pc.CULLFACE_NONE</li>
          *     <li>pc.CULLFACE_BACK</li>
@@ -2856,8 +2856,8 @@ Object.assign(pc, function () {
          * device. On subsequent calls to pc.GraphicsDevice#draw, the specified vertex buffer will be
          * used to provide vertex data for any primitives.
          * @param {pc.VertexBuffer} vertexBuffer The vertex buffer to assign to the device.
-         * @param {Number} stream The stream index for the vertex buffer, indexed from 0 upwards.
-         * @param {Number} [vbOffset=0] The byte offset into the vertex buffer data. Defaults to 0.
+         * @param {number} stream The stream index for the vertex buffer, indexed from 0 upwards.
+         * @param {number} [vbOffset=0] The byte offset into the vertex buffer data. Defaults to 0.
          */
         setVertexBuffer: function (vertexBuffer, stream, vbOffset) {
             if (this.vertexBuffers[stream] !== vertexBuffer || this.vbOffsets[stream] !== vbOffset) {
@@ -3080,7 +3080,7 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setShader
          * @description Sets the active shader to be used during subsequent draw calls.
          * @param {pc.Shader} shader The shader to set to assign to the device.
-         * @returns {Boolean} true if the shader was successfully set, false otherwise.
+         * @returns {boolean} true if the shader was successfully set, false otherwise.
          */
         setShader: function (shader) {
             if (shader !== this.shader) {
@@ -3123,7 +3123,7 @@ Object.assign(pc, function () {
          * available uniform vectors available after subtracting the number taken by a typical
          * heavyweight shader. If a different number is required, it can be tuned via
          * pc.GraphicsDevice#setBoneLimit.
-         * @returns {Number} The maximum number of bones that can be supported by the host hardware.
+         * @returns {number} The maximum number of bones that can be supported by the host hardware.
          */
         getBoneLimit: function () {
             return this.boneLimit;
@@ -3136,7 +3136,7 @@ Object.assign(pc, function () {
          * @description Specifies the maximum number of bones that the device can support on
          * the current hardware. This function allows the default calculated value based on
          * available vector uniforms to be overridden.
-         * @param {Number} maxBones The maximum number of bones supported by the host hardware.
+         * @param {number} maxBones The maximum number of bones supported by the host hardware.
          */
         setBoneLimit: function (maxBones) {
             this.boneLimit = maxBones;
@@ -3149,8 +3149,8 @@ Object.assign(pc, function () {
          * Note that the specified width and height values will be multiplied by the value of
          * {@link pc.GraphicsDevice#maxPixelRatio} to give the final resultant width and height for
          * the canvas.
-         * @param {Number} width The new width of the canvas.
-         * @param {Number} height The new height of the canvas.
+         * @param {number} width The new width of the canvas.
+         * @param {number} height The new height of the canvas.
          */
         resizeCanvas: function (width, height) {
             this._width = width;
@@ -3221,7 +3221,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphicsDevice#width
-     * @type {Number}
+     * @type {number}
      * @description Width of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'width', {
@@ -3233,7 +3233,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphicsDevice#height
-     * @type {Number}
+     * @type {number}
      * @description Height of the back buffer in pixels.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'height', {
@@ -3244,7 +3244,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.GraphicsDevice#fullscreen
-     * @type {Boolean}
+     * @type {boolean}
      * @description Fullscreen mode
      */
     Object.defineProperty(GraphicsDevice.prototype, 'fullscreen', {
@@ -3264,7 +3264,7 @@ Object.assign(pc, function () {
     /**
      * @private
      * @name pc.GraphicsDevice#enableAutoInstancing
-     * @type {Boolean}
+     * @type {boolean}
      * @description Automatic instancing
      */
     Object.defineProperty(GraphicsDevice.prototype, 'enableAutoInstancing', {
@@ -3278,7 +3278,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.GraphicsDevice#maxPixelRatio
-     * @type {Number}
+     * @type {number}
      * @description Maximum pixel ratio
      */
     Object.defineProperty(GraphicsDevice.prototype, 'maxPixelRatio', {
@@ -3294,7 +3294,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.GraphicsDevice#textureFloatHighPrecision
-     * @type {Number}
+     * @type {number}
      * @description Check if high precision floating-point textures are supported
      */
     Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {

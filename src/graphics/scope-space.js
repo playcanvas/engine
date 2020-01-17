@@ -5,8 +5,8 @@ Object.assign(pc, function () {
      * @class
      * @name pc.ScopeSpace
      * @classdesc The scope for variables and subspaces.
-     * @param {String} name The scope name.
-     * @property {String} name The scope name.
+     * @param {string} name The scope name.
+     * @property {string} name The scope name.
      */
     var ScopeSpace = function (name) {
         // Store the name
@@ -22,7 +22,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ScopeSpace#resolve
          * @description Get (or create, if it doesn't already exist) a variable in the scope.
-         * @param {String} name The variable name.
+         * @param {string} name The variable name.
          * @returns {pc.ScopeId} The variable instance.
          */
         resolve: function (name) {
@@ -40,7 +40,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ScopeSpace#getSubSpace
          * @description Get (or create, if it doesn't already exist) a subspace in the scope.
-         * @param {String} name The subspace name.
+         * @param {string} name The subspace name.
          * @returns {pc.ScopeSpace} The subspace instance.
          */
         getSubSpace: function (name) {

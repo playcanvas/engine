@@ -109,7 +109,7 @@ Object.assign(pc, function () {
          * @name pc.AudioSourceComponentSystem#setVolume
          * @description Set the volume for the entire AudioSource system. All sources will
          * have their volume multiplied by this value.
-         * @param {Number} volume The value to set the volume to. Valid from 0 to 1.
+         * @param {number} volume The value to set the volume to. Valid from 0 to 1.
          */
         setVolume: function (volume) {
             this.manager.setVolume(volume);

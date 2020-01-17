@@ -4,7 +4,7 @@ Object.assign(pc, (function () {
     /**
      * @static
      * @readonly
-     * @type {Object}
+     * @type {object}
      * @name pc.shaderChunks
      * @description Object containing all default shader chunks used by shader generators.
      */

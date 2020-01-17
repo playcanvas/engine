@@ -30,7 +30,7 @@ Object.assign(pc, function () {
          * @description Test if a ray intersects with the OBB.
          * @param {pc.Ray} ray Ray to test against (direction must be normalized).
          * @param {pc.Vec3} [point] If there is an intersection, the intersection point will be copied into here.
-         * @returns {Boolean} True if there is an intersection.
+         * @returns {boolean} True if there is an intersection.
          */
         intersectsRay: function (ray, point) {
             this._modelTransform.transformPoint(ray.origin, tmpRay.origin);
@@ -50,7 +50,7 @@ Object.assign(pc, function () {
          * @name pc.OrientedBox#containsPoint
          * @description Test if a point is inside a OBB.
          * @param {pc.Vec3} point Point to test.
-         * @returns {Boolean} true if the point is inside the OBB and false otherwise.
+         * @returns {boolean} true if the point is inside the OBB and false otherwise.
          */
         containsPoint: function (point) {
             this._modelTransform.transformPoint(point, tmpVec3);
@@ -62,7 +62,7 @@ Object.assign(pc, function () {
          * @name pc.OrientedBox#intersectsBoundingSphere
          * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this OBB.
          * @param {pc.BoundingSphere} sphere Bounding Sphere to test.
-         * @returns {Boolean} true if the Bounding Sphere is overlapping, enveloping or inside this OBB and false otherwise.
+         * @returns {boolean} true if the Bounding Sphere is overlapping, enveloping or inside this OBB and false otherwise.
          */
         intersectsBoundingSphere: function (sphere) {
             this._modelTransform.transformPoint(sphere.center, tmpSphere.center);
