@@ -18,12 +18,10 @@ Object.assign(pc, function () {
 
         this.needsDepthBuffer = true;
 
-        /*
-         * Shader author: alteredq / http://alteredqualia.com/
-         * Depth-of-field shader with bokeh
-         * ported from GLSL shader by Martins Upitis
-         * http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
-         */
+        // Shader author: alteredq / http://alteredqualia.com/
+        // Depth-of-field shader with bokeh
+        // ported from GLSL shader by Martins Upitis
+        // http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
         this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.SEMANTIC_POSITION
