@@ -7,21 +7,21 @@ Object.assign(pc, function () {
          * @name pc.inherits
          * @description Implementation of inheritance for JavaScript objects
          * e.g. Class can access all of Base's function prototypes
-         * The super classes prototype is available on the derived class as _super
-         * @param {Function} Self Constructor of derived class
-         * @param {Function} Super Constructor of base class
-         * @returns {Function} New instance of Self which inherits from Super
+         * The super classes prototype is available on the derived class as _super.
+         * @param {Function} Self - Constructor of derived class.
+         * @param {Function} Super - Constructor of base class.
+         * @returns {Function} New instance of Self which inherits from Super.
          * @example
-         * Base = function () {};
+         * var Base = function () {};
          * Base.prototype.fn = function () {
-         *   console.log('base');
+         *     console.log('base');
          * };
-         * Class = function () {}
+         * var Class = function () {};
          * Class = pc.inherits(Class, Base);
          * Class.prototype.fn = function () {
-         *   // Call overridden method
-         *   Class._super.fn();
-         *   console.log('class');
+         *     // Call overridden method
+         *     Class._super.fn();
+         *     console.log('class');
          * };
          *
          * var c = new Class();
@@ -143,8 +143,8 @@ Object.assign(pc.input, {
  * @private
  * @deprecated
  * @name pc.math.INV_LOG2
+ * @type {number}
  * @description Inverse log 2. Use Math.LOG2E instead.
- * @type Number
  */
 pc.math.INV_LOG2 = Math.LOG2E;
 

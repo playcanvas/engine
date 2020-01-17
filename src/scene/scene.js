@@ -3,24 +3,24 @@
     var enums = {
         /**
          * @constant
-         * @type {Number}
          * @name pc.BLEND_SUBTRACTIVE
+         * @type {number}
          * @description Subtract the color of the source fragment from the destination fragment
          * and write the result to the frame buffer.
          */
         BLEND_SUBTRACTIVE: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.BLEND_ADDITIVE
+         * @type {number}
          * @description Add the color of the source fragment to the destination fragment
          * and write the result to the frame buffer.
          */
         BLEND_ADDITIVE: 1,
         /**
          * @constant
-         * @type {Number}
          * @name pc.BLEND_NORMAL
+         * @type {number}
          * @description Enable simple translucency for materials such as glass. This is
          * equivalent to enabling a source blend mode of pc.BLENDMODE_SRC_ALPHA and a destination
          * blend mode of pc.BLENDMODE_ONE_MINUS_SRC_ALPHA.
@@ -28,107 +28,107 @@
         BLEND_NORMAL: 2,
         /**
          * @constant
-         * @type {Number}
          * @name pc.BLEND_NONE
+         * @type {number}
          * @description Disable blending.
          */
         BLEND_NONE: 3,
         /**
          * @constant
-         * @type {Number}
          * @name pc.BLEND_PREMULTIPLIED
+         * @type {number}
          * @description Similar to pc.BLEND_NORMAL expect the source fragment is assumed to have
          * already been multiplied by the source alpha value.
          */
         BLEND_PREMULTIPLIED: 4,
         /**
          * @constant
-         * @type {Number}
          * @name pc.BLEND_MULTIPLICATIVE
+         * @type {number}
          * @description Multiply the color of the source fragment by the color of the destination
          * fragment and write the result to the frame buffer.
          */
         BLEND_MULTIPLICATIVE: 5,
         /**
          * @constant
-         * @type {Number}
          * @name pc.BLEND_ADDITIVEALPHA
+         * @type {number}
          * @description Same as pc.BLEND_ADDITIVE except the source RGB is multiplied by the source alpha.
          */
         BLEND_ADDITIVEALPHA: 6,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.BLEND_MULTIPLICATIVE2X
-         * @description Multiplies colors and doubles the result
+         * @type {number}
+         * @description Multiplies colors and doubles the result.
          */
         BLEND_MULTIPLICATIVE2X: 7,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.BLEND_SCREEN
-         * @description Softer version of additive
+         * @type {number}
+         * @description Softer version of additive.
          */
         BLEND_SCREEN: 8,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.BLEND_MIN
+         * @type {number}
          * @description Minimum color. Check app.graphicsDevice.extBlendMinmax for support.
          */
         BLEND_MIN: 9,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.BLEND_MAX
+         * @type {number}
          * @description Maximum color. Check app.graphicsDevice.extBlendMinmax for support.
          */
         BLEND_MAX: 10,
 
         /**
          * @constant
-         * @type {String}
          * @name pc.FOG_NONE
+         * @type {string}
          * @description No fog is applied to the scene.
          */
         FOG_NONE: 'none',
         /**
          * @constant
-         * @type {String}
          * @name pc.FOG_LINEAR
+         * @type {string}
          * @description Fog rises linearly from zero to 1 between a start and end depth.
          */
         FOG_LINEAR: 'linear',
         /**
          * @constant
-         * @type {String}
          * @name pc.FOG_EXP
+         * @type {string}
          * @description Fog rises according to an exponential curve controlled by a density value.
          */
         FOG_EXP: 'exp',
         /**
          * @constant
-         * @type {String}
          * @name pc.FOG_EXP2
+         * @type {string}
          * @description Fog rises according to an exponential curve controlled by a density value.
          */
         FOG_EXP2: 'exp2',
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.FRESNEL_NONE
+         * @type {number}
          * @description No Fresnel.
          */
         FRESNEL_NONE: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.FRESNEL_SCHLICK
+         * @type {number}
          * @description Schlick's approximation of Fresnel.
          */
         FRESNEL_SCHLICK: 2,
@@ -143,154 +143,154 @@
         // New layers
         /**
          * @constant
-         * @type {Number}
          * @name pc.LAYERID_WORLD
+         * @type {number}
          * @description The world layer.
          */
         LAYERID_WORLD: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.LAYERID_DEPTH
+         * @type {number}
          * @description The depth layer.
          */
         LAYERID_DEPTH: 1,
         /**
          * @constant
-         * @type {Number}
          * @name pc.LAYERID_SKYBOX
+         * @type {number}
          * @description The skybox layer.
          */
         LAYERID_SKYBOX: 2,
         /**
          * @constant
-         * @type {Number}
          * @name pc.LAYERID_IMMEDIATE
+         * @type {number}
          * @description The immediate layer.
          */
         LAYERID_IMMEDIATE: 3,
         /**
          * @constant
-         * @type {Number}
          * @name pc.LAYERID_UI
+         * @type {number}
          * @description The UI layer.
          */
         LAYERID_UI: 4,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.LIGHTTYPE_DIRECTIONAL
+         * @type {number}
          * @description Directional (global) light source.
          */
         LIGHTTYPE_DIRECTIONAL: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.LIGHTTYPE_POINT
+         * @type {number}
          * @description Point (local) light source.
          */
         LIGHTTYPE_POINT: 1,
         /**
          * @constant
-         * @type {Number}
          * @name pc.LIGHTTYPE_SPOT
+         * @type {number}
          * @description Spot (local) light source.
          */
         LIGHTTYPE_SPOT: 2,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.LIGHTFALLOFF_LINEAR
+         * @type {number}
          * @description Linear distance falloff model for light attenuation.
          */
         LIGHTFALLOFF_LINEAR: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.LIGHTFALLOFF_INVERSESQUARED
+         * @type {number}
          * @description Inverse squared distance falloff model for light attenuation.
          */
         LIGHTFALLOFF_INVERSESQUARED: 1,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.SHADOW_PCF3
+         * @type {number}
          * @description Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.
          */
         SHADOW_PCF3: 0,
         SHADOW_DEPTH: 0, // alias for SHADOW_PCF3 for backwards compatibility
         /**
          * @constant
-         * @type {Number}
          * @name pc.SHADOW_VSM8
+         * @type {number}
          * @description Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.
          */
         SHADOW_VSM8: 1,
         /**
          * @constant
-         * @type {Number}
          * @name pc.SHADOW_VSM16
+         * @type {number}
          * @description Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.
          */
         SHADOW_VSM16: 2,
         /**
          * @constant
-         * @type {Number}
          * @name pc.SHADOW_VSM32
+         * @type {number}
          * @description Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.
          */
         SHADOW_VSM32: 3,
         /**
          * @constant
-         * @type {Number}
          * @name pc.SHADOW_PCF5
+         * @type {number}
          * @description Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to pc.SHADOW_PCF3 on WebGL 1.0.
          */
         SHADOW_PCF5: 4,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.BLUR_BOX
+         * @type {number}
          * @description Box filter.
          */
         BLUR_BOX: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.BLUR_GAUSSIAN
+         * @type {number}
          * @description Gaussian filter. May look smoother than box, but requires more samples.
          */
         BLUR_GAUSSIAN: 1,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.PARTICLESORT_NONE
+         * @type {number}
          * @description No sorting, particles are drawn in arbitary order. Can be simulated on GPU.
          */
         PARTICLESORT_NONE: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.PARTICLESORT_DISTANCE
+         * @type {number}
          * @description Sorting based on distance to the camera. CPU only.
          */
         PARTICLESORT_DISTANCE: 1,
         /**
          * @constant
-         * @type {Number}
          * @name pc.PARTICLESORT_NEWER_FIRST
+         * @type {number}
          * @description Newer particles are drawn first. CPU only.
          */
         PARTICLESORT_NEWER_FIRST: 2,
         /**
          * @constant
-         * @type {Number}
          * @name pc.PARTICLESORT_OLDER_FIRST
+         * @type {number}
          * @description Older particles are drawn first. CPU only.
          */
         PARTICLESORT_OLDER_FIRST: 3,
@@ -300,192 +300,192 @@
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.EMITTERSHAPE_BOX
+         * @type {number}
          * @description Box shape parameterized by emitterExtents. Initial velocity is directed towards local Z axis.
          */
         EMITTERSHAPE_BOX: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.EMITTERSHAPE_SPHERE
+         * @type {number}
          * @description Sphere shape parameterized by emitterRadius. Initial velocity is directed outwards from the center.
          */
         EMITTERSHAPE_SPHERE: 1,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.PARTICLEORIENTATION_SCREEN
+         * @type {number}
          * @description Particles are facing camera.
          */
         PARTICLEORIENTATION_SCREEN: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.PARTICLEORIENTATION_WORLD
+         * @type {number}
          * @description User defines world space normal (particleNormal) to set planes orientation.
          */
         PARTICLEORIENTATION_WORLD: 1,
         /**
          * @constant
-         * @type {Number}
          * @name pc.PARTICLEORIENTATION_EMITTER
+         * @type {number}
          * @description Similar to previous, but the normal is affected by emitter(entity) transformation.
          */
         PARTICLEORIENTATION_EMITTER: 2,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.PROJECTION_PERSPECTIVE
+         * @type {number}
          * @description A perspective camera projection where the frustum shape is essentially pyramidal.
          */
         PROJECTION_PERSPECTIVE: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.PROJECTION_ORTHOGRAPHIC
+         * @type {number}
          * @description An orthographic camera projection where the frustum shape is essentially a cuboid.
          */
         PROJECTION_ORTHOGRAPHIC: 1,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.RENDERSTYLE_SOLID
+         * @type {number}
          * @description Render mesh instance as solid geometry.
          */
         RENDERSTYLE_SOLID: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.RENDERSTYLE_WIREFRAME
+         * @type {number}
          * @description Render mesh instance as wireframe.
          */
         RENDERSTYLE_WIREFRAME: 1,
         /**
          * @constant
-         * @type {Number}
          * @name pc.RENDERSTYLE_POINTS
+         * @type {number}
          * @description Render mesh instance as points.
          */
         RENDERSTYLE_POINTS: 2,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.CUBEPROJ_NONE
+         * @type {number}
          * @description The cube map is treated as if it is infinitely far away.
          */
         CUBEPROJ_NONE: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.CUBEPROJ_BOX
+         * @type {number}
          * @description The cube map is box-projected based on a world space axis-aligned bounding box.
          */
         CUBEPROJ_BOX: 1,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.SPECULAR_PHONG
+         * @type {number}
          * @description Phong without energy conservation. You should only use it as a backwards compatibility with older projects.
          */
         SPECULAR_PHONG: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.SPECULAR_BLINN
+         * @type {number}
          * @description Energy-conserving Blinn-Phong.
          */
         SPECULAR_BLINN: 1,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.GAMMA_NONE
+         * @type {number}
          * @description No gamma correction.
          */
         GAMMA_NONE: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.GAMMA_SRGB
+         * @type {number}
          * @description Apply sRGB gamma correction.
          */
         GAMMA_SRGB: 1,
         /**
          * @deprecated
          * @constant
-         * @type {Number}
          * @name pc.GAMMA_SRGBFAST
+         * @type {number}
          * @description Apply sRGB (fast) gamma correction.
          */
         GAMMA_SRGBFAST: 2, // deprecated
         /**
          * @constant
-         * @type {Number}
          * @name pc.GAMMA_SRGBHDR
+         * @type {number}
          * @description Apply sRGB (HDR) gamma correction.
          */
         GAMMA_SRGBHDR: 3,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.TONEMAP_LINEAR
+         * @type {number}
          * @description Linear tonemapping.
          */
         TONEMAP_LINEAR: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.TONEMAP_FILMIC
+         * @type {number}
          * @description Filmic tonemapping curve.
          */
         TONEMAP_FILMIC: 1,
         /**
          * @constant
-         * @type {Number}
          * @name pc.TONEMAP_HEJL
+         * @type {number}
          * @description Hejl filmic tonemapping curve.
          */
         TONEMAP_HEJL: 2,
         /**
          * @constant
-         * @type {Number}
          * @name pc.TONEMAP_ACES
+         * @type {number}
          * @description ACES filmic tonemapping curve.
          */
         TONEMAP_ACES: 3,
         /**
          * @constant
-         * @type {Number}
          * @name pc.TONEMAP_ACES2
+         * @type {number}
          * @description ACES v2 filmic tonemapping curve.
          */
         TONEMAP_ACES2: 4,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.SPECOCC_NONE
+         * @type {number}
          * @description No specular occlusion.
          */
         SPECOCC_NONE: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.SPECOCC_AO
+         * @type {number}
          * @description Use AO directly to occlude specular.
          */
         SPECOCC_AO: 1,
         /**
          * @constant
-         * @type {Number}
          * @name pc.SPECOCC_GLOSSDEPENDENT
+         * @type {number}
          * @description Modify AO based on material glossiness/view angle to occlude specular.
          */
         SPECOCC_GLOSSDEPENDENT: 2,
@@ -518,24 +518,24 @@
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.SHADER_FORWARD
+         * @type {number}
          * @description Render shaded materials with gamma correction and tonemapping.
          */
         SHADER_FORWARD: 0,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.SHADER_FORWARDHDR
+         * @type {number}
          * @description Render shaded materials without gamma correction and tonemapping.
          */
         SHADER_FORWARDHDR: 1,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.SHADER_DEPTH
+         * @type {number}
          * @description Render RGBA-encoded depth value.
          */
         SHADER_DEPTH: 2,
@@ -560,77 +560,77 @@
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.BAKE_COLOR
+         * @type {number}
          * @description Single color lightmap.
          */
         BAKE_COLOR: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.BAKE_COLORDIR
+         * @type {number}
          * @description Single color lightmap + dominant light direction (used for bump/specular).
          */
         BAKE_COLORDIR: 1,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.VIEW_CENTER
+         * @type {number}
          * @description Center of view.
          */
         VIEW_CENTER: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.VIEW_LEFT
+         * @type {number}
          * @description Left of view. Only used in stereo rendering.
          */
         VIEW_LEFT: 1,
         /**
          * @constant
-         * @type {Number}
          * @name pc.VIEW_RIGHT
+         * @type {number}
          * @description Right of view. Only used in stereo rendering.
          */
         VIEW_RIGHT: 2,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.SORTMODE_NONE
+         * @type {number}
          * @description No sorting is applied. Mesh instances are rendered in the same order they were added to a layer.
          */
         SORTMODE_NONE: 0,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.SORTMODE_MANUAL
+         * @type {number}
          * @description Mesh instances are sorted based on {@link pc.MeshInstance#drawOrder}.
          */
         SORTMODE_MANUAL: 1,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.SORTMODE_MATERIALMESH
+         * @type {number}
          * @description Mesh instances are sorted to minimize switching between materials and meshes to improve rendering performance.
          */
         SORTMODE_MATERIALMESH: 2,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.SORTMODE_BACK2FRONT
+         * @type {number}
          * @description Mesh instances are sorted back to front. This is the way to properly render many semi-transparent objects on different depth, one is blended on top of another.
          */
         SORTMODE_BACK2FRONT: 3,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.SORTMODE_FRONT2BACK
+         * @type {number}
          * @description Mesh instances are sorted front to back. Depending on GPU and the scene, this option may give better performance than pc.SORTMODE_MATERIALMESH due to reduced overdraw.
          */
         SORTMODE_FRONT2BACK: 4,
@@ -638,9 +638,9 @@
         /**
          * @private
          * @constant
-         * @type {Number}
          * @name  pc.SORTMODE_CUSTOM
-         * @description Provide custom functions for sorting drawcalls and calculating distance
+         * @type {number}
+         * @description Provide custom functions for sorting drawcalls and calculating distance.
          */
         SORTMODE_CUSTOM: 5,
 
@@ -651,30 +651,30 @@
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.ASPECT_AUTO
+         * @type {number}
          * @description Automatically set aspect ratio to current render target's width divided by height.
          */
         ASPECT_AUTO: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.ASPECT_MANUAL
+         * @type {number}
          * @description Use the manual aspect ratio value.
          */
         ASPECT_MANUAL: 1,
 
         /**
          * @constant
-         * @type {Number}
          * @name pc.ORIENTATION_HORIZONTAL
+         * @type {number}
          * @description Horizontal orientation.
          */
         ORIENTATION_HORIZONTAL: 0,
         /**
          * @constant
-         * @type {Number}
          * @name pc.ORIENTATION_VERTICAL
+         * @type {number}
          * @description Vertical orientation.
          */
         ORIENTATION_VERTICAL: 1
@@ -689,14 +689,14 @@
 
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.Scene
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc A scene is graphical representation of an environment. It manages the scene hierarchy, all
      * graphical objects, lights, and scene-wide properties.
      * @description Creates a new Scene.
      * @property {pc.Color} ambientLight The color of the scene's ambient light. Defaults to black (0, 0, 0).
-     * @property {String} fog The type of fog used by the scene. Can be:
+     * @property {string} fog The type of fog used by the scene. Can be:
      * <ul>
      *     <li>pc.FOG_NONE</li>
      *     <li>pc.FOG_LINEAR</li>
@@ -705,19 +705,19 @@ Object.assign(pc, function () {
      * </ul>
      * Defaults to pc.FOG_NONE.
      * @property {pc.Color} fogColor The color of the fog (if enabled). Defaults to black (0, 0, 0).
-     * @property {Number} fogDensity The density of the fog (if enabled). This property is only valid if the
+     * @property {number} fogDensity The density of the fog (if enabled). This property is only valid if the
      * fog property is set to pc.FOG_EXP or pc.FOG_EXP2. Defaults to 0.
-     * @property {Number} fogEnd The distance from the viewpoint where linear fog reaches its maximum. This
+     * @property {number} fogEnd The distance from the viewpoint where linear fog reaches its maximum. This
      * property is only valid if the fog property is set to pc.FOG_LINEAR. Defaults to 1000.
-     * @property {Number} fogStart The distance from the viewpoint where linear fog begins. This property is
+     * @property {number} fogStart The distance from the viewpoint where linear fog begins. This property is
      * only valid if the fog property is set to pc.FOG_LINEAR. Defaults to 1.
-     * @property {Number} gammaCorrection The gamma correction to apply when rendering the scene. Can be:
+     * @property {number} gammaCorrection The gamma correction to apply when rendering the scene. Can be:
      * <ul>
      *     <li>pc.GAMMA_NONE</li>
      *     <li>pc.GAMMA_SRGB</li>
      * </ul>
      * Defaults to pc.GAMMA_NONE.
-     * @property {Number} toneMapping The tonemapping transform to apply when writing fragments to the
+     * @property {number} toneMapping The tonemapping transform to apply when writing fragments to the
      * frame buffer. Can be:
      * <ul>
      *     <li>pc.TONEMAP_LINEAR</li>
@@ -726,14 +726,14 @@ Object.assign(pc, function () {
      *     <li>pc.TONEMAP_ACES</li>
      * </ul>
      * Defaults to pc.TONEMAP_LINEAR.
-     * @property {Number} exposure The exposure value tweaks the overall brightness of the scene. Defaults to 1.
+     * @property {number} exposure The exposure value tweaks the overall brightness of the scene. Defaults to 1.
      * @property {pc.Texture} skybox A cube map texture used as the scene's skybox. Defaults to null.
-     * @property {Number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
-     * @property {Number} skyboxMip The mip level of the skybox to be displayed. Only valid for prefiltered
+     * @property {number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
+     * @property {number} skyboxMip The mip level of the skybox to be displayed. Only valid for prefiltered
      * cubemap skyboxes. Defaults to 0 (base level).
-     * @property {Number} lightmapSizeMultiplier The lightmap resolution multiplier. Defaults to 1.
-     * @property {Number} lightmapMaxResolution The maximum lightmap resolution. Defaults to 2048.
-     * @property {Number} lightmapMode The lightmap baking mode. Can be:
+     * @property {number} lightmapSizeMultiplier The lightmap resolution multiplier. Defaults to 1.
+     * @property {number} lightmapMaxResolution The maximum lightmap resolution. Defaults to 2048.
+     * @property {number} lightmapMode The lightmap baking mode. Can be:
      * <ul>
      *     <li>pc.BAKE_COLOR: single color lightmap
      *     <li>pc.BAKE_COLORDIR: single color lightmap + dominant light direction (used for bump/specular)
@@ -1150,30 +1150,30 @@ Object.assign(pc, function () {
  * @event
  * @name pc.Scene#set:skybox
  * @description Fired when the skybox is set.
- * @param {pc.Texture} usedTex Previously used cubemap texture. New is in the {@link pc.Scene#skybox}.
+ * @param {pc.Texture} usedTex - Previously used cubemap texture. New is in the {@link pc.Scene#skybox}.
  */
 
 /**
  * @event
  * @name pc.Scene#set:layers
  * @description Fired when the layer composition is set. Use this event to add callbacks or advanced properties to your layers.
- * @param {pc.LayerComposition} oldComp Previously used {@link pc.LayerComposition}.
- * @param {pc.LayerComposition} newComp Newly set {@link pc.LayerComposition}.
+ * @param {pc.LayerComposition} oldComp - Previously used {@link pc.LayerComposition}.
+ * @param {pc.LayerComposition} newComp - Newly set {@link pc.LayerComposition}.
  * @example
- *   this.app.scene.on('set:layers', function(oldComp, newComp) {
- *       var list = newComp.layerList;
- *       var layer;
- *       for(var i=0; i<list.length; i++) {
- *           layer = list[i];
- *           switch(layer.name) {
- *               case 'MyLayer':
- *                   layer.onEnable = myOnEnableFunction;
- *                   layer.onDisable = myOnDisableFunction;
- *                   break;
- *               case 'MyOtherLayer':
- *                   layer.shaderPass = myShaderPass;
- *                   break;
- *           }
- *       }
- *   });
+ * this.app.scene.on('set:layers', function (oldComp, newComp) {
+ *     var list = newComp.layerList;
+ *     var layer;
+ *     for (var i = 0; i < list.length; i++) {
+ *         layer = list[i];
+ *         switch (layer.name) {
+ *             case 'MyLayer':
+ *                 layer.onEnable = myOnEnableFunction;
+ *                 layer.onDisable = myOnDisableFunction;
+ *                 break;
+ *             case 'MyOtherLayer':
+ *                 layer.shaderPass = myShaderPass;
+ *                 break;
+ *         }
+ *     }
+ * });
  */

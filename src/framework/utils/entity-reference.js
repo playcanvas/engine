@@ -1,16 +1,14 @@
 Object.assign(pc, function () {
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.EntityReference
      * @description Helper class used for managing component properties that represent entity references.
      * @classdesc An EntityReference can be used in scenarios where a component has one or more properties that
      * refer to entities in the scene graph. Using an EntityReference simplifies the job of dealing with the
      * presence or non-presence of the underlying entity and its components, especially when it comes to dealing
      * with the runtime addition or removal of components, and addition/removal of associated event listeners.
-     *
      * <h2>Usage Scenario</h2>
-     *
      * Imagine that you're creating a Checkbox component, which has a reference to an entity representing
      * the checkmark/tickmark that is rendered in the Checkbox. The reference is modelled as an entity guid
      * property on the Checkbox component, called simply 'checkmark'. We have to implement a basic piece of
@@ -102,10 +100,10 @@ Object.assign(pc, function () {
      * Additionally, any callbacks listed in the event config will automatically be called in the scope
      * of the parent component – you should never have to worry about manually calling <code>Function.bind()</code>.
      *
-     * @param {pc.Component} parentComponent A reference to the parent component that owns this entity reference.
-     * @param {String} entityPropertyName The name of the component property that contains the entity guid.
-     * @param {Object<String, Function>} [eventConfig] A map of event listener configurations.
-     * @property {Entity} entity A reference to the entity, if present.
+     * @param {pc.Component} parentComponent - A reference to the parent component that owns this entity reference.
+     * @param {string} entityPropertyName - The name of the component property that contains the entity guid.
+     * @param {object<string, Function>} [eventConfig] - A map of event listener configurations.
+     * @property {pc.Entity} entity A reference to the entity, if present.
      */
     function EntityReference(parentComponent, entityPropertyName, eventConfig) {
         if (!parentComponent || !(parentComponent instanceof pc.Component)) {
@@ -392,8 +390,8 @@ Object.assign(pc, function () {
          * @name pc.EntityReference#hasComponent
          * @description Convenience method indicating whether the entity exists and has a
          * component of the provided type.
-         * @param {String} componentName Name of the component.
-         * @returns {Boolean} True if the entity exists and has a component of the provided type.
+         * @param {string} componentName - Name of the component.
+         * @returns {boolean} True if the entity exists and has a component of the provided type.
          */
         hasComponent: function (componentName) {
             return (this._entity && this._entity.c) ? !!this._entity.c[componentName] : false;

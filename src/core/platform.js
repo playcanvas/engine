@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     /**
      * @namespace
      * @name pc.platform
-     * @description Global namespace that stores flags regarding platform environment and features support
+     * @description Global namespace that stores flags regarding platform environment and features support.
      * @example
      * if (pc.platform.touch) {
      *     // touch is supported
@@ -12,81 +12,81 @@ Object.assign(pc, function () {
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.desktop
-         * @description is it a desktop or laptop device
+         * @description Is it a desktop or laptop device.
          */
         desktop: false,
 
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.mobile
-         * @description is it a mobile or tablet device
+         * @description Is it a mobile or tablet device.
          */
         mobile: false,
 
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.ios
-         * @description if it is iOS
+         * @description If it is iOS.
          */
         ios: false,
 
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.android
-         * @description if it is Android
+         * @description If it is Android.
          */
         android: false,
 
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.windows
-         * @description if it is Windows
+         * @description If it is Windows.
          */
         windows: false,
 
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.xbox
-         * @description if it is Xbox
+         * @description If it is Xbox.
          */
         xbox: false,
 
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.gamepads
-         * @description if platform supports gamepads
+         * @description If platform supports gamepads.
          */
         gamepads: false,
 
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.touch
-         * @description if platform supports touch input
+         * @description If platform supports touch input.
          */
         touch: false,
 
         /**
          * @static
          * @readonly
-         * @type {Boolean}
+         * @type {boolean}
          * @name pc.platform.workers
-         * @description if the platform supports Web Workers
+         * @description If the platform supports Web Workers.
          */
         workers: false
     };

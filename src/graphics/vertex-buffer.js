@@ -2,16 +2,16 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.VertexBuffer
      * @classdesc A vertex buffer is the mechanism via which the application specifies vertex
      * data to the graphics hardware.
      * @description Creates a new vertex buffer object.
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this vertex buffer.
-     * @param {pc.VertexFormat} format The vertex format of this vertex buffer.
-     * @param {Number} numVertices The number of vertices that this vertex buffer will hold.
-     * @param {Number} [usage] The usage type of the vertex buffer (see pc.BUFFER_*).
-     * @param {ArrayBuffer} [initialData] Initial data.
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex buffer.
+     * @param {pc.VertexFormat} format - The vertex format of this vertex buffer.
+     * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
+     * @param {number} [usage] - The usage type of the vertex buffer (see pc.BUFFER_*).
+     * @param {ArrayBuffer} [initialData] - Initial data.
      */
     var VertexBuffer = function (graphicsDevice, format, numVertices, usage, initialData) {
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
@@ -84,7 +84,7 @@ Object.assign(pc, function () {
          * whether the buffer can be modified once and used many times (pc.BUFFER_STATIC),
          * modified repeatedly and used many times (pc.BUFFER_DYNAMIC) or modified once
          * and used at most a few times (pc.BUFFER_STREAM).
-         * @returns {Number} The usage type of the vertex buffer (see pc.BUFFER_*).
+         * @returns {number} The usage type of the vertex buffer (see pc.BUFFER_*).
          */
         getUsage: function () {
             return this.usage;
@@ -94,7 +94,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.VertexBuffer#getNumVertices
          * @description Returns the number of vertices stored in the specified vertex buffer.
-         * @returns {Number} The number of vertices stored in the vertex buffer.
+         * @returns {number} The number of vertices stored in the vertex buffer.
          */
         getNumVertices: function () {
             return this.numVertices;

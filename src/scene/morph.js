@@ -4,19 +4,19 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.MorphTarget
      * @classdesc A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
      * Multiple morph targets can be blended together on a mesh. This is useful for effects that are hard to achieve with conventional animation and skinning.
-     * @param {Object} options Object for passing optional arguments.
-     * @param {Number[]} options.deltaPositions An array of 3-dimensional vertex position offsets.
-     * @param {Number[]} [options.deltaNormals] An array of 3-dimensional vertex normal offsets.
-     * @param {Number[]} [options.deltaTangents] An array of 4-dimensional vertex normal tangents.
-     * @param {Number[]} [options.indices] A morph target doesn't have to contain a full copy of the original mesh with added deformations.
+     * @param {object} options - Object for passing optional arguments.
+     * @param {number[]} options.deltaPositions - An array of 3-dimensional vertex position offsets.
+     * @param {number[]} [options.deltaNormals] - An array of 3-dimensional vertex normal offsets.
+     * @param {number[]} [options.deltaTangents] - An array of 4-dimensional vertex normal tangents.
+     * @param {number[]} [options.indices] - A morph target doesn't have to contain a full copy of the original mesh with added deformations.
      * Instead, only deformed vertices can be stored. This array contains indices to the original mesh's vertices and must be of the same size
      * as other arrays.
-     * @param {String} [options.name] Name
-     * @param {pc.BoundingBox} [options.aabb] Bounding box. Will be automatically generated, if undefined.
+     * @param {string} [options.name] - Name.
+     * @param {pc.BoundingBox} [options.aabb] - Bounding box. Will be automatically generated, if undefined.
      */
     var MorphTarget = function (options) {
         if (options.indices) {
@@ -38,10 +38,10 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.Morph
      * @classdesc Contains a list of pc.MorphTarget, a combined AABB and some associated data.
-     * @param {pc.MoprhTarget[]} targets A list of morph targets
+     * @param {pc.MoprhTarget[]} targets - A list of morph targets.
      */
     var Morph = function (targets) {
         this.aabb = new pc.BoundingBox();
@@ -140,8 +140,8 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Morph#addTarget
-         * @description Adds a new morph target to the list
-         * @param {pc.MoprhTarget} target A new morph target
+         * @description Adds a new morph target to the list.
+         * @param {pc.MoprhTarget} target - A new morph target.
          */
         addTarget: function (target) {
             this._targets.push(target);
@@ -152,8 +152,8 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Morph#removeTarget
-         * @description Remove the specified morph target from the list
-         * @param {pc.MoprhTarget} target A morph target to delete
+         * @description Remove the specified morph target from the list.
+         * @param {pc.MoprhTarget} target - A morph target to delete.
          */
         removeTarget: function (target) {
             var index = this._targets.indexOf(target);
@@ -167,9 +167,9 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Morph#getTarget
-         * @description Gets the morph target by index
-         * @param {Number} index An index of morph target.
-         * @returns {pc.MorphTarget} A morph target object
+         * @description Gets the morph target by index.
+         * @param {number} index - An index of morph target.
+         * @returns {pc.MorphTarget} A morph target object.
          */
         getTarget: function (index) {
             return this._targets[index];
@@ -178,10 +178,10 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.MorphInstance
      * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, holds morphed buffer and associated data.
-     * @param {pc.Morph} morph The pc.Morph to instance.
+     * @param {pc.Morph} morph - The pc.Morph to instance.
      */
     var MorphInstance = function (morph) {
         this.morph = morph;
@@ -226,8 +226,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.MorphInstance#getWeight
          * @description Gets current weight of the specified morph target.
-         * @param {Number} index An index of morph target.
-         * @returns {Number} Weight
+         * @param {number} index - An index of morph target.
+         * @returns {number} Weight.
          */
         getWeight: function (index) {
             return this._weights[index];
@@ -238,8 +238,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.MorphInstance#setWeight
          * @description Sets weight of the specified morph target.
-         * @param {Number} index An index of morph target.
-         * @param {Number} weight Weight
+         * @param {number} index - An index of morph target.
+         * @param {number} weight - Weight.
          */
         setWeight: function (index, weight) {
             this._weights[index] = weight;
@@ -250,7 +250,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.MorphInstance#updateBounds
-         * @param {pc.Mesh} mesh Base mesh for the morph.
+         * @param {pc.Mesh} mesh - Base mesh for the morph.
          * @description Calculates AABB for this morph instance. Called automatically by renderer.
          */
         updateBounds: function (mesh) {
@@ -270,7 +270,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.MorphInstance#update
-         * @param {pc.Mesh} mesh Base mesh for the morph.
+         * @param {pc.Mesh} mesh - Base mesh for the morph.
          * @description Performs morphing. Called automatically by renderer.
          */
         update: function (mesh) {
