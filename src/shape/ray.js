@@ -12,6 +12,8 @@ Object.assign(pc, function () {
      * Defaults to the origin (0, 0, 0).
      * @param {pc.Vec3} [direction] - The direction of the ray. The constructor takes a reference of this parameter.
      * Defaults to a direction down the world negative Z axis (0, 0, -1).
+     * @property {pc.Vec3} origin The starting point of the ray.
+     * @property {pc.Vec3} direction The direction of the ray.
      */
     var Ray = function Ray(origin, direction) {
         this.origin = origin || new pc.Vec3(0, 0, 0);

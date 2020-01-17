@@ -70,6 +70,7 @@ Object.assign(pc, function () {
      * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
      * @property {boolean} preload If true the asset will be loaded during the preload phase of application set up.
      * @property {boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
+     * @property {boolean} loading True if the resource is currently being loaded
      * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
      */
     var Asset = function (name, type, file, data) {
