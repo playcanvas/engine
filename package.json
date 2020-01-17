@@ -34,10 +34,9 @@
   ],
   "devDependencies": {
     "@playcanvas/jsdoc-template": "^1.0.9",
-    "@playcanvas/eslint-config": "^1.0.1",
+    "@playcanvas/eslint-config": "^1.0.3",
     "chai": "^4.2.0",
     "eslint": "^6.8.0",
-    "eslint-plugin-jsdoc": "^20.3.1",
     "fs-extra": "^8.1.0",
     "google-closure-compiler": "^20191111.0.0",
     "http-server": "^0.12.0",
