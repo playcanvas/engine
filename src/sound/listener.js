@@ -6,7 +6,7 @@ Object.assign(pc, function () {
      * @class
      * @name pc.Listener
      * @classdesc Represents an audio listener - used internally.
-     * @param {pc.SoundManager} manager - The sound manager
+     * @param {pc.SoundManager} manager - The sound manager.
      */
     var Listener = function (manager) {
         this.position = new pc.Vec3();

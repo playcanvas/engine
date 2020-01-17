@@ -5,8 +5,8 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.SoundManager.hasAudio
-     * @description Reports whether this device supports the HTML5 Audio tag API
-     * @returns {boolean} true if HTML5 Audio tag API is supported and false otherwise
+     * @description Reports whether this device supports the HTML5 Audio tag API.
+     * @returns {boolean} True if HTML5 Audio tag API is supported and false otherwise.
      */
     function hasAudio() {
         return (typeof Audio !== 'undefined');
@@ -16,8 +16,8 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.SoundManager.hasAudioContext
-     * @description Reports whether this device supports the Web Audio API
-     * @returns {boolean} true if Web Audio is supported and false otherwise
+     * @description Reports whether this device supports the Web Audio API.
+     * @returns {boolean} True if Web Audio is supported and false otherwise.
      */
     function hasAudioContext() {
         return !!(typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined');
@@ -31,7 +31,7 @@ Object.assign(pc, function () {
      * like global volume, suspend and resume.
      * @description Creates a new sound manager.
      * @param {object} [options] - Options options object.
-     * @param {boolean} [options.forceWebAudioApi] - Always use the Web Audio API even check indicates that it if not available
+     * @param {boolean} [options.forceWebAudioApi] - Always use the Web Audio API even check indicates that it if not available.
      * @property {number} volume Global volume for the manager. All {@link pc.SoundInstance}s will scale their volume with this volume. Valid between [0, 1].
      */
     var SoundManager = function (options) {
@@ -156,7 +156,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.SoundManager#playSound3d
-         * @description Create a new pc.Channel3d and begin playback of the sound at the position specified
+         * @description Create a new pc.Channel3d and begin playback of the sound at the position specified.
          * @param {pc.Sound} sound - The Sound object to play.
          * @param {pc.Vec3} position - The position of the sound in 3D space.
          * @param {object} options - Optional options object.

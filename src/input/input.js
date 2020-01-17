@@ -17,14 +17,14 @@
          * @constant
          * @type {string}
          * @name pc.EVENT_KEYDOWN
-         * @description Name of event fired when a key is pressed
+         * @description Name of event fired when a key is pressed.
          */
         EVENT_KEYDOWN: 'keydown',
         /**
          * @constant
          * @type {string}
          * @name pc.EVENT_KEYUP
-         * @description Name of event fired when a key is released
+         * @description Name of event fired when a key is released.
          */
         EVENT_KEYUP: 'keyup',
 
@@ -32,28 +32,28 @@
          * @constant
          * @type {string}
          * @name pc.EVENT_MOUSEDOWN
-         * @description Name of event fired when a mouse button is pressed
+         * @description Name of event fired when a mouse button is pressed.
          */
         EVENT_MOUSEDOWN: "mousedown",
         /**
          * @constant
          * @type {string}
          * @name pc.EVENT_MOUSEMOVE
-         * @description Name of event fired when the mouse is moved
+         * @description Name of event fired when the mouse is moved.
          */
         EVENT_MOUSEMOVE: "mousemove",
         /**
          * @constant
          * @type {string}
          * @name pc.EVENT_MOUSEUP
-         * @description Name of event fired when a mouse button is released
+         * @description Name of event fired when a mouse button is released.
          */
         EVENT_MOUSEUP: "mouseup",
         /**
          * @constant
          * @type {string}
          * @name pc.EVENT_MOUSEWHEEL
-         * @description Name of event fired when the mouse wheel is rotated
+         * @description Name of event fired when the mouse wheel is rotated.
          */
         EVENT_MOUSEWHEEL: "mousewheel",
 
@@ -685,28 +685,28 @@
          * @constant
          * @type {number}
          * @name pc.MOUSEBUTTON_NONE
-         * @description No mouse buttons pressed
+         * @description No mouse buttons pressed.
          */
         MOUSEBUTTON_NONE: -1,
         /**
          * @constant
          * @type {number}
          * @name pc.MOUSEBUTTON_LEFT
-         * @description The left mouse button
+         * @description The left mouse button.
          */
         MOUSEBUTTON_LEFT: 0,
         /**
          * @constant
          * @type {number}
          * @name pc.MOUSEBUTTON_MIDDLE
-         * @description The middle mouse button
+         * @description The middle mouse button.
          */
         MOUSEBUTTON_MIDDLE: 1,
         /**
          * @constant
          * @type {number}
          * @name pc.MOUSEBUTTON_RIGHT
-         * @description The right mouse button
+         * @description The right mouse button.
          */
         MOUSEBUTTON_RIGHT: 2,
 
@@ -714,28 +714,28 @@
          * @constant
          * @type {number}
          * @name pc.PAD_1
-         * @description Index for pad 1
+         * @description Index for pad 1.
          */
         PAD_1: 0,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_2
-         * @description Index for pad 2
+         * @description Index for pad 2.
          */
         PAD_2: 1,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_3
-         * @description Index for pad 3
+         * @description Index for pad 3.
          */
         PAD_3: 2,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_4
-         * @description Index for pad 4
+         * @description Index for pad 4.
          */
         PAD_4: 3,
 
@@ -743,28 +743,28 @@
          * @constant
          * @type {number}
          * @name pc.PAD_FACE_1
-         * @description The first face button, from bottom going clockwise
+         * @description The first face button, from bottom going clockwise.
          */
         PAD_FACE_1: 0,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_FACE_2
-         * @description The second face button, from bottom going clockwise
+         * @description The second face button, from bottom going clockwise.
          */
         PAD_FACE_2: 1,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_FACE_3
-         * @description The third face button, from bottom going clockwise
+         * @description The third face button, from bottom going clockwise.
          */
         PAD_FACE_3: 2,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_FACE_4
-         * @description The fourth face button, from bottom going clockwise
+         * @description The fourth face button, from bottom going clockwise.
          */
         PAD_FACE_4: 3,
 
@@ -772,28 +772,28 @@
          * @constant
          * @type {number}
          * @name pc.PAD_L_SHOULDER_1
-         * @description The first shoulder button on the left
+         * @description The first shoulder button on the left.
          */
         PAD_L_SHOULDER_1: 4,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_R_SHOULDER_1
-         * @description The first shoulder button on the right
+         * @description The first shoulder button on the right.
          */
         PAD_R_SHOULDER_1: 5,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_L_SHOULDER_2
-         * @description The second shoulder button on the left
+         * @description The second shoulder button on the left.
          */
         PAD_L_SHOULDER_2: 6,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_R_SHOULDER_2
-         * @description The second shoulder button on the right
+         * @description The second shoulder button on the right.
          */
         PAD_R_SHOULDER_2: 7,
 
@@ -801,14 +801,14 @@
          * @constant
          * @type {number}
          * @name pc.PAD_SELECT
-         * @description The select button
+         * @description The select button.
          */
         PAD_SELECT: 8,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_START
-         * @description The start button
+         * @description The start button.
          */
         PAD_START: 9,
 
@@ -816,14 +816,14 @@
          * @constant
          * @type {number}
          * @name pc.PAD_L_STICK_BUTTON
-         * @description The button when depressing the left analogue stick
+         * @description The button when depressing the left analogue stick.
          */
         PAD_L_STICK_BUTTON: 10,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_R_STICK_BUTTON
-         * @description The button when depressing the right analogue stick
+         * @description The button when depressing the right analogue stick.
          */
         PAD_R_STICK_BUTTON: 11,
 
@@ -831,28 +831,28 @@
          * @constant
          * @type {number}
          * @name pc.PAD_UP
-         * @description Direction pad up
+         * @description Direction pad up.
          */
         PAD_UP: 12,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_DOWN
-         * @description Direction pad down
+         * @description Direction pad down.
          */
         PAD_DOWN: 13,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_LEFT
-         * @description Direction pad left
+         * @description Direction pad left.
          */
         PAD_LEFT: 14,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_RIGHT
-         * @description Direction pad right
+         * @description Direction pad right.
          */
         PAD_RIGHT: 15,
 
@@ -860,7 +860,7 @@
          * @constant
          * @type {number}
          * @name pc.PAD_VENDOR
-         * @description Vendor specific button
+         * @description Vendor specific button.
          */
         PAD_VENDOR: 16,
 
@@ -868,28 +868,28 @@
          * @constant
          * @type {number}
          * @name pc.PAD_L_STICK_X
-         * @description Horizontal axis on the left analogue stick
+         * @description Horizontal axis on the left analogue stick.
          */
         PAD_L_STICK_X: 0,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_L_STICK_Y
-         * @description Vertical axis on the left analogue stick
+         * @description Vertical axis on the left analogue stick.
          */
         PAD_L_STICK_Y: 1,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_R_STICK_X
-         * @description Horizontal axis on the right analogue stick
+         * @description Horizontal axis on the right analogue stick.
          */
         PAD_R_STICK_X: 2,
         /**
          * @constant
          * @type {number}
          * @name pc.PAD_R_STICK_Y
-         * @description Vertical axis on the right analogue stick
+         * @description Vertical axis on the right analogue stick.
          */
         PAD_R_STICK_Y: 3
     };

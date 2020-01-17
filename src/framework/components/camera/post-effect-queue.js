@@ -3,10 +3,10 @@ Object.assign(pc, function () {
     /**
      * @class
      * @name pc.PostEffectQueue
-     * @classdesc Used to manage multiple post effects for a camera
-     * @description Create a new PostEffectQueue
-     * @param {pc.Application} app - The application
-     * @param {pc.CameraComponent} camera - The camera component
+     * @classdesc Used to manage multiple post effects for a camera.
+     * @description Create a new PostEffectQueue.
+     * @param {pc.Application} app - The application.
+     * @param {pc.CameraComponent} camera - The camera component.
      */
     function PostEffectQueue(app, camera) {
         var self = this;
@@ -43,10 +43,10 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.PostEffectQueue#_createOffscreenTarget
-         * @description Creates a render target with the dimensions of the canvas, with an optional depth buffer
-         * @param {boolean} useDepth - Set to true if you want to create a render target with a depth buffer
-         * @param {boolean} hdr - Use HDR render target format
-         * @returns {pc.RenderTarget} The render target
+         * @description Creates a render target with the dimensions of the canvas, with an optional depth buffer.
+         * @param {boolean} useDepth - Set to true if you want to create a render target with a depth buffer.
+         * @param {boolean} hdr - Use HDR render target format.
+         * @returns {pc.RenderTarget} The render target.
          */
 
         _createOffscreenTarget: function (useDepth, hdr) {
@@ -303,7 +303,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.PostEffectQueue#destroy
-         * @description Removes all the effects from the queue and disables it
+         * @description Removes all the effects from the queue and disables it.
          */
         destroy: function () {
             // release memory for all effects

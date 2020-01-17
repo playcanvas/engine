@@ -63,9 +63,9 @@ pc.script = (function () {
          * @description Creates a script attribute for the current script. The script attribute can be accessed
          * inside the script instance like so 'this.attributeName' or outside a script instance like so 'entity.script.attributeName'.
          * Script attributes can be edited from the Attribute Editor of the PlayCanvas Editor like normal Components.
-         * @param {string} name - The name of the attribute
-         * @param {string} type - The type of the attribute. Can be one of the following: 'number', 'string', 'boolean', 'asset', 'entity', 'rgb', 'rgba', 'vector', 'enumeration', 'curve', 'colorcurve'
-         * @param {object} defaultValue - The default value of the attribute
+         * @param {string} name - The name of the attribute.
+         * @param {string} type - The type of the attribute. Can be one of the following: 'number', 'string', 'boolean', 'asset', 'entity', 'rgb', 'rgba', 'vector', 'enumeration', 'curve', 'colorcurve'.
+         * @param {object} defaultValue - The default value of the attribute.
          * @param {object} options - Optional parameters for the attribute. Valid values are:
          * <ul>
          *   <li>{Number} min: The minimum value of the attribute</li>

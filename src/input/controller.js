@@ -38,7 +38,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Controller#attach
      * @description Attach Controller to a Element, this is required before you can monitor for key/mouse inputs.
-     * @param {Element} element - The element to attach mouse and keyboard event handler too
+     * @param {Element} element - The element to attach mouse and keyboard event handler too.
      */
     Controller.prototype.attach = function (element) {
         this._element = element;
@@ -54,7 +54,7 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.Controller#detach
-     * @description Detach Controller from an Element, this should be done before the Controller is destroyed
+     * @description Detach Controller from an Element, this should be done before the Controller is destroyed.
      */
     Controller.prototype.detach = function () {
         if (this._keyboard) {
@@ -95,8 +95,8 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.Controller#update
-     * @description Update the Keyboard and Mouse handlers
-     * @param {object} dt - The time since the last frame
+     * @description Update the Keyboard and Mouse handlers.
+     * @param {object} dt - The time since the last frame.
      */
     Controller.prototype.update = function (dt) {
         if (this._keyboard) {
@@ -122,8 +122,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Controller#registerKeys
      * @description Create or update a action which is enabled when the supplied keys are pressed.
-     * @param {string} action - The name of the action
-     * @param {number[]} keys - A list of keycodes
+     * @param {string} action - The name of the action.
+     * @param {number[]} keys - A list of keycodes.
      */
     Controller.prototype.registerKeys = function (action, keys) {
         if (!this._keyboard) {
@@ -158,9 +158,9 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.Controller#registerMouse
-     * @description Create or update an action which is enabled when the supplied mouse button is pressed
-     * @param {string} action - The name of the action
-     * @param {number} button - The mouse button
+     * @description Create or update an action which is enabled when the supplied mouse button is pressed.
+     * @param {string} action - The name of the action.
+     * @param {number} button - The mouse button.
      */
     Controller.prototype.registerMouse = function (action, button) {
         if (!this._mouse) {
@@ -188,10 +188,10 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.Controller#registerPadButton
-     * @description Create or update an action which is enabled when the gamepad button is pressed
-     * @param {string} action - The name of the action
-     * @param {number} pad - The index of the pad to register (use pc.PAD_1, etc)
-     * @param {number} button - The pad button
+     * @description Create or update an action which is enabled when the gamepad button is pressed.
+     * @param {string} action - The name of the action.
+     * @param {number} pad - The index of the pad to register (use pc.PAD_1, etc).
+     * @param {number} button - The pad button.
      */
     Controller.prototype.registerPadButton = function (action, pad, button) {
         if (button === undefined) {
@@ -217,7 +217,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Controller#registerAxis
      * @param {object} [options] - Optional options object.
-     * @param {object} [options.pad] - The index of the game pad to register for (use pc.PAD_1, etc)
+     * @param {object} [options.pad] - The index of the game pad to register for (use pc.PAD_1, etc).
      */
     Controller.prototype.registerAxis = function (options) {
         var name = options.name;

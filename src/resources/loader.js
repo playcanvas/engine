@@ -4,7 +4,7 @@ Object.assign(pc, function () {
     /**
      * @class
      * @name pc.ResourceLoader
-     * @param {pc.Application} app - The application
+     * @param {pc.Application} app - The application.
      * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
      * multiple requests. Add ResourceHandlers to handle different types of resources.
      */
@@ -166,7 +166,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.ResourceLoader#open
-         * @description Convert raw resource data into a resource instance. e.g. take 3D model format JSON and return a pc.Model.
+         * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a pc.Model.
          * @param {string} type - The type of resource.
          * @param {*} data - The raw resource data.
          * @returns {*} The parsed resource data.

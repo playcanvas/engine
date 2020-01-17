@@ -207,7 +207,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.BoundingBox#getMin
          * @description Return the minimum corner of the AABB.
-         * @returns {pc.Vec3} minimum corner.
+         * @returns {pc.Vec3} Minimum corner.
          */
         getMin: function () {
             return this._min.copy(this.center).sub(this.halfExtents);
@@ -217,7 +217,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.BoundingBox#getMax
          * @description Return the maximum corner of the AABB.
-         * @returns {pc.Vec3} maximum corner.
+         * @returns {pc.Vec3} Maximum corner.
          */
         getMax: function () {
             return this._max.copy(this.center).add(this.halfExtents);
@@ -228,7 +228,7 @@ Object.assign(pc, function () {
          * @name pc.BoundingBox#containsPoint
          * @description Test if a point is inside a AABB.
          * @param {pc.Vec3} point - Point to test.
-         * @returns {boolean} true if the point is inside the AABB and false otherwise.
+         * @returns {boolean} True if the point is inside the AABB and false otherwise.
          */
         containsPoint: function (point) {
             var min = this.getMin();
@@ -248,7 +248,7 @@ Object.assign(pc, function () {
          * @name pc.BoundingBox#setFromTransformedAabb
          * @description Set an AABB to enclose the specified AABB if it were to be
          * transformed by the specified 4x4 matrix.
-         * @param {pc.BoundingBox} aabb - Box to transform and enclose
+         * @param {pc.BoundingBox} aabb - Box to transform and enclose.
          * @param {pc.Mat4} m - Transformation matrix to apply to source AABB.
          */
         setFromTransformedAabb: function (aabb, m) {
@@ -316,7 +316,7 @@ Object.assign(pc, function () {
          * @name pc.BoundingBox#intersectsBoundingSphere
          * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this AABB.
          * @param {pc.BoundingSphere} sphere - Bounding Sphere to test.
-         * @returns {boolean} true if the Bounding Sphere is overlapping, enveloping, or inside the AABB and false otherwise.
+         * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside the AABB and false otherwise.
          */
         intersectsBoundingSphere: function (sphere) {
             var sq = this._distanceToBoundingSphereSq(sphere);

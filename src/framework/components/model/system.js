@@ -9,7 +9,7 @@ Object.assign(pc, function () {
      * @augments pc.ComponentSystem
      * @classdesc Allows an Entity to render a model or a primitive shape like a box,
      * capsule, sphere, cylinder, cone etc.
-     * @description Create a new ModelComponentSystem
+     * @description Create a new ModelComponentSystem.
      * @param {pc.Application} app - The Application.
      */
     var ModelComponentSystem = function ModelComponentSystem(app) {

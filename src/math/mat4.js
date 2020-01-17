@@ -129,7 +129,7 @@ Object.assign(pc, (function () {
          * @name pc.Mat4#equals
          * @description Reports whether two matrices are equal.
          * @param {pc.Mat4} rhs - The other matrix.
-         * @returns {boolean} true if the matrices are equal and false otherwise.
+         * @returns {boolean} True if the matrices are equal and false otherwise.
          * @example
          * var a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          * var b = new pc.Mat4();
@@ -161,7 +161,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat4#isIdentity
          * @description Reports whether the specified matrix is the identity matrix.
-         * @returns {boolean} true if the matrix is identity and false otherwise.
+         * @returns {boolean} True if the matrix is identity and false otherwise.
          * @example
          * var m = new pc.Mat4();
          * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));

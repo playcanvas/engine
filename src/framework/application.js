@@ -14,7 +14,7 @@ Object.assign(pc, function () {
      * MyScript.prototype.initialize = function() {
      *     // Every script instance has a property 'this.app' accessible in the initialize...
      *     var app = this.app;
-     * }
+     * }.
      *
      * MyScript.prototype.update = function(dt) {
      *     // ...and update functions.
@@ -23,17 +23,17 @@ Object.assign(pc, function () {
      * If you are using the Engine without the Editor, you have to create the application
      * instance manually.
      * @description Create a new Application.
-     * @param {Element} canvas - The canvas element
+     * @param {Element} canvas - The canvas element.
      * @param {object} options
-     * @param {pc.ElementInput} [options.elementInput] - Input handler for {@link pc.ElementComponent}s
-     * @param {pc.Keyboard} [options.keyboard] - Keyboard handler for input
-     * @param {pc.Mouse} [options.mouse] - Mouse handler for input
-     * @param {pc.TouchDevice} [options.touch] - TouchDevice handler for input
-     * @param {pc.GamePads} [options.gamepads] - Gamepad handler for input
-     * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading
-     * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading
-     * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the {@link pc.GraphicsDevice} constructor
-     * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first
+     * @param {pc.ElementInput} [options.elementInput] - Input handler for {@link pc.ElementComponent}s.
+     * @param {pc.Keyboard} [options.keyboard] - Keyboard handler for input.
+     * @param {pc.Mouse} [options.mouse] - Mouse handler for input.
+     * @param {pc.TouchDevice} [options.touch] - TouchDevice handler for input.
+     * @param {pc.GamePads} [options.gamepads] - Gamepad handler for input.
+     * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
+     * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
+     * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the {@link pc.GraphicsDevice} constructor.
+     * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
      * @example
      * // Engine-only example: create the application manually
      * var app = new pc.Application(canvas, options);
@@ -212,7 +212,7 @@ Object.assign(pc, function () {
      /**
       * @name pc.Application#i18n
       * @type {pc.I18n}
-      * @description Handles localization
+      * @description Handles localization.
       */
 
     var Application = function (canvas, options) {
@@ -658,8 +658,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Application#configure
-         * @description Load the application configuration file and apply application properties and fill the asset registry
-         * @param {string} url - The URL of the configuration file to load
+         * @description Load the application configuration file and apply application properties and fill the asset registry.
+         * @param {string} url - The URL of the configuration file to load.
          * @param {pc.callbacks.ConfigureApp} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
          */
         configure: function (url, callback) {
@@ -689,8 +689,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Application#preload
-         * @description Load all assets in the asset registry that are marked as 'preload'
-         * @param {pc.callbacks.PreloadApp} callback - Function called when all assets are loaded
+         * @description Load all assets in the asset registry that are marked as 'preload'.
+         * @param {pc.callbacks.PreloadApp} callback - Function called when all assets are loaded.
          */
         preload: function (callback) {
             var self = this;
@@ -768,8 +768,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#getSceneUrl
          * @description Look up the URL of the scene hierarchy file via the name given to the scene in the editor. Use this to in {@link pc.Application#loadSceneHierarchy}.
-         * @param {string} name - The name of the scene file given in the Editor
-         * @returns {string} The URL of the scene file
+         * @param {string} name - The name of the scene file given in the Editor.
+         * @returns {string} The URL of the scene file.
          */
         getSceneUrl: function (name) {
             var entry = this._sceneRegistry.find(name);
@@ -785,7 +785,7 @@ Object.assign(pc, function () {
          * @name pc.Application#loadSceneHierarchy
          * @description Load a scene file, create and initialize the Entity hierarchy
          * and add the hierarchy to the application root Entity.
-         * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json"
+         * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json".
          * @param {pc.callbacks.LoadHierarchy} callback - The function to call after loading, passed (err, entity) where err is null if no errors occurred.
          * @example
          *
@@ -805,7 +805,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#loadSceneSettings
          * @description Load a scene file and automatically apply the scene settings to the current scene.
-         * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json"
+         * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json".
          * @param {pc.callbacks.LoadSettings} callback - The function called after the settings are applied. Passed (err) where err is null if no error occurred.
          * @example
          * app.loadSceneSettings("1000.json", function (err) {
@@ -825,7 +825,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#loadScene
          * @description Load a scene file.
-         * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json"
+         * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json".
          * @param {pc.callbacks.LoadScene} callback - The function to call after loading, passed (err, entity) where err is null if no errors occurred.
          * @example
          *
@@ -1323,14 +1323,14 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Application#setCanvasResolution
-         * @description Change the resolution of the canvas, and set the way it behaves when the window is resized
+         * @description Change the resolution of the canvas, and set the way it behaves when the window is resized.
          * @param {string} mode - The mode to use when setting the resolution. Can be:
          * <ul>
          *     <li>pc.RESOLUTION_AUTO: if width and height are not provided, canvas will be resized to match canvas client size.</li>
          *     <li>pc.RESOLUTION_FIXED: resolution of canvas will be fixed.</li>
          * </ul>
-         * @param {number} [width] - The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used
-         * @param {number} [height] - The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used
+         * @param {number} [width] - The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used.
+         * @param {number} [height] - The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used.
          */
         setCanvasResolution: function (mode, width, height) {
             this._resolutionMode = mode;
@@ -1358,7 +1358,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Application#onVisibilityChange
-         * @description Called when the visibility state of the current tab/window changes
+         * @description Called when the visibility state of the current tab/window changes.
          */
         onVisibilityChange: function () {
             if (this.isHidden()) {
@@ -1421,9 +1421,9 @@ Object.assign(pc, function () {
         /**
          * @private
          * @name pc.Application#onLibrariesLoaded
-         * @description Event handler called when all code libraries have been loaded
+         * @description Event handler called when all code libraries have been loaded.
          * Code libraries are passed into the constructor of the Application and the application won't start running or load packs until all libraries have
-         * been loaded
+         * been loaded.
          */
         onLibrariesLoaded: function () {
             this._librariesLoaded = true;
@@ -1475,7 +1475,7 @@ Object.assign(pc, function () {
          *     <li>pc.BAKE_COLOR: single color lightmap
          *     <li>pc.BAKE_COLORDIR: single color lightmap + dominant light direction (used for bump/specular)
          * </ul>
-         * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to
+         * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to.
          * @example
          *
          * var settings = {
@@ -1530,8 +1530,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Application#setSkybox
-         * @description Sets the skybox asset to current scene, and subscribes to asset load/change events
-         * @param {pc.Asset} asset - Asset of type `skybox` to be set to, or null to remove skybox
+         * @description Sets the skybox asset to current scene, and subscribes to asset load/change events.
+         * @param {pc.Asset} asset - Asset of type `skybox` to be set to, or null to remove skybox.
          */
         setSkybox: function (asset) {
             if (asset) {
@@ -1583,7 +1583,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Application#disableVr
-         * @description Destroy the {@link pc.VrManager}
+         * @description Destroy the {@link pc.VrManager}.
          */
         disableVr: function () {
             if (this.vr) {
@@ -1778,9 +1778,9 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Application#getEntityFromIndex
-         * @description Get entity from the index by guid
-         * @param {string} guid - The GUID to search for
-         * @returns {pc.Entity} The Entity with the GUID or null
+         * @description Get entity from the index by guid.
+         * @param {string} guid - The GUID to search for.
+         * @returns {pc.Entity} The Entity with the GUID or null.
          */
         getEntityFromIndex: function (guid) {
             return this._entityIndex[guid];

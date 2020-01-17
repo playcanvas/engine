@@ -4,11 +4,11 @@ Object.assign(pc, function () {
     /**
      * @class
      * @name pc.VerticalTiltShiftEffect
-     * @classdesc Simple fake tilt-shift effect, modulating two pass Gaussian blur by vertical position
+     * @classdesc Simple fake tilt-shift effect, modulating two pass Gaussian blur by vertical position.
      * @description Creates new instance of the post effect.
      * @augments pc.PostEffect
-     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application
-     * @property {number} focus Controls where the "focused" horizontal line lies
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+     * @property {number} focus Controls where the "focused" horizontal line lies.
      */
     var VerticalTiltShiftEffect = function (graphicsDevice) {
         pc.PostEffect.call(this, graphicsDevice);

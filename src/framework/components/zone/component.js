@@ -9,7 +9,7 @@ Object.assign(pc, function () {
      * This can be used in various ways, such as affecting audio reverb when audiolistener is within zone.
      * Or create culling system with portals between zones to hide whole indoor sections for performance reasons.
      * And many other possible options. Zones are building blocks and meant to be used in many different ways.
-     * @param {pc.ZoneComponentSystem} system - The ComponentSystem that created this Component
+     * @param {pc.ZoneComponentSystem} system - The ComponentSystem that created this Component.
      * @param {pc.Vec3} size - The Size of Box of a Zone.
      */
 
@@ -28,7 +28,7 @@ Object.assign(pc, function () {
      * @event
      * @name pc.ZoneComponent#enable
      * @description Fired when Component becomes enabled
-     * Note: this event does not take in account entity or any of its parent enabled state
+     * Note: this event does not take in account entity or any of its parent enabled state.
      * @example
      * entity.zone.on('enable', function () {
      *     // component is enabled
@@ -40,7 +40,7 @@ Object.assign(pc, function () {
      * @event
      * @name pc.ZoneComponent#disable
      * @description Fired when Component becomes disabled
-     * Note: this event does not take in account entity or any of its parent enabled state
+     * Note: this event does not take in account entity or any of its parent enabled state.
      * @example
      * entity.zone.on('disable', function () {
      *     // component is disabled
@@ -52,8 +52,8 @@ Object.assign(pc, function () {
      * @event
      * @name pc.ZoneComponent#state
      * @description Fired when Component changes state to enabled or disabled
-     * Note: this event does not take in account entity or any of its parent enabled state
-     * @param {boolean} enabled - True if now enabled, False if disabled
+     * Note: this event does not take in account entity or any of its parent enabled state.
+     * @param {boolean} enabled - True if now enabled, False if disabled.
      * @example
      * entity.zone.on('state', function (enabled) {
      *     // component changed state
@@ -64,7 +64,7 @@ Object.assign(pc, function () {
      * @private
      * @event
      * @name pc.ZoneComponent#remove
-     * @description Fired when a zone is removed from an entity
+     * @description Fired when a zone is removed from an entity.
      * @example
      * entity.zone.on('remove', function () {
      *     // zone has been removed from an entity

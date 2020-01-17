@@ -43,10 +43,10 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Plane#intersectsRay
-         * @description Test if a ray intersects with the infinite plane
-         * @param {pc.Ray} ray - Ray to test against (direction must be normalized)
-         * @param {pc.Vec3} [point] - If there is an intersection, the intersection point will be copied into here
-         * @returns {boolean} True if there is an intersection
+         * @description Test if a ray intersects with the infinite plane.
+         * @param {pc.Ray} ray - Ray to test against (direction must be normalized).
+         * @param {pc.Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
+         * @returns {boolean} True if there is an intersection.
          */
         intersectsRay: function (ray, point) {
             var pointToOrigin = tmpVecA.sub2(this.point, ray.origin);

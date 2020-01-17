@@ -146,8 +146,8 @@ Object.assign(pc, function () {
          * This function performs this averaging and updates the colorBuffer and the depthBuffer.
          * If autoResolve is set to true, the resolve will happen after every rendering to this render target, otherwise you can do it manually,
          * during the app update or inside a pc.Command.
-         * @param {boolean} color - Resolve color buffer
-         * @param {boolean} depth - Resolve depth buffer
+         * @param {boolean} color - Resolve color buffer.
+         * @param {boolean} depth - Resolve depth buffer.
          */
         resolve: function (color, depth) {
             if (!this._device) return;
@@ -172,10 +172,10 @@ Object.assign(pc, function () {
          * @name pc.RenderTarget#copy
          * @description Copies color and/or depth contents of source render target to this one. Formats, sizes and anti-aliasing samples must match.
          * Depth buffer can only be copied on WebGL 2.0.
-         * @param {pc.RenderTarget} source - Source render target to copy from
-         * @param {boolean} color - Copy color buffer
-         * @param {boolean} depth - Copy depth buffer
-         * @returns {boolean} true if the copy was successfull, false otherwise.
+         * @param {pc.RenderTarget} source - Source render target to copy from.
+         * @param {boolean} color - Copy color buffer.
+         * @param {boolean} depth - Copy depth buffer.
+         * @returns {boolean} True if the copy was successfull, false otherwise.
          */
         copy: function (source, color, depth) {
             if (!this._device) {
@@ -230,7 +230,7 @@ Object.assign(pc, function () {
      *     <li>pc.CUBEFACE_NEGY</li>
      *     <li>pc.CUBEFACE_POSZ</li>
      *     <li>pc.CUBEFACE_NEGZ</li>
-     * </ul>
+     * </ul>.
      */
     Object.defineProperty(RenderTarget.prototype, 'face', {
         get: function () {

@@ -8,7 +8,7 @@ Object.assign(pc, function () {
      * @augments pc.Component
      * @classdesc A ScrollViewComponent enables a group of entities to behave like a masked scrolling area, with optional horizontal and vertical scroll bars.
      * @description Create a new ScrollViewComponent.
-     * @param {pc.ScrollViewComponentSystem} system - The ComponentSystem that created this Component
+     * @param {pc.ScrollViewComponentSystem} system - The ComponentSystem that created this Component.
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {boolean} horizontal Whether to enable horizontal scrolling.
      * @property {boolean} vertical Whether to enable vertical scrolling.
@@ -17,9 +17,9 @@ Object.assign(pc, function () {
      *     <li>{@link pc.SCROLL_MODE_CLAMP}: Content does not scroll any further than its bounds.</li>
      *     <li>{@link pc.SCROLL_MODE_BOUNCE}: Content scrolls past its bounds and then gently bounces back.</li>
      *     <li>{@link pc.SCROLL_MODE_INFINITE}: Content can scroll forever.</li>
-     * </ul>
+     * </ul>.
      * @property {number} bounceAmount Controls how far the content should move before bouncing back.
-     * @property {number} friction Controls how freely the content should move if thrown, i.e. by flicking on a phone or by flinging the scroll wheel on a mouse. A value of 1 means that content will stop immediately; 0 means that content will continue moving forever (or until the bounds of the content are reached, depending on the scrollMode).
+     * @property {number} friction Controls how freely the content should move if thrown, i.e. By flicking on a phone or by flinging the scroll wheel on a mouse. A value of 1 means that content will stop immediately; 0 means that content will continue moving forever (or until the bounds of the content are reached, depending on the scrollMode).
      * @property {number} horizontalScrollbarVisibility Controls whether the horizontal scrollbar should be visible all the time, or only visible when the content exceeds the size of the viewport.
      * @property {number} verticalScrollbarVisibility Controls whether the vertical scrollbar should be visible all the time, or only visible when the content exceeds the size of the viewport.
      * @property {pc.Entity} viewportEntity The entity to be used as the masked viewport area, within which the content will scroll. This entity must have an ElementGroup component.

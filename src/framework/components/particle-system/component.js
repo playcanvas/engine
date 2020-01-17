@@ -85,9 +85,9 @@ Object.assign(pc, function () {
      * Particle rotation is specified by a single angle parameter: default billboard particles rotate around camera facing axis, while mesh particles rotate around 2 different view-independent axes.
      * Most of the simulation parameters are specified with pc.Curve or pc.CurveSet. Curves are interpolated based on each particle's lifetime, therefore parameters are able to change over time.
      * Most of the curve parameters can also be specified by 2 minimum/maximum curves, this way each particle will pick a random value in-between.
-     * @description Create a new ParticleSystemComponent
-     * @param {pc.ParticleSystemComponentSystem} system - The ComponentSystem that created this Component
-     * @param {pc.Entity} entity - The Entity this Component is attached to
+     * @description Create a new ParticleSystemComponent.
+     * @param {pc.ParticleSystemComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {pc.Entity} entity - The Entity this Component is attached to.
      * @property {boolean} autoPlay Controls whether the particle system plays automatically on creation. If set to false, it is necessary to call {@link pc.ParticleSystemComponent#play} for the particle system to play. Defaults to true.
      * @property {boolean} loop Enables or disables respawning of particles.
      * @property {boolean} preWarm If enabled, the particle system will be initialized as though it had already completed a full cycle. This only works with looping particle systems.
@@ -95,7 +95,7 @@ Object.assign(pc, function () {
      * @property {boolean} halfLambert Enabling Half Lambert lighting avoids particles looking too flat in shadowed areas. It is a completely non-physical lighting model but can give more pleasing visual results.
      * @property {boolean} alignToMotion Orient particles in their direction of motion.
      * @property {boolean} depthWrite If enabled, the particles will write to the depth buffer. If disabled, the depth buffer is left unchanged and particles will be guaranteed to overwrite one another in the order in which they are rendered.
-     * @property {boolean} noFog Disable fogging
+     * @property {boolean} noFog Disable fogging.
      * @property {boolean} localSpace Binds particles to emitter transformation rather then world space.
      * @property {number} numParticles Maximum number of simulated particles.
      * @property {number} rate Minimal interval in seconds between particle births.
@@ -774,7 +774,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ParticleSystemComponent#isPlaying
          * @description Checks if simulation is in progress.
-         * @returns {boolean} true if the particle system is currently playing and false otherwise.
+         * @returns {boolean} True if the particle system is currently playing and false otherwise.
          */
         isPlaying: function () {
             if (this.data.paused) {

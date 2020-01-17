@@ -132,7 +132,7 @@ Object.assign(pc, (function () {
          * @name pc.Quat#equals
          * @description Reports whether two quaternions are equal.
          * @param {pc.Quat} rhs - The quaternion to be compared against.
-         * @returns {boolean} true if the quaternions are equal and false otherwise.
+         * @returns {boolean} True if the quaternions are equal and false otherwise.
          * @example
          * var a = new pc.Quat();
          * var b = new pc.Quat();
@@ -151,7 +151,7 @@ Object.assign(pc, (function () {
          *  values as provided in the original parameter list
          *  OR functionally equivalent values.
          * @param {pc.Vec3} axis - The 3-dimensional vector to receive the axis of rotation.
-         * @returns {number} Angle, in degrees, of the rotation
+         * @returns {number} Angle, in degrees, of the rotation.
          * @example
          * var q = new pc.Quat();
          * q.setFromAxisAngle(new pc.Vec3(0, 1, 0), 90);

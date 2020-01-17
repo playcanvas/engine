@@ -47,9 +47,9 @@ Object.assign(pc, function () {
      *       <td>-</td>
      *   </tr>
      * </table>
-     * </p>
-     * @description Create a new CollisionComponent
-     * @param {pc.CollisionComponentSystem} system - The ComponentSystem that created this Component
+     * </p>.
+     * @description Create a new CollisionComponent.
+     * @param {pc.CollisionComponentSystem} system - The ComponentSystem that created this Component.
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {string} type The type of the collision volume. Defaults to 'box'. Can be one of the following:
      * <ul>
@@ -61,9 +61,9 @@ Object.assign(pc, function () {
      * <li><strong>cylinder</strong>: A cylinder-shaped collision volume.</li>
      * <li><strong>mesh</strong>: A collision volume that uses a model asset as its shape.</li>
      * <li><strong>sphere</strong>: A sphere-shaped collision volume.</li>
-     * </ul>
-     * @property {pc.Vec3} halfExtents The half-extents of the box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5]
-     * @property {number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision volumes. Defaults to 0.5
+     * </ul>.
+     * @property {pc.Vec3} halfExtents The half-extents of the box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5].
+     * @property {number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision volumes. Defaults to 0.5.
      * @property {number} axis The local space axis with which the capsule, cylinder or cone-shaped collision volume's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @property {number} height The total height of the capsule, cylinder or cone-shaped collision volume from tip to tip. Defaults to 2.
      * @property {pc.Asset} asset The asset for the model of the mesh collision volume - can also be an asset id.
@@ -91,7 +91,7 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.CollisionComponent#contact
-     * @description The 'contact' event is fired when a contact occurs between two rigid bodies
+     * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
      * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
      */
 

@@ -3,7 +3,7 @@ Object.assign(pc, function () {
     /**
      * @private
      * @name pc.JsonStandardMaterialParser
-     * @description Convert incoming JSON data into a {@link pc.StandardMaterial}
+     * @description Convert incoming JSON data into a {@link pc.StandardMaterial}.
      */
     var JsonStandardMaterialParser = function () {
         this._validator = null;
@@ -23,9 +23,9 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.JsonStandardMaterialParser#initialize
-     * @description  Initialize material properties from the material data block e.g. loading from server
-     * @param {pc.StandardMaterial} material - The material to be initialized
-     * @param {object} data - The data block that is used to initialize
+     * @description  Initialize material properties from the material data block e.g. Loading from server.
+     * @param {pc.StandardMaterial} material - The material to be initialized.
+     * @param {object} data - The data block that is used to initialize.
      */
     JsonStandardMaterialParser.prototype.initialize = function (material, data) {
         // usual flow is that data is validated in resource loader

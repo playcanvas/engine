@@ -15,7 +15,7 @@ Object.assign(pc, function () {
      * property set to pc.RENDERSTYLE_SOLID. The second index buffer in the array is used if renderStyle is
      * set to pc.RENDERSTYLE_WIREFRAME.
      * @property {object[]} primitive Array of primitive objects defining how vertex (and index) data in the
-     * mesh should be interpreted by the graphics device. For details on the primitive object, see
+     * mesh should be interpreted by the graphics device. For details on the primitive object, see.
      * @property {number} primitive[].type The type of primitive to render. Can be:
      * <ul>
      *     <li>{@link pc.PRIMITIVE_POINTS}</li>

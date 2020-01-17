@@ -2,8 +2,8 @@ Object.assign(pc, function () {
     /**
      * @class
      * @name pc.ComponentSystemRegistry
-     * @classdesc Store, access and delete instances of the various ComponentSystems
-     * @description Create a new ComponentSystemRegistry
+     * @classdesc Store, access and delete instances of the various ComponentSystems.
+     * @description Create a new ComponentSystemRegistry.
      */
     var ComponentSystemRegistry = function () {
         // An array of pc.ComponentSystem objects
@@ -16,7 +16,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ComponentSystemRegistry#add
          * @description Add a component system to the registry.
-         * @param {object} system - The {pc.ComponentSystem} instance
+         * @param {object} system - The {pc.ComponentSystem} instance.
          */
         add: function (system) {
             var id = system.id;
@@ -35,7 +35,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ComponentSystemRegistry#remove
          * @description Remove a component system from the registry.
-         * @param {object} system - The {pc.ComponentSystem} instance
+         * @param {object} system - The {pc.ComponentSystem} instance.
          */
         remove: function (system) {
             var id = system.id;

@@ -3,9 +3,9 @@ Object.assign(pc, function () {
      * @class
      * @name pc.ModelHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading {@link pc.Model} resources
-     * @param {pc.GraphicsDevice} device - The graphics device that will be rendering
-     * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified
+     * @classdesc Resource handler used for loading {@link pc.Model} resources.
+     * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
+     * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
      */
     var ModelHandler = function (device, defaultMaterial) {
         this._device = device;
@@ -22,7 +22,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.ModelHandler#load
-         * @description Fetch model data from a remote url
+         * @description Fetch model data from a remote url.
          * @param {string} url - The URL of the model data.
          * @param {pc.callbacks.ResourceHandler} callback - Callback function called when the load completes. The
          * callback is of the form fn(err, response), where err is a String error message in
@@ -143,8 +143,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ModelHandler#addParser
          * @description Add a parser that converts raw data into a {@link pc.Model}
-         * Default parser is for JSON models
-         * @param {object} parser - See JsonModelParser for example
+         * Default parser is for JSON models.
+         * @param {object} parser - See JsonModelParser for example.
          * @param {pc.callbacks.AddParser} decider - Function that decides on which parser to use.
          * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link pc.Model}.
          * The first parser to return true is used.

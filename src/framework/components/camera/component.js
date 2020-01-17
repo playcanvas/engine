@@ -179,8 +179,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.CameraComponent#screenToWorld
          * @description Convert a point from 2D screen space to 3D world space.
-         * @param {number} screenx - x coordinate on PlayCanvas' canvas element.
-         * @param {number} screeny - y coordinate on PlayCanvas' canvas element.
+         * @param {number} screenx - X coordinate on PlayCanvas' canvas element.
+         * @param {number} screeny - Y coordinate on PlayCanvas' canvas element.
          * @param {number} cameraz - The distance from the camera in world space to create the new point.
          * @param {pc.Vec3} [worldCoord] - 3D vector to receive world coordinate result.
          * @example
@@ -443,7 +443,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.CameraComponent#frameEnd
-         * @description End rendering the frame for this camera
+         * @description End rendering the frame for this camera.
          */
         frameEnd: function () {
             this.data.isRendering = false;
@@ -470,7 +470,7 @@ Object.assign(pc, function () {
          * @name pc.CameraComponent#enterVr
          * @variation 2
          * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
-         * @param {pc.VrDisplay} display - The VrDisplay to present. If not supplied this uses {@link pc.VrManager#display} as the default
+         * @param {pc.VrDisplay} display - The VrDisplay to present. If not supplied this uses {@link pc.VrManager#display} as the default.
          * @param {pc.callbacks.VrCamera} callback - Function called once to indicate success of failure. The callback takes one argument (err).
          * On success it returns null on failure it returns the error message.
          * @example

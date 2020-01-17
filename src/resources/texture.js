@@ -257,10 +257,10 @@ Object.assign(pc, function () {
      * @class
      * @name pc.TextureHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading 2D and 3D {@link pc.Texture} resources
-     * @param {pc.GraphicsDevice} device - The graphics device
-     * @param {pc.AssetRegistry} assets - The asset registry
-     * @param {pc.ResourceLoader} loader - The resource loader
+     * @classdesc Resource handler used for loading 2D and 3D {@link pc.Texture} resources.
+     * @param {pc.GraphicsDevice} device - The graphics device.
+     * @param {pc.AssetRegistry} assets - The asset registry.
+     * @param {pc.ResourceLoader} loader - The resource loader.
      */
     var TextureHandler = function (device, assets, loader) {
         this._device = device;

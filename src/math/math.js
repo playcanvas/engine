@@ -1,14 +1,14 @@
 /**
  * @name pc.math
  * @namespace
- * @description Math API
+ * @description Math API.
  */
 pc.math = {
     /**
      * @constant
      * @type {number}
      * @name pc.math.DEG_TO_RAD
-     * @description Conversion factor between degrees and radians
+     * @description Conversion factor between degrees and radians.
      * @example
      * // Convert 180 degrees to pi radians
      * var rad = 180 * pc.math.DEG_TO_RAD;
@@ -19,7 +19,7 @@ pc.math = {
      * @constant
      * @type {number}
      * @name pc.math.RAD_TO_DEG
-     * @description Conversion factor between degrees and radians
+     * @description Conversion factor between degrees and radians.
      * @example
      * // Convert pi radians to 180 degrees
      * var deg = Math.PI * pc.math.RAD_TO_DEG;
@@ -30,10 +30,10 @@ pc.math = {
      * @function
      * @name pc.math.clamp
      * @description Clamp a number between min and max inclusive.
-     * @param {number} value - Number to clamp
-     * @param {number} min - Min value
-     * @param {number} max - Max value
-     * @returns {number} The clamped value
+     * @param {number} value - Number to clamp.
+     * @param {number} min - Min value.
+     * @param {number} max - Max value.
+     * @returns {number} The clamped value.
      */
     clamp: function (value, min, max) {
         if (value >= max) return max;
@@ -45,7 +45,7 @@ pc.math = {
      * @function
      * @name pc.math.intToBytes24
      * @description Convert an 24 bit integer into an array of 3 bytes.
-     * @param {number} i - Number holding an integer value
+     * @param {number} i - Number holding an integer value.
      * @returns {number[]} An array of 3 bytes.
      * @example
      * // Set bytes to [0x11, 0x22, 0x33]
@@ -65,8 +65,8 @@ pc.math = {
      * @function
      * @name pc.math.intToBytes32
      * @description Convert an 32 bit integer into an array of 4 bytes.
-     * @returns {number[]} An array of 4 bytes
-     * @param {number} i - Number holding an integer value
+     * @returns {number[]} An array of 4 bytes.
+     * @param {number} i - Number holding an integer value.
      * @example
      * // Set bytes to [0x11, 0x22, 0x33, 0x44]
      * var bytes = pc.math.intToBytes32(0x11223344);
@@ -92,9 +92,9 @@ pc.math = {
      *
      * // Set result2 to 0x112233 from 3 discrete values
      * var result2 = pc.math.bytesToInt24(0x11, 0x22, 0x33);
-     * @param {number} r - A single byte (0-255)
-     * @param {number} g - A single byte (0-255)
-     * @param {number} b - A single byte (0-255)
+     * @param {number} r - A single byte (0-255).
+     * @param {number} g - A single byte (0-255).
+     * @param {number} b - A single byte (0-255).
      * @returns {number} A single unsigned 24 bit Number.
      */
     bytesToInt24: function (r, g, b) {
@@ -117,10 +117,10 @@ pc.math = {
      *
      * // Set result2 to 0x11223344 from 4 discrete values
      * var result2 = pc.math.bytesToInt32(0x11, 0x22, 0x33, 0x44);
-     * @param {number} r - A single byte (0-255)
-     * @param {number} g - A single byte (0-255)
-     * @param {number} b - A single byte (0-255)
-     * @param {number} a - A single byte (0-255)
+     * @param {number} r - A single byte (0-255).
+     * @param {number} g - A single byte (0-255).
+     * @param {number} b - A single byte (0-255).
+     * @param {number} a - A single byte (0-255).
      */
     bytesToInt32: function (r, g, b, a) {
         if (r.length) {
@@ -156,7 +156,7 @@ pc.math = {
      * @name pc.math.lerpAngle
      * @description Calculates the linear interpolation of two angles ensuring that interpolation
      * is correctly performed across the 360 to 0 degree boundary. Angles are supplied in degrees.
-     * @returns {number} The linear interpolation of two angles
+     * @returns {number} The linear interpolation of two angles.
      * @param {number} a - Angle (in degrees) to linearly interpolate from.
      * @param {number} b - Angle (in degrees) to linearly interpolate to.
      * @param {number} alpha - The value controlling the result of interpolation. When alpha is 0,
@@ -178,7 +178,7 @@ pc.math = {
      * @name pc.math.powerOfTwo
      * @description Returns true if argument is a power-of-two and false otherwise.
      * @param {number} x - Number to check for power-of-two property.
-     * @returns {boolean} true if power-of-two and false otherwise.
+     * @returns {boolean} True if power-of-two and false otherwise.
      */
     powerOfTwo: function (x) {
         return ((x !== 0) && !(x & (x - 1)));

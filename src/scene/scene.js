@@ -61,7 +61,7 @@
          * @constant
          * @type {number}
          * @name pc.BLEND_MULTIPLICATIVE2X
-         * @description Multiplies colors and doubles the result
+         * @description Multiplies colors and doubles the result.
          */
         BLEND_MULTIPLICATIVE2X: 7,
 
@@ -69,7 +69,7 @@
          * @constant
          * @type {number}
          * @name pc.BLEND_SCREEN
-         * @description Softer version of additive
+         * @description Softer version of additive.
          */
         BLEND_SCREEN: 8,
 
@@ -640,7 +640,7 @@
          * @constant
          * @type {number}
          * @name  pc.SORTMODE_CUSTOM
-         * @description Provide custom functions for sorting drawcalls and calculating distance
+         * @description Provide custom functions for sorting drawcalls and calculating distance.
          */
         SORTMODE_CUSTOM: 5,
 

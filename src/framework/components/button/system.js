@@ -22,8 +22,8 @@ Object.assign(pc, function () {
      * @name pc.ButtonComponentSystem
      * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.ButtonComponent}s.
-     * @description Create a new ButtonComponentSystem
-     * @param {pc.Application} app - The application
+     * @description Create a new ButtonComponentSystem.
+     * @param {pc.Application} app - The application.
      */
     var ButtonComponentSystem = function ButtonComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

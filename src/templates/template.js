@@ -5,9 +5,9 @@ Object.assign(pc, function () {
      * @private
      * @class
      * @name pc.Template
-     * @classdesc Create a Template resource from raw database data
-     * @param {pc.Application} app - The application
-     * @param {object} data - Asset data from the database
+     * @classdesc Create a Template resource from raw database data.
+     * @param {pc.Application} app - The application.
+     * @param {object} data - Asset data from the database.
      */
     var Template = function Template(app, data) {
         this._app = app;
@@ -23,8 +23,8 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.Template#instantiate
-     * @description Create an instance of this template
-     * @returns {pc.Entity} The root entity of the created instance
+     * @description Create an instance of this template.
+     * @returns {pc.Entity} The root entity of the created instance.
      */
     Template.prototype.instantiate = function () {
         if (!this._templateRoot) { // at first use, after scripts are loaded
@@ -42,7 +42,7 @@ Object.assign(pc, function () {
      * @description Creates, if needed, and returns an object whose entities field contains
      * expanded entity data. This output format matches the format of raw scene data.
      * @returns {object} An object whose entities field contains
-     * expanded entity data
+     * expanded entity data.
      */
     Template.prototype.getExpandedData = function () {
         if (!this._expandedData.entities) {

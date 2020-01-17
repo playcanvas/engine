@@ -11,7 +11,7 @@ Object.assign(pc, function () {
      * True means only semi-transparent objects are rendered, and false means opaque.
      * @property {boolean[]} subLayerEnabled A read-only array of boolean values, matching {@link pc.Layer#layerList}.
      * True means the layer is rendered, false means it's skipped.
-     * @property {pc.CameraComponent[]} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering, e.g. inside
+     * @property {pc.CameraComponent[]} cameras A read-only array of {@link pc.CameraComponent} that can be used during rendering, e.g. Inside
      * {@link pc.Layer#onPreCull}, {@link pc.Layer#onPostCull}, {@link pc.Layer#onPreRender}, {@link pc.Layer#onPostRender}.
      */
     // Composition can hold only 2 sublayers of each layer
@@ -610,7 +610,7 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.LayerComposition#getLayerById
-     * @description Finds a layer inside this composition by its ID. null is returned, if nothing is found.
+     * @description Finds a layer inside this composition by its ID. Null is returned, if nothing is found.
      * @param {number} id - An ID of the layer to find.
      * @returns {pc.Layer} The layer corresponding to the specified ID. Returns null if layer is not found.
      */
@@ -624,7 +624,7 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.LayerComposition#getLayerByName
-     * @description Finds a layer inside this composition by its name. null is returned, if nothing is found.
+     * @description Finds a layer inside this composition by its name. Null is returned, if nothing is found.
      * @param {string} name - The name of the layer to find.
      * @returns {pc.Layer} The layer corresponding to the specified name. Returns null if layer is not found.
      */
@@ -694,8 +694,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#sortTransparentLayers
      * @description Used to determine which array of layers has any transparent sublayer that is on top of all the transparent sublayers in the other array.
-     * @param {number[]} layersA - IDs of layers
-     * @param {number[]} layersB - IDs of layers
+     * @param {number[]} layersA - IDs of layers.
+     * @param {number[]} layersB - IDs of layers.
      * @returns {number} Returns a negative number if any of the transparent sublayers in layersA is on top of all the transparent sublayers in layersB,
      * or a positive number if any of the transparent sublayers in layersB is on top of all the transparent sublayers in layersA, or 0 otherwise.
      */
@@ -707,8 +707,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#sortOpaqueLayers
      * @description Used to determine which array of layers has any opaque sublayer that is on top of all the opaque sublayers in the other array.
-     * @param {number[]} layersA - IDs of layers
-     * @param {number[]} layersB - IDs of layers
+     * @param {number[]} layersA - IDs of layers.
+     * @param {number[]} layersB - IDs of layers.
      * @returns {number} Returns a negative number if any of the opaque sublayers in layersA is on top of all the opaque sublayers in layersB,
      * or a positive number if any of the opaque sublayers in layersB is on top of all the opaque sublayers in layersA, or 0 otherwise.
      */

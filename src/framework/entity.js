@@ -107,7 +107,7 @@ Object.assign(pc, function () {
      *   <li>"scrollview" - see {@link pc.ScrollViewComponent}</li>
      *   <li>"sound" - see {@link pc.SoundComponent}</li>
      *   <li>"sprite" - see {@link pc.SpriteComponent}</li>
-     * </ul>
+     * </ul>.
      * @param {object} [data] - The initialization data for the specific component type. Refer to each
      * specific component's API reference page for details on valid values for this parameter.
      * @returns {pc.Component} The new Component that was attached to the entity or null if there
@@ -145,7 +145,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Entity#removeComponent
      * @description Remove a component from the Entity.
-     * @param {string} type - The name of the Component type
+     * @param {string} type - The name of the Component type.
      * @example
      * var entity = new pc.Entity();
      * entity.addComponent("light"); // add new light component
@@ -211,8 +211,8 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.Entity#getGuid
-     * @description Get the GUID value for this Entity
-     * @returns {string} The GUID of the Entity
+     * @description Get the GUID value for this Entity.
+     * @returns {string} The GUID of the Entity.
      */
     Entity.prototype.getGuid = function () {
         // if the guid hasn't been set yet then set it now
@@ -231,7 +231,7 @@ Object.assign(pc, function () {
      * @description Set the GUID value for this Entity.
      *
      * N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
-     * @param {string} guid - The GUID to assign to the Entity
+     * @param {string} guid - The GUID to assign to the Entity.
      */
     Entity.prototype.setGuid = function (guid) {
         // remove current guid from entityIndex
@@ -309,8 +309,8 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.Entity#setRequest
-     * @description Used during resource loading to ensure that child resources of Entities are tracked
-     * @param {ResourceRequest} request - The request being used to load this entity
+     * @description Used during resource loading to ensure that child resources of Entities are tracked.
+     * @param {ResourceRequest} request - The request being used to load this entity.
      */
     Entity.prototype.setRequest = function (request) {
         this._request = request;
@@ -320,8 +320,8 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.Entity#getRequest
-     * @description Get the Request that is being used to load this Entity
-     * @returns {ResourceRequest} The Request
+     * @description Get the Request that is being used to load this Entity.
+     * @returns {ResourceRequest} The Request.
      */
     Entity.prototype.getRequest = function () {
         return this._request;
@@ -330,9 +330,9 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.Entity#findByGuid
-     * @description Find a descendant of this Entity with the GUID
+     * @description Find a descendant of this Entity with the GUID.
      * @param {string} guid - The GUID to search for.
-     * @returns {pc.Entity} The Entity with the GUID or null
+     * @returns {pc.Entity} The Entity with the GUID or null.
      */
     Entity.prototype.findByGuid = function (guid) {
         if (this._guid === guid) return this;
@@ -348,7 +348,7 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.Entity#destroy
-     * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
+     * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities.
      * @example
      * var firstChild = this.entity.children[0];
      * firstChild.destroy(); // delete child, all components and remove from hierarchy

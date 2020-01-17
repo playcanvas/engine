@@ -10,14 +10,14 @@ Object.assign(pc, {
      * @constant
      * @type {number}
      * @name pc.FITTING_STRETCH
-     * @description Stretch child elements to fit the parent container
+     * @description Stretch child elements to fit the parent container.
      */
     FITTING_STRETCH: 1,
     /**
      * @constant
      * @type {number}
      * @name pc.FITTING_SHRINK
-     * @description Shrink child elements to fit the parent container
+     * @description Shrink child elements to fit the parent container.
      */
     FITTING_SHRINK: 2,
     /**

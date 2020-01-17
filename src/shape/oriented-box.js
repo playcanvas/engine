@@ -9,7 +9,7 @@ Object.assign(pc, function () {
      * @name pc.OrientedBox
      * @description Create a new oriented box.
      * @classdesc Oriented Box.
-     * @property {pc.Mat4} [worldTransform] The world transform of the OBB
+     * @property {pc.Mat4} [worldTransform] The world transform of the OBB.
      * @param {pc.Mat4} [worldTransform] - Transform that has the orientation and position of the box. Scale is assumed to be one.
      * @param {pc.Vec3} [halfExtents] - Half the distance across the box in each local axis. The constructor takes a reference of this parameter.
      */
@@ -50,7 +50,7 @@ Object.assign(pc, function () {
          * @name pc.OrientedBox#containsPoint
          * @description Test if a point is inside a OBB.
          * @param {pc.Vec3} point - Point to test.
-         * @returns {boolean} true if the point is inside the OBB and false otherwise.
+         * @returns {boolean} True if the point is inside the OBB and false otherwise.
          */
         containsPoint: function (point) {
             this._modelTransform.transformPoint(point, tmpVec3);
@@ -62,7 +62,7 @@ Object.assign(pc, function () {
          * @name pc.OrientedBox#intersectsBoundingSphere
          * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this OBB.
          * @param {pc.BoundingSphere} sphere - Bounding Sphere to test.
-         * @returns {boolean} true if the Bounding Sphere is overlapping, enveloping or inside this OBB and false otherwise.
+         * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping or inside this OBB and false otherwise.
          */
         intersectsBoundingSphere: function (sphere) {
             this._modelTransform.transformPoint(sphere.center, tmpSphere.center);

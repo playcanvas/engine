@@ -12,9 +12,9 @@ Object.assign(pc, function () {
      * entities to be simulated using realistic physics.
      * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you
      * can apply forces and impulses to rigid bodies.
-     * @description Create a new RigidBodyComponent
-     * @param {pc.RigidBodyComponentSystem} system - The ComponentSystem that created this component
-     * @param {pc.Entity} entity - The entity this component is attached to
+     * @description Create a new RigidBodyComponent.
+     * @param {pc.RigidBodyComponentSystem} system - The ComponentSystem that created this component.
+     * @param {pc.Entity} entity - The entity this component is attached to.
      * @property {number} mass The mass of the body. This is only relevant for {@link pc.BODYTYPE_DYNAMIC}
      * bodies, other types have infinite mass. Defaults to 1.
      * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.
@@ -82,7 +82,7 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.RigidBodyComponent#contact
-     * @description The 'contact' event is fired when a contact occurs between two rigid bodies
+     * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
      * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
      */
 
@@ -253,8 +253,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.RigidBodyComponent#isActive
-         * @description Returns true if the rigid body is currently actively being simulated. i.e. not 'sleeping'
-         * @returns {boolean} True if the body is active
+         * @description Returns true if the rigid body is currently actively being simulated. I.e. Not 'sleeping'.
+         * @returns {boolean} True if the body is active.
          */
         isActive: function () {
             if (this.body) {
@@ -267,7 +267,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.RigidBodyComponent#activate
-         * @description Forcibly activate the rigid body simulation
+         * @description Forcibly activate the rigid body simulation.
          */
         activate: function () {
             if (this.body) {
@@ -567,8 +567,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.RigidBodyComponent#isStatic
-         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC}
-         * @returns {boolean} True if static
+         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC}.
+         * @returns {boolean} True if static.
          */
         isStatic: function () {
             return (this.type === pc.BODYTYPE_STATIC);
@@ -577,8 +577,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.RigidBodyComponent#isStaticOrKinematic
-         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC} or {@link pc.BODYTYPE_KINEMATIC}
-         * @returns {boolean} True if static or kinematic
+         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC} or {@link pc.BODYTYPE_KINEMATIC}.
+         * @returns {boolean} True if static or kinematic.
          */
         isStaticOrKinematic: function () {
             return (this.type === pc.BODYTYPE_STATIC || this.type === pc.BODYTYPE_KINEMATIC);
@@ -587,8 +587,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.RigidBodyComponent#isKinematic
-         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_KINEMATIC}
-         * @returns {boolean} True if kinematic
+         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_KINEMATIC}.
+         * @returns {boolean} True if kinematic.
          */
         isKinematic: function () {
             return (this.type === pc.BODYTYPE_KINEMATIC);

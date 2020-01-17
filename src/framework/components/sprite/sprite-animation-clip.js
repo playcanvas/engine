@@ -124,8 +124,8 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.SpriteAnimationClip#_update
-         * @param {number} dt - The delta time
-         * @description Advances the animation looping if necessary
+         * @param {number} dt - The delta time.
+         * @description Advances the animation looping if necessary.
          */
         _update: function (dt) {
             if (this.fps === 0) return;
@@ -440,7 +440,7 @@ Object.assign(pc, function () {
 /**
  * @event
  * @name pc.SpriteAnimationClip#play
- * @description Fired when the clip starts playing
+ * @description Fired when the clip starts playing.
  */
 
 /**

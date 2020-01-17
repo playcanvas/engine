@@ -42,8 +42,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.CurveSet#get
          * @description Return a specific curve in the curve set.
-         * @param {number} index - The index of the curve to return
-         * @returns {pc.Curve} The curve at the specified index
+         * @param {number} index - The index of the curve to return.
+         * @returns {pc.Curve} The curve at the specified index.
          */
         get: function (index) {
             return this.curves[index];
@@ -54,11 +54,11 @@ Object.assign(pc, (function () {
          * @name pc.CurveSet#value
          * @description Returns the interpolated value of all curves in the curve
          * set at the specified time.
-         * @param {number} time - The time at which to calculate the value
+         * @param {number} time - The time at which to calculate the value.
          * @param {number[]} [result] - The interpolated curve values at the specified time.
          * If this parameter is not supplied, the function allocates a new array internally
          * to return the result.
-         * @returns {number[]} The interpolated curve values at the specified time
+         * @returns {number[]} The interpolated curve values at the specified time.
          */
         value: function (time, result) {
             var length = this.curves.length;
@@ -76,7 +76,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.CurveSet#clone
          * @description Returns a clone of the specified curve set object.
-         * @returns {pc.CurveSet} A clone of the specified curve set
+         * @returns {pc.CurveSet} A clone of the specified curve set.
          */
         clone: function () {
             var result = new pc.CurveSet();
@@ -150,7 +150,7 @@ Object.assign(pc, (function () {
      *     <li>{@link pc.CURVE_SPLINE}</li>
      *     <li>{@link pc.CURVE_STEP}</li>
      * </ul>
-     * Defaults to {@link pc.CURVE_SMOOTHSTEP};
+     * Defaults to {@link pc.CURVE_SMOOTHSTEP}.
      */
     Object.defineProperty(CurveSet.prototype, 'type', {
         get: function () {

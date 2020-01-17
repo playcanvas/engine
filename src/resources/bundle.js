@@ -5,8 +5,8 @@ Object.assign(pc, function () {
      * @class
      * @name pc.BundleHandler
      * @implements {pc.ResourceHandler}
-     * @param {pc.AssetRegistry} assets - The asset registry
-     * @classdesc Loads Bundle Assets
+     * @param {pc.AssetRegistry} assets - The asset registry.
+     * @classdesc Loads Bundle Assets.
      */
     var BundleHandler = function (assets) {
         this._assets = assets;

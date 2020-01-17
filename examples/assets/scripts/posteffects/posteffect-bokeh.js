@@ -4,21 +4,21 @@ Object.assign(pc, function () {
     /**
      * @class
      * @name pc.BokehEffect
-     * @classdesc Implements the BokehEffect post processing effect
+     * @classdesc Implements the BokehEffect post processing effect.
      * @description Creates new instance of the post effect.
      * @augments pc.PostEffect
-     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application
-     * @property {number} maxBlur The maximum amount of blurring. Ranges from 0 to 1
-     * @property {number} aperture Bigger values create a shallower depth of field
-     * @property {number} focus Controls the focus of the effect
-     * @property {number} aspect Controls the blurring effect
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+     * @property {number} maxBlur The maximum amount of blurring. Ranges from 0 to 1.
+     * @property {number} aperture Bigger values create a shallower depth of field.
+     * @property {number} focus Controls the focus of the effect.
+     * @property {number} aspect Controls the blurring effect.
      */
     var BokehEffect = function (graphicsDevice) {
         pc.PostEffect.call(this, graphicsDevice);
 
         this.needsDepthBuffer = true;
 
-        /**
+        /*
          * Shader author: alteredq / http://alteredqualia.com/
          * Depth-of-field shader with bokeh
          * ported from GLSL shader by Martins Upitis

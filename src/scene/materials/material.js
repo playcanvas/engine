@@ -6,7 +6,7 @@ Object.assign(pc, function () {
      * @name pc.Material
      * @classdesc A material determines how a particular mesh instance is rendered. It specifies the shader and render state that is
      * set before the mesh instance is submitted to the graphics device.
-     * @description Create a new Material instance
+     * @description Create a new Material instance.
      * @property {number} alphaTest The alpha test reference value to control which fragments are written to the currently
      * active render target based on alpha value. All fragments with an alpha value of less than the alphaTest reference value
      * will be discarded. alphaTest defaults to 0 (all fragments pass).

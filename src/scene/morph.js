@@ -15,7 +15,7 @@ Object.assign(pc, function () {
      * @param {number[]} [options.indices] - A morph target doesn't have to contain a full copy of the original mesh with added deformations.
      * Instead, only deformed vertices can be stored. This array contains indices to the original mesh's vertices and must be of the same size
      * as other arrays.
-     * @param {string} [options.name] - Name
+     * @param {string} [options.name] - Name.
      * @param {pc.BoundingBox} [options.aabb] - Bounding box. Will be automatically generated, if undefined.
      */
     var MorphTarget = function (options) {
@@ -41,7 +41,7 @@ Object.assign(pc, function () {
      * @class
      * @name pc.Morph
      * @classdesc Contains a list of pc.MorphTarget, a combined AABB and some associated data.
-     * @param {pc.MoprhTarget[]} targets - A list of morph targets
+     * @param {pc.MoprhTarget[]} targets - A list of morph targets.
      */
     var Morph = function (targets) {
         this.aabb = new pc.BoundingBox();
@@ -140,8 +140,8 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Morph#addTarget
-         * @description Adds a new morph target to the list
-         * @param {pc.MoprhTarget} target - A new morph target
+         * @description Adds a new morph target to the list.
+         * @param {pc.MoprhTarget} target - A new morph target.
          */
         addTarget: function (target) {
             this._targets.push(target);
@@ -152,8 +152,8 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Morph#removeTarget
-         * @description Remove the specified morph target from the list
-         * @param {pc.MoprhTarget} target - A morph target to delete
+         * @description Remove the specified morph target from the list.
+         * @param {pc.MoprhTarget} target - A morph target to delete.
          */
         removeTarget: function (target) {
             var index = this._targets.indexOf(target);
@@ -167,9 +167,9 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Morph#getTarget
-         * @description Gets the morph target by index
+         * @description Gets the morph target by index.
          * @param {number} index - An index of morph target.
-         * @returns {pc.MorphTarget} A morph target object
+         * @returns {pc.MorphTarget} A morph target object.
          */
         getTarget: function (index) {
             return this._targets[index];
@@ -227,7 +227,7 @@ Object.assign(pc, function () {
          * @name pc.MorphInstance#getWeight
          * @description Gets current weight of the specified morph target.
          * @param {number} index - An index of morph target.
-         * @returns {number} Weight
+         * @returns {number} Weight.
          */
         getWeight: function (index) {
             return this._weights[index];
@@ -239,7 +239,7 @@ Object.assign(pc, function () {
          * @name pc.MorphInstance#setWeight
          * @description Sets weight of the specified morph target.
          * @param {number} index - An index of morph target.
-         * @param {number} weight - Weight
+         * @param {number} weight - Weight.
          */
         setWeight: function (index, weight) {
             this._weights[index] = weight;

@@ -553,7 +553,7 @@
          * @constant
          * @name pc.PIXELFORMAT_DEPTH
          * @type {number}
-         * @description A readable depth buffer format
+         * @description A readable depth buffer format.
          */
         PIXELFORMAT_DEPTH: 16,
 

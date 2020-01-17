@@ -22,7 +22,7 @@ Object.assign(pc, function () {
      * @name pc.Animation
      * @classdesc An animation is a sequence of keyframe arrays which map to the nodes of a skeletal hierarchy.
      * It controls how the nodes of the hierarchy are transformed over time.
-     * @property {string} name Human-readable name of the animation
+     * @property {string} name Human-readable name of the animation.
      * @property {number} duration Duration of the animation in seconds.
      */
     var Animation = function Animation() {
@@ -59,9 +59,9 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.Animation#getNode
-     * @description Gets a {@link pc.Node} by name
-     * @param {string} name - The name of the pc.Node
-     * @returns {pc.Node} The pc.Node with the specified name
+     * @description Gets a {@link pc.Node} by name.
+     * @param {string} name - The name of the pc.Node.
+     * @returns {pc.Node} The pc.Node with the specified name.
      */
     Animation.prototype.getNode = function (name) {
         return this._nodeDict[name];
@@ -71,7 +71,7 @@ Object.assign(pc, function () {
      * @readonly
      * @name pc.Animation#nodes
      * @type {pc.Node[]}
-     * @description A read-only property to get array of animation nodes
+     * @description A read-only property to get array of animation nodes.
      */
     Object.defineProperty(Animation.prototype, 'nodes', {
         get: function () {
@@ -84,7 +84,7 @@ Object.assign(pc, function () {
      * @deprecated
      * @function
      * @name pc.Animation#getNodes
-     * @description Gets the {@link pc.Node}s of this {@link pc.Animation}
+     * @description Gets the {@link pc.Node}s of this {@link pc.Animation}.
      * @returns {pc.Node[]} An array of nodes.
      */
     Animation.prototype.getNodes = function () {

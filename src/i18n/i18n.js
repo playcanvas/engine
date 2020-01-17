@@ -223,7 +223,7 @@ Object.assign(pc, (function () {
      * @name pc.I18n#findAvailableLocale
      * @description Returns the first available locale based on the desired locale specified. First
      * tries to find the desired locale and then tries to find an alternative locale based on the language.
-     * @param {string} desiredLocale - The desired locale e.g. en-US.
+     * @param {string} desiredLocale - The desired locale e.g. En-US.
      * @param {object} availableLocales - A dictionary where each key is an available locale.
      * @returns {string} The locale found or if no locale is available returns the default en-US locale.
      */
@@ -256,7 +256,7 @@ Object.assign(pc, (function () {
      * @name pc.I18n#getText
      * @description Returns the translation for the specified key and locale. If the locale is not specified
      * it will use the current locale.
-     * @param {string} key - The localization key
+     * @param {string} key - The localization key.
      * @param {string} [locale] - The desired locale.
      * @returns {string} The translated text. If no translations are found at all for the locale then it will return
      * the en-US translation. If no translation exists for that key then it will return the localization key.
@@ -306,8 +306,8 @@ Object.assign(pc, (function () {
      * @name pc.I18n#getPluralText
      * @description Returns the pluralized translation for the specified key, number n and locale. If the locale is not specified
      * it will use the current locale.
-     * @param {string} key - The localization key
-     * @param {number} n - The number used to determine which plural form to use. E.g. for the phrase "5 Apples" n equals 5.
+     * @param {string} key - The localization key.
+     * @param {number} n - The number used to determine which plural form to use. E.g. For the phrase "5 Apples" n equals 5.
      * @param {string} [locale] - The desired locale.
      * @returns {string} The translated text. If no translations are found at all for the locale then it will return
      * the en-US translation. If no translation exists for that key then it will return the localization key.

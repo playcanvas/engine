@@ -18,10 +18,10 @@ Object.assign(pc, function () {
          * @class
          * @name pc.SoundInstance
          * @augments pc.EventHandler
-         * @classdesc A pc.SoundInstance plays a {@link pc.Sound}
-         * @param {pc.SoundManager} manager - The sound manager
-         * @param {pc.Sound} sound - The sound to play
-         * @param {object} options - Options for the instance
+         * @classdesc A pc.SoundInstance plays a {@link pc.Sound}.
+         * @param {pc.SoundManager} manager - The sound manager.
+         * @param {pc.Sound} sound - The sound to play.
+         * @param {object} options - Options for the instance.
          * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
          * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
          * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the end or not.
@@ -33,11 +33,11 @@ Object.assign(pc, function () {
          * @param {Function} [options.onStop=null] - Function called when the instance is stopped.
          * @param {Function} [options.onEnd=null] - Function called when the instance ends.
          * @property {number} volume The volume modifier to play the sound with. In range 0-1.
-         * @property {number} pitch The pitch modifier to play the sound with. Must be larger than 0.01
+         * @property {number} pitch The pitch modifier to play the sound with. Must be larger than 0.01.
          * @property {number} startTime The start time from which the sound will start playing.
          * @property {number} currentTime Gets or sets the current time of the sound that is playing. If the value provided is bigger than the duration of the instance it will wrap from the beginning.
          * @property {number} duration The duration of the sound that the instance will play starting from startTime.
-         * @property {boolean} loop If true the instance will restart when it finishes playing
+         * @property {boolean} loop If true the instance will restart when it finishes playing.
          * @property {boolean} isPlaying Returns true if the instance is currently playing.
          * @property {boolean} isPaused Returns true if the instance is currently paused.
          * @property {boolean} isStopped Returns true if the instance is currently stopped.
@@ -118,7 +118,7 @@ Object.assign(pc, function () {
              * @function
              * @private
              * @name pc.SoundInstance#_initializeNodes
-             * @description Creates internal audio nodes and connects them
+             * @description Creates internal audio nodes and connects them.
              */
             _initializeNodes: function () {
                 // create gain node for volume control
@@ -194,7 +194,7 @@ Object.assign(pc, function () {
              * @function
              * @name pc.SoundInstance#pause
              * @description Pauses playback of sound. Call resume() to resume playback from the same position.
-             * @returns {boolean} Returns true if the sound was paused
+             * @returns {boolean} Returns true if the sound was paused.
              */
             pause: function () {
                 if (this._state !== STATE_PLAYING || !this.source)
@@ -226,7 +226,7 @@ Object.assign(pc, function () {
             /**
              * @function
              * @name pc.SoundInstance#resume
-             * @description Resumes playback of the sound. Playback resumes at the point that the audio was paused
+             * @description Resumes playback of the sound. Playback resumes at the point that the audio was paused.
              * @returns {boolean} Returns true if the sound was resumed.
              */
             resume: function () {
@@ -414,7 +414,7 @@ Object.assign(pc, function () {
             /**
              * @private
              * @function
-             * @description Creates the source for the instance
+             * @description Creates the source for the instance.
              */
 
             _createSource: function () {
@@ -1024,7 +1024,7 @@ Object.assign(pc, function () {
 /**
  * @event
  * @name pc.SoundInstance#play
- * @description Fired when the instance starts playing its source
+ * @description Fired when the instance starts playing its source.
  */
 
 /**

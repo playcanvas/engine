@@ -142,7 +142,7 @@ Object.assign(pc, (function () {
          * @name pc.Vec2#equals
          * @description Reports whether two vectors are equal.
          * @param {pc.Vec2} rhs - The vector to compare to the specified vector.
-         * @returns {boolean} true if the vectors are equal and false otherwise.
+         * @returns {boolean} True if the vectors are equal and false otherwise.
          * @example
          * var a = new pc.Vec2(1, 2);
          * var b = new pc.Vec2(4, 5);

@@ -149,7 +149,7 @@ Object.assign(pc, (function () {
      * @class
      * @name pc.Tags
      * @augments pc.EventHandler
-     * @classdesc Set of tag names
+     * @classdesc Set of tag names.
      * @description Create an instance of a Tags.
      * @param {object} [parent] - Parent object who tags belong to.
      * Note: Tags are used as addition of `pc.Entity` and `pc.Asset` as `tags` field.
@@ -174,7 +174,7 @@ Object.assign(pc, (function () {
      * @name pc.Tags#change
      * @param {object} [parent] - Parent object who tags belong to.
      * @description Fires when tags been added / removed.
-     * It will fire once on bulk changes, while `add`/`remove` will fire on each tag operation
+     * It will fire once on bulk changes, while `add`/`remove` will fire on each tag operation.
      */
 
     var Tags = function (parent) {
@@ -192,8 +192,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Tags#add
          * @description Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
-         * @param {string} name - Name of a tag, or array of tags
-         * @returns {boolean} true if any tag were added
+         * @param {string} name - Name of a tag, or array of tags.
+         * @returns {boolean} True if any tag were added.
          * @example
          * tags.add('level-1');
          * @example
@@ -231,8 +231,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Tags#remove
          * @description Remove tag.
-         * @param {string} name - Name of a tag or array of tags
-         * @returns {boolean} true if any tag were removed
+         * @param {string} name - Name of a tag or array of tags.
+         * @returns {boolean} True if any tag were removed.
          * @example
          * tags.remove('level-1');
          * @example
@@ -300,8 +300,8 @@ Object.assign(pc, (function () {
          * When an array is provided it will check if tags contain each tag within the array.
          * If any of comma separated argument is satisfied, then it will return true.
          * Any number of combinations are valid, and order is irrelevant.
-         * @param {string} name - of tag, or array of names
-         * @returns {boolean} true if filters are satisfied
+         * @param {string} name - Of tag, or array of names.
+         * @returns {boolean} True if filters are satisfied.
          * @example
          * tags.has('player'); // player
          * @example
@@ -352,8 +352,8 @@ Object.assign(pc, (function () {
         /**
          * @function
          * @name pc.Tags#list
-         * @description Returns immutable array of tags
-         * @returns {string[]} copy of tags array
+         * @description Returns immutable array of tags.
+         * @returns {string[]} Copy of tags array.
          */
         list: function () {
             return this._list.slice(0);
@@ -403,7 +403,7 @@ Object.assign(pc, (function () {
      * @readonly
      * @name pc.Tags#size
      * @type {number}
-     * @description Number of tags in set
+     * @description Number of tags in set.
      */
     Object.defineProperty(Tags.prototype, 'size', {
         get: function () {

@@ -7,9 +7,9 @@ Object.assign(pc, function () {
      * @class
      * @name pc.LayoutGroupComponentSystem
      * @augments pc.ComponentSystem
-     * @description Create a new LayoutGroupComponentSystem
+     * @description Create a new LayoutGroupComponentSystem.
      * @classdesc Manages creation of {@link pc.LayoutGroupComponent}s.
-     * @param {pc.Application} app - The application
+     * @param {pc.Application} app - The application.
      */
     var LayoutGroupComponentSystem = function LayoutGroupComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

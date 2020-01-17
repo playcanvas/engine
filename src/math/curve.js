@@ -53,8 +53,8 @@ Object.assign(pc, (function () {
      * curve is defined by its type that specifies an interpolation scheme for the keys.
      * @description Creates a new curve.
      * @param {number[]} [data] - An array of keys (pairs of numbers with the time first and
-     * value second)
-     * @property {number} length The number of keys in the curve. [read only]
+     * value second).
+     * @property {number} length The number of keys in the curve. [read only].
      * @property {number} type The curve interpolation scheme. Can be:
      * <ul>
      *     <li>{@link pc.CURVE_LINEAR}</li>
@@ -62,7 +62,7 @@ Object.assign(pc, (function () {
      *     <li>{@link pc.CURVE_SPLINE}</li>
      *     <li>{@link pc.CURVE_STEP}</li>
      * </ul>
-     * Defaults to {@link pc.CURVE_SMOOTHSTEP};
+     * Defaults to {@link pc.CURVE_SMOOTHSTEP}.
      */
     var Curve = function (data) {
         this.keys = [];
@@ -84,9 +84,9 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Curve#add
          * @description Add a new key to the curve.
-         * @param {number} time - Time to add new key
-         * @param {number} value - Value of new key
-         * @returns {number[]} [time, value] pair
+         * @param {number} time - Time to add new key.
+         * @param {number} value - Value of new key.
+         * @returns {number[]} [time, value] pair.
          */
         add: function (time, value) {
             var keys = this.keys;
@@ -108,8 +108,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Curve#get
          * @description Return a specific key.
-         * @param {number} index - The index of the key to return
-         * @returns {number[]} The key at the specified index
+         * @param {number} index - The index of the key to return.
+         * @returns {number[]} The key at the specified index.
          */
         get: function (index) {
             return this.keys[index];
@@ -130,8 +130,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Curve#value
          * @description Returns the interpolated value of the curve at specified time.
-         * @param {number} time - The time at which to calculate the value
-         * @returns {number} The interpolated value
+         * @param {number} time - The time at which to calculate the value.
+         * @returns {number} The interpolated value.
          */
         value: function (time) {
             // we for the evaluation because keys may have changed since the last evaluate
@@ -162,7 +162,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Curve#clone
          * @description Returns a clone of the specified curve object.
-         * @returns {pc.Curve} A clone of the specified curve
+         * @returns {pc.Curve} A clone of the specified curve.
          */
         clone: function () {
             var result = new pc.Curve();
@@ -176,7 +176,7 @@ Object.assign(pc, (function () {
          * @private
          * @function
          * @name pc.Curve#quantize
-         * @description Sample the curve at regular intervals over the range [0..1]
+         * @description Sample the curve at regular intervals over the range [0..1].
          * @param {number} precision - The number of samples to return.
          * @returns {Float32Array} The set of quantized values.
          */

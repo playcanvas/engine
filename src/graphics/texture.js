@@ -568,14 +568,14 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Texture.calcGpuSize
-         * @description Calculate the GPU memory required for a texture
-         * @param {number} [width] - Texture's width
-         * @param {number} [height] - Texture's height
-         * @param {number} [depth] - Texture's depth
-         * @param {number} [format] - Texture's pixel format (pc.PIXELFORMAT_***)
-         * @param {boolean} [mipmaps] - True if the texture includes mipmaps, false otherwise
-         * @param {boolean} [cubemap] - True is the texture is a cubemap, false otherwise
-         * @returns {number} The amount of GPU memory required for the texture, in bytes
+         * @description Calculate the GPU memory required for a texture.
+         * @param {number} [width] - Texture's width.
+         * @param {number} [height] - Texture's height.
+         * @param {number} [depth] - Texture's depth.
+         * @param {number} [format] - Texture's pixel format (pc.PIXELFORMAT_***).
+         * @param {boolean} [mipmaps] - True if the texture includes mipmaps, false otherwise.
+         * @param {boolean} [cubemap] - True is the texture is a cubemap, false otherwise.
+         * @returns {number} The amount of GPU memory required for the texture, in bytes.
          */
         calcGpuSize: function (width, height, depth, format, mipmaps, cubemap) {
             if (!_pixelSizeTable) {

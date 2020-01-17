@@ -32,13 +32,13 @@ Object.assign(pc, function () {
      * @name pc.SpriteComponent
      * @augments pc.Component
      * @classdesc Enables an Entity to render a simple static sprite or sprite animations.
-     * @param {pc.SpriteComponentSystem} system - The ComponentSystem that created this Component
+     * @param {pc.SpriteComponentSystem} system - The ComponentSystem that created this Component.
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {string} type The type of the SpriteComponent. Can be one of the following:
      * <ul>
      *     <li>pc.SPRITETYPE_SIMPLE: The component renders a single frame from a sprite asset.
      *     <li>pc.SPRITETYPE_ANIMATED: The component can play sprite animation clips.
-     * </ul>
+     * </ul>.
      * @property {number} frame The frame counter of the sprite. Specifies which frame from the current sprite asset to render.
      * @property {number} spriteAsset The id of the sprite asset to render. Only works for {@link pc.SPRITETYPE_SIMPLE} types.
      * @property {pc.Sprite} sprite The current sprite.
@@ -897,41 +897,41 @@ Object.assign(pc, function () {
 /**
  * @event
  * @name pc.SpriteComponent#play
- * @description Fired when an animation clip starts playing
- * @param {pc.SpriteAnimationClip} clip - The clip that started playing
+ * @description Fired when an animation clip starts playing.
+ * @param {pc.SpriteAnimationClip} clip - The clip that started playing.
  */
 
 /**
  * @event
  * @name pc.SpriteComponent#pause
  * @description Fired when an animation clip is paused.
- * @param {pc.SpriteAnimationClip} clip - The clip that was paused
+ * @param {pc.SpriteAnimationClip} clip - The clip that was paused.
  */
 
 /**
  * @event
  * @name pc.SpriteComponent#resume
  * @description Fired when an animation clip is resumed.
- * @param {pc.SpriteAnimationClip} clip - The clip that was resumed
+ * @param {pc.SpriteAnimationClip} clip - The clip that was resumed.
  */
 
 /**
  * @event
  * @name pc.SpriteComponent#stop
  * @description Fired when an animation clip is stopped.
- * @param {pc.SpriteAnimationClip} clip - The clip that was stopped
+ * @param {pc.SpriteAnimationClip} clip - The clip that was stopped.
  */
 
 /**
  * @event
  * @name pc.SpriteComponent#end
  * @description Fired when an animation clip stops playing because it reached its ending.
- * @param {pc.SpriteAnimationClip} clip - The clip that ended
+ * @param {pc.SpriteAnimationClip} clip - The clip that ended.
  */
 
 /**
  * @event
  * @name pc.SpriteComponent#loop
  * @description Fired when an animation clip reached the end of its current loop.
- * @param {pc.SpriteAnimationClip} clip - The clip
+ * @param {pc.SpriteAnimationClip} clip - The clip.
  */

@@ -60,7 +60,7 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.Skeleton#addTime
-     * @description Progresses the animation assigned to the specified skeleton by the
+     * @description Progresses The animation assigned to The specified skeleton by The
      * supplied time delta. If the delta takes the animation passed its end point, if
      * the skeleton is set to loop, the animation will continue from the beginning.
      * Otherwise, the animation's current time will remain at its duration (i.e. the

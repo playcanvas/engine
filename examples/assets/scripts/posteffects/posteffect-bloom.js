@@ -54,11 +54,11 @@ Object.assign(pc, function () {
     /**
      * @class
      * @name pc.BloomEffect
-     * @classdesc Implements the BloomEffect post processing effect
+     * @classdesc Implements the BloomEffect post processing effect.
      * @description Creates new instance of the post effect.
      * @augments pc.PostEffect
-     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application
-     * @property {number} bloomThreshold Only pixels brighter then this threshold will be processed. Ranges from 0 to 1
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+     * @property {number} bloomThreshold Only pixels brighter then this threshold will be processed. Ranges from 0 to 1.
      * @property {number} blurAmount Controls the amount of blurring.
      * @property {number} bloomIntensity The intensity of the effect.
      */

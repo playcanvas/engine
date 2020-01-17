@@ -63,8 +63,8 @@ Object.assign(pc, function () {
      * @class
      * @name pc.ParticleSystemComponentSystem
      * @augments pc.ComponentSystem
-     * @classdesc Allows an Entity to render a particle system
-     * @description Create a new ParticleSystemComponentSystem
+     * @classdesc Allows an Entity to render a particle system.
+     * @description Create a new ParticleSystemComponentSystem.
      * @param {pc.Application} app - The Application.
      */
     var ParticleSystemComponentSystem = function ParticleSystemComponentSystem(app) {

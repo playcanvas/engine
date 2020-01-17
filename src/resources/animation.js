@@ -5,7 +5,7 @@ Object.assign(pc, function () {
      * @class
      * @name pc.AnimationHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading {@link pc.Animation} resources
+     * @classdesc Resource handler used for loading {@link pc.Animation} resources.
      */
     var AnimationHandler = function () {
         this.retryRequests = false;

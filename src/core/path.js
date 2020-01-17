@@ -1,6 +1,6 @@
 /**
  * @namespace pc.path
- * @description File path API
+ * @description File path API.
  */
 pc.path = function () {
     return {
@@ -8,7 +8,7 @@ pc.path = function () {
          * @constant
          * @type {string}
          * @name pc.path.delimiter
-         * @description The character that separates path segments
+         * @description The character that separates path segments.
          */
         delimiter: "/",
         /**
@@ -48,9 +48,9 @@ pc.path = function () {
         /**
          * @function
          * @name  pc.path.normalize
-         * @description  Normalize the path by removing '.' and '..' instances
-         * @param  {string} path - The path to normalize
-         * @returns {string} The normalized path
+         * @description  Normalize the path by removing '.' and '..' instances.
+         * @param  {string} path - The path to normalize.
+         * @returns {string} The normalized path.
          */
         normalize: function (path) {
             var lead = path.startsWith(pc.path.delimiter);
@@ -91,7 +91,7 @@ pc.path = function () {
          * @function
          * @name pc.path.split
          * @description Split the pathname path into a pair [head, tail] where tail is the final part of the path
-         * after the last delimiter and head is everything leading up to that. tail will never contain a slash
+         * after the last delimiter and head is everything leading up to that. tail will never contain a slash.
          * @param {string} path - The path to split.
          * @returns {string[]} The split path which is an array of two strings, the path and the filename.
          */
@@ -121,7 +121,7 @@ pc.path = function () {
          * @function
          * @name pc.path.getDirectory
          * @description Get the directory name from the path. This is everything up to the final instance of pc.path.delimiter.
-         * @param {string} path - The path to get the directory from
+         * @param {string} path - The path to get the directory from.
          * @returns {string} The directory part of the path.
          */
         getDirectory: function (path) {
@@ -168,7 +168,7 @@ pc.path = function () {
         /**
          * @function
          * @name pc.path.extractPath
-         * @description Return the path without file name. if path is relative path, start with period.
+         * @description Return the path without file name. If path is relative path, start with period.
          * @param {string} s - The full path to process.
          * @returns {string} The path without a last element from list split by slash.
          * @example

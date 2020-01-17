@@ -15,7 +15,7 @@ Object.assign(pc, function () {
      * Defines basic surface color (aka albedo).
      * @property {boolean} diffuseTint Multiply diffuse map and/or diffuse vertex color by the constant diffuse value.
      * @property {pc.Texture|null} diffuseMap The diffuse map of the material (default is null).
-     * @property {number} diffuseMapUv Diffuse map UV channel
+     * @property {number} diffuseMapUv Diffuse map UV channel.
      * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the diffuse map.
      * @property {pc.Vec2} diffuseMapOffset Controls the 2D offset of the diffuse map. Each component is between 0 and 1.
      * @property {string} diffuseMapChannel Color channels of the diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
@@ -27,7 +27,7 @@ Object.assign(pc, function () {
      * Defines surface reflection/specular color. Affects specular intensity and tint.
      * @property {boolean} specularTint Multiply specular map and/or specular vertex color by the constant specular value.
      * @property {pc.Texture|null} specularMap The specular map of the material (default is null).
-     * @property {number} specularMapUv Specular map UV channel
+     * @property {number} specularMapUv Specular map UV channel.
      * @property {pc.Vec2} specularMapTiling Controls the 2D tiling of the specular map.
      * @property {pc.Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
      * @property {string} specularMapChannel Color channels of the specular map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
@@ -41,7 +41,7 @@ Object.assign(pc, function () {
      * With metaless == 1, the pixel is fully metallic, and diffuse color is used as specular color instead.
      * @property {number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1 (metal).
      * @property {pc.Texture|null} metalnessMap Monochrome metalness map (default is null).
-     * @property {number} metalnessMapUv Metalness map UV channel
+     * @property {number} metalnessMapUv Metalness map UV channel.
      * @property {pc.Vec2} metalnessMapTiling Controls the 2D tiling of the metalness map.
      * @property {pc.Vec2} metalnessMapOffset Controls the 2D offset of the metalness map. Each component is between 0 and 1.
      * @property {string} metalnessMapChannel Color channel of the metalness map to use. Can be "r", "g", "b" or "a".
@@ -52,7 +52,7 @@ Object.assign(pc, function () {
      * A higher shininess value results in a more focused specular highlight.
      * Glossiness map/vertex colors are always multiplied by this value (normalized to 0 - 1 range), or it is used directly as constant output.
      * @property {pc.Texture|null} glossMap Glossiness map (default is null). If specified, will be multiplied by normalized 'shininess' value and/or vertex colors.
-     * @property {number} glossMapUv Gloss map UV channel
+     * @property {number} glossMapUv Gloss map UV channel.
      * @property {string} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
      * @property {pc.Vec2} glossMapOffset Controls the 2D offset of the gloss map. Each component is between 0 and 1.
@@ -60,7 +60,7 @@ Object.assign(pc, function () {
      * @property {string} glossVertexColorChannel Vertex color channel to use for glossiness. Can be "r", "g", "b" or "a".
      *
      * @property {number} refraction Defines the visibility of refraction. Material can refract the same cube map as used for reflections.
-     * @property {number} refractionIndex Defines the index of refraction, i.e. the amount of distortion.
+     * @property {number} refractionIndex Defines the index of refraction, i.e. The amount of distortion.
      * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of it's own surface.
      * In most situations outer medium is air, so outerIor will be approximately 1. Then you only need to do (1.0 / surfaceIor).
      *
@@ -81,7 +81,7 @@ Object.assign(pc, function () {
      * set the {@link pc.Material#blendType} to pc.BLEND_NORMAL, pc.BLEND_ADDITIVE or any other mode.
      * Also note that for most semi-transparent objects you want {@link pc.Material#depthWrite} to be false, otherwise they can fully occlude objects behind them.
      * @property {pc.Texture|null} opacityMap The opacity map of the material (default is null).
-     * @property {number} opacityMapUv Opacity map UV channel
+     * @property {number} opacityMapUv Opacity map UV channel.
      * @property {string} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
      * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
@@ -90,7 +90,7 @@ Object.assign(pc, function () {
      *
      * @property {pc.Texture|null} normalMap The normal map of the material (default is null).
      * The texture must contains normalized, tangent space normals.
-     * @property {number} normalMapUv Normal map UV channel
+     * @property {number} normalMapUv Normal map UV channel.
      * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
      * @property {pc.Vec2} normalMapOffset Controls the 2D offset of the normal map. Each component is between 0 and 1.
      * @property {number} bumpiness The bumpiness of the material. This value scales the assigned normal map.
@@ -99,7 +99,7 @@ Object.assign(pc, function () {
      * @property {pc.Texture|null} heightMap The height map of the material (default is null). Used for a view-dependent parallax effect.
      * The texture must represent the height of the surface where darker pixels are lower and lighter pixels are higher.
      * It is recommended to use it together with a normal map.
-     * @property {number} heightMapUv Height map UV channel
+     * @property {number} heightMapUv Height map UV channel.
      * @property {string} heightMapChannel Color channel of the height map to use. Can be "r", "g", "b" or "a".
      * @property {pc.Vec2} heightMapTiling Controls the 2D tiling of the height map.
      * @property {pc.Vec2} heightMapOffset Controls the 2D offset of the height map. Each component is between 0 and 1.

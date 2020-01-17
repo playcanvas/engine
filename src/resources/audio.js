@@ -29,8 +29,8 @@ Object.assign(pc, function () {
      * @class
      * @name pc.AudioHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading {@link pc.Sound} resources
-     * @param {pc.SoundManager} manager - The sound manager
+     * @classdesc Resource handler used for loading {@link pc.Sound} resources.
+     * @param {pc.SoundManager} manager - The sound manager.
      */
     var AudioHandler = function (manager) {
         this.manager = manager;
@@ -100,11 +100,11 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.SoundHandler._createSound
-         * @description Loads an audio asset using an AudioContext by URL and calls success or error with the created resource or error respectively
-         * @param {string} url - The url of the audio asset
+         * @description Loads an audio asset using an AudioContext by URL and calls success or error with the created resource or error respectively.
+         * @param {string} url - The url of the audio asset.
          * @param {Function} success - Function to be called if the audio asset was loaded or if we
          * just want to continue without errors even if the audio is not loaded.
-         * @param {Function} error - Function to be called if there was an error while loading the audio asset
+         * @param {Function} error - Function to be called if there was an error while loading the audio asset.
          */
         AudioHandler.prototype._createSound = function (url, success, error) {
             var manager = this.manager;
@@ -138,11 +138,11 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.SoundHandler._createSound
-         * @description Loads an audio asset using an Audio element by URL and calls success or error with the created resource or error respectively
-         * @param {string} url - The url of the audio asset
+         * @description Loads an audio asset using an Audio element by URL and calls success or error with the created resource or error respectively.
+         * @param {string} url - The url of the audio asset.
          * @param {Function} success - Function to be called if the audio asset was loaded or if we
          * just want to continue without errors even if the audio is not loaded.
-         * @param {Function} error - Function to be called if there was an error while loading the audio asset
+         * @param {Function} error - Function to be called if there was an error while loading the audio asset.
          */
         AudioHandler.prototype._createSound = function (url, success, error) {
             var audio = null;

@@ -147,9 +147,9 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.GraphicsDevice#resizecanvas
-     * @description The 'resizecanvas' event is fired when the canvas is resized
-     * @param {number} width - The new width of the canvas in pixels
-     * @param {number} height - The new height of the canvas in pixels
+     * @description The 'resizecanvas' event is fired when the canvas is resized.
+     * @param {number} width - The new width of the canvas in pixels.
+     * @param {number} height - The new height of the canvas in pixels.
      */
 
     /**
@@ -164,9 +164,9 @@ Object.assign(pc, function () {
      * @param {HTMLCanvasElement} canvas - The canvas to which the graphics device will render.
      * @param {object} [options] - Options passed when creating the WebGL context. More info {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext here}.
      * @property {HTMLCanvasElement} canvas The canvas DOM element that provides the underlying WebGL context used by the graphics device.
-     * @property {boolean} textureFloatRenderable Determines if 32-bit floating-point textures can be used as frame buffer. [read only]
-     * @property {boolean} textureHalfFloatRenderable Determines if 16-bit floating-point textures can be used as frame buffer. [read only]
-     * @property {pc.ScopeSpace} scope The scope namespace for shader attributes and variables. [read only]
+     * @property {boolean} textureFloatRenderable Determines if 32-bit floating-point textures can be used as frame buffer. [read only].
+     * @property {boolean} textureHalfFloatRenderable Determines if 16-bit floating-point textures can be used as frame buffer. [read only].
+     * @property {pc.ScopeSpace} scope The scope namespace for shader attributes and variables. [read only].
      */
     var GraphicsDevice = function (canvas, options) {
         pc.EventHandler.call(this);
@@ -2259,7 +2259,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#getDepthTest
          * @description Queries whether depth testing is enabled.
-         * @returns {boolean} true if depth testing is enabled and false otherwise.
+         * @returns {boolean} True if depth testing is enabled and false otherwise.
          * @example
          * var depthTest = device.getDepthTest();
          * console.log('Depth testing is ' + depthTest ? 'enabled' : 'disabled');
@@ -2273,7 +2273,7 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setDepthTest
          * @description Enables or disables depth testing of fragments. Once this state
          * is set, it persists until it is changed. By default, depth testing is enabled.
-         * @param {boolean} depthTest - true to enable depth testing and false otherwise.
+         * @param {boolean} depthTest - True to enable depth testing and false otherwise.
          * @example
          * device.setDepthTest(true);
          */
@@ -2315,7 +2315,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#getDepthWrite
          * @description Queries whether writes to the depth buffer are enabled.
-         * @returns {boolean} true if depth writing is enabled and false otherwise.
+         * @returns {boolean} True if depth writing is enabled and false otherwise.
          * @example
          * var depthWrite = device.getDepthWrite();
          * console.log('Depth writing is ' + depthWrite ? 'enabled' : 'disabled');
@@ -2329,7 +2329,7 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setDepthWrite
          * @description Enables or disables writes to the depth buffer. Once this state
          * is set, it persists until it is changed. By default, depth writes are enabled.
-         * @param {boolean} writeDepth - true to enable depth writing and false otherwise.
+         * @param {boolean} writeDepth - True to enable depth writing and false otherwise.
          * @example
          * device.setDepthWrite(true);
          */
@@ -2346,10 +2346,10 @@ Object.assign(pc, function () {
          * @description Enables or disables writes to the color buffer. Once this state
          * is set, it persists until it is changed. By default, color writes are enabled
          * for all color channels.
-         * @param {boolean} writeRed - true to enable writing of the red channel and false otherwise.
-         * @param {boolean} writeGreen - true to enable writing of the green channel and false otherwise.
-         * @param {boolean} writeBlue - true to enable writing of the blue channel and false otherwise.
-         * @param {boolean} writeAlpha - true to enable writing of the alpha channel and false otherwise.
+         * @param {boolean} writeRed - True to enable writing of the red channel and false otherwise.
+         * @param {boolean} writeGreen - True to enable writing of the green channel and false otherwise.
+         * @param {boolean} writeBlue - True to enable writing of the blue channel and false otherwise.
+         * @param {boolean} writeAlpha - True to enable writing of the alpha channel and false otherwise.
          * @example
          * // Just write alpha into the frame buffer
          * device.setColorWrite(false, false, false, true);
@@ -2391,7 +2391,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphicsDevice#setTransformFeedbackBuffer
          * @description Sets the output vertex buffer. It will be written to by a shader with transform feedback varyings.
-         * @param {pc.VertexBuffer} tf - The output vertex buffer
+         * @param {pc.VertexBuffer} tf - The output vertex buffer.
          */
         setTransformFeedbackBuffer: function (tf) {
             if (this.transformFeedbackBuffer === tf)
@@ -2588,8 +2588,8 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setStencilOperation
          * @description Configures how stencil buffer values should be modified based on the result
          * of depth/stencil tests. Works for both front and back faces.
-         * @param {number} fail - Action to take if stencil test is failed
-         * @param {number} zfail - Action to take if depth test is failed
+         * @param {number} fail - Action to take if stencil test is failed.
+         * @param {number} zfail - Action to take if depth test is failed.
          * @param {number} zpass - Action to take if both depth and stencil test are passed
          * All arguments can be:
          * <ul>
@@ -2624,8 +2624,8 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setStencilOperationFront
          * @description Configures how stencil buffer values should be modified based on the result
          * of depth/stencil tests. Works for front faces.
-         * @param {number} fail - Action to take if stencil test is failed
-         * @param {number} zfail - Action to take if depth test is failed
+         * @param {number} fail - Action to take if stencil test is failed.
+         * @param {number} zfail - Action to take if depth test is failed.
          * @param {number} zpass - Action to take if both depth and stencil test are passed
          * All arguments can be:
          * <ul>
@@ -2658,8 +2658,8 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setStencilOperationBack
          * @description Configures how stencil buffer values should be modified based on the result
          * of depth/stencil tests. Works for back faces.
-         * @param {number} fail - Action to take if stencil test is failed
-         * @param {number} zfail - Action to take if depth test is failed
+         * @param {number} fail - Action to take if stencil test is failed.
+         * @param {number} zfail - Action to take if depth test is failed.
          * @param {number} zpass - Action to take if both depth and stencil test are passed
          * All arguments can be:
          * <ul>
@@ -3080,7 +3080,7 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setShader
          * @description Sets the active shader to be used during subsequent draw calls.
          * @param {pc.Shader} shader - The shader to set to assign to the device.
-         * @returns {boolean} true if the shader was successfully set, false otherwise.
+         * @returns {boolean} True if the shader was successfully set, false otherwise.
          */
         setShader: function (shader) {
             if (shader !== this.shader) {
@@ -3175,7 +3175,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#clearShaderCache
-         * @description Frees memory from all shaders ever allocated with this device
+         * @description Frees memory from all shaders ever allocated with this device.
          */
         clearShaderCache: function () {
             var gl = this.gl;
@@ -3245,7 +3245,7 @@ Object.assign(pc, function () {
     /**
      * @name pc.GraphicsDevice#fullscreen
      * @type {boolean}
-     * @description Fullscreen mode
+     * @description Fullscreen mode.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'fullscreen', {
         get: function () {
@@ -3265,7 +3265,7 @@ Object.assign(pc, function () {
      * @private
      * @name pc.GraphicsDevice#enableAutoInstancing
      * @type {boolean}
-     * @description Automatic instancing
+     * @description Automatic instancing.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'enableAutoInstancing', {
         get: function () {
@@ -3279,7 +3279,7 @@ Object.assign(pc, function () {
     /**
      * @name pc.GraphicsDevice#maxPixelRatio
      * @type {number}
-     * @description Maximum pixel ratio
+     * @description Maximum pixel ratio.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'maxPixelRatio', {
         get: function () {
@@ -3295,7 +3295,7 @@ Object.assign(pc, function () {
      * @readonly
      * @name pc.GraphicsDevice#textureFloatHighPrecision
      * @type {number}
-     * @description Check if high precision floating-point textures are supported
+     * @description Check if high precision floating-point textures are supported.
      */
     Object.defineProperty(GraphicsDevice.prototype, 'textureFloatHighPrecision', {
         get: function () {

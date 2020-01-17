@@ -10,8 +10,8 @@ Object.assign(pc, function () {
          * @name pc.Channel
          * @classdesc A channel is created when the pc.AudioManager begins playback of a pc.Sound. Usually created internally by
          * pc.AudioManager#playSound or pc.AudioManager#playSound3d. Developers usually won't have to create Channels manually.
-         * @param {pc.AudioManager} manager - The AudioManager instance
-         * @param {pc.Sound} sound - The sound to playback
+         * @param {pc.AudioManager} manager - The AudioManager instance.
+         * @param {pc.Sound} sound - The sound to playback.
          * @param {object} [options] - Optional options object.
          * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
          * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
@@ -43,7 +43,7 @@ Object.assign(pc, function () {
              * @private
              * @function
              * @name pc.Channel#play
-             * @description Begin playback of sound
+             * @description Begin playback of sound.
              */
             play: function () {
                 if (this.source) {
@@ -77,7 +77,7 @@ Object.assign(pc, function () {
              * @private
              * @function
              * @name pc.Channel#pause
-             * @description Pause playback of sound. Call unpause() to resume playback from the same position
+             * @description Pause playback of sound. Call unpause() to resume playback from the same position.
              */
             pause: function () {
                 if (this.source) {
@@ -93,7 +93,7 @@ Object.assign(pc, function () {
              * @private
              * @function
              * @name pc.Channel#unpause
-             * @description Resume playback of the sound. Playback resumes at the point that the audio was paused
+             * @description Resume playback of the sound. Playback resumes at the point that the audio was paused.
              */
             unpause: function () {
                 if (this.source || !this.paused) {
@@ -139,7 +139,7 @@ Object.assign(pc, function () {
              * @function
              * @name pc.Channel#setLoop
              * @description Enable/disable the loop property to make the sound restart from the beginning when it reaches the end.
-             * @param {boolean} loop - true to loop the sound, false otherwise.
+             * @param {boolean} loop - True to loop the sound, false otherwise.
              */
             setLoop: function (loop) {
                 this.loop = loop;
@@ -311,7 +311,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Channel#getLoop
-         * @description Get the current looping state of the Channel
+         * @description Get the current looping state of the Channel.
          * @returns {boolean} The loop property for the channel.
          */
         getLoop: function () {
@@ -322,7 +322,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Channel#getPitch
-         * @description Get the current pitch of the Channel
+         * @description Get the current pitch of the Channel.
          * @returns {number} The pitch of the channel.
          */
         getPitch: function () {

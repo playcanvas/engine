@@ -139,8 +139,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Camera#screenToWorld
          * @description Convert a point from 2D canvas pixel space to 3D world space.
-         * @param {number} x - x coordinate on PlayCanvas' canvas element.
-         * @param {number} y - y coordinate on PlayCanvas' canvas element.
+         * @param {number} x - X coordinate on PlayCanvas' canvas element.
+         * @param {number} y - Y coordinate on PlayCanvas' canvas element.
          * @param {number} z - The distance from the camera in world space to create the new point.
          * @param {number} cw - The width of PlayCanvas' canvas element.
          * @param {number} ch - The height of PlayCanvas' canvas element.
@@ -321,7 +321,7 @@ Object.assign(pc, function () {
      * <ul>
      *     <li>{@link pc.PROJECTION_PERSPECTIVE}</li>
      *     <li>{@link pc.PROJECTION_ORTHOGRAPHIC}</li>
-     * </ul>
+     * </ul>.
      */
     Object.defineProperty(Camera.prototype, 'projection', {
         get: function () {
@@ -339,7 +339,7 @@ Object.assign(pc, function () {
      * @private
      * @name pc.Camera#nearClip
      * @type {number}
-     * @description Camera's distance to near clipping plane
+     * @description Camera's distance to near clipping plane.
      */
     Object.defineProperty(Camera.prototype, 'nearClip', {
         get: function () {
@@ -357,7 +357,7 @@ Object.assign(pc, function () {
      * @private
      * @name pc.Camera#farClip
      * @type {number}
-     * @description Camera's distance to far clipping plane
+     * @description Camera's distance to far clipping plane.
      */
     Object.defineProperty(Camera.prototype, 'farClip', {
         get: function () {

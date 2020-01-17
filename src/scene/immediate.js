@@ -175,7 +175,7 @@ Object.assign(pc.Application.prototype, function () {
      * @param {pc.Vec3} end - The end world-space coordinate of the line.
      * @param {pc.Color} color - The start color of the line.
      * @param {pc.Color} [endColor] - The end color of the line.
-     * @param {object} [options] - Options to set rendering properties
+     * @param {object} [options] - Options to set rendering properties.
      * @param {pc.Layer} [options.layer] - The layer to render the line into. Defaults
      * to {@link pc.LAYERID_IMMEDIATE}.
      * @example
@@ -281,10 +281,10 @@ Object.assign(pc.Application.prototype, function () {
      * @function
      * @name pc.Application#renderLines
      * @description Draw an array of lines.
-     * @param {pc.Vec3[]} position - An array of points to draw lines between
-     * @param {pc.Color[]} color - An array of colors to color the lines. This must be the same size as the position array
-     * @param {object} [options] - Options to set rendering properties
-     * @param {pc.Layer} [options.layer] - The layer to render the line into
+     * @param {pc.Vec3[]} position - An array of points to draw lines between.
+     * @param {pc.Color[]} color - An array of colors to color the lines. This must be the same size as the position array.
+     * @param {object} [options] - Options to set rendering properties.
+     * @param {pc.Layer} [options.layer] - The layer to render the line into.
      * @example
      * var points = [new pc.Vec3(0, 0, 0), new pc.Vec3(1, 0, 0), new pc.Vec3(1, 1, 0), new pc.Vec3(1, 1, 1)];
      * var colors = [new pc.Color(1, 0, 0), new pc.Color(1, 1, 0), new pc.Color(0, 1, 1), new pc.Color(0, 0, 1)];

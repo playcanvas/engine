@@ -4,7 +4,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.log.write
-         * @description Write text to the console
+         * @description Write text to the console.
          * @param {string} text - The text to log.
          */
         write: function (text) {
@@ -15,7 +15,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.log.open
-         * @description Starting logging to the console
+         * @description Starting logging to the console.
          */
         open: function () {
             pc.log.write("Powered by PlayCanvas " + pc.version + " " + pc.revision);
@@ -25,7 +25,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.log.info
-         * @description Write text to the log preceded by 'INFO:'
+         * @description Write text to the log preceded by 'INFO:'.
          * @param {string} text - The text to log.
          */
         info: function (text) {
@@ -36,7 +36,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.log.debug
-         * @description Write text to the log preceded by 'DEBUG:'
+         * @description Write text to the log preceded by 'DEBUG:'.
          * @param {string} text - The text to log.
          */
         debug: function (text) {
@@ -47,7 +47,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.log.error
-         * @description Write text to the log preceded by 'ERROR:'
+         * @description Write text to the log preceded by 'ERROR:'.
          * @param {string} text - The text to log.
          */
         error: function (text) {
@@ -58,7 +58,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.log.warning
-         * @description Write text to the log preceded by 'WARNING:'
+         * @description Write text to the log preceded by 'WARNING:'.
          * @param {string} text - The text to log.
          */
         warning: function (text) {
@@ -69,7 +69,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.log.alert
-         * @description Write text to the log preceded by 'ALERT:' and pop up an alert dialog box with the text
+         * @description Write text to the log preceded by 'ALERT:' and pop up an alert dialog box with the text.
          * @param {string} text - The text to show in the alert.
          */
         alert: function (text) {

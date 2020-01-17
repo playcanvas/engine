@@ -3,7 +3,7 @@ Object.assign(pc, function () {
      * @private
      * @class
      * @name pc.LayoutCalculator
-     * @classdesc Used to manage layout calculations for {@link pc.LayoutGroupComponent}s
+     * @classdesc Used to manage layout calculations for {@link pc.LayoutGroupComponent}s.
      */
     function LayoutCalculator() {}
 

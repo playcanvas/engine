@@ -107,7 +107,7 @@ Object.assign(pc, function () {
          * @name pc.BoundingSphere#intersectsBoundingSphere
          * @description Test if a Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere.
          * @param {pc.BoundingSphere} sphere - Bounding Sphere to test.
-         * @returns {boolean} true if the Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere and false otherwise.
+         * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside this Bounding Sphere and false otherwise.
          */
         intersectsBoundingSphere: function (sphere) {
             tmpVecA.sub2(sphere.center, this.center);

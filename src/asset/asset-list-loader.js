@@ -4,9 +4,9 @@ Object.assign(pc, function () {
      * @class
      * @name pc.AssetListLoader
      * @augments pc.EventHandler
-     * @classdesc Used to load a group of assets and fires a callback when all assets are loaded
-     * @param {pc.Asset[]|number[]} assetList - An array of pc.Asset objects to load or an array of Asset IDs to load
-     * @param {pc.AssetRegistry} assetRegistry - The application's asset registry
+     * @classdesc Used to load a group of assets and fires a callback when all assets are loaded.
+     * @param {pc.Asset[]|number[]} assetList - An array of pc.Asset objects to load or an array of Asset IDs to load.
+     * @param {pc.AssetRegistry} assetRegistry - The application's asset registry.
      */
     var AssetListLoader = function (assetList, assetRegistry) {
         pc.EventHandler.call(this);
@@ -60,9 +60,9 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.AssetListLoader#load
-     * @description  Start loading asset list, call done() when all assets have loaded or failed to load
-     * @param {Function} done - Callback called when all assets in the list are loaded. Passed (err, failed) where err is the undefined if no errors are encountered and failed contains a list of assets that failed to load
-     * @param {object} [scope] - Scope to use when calling callback
+     * @description Start loading asset list, call done() when all assets have loaded or failed to load.
+     * @param {Function} done - Callback called when all assets in the list are loaded. Passed (err, failed) where err is the undefined if no errors are encountered and failed contains a list of assets that failed to load.
+     * @param {object} [scope] - Scope to use when calling callback.
      *
      */
     AssetListLoader.prototype.load = function (done, scope) {
@@ -93,8 +93,8 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.AssetListLoader#ready
-     * @param {Function} done - Callback called when all assets in the list are loaded
-     * @param {object} [scope] - Scope to use when calling callback
+     * @param {Function} done - Callback called when all assets in the list are loaded.
+     * @param {object} [scope] - Scope to use when calling callback.
      */
     AssetListLoader.prototype.ready = function (done, scope) {
         scope = scope || this;

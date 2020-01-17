@@ -4,16 +4,16 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.createURI
-         * @description Create a URI object from constituent parts
-         * @param {object} options - Parts of the URI to build
-         * @param {string} [options.scheme] - The URI scheme (e.g. http)
-         * @param {string} [options.authority] - The URI authority (e.g. www.example.com)
-         * @param {string} [options.host] - Combination of scheme and authority (e.g. http://www.example.com)
-         * @param {string} [options.path] - The URI path (e.g. /users/example)
-         * @param {string} [options.hostpath] - Combination of scheme, authority and path (e.g. http://www.example.com/users/example)
-         * @param {string} [options.query] - The query section, after the ?(e.g. http://example.com?<b>key=value&another=123</b>)
-         * @param {string} [options.fragment] - The fragment section, after the # (e.g. http://example.com#<b>fragment/data</b>)
-         * @returns {string} A URI string
+         * @description Create a URI object from constituent parts.
+         * @param {object} options - Parts of the URI to build.
+         * @param {string} [options.scheme] - The URI scheme (e.g. Http).
+         * @param {string} [options.authority] - The URI authority (e.g. Www.example.com).
+         * @param {string} [options.host] - Combination of scheme and authority (e.g. Http://www.example.com).
+         * @param {string} [options.path] - The URI path (e.g. /users/example).
+         * @param {string} [options.hostpath] - Combination of scheme, authority and path (e.g. Http://www.example.com/users/example).
+         * @param {string} [options.query] - The query section, after the ?(e.g. Http://example.com?<b>key=value&another=123</b>).
+         * @param {string} [options.fragment] - The fragment section, after the # (e.g. Http://example.com#<b>fragment/data</b>).
+         * @returns {string} A URI string.
          */
         createURI: function (options) {
             var s = "";
@@ -62,9 +62,9 @@ Object.assign(pc, function () {
          * @private
          * @class
          * @name pc.URI
-         * @description Create a new URI object
-         * @classdesc A URI object
-         * @param {string} uri - URI string
+         * @description Create a new URI object.
+         * @classdesc A URI object.
+         * @param {string} uri - URI string.
          */
         URI: function (uri) {
             // See http://tools.ietf.org/html/rfc2396#appendix-B for details of RegExp
@@ -75,7 +75,7 @@ Object.assign(pc, function () {
              * @private
              * @name pc.URI#scheme
              * @type {string}
-             * @description The scheme. (e.g. http)
+             * @description The scheme. (e.g. Http).
              */
             this.scheme = result[2];
 
@@ -83,7 +83,7 @@ Object.assign(pc, function () {
              * @private
              * @name pc.URI#authority
              * @type {string}
-             * @description The authority. (e.g. www.example.com)
+             * @description The authority. (e.g. Www.example.com).
              */
             this.authority = result[4];
 
@@ -91,7 +91,7 @@ Object.assign(pc, function () {
              * @private
              * @name pc.URI#path
              * @type {string}
-             * @description The path. (e.g. /users/example)
+             * @description The path. (e.g. /users/example).
              */
             this.path = result[5];
 
@@ -99,7 +99,7 @@ Object.assign(pc, function () {
              * @private
              * @name pc.URI#query
              * @type {string}
-             * @description The query, the section after a ?. (e.g. search=value)
+             * @description The query, the section after a ?. (e.g. Search=value).
              */
             this.query = result[7];
 
@@ -107,7 +107,7 @@ Object.assign(pc, function () {
              * @private
              * @name pc.URI#fragment
              * @type {string}
-             * @description The fragment, the section after a #
+             * @description The fragment, the section after a #.
              */
             this.fragment = result[9];
 
@@ -115,7 +115,7 @@ Object.assign(pc, function () {
              * @private
              * @function
              * @name pc.URI#toString
-             * @description Convert URI back to string
+             * @description Convert URI back to string.
              * @returns {string} The URI as a string.
              */
             this.toString = function () {
@@ -176,8 +176,8 @@ Object.assign(pc, function () {
              * @private
              * @function
              * @name pc.URI#setQuery
-             * @description Set the query section of the URI from a Object
-             * @param {object} params - Key-Value pairs to encode into the query string
+             * @description Set the query section of the URI from a Object.
+             * @param {object} params - Key-Value pairs to encode into the query string.
              * @example
              * var s = "http://example.com";
              * var uri = new pc.URI(s);

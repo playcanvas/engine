@@ -11,7 +11,7 @@ Object.assign(pc, function () {
      * @param {number} batchGroupId - Link this batch to a specific batch group. This is done automatically with default batches.
      * @property {pc.MeshInstance[]} origMeshInstances An array of original mesh instances, from which this batch was generated.
      * @property {pc.MeshInstance} meshInstance A single combined mesh instance, the result of batching.
-     * @property {pc.Model} model A handy model object
+     * @property {pc.Model} model A handy model object.
      * @property {boolean} dynamic Whether this batch is dynamic (supports transforming mesh instances at runtime).
      * @property {number} [batchGroupId] Link this batch to a specific batch group. This is done automatically with default batches.
      */
@@ -181,7 +181,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.BatchManager#addGroup
      * @description Adds new global batch group.
-     * @param {string} name - Custom name
+     * @param {string} name - Custom name.
      * @param {boolean} dynamic - Is this batch group dynamic? Will these objects move/rotate/scale after being batched?
      * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.
      * {@link pc.BatchManager#prepare} will split objects into local groups based on this size.
@@ -213,8 +213,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.BatchManager#removeGroup
      * @description Remove global batch group by id.
-     * Note, this traverses the entire scene graph and clears the batch group id from all components
-     * @param {string} id - Group id
+     * Note, this traverses the entire scene graph and clears the batch group id from all components.
+     * @param {string} id - Group id.
      */
     BatchManager.prototype.removeGroup = function (id) {
         if (!this._batchGroups[id]) {
@@ -244,8 +244,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.BatchManager.markGroupDirty
      * @description Mark a specific batch group as dirty. Dirty groups are re-batched before the next frame is rendered.
-     * Note, re-batching a group is a potentially expensive operation
-     * @param  {number} id - Batch Group ID to mark as dirty
+     * Note, re-batching a group is a potentially expensive operation.
+     * @param  {number} id - Batch Group ID to mark as dirty.
      */
     BatchManager.prototype.markGroupDirty = function (id) {
         if (this._dirtyGroups.indexOf(id) < 0) {
@@ -257,7 +257,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.BatchManager#getGroupByName
      * @description Retrieves a {@link pc.BatchGroup} object with a corresponding name, if it exists, or null otherwise.
-     * @param {string} name - Name
+     * @param {string} name - Name.
      * @returns {pc.BatchGroup} Group object.
      */
     BatchManager.prototype.getGroupByName = function (name) {
@@ -274,10 +274,10 @@ Object.assign(pc, function () {
     /**
      * @private
      * @function
-     * @name  pc.BatchManager#getBatches
-     * @description  Return a list of all {@link pc.Batch} objects that belong to the Batch Group supplied
-     * @param  {number} batchGroupId - The id of the batch group
-     * @returns {pc.Batch[]} A list of batches that are used to render the batch group
+     * @name pc.BatchManager#getBatches
+     * @description  Return a list of all {@link pc.Batch} objects that belong to the Batch Group supplied.
+     * @param  {number} batchGroupId - The id of the batch group.
+     * @returns {pc.Batch[]} A list of batches that are used to render the batch group.
      */
     BatchManager.prototype.getBatches = function (batchGroupId) {
         var results = [];
@@ -702,7 +702,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.BatchManager#create
      * @description Takes a mesh instance list that has been prepared by {@link pc.BatchManager#prepare}, and returns a {@link pc.Batch} object. This method assumes that all mesh instances provided can be rendered in a single draw call.
-     * @param {pc.MeshInstance[]} meshInstances - Input list of mesh instances
+     * @param {pc.MeshInstance[]} meshInstances - Input list of mesh instances.
      * @param {boolean} dynamic - Is it a static or dynamic batch? Will objects be transformed after batching?
      * @param {number} [batchGroupId] - Link this batch to a specific batch group. This is done automatically with default batches.
      * @returns {pc.Batch} The resulting batch object.
@@ -1046,7 +1046,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.BatchManager#update
      * @description Updates bounding box for a batch. Called automatically.
-     * @param {pc.Batch} batch - A batch object
+     * @param {pc.Batch} batch - A batch object.
      */
     BatchManager.prototype.update = function (batch) {
         batch._aabb.copy(batch.origMeshInstances[0].aabb);
@@ -1089,9 +1089,9 @@ Object.assign(pc, function () {
      * @function
      * @name pc.BatchManager#clone
      * @description Clones a batch. This method doesn't rebuild batch geometry, but only creates a new model and batch objects, linked to different source mesh instances.
-     * @param {pc.Batch} batch - A batch object
-     * @param {pc.MeshInstance[]} clonedMeshInstances - New mesh instances
-     * @returns {pc.Batch} New batch object
+     * @param {pc.Batch} batch - A batch object.
+     * @param {pc.MeshInstance[]} clonedMeshInstances - New mesh instances.
+     * @returns {pc.Batch} New batch object.
      */
     BatchManager.prototype.clone = function (batch, clonedMeshInstances) {
         var batch2 = new pc.Batch(clonedMeshInstances, batch.dynamic, batch.batchGroupId);
@@ -1130,8 +1130,8 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.BatchManager#destroy
-     * @description Mark the batches ref counter to 0, remove the batch model out of all layers and destroy it
-     * @param {pc.Batch} batch - A batch object
+     * @description Mark the batches ref counter to 0, remove the batch model out of all layers and destroy it.
+     * @param {pc.Batch} batch - A batch object.
      */
     BatchManager.prototype.destroy = function (batch) {
         batch.refCounter = 0;
@@ -1151,7 +1151,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.BatchManager#decrement
      * @description Decrements reference counter on a batch. If it's zero, the batch is removed from scene, and its geometry is deleted from memory.
-     * @param {pc.Batch} batch - A batch object
+     * @param {pc.Batch} batch - A batch object.
      */
     BatchManager.prototype.decrement = function (batch) {
         batch.refCounter--;

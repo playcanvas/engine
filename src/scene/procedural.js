@@ -324,9 +324,9 @@ pc.createMesh = function (device, positions, opts) {
  * @description Creates a procedural torus-shaped mesh.
  * The size, shape and tesselation properties of the torus can be controlled via function parameters.
  * By default, the function will create a torus in the XZ-plane with a tube radius of 0.2, a ring radius
- * of 0.3, 20 segments and 30 sides.<br />
+ * of 0.3, 20 segments and 30 sides.<br>
  * Note that the torus is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the torus's mesh.<br />
+ * is generated into the vertex buffer of the torus's mesh.
  * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.tubeRadius] - The radius of the tube forming the body of the torus (defaults to 0.2).
@@ -621,9 +621,9 @@ pc._createConeData = function (baseRadius, peakRadius, height, heightSegments, c
  * @description Creates a procedural cylinder-shaped mesh.
  * The size, shape and tesselation properties of the cylinder can be controlled via function parameters.
  * By default, the function will create a cylinder standing vertically centred on the XZ-plane with a radius
- * of 0.5, a height of 1.0, 1 height segment and 20 cap segments.<br />
+ * of 0.5, a height of 1.0, 1 height segment and 20 cap segments.<br>
  * Note that the cylinder is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the cylinder's mesh.<br />
+ * is generated into the vertex buffer of the cylinder's mesh.
  * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the tube forming the body of the cylinder (defaults to 0.5).
@@ -663,9 +663,9 @@ pc.createCylinder = function (device, opts) {
  * @description Creates a procedural capsule-shaped mesh.
  * The size, shape and tesselation properties of the capsule can be controlled via function parameters.
  * By default, the function will create a capsule standing vertically centred on the XZ-plane with a radius
- * of 0.25, a height of 1.0, 1 height segment and 10 cap segments.<br />
+ * of 0.25, a height of 1.0, 1 height segment and 10 cap segments.<br>
  * Note that the capsule is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the capsule's mesh.<br />
+ * is generated into the vertex buffer of the capsule's mesh.
  * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the tube forming the body of the capsule (defaults to 0.3).
@@ -698,9 +698,9 @@ pc.createCapsule = function (device, opts) {
  * @description Creates a procedural cone-shaped mesh.</p>
  * The size, shape and tesselation properties of the cone can be controlled via function parameters.
  * By default, the function will create a cone standing vertically centred on the XZ-plane with a base radius
- * of 0.5, a height of 1.0, 5 height segments and 20 cap segments.<br />
+ * of 0.5, a height of 1.0, 5 height segments and 20 cap segments.<br>
  * Note that the cone is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the cone's mesh.<br />
+ * is generated into the vertex buffer of the cone's mesh.
  * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.baseRadius] - The base radius of the cone (defaults to 0.5).
@@ -734,9 +734,9 @@ pc.createCone = function (device, opts) {
  * @description Creates a procedural sphere-shaped mesh.
  * The size and tesselation properties of the sphere can be controlled via function parameters. By
  * default, the function will create a sphere centred on the object space origin with a radius of 0.5
- * and 16 segments in both longitude and latitude.<br />
+ * and 16 segments in both longitude and latitude.<br>
  * Note that the sphere is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the sphere's mesh.<br />
+ * is generated into the vertex buffer of the sphere's mesh.
  * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {number} [opts.radius] - The radius of the sphere (defaults to 0.5).
@@ -814,9 +814,9 @@ pc.createSphere = function (device, opts) {
  * The size and tesselation properties of the plane can be controlled via function parameters. By
  * default, the function will create a plane centred on the object space origin with a width and
  * length of 1.0 and 5 segments in either axis (50 triangles). The normal vector of the plane is aligned
- * along the positive Y axis.<br />
+ * along the positive Y axis.<br>
  * Note that the plane is created with UVs in the range of 0 to 1. Additionally, tangent information
- * is generated into the vertex buffer of the plane's mesh.<br />
+ * is generated into the vertex buffer of the plane's mesh.
  * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {pc.Vec2} [opts.halfExtents] - The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
@@ -891,9 +891,9 @@ pc.createPlane = function (device, opts) {
  * @description Creates a procedural box-shaped mesh.
  * The size, shape and tesselation properties of the box can be controlled via function parameters. By
  * default, the function will create a box centred on the object space origin with a width, length and
- * height of 1.0 unit and 10 segments in either axis (50 triangles per face).<br />
+ * height of 1.0 unit and 10 segments in either axis (50 triangles per face).<br>
  * Note that the box is created with UVs in the range of 0 to 1 on each face. Additionally, tangent
- * information is generated into the vertex buffer of the box's mesh.<br />
+ * information is generated into the vertex buffer of the box's mesh.
  * @param {pc.GraphicsDevice} device - The graphics device used to manage the mesh.
  * @param {object} [opts] - An object that specifies optional inputs for the function as follows:
  * @param {pc.Vec3} [opts.halfExtents] - The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).

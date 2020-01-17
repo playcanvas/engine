@@ -7,7 +7,7 @@ Object.assign(pc, function () {
      * @classdesc Allows hue and saturation adjustment of the input render target.
      * @description Creates new instance of the post effect.
      * @augments pc.PostEffect
-     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
      * @property {number} hue Controls the hue. Ranges from -1 to 1 (-1 is 180 degrees in the negative direction, 0 no change, 1 is 180 degrees in the postitive direction).
      * @property {number} saturation Controls the saturation. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum saturation).
      */

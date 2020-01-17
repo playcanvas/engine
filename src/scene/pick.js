@@ -8,7 +8,7 @@ Object.assign(pc, function () {
      * @class
      * @name pc.Picker
      * @classdesc Picker object used to select mesh instances from screen coordinates.
-     * @description Create a new instance of a Picker object
+     * @description Create a new instance of a Picker object.
      * @param {pc.Application} app - The application managing this picker instance.
      * @param {number} width - The width of the pick buffer in pixels.
      * @param {number} height - The height of the pick buffer in pixels.
@@ -66,11 +66,11 @@ Object.assign(pc, function () {
      * @name pc.Picker#getSelection
      * @description Return the list of mesh instances selected by the specified rectangle in the
      * previously prepared pick buffer.The rectangle using top-left coordinate system.
-     * @param {number} x - The left edge of the rectangle
-     * @param {number} y - The top edge of the rectangle
-     * @param {number} [width] - The width of the rectangle
-     * @param {number} [height] - The height of the rectangle
-     * @returns {pc.MeshInstance[]} An array of mesh instances that are in the selection
+     * @param {number} x - The left edge of the rectangle.
+     * @param {number} y - The top edge of the rectangle.
+     * @param {number} [width] - The width of the rectangle.
+     * @param {number} [height] - The height of the rectangle.
+     * @returns {pc.MeshInstance[]} An array of mesh instances that are in the selection.
      * @example
      * // Get the selection at the point (10,20)
      * var selection = picker.getSelection(10, 20);

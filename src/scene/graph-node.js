@@ -142,7 +142,7 @@ Object.assign(pc, function () {
      * @readonly
      * @name pc.GraphNode#parent
      * @type {pc.GraphNode}
-     * @description A read-only property to get a parent graph node
+     * @description A read-only property to get a parent graph node.
      */
     Object.defineProperty(GraphNode.prototype, 'parent', {
         get: function () {
@@ -155,7 +155,7 @@ Object.assign(pc, function () {
      * @name pc.GraphNode#path
      * @type {string}
      * @description A read-only property to get the path of the graph node relative to
-     * the root of the hierarchy
+     * the root of the hierarchy.
      */
     Object.defineProperty(GraphNode.prototype, 'path', {
         get: function () {
@@ -179,7 +179,7 @@ Object.assign(pc, function () {
      * @readonly
      * @name pc.GraphNode#root
      * @type {pc.GraphNode}
-     * @description A read-only property to get highest graph node from current node
+     * @description A read-only property to get highest graph node from current node.
      */
     Object.defineProperty(GraphNode.prototype, 'root', {
         get: function () {
@@ -210,7 +210,7 @@ Object.assign(pc, function () {
      * @readonly
      * @name pc.GraphNode#graphDepth
      * @type {number}
-     * @description A read-only property to get the depth of this child within the graph. Note that for performance reasons this is only recalculated when a node is added to a new parent, i.e. it is not recalculated when a node is simply removed from the graph.
+     * @description A read-only property to get the depth of this child within the graph. Note that for performance reasons this is only recalculated when a node is added to a new parent, i.e. It is not recalculated when a node is simply removed from the graph.
      */
     Object.defineProperty(GraphNode.prototype, 'graphDepth', {
         get: function () {
@@ -234,7 +234,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#_onHierarchyStateChanged
          * @description Called when the enabled flag of the entity or one of its parents changes.
-         * @param {boolean} enabled - true if enabled in the hierarchy, false if disabled.
+         * @param {boolean} enabled - True if enabled in the hierarchy, false if disabled.
          */
         _onHierarchyStateChanged: function (enabled) {
             // Override in derived classes
@@ -413,9 +413,9 @@ Object.assign(pc, function () {
          * @description Return all graph nodes that satisfy the search query.
          * Query can be simply a string, or comma separated strings,
          * to have inclusive results of assets that match at least one query.
-         * A query that consists of an array of tags can be used to match graph nodes that have each tag of array
-         * @param {string} query - Name of a tag or array of tags
-         * @returns {pc.GraphNode[]} A list of all graph nodes that match the query
+         * A query that consists of an array of tags can be used to match graph nodes that have each tag of array.
+         * @param {string} query - Name of a tag or array of tags.
+         * @returns {pc.GraphNode[]} A list of all graph nodes that match the query.
          * @example
          * // Return all graph nodes that tagged by `animal`
          * var animals = node.findByTag("animal");
@@ -532,7 +532,7 @@ Object.assign(pc, function () {
          * @name pc.GraphNode#isDescendantOf
          * @description Check if node is descendant of another node.
          * @param {pc.GraphNode} node - Potential ancestor of node.
-         * @returns {boolean} if node is descendant of another node.
+         * @returns {boolean} If node is descendant of another node.
          * @example
          * if (roof.isDescendantOf(house)) {
          *     // roof is descendant of house entity
@@ -554,7 +554,7 @@ Object.assign(pc, function () {
          * @name pc.GraphNode#isAncestorOf
          * @description Check if node is ancestor for another node.
          * @param {pc.GraphNode} node - Potential descendant of node.
-         * @returns {boolean} if node is ancestor for another node
+         * @returns {boolean} If node is ancestor for another node.
          * @example
          * if (body.isAncestorOf(foot)) {
          *     // foot is within body's hierarchy
@@ -738,8 +738,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#reparent
-         * @description Remove graph node from current parent and add as child to new parent
-         * @param {pc.GraphNode} parent - New parent to attach graph node to
+         * @description Remove graph node from current parent and add as child to new parent.
+         * @param {pc.GraphNode} parent - New parent to attach graph node to.
          * @param {number} [index] - The child index where the child node should be placed.
          */
         reparent: function (parent, index) {
@@ -766,8 +766,8 @@ Object.assign(pc, function () {
          * local-space euler rotation.
          * @param {pc.Vec3|number} x - 3-dimensional vector holding eulers or rotation around local-space
          * x-axis in degrees.
-         * @param {number} [y] - rotation around local-space y-axis in degrees.
-         * @param {number} [z] - rotation around local-space z-axis in degrees.
+         * @param {number} [y] - Rotation around local-space y-axis in degrees.
+         * @param {number} [z] - Rotation around local-space z-axis in degrees.
          * @example
          * // Set rotation of 90 degrees around y-axis via 3 numbers
          * this.entity.setLocalEulerAngles(0, 90, 0);
@@ -795,8 +795,8 @@ Object.assign(pc, function () {
          * local-space position.
          * @param {pc.Vec3|number} x - 3-dimensional vector holding local-space position or
          * x-coordinate of local-space position.
-         * @param {number} [y] - y-coordinate of local-space position.
-         * @param {number} [z] - z-coordinate of local-space position.
+         * @param {number} [y] - Y-coordinate of local-space position.
+         * @param {number} [z] - Z-coordinate of local-space position.
          * @example
          * // Set via 3 numbers
          * this.entity.setLocalPosition(0, 10, 0);
@@ -822,11 +822,11 @@ Object.assign(pc, function () {
          * @description Sets the local-space rotation of the specified graph node. This function
          * has two valid signatures: you can either pass a quaternion or 3 numbers to specify the
          * local-space rotation.
-         * @param {pc.Quat|number} x - quaternion holding local-space rotation or x-component of
+         * @param {pc.Quat|number} x - Quaternion holding local-space rotation or x-component of
          * local-space quaternion rotation.
-         * @param {number} [y] - y-component of local-space quaternion rotation.
-         * @param {number} [z] - z-component of local-space quaternion rotation.
-         * @param {number} [w] - w-component of local-space quaternion rotation.
+         * @param {number} [y] - Y-component of local-space quaternion rotation.
+         * @param {number} [z] - Z-component of local-space quaternion rotation.
+         * @param {number} [w] - W-component of local-space quaternion rotation.
          * @example
          * // Set via 4 numbers
          * this.entity.setLocalRotation(0, 0, 0, 1);
@@ -854,8 +854,8 @@ Object.assign(pc, function () {
          * local-space scale.
          * @param {pc.Vec3|number} x - 3-dimensional vector holding local-space scale or x-coordinate
          * of local-space scale.
-         * @param {number} [y] - y-coordinate of local-space scale.
-         * @param {number} [z] - z-coordinate of local-space scale.
+         * @param {number} [y] - Y-coordinate of local-space scale.
+         * @param {number} [z] - Z-coordinate of local-space scale.
          * @example
          * // Set via 3 numbers
          * this.entity.setLocalScale(10, 10, 10);
@@ -918,8 +918,8 @@ Object.assign(pc, function () {
          * world-space position.
          * @param {pc.Vec3|number} x - 3-dimensional vector holding world-space position or
          * x-coordinate of world-space position.
-         * @param {number} [y] - y-coordinate of world-space position.
-         * @param {number} [z] - z-coordinate of world-space position.
+         * @param {number} [y] - Y-coordinate of world-space position.
+         * @param {number} [z] - Z-coordinate of world-space position.
          * @example
          * // Set via 3 numbers
          * this.entity.setPosition(0, 10, 0);
@@ -957,11 +957,11 @@ Object.assign(pc, function () {
          * @description Sets the world-space rotation of the specified graph node. This function
          * has two valid signatures: you can either pass a quaternion or 3 numbers to specify the
          * world-space rotation.
-         * @param {pc.Quat|number} x - quaternion holding world-space rotation or x-component of
+         * @param {pc.Quat|number} x - Quaternion holding world-space rotation or x-component of
          * world-space quaternion rotation.
-         * @param {number} [y] - y-component of world-space quaternion rotation.
-         * @param {number} [z] - z-component of world-space quaternion rotation.
-         * @param {number} [w] - w-component of world-space quaternion rotation.
+         * @param {number} [y] - Y-component of world-space quaternion rotation.
+         * @param {number} [z] - Z-component of world-space quaternion rotation.
+         * @param {number} [w] - W-component of world-space quaternion rotation.
          * @example
          * // Set via 4 numbers
          * this.entity.setRotation(0, 0, 0, 1);
@@ -1003,8 +1003,8 @@ Object.assign(pc, function () {
          * world-space euler rotation.
          * @param {pc.Vec3|number} x - 3-dimensional vector holding eulers or rotation around world-space
          * x-axis in degrees.
-         * @param {number} [y] - rotation around world-space y-axis in degrees.
-         * @param {number} [z] - rotation around world-space z-axis in degrees.
+         * @param {number} [y] - Rotation around world-space y-axis in degrees.
+         * @param {number} [z] - Rotation around world-space z-axis in degrees.
          * @example
          * // Set rotation of 90 degrees around world-space y-axis via 3 numbers
          * this.entity.setEulerAngles(0, 90, 0);
@@ -1037,8 +1037,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#addChild
-         * @description Add a new child to the child list and update the parent value of the child node
-         * @param {pc.GraphNode} node - The new child to add
+         * @description Add a new child to the child list and update the parent value of the child node.
+         * @param {pc.GraphNode} node - The new child to add.
          * @example
          * var e = new pc.Entity(app);
          * this.entity.addChild(e);
@@ -1077,9 +1077,9 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.GraphNode#insertChild
-         * @description Insert a new child to the child list at the specified index and update the parent value of the child node
-         * @param {pc.GraphNode} node - The new child to insert
-         * @param {number} index - The index in the child list of the parent where the new node will be inserted
+         * @description Insert a new child to the child list at the specified index and update the parent value of the child node.
+         * @param {pc.GraphNode} node - The new child to insert.
+         * @param {number} index - The index in the child list of the parent where the new node will be inserted.
          * @example
          * var e = new pc.Entity(app);
          * this.entity.insertChild(e, 1);
@@ -1275,10 +1275,10 @@ Object.assign(pc, function () {
          * Otherwise, it is the x-component of the world-space coordinate to look at.
          * @param {pc.Vec3|number} y - If passing a 3D vector, this is the world-space up vector for look at
          * transform. Otherwise, it is the y-component of the world-space coordinate to look at.
-         * @param {number} z - z-component of the world-space coordinate to look at.
-         * @param {number} [ux=0] - x-component of the up vector for the look at transform.
-         * @param {number} [uy=1] - y-component of the up vector for the look at transform.
-         * @param {number} [uz=0] - z-component of the up vector for the look at transform.
+         * @param {number} z - Z-component of the world-space coordinate to look at.
+         * @param {number} [ux=0] - X-component of the up vector for the look at transform.
+         * @param {number} [uy=1] - Y-component of the up vector for the look at transform.
+         * @param {number} [uz=0] - Z-component of the up vector for the look at transform.
          * @example
          * // Look at another entity, using the (default) positive y-axis for up
          * var position = otherEntity.getPosition();
@@ -1335,8 +1335,8 @@ Object.assign(pc, function () {
          * specify the world-space translation.
          * @param {pc.Vec3|number} x - 3-dimensional vector holding world-space translation or
          * x-coordinate of world-space translation.
-         * @param {number} [y] - y-coordinate of world-space translation.
-         * @param {number} [z] - z-coordinate of world-space translation.
+         * @param {number} [y] - Y-coordinate of world-space translation.
+         * @param {number} [z] - Z-coordinate of world-space translation.
          * @example
          * // Translate via 3 numbers
          * this.entity.translate(10, 0, 0);
@@ -1368,8 +1368,8 @@ Object.assign(pc, function () {
          * specify the local-space translation.
          * @param {pc.Vec3|number} x - 3-dimensional vector holding local-space translation or
          * x-coordinate of local-space translation.
-         * @param {number} [y] - y-coordinate of local-space translation.
-         * @param {number} [z] - z-coordinate of local-space translation.
+         * @param {number} [y] - Y-coordinate of local-space translation.
+         * @param {number} [z] - Z-coordinate of local-space translation.
          * @example
          * // Translate via 3 numbers
          * this.entity.translateLocal(10, 0, 0);

@@ -8,9 +8,7 @@ Object.assign(pc, function () {
      * refer to entities in the scene graph. Using an EntityReference simplifies the job of dealing with the
      * presence or non-presence of the underlying entity and its components, especially when it comes to dealing
      * with the runtime addition or removal of components, and addition/removal of associated event listeners.
-     *
      * <h2>Usage Scenario</h2>
-     *
      * Imagine that you're creating a Checkbox component, which has a reference to an entity representing
      * the checkmark/tickmark that is rendered in the Checkbox. The reference is modelled as an entity guid
      * property on the Checkbox component, called simply 'checkmark'. We have to implement a basic piece of
