@@ -74,7 +74,6 @@ Object.assign(pc, function () {
         }
 
         this._guid = null;
-        this._request = null;
 
         // used by component systems to speed up destruction
         this._destroying = false;
@@ -303,28 +302,6 @@ Object.assign(pc, function () {
             if (components.hasOwnProperty(type))
                 components[type].onPostStateChange();
         }
-    };
-
-    /**
-     * @private
-     * @function
-     * @name pc.Entity#setRequest
-     * @description Used during resource loading to ensure that child resources of Entities are tracked.
-     * @param {ResourceRequest} request - The request being used to load this entity.
-     */
-    Entity.prototype.setRequest = function (request) {
-        this._request = request;
-    };
-
-    /**
-     * @private
-     * @function
-     * @name pc.Entity#getRequest
-     * @description Get the Request that is being used to load this Entity.
-     * @returns {ResourceRequest} The Request.
-     */
-    Entity.prototype.getRequest = function () {
-        return this._request;
     };
 
     /**
