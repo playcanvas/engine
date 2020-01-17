@@ -21,13 +21,13 @@
 
     <!-- The script -->
     <script>
-    if (wasmSupported()) {
-        loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.wasm.js', '../lib/ammo/ammo.wasm.wasm', demo);
-    } else {
-        loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.js', '', demo);
-    }
+    // if (wasmSupported()) {
+    //     loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.wasm.js', '../lib/ammo/ammo.wasm.wasm', demo);
+    // } else {
+    //     loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.js', '', demo);
+    // }
 
-    function demo() {
+    // function demo() {
         // ***********    Initialize application   *******************
         var canvas = document.getElementById("application-canvas");
 
@@ -134,7 +134,7 @@
         var boxTemplate = new pc.Entity();
         boxTemplate.addComponent("model", {
             type: "box",
-            castShadows: true
+            castShadows: true,
         });
 
          // ...a rigidbody component of type 'dynamic' so that it is simulated
@@ -146,9 +146,10 @@
         });
 
         // ... and a collision component of type 'box'
-        boxTemplate.addComponent("collision", {
+        var collision = boxTemplate.addComponent("collision", {
             type: "box",
-            halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
+            halfExtents: new pc.Vec3(0.5, 0.5, 0.5),
+            offset: new pc.Vec3(0, 0.5, 0),
         });
 
         // make the box red
@@ -171,7 +172,8 @@
 
         sphereTemplate.addComponent("collision", {
             type: "sphere",
-            radius: 0.5
+            radius: 0.5,
+            offset: new pc.Vec3(0, 0.5, 0)
         });
 
 
@@ -194,7 +196,8 @@
         capsuleTemplate.addComponent("collision", {
             type: "capsule",
             radius: 0.5,
-            height: 2
+            height: 2,
+            offset: new pc.Vec3(0, 0.5, 0)
         });
 
 
@@ -217,7 +220,8 @@
         cylinderTemplate.addComponent("collision", {
             type: "cylinder",
             radius: 0.5,
-            height: 1
+            height: 1,
+            offset: new pc.Vec3(0, 0.5, 0)
         });
 
 
@@ -247,7 +251,7 @@
                 timer -= dt;
                 if (timer <= 0) {
                     count--;
-                    timer = 0.2;
+                    timer = 1;
 
                     // Clone a random template and position it above the floor
                     var template = templates[Math.floor(pc.math.random(0, templates.length))];
@@ -257,11 +261,11 @@
 
                     app.root.addChild(clone);
 
-                    clone.rigidbody.teleport(pc.math.random(-1, 1), 10, pc.math.random(-1, 1));
+                    clone.rigidbody.teleport(pc.math.random(-3, 3), 7, pc.math.random(-3, 3));
                 }
             }
         });
-    }
+    //}
     </script>
 </body>
 </html>

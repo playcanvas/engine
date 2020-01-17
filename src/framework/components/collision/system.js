@@ -6,6 +6,7 @@ Object.assign(pc, function () {
     var _schema = [
         'enabled',
         'type',
+        'offset',
         'halfExtents',
         'radius',
         'axis',
@@ -175,6 +176,7 @@ Object.assign(pc, function () {
             var data = {
                 enabled: src.data.enabled,
                 type: src.data.type,
+                offset: src.data.offset,
                 halfExtents: [src.data.halfExtents.x, src.data.halfExtents.y, src.data.halfExtents.z],
                 radius: src.data.radius,
                 axis: src.data.axis,
