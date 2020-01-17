@@ -15,9 +15,9 @@ Object.assign(pc, function () {
     var executionOrderCounter = 0;
 
     /**
-     * @constructor
+     * @class
      * @name pc.ScriptComponentSystem
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
      * @description Create a new ScriptComponentSystem
      * @classdesc Allows scripts to be attached to an Entity and executed
      * @param {pc.Application} app The application

@@ -4,9 +4,9 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.CanvasFont
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc Represents the resource of a canvas font asset.
      * @param {pc.Application} app The application
      * @param {Object} options The font options

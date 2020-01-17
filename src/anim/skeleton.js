@@ -24,7 +24,7 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @constructor
+     * @class
      * @name pc.Skeleton
      * @classdesc Represents a skeleton used to play animations.
      * @param {pc.GraphNode} graph The root pc.GraphNode of the skeleton.

@@ -12,9 +12,9 @@ Object.assign(pc, function () {
     ];
 
     /**
-     * @constructor
+     * @class
      * @name pc.SoundComponentSystem
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.SoundComponent}s.
      * @description Create a SoundComponentSystem
      * @param {pc.Application} app The Application

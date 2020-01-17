@@ -2,9 +2,9 @@ Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
-     * @constructor
+     * @class
      * @name pc.ScreenComponentSystem
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.ScreenComponent}s.
      * @description Create a new ScreenComponentSystem
      * @param {pc.Application} app The application

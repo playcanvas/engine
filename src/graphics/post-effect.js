@@ -9,7 +9,7 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.PostEffect
      * @classdesc Base class for all post effects. Post effects take a a render target as input
      * apply effects to it and then render the result to an output render target or the screen

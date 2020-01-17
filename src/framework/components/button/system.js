@@ -18,9 +18,9 @@ Object.assign(pc, function () {
     ];
 
     /**
-     * @constructor
+     * @class
      * @name pc.ButtonComponentSystem
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.ButtonComponent}s.
      * @description Create a new ButtonComponentSystem
      * @param {pc.Application} app The application

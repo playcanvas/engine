@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.KeyboardEvent
      * @classdesc The KeyboardEvent is passed into all event callbacks from the {@link pc.Keyboard}. It corresponds to a key press or release.
      * @description Create a new KeyboardEvent
@@ -104,9 +104,9 @@ Object.assign(pc, function () {
      */
 
     /**
-     * @constructor
+     * @class
      * @name pc.Keyboard
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc A Keyboard device bound to an Element. Allows you to detect the state of the key presses.
      * Note, Keyboard object must be attached to an Element before it can detect any key presses.
      * @description Create a new Keyboard object

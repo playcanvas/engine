@@ -2,7 +2,7 @@ Object.assign(pc, (function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.CurveSet
      * @classdesc A curve set is a collection of curves.
      * @description Creates a new curve set.

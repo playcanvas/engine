@@ -193,9 +193,9 @@ Object.assign(pc, (function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.I18n
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc Handles localization. Responsible for loading localization assets
      * and returning translations for a certain key. Can also handle plural forms. To override
      * its default behaviour define a different implementation for {@link pc.I18n#getText} and {@link pc.I18n#getPluralText}.

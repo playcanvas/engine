@@ -116,7 +116,7 @@ Object.assign(pc, function () {
 
 
     /**
-     * @constructor
+     * @class
      * @name pc.ScriptAttributes
      * @classdesc Container of Script Attribute definitions. Implements an interface to add/remove attributes and store their definition for a {@link pc.ScriptType}.
      * Note: An instance of pc.ScriptAttributes is created automatically by each {@link pc.ScriptType}.
@@ -306,9 +306,9 @@ Object.assign(pc, function () {
             throw new Error('script name: \'' + name + '\' is reserved, please change script name');
 
         /**
-         * @constructor
+         * @class
          * @name pc.ScriptType
-         * @extends pc.EventHandler
+         * @augments pc.EventHandler
          * @classdesc Represents the type of a script. It is returned by {@link pc.createScript}. Also referred to as Script Type.<br />
          * The type is to be extended using its JavaScript prototype. There is a <strong>list of methods</strong>
          * that will be executed by the engine on instances of this type, such as: <ul><li>initialize</li><li>postInitialize</li><li>update</li><li>postUpdate</li><li>swap</li></ul>

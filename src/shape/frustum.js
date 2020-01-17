@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     var viewProj = new pc.Mat4();
 
     /**
-     * @constructor
+     * @class
      * @name pc.Frustum
      * @classdesc A frustum is a shape that defines the viewing space of a camera.
      * @description Creates a new frustum shape.

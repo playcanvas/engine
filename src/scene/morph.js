@@ -4,7 +4,7 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.MorphTarget
      * @classdesc A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
      * Multiple morph targets can be blended together on a mesh. This is useful for effects that are hard to achieve with conventional animation and skinning.
@@ -38,7 +38,7 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.Morph
      * @classdesc Contains a list of pc.MorphTarget, a combined AABB and some associated data.
      * @param {pc.MoprhTarget[]} targets A list of morph targets
@@ -178,7 +178,7 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.MorphInstance
      * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, holds morphed buffer and associated data.
      * @param {pc.Morph} morph The pc.Morph to instance.

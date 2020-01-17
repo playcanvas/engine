@@ -11,7 +11,7 @@ Object.assign(pc, function () {
     _typeSize[pc.TYPE_FLOAT32] = 4;
 
     /**
-     * @constructor
+     * @class
      * @name pc.VertexFormat
      * @classdesc A vertex format is a descriptor that defines the layout of vertex data inside
      * a {@link pc.VertexBuffer}.

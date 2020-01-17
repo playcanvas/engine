@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.ScriptHandler
      * @implements {pc.ResourceHandler}
      * @classdesc Resource handler for loading JavaScript files dynamically

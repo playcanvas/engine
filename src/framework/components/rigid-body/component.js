@@ -5,9 +5,9 @@ Object.assign(pc, function () {
 
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.RigidBodyComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @classdesc The rigidbody component, when combined with a {@link pc.CollisionComponent}, allows your
      * entities to be simulated using realistic physics.
      * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you

@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.Model
      * @classdesc A model is a graphical object that can be added to or removed from a scene.
      * It contains a hierarchy and any number of mesh instances.

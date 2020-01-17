@@ -5,7 +5,7 @@ Object.assign(pc, function () {
     var _prepareDeprecationWarning = false;
 
     /**
-     * @constructor
+     * @class
      * @name pc.Picker
      * @classdesc Picker object used to select mesh instances from screen coordinates.
      * @description Create a new instance of a Picker object

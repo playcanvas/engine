@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.AnimationHandler
      * @implements {pc.ResourceHandler}
      * @classdesc Resource handler used for loading {@link pc.Animation} resources

@@ -2,7 +2,7 @@ Object.assign(pc, (function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.Vec2
      * @classdesc A 2-dimensional vector.
      * @description Creates a new Vec2 object.

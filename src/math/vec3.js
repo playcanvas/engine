@@ -2,7 +2,7 @@ Object.assign(pc, (function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.Vec3
      * @classdesc A 3-dimensional vector.
      * @description Creates a new Vec3 object.

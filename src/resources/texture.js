@@ -254,7 +254,7 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.TextureHandler
      * @implements {pc.ResourceHandler}
      * @classdesc Resource handler used for loading 2D and 3D {@link pc.Texture} resources

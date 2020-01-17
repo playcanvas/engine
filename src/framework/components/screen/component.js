@@ -17,9 +17,9 @@ Object.assign(pc, function () {
     // var counter = 1;
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.ScreenComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @classdesc A ScreenComponent enables the Entity to render child {@link pc.ElementComponent}s using anchors and positions in the ScreenComponent's space.
      * @description Create a new ScreenComponent
      * @param {pc.ScreenComponentSystem} system The ComponentSystem that created this Component

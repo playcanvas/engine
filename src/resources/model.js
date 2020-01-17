@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.ModelHandler
      * @implements {pc.ResourceHandler}
      * @classdesc Resource handler used for loading {@link pc.Model} resources

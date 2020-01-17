@@ -2,11 +2,11 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.HorizontalTiltShiftEffect
      * @classdesc Simple fake tilt-shift effect, modulating two pass Gaussian blur by horizontal position
      * @description Creates new instance of the post effect.
-     * @extends pc.PostEffect
+     * @augments pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} focus Controls where the "focused" vertical line lies
      */

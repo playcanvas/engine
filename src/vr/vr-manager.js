@@ -1,8 +1,8 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.VrManager
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc Manage and update {@link pc.VrDisplay}s that are attached to this device.
      * @description Manage and update {@link pc.VrDisplay}s that are attached to this device.
      * @param {pc.Application} app The main application

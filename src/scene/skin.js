@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.Skin
      * @classdesc A skin contains data about the bones in a hierarchy that drive a skinned mesh animation.
      * Specifically, the skin stores the bone name and inverse bind matrix and for each bone.
@@ -20,7 +20,7 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.SkinInstance
      * @classdesc A skin instance is responsible for generating the matrix palette that is used to
      * skin vertices from object space to world space.

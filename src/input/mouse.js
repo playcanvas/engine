@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.MouseEvent
      * @classdesc MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
      * @description Create an new MouseEvent
@@ -115,9 +115,9 @@ Object.assign(pc, function () {
      */
 
     /**
-     * @constructor
+     * @class
      * @name pc.Mouse
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc A Mouse Device, bound to a DOM Element.
      * @description Create a new Mouse device
      * @param {Element} [element] The Element that the mouse events are attached to

@@ -64,7 +64,7 @@ Object.assign(pc, function () {
     }
 
     /**
-     * @constructor
+     * @class
      * @name pc.VertexIterator
      * @classdesc A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
      * @description Returns a new pc.VertexIterator object.

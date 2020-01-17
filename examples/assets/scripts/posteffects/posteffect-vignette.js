@@ -2,11 +2,11 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.VignetteEffect
      * @classdesc Implements the VignetteEffect post processing effect.
      * @description Creates new instance of the post effect.
-     * @extends pc.PostEffect
+     * @augments pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} offset Controls the offset of the effect.
      * @property {Number} darkness Controls the darkness of the effect.

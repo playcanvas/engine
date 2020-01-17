@@ -146,9 +146,9 @@ Object.assign(pc, (function () {
 
 
     /**
-     * @constructor
+     * @class
      * @name pc.Tags
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc Set of tag names
      * @description Create an instance of a Tags.
      * @param {Object} [parent] Parent object who tags belong to.

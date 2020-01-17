@@ -6,7 +6,7 @@ Object.assign(pc, function () {
     if (pc.AudioManager.hasAudioContext()) {
         /**
          * @private
-         * @constructor
+         * @class
          * @name pc.Channel
          * @classdesc A channel is created when the pc.AudioManager begins playback of a pc.Sound. Usually created internally by
          * pc.AudioManager#playSound or pc.AudioManager#playSound3d. Developers usually won't have to create Channels manually.

@@ -18,9 +18,9 @@ Object.assign(pc, function () {
     ];
 
     /**
-     * @constructor
+     * @class
      * @name pc.AnimationComponentSystem
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc The AnimationComponentSystem manages creating and deleting AnimationComponents
      * @description Create an AnimationComponentSystem
      * @param {pc.Application} app The application managing this system.

@@ -3,7 +3,7 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.Template
      * @classdesc Create a Template resource from raw database data
      * @param {pc.Application} app The application

@@ -33,9 +33,9 @@ Object.assign(pc, function () {
     var VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
     /**
-     * @constructor
+     * @class
      * @name pc.Asset
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc An asset record of a file or data resource that can be loaded by the engine.
      * The asset contains three important fields:<br/>
      * <strong>file</strong>: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset<br/>

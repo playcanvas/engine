@@ -2,7 +2,7 @@ Object.assign(pc, (function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.Mat4
      * @classdesc A 4x4 matrix.
      * @description Creates a new identity Mat4 object.

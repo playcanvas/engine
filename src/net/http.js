@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.Http
      * @classdesc Used to send and receive HTTP requests.
      * @description Create a new Http instance. By default, a PlayCanvas application creates an instance of this

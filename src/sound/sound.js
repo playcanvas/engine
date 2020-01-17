@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.Sound
      * @classdesc Represents the resource of an audio asset.
      * @param {HTMLAudioElement|AudioBuffer} resource If the Web Audio API is supported, pass an AudioBuffer object, otherwise

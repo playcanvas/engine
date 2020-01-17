@@ -2,7 +2,7 @@ Object.assign(pc, (function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.Mat3
      * @classdesc A 3x3 matrix.
      * @description Creates a new identity Mat3 object.

@@ -8,9 +8,9 @@ Object.assign(pc, function () {
 
     if (pc.SoundManager.hasAudioContext()) {
         /**
-         * @constructor
+         * @class
          * @name pc.SoundInstance3d
-         * @extends pc.SoundInstance
+         * @augments pc.SoundInstance
          * @classdesc A pc.SoundInstance3d plays a {@link pc.Sound} in 3D
          * @param {pc.SoundManager} manager The sound manager
          * @param {pc.Sound} sound The sound to play

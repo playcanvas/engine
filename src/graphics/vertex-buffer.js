@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.VertexBuffer
      * @classdesc A vertex buffer is the mechanism via which the application specifies vertex
      * data to the graphics hardware.

@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
     /**
      * @component Animation
-     * @constructor
+     * @class
      * @name pc.AnimationComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @classdesc The Animation Component allows an Entity to playback animations on models
      * @description Create a new AnimationComponent
      * @param {pc.AnimationComponentSystem} system The {@link pc.ComponentSystem} that created this Component

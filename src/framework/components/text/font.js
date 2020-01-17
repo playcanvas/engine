@@ -3,7 +3,7 @@ Object.assign(pc, function () {
     pc.FONT_BITMAP = 'bitmap';
 
     /**
-     * @constructor
+     * @class
      * @name pc.Font
      * @classdesc Represents the resource of a font asset.
      * @param {pc.Texture[]} textures The font textures

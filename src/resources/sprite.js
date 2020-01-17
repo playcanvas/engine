@@ -1,7 +1,7 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.SpriteHandler
      * @implements {pc.ResourceHandler}
      * @classdesc Resource handler used for loading {@link pc.Sprite} resources

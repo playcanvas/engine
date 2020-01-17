@@ -34,9 +34,9 @@ Object.assign(pc, function () {
 
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.ElementComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @classdesc Enables an Entity to be positioned using anchors and screen coordinates under a {@link pc.ScreenComponent} or under other ElementComponents.
      * Depending on its type it can be used to render images, text or just as a layout mechanism to build 2D and 3D user interfaces.
      * If the component is a descendant of a {@link pc.ScreenComponent}, then the Entity's {@link pc.Entity.setLocalPosition} is in the {@link pc.ScreenComponent}'s coordinate system.

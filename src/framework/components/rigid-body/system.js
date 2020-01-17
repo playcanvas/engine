@@ -8,7 +8,7 @@ Object.assign(pc, function () {
     var WARNED_RAYCAST_CALLBACK = false;
 
     /**
-     * @constructor
+     * @class
      * @name pc.RaycastResult
      * @classdesc Object holding the result of a successful raycast hit
      * @description Create a new RaycastResult
@@ -26,7 +26,7 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.SingleContactResult
      * @classdesc Object holding the result of a contact between two rigid bodies
      * @description Create a new SingleContactResult
@@ -62,7 +62,7 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.ContactPoint
      * @classdesc Object holding the result of a contact between two Entities.
      * @description Create a new ContactPoint
@@ -94,7 +94,7 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.ContactResult
      * @classdesc Object holding the result of a contact between two Entities
      * @description Create a new ContactResult
@@ -132,9 +132,9 @@ Object.assign(pc, function () {
     ];
 
     /**
-     * @constructor
+     * @class
      * @name pc.RigidBodyComponentSystem
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies,
      * it also controls global values for the world such as gravity. Note: The RigidBodyComponentSystem
      * is only valid if 3D Physics is enabled in your application. You can enable this in the application

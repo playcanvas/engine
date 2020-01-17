@@ -1,8 +1,8 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.Application
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc A pc.Application represents and manages your PlayCanvas application.
      * If you are developing using the PlayCanvas Editor, the pc.Application is created
      * for you. You can access your pc.Application instance in your scripts. Below is a

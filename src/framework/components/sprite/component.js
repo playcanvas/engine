@@ -28,9 +28,9 @@ Object.assign(pc, function () {
 
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.SpriteComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @classdesc Enables an Entity to render a simple static sprite or sprite animations.
      * @param {pc.SpriteComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.Entity} entity The Entity that this Component is attached to.

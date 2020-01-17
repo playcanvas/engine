@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.CollisionComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @classdesc A collision volume. Use this in conjunction with a {@link pc.RigidBodyComponent} to make a collision volume that can be simulated using the physics engine.
      * <p>If the {@link pc.Entity} does not have a {@link pc.RigidBodyComponent} then this collision volume will act as a trigger volume. When an entity with a dynamic
      * or kinematic body enters or leaves an entity with a trigger volume, both entities will receive trigger events.

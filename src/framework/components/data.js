@@ -1,7 +1,7 @@
 Object.assign(pc, function () {
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.ComponentData
      * @classdesc Base class for Component data storage.
      */

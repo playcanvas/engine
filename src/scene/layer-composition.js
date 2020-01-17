@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.LayerComposition
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc Layer Composition is a collection of {@link pc.Layer} that is fed to {@link pc.Scene#layers} to define rendering order.
      * @description Create a new layer composition.
      * @property {pc.Layer[]} layerList A read-only array of {@link pc.Layer} sorted in the order they will be rendered.

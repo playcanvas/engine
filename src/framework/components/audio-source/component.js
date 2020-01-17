@@ -2,9 +2,9 @@ Object.assign(pc, function () {
     /**
      * @private
      * @component
-     * @constructor
+     * @class
      * @name pc.AudioSourceComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @classdesc The AudioSource Component controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponent}.
      * @description Create a new AudioSource Component
      * @param {pc.AudioSourceComponentSystem} system The ComponentSystem that created this Component

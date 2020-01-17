@@ -1,7 +1,7 @@
 Object.assign(pc, function () {
     var depthLayer;
     /**
-     * @constructor
+     * @class
      * @name pc.PostEffectQueue
      * @classdesc Used to manage multiple post effects for a camera
      * @description Create a new PostEffectQueue

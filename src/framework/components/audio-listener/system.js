@@ -2,9 +2,9 @@ Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
-     * @constructor
+     * @class
      * @name pc.AudioListenerComponentSystem
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Component System for adding and removing {@link pc.AudioComponent} objects to Entities.
      * @description Create a new AudioListenerComponentSystem
      * @param {pc.Application} app The application managing this system.

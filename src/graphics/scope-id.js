@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.ScopeId
      * @classdesc The scope for a variable.
      * @param {String} name The variable name.

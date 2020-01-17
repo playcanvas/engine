@@ -1,8 +1,8 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.LightComponentSystem
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc A Light Component is used to dynamically light the scene.
      * @description Create a new LightComponentSystem.
      * @param {pc.Application} app The application.

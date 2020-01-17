@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.ScrollbarComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @description Create a new ScrollbarComponent
      * @classdesc A ScrollbarComponent enables a group of entities to behave like a draggable scrollbar.
      * @param {pc.ScrollbarComponentSystem} system The ComponentSystem that created this Component

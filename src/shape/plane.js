@@ -3,7 +3,7 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.Plane
      * @classdesc An infinite plane.
      * @description Create an infinite plane.

@@ -1,8 +1,8 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.AssetRegistry
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc Container for all assets that are available to this application
      * @description Create an instance of an AssetRegistry.
      * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.

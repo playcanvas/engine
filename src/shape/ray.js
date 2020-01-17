@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.Ray
      * @classdesc An infinite ray
      * @description Creates a new infinite ray starting at a given origin and pointing in a given direction.

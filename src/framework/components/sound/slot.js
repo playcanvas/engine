@@ -22,9 +22,9 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.SoundSlot
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc The SoundSlot controls playback of an audio asset.
      * @description Create a new SoundSlot
      * @param {pc.SoundComponent} component The Component that created this slot.

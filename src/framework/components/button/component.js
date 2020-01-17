@@ -26,9 +26,9 @@ Object.assign(pc, function () {
 
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.ButtonComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @classdesc A ButtonComponent enables a group of entities to behave like a button, with different visual states for hover and press interactions.
      * @description Create a new ButtonComponent.
      * @param {pc.ButtonComponentSystem} system The ComponentSystem that created this Component

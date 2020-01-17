@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.SoundComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @classdesc The Sound Component controls playback of {@link pc.Sound}s.
      * @description Create a new Sound Component.
      * @param {pc.SoundComponentSystem} system The ComponentSystem that created this Component

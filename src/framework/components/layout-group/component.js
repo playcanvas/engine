@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.LayoutGroupComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @description Create a new LayoutGroupComponent
      * @classdesc A LayoutGroupComponent enables the Entity to position and scale child {@link pc.ElementComponent}s according to configurable layout rules.
      * @param {pc.LayoutGroupComponentSystem} system The ComponentSystem that created this Component

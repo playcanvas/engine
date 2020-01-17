@@ -9,9 +9,9 @@ Object.assign(pc, function () {
     var tmpQuat = new pc.Quat();
 
     /**
-     * @constructor
+     * @class
      * @name pc.GraphNode
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc A hierarchical scene node.
      * @param {String} [name] The non-unique name of the graph node, default is "Untitled".
      * @property {String} name The non-unique name of a graph node.

@@ -5,7 +5,7 @@ Object.assign(pc, function () {
     var tmpVecD = new pc.Vec3();
 
     /**
-     * @constructor
+     * @class
      * @name pc.BoundingSphere
      * @classdesc A bounding sphere is a volume for facilitating fast intersection testing.
      * @description Creates a new bounding sphere.

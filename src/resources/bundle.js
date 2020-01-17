@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     'use strict';
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.BundleHandler
      * @implements {pc.ResourceHandler}
      * @param {pc.AssetRegistry} assets The asset registry

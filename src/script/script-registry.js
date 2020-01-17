@@ -1,8 +1,8 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.ScriptRegistry
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc Container for all Script Types that are available to this application
      * @description Create an instance of a pc.ScriptRegistry.
      * Note: PlayCanvas scripts can access the Script Registry from inside the application with {@link pc.Application#scripts} {@link pc.ADDRESS_REPEAT}.

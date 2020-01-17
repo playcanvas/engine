@@ -2,11 +2,11 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.FxaaEffect
      * @classdesc Implements the FXAA post effect by NVIDIA
      * @description Creates new instance of the post effect.
-     * @extends pc.PostEffect
+     * @augments pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      */
     var FxaaEffect = function (graphicsDevice) {

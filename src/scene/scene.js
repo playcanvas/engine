@@ -689,9 +689,9 @@
 
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.Scene
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc A scene is graphical representation of an environment. It manages the scene hierarchy, all
      * graphical objects, lights, and scene-wide properties.
      * @description Creates a new Scene.

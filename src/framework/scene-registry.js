@@ -2,7 +2,7 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.SceneRegistryItem
      * @description Item to be stored in the {@link pc.SceneRegistry}
      * @param {String} name The name of the scene
@@ -15,7 +15,7 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.SceneRegistry
      * @description Container for storing the name and url for scene files
      * @param {pc.Application} app The application

@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.LayoutChildComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @description Create a new LayoutChildComponent
      * @classdesc A LayoutChildComponent enables the Entity to control the sizing applied to it by its parent {@link pc.LayoutGroupComponent}.
      * @param {pc.LayoutChildComponentSystem} system The ComponentSystem that created this Component

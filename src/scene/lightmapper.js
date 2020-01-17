@@ -73,7 +73,7 @@ Object.assign(pc, function () {
     }
 
     /**
-     * @constructor
+     * @class
      * @name pc.Lightmapper
      * @classdesc The lightmapper is used to bake scene lights into textures.
      * @param {pc.GraphicsDevice} device The grahpics device used by the lightmapper.

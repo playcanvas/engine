@@ -64,7 +64,7 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.Layer
      * @classdesc Layer represents a renderable subset of the scene. It can contain a list of mesh instances, lights and cameras,
      * their render settings and also defines custom callbacks before, after or during rendering.

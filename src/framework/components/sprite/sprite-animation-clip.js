@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.SpriteAnimationClip
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc Handles playing of sprite animations and loading of relevant sprite assets.
      * @param {pc.SpriteComponent} component The sprite component managing this clip.
      * @param {Object} data Data for the new animation clip.

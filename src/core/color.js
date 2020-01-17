@@ -1,6 +1,6 @@
 Object.assign(pc, (function () {
     /**
-     * @constructor
+     * @class
      * @name pc.Color
      * @classdesc Representation of an RGBA color
      * @description Create a new Color object

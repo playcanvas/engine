@@ -7,7 +7,7 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.RenderTarget
      * @classdesc A render target is a rectangular rendering surface.
      * @description Creates a new render target. A color buffer or a depth buffer must be set.

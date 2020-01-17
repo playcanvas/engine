@@ -1,7 +1,7 @@
 Object.assign(pc, (function () {
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.IndexedList
      * @classdesc A ordered list-type data structure that can provide item look up by key, but also return return a list.\
      */

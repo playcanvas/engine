@@ -2,11 +2,11 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.BokehEffect
      * @classdesc Implements the BokehEffect post processing effect
      * @description Creates new instance of the post effect.
-     * @extends pc.PostEffect
+     * @augments pc.PostEffect
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} maxBlur The maximum amount of blurring. Ranges from 0 to 1
      * @property {Number} aperture Bigger values create a shallower depth of field

@@ -64,7 +64,7 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.ElementInputEvent
      * @classdesc Represents an input event fired on a {@link pc.ElementComponent}. When an event is raised
      * on an ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
@@ -96,9 +96,9 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @constructor
+     * @class
      * @name pc.ElementMouseEvent
-     * @extends pc.ElementInputEvent
+     * @augments pc.ElementInputEvent
      * @classdesc Represents a Mouse event fired on a {@link pc.ElementComponent}.
      * @description Create an instance of a pc.ElementMouseEvent.
      * @param {MouseEvent} event The MouseEvent that was originally raised.
@@ -152,9 +152,9 @@ Object.assign(pc, function () {
     ElementMouseEvent.prototype.constructor = ElementMouseEvent;
 
     /**
-     * @constructor
+     * @class
      * @name pc.ElementTouchEvent
-     * @extends pc.ElementInputEvent
+     * @augments pc.ElementInputEvent
      * @classdesc Represents a TouchEvent fired on a {@link pc.ElementComponent}.
      * @description Create an instance of a pc.ElementTouchEvent.
      * @param {TouchEvent} event The TouchEvent that was originally raised.
@@ -178,7 +178,7 @@ Object.assign(pc, function () {
     ElementTouchEvent.prototype.constructor = ElementTouchEvent;
 
     /**
-     * @constructor
+     * @class
      * @name pc.ElementInput
      * @classdesc Handles mouse and touch events for {@link pc.ElementComponent}s. When input events
      * occur on an ElementComponent this fires the appropriate events on the ElementComponent.

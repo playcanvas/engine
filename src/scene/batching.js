@@ -3,7 +3,7 @@ Object.assign(pc, function () {
     // TODO: split by new layers
 
     /**
-     * @constructor
+     * @class
      * @name pc.Batch
      * @classdesc Holds information about batched mesh instances. Created in {@link pc.BatchManager#create}.
      * @param {pc.MeshInstance[]} meshInstances The mesh instances to be batched.
@@ -26,7 +26,7 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.BatchGroup
      * @classdesc Holds mesh batching settings and a unique id. Created via {@link pc.BatchManager#addGroup}.
      * @param {Number} id Unique id. Can be assigned to model and element components.
@@ -141,7 +141,7 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @constructor
+     * @class
      * @name pc.BatchManager
      * @classdesc Glues many mesh instances into a single one for better performance.
      * @param {pc.GraphicsDevice} device The graphics device used by the batch manager.

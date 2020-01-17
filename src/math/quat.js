@@ -2,7 +2,7 @@ Object.assign(pc, (function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.Quat
      * @classdesc A quaternion.
      * @description Create a new Quat object.

@@ -1,7 +1,7 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.CubemapHandler
      * @implements {pc.ResourceHandler}
      * @classdesc Resource handler used for loading cubemap {@link pc.Texture} resources

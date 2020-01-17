@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.Shader
      * @classdesc A shader is a program that is responsible for rendering graphical primitives on a device's
      * graphics processor. The shader is generated from a shader definition. This shader definition specifies

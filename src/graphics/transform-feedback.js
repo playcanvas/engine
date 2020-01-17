@@ -3,7 +3,7 @@ Object.assign(pc, function () {
 
     /* eslint-disable jsdoc/check-examples */
     /**
-     * @constructor
+     * @class
      * @name pc.TransformFeedback
      * @classdesc Transform feedback helper object.
      * @description This object allows you to configure and use the transform feedback feature (WebGL2 only).

@@ -1,6 +1,6 @@
 /**
  * @private
- * @constructor
+ * @class
  * @name pc.ApplicationStats
  * @param {pc.GraphicsDevice} device The graphics device.
  */

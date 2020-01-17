@@ -3,7 +3,7 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.Bundle
      * @param {Object[]} files An array of objects that have a name field and contain a getBlobUrl() function
      * @classdesc Represents the resource of a Bundle Asset, which contains an index that maps URLs to blob URLs.

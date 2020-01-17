@@ -1,8 +1,8 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.VrDisplay
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc Represents a single Display for VR content. This could be a Head Mounted display that can present content on a separate screen
      * or a phone which can display content full screen on the same screen. This object contains the native `navigator.VRDisplay` object
      * from the WebVR API.

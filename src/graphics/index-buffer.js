@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.IndexBuffer
      * @classdesc An index buffer is the mechanism via which the application specifies primitive
      * index data to the graphics hardware.

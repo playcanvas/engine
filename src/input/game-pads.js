@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.GamePads
      * @classdesc Input handler for accessing GamePad input.
      */

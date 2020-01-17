@@ -5,7 +5,7 @@ Object.assign(pc, function () {
     var tmpMat4 = new pc.Mat4();
 
     /**
-     * @constructor
+     * @class
      * @name pc.OrientedBox
      * @description Create a new oriented box.
      * @classdesc Oriented Box.

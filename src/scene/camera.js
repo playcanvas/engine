@@ -6,7 +6,7 @@ Object.assign(pc, function () {
     var _invViewProjMat = new pc.Mat4();
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.Camera
      * @classdesc A camera.
      */

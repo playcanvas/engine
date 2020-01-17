@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     var id = 0;
 
     /**
-     * @constructor
+     * @class
      * @name pc.Material
      * @classdesc A material determines how a particular mesh instance is rendered. It specifies the shader and render state that is
      * set before the mesh instance is submitted to the graphics device.

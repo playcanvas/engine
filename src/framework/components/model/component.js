@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.ModelComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @classdesc Enables an Entity to render a model or a primitive shape. This Component attaches additional model
      * geometry in to the scene graph below the Entity.
      * @description Create a new ModelComponent

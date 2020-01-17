@@ -26,7 +26,7 @@ Object.assign(pc, function () {
     }
 
     /**
-     * @constructor
+     * @class
      * @name pc.FontHandler
      * @implements {pc.ResourceHandler}
      * @classdesc Resource handler used for loading {@link pc.Font} resources

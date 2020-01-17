@@ -16,7 +16,7 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.MaterialHandler
      * @implements {pc.ResourceHandler}
      * @classdesc Resource handler used for loading {@link pc.Material} resources

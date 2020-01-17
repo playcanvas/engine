@@ -6,7 +6,7 @@ Object.assign(pc, function () {
     var tmpVecE = new pc.Vec3();
 
     /**
-     * @constructor
+     * @class
      * @name pc.BoundingBox
      * @description Create a new axis-aligned bounding box.
      * @classdesc Axis-Aligned Bounding Box.

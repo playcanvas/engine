@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.Touch
      * @classdesc A instance of a single point touch on a {@link pc.TouchDevice}
      * @description Create a new Touch object from the browser Touch
@@ -25,7 +25,7 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.TouchEvent
      * @classdesc A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the standard
      * browser event and provides lists of {@link pc.Touch} objects.
@@ -79,9 +79,9 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @constructor
+     * @class
      * @name pc.TouchDevice
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc Attach a TouchDevice to an element and it will receive and fire events when the element is touched.
      * See also {@link pc.Touch} and {@link pc.TouchEvent}
      * @description Create a new touch device and attach it to an element

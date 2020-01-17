@@ -3,7 +3,7 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.BundleRegistry
      * @param {pc.AssetRegistry} assets The asset registry
      * @classdesc Keeps track of which assets are in bundles and loads files from bundles.

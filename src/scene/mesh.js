@@ -3,7 +3,7 @@ Object.assign(pc, function () {
     var _tmpAabb = new pc.BoundingBox();
 
     /**
-     * @constructor
+     * @class
      * @name pc.Mesh
      * @classdesc A graphical primitive. The mesh is defined by a {@link pc.VertexBuffer} and an optional
      * {@link pc.IndexBuffer}. It also contains a primitive definition which controls the type of the
@@ -67,7 +67,7 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @constructor
+     * @class
      * @name pc.MeshInstance
      * @classdesc An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
      * mesh instances that can have different transforms and materials.

@@ -1,6 +1,6 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.StencilParameters
      * @classdesc Holds stencil test settings
      * @description Create a new StencilParameters instance

@@ -1,7 +1,7 @@
 Object.assign(pc, (function () {
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.Timer
      * @description Create a new Timer instance.
      * @classdesc A Timer counts milliseconds from when start() is called until when stop() is called.

@@ -2,7 +2,7 @@ Object.assign(pc, (function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.EventHandler
      * @classdesc Abstract base class that implements functionality for event handling.
      * @description Create a new event handler.

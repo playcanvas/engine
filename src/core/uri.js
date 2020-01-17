@@ -60,7 +60,7 @@ Object.assign(pc, function () {
 
         /**
          * @private
-         * @constructor
+         * @class
          * @name pc.URI
          * @description Create a new URI object
          * @classdesc A URI object
