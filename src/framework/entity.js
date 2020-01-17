@@ -12,8 +12,8 @@ Object.assign(pc, function () {
      * The Component and ComponentSystem provide the logic to give an Entity a specific type of behavior. e.g. the ability to
      * render a model or play a sound. Components are specific to an instance of an Entity and are attached (e.g. `this.entity.model`)
      * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
-     * @param {string} [name] The non-unique name of the entity, default is "Untitled".
-     * @param {pc.Application} [app] The application the entity belongs to, default is the current application.
+     * @param {string} [name] - The non-unique name of the entity, default is "Untitled".
+     * @param {pc.Application} [app] - The application the entity belongs to, default is the current application.
      * @property {pc.AnimationComponent} [animation] Gets the {@link pc.AnimationComponent} attached to this entity. [read only]
      * @property {pc.AudioListenerComponent} [audiolistener] Gets the {@link pc.AudioSourceComponent} attached to this entity. [read only]
      * @property {pc.ButtonComponent} [button] Gets the {@link pc.ButtonComponent} attached to this entity. [read only]
@@ -87,7 +87,7 @@ Object.assign(pc, function () {
      * @name pc.Entity#addComponent
      * @description Create a new component and add it to the entity.
      * Use this to add functionality to the entity like rendering a model, playing sounds and so on.
-     * @param {string} type The name of the component to add. Valid strings are:
+     * @param {string} type - The name of the component to add. Valid strings are:
      * <ul>
      *   <li>"animation" - see {@link pc.AnimationComponent}</li>
      *   <li>"audiolistener" - see {@link pc.AudioListenerComponent}</li>
@@ -108,7 +108,7 @@ Object.assign(pc, function () {
      *   <li>"sound" - see {@link pc.SoundComponent}</li>
      *   <li>"sprite" - see {@link pc.SpriteComponent}</li>
      * </ul>
-     * @param {object} [data] The initialization data for the specific component type. Refer to each
+     * @param {object} [data] - The initialization data for the specific component type. Refer to each
      * specific component's API reference page for details on valid values for this parameter.
      * @returns {pc.Component} The new Component that was attached to the entity or null if there
      * was an error.
@@ -145,7 +145,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Entity#removeComponent
      * @description Remove a component from the Entity.
-     * @param {string} type The name of the Component type
+     * @param {string} type - The name of the Component type
      * @example
      * var entity = new pc.Entity();
      * entity.addComponent("light"); // add new light component
@@ -173,7 +173,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Entity#findComponent
      * @description Search the entity and all of its descendants for the first component of specified type.
-     * @param {string} type The name of the component type to retrieve.
+     * @param {string} type - The name of the component type to retrieve.
      * @returns {pc.Component} A component of specified type, if the entity or any of its descendants has
      * one. Returns undefined otherwise.
      * @example
@@ -191,7 +191,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Entity#findComponents
      * @description Search the entity and all of its descendants for all components of specified type.
-     * @param {string} type The name of the component type to retrieve.
+     * @param {string} type - The name of the component type to retrieve.
      * @returns {pc.Component} All components of specified type in the entity or any of its descendants.
      * Returns empty array if none found.
      * @example
@@ -231,7 +231,7 @@ Object.assign(pc, function () {
      * @description Set the GUID value for this Entity.
      *
      * N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
-     * @param {string} guid The GUID to assign to the Entity
+     * @param {string} guid - The GUID to assign to the Entity
      */
     Entity.prototype.setGuid = function (guid) {
         // remove current guid from entityIndex
@@ -310,7 +310,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Entity#setRequest
      * @description Used during resource loading to ensure that child resources of Entities are tracked
-     * @param {ResourceRequest} request The request being used to load this entity
+     * @param {ResourceRequest} request - The request being used to load this entity
      */
     Entity.prototype.setRequest = function (request) {
         this._request = request;
@@ -331,7 +331,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Entity#findByGuid
      * @description Find a descendant of this Entity with the GUID
-     * @param {string} guid The GUID to search for.
+     * @param {string} guid - The GUID to search for.
      * @returns {pc.Entity} The Entity with the GUID or null
      */
     Entity.prototype.findByGuid = function (guid) {
@@ -515,7 +515,7 @@ Object.assign(pc, function () {
  * @event
  * @name pc.Entity#destroy
  * @description Fired after the entity is destroyed.
- * @param {pc.Entity} entity The entity that was destroyed.
+ * @param {pc.Entity} entity - The entity that was destroyed.
  * @example
  * entity.on("destroy", function (e) {
  *     console.log('entity ' + e.name + ' has been destroyed');

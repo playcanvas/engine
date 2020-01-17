@@ -44,15 +44,15 @@ Object.assign(pc, function () {
      *
      * See the {@link pc.AssetRegistry} for details on loading resources from assets.
      * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
-     * @param {string} name A non-unique but human-readable name which can be later used to retrieve the asset.
-     * @param {string} type Type of asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
-     * @param {object} [file] Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
+     * @param {string} name - A non-unique but human-readable name which can be later used to retrieve the asset.
+     * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
+     * @param {object} [file] - Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
      * @example
      * var file = {
      *     filename: "filename.txt",
      *     url: "/example/filename.txt"
      * };
-     * @param {object} [data] JSON object with additional data about the asset (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of materials)
+     * @param {object} [data] - JSON object with additional data about the asset (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of materials)
      * @example
      * var asset = new pc.Asset("a texture", "texture", {
      *     url: "http://example.com/my/assets/here/texture.png"
@@ -110,48 +110,48 @@ Object.assign(pc, function () {
      * @event
      * @name pc.Asset#load
      * @description Fired when the asset has completed loading
-     * @param {pc.Asset} asset The asset that was loaded
+     * @param {pc.Asset} asset - The asset that was loaded
      */
 
     /**
      * @event
      * @name pc.Asset#remove
      * @description Fired when the asset is removed from the asset registry
-     * @param {pc.Asset} asset The asset that was removed
+     * @param {pc.Asset} asset - The asset that was removed
      */
 
     /**
      * @event
      * @name pc.Asset#error
      * @description Fired if the asset encounters an error while loading
-     * @param {string} err The error message
-     * @param {pc.Asset} asset The asset that generated the error
+     * @param {string} err - The error message
+     * @param {pc.Asset} asset - The asset that generated the error
      */
 
     /**
      * @event
      * @name pc.Asset#change
      * @description Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed
-     * @param {pc.Asset} asset The asset that was loaded
-     * @param {string} property The name of the property that changed
-     * @param {*} value The new property value
-     * @param {*} oldValue The old property value
+     * @param {pc.Asset} asset - The asset that was loaded
+     * @param {string} property - The name of the property that changed
+     * @param {*} value - The new property value
+     * @param {*} oldValue - The old property value
      */
 
     /**
      * @event
      * @name pc.Asset#add:localized
      * @description Fired when we add a new localized asset id to the asset.
-     * @param {string} locale The locale
-     * @param {number} assetId The asset id we added.
+     * @param {string} locale - The locale
+     * @param {number} assetId - The asset id we added.
      */
 
     /**
      * @event
      * @name pc.Asset#remove:localized
      * @description Fired when we remove a localized asset id from the asset.
-     * @param {string} locale The locale
-     * @param {number} assetId The asset id we removed.
+     * @param {string} locale - The locale
+     * @param {number} assetId - The asset id we removed.
      */
 
     Object.assign(Asset.prototype, {
@@ -225,7 +225,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Asset#getLocalizedAssetId
-         * @param {string} locale The desired locale e.g. ar-AR.
+         * @param {string} locale - The desired locale e.g. ar-AR.
          * @description Returns the asset id of the asset that corresponds to the specified locale.
          * @returns {number} An asset id or null if there is no asset specified for the desired locale.
          */
@@ -239,8 +239,8 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Asset#addLocalizedAssetId
-         * @param {string} locale The locale e.g. ar-AR.
-         * @param {number} assetId The asset id
+         * @param {string} locale - The locale e.g. ar-AR.
+         * @param {number} assetId - The asset id
          * @description Adds a replacement asset id for the specified locale. When the locale in {@link pc.Application#i18n} changes then
          * references to this asset will be replaced with the specified asset id. (Currently only supported by the {@link pc.ElementComponent}).
          */
@@ -253,7 +253,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Asset#removeLocalizedAssetId
-         * @param {string} locale The locale e.g. ar-AR.
+         * @param {string} locale - The locale e.g. ar-AR.
          * @description Removes a localized asset
          */
         removeLocalizedAssetId: function (locale) {
@@ -268,8 +268,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Asset#ready
          * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away
-         * @param {pc.callbacks.AssetReady} callback The function called when the asset is ready. Passed the (asset) arguments
-         * @param {object} [scope] Scope object to use when calling the callback
+         * @param {pc.callbacks.AssetReady} callback - The function called when the asset is ready. Passed the (asset) arguments
+         * @param {object} [scope] - Scope object to use when calling the callback
          * @example
          * var asset = app.assets.find("My Asset");
          * asset.ready(function (asset) {

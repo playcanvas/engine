@@ -8,8 +8,8 @@ Object.assign(pc, function () {
      * enabled camera component to be rendered. Note that multiple camera components can be enabled
      * simultaneously (for split-screen or offscreen rendering, for example).
      * @description Create a new Camera Component.
-     * @param {pc.CameraComponentSystem} system The ComponentSystem that created this Component.
-     * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @param {pc.CameraComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @example
      * // Add a pc.CameraComponent to an entity
      * var entity = new pc.Entity();
@@ -179,10 +179,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.CameraComponent#screenToWorld
          * @description Convert a point from 2D screen space to 3D world space.
-         * @param {number} screenx x coordinate on PlayCanvas' canvas element.
-         * @param {number} screeny y coordinate on PlayCanvas' canvas element.
-         * @param {number} cameraz The distance from the camera in world space to create the new point.
-         * @param {pc.Vec3} [worldCoord] 3D vector to receive world coordinate result.
+         * @param {number} screenx - x coordinate on PlayCanvas' canvas element.
+         * @param {number} screeny - y coordinate on PlayCanvas' canvas element.
+         * @param {number} cameraz - The distance from the camera in world space to create the new point.
+         * @param {pc.Vec3} [worldCoord] - 3D vector to receive world coordinate result.
          * @example
          * // Get the start and end points of a 3D ray fired from a screen click position
          * var start = entity.camera.screenToWorld(clickX, clickY, entity.camera.nearClip);
@@ -208,8 +208,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.CameraComponent#worldToScreen
          * @description Convert a point from 3D world space to 2D screen space.
-         * @param {pc.Vec3} worldCoord The world space coordinate.
-         * @param {pc.Vec3} [screenCoord] 3D vector to receive screen coordinate result.
+         * @param {pc.Vec3} worldCoord - The world space coordinate.
+         * @param {pc.Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
          * @returns {pc.Vec3} The screen space coordinate.
          */
         worldToScreen: function (worldCoord, screenCoord) {
@@ -416,7 +416,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.CameraComponent#calculateAspectRatio
          * @description Calculates aspect ratio value for a given render target.
-         * @param {pc.RenderTarget} [rt] Optional render target. If unspecified, the backbuffer is assumed.
+         * @param {pc.RenderTarget} [rt] - Optional render target. If unspecified, the backbuffer is assumed.
          * @returns {number} The aspect ratio of the render target (or backbuffer).
          */
         calculateAspectRatio: function (rt) {
@@ -430,7 +430,7 @@ Object.assign(pc, function () {
          * @private
          * @name pc.CameraComponent#frameBegin
          * @description Start rendering the frame for this camera.
-         * @param {pc.RenderTarget} rt Render target to which rendering will be performed. Will affect camera's aspect ratio, if aspectRatioMode is pc.ASPECT_AUTO.
+         * @param {pc.RenderTarget} rt - Render target to which rendering will be performed. Will affect camera's aspect ratio, if aspectRatioMode is pc.ASPECT_AUTO.
          */
         frameBegin: function (rt) {
             if (this.aspectRatioMode === pc.ASPECT_AUTO) {
@@ -453,7 +453,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.CameraComponent#enterVr
          * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
-         * @param {pc.callbacks.VrCamera} callback Function called once to indicate success of failure. The callback takes one argument (err).
+         * @param {pc.callbacks.VrCamera} callback - Function called once to indicate success of failure. The callback takes one argument (err).
          * On success it returns null on failure it returns the error message.
          * @example
          * // On an entity with a camera component
@@ -470,8 +470,8 @@ Object.assign(pc, function () {
          * @name pc.CameraComponent#enterVr
          * @variation 2
          * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
-         * @param {pc.VrDisplay} display The VrDisplay to present. If not supplied this uses {@link pc.VrManager#display} as the default
-         * @param {pc.callbacks.VrCamera} callback Function called once to indicate success of failure. The callback takes one argument (err).
+         * @param {pc.VrDisplay} display - The VrDisplay to present. If not supplied this uses {@link pc.VrManager#display} as the default
+         * @param {pc.callbacks.VrCamera} callback - Function called once to indicate success of failure. The callback takes one argument (err).
          * On success it returns null on failure it returns the error message.
          * @example
          * // On an entity with a camera component
@@ -530,7 +530,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.CameraComponent#exitVr
          * @description Attempt to stop presenting this camera.
-         * @param {pc.callbacks.VrCamera} callback Function called once to indicate success of failure. The callback takes one argument (err).
+         * @param {pc.callbacks.VrCamera} callback - Function called once to indicate success of failure. The callback takes one argument (err).
          * On success it returns null on failure it returns the error message.
          * @example
          * this.entity.camera.exitVr(function (err) {

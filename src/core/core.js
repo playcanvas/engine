@@ -43,7 +43,7 @@ var pc = {
      * @name pc.makeArray
      * @description Convert an array-like object into a normal array.
      * For example, this is useful for converting the arguments object into an array.
-     * @param {object} arr The array to convert
+     * @param {object} arr - The array to convert
      * @returns {Array} An array
      */
     makeArray: function (arr) {
@@ -63,7 +63,7 @@ var pc = {
      * @function
      * @name pc.type
      * @description Extended typeof() function, returns the type of the object.
-     * @param {object} obj The object to get the type of
+     * @param {object} obj - The object to get the type of
      * @returns {string} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array"
      */
     type: function (obj) {
@@ -85,8 +85,8 @@ var pc = {
      * @function
      * @name pc.extend
      * @description Merge the contents of two objects into a single object
-     * @param {object} target The target object of the merge
-     * @param {object} ex The object that is merged with target
+     * @param {object} target - The target object of the merge
+     * @param {object} ex - The object that is merged with target
      * @returns {object} The target object
      * @example
      * var A = {
@@ -130,7 +130,7 @@ var pc = {
      * @function
      * @name pc.isDefined
      * @description Return true if the Object is not undefined
-     * @param {object} o The Object to test
+     * @param {object} o - The Object to test
      * @returns {boolean} True if the Object is not undefined
      */
     isDefined: function (o) {

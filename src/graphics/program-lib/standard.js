@@ -224,9 +224,9 @@ pc.programlib.standard = {
      * @function
      * @name _getUvSourceExpression
      * @description Get the code with which to to replace '$UV' in the map shader functions
-     * @param  {string} transformPropName Name of the transform id in the options block. Usually "basenameTransform"
-     * @param  {string} uVPropName        Name of the UV channel in the options block. Usually "basenameUv"
-     * @param  {object} options           The options passed into createShaderDefinition
+     * @param  {string} transformPropName - Name of the transform id in the options block. Usually "basenameTransform"
+     * @param  {string} uVPropName -        Name of the UV channel in the options block. Usually "basenameUv"
+     * @param  {object} options -           The options passed into createShaderDefinition
      * @returns {string}                   The code used to replace "$UV" in the shader code
      */
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
@@ -276,11 +276,11 @@ pc.programlib.standard = {
      * @function
      * @name  _addMap
      * @description Add chunk for Map Types (used for all maps except Normal)
-     * @param {string} propName      The base name of the map: diffuse | emissive | opacity | light | height | metalness | specular | gloss | ao
-     * @param {string} chunkName     The name of the chunk to use. Usually "basenamePS"
-     * @param {object} options       The options passed into to createShaderDefinition
-     * @param {object} chunks        The set of shader chunks to choose from
-     * @param {string} samplerFormat Format of texture sampler to use - 0: "texture2DSRGB", 1: "texture2DRGBM", 2: "texture2D"
+     * @param {string} propName -      The base name of the map: diffuse | emissive | opacity | light | height | metalness | specular | gloss | ao
+     * @param {string} chunkName -     The name of the chunk to use. Usually "basenamePS"
+     * @param {object} options -       The options passed into to createShaderDefinition
+     * @param {object} chunks -        The set of shader chunks to choose from
+     * @param {string} samplerFormat - Format of texture sampler to use - 0: "texture2DSRGB", 1: "texture2DRGBM", 2: "texture2D"
      * @returns {string} The shader code to support this map
      */
     _addMap: function (propName, chunkName, options, chunks, samplerFormat) {
@@ -365,10 +365,10 @@ pc.programlib.standard = {
      * @function
      * @name _fsAddBaseCode
      * @description Add "Base" Code section to fragment shader
-     * @param  {string} code Current fragment shader code
-     * @param  {pc.GraphicsDevice} device The graphics device
-     * @param  {object} chunks All available shader chunks
-     * @param  {object} options The Shader Definition options
+     * @param  {string} code - Current fragment shader code
+     * @param  {pc.GraphicsDevice} device - The graphics device
+     * @param  {object} chunks - All available shader chunks
+     * @param  {object} options - The Shader Definition options
      * @returns {string} The new fragment shader code (old+new)
      */
     _fsAddBaseCode: function (code, device, chunks, options) {
@@ -387,10 +387,10 @@ pc.programlib.standard = {
      * @function
      * @name  _fsAddStartCode
      * @description Add "Start" Code section to fragment shader
-     * @param  {string} code  Current fragment shader code
-     * @param  {pc.GraphicsDevice} device The graphics device
-     * @param  {object} chunks All available shader chunks
-     * @param  {object} options The Shader Definition options
+     * @param  {string} code -  Current fragment shader code
+     * @param  {pc.GraphicsDevice} device - The graphics device
+     * @param  {object} chunks - All available shader chunks
+     * @param  {object} options - The Shader Definition options
      * @returns {string} The new fragment shader code (old+new)
      */
     _fsAddStartCode: function (code, device, chunks, options) {

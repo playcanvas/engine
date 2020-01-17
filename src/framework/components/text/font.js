@@ -6,8 +6,8 @@ Object.assign(pc, function () {
      * @class
      * @name pc.Font
      * @classdesc Represents the resource of a font asset.
-     * @param {pc.Texture[]} textures The font textures
-     * @param {object} data The font data
+     * @param {pc.Texture[]} textures - The font textures
+     * @param {object} data - The font data
      * @property {number} intensity The font intensity
      * @property {pc.Texture[]} textures The font textures
      */

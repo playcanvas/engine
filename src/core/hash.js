@@ -5,7 +5,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.hashCode
          * @description Calculates simple hash value of a string. Designed for performance, not perfect.
-         * @param {string} str String
+         * @param {string} str - String
          * @returns {number} Hash value
          */
         hashCode: function (str) {

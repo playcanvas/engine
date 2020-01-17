@@ -11,14 +11,14 @@ Object.assign(pc, function () {
      * the PlayCanvas engine should map vertex buffer elements onto the attributes specified in the vertex
      * shader code.
      * @description Creates a new shader object.
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this shader.
-     * @param {object} definition The shader definition from which to build the shader.
-     * @param {object} definition.attributes Object detailing the mapping of vertex shader attribute names
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this shader.
+     * @param {object} definition - The shader definition from which to build the shader.
+     * @param {object} definition.attributes - Object detailing the mapping of vertex shader attribute names
      * to semantics (pc.SEMANTIC_*). This enables the engine to match vertex buffer data as inputs to the
      * shader.
-     * @param {string} definition.vshader Vertex shader source (GLSL code).
-     * @param {string} definition.fshader Fragment shader source (GLSL code).
-     * @param {boolean} definition.useTransformFeedback Specifies that this shader outputs post-VS data to a buffer.
+     * @param {string} definition.vshader - Vertex shader source (GLSL code).
+     * @param {string} definition.fshader - Fragment shader source (GLSL code).
+     * @param {boolean} definition.useTransformFeedback - Specifies that this shader outputs post-VS data to a buffer.
      * @example
      * // Create a shader that renders primitives with a solid red color
      * var shaderDefinition = {

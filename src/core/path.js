@@ -15,8 +15,8 @@ pc.path = function () {
          * @function
          * @name pc.path.join
          * @description Join two sections of file path together, insert a delimiter if needed.
-         * @param {string} one First part of path to join.
-         * @param {string} two Second part of path to join.
+         * @param {string} one - First part of path to join.
+         * @param {string} two - Second part of path to join.
          * @returns {string} The joined file path.
          */
         join: function () {
@@ -49,7 +49,7 @@ pc.path = function () {
          * @function
          * @name  pc.path.normalize
          * @description  Normalize the path by removing '.' and '..' instances
-         * @param  {string} path The path to normalize
+         * @param  {string} path - The path to normalize
          * @returns {string} The normalized path
          */
         normalize: function (path) {
@@ -92,7 +92,7 @@ pc.path = function () {
          * @name pc.path.split
          * @description Split the pathname path into a pair [head, tail] where tail is the final part of the path
          * after the last delimiter and head is everything leading up to that. tail will never contain a slash
-         * @param {string} path The path to split.
+         * @param {string} path - The path to split.
          * @returns {string[]} The split path which is an array of two strings, the path and the filename.
          */
         split: function (path) {
@@ -107,7 +107,7 @@ pc.path = function () {
          * @name pc.path.getBasename
          * @description Return the basename of the path. That is the second element of the pair returned by
          * passing path into {@link pc.path.split}.
-         * @param {string} path The path to process.
+         * @param {string} path - The path to process.
          * @returns {string} The basename.
          * @example
          * pc.path.getBasename("/path/to/file.txt"); // returns "path.txt"
@@ -121,7 +121,7 @@ pc.path = function () {
          * @function
          * @name pc.path.getDirectory
          * @description Get the directory name from the path. This is everything up to the final instance of pc.path.delimiter.
-         * @param {string} path The path to get the directory from
+         * @param {string} path - The path to get the directory from
          * @returns {string} The directory part of the path.
          */
         getDirectory: function (path) {
@@ -132,7 +132,7 @@ pc.path = function () {
          * @function
          * @name pc.path.getExtension
          * @description Return the extension of the path. Pop the last value of a list after path is split by question mark and comma.
-         * @param {string} path The path to process.
+         * @param {string} path - The path to process.
          * @returns {string} The extension.
          * @example
          * pc.path.getExtension("/path/to/file.txt"); // returns ".txt"
@@ -151,7 +151,7 @@ pc.path = function () {
          * @function
          * @name pc.path.isRelativePath
          * @description Check if a string s is relative path.
-         * @param {string} s The path to process.
+         * @param {string} s - The path to process.
          * @returns {boolean} True if s doesn't start with slash and doesn't include colon and double slash.
          * @example
          * pc.path.isRelativePath("file.txt"); // returns true
@@ -169,7 +169,7 @@ pc.path = function () {
          * @function
          * @name pc.path.extractPath
          * @description Return the path without file name. if path is relative path, start with period.
-         * @param {string} s The full path to process.
+         * @param {string} s - The full path to process.
          * @returns {string} The path without a last element from list split by slash.
          * @example
          * pc.path.extractPath("path/to/file.txt"); // returns "./path/to"

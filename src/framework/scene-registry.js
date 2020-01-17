@@ -5,8 +5,8 @@ Object.assign(pc, function () {
      * @class
      * @name pc.SceneRegistryItem
      * @description Item to be stored in the {@link pc.SceneRegistry}
-     * @param {string} name The name of the scene
-     * @param {string} url The url of the scene file
+     * @param {string} name - The name of the scene
+     * @param {string} url - The url of the scene file
      */
     var SceneRegistryItem = function (name, url) {
         this.name = name;
@@ -18,7 +18,7 @@ Object.assign(pc, function () {
      * @class
      * @name pc.SceneRegistry
      * @description Container for storing the name and url for scene files
-     * @param {pc.Application} app The application
+     * @param {pc.Application} app - The application
      */
     var SceneRegistry = function (app) {
         this._app = app;
@@ -47,8 +47,8 @@ Object.assign(pc, function () {
      * @function
      * @name  pc.SceneRegistry#add
      * @description  Add a new item to the scene registry
-     * @param {string} name The name of the scene
-     * @param {string} url  The url of the scene file
+     * @param {string} name - The name of the scene
+     * @param {string} url -  The url of the scene file
      * @returns {boolean} Returns true if the scene was successfully added to the registry, false otherwise
      */
     SceneRegistry.prototype.add = function (name, url) {
@@ -73,7 +73,7 @@ Object.assign(pc, function () {
      * @function
      * @name  pc.SceneRegistry#find
      * @description  Find a Scene by name and return the {@link pc.SceneRegistryItem}
-     * @param  {string} name The name of the scene
+     * @param  {string} name - The name of the scene
      * @returns {pc.SceneRegistryItem} The stored data about a scene
      */
     SceneRegistry.prototype.find = function (name) {
@@ -89,7 +89,7 @@ Object.assign(pc, function () {
      * @function
      * @name  pc.SceneRegistry#findByUrl
      * @description  Find a scene by the URL and return the {@link pc.SceneRegistryItem}
-     * @param  {string} url The URL to search by
+     * @param  {string} url - The URL to search by
      * @returns {pc.SceneRegistryItem} The stored data about a scene
      */
     SceneRegistry.prototype.findByUrl = function (url) {
@@ -104,7 +104,7 @@ Object.assign(pc, function () {
      * @function
      * @name  pc.SceneRegistry#remove
      * @description  Remove an item from the scene registry
-     * @param  {string} name The name of the scene
+     * @param  {string} name - The name of the scene
      */
     SceneRegistry.prototype.remove = function (name) {
         if (this._index.hasOwnProperty(name)) {
@@ -134,8 +134,8 @@ Object.assign(pc, function () {
      * @name pc.SceneRegistry#loadSceneHierarchy
      * @description Load a scene file, create and initialize the Entity hierarchy
      * and add the hierarchy to the application root Entity.
-     * @param {string} url The URL of the scene file. Usually this will be "scene_id.json"
-     * @param {Function} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
+     * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json"
+     * @param {Function} callback - The function to call after loading, passed (err, entity) where err is null if no errors occurred.
      * @example
      *
      * var url = app.getSceneUrl("Scene Name");
@@ -194,8 +194,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.SceneRegistry#loadSceneSettings
      * @description Load a scene file and apply the scene settings to the current scene
-     * @param {string} url The URL of the scene file. This can be looked up using app.getSceneUrl
-     * @param {Function} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
+     * @param {string} url - The URL of the scene file. This can be looked up using app.getSceneUrl
+     * @param {Function} callback - The function called after the settings are applied. Passed (err) where err is null if no error occurred.
      * @example
      *
      * var url = app.getSceneUrl("Scene Name");
@@ -235,8 +235,8 @@ Object.assign(pc, function () {
      * @function
      * @name  pc.SceneRegistry#loadScene
      * @description Load the scene hierarchy and scene settings. This is an internal method used by the pc.Application
-     * @param  {string}   url      The URL of the scene file
-     * @param  {Function} callback The function called after the settings are applied. Passed (err, scene) where err is null if no error occurred and scene is the pc.Scene
+     * @param  {string}   url -      The URL of the scene file
+     * @param  {Function} callback - The function called after the settings are applied. Passed (err, scene) where err is null if no error occurred and scene is the pc.Scene
      */
     SceneRegistry.prototype.loadScene =  function (url, callback) {
         var self = this;

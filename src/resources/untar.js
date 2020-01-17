@@ -85,7 +85,7 @@ Object.assign(pc, function () {
          * @private
          * @name pc.Untar
          * @classdesc Untars a tar archive in the form of an array buffer
-         * @param {ArrayBuffer} arrayBuffer The array buffer that holds the tar archive
+         * @param {ArrayBuffer} arrayBuffer - The array buffer that holds the tar archive
          * @description Creates a new instance of pc.Untar
          */
         var UntarInternal = function (arrayBuffer) {
@@ -202,7 +202,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Untar#untar
          * @description Untars the array buffer provided in the constructor.
-         * @param {string} [filenamePrefix] The prefix for each filename in the tar archive. This is usually the {@link pc.AssetRegistry} prefix.
+         * @param {string} [filenamePrefix] - The prefix for each filename in the tar archive. This is usually the {@link pc.AssetRegistry} prefix.
          * @returns {object[]} An array of files in this format {name, start, size, url}
          */
         UntarInternal.prototype.untar = function (filenamePrefix) {
@@ -273,7 +273,7 @@ Object.assign(pc, function () {
      * @name pc.UntarWorker
      * @classdesc Wraps untar'ing a tar archive with a Web Worker.
      * @description Creates new instance of a pc.UntarWorker.
-     * @param {string} [filenamePrefix] The prefix that should be added to each file name in the archive. This is usually the {@link pc.AssetRegistry} prefix.
+     * @param {string} [filenamePrefix] - The prefix that should be added to each file name in the archive. This is usually the {@link pc.AssetRegistry} prefix.
      */
     var UntarWorker = function (filenamePrefix) {
         this._requestId = 0;
@@ -313,8 +313,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.UntarWorker#untar
      * @description Untars the specified array buffer using a Web Worker and returns the result in the callback.
-     * @param {ArrayBuffer} arrayBuffer The array buffer that holds the tar archive.
-     * @param {Function} callback The callback function called when the worker is finished or if there is an error. The
+     * @param {ArrayBuffer} arrayBuffer - The array buffer that holds the tar archive.
+     * @param {Function} callback - The callback function called when the worker is finished or if there is an error. The
      * callback has the following arguments: {error, files}, where error is a string if any, and files is an array of file descriptors
      */
     UntarWorker.prototype.untar = function (arrayBuffer, callback) {

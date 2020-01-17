@@ -15,7 +15,7 @@ pc.debug = (function () {
          * @function
          * @name pc.debug.display
          * @description Display an object and its data in a table on the page.
-         * @param {object} data The object to display.
+         * @param {object} data - The object to display.
          */
         display: function (data) {
             function init() {

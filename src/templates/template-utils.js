@@ -9,9 +9,9 @@ Object.assign(pc, function () {
          * @description Delay execution of the callback until collapsedInstances
          * are expanded (if present). For expansion we need to wait for template assets
          * to load.
-         * @param {object} data Raw scene data from the database
-         * @param {pc.AssetRegistry} assets The application's asset registry
-         * @param {Function} callback The callback to execute after template assets are loaded.
+         * @param {object} data - Raw scene data from the database
+         * @param {pc.AssetRegistry} assets - The application's asset registry
+         * @param {Function} callback - The callback to execute after template assets are loaded.
          */
         waitForTemplatesInScene: function (data, assets, callback) {
             if (data.collapsedInstances) {
@@ -33,10 +33,10 @@ Object.assign(pc, function () {
          * @name pc.TemplateUtils#waitForTemplateAssets
          * @description Delay execution of the callback until template assets
          * referenced by the provided entities are loaded
-         * @param {object[]} entities Scene entity data from the database
-         * @param {pc.AssetRegistry} assets The application's asset registry
-         * @param {Function} callback The callback to execute after template assets are loaded
-         * @param {object} response The response object to be passed to the callback
+         * @param {object[]} entities - Scene entity data from the database
+         * @param {pc.AssetRegistry} assets - The application's asset registry
+         * @param {Function} callback - The callback to execute after template assets are loaded
+         * @param {object} response - The response object to be passed to the callback
          */
         waitForTemplateAssets: function (entities, assets, callback, response) {
             var templateIds = pc.TemplateUtils._extractTemplateIds(entities);
@@ -77,8 +77,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.TemplateUtils#expandTemplateEntities
          * @description Expand entities marked with the collapsed_entity flag
-         * @param {pc.Application} app The application
-         * @param {object} entities Scene entity data from the database
+         * @param {pc.Application} app - The application
+         * @param {object} entities - Scene entity data from the database
          * @returns {object} An entities map with those that needed expansion expanded
          */
         expandTemplateEntities: function (app, entities) {

@@ -7,7 +7,7 @@ Object.assign(pc, function () {
      * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.ScreenComponent}s.
      * @description Create a new ScreenComponentSystem
-     * @param {pc.Application} app The application
+     * @param {pc.Application} app - The application
      */
     var ScreenComponentSystem = function ScreenComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

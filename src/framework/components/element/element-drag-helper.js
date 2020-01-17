@@ -19,8 +19,8 @@ Object.assign(pc, function () {
      * @augments pc.EventHandler
      * @description Create a new ElementDragHelper
      * @classdesc Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
-     * @param {pc.ElementComponent} element The Element that should become draggable.
-     * @param {string} [axis] Optional axis to constrain to, either 'x', 'y' or null.
+     * @param {pc.ElementComponent} element - The Element that should become draggable.
+     * @param {string} [axis] - Optional axis to constrain to, either 'x', 'y' or null.
      */
     var ElementDragHelper = function ElementDragHelper(element, axis) {
         pc.EventHandler.call(this);
@@ -248,5 +248,5 @@ Object.assign(pc, function () {
  * @event
  * @name pc.ElementDragHelper#drag:move
  * @description Fired whenever the position of the dragged element changes.
- * @param {pc.Vec3} value The current position.
+ * @param {pc.Vec3} value - The current position.
  */

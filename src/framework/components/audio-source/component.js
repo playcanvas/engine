@@ -7,8 +7,8 @@ Object.assign(pc, function () {
      * @augments pc.Component
      * @classdesc The AudioSource Component controls playback of an audio sample. This class will be deprecated in favor of {@link pc.SoundComponent}.
      * @description Create a new AudioSource Component
-     * @param {pc.AudioSourceComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.Entity} entity The entity that the Component is attached to
+     * @param {pc.AudioSourceComponentSystem} system - The ComponentSystem that created this Component
+     * @param {pc.Entity} entity - The entity that the Component is attached to
      * @property {pc.Asset[]} assets The list of audio assets - can also be an array of asset ids.
      * @property {boolean} activate If true the audio will begin playing as soon as the Pack is loaded
      * @property {number} volume The volume modifier to play the audio with. In range 0-1.
@@ -43,7 +43,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AudioSourceComponent#play
          * @description Begin playback of an audio asset in the component attached to an entity
-         * @param {string} name The name of the Asset to play
+         * @param {string} name - The name of the Asset to play
          */
         play: function (name) {
             if (!this.enabled || !this.entity.enabled) {

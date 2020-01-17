@@ -333,7 +333,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Material#getParameter
      * @description Retrieves the specified shader parameter from a material.
-     * @param {string} name The name of the parameter to query.
+     * @param {string} name - The name of the parameter to query.
      * @returns {object} The named parameter.
      */
     Material.prototype.getParameter = function (name) {
@@ -344,9 +344,9 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Material#setParameter
      * @description Sets a shader parameter on a material.
-     * @param {string} name The name of the parameter to set.
-     * @param {number|number[]|pc.Texture} data The value for the specified parameter.
-     * @param {number} [passFlags] Mask describing which passes the material should be included in.
+     * @param {string} name - The name of the parameter to set.
+     * @param {number|number[]|pc.Texture} data - The value for the specified parameter.
+     * @param {number} [passFlags] - Mask describing which passes the material should be included in.
      */
     Material.prototype.setParameter = function (name, data, passFlags) {
         if (passFlags === undefined) passFlags = -524285; // All bits set except 2 - 18 range
@@ -380,7 +380,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Material#deleteParameter
      * @description Deletes a shader parameter on a material.
-     * @param {string} name The name of the parameter to delete.
+     * @param {string} name - The name of the parameter to delete.
      */
     Material.prototype.deleteParameter = function (name) {
         if (this.parameters[name]) {

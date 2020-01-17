@@ -68,7 +68,7 @@ Object.assign(pc, function () {
      * @name pc.VertexIterator
      * @classdesc A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
      * @description Returns a new pc.VertexIterator object.
-     * @param {pc.VertexBuffer} vertexBuffer The vertex buffer to be iterated.
+     * @param {pc.VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
      * @property {object} element The vertex buffer elements
      */
     function VertexIterator(vertexBuffer) {
@@ -96,7 +96,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.VertexIterator#next
          * @description Moves the vertex iterator on to the next vertex.
-         * @param {number} [count] Optional number of steps to move on when calling next, defaults to 1.
+         * @param {number} [count] - Optional number of steps to move on when calling next, defaults to 1.
          * @example
          * var iterator = new pc.VertexIterator(vertexBuffer);
          * iterator.element[pc.SEMANTIC_POSTIION].set(-0.9, -0.9, 0.0);

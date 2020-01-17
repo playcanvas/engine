@@ -360,7 +360,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#push
      * @description Adds a layer (both opaque and semi-transparent parts) to the end of the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to add.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
      */
     LayerComposition.prototype.push = function (layer) {
         // add both opaque and transparent to the end of the array
@@ -381,8 +381,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#insert
      * @description Inserts a layer (both opaque and semi-transparent parts) at the chosen index in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to add.
-     * @param {number} index Insertion position.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
+     * @param {number} index - Insertion position.
      */
     LayerComposition.prototype.insert = function (layer, index) {
         // insert both opaque and transparent at the index
@@ -404,7 +404,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#remove
      * @description Removes a layer (both opaque and semi-transparent parts) from {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to remove.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
      */
     LayerComposition.prototype.remove = function (layer) {
         // remove all occurences of a layer
@@ -436,7 +436,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#pushOpaque
      * @description Adds part of the layer with opaque (non semi-transparent) objects to the end of the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to add.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
      */
     LayerComposition.prototype.pushOpaque = function (layer) {
         // add opaque to the end of the array
@@ -454,8 +454,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#insertOpaque
      * @description Inserts an opaque part of the layer (non semi-transparent mesh instances) at the chosen index in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to add.
-     * @param {number} index Insertion position.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
+     * @param {number} index - Insertion position.
      */
     LayerComposition.prototype.insertOpaque = function (layer, index) {
         // insert opaque at index
@@ -477,7 +477,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#removeOpaque
      * @description Removes an opaque part of the layer (non semi-transparent mesh instances) from {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to remove.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
      */
     LayerComposition.prototype.removeOpaque = function (layer) {
         // remove opaque occurences of a layer
@@ -505,7 +505,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#pushTransparent
      * @description Adds part of the layer with semi-transparent objects to the end of the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to add.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
      */
     LayerComposition.prototype.pushTransparent = function (layer) {
         // add transparent to the end of the array
@@ -523,8 +523,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#insertTransparent
      * @description Inserts a semi-transparent part of the layer at the chosen index in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to add.
-     * @param {number} index Insertion position.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to add.
+     * @param {number} index - Insertion position.
      */
     LayerComposition.prototype.insertTransparent = function (layer, index) {
         // insert transparent at index
@@ -546,7 +546,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#removeTransparent
      * @description Removes a transparent part of the layer from {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to remove.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to remove.
      */
     LayerComposition.prototype.removeTransparent = function (layer) {
         // remove transparent occurences of a layer
@@ -589,7 +589,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#getOpaqueIndex
      * @description Gets index of the opaque part of the supplied layer in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to find index of.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to find index of.
      * @returns {number} The index of the opaque part of the specified layer.
      */
     LayerComposition.prototype.getOpaqueIndex = function (layer) {
@@ -600,7 +600,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#getTransparentIndex
      * @description Gets index of the semi-transparent part of the supplied layer in the {@link pc.Layer#layerList}.
-     * @param {pc.Layer} layer A {@link pc.Layer} to find index of.
+     * @param {pc.Layer} layer - A {@link pc.Layer} to find index of.
      * @returns {number} The index of the semi-transparent part of the specified layer.
      */
     LayerComposition.prototype.getTransparentIndex = function (layer) {
@@ -611,7 +611,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#getLayerById
      * @description Finds a layer inside this composition by its ID. null is returned, if nothing is found.
-     * @param {number} id An ID of the layer to find.
+     * @param {number} id - An ID of the layer to find.
      * @returns {pc.Layer} The layer corresponding to the specified ID. Returns null if layer is not found.
      */
     LayerComposition.prototype.getLayerById = function (id) {
@@ -625,7 +625,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#getLayerByName
      * @description Finds a layer inside this composition by its name. null is returned, if nothing is found.
-     * @param {string} name The name of the layer to find.
+     * @param {string} name - The name of the layer to find.
      * @returns {pc.Layer} The layer corresponding to the specified name. Returns null if layer is not found.
      */
     LayerComposition.prototype.getLayerByName = function (name) {
@@ -694,8 +694,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#sortTransparentLayers
      * @description Used to determine which array of layers has any transparent sublayer that is on top of all the transparent sublayers in the other array.
-     * @param {number[]} layersA IDs of layers
-     * @param {number[]} layersB IDs of layers
+     * @param {number[]} layersA - IDs of layers
+     * @param {number[]} layersB - IDs of layers
      * @returns {number} Returns a negative number if any of the transparent sublayers in layersA is on top of all the transparent sublayers in layersB,
      * or a positive number if any of the transparent sublayers in layersB is on top of all the transparent sublayers in layersA, or 0 otherwise.
      */
@@ -707,8 +707,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.LayerComposition#sortOpaqueLayers
      * @description Used to determine which array of layers has any opaque sublayer that is on top of all the opaque sublayers in the other array.
-     * @param {number[]} layersA IDs of layers
-     * @param {number[]} layersB IDs of layers
+     * @param {number[]} layersA - IDs of layers
+     * @param {number[]} layersB - IDs of layers
      * @returns {number} Returns a negative number if any of the opaque sublayers in layersA is on top of all the opaque sublayers in layersB,
      * or a positive number if any of the opaque sublayers in layersB is on top of all the opaque sublayers in layersA, or 0 otherwise.
      */

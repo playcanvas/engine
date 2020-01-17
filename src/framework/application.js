@@ -23,17 +23,17 @@ Object.assign(pc, function () {
      * If you are using the Engine without the Editor, you have to create the application
      * instance manually.
      * @description Create a new Application.
-     * @param {Element} canvas The canvas element
+     * @param {Element} canvas - The canvas element
      * @param {object} options
-     * @param {pc.ElementInput} [options.elementInput] Input handler for {@link pc.ElementComponent}s
-     * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input
-     * @param {pc.Mouse} [options.mouse] Mouse handler for input
-     * @param {pc.TouchDevice} [options.touch] TouchDevice handler for input
-     * @param {pc.GamePads} [options.gamepads] Gamepad handler for input
-     * @param {string} [options.scriptPrefix] Prefix to apply to script urls before loading
-     * @param {string} [options.assetPrefix] Prefix to apply to asset urls before loading
-     * @param {object} [options.graphicsDeviceOptions] Options object that is passed into the {@link pc.GraphicsDevice} constructor
-     * @param {string[]} [options.scriptsOrder] Scripts in order of loading first
+     * @param {pc.ElementInput} [options.elementInput] - Input handler for {@link pc.ElementComponent}s
+     * @param {pc.Keyboard} [options.keyboard] - Keyboard handler for input
+     * @param {pc.Mouse} [options.mouse] - Mouse handler for input
+     * @param {pc.TouchDevice} [options.touch] - TouchDevice handler for input
+     * @param {pc.GamePads} [options.gamepads] - Gamepad handler for input
+     * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading
+     * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading
+     * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the {@link pc.GraphicsDevice} constructor
+     * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first
      * @example
      * // Engine-only example: create the application manually
      * var app = new pc.Application(canvas, options);
@@ -631,7 +631,7 @@ Object.assign(pc, function () {
      * applications, the function can get an application based on a supplied canvas id. This
      * function is particularly useful when the current pc.Application is not readily available.
      * For example, in the JavaScript console of the browser's developer tools.
-     * @param {string} [id] If defined, the returned application should use the canvas which has this id. Otherwise current application will be returned.
+     * @param {string} [id] - If defined, the returned application should use the canvas which has this id. Otherwise current application will be returned.
      * @returns {pc.Application|undefined} The running application, if any.
      * @example
      * var app = pc.Application.getApplication();
@@ -659,8 +659,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#configure
          * @description Load the application configuration file and apply application properties and fill the asset registry
-         * @param {string} url The URL of the configuration file to load
-         * @param {pc.callbacks.ConfigureApp} callback The Function called when the configuration file is loaded and parsed (or an error occurs).
+         * @param {string} url - The URL of the configuration file to load
+         * @param {pc.callbacks.ConfigureApp} callback - The Function called when the configuration file is loaded and parsed (or an error occurs).
          */
         configure: function (url, callback) {
             var self = this;
@@ -690,7 +690,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#preload
          * @description Load all assets in the asset registry that are marked as 'preload'
-         * @param {pc.callbacks.PreloadApp} callback Function called when all assets are loaded
+         * @param {pc.callbacks.PreloadApp} callback - Function called when all assets are loaded
          */
         preload: function (callback) {
             var self = this;
@@ -768,7 +768,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#getSceneUrl
          * @description Look up the URL of the scene hierarchy file via the name given to the scene in the editor. Use this to in {@link pc.Application#loadSceneHierarchy}.
-         * @param {string} name The name of the scene file given in the Editor
+         * @param {string} name - The name of the scene file given in the Editor
          * @returns {string} The URL of the scene file
          */
         getSceneUrl: function (name) {
@@ -785,8 +785,8 @@ Object.assign(pc, function () {
          * @name pc.Application#loadSceneHierarchy
          * @description Load a scene file, create and initialize the Entity hierarchy
          * and add the hierarchy to the application root Entity.
-         * @param {string} url The URL of the scene file. Usually this will be "scene_id.json"
-         * @param {pc.callbacks.LoadHierarchy} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
+         * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json"
+         * @param {pc.callbacks.LoadHierarchy} callback - The function to call after loading, passed (err, entity) where err is null if no errors occurred.
          * @example
          *
          * app.loadSceneHierarchy("1000.json", function (err, entity) {
@@ -805,8 +805,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#loadSceneSettings
          * @description Load a scene file and automatically apply the scene settings to the current scene.
-         * @param {string} url The URL of the scene file. Usually this will be "scene_id.json"
-         * @param {pc.callbacks.LoadSettings} callback The function called after the settings are applied. Passed (err) where err is null if no error occurred.
+         * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json"
+         * @param {pc.callbacks.LoadSettings} callback - The function called after the settings are applied. Passed (err) where err is null if no error occurred.
          * @example
          * app.loadSceneSettings("1000.json", function (err) {
          *     if (!err) {
@@ -825,8 +825,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#loadScene
          * @description Load a scene file.
-         * @param {string} url The URL of the scene file. Usually this will be "scene_id.json"
-         * @param {pc.callbacks.LoadScene} callback The function to call after loading, passed (err, entity) where err is null if no errors occurred.
+         * @param {string} url - The URL of the scene file. Usually this will be "scene_id.json"
+         * @param {pc.callbacks.LoadScene} callback - The function to call after loading, passed (err, entity) where err is null if no errors occurred.
          * @example
          *
          * app.loadScene("1000.json", function (err, entity) {
@@ -1155,7 +1155,7 @@ Object.assign(pc, function () {
          * will then update the current state of all connected input devices.
          * This function is called internally in the application's main loop and
          * does not need to be called explicitly.
-         * @param {number} dt The time delta since the last frame.
+         * @param {number} dt - The time delta since the last frame.
          */
         update: function (dt) {
             this.frame++;
@@ -1306,14 +1306,14 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#setCanvasFillMode
          * @description Controls how the canvas fills the window and resizes when the window changes.
-         * @param {string} mode The mode to use when setting the size of the canvas. Can be:
+         * @param {string} mode - The mode to use when setting the size of the canvas. Can be:
          * <ul>
          *     <li>pc.FILLMODE_NONE: the canvas will always match the size provided.</li>
          *     <li>pc.FILLMODE_FILL_WINDOW: the canvas will simply fill the window, changing aspect ratio.</li>
          *     <li>pc.FILLMODE_KEEP_ASPECT: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.</li>
          * </ul>
-         * @param {number} [width] The width of the canvas (only used when mode is pc.FILLMODE_NONE).
-         * @param {number} [height] The height of the canvas (only used when mode is pc.FILLMODE_NONE).
+         * @param {number} [width] - The width of the canvas (only used when mode is pc.FILLMODE_NONE).
+         * @param {number} [height] - The height of the canvas (only used when mode is pc.FILLMODE_NONE).
          */
         setCanvasFillMode: function (mode, width, height) {
             this._fillMode = mode;
@@ -1324,13 +1324,13 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#setCanvasResolution
          * @description Change the resolution of the canvas, and set the way it behaves when the window is resized
-         * @param {string} mode The mode to use when setting the resolution. Can be:
+         * @param {string} mode - The mode to use when setting the resolution. Can be:
          * <ul>
          *     <li>pc.RESOLUTION_AUTO: if width and height are not provided, canvas will be resized to match canvas client size.</li>
          *     <li>pc.RESOLUTION_FIXED: resolution of canvas will be fixed.</li>
          * </ul>
-         * @param {number} [width] The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used
-         * @param {number} [height] The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used
+         * @param {number} [width] - The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used
+         * @param {number} [height] - The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used
          */
         setCanvasResolution: function (mode, width, height) {
             this._resolutionMode = mode;
@@ -1375,8 +1375,8 @@ Object.assign(pc, function () {
          * In {@link pc.FILLMODE_KEEP_ASPECT} mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
          * In {@link pc.FILLMODE_FILL_WINDOW} mode, the canvas will simply fill the window, changing aspect ratio.
          * In {@link pc.FILLMODE_NONE} mode, the canvas will always match the size provided.
-         * @param {number} [width] The width of the canvas. Only used if current fill mode is {@link pc.FILLMODE_NONE}.
-         * @param {number} [height] The height of the canvas. Only used if current fill mode is {@link pc.FILLMODE_NONE}.
+         * @param {number} [width] - The width of the canvas. Only used if current fill mode is {@link pc.FILLMODE_NONE}.
+         * @param {number} [height] - The height of the canvas. Only used if current fill mode is {@link pc.FILLMODE_NONE}.
          * @returns {object} A object containing the values calculated to use as width and height.
          */
         resizeCanvas: function (width, height) {
@@ -1435,28 +1435,28 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#applySceneSettings
          * @description Apply scene settings to the current scene. Useful when your scene settings are parsed or generated from a non-URL source.
-         * @param {object} settings The scene settings to be applied.
-         * @param {object} settings.physics The physics settings to be applied.
-         * @param {number[]} settings.physics.gravity The world space vector representing global gravity in the physics simulation. Must be a fixed size array with three number elements, corresponding to each axis [ X, Y, Z ].
-         * @param {object} settings.render The rendering settings to be applied.
-         * @param {number[]} settings.render.global_ambient The color of the scene's ambient light. Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
-         * @param {string} settings.render.fog The type of fog used by the scene. Can be:
+         * @param {object} settings - The scene settings to be applied.
+         * @param {object} settings.physics - The physics settings to be applied.
+         * @param {number[]} settings.physics.gravity - The world space vector representing global gravity in the physics simulation. Must be a fixed size array with three number elements, corresponding to each axis [ X, Y, Z ].
+         * @param {object} settings.render - The rendering settings to be applied.
+         * @param {number[]} settings.render.global_ambient - The color of the scene's ambient light. Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
+         * @param {string} settings.render.fog - The type of fog used by the scene. Can be:
          * <ul>
          *     <li>pc.FOG_NONE</li>
          *     <li>pc.FOG_LINEAR</li>
          *     <li>pc.FOG_EXP</li>
          *     <li>pc.FOG_EXP2</li>
          * </ul>
-         * @param {number[]} settings.render.fog_color The color of the fog (if enabled). Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
-         * @param {number} settings.render.fog_density The density of the fog (if enabled). This property is only valid if the fog property is set to pc.FOG_EXP or pc.FOG_EXP2.
-         * @param {number} settings.render.fog_start The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to pc.FOG_LINEAR.
-         * @param {number} settings.render.fog_end The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to pc.FOG_LINEAR.
-         * @param {number} settings.render.gamma_correction The gamma correction to apply when rendering the scene. Can be:
+         * @param {number[]} settings.render.fog_color - The color of the fog (if enabled). Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
+         * @param {number} settings.render.fog_density - The density of the fog (if enabled). This property is only valid if the fog property is set to pc.FOG_EXP or pc.FOG_EXP2.
+         * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to pc.FOG_LINEAR.
+         * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to pc.FOG_LINEAR.
+         * @param {number} settings.render.gamma_correction - The gamma correction to apply when rendering the scene. Can be:
          * <ul>
          *     <li>pc.GAMMA_NONE</li>
          *     <li>pc.GAMMA_SRGB</li>
          * </ul>
-         * @param {number} settings.render.tonemapping The tonemapping transform to apply when writing fragments to the
+         * @param {number} settings.render.tonemapping - The tonemapping transform to apply when writing fragments to the
          * frame buffer. Can be:
          * <ul>
          *     <li>pc.TONEMAP_LINEAR</li>
@@ -1464,13 +1464,13 @@ Object.assign(pc, function () {
          *     <li>pc.TONEMAP_HEJL</li>
          *     <li>pc.TONEMAP_ACES</li>
          * </ul>
-         * @param {number} settings.render.exposure The exposure value tweaks the overall brightness of the scene.
-         * @param {number|null} [settings.render.skybox] The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
-         * @param {number} settings.render.skyboxIntensity Multiplier for skybox intensity.
-         * @param {number} settings.render.skyboxMip The mip level of the skybox to be displayed. Only valid for prefiltered cubemap skyboxes.
-         * @param {number} settings.render.lightmapSizeMultiplier The lightmap resolution multiplier.
-         * @param {number} settings.render.lightmapMaxResolution The maximum lightmap resolution.
-         * @param {number} settings.render.lightmapMode The lightmap baking mode. Can be:
+         * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness of the scene.
+         * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
+         * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
+         * @param {number} settings.render.skyboxMip - The mip level of the skybox to be displayed. Only valid for prefiltered cubemap skyboxes.
+         * @param {number} settings.render.lightmapSizeMultiplier - The lightmap resolution multiplier.
+         * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
+         * @param {number} settings.render.lightmapMode - The lightmap baking mode. Can be:
          * <ul>
          *     <li>pc.BAKE_COLOR: single color lightmap
          *     <li>pc.BAKE_COLORDIR: single color lightmap + dominant light direction (used for bump/specular)
@@ -1531,7 +1531,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#setSkybox
          * @description Sets the skybox asset to current scene, and subscribes to asset load/change events
-         * @param {pc.Asset} asset Asset of type `skybox` to be set to, or null to remove skybox
+         * @param {pc.Asset} asset - Asset of type `skybox` to be set to, or null to remove skybox
          */
         setSkybox: function (asset) {
             if (asset) {
@@ -1779,7 +1779,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#getEntityFromIndex
          * @description Get entity from the index by guid
-         * @param {string} guid The GUID to search for
+         * @param {string} guid - The GUID to search for
          * @returns {pc.Entity} The Entity with the GUID or null
          */
         getEntityFromIndex: function (guid) {

@@ -36,7 +36,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat3#copy
          * @description Copies the contents of a source 3x3 matrix to a destination 3x3 matrix.
-         * @param {pc.Mat3} rhs A 3x3 matrix to be copied.
+         * @param {pc.Mat3} rhs - A 3x3 matrix to be copied.
          * @returns {pc.Mat3} Self for chaining
          * @example
          * var src = new pc.Mat3().translate(10, 20, 30);
@@ -65,7 +65,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Mat3#set
          * @description Copies the contents of a source array[9] to a destination 3x3 matrix.
-         * @param {number[]} src An array[9] to be copied.
+         * @param {number[]} src - An array[9] to be copied.
          * @returns {pc.Mat3} Self for chaining
          * @example
          * var dst = new pc.Mat3();
@@ -90,7 +90,7 @@ Object.assign(pc, (function () {
         /**
          * @function
          * @name pc.Mat3#equals
-         * @param {pc.Mat3} rhs The other matrix.
+         * @param {pc.Mat3} rhs - The other matrix.
          * @description Reports whether two matrices are equal.
          * @returns {boolean} true if the matrices are equal and false otherwise.
          * @example

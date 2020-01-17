@@ -4,7 +4,7 @@ Object.assign(pc, function () {
      * @name pc.StencilParameters
      * @classdesc Holds stencil test settings
      * @description Create a new StencilParameters instance
-     * @param {object} options Options object to configure the stencil parameters.
+     * @param {object} options - Options object to configure the stencil parameters.
      * @property {number} func Sets stencil test function. See {@link pc.GraphicsDevice#setStencilFunc}
      * @property {number} ref Sets stencil test reference value. See {@link pc.GraphicsDevice#setStencilFunc}
      * @property {number} fail Sets operation to perform if stencil test is failed. See {@link pc.GraphicsDevice#setStencilOperation}

@@ -5,8 +5,8 @@ Object.assign(pc, function () {
      * @name pc.PostEffectQueue
      * @classdesc Used to manage multiple post effects for a camera
      * @description Create a new PostEffectQueue
-     * @param {pc.Application} app The application
-     * @param {pc.CameraComponent} camera The camera component
+     * @param {pc.Application} app - The application
+     * @param {pc.CameraComponent} camera - The camera component
      */
     function PostEffectQueue(app, camera) {
         var self = this;
@@ -44,8 +44,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.PostEffectQueue#_createOffscreenTarget
          * @description Creates a render target with the dimensions of the canvas, with an optional depth buffer
-         * @param {boolean} useDepth Set to true if you want to create a render target with a depth buffer
-         * @param {boolean} hdr Use HDR render target format
+         * @param {boolean} useDepth - Set to true if you want to create a render target with a depth buffer
+         * @param {boolean} hdr - Use HDR render target format
          * @returns {pc.RenderTarget} The render target
          */
 
@@ -121,7 +121,7 @@ Object.assign(pc, function () {
          * @name pc.PostEffectQueue#addEffect
          * @description Adds a post effect to the queue. If the queue is disabled adding a post effect will
          * automatically enable the queue.
-         * @param {pc.PostEffect} effect The post effect to add to the queue.
+         * @param {pc.PostEffect} effect - The post effect to add to the queue.
          */
         addEffect: function (effect) {
             // first rendering of the scene requires depth buffer
@@ -217,7 +217,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.PostEffectQueue#removeEffect
          * @description Removes a post effect from the queue. If the queue becomes empty it will be disabled automatically.
-         * @param {pc.PostEffect} effect The post effect to remove.
+         * @param {pc.PostEffect} effect - The post effect to remove.
          */
         removeEffect: function (effect) {
             // find index of effect

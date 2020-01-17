@@ -60,7 +60,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Animation#getNode
      * @description Gets a {@link pc.Node} by name
-     * @param {string} name The name of the pc.Node
+     * @param {string} name - The name of the pc.Node
      * @returns {pc.Node} The pc.Node with the specified name
      */
     Animation.prototype.getNode = function (name) {
@@ -97,7 +97,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Animation#setDuration
      * @description Sets the duration of the specified animation in seconds.
-     * @param {number} duration The duration of the animation in seconds.
+     * @param {number} duration - The duration of the animation in seconds.
      */
     Animation.prototype.setDuration = function (duration) {
         this.duration = duration;
@@ -109,7 +109,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Animation#setName
      * @description Sets the human-readable name of the specified animation.
-     * @param {string} name The new name for the animation.
+     * @param {string} name - The new name for the animation.
      */
     Animation.prototype.setName = function (name) {
         this.name = name;
@@ -119,7 +119,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Animation#addNode
      * @description Adds a node to the internal nodes array.
-     * @param {pc.Node} node The node to add.
+     * @param {pc.Node} node - The node to add.
      */
     Animation.prototype.addNode = function (node) {
         this._nodes.push(node);

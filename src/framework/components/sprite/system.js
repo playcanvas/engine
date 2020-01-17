@@ -8,7 +8,7 @@ Object.assign(pc, function () {
      * @name pc.SpriteComponentSystem
      * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.SpriteComponent}s.
-     * @param {pc.Application} app The application
+     * @param {pc.Application} app - The application
      */
     var SpriteComponentSystem = function SpriteComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

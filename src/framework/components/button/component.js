@@ -31,8 +31,8 @@ Object.assign(pc, function () {
      * @augments pc.Component
      * @classdesc A ButtonComponent enables a group of entities to behave like a button, with different visual states for hover and press interactions.
      * @description Create a new ButtonComponent.
-     * @param {pc.ButtonComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @param {pc.ButtonComponentSystem} system - The ComponentSystem that created this Component
+     * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {boolean} active If set to false, the button will be visible but will not respond to hover or touch interactions.
      * @property {pc.Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.
      * @property {pc.Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
@@ -465,63 +465,63 @@ Object.assign(pc, function () {
  * @event
  * @name pc.ButtonComponent#mousedown
  * @description Fired when the mouse is pressed while the cursor is on the component.
- * @param {pc.ElementMouseEvent} event The event
+ * @param {pc.ElementMouseEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ButtonComponent#mouseup
  * @description Fired when the mouse is released while the cursor is on the component.
- * @param {pc.ElementMouseEvent} event The event
+ * @param {pc.ElementMouseEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ButtonComponent#mouseenter
  * @description Fired when the mouse cursor enters the component.
- * @param {pc.ElementMouseEvent} event The event
+ * @param {pc.ElementMouseEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ButtonComponent#mouseleave
  * @description Fired when the mouse cursor leaves the component.
- * @param {pc.ElementMouseEvent} event The event
+ * @param {pc.ElementMouseEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ButtonComponent#click
  * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component.
- * @param {pc.ElementMouseEvent|pc.ElementTouchEvent} event The event
+ * @param {pc.ElementMouseEvent|pc.ElementTouchEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ButtonComponent#touchstart
  * @description Fired when a touch starts on the component.
- * @param {pc.ElementTouchEvent} event The event
+ * @param {pc.ElementTouchEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ButtonComponent#touchend
  * @description Fired when a touch ends on the component.
- * @param {pc.ElementTouchEvent} event The event
+ * @param {pc.ElementTouchEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ButtonComponent#touchcancel
  * @description Fired when a touch is cancelled on the component.
- * @param {pc.ElementTouchEvent} event The event
+ * @param {pc.ElementTouchEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ButtonComponent#touchleave
  * @description Fired when a touch leaves the component.
- * @param {pc.ElementTouchEvent} event The event
+ * @param {pc.ElementTouchEvent} event - The event
  */
 
 /**

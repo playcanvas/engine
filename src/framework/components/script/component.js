@@ -6,8 +6,8 @@ Object.assign(pc, function () {
      * @augments pc.Component
      * @classdesc The ScriptComponent allows you to extend the functionality of an Entity by attaching your own Script Types defined in JavaScript files
      * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
-     * @param {pc.ScriptComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @param {pc.ScriptComponentSystem} system - The ComponentSystem that created this Component
+     * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {pc.ScriptType[]} scripts An array of all script instances attached to an entity. This Array shall not be modified by developer.
      */
 
@@ -82,7 +82,7 @@ Object.assign(pc, function () {
      * @name pc.ScriptComponent#state
      * @description Fired when Component changes state to enabled or disabled
      * Note: this event does not take in account entity or any of its parent enabled state
-     * @param {boolean} enabled True if now enabled, False if disabled
+     * @param {boolean} enabled - True if now enabled, False if disabled
      * @example
      * entity.script.on('state', function (enabled) {
      *     // component changed state
@@ -103,8 +103,8 @@ Object.assign(pc, function () {
      * @event
      * @name pc.ScriptComponent#create
      * @description Fired when a script instance is created and attached to component
-     * @param {string} name The name of the Script Type
-     * @param {pc.ScriptType} scriptInstance The instance of the {@link pc.ScriptType} that has been created
+     * @param {string} name - The name of the Script Type
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that has been created
      * @example
      * entity.script.on('create', function (name, scriptInstance) {
      *     // new script instance added to component
@@ -115,7 +115,7 @@ Object.assign(pc, function () {
      * @event
      * @name pc.ScriptComponent#create:[name]
      * @description Fired when a script instance is created and attached to component
-     * @param {pc.ScriptType} scriptInstance The instance of the {@link pc.ScriptType} that has been created
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that has been created
      * @example
      * entity.script.on('create:playerController', function (scriptInstance) {
      *     // new script instance 'playerController' is added to component
@@ -126,8 +126,8 @@ Object.assign(pc, function () {
      * @event
      * @name pc.ScriptComponent#destroy
      * @description Fired when a script instance is destroyed and removed from component
-     * @param {string} name The name of the Script Type
-     * @param {pc.ScriptType} scriptInstance The instance of the {@link pc.ScriptType} that has been destroyed
+     * @param {string} name - The name of the Script Type
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that has been destroyed
      * @example
      * entity.script.on('destroy', function (name, scriptInstance) {
      *     // script instance has been destroyed and removed from component
@@ -138,7 +138,7 @@ Object.assign(pc, function () {
      * @event
      * @name pc.ScriptComponent#destroy:[name]
      * @description Fired when a script instance is destroyed and removed from component
-     * @param {pc.ScriptType} scriptInstance The instance of the {@link pc.ScriptType} that has been destroyed
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that has been destroyed
      * @example
      * entity.script.on('destroy:playerController', function (scriptInstance) {
      *     // script instance 'playerController' has been destroyed and removed from component
@@ -149,10 +149,10 @@ Object.assign(pc, function () {
      * @event
      * @name pc.ScriptComponent#move
      * @description Fired when a script instance is moved in component
-     * @param {string} name The name of the Script Type
-     * @param {pc.ScriptType} scriptInstance The instance of the {@link pc.ScriptType} that has been moved
-     * @param {number} ind New position index
-     * @param {number} indOld Old position index
+     * @param {string} name - The name of the Script Type
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that has been moved
+     * @param {number} ind - New position index
+     * @param {number} indOld - Old position index
      * @example
      * entity.script.on('move', function (name, scriptInstance, ind, indOld) {
      *     // script instance has been moved in component
@@ -163,9 +163,9 @@ Object.assign(pc, function () {
      * @event
      * @name pc.ScriptComponent#move:[name]
      * @description Fired when a script instance is moved in component
-     * @param {pc.ScriptType} scriptInstance The instance of the {@link pc.ScriptType} that has been moved
-     * @param {number} ind New position index
-     * @param {number} indOld Old position index
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that has been moved
+     * @param {number} ind - New position index
+     * @param {number} indOld - Old position index
      * @example
      * entity.script.on('move:playerController', function (scriptInstance, ind, indOld) {
      *     // script instance 'playerController' has been moved in component
@@ -176,9 +176,9 @@ Object.assign(pc, function () {
      * @event
      * @name pc.ScriptComponent#error
      * @description Fired when a script instance had an exception
-     * @param {pc.ScriptType} scriptInstance The instance of the {@link pc.ScriptType} that raised the exception
-     * @param {Error} err Native JS Error object with details of an error
-     * @param {string} method The method of the script instance that the exception originated from.
+     * @param {pc.ScriptType} scriptInstance - The instance of the {@link pc.ScriptType} that raised the exception
+     * @param {Error} err - Native JS Error object with details of an error
+     * @param {string} method - The method of the script instance that the exception originated from.
      * @example
      * entity.script.on('error', function (scriptInstance, err, method) {
      *     // script instance caught an exception
@@ -395,9 +395,9 @@ Object.assign(pc, function () {
          * @function
          * @description Inserts script instance into the scripts array at the specified index. Also inserts the script
          * into the update list if it has an update method and the post update list if it has a postUpdate method.
-         * @param {object} scriptInstance The script instance
-         * @param {number} index The index where to insert the script at. If -1 then append it at the end.
-         * @param {number} scriptsLength The length of the scripts array.
+         * @param {object} scriptInstance - The script instance
+         * @param {number} index - The index where to insert the script at. If -1 then append it at the end.
+         * @param {number} scriptsLength - The length of the scripts array.
          */
         _insertScriptInstance: function (scriptInstance, index, scriptsLength) {
             if (index === -1) {
@@ -464,7 +464,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ScriptComponent#has
          * @description Detect if script is attached to an entity using name of {@link pc.ScriptType}.
-         * @param {string} name The name of the Script Type
+         * @param {string} name - The name of the Script Type
          * @returns {boolean} If script is attached to an entity
          * @example
          * if (entity.script.has('playerController')) {
@@ -479,10 +479,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ScriptComponent#create
          * @description Create a script instance using name of a {@link pc.ScriptType} and attach to an entity script component.
-         * @param {string|pc.ScriptType} name The name of the Script Type (or alternatively the {@link pc.ScriptType} to instantiate)
-         * @param {object} [args] Object with arguments for a script
-         * @param {boolean} [args.enabled] if script instance is enabled after creation
-         * @param {object} [args.attributes] Object with values for attributes, where key is name of an attribute
+         * @param {string|pc.ScriptType} name - The name of the Script Type (or alternatively the {@link pc.ScriptType} to instantiate)
+         * @param {object} [args] - Object with arguments for a script
+         * @param {boolean} [args.enabled] - if script instance is enabled after creation
+         * @param {object} [args.attributes] - Object with values for attributes, where key is name of an attribute
          * @returns {pc.ScriptType} Returns an instance of a {@link pc.ScriptType} if successfully attached to an entity,
          * or null if it failed because a script with a same name has already been added
          * or if the {@link pc.ScriptType} cannot be found by name in the {@link pc.ScriptRegistry}.
@@ -578,7 +578,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ScriptComponent#destroy
          * @description Destroy the script instance that is attached to an entity.
-         * @param {string} name The name of the Script Type
+         * @param {string} name - The name of the Script Type
          * @returns {boolean} If it was successfully destroyed
          * @example
          * entity.script.destroy('playerController');
@@ -693,8 +693,8 @@ Object.assign(pc, function () {
          * to other entities in the same subtree that is cloned, then we want the new script attributes to point
          * at the cloned entities. This method remaps the script attributes for this entity and it assumes that this
          * entity is the result of the clone operation.
-         * @param {pc.ScriptComponent} oldScriptComponent The source script component that belongs to the entity that was being cloned.
-         * @param {object} duplicatedIdsMap A dictionary with guid-entity values that contains the entities that were cloned
+         * @param {pc.ScriptComponent} oldScriptComponent - The source script component that belongs to the entity that was being cloned.
+         * @param {object} duplicatedIdsMap - A dictionary with guid-entity values that contains the entities that were cloned
          */
         resolveDuplicatedEntityReferenceProperties: function (oldScriptComponent, duplicatedIdsMap) {
             var newScriptComponent = this.entity.script;
@@ -785,8 +785,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ScriptComponent#move
          * @description Move script instance to different position to alter update order of scripts within entity.
-         * @param {string} name The name of the Script Type
-         * @param {number} ind New position index
+         * @param {string} name - The name of the Script Type
+         * @param {number} ind - New position index
          * @returns {boolean} If it was successfully moved
          * @example
          * entity.script.move('playerController', 0);

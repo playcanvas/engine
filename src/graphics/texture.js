@@ -7,12 +7,12 @@ Object.assign(pc, function () {
      * @classdesc A texture is a container for texel data that can be utilized in a fragment shader.
      * Typically, the texel data represents an image that is mapped over geometry.
      * @description Creates a new texture.
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this texture.
-     * @param {object} [options] Object for passing optional arguments.
-     * @param {number} [options.width] The width of the texture in pixels. Defaults to 4.
-     * @param {number} [options.height] The height of the texture in pixels. Defaults to 4.
-     * @param {number} [options.depth] The number of depth slices in a 3D texture (WebGL2 only). Defaults to 1 (single 2D image).
-     * @param {number} [options.format] The pixel format of the texture. Can be:
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
+     * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
+     * @param {number} [options.depth] - The number of depth slices in a 3D texture (WebGL2 only). Defaults to 1 (single 2D image).
+     * @param {number} [options.format] - The pixel format of the texture. Can be:
      * <ul>
      *     <li>{@link pc.PIXELFORMAT_A8}</li>
      *     <li>{@link pc.PIXELFORMAT_L8}</li>
@@ -40,30 +40,30 @@ Object.assign(pc, function () {
      *     <li>{@link pc.PIXELFORMAT_ATC_RGBA}</li>
      * </ul>
      * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
-     * @param {number} [options.minFilter] The minification filter type to use. Defaults to {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
-     * @param {number} [options.magFilter] The magnification filter type to use. Defaults to {@link pc.FILTER_LINEAR}
-     * @param {number} [options.anisotropy] The level of anisotropic filtering to use. Defaults to 1
-     * @param {number} [options.addressU] The repeat mode to use in the U direction. Defaults to {@link pc.ADDRESS_REPEAT}
-     * @param {number} [options.addressV] The repeat mode to use in the V direction. Defaults to {@link pc.ADDRESS_REPEAT}
-     * @param {number} [options.addressW] The repeat mode to use in the W direction. Defaults to {@link pc.ADDRESS_REPEAT}
-     * @param {boolean} [options.mipmaps] When enabled try to generate or use mipmaps for this texture. Default is true
-     * @param {boolean} [options.cubemap] Specifies whether the texture is to be a cubemap. Defaults to false.
-     * @param {boolean} [options.volume] Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
-     * @param {boolean} [options.rgbm] Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
-     * @param {boolean} [options.swizzleGGGR] Specifies whether the texture contains swizzled GGGR data for use with tangent space normal
+     * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
+     * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link pc.FILTER_LINEAR}
+     * @param {number} [options.anisotropy] - The level of anisotropic filtering to use. Defaults to 1
+     * @param {number} [options.addressU] - The repeat mode to use in the U direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {number} [options.addressV] - The repeat mode to use in the V direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {number} [options.addressW] - The repeat mode to use in the W direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {boolean} [options.mipmaps] - When enabled try to generate or use mipmaps for this texture. Default is true
+     * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap. Defaults to false.
+     * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
+     * @param {boolean} [options.rgbm] - Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
+     * @param {boolean} [options.swizzleGGGR] - Specifies whether the texture contains swizzled GGGR data for use with tangent space normal
      * maps. The R component is stored in alpha and G is stored in RGB. This packing can result in higher quality when the texture data
      * is compressed. Defaults to false.
-     * @param {boolean} [options.fixCubemapSeams] Specifies whether this cubemap texture requires special
+     * @param {boolean} [options.fixCubemapSeams] - Specifies whether this cubemap texture requires special
      * seam fixing shader code to look right. Defaults to false.
-     * @param {boolean} [options.flipY] Specifies whether the texture should be flipped in the Y-direction. Only affects textures
+     * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the Y-direction. Only affects textures
      * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures or textures set from raw
      * pixel data. Defaults to true.
-     * @param {boolean} [options.premultiplyAlpha] If true, the alpha channel of the texture (if present) is multiplied into the color
+     * @param {boolean} [options.premultiplyAlpha] - If true, the alpha channel of the texture (if present) is multiplied into the color
      * channels. Defaults to false.
-     * @param {boolean} [options.compareOnRead] When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
+     * @param {boolean} [options.compareOnRead] - When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      * Defaults to false.
-     * @param {number} [options.compareFunc] Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to pc.FUNC_LESS.
+     * @param {number} [options.compareFunc] - Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to pc.FUNC_LESS.
      * Possible values:
      * <ul>
      *     <li>pc.FUNC_LESS</li>
@@ -569,12 +569,12 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Texture.calcGpuSize
          * @description Calculate the GPU memory required for a texture
-         * @param {number} [width] Texture's width
-         * @param {number} [height] Texture's height
-         * @param {number} [depth] Texture's depth
-         * @param {number} [format] Texture's pixel format (pc.PIXELFORMAT_***)
-         * @param {boolean} [mipmaps] True if the texture includes mipmaps, false otherwise
-         * @param {boolean} [cubemap] True is the texture is a cubemap, false otherwise
+         * @param {number} [width] - Texture's width
+         * @param {number} [height] - Texture's height
+         * @param {number} [depth] - Texture's depth
+         * @param {number} [format] - Texture's pixel format (pc.PIXELFORMAT_***)
+         * @param {boolean} [mipmaps] - True if the texture includes mipmaps, false otherwise
+         * @param {boolean} [cubemap] - True is the texture is a cubemap, false otherwise
          * @returns {number} The amount of GPU memory required for the texture, in bytes
          */
         calcGpuSize: function (width, height, depth, format, mipmaps, cubemap) {
@@ -681,9 +681,9 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Texture#lock
          * @description Locks a miplevel of the texture, returning a typed array to be filled with pixel data.
-         * @param {object} [options] Optional options object. Valid properties are as follows:
-         * @param {number} [options.level] The mip level to lock with 0 being the top level. Defaults to 0.
-         * @param {number} [options.face] If the texture is a cubemap, this is the index of the face to lock.
+         * @param {object} [options] - Optional options object. Valid properties are as follows:
+         * @param {number} [options.level] - The mip level to lock with 0 being the top level. Defaults to 0.
+         * @param {number} [options.face] - If the texture is a cubemap, this is the index of the face to lock.
          * @returns {Uint8Array|Uint16Array|Float32Array} A typed array containing the pixel data of the locked mip level.
          */
         lock: function (options) {
@@ -751,9 +751,9 @@ Object.assign(pc, function () {
          * @name pc.Texture#setSource
          * @description Set the pixel data of the texture from a canvas, image, video DOM element. If the
          * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
-         * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source A canvas, image or video element,
+         * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source - A canvas, image or video element,
          * or an array of 6 canvas, image or video elements.
-         * @param {number} [mipLevel] A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
+         * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
          * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
          */
         setSource: function (source, mipLevel) {
@@ -852,7 +852,7 @@ Object.assign(pc, function () {
          * @name pc.Texture#getSource
          * @description Get the pixel data of the texture. If this is a cubemap then an array of 6 images will be returned otherwise
          * a single image.
-         * @param {number} [mipLevel] A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
+         * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
          * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
          * @returns {HTMLImageElement} The source image of this texture. Can be null if source not assigned for specific image level.
          */

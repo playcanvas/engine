@@ -13,7 +13,7 @@ Object.assign(pc, function () {
      * @name pc.GraphNode
      * @augments pc.EventHandler
      * @classdesc A hierarchical scene node.
-     * @param {string} [name] The non-unique name of the graph node, default is "Untitled".
+     * @param {string} [name] - The non-unique name of the graph node, default is "Untitled".
      * @property {string} name The non-unique name of a graph node.
      * @property {pc.Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link pc.GraphNode#findByTag} function.
      */
@@ -234,7 +234,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#_onHierarchyStateChanged
          * @description Called when the enabled flag of the entity or one of its parents changes.
-         * @param {boolean} enabled true if enabled in the hierarchy, false if disabled.
+         * @param {boolean} enabled - true if enabled in the hierarchy, false if disabled.
          */
         _onHierarchyStateChanged: function (enabled) {
             // Override in derived classes
@@ -287,13 +287,13 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#find
          * @description Search the graph node and all of its descendants for the nodes that satisfy some search criteria.
-         * @param {pc.callbacks.FindNode|string} attr This can either be a function or a string. If it's a function, it is executed
+         * @param {pc.callbacks.FindNode|string} attr - This can either be a function or a string. If it's a function, it is executed
          * for each descendant node to test if node satisfies the search logic. Returning true from the function will
          * include the node into the results. If it's a string then it represents the name of a field or a method of the
          * node. If this is the name of a field then the value passed as the second argument will be checked for equality.
          * If this is the name of a function then the return value of the function will be checked for equality against
          * the valued passed as the second argument to this function.
-         * @param {object} [value] If the first argument (attr) is a property name then this value will be checked against
+         * @param {object} [value] - If the first argument (attr) is a property name then this value will be checked against
          * the value of the property.
          * @returns {pc.GraphNode[]} The array of graph nodes that match the search criteria.
          * @example
@@ -349,13 +349,13 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#findOne
          * @description Search the graph node and all of its descendants for the first node that satisfies some search criteria.
-         * @param {pc.callbacks.FindNode|string} attr This can either be a function or a string. If it's a function, it is executed
+         * @param {pc.callbacks.FindNode|string} attr - This can either be a function or a string. If it's a function, it is executed
          * for each descendant node to test if node satisfies the search logic. Returning true from the function will
          * result in that node being returned from findOne. If it's a string then it represents the name of a field or a method of the
          * node. If this is the name of a field then the value passed as the second argument will be checked for equality.
          * If this is the name of a function then the return value of the function will be checked for equality against
          * the valued passed as the second argument to this function.
-         * @param {object} [value] If the first argument (attr) is a property name then this value will be checked against
+         * @param {object} [value] - If the first argument (attr) is a property name then this value will be checked against
          * the value of the property.
          * @returns {pc.GraphNode} A graph node that match the search criteria.
          * @example
@@ -414,7 +414,7 @@ Object.assign(pc, function () {
          * Query can be simply a string, or comma separated strings,
          * to have inclusive results of assets that match at least one query.
          * A query that consists of an array of tags can be used to match graph nodes that have each tag of array
-         * @param {string} query Name of a tag or array of tags
+         * @param {string} query - Name of a tag or array of tags
          * @returns {pc.GraphNode[]} A list of all graph nodes that match the query
          * @example
          * // Return all graph nodes that tagged by `animal`
@@ -456,7 +456,7 @@ Object.assign(pc, function () {
          * @name pc.GraphNode#findByName
          * @description Get the first node found in the graph with the name. The search
          * is depth first.
-         * @param {string} name The name of the graph.
+         * @param {string} name - The name of the graph.
          * @returns {pc.GraphNode} The first node to be found matching the supplied name.
          */
         findByName: function (name) {
@@ -474,7 +474,7 @@ Object.assign(pc, function () {
          * @name pc.GraphNode#findByPath
          * @description Get the first node found in the graph by its full path in the graph.
          * The full path has this form 'parent/child/sub-child'. The search is depth first.
-         * @param {string} path The full path of the pc.GraphNode.
+         * @param {string} path - The full path of the pc.GraphNode.
          * @returns {pc.GraphNode} The first node to be found matching the supplied path.
          * @example
          * var path = this.entity.findByPath('child/another_child');
@@ -510,8 +510,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#forEach
          * @description Executes a provided function once on this graph node and all of its descendants.
-         * @param {pc.callbacks.ForEach} callback The function to execute on the graph node and each descendant.
-         * @param {object} [thisArg] Optional value to use as this when executing callback function.
+         * @param {pc.callbacks.ForEach} callback - The function to execute on the graph node and each descendant.
+         * @param {object} [thisArg] - Optional value to use as this when executing callback function.
          * @example
          * // Log the path and name of each node in descendant tree starting with "parent"
          * parent.forEach(function (node) {
@@ -531,7 +531,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#isDescendantOf
          * @description Check if node is descendant of another node.
-         * @param {pc.GraphNode} node Potential ancestor of node.
+         * @param {pc.GraphNode} node - Potential ancestor of node.
          * @returns {boolean} if node is descendant of another node.
          * @example
          * if (roof.isDescendantOf(house)) {
@@ -553,7 +553,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#isAncestorOf
          * @description Check if node is ancestor for another node.
-         * @param {pc.GraphNode} node Potential descendant of node.
+         * @param {pc.GraphNode} node - Potential descendant of node.
          * @returns {boolean} if node is ancestor for another node
          * @example
          * if (body.isAncestorOf(foot)) {
@@ -739,8 +739,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#reparent
          * @description Remove graph node from current parent and add as child to new parent
-         * @param {pc.GraphNode} parent New parent to attach graph node to
-         * @param {number} [index] The child index where the child node should be placed.
+         * @param {pc.GraphNode} parent - New parent to attach graph node to
+         * @param {number} [index] - The child index where the child node should be placed.
          */
         reparent: function (parent, index) {
             var current = this._parent;
@@ -1038,7 +1038,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#addChild
          * @description Add a new child to the child list and update the parent value of the child node
-         * @param {pc.GraphNode} node The new child to add
+         * @param {pc.GraphNode} node - The new child to add
          * @example
          * var e = new pc.Entity(app);
          * this.entity.addChild(e);
@@ -1078,8 +1078,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#insertChild
          * @description Insert a new child to the child list at the specified index and update the parent value of the child node
-         * @param {pc.GraphNode} node The new child to insert
-         * @param {number} index The index in the child list of the parent where the new node will be inserted
+         * @param {pc.GraphNode} node - The new child to insert
+         * @param {number} index - The index in the child list of the parent where the new node will be inserted
          * @example
          * var e = new pc.Entity(app);
          * this.entity.insertChild(e, 1);
@@ -1154,7 +1154,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.GraphNode#removeChild
          * @description Remove the node from the child list and update the parent value of the child.
-         * @param {pc.GraphNode} child The node to remove.
+         * @param {pc.GraphNode} child - The node to remove.
          * @example
          * var child = this.entity.children[0];
          * this.entity.removeChild(child);

@@ -8,8 +8,8 @@ Object.assign(pc, function () {
      * @classdesc Helper class used to hold an array of items in a specific order. This array is safe to modify
      * while we loop through it. The class assumes that it holds objects that need to be sorted based on
      * one of their fields.
-     * @param {object} args Arguments
-     * @param {string} args.sortBy The name of the field that each element in the array is going to be sorted by
+     * @param {object} args - Arguments
+     * @param {string} args.sortBy - The name of the field that each element in the array is going to be sorted by
      * @property {number} loopIndex The current index used to loop through the array. This gets modified if we
      * add or remove elements from the array while looping. See the example to see how to loop through this array.
      * @property {number} length The number of elements in the array.
@@ -38,7 +38,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.SortedLoopArray#_binarySearch
      * @description Searches for the right spot to insert the specified item
-     * @param {object} item The item
+     * @param {object} item - The item
      * @returns {number} The index where to insert the item
      */
     SortedLoopArray.prototype._binarySearch = function (item) {
@@ -73,7 +73,7 @@ Object.assign(pc, function () {
      * @description Inserts the specified item into the array at the right
      * index based on the 'sortBy' field passed into the constructor. This
      * also adjusts the loopIndex accordingly.
-     * @param {object} item The item to insert
+     * @param {object} item - The item to insert
      */
     SortedLoopArray.prototype.insert = function (item) {
         var index = this._binarySearch(item);
@@ -91,7 +91,7 @@ Object.assign(pc, function () {
      * @description Appends the specified item to the end of the array. Faster than insert()
      * as it does not binary search for the right index. This also adjusts
      * the loopIndex accordingly.
-     * @param {object} item The item to append
+     * @param {object} item - The item to append
      */
     SortedLoopArray.prototype.append = function (item) {
         this.items.push(item);
@@ -103,7 +103,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.SortedLoopArray#remove
      * @description Removes the specified item from the array.
-     * @param {object} item The item to remove
+     * @param {object} item - The item to remove
      */
     SortedLoopArray.prototype.remove = function (item) {
         var idx = this.items.indexOf(item);

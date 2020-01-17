@@ -9,8 +9,8 @@ Object.assign(pc, function () {
      * @description Represents a single Display for VR content. This could be a Head Mounted display that can present content on a separate screen
      * or a phone which can display content full screen on the same screen. This object contains the native `navigator.VRDisplay` object
      * from the WebVR API.
-     * @param {pc.Application} app The application outputting to this VR display.
-     * @param {VRDisplay} display The native VRDisplay object from the WebVR API.
+     * @param {pc.Application} app - The application outputting to this VR display.
+     * @param {VRDisplay} display - The native VRDisplay object from the WebVR API.
      * @property {number} id An identifier for this distinct VRDisplay
      * @property {VRDisplay} display The native VRDisplay object from the WebVR API
      * @property {boolean} presenting True if this display is currently presenting VR content
@@ -216,7 +216,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.VrDisplay#requestPresent
          * @description Try to present full screen VR content on this display
-         * @param {pc.callbacks.VrDisplay} callback Called when the request is completed. Callback takes a single argument (err) that is the error message return
+         * @param {pc.callbacks.VrDisplay} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
          * if presenting fails, or null if the call succeeds. Usually called by {@link pc.CameraComponent#enterVr}.
          */
         requestPresent: function (callback) {
@@ -241,7 +241,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.VrDisplay#exitPresent
          * @description Try to stop presenting VR content on this display
-         * @param {pc.callbacks.VrDisplay} callback Called when the request is completed. Callback takes a single argument (err) that is the error message return
+         * @param {pc.callbacks.VrDisplay} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
          * if presenting fails, or null if the call succeeds. Usually called by {@link pc.CameraComponent#exitVr}.
          */
         exitPresent: function (callback) {
@@ -265,7 +265,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.VrDisplay#requestAnimationFrame
          * @description Used in the main application loop instead of the regular `window.requestAnimationFrame`. Usually only called from inside {@link pc.Application}
-         * @param {pc.callbacks.VrFrame} fn Function called when it is time to update the frame.
+         * @param {pc.callbacks.VrFrame} fn - Function called when it is time to update the frame.
          */
         requestAnimationFrame: function (fn) {
             if (this.display) this.display.requestAnimationFrame(fn);
@@ -294,8 +294,8 @@ Object.assign(pc, function () {
          * @name pc.VrDisplay#setClipPlanes
          * @description Set the near and far depth plans of the display. This enables mapping of values in the
          * render target depth attachment to scene coordinates
-         * @param {number} n The near depth distance
-         * @param {number} f The far depth distance
+         * @param {number} n - The near depth distance
+         * @param {number} f - The far depth distance
          */
         setClipPlanes: function (n, f) {
             if (this.display) {

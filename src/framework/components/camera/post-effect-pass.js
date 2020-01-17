@@ -151,8 +151,8 @@ Object.assign(pc, function () {
      * @private
      * @class
      * @name pc.PostEffectPass
-     * @param {pc.Application} app The application.
-     * @param {object} options Optional options object.
+     * @param {pc.Application} app - The application.
+     * @param {object} options - Optional options object.
      */
     function PostEffectPass(app, options) {
         this.app = app;

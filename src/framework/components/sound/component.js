@@ -6,8 +6,8 @@ Object.assign(pc, function () {
      * @augments pc.Component
      * @classdesc The Sound Component controls playback of {@link pc.Sound}s.
      * @description Create a new Sound Component.
-     * @param {pc.SoundComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.Entity} entity The entity that the Component is attached to
+     * @param {pc.SoundComponentSystem} system - The ComponentSystem that created this Component
+     * @param {pc.Entity} entity - The entity that the Component is attached to
      * @property {number} volume The volume modifier to play the audio with. In range 0-1.
      * @property {number} pitch The pitch modifier to play the audio with. Must be larger than 0.01
      * @property {boolean} positional If true the audio will play back at the location of the Entity in space, so the audio will be affect by the position of the {@link pc.AudioListenerComponent}.
@@ -221,16 +221,16 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SoundComponent#addSlot
          * @description Creates a new {@link pc.SoundSlot} with the specified name.
-         * @param {string} name The name of the slot
-         * @param {object} [options] Settings for the slot
-         * @param {number} [options.volume=1] The playback volume, between 0 and 1.
-         * @param {number} [options.pitch=1] The relative pitch, default of 1, plays at normal pitch.
-         * @param {boolean} [options.loop=false] If true the sound will restart when it reaches the end.
-         * @param {number} [options.startTime=0] The start time from which the sound will start playing.
-         * @param {number} [options.duration=null] The duration of the sound that the slot will play starting from startTime.
-         * @param {boolean} [options.overlap=false] If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
-         * @param {boolean} [options.autoPlay=false] If true the slot will start playing as soon as its audio asset is loaded.
-         * @param {number} [options.asset=null] The asset id of the audio asset that is going to be played by this slot.
+         * @param {string} name - The name of the slot
+         * @param {object} [options] - Settings for the slot
+         * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
+         * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
+         * @param {boolean} [options.loop=false] - If true the sound will restart when it reaches the end.
+         * @param {number} [options.startTime=0] - The start time from which the sound will start playing.
+         * @param {number} [options.duration=null] - The duration of the sound that the slot will play starting from startTime.
+         * @param {boolean} [options.overlap=false] - If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
+         * @param {boolean} [options.autoPlay=false] - If true the slot will start playing as soon as its audio asset is loaded.
+         * @param {number} [options.asset=null] - The asset id of the audio asset that is going to be played by this slot.
          * @returns {pc.SoundSlot} The new slot.
          * @example
          * // get an asset by id
@@ -263,7 +263,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SoundComponent#removeSlot
          * @description Removes the {@link pc.SoundSlot} with the specified name.
-         * @param {string} name The name of the slot
+         * @param {string} name - The name of the slot
          * @example
          * // remove a slot called 'beep'
          * this.entity.sound.removeSlot('beep');
@@ -280,7 +280,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SoundComponent#slot
          * @description Returns the slot with the specified name
-         * @param {string} name The name of the slot
+         * @param {string} name - The name of the slot
          * @returns {pc.SoundSlot} The slot
          * @example
          * // get a slot and set its volume
@@ -295,7 +295,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SoundComponent#play
          * @description Begins playing the sound slot with the specified name. The slot will restart playing if it is already playing unless the overlap field is true in which case a new sound will be created and played.
-         * @param {string} name The name of the {@link pc.SoundSlot} to play
+         * @param {string} name - The name of the {@link pc.SoundSlot} to play
          * @example
          * // get asset by id
          * var asset = app.assets.get(10);
@@ -324,7 +324,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SoundComponent#pause
          * @description Pauses playback of the slot with the specified name. If the name is undefined then all slots currently played will be paused. The slots can be resumed by calling {@link pc.SoundComponent#resume}.
-         * @param {string} [name] The name of the slot to pause. Leave undefined to pause everything.
+         * @param {string} [name] - The name of the slot to pause. Leave undefined to pause everything.
          * @example
          * // pause all sounds
          * this.entity.sound.pause();
@@ -354,7 +354,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SoundComponent#resume
          * @description Resumes playback of the sound slot with the specified name if it's paused. If no name is specified all slots will be resumed.
-         * @param {string} name The name of the slot to resume. Leave undefined to resume everything.
+         * @param {string} name - The name of the slot to resume. Leave undefined to resume everything.
          * @example
          * // resume all sounds
          * this.entity.sound.resume();
@@ -386,7 +386,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SoundComponent#stop
          * @description Stops playback of the sound slot with the specified name if it's paused. If no name is specified all slots will be stopped.
-         * @param {string} name The name of the slot to stop. Leave undefined to stop everything.
+         * @param {string} name - The name of the slot to stop. Leave undefined to stop everything.
          * @example
          * // stop all sounds
          * this.entity.sound.stop();
@@ -425,38 +425,38 @@ Object.assign(pc, function () {
  * @event
  * @name pc.SoundComponent#play
  * @description Fired when a sound instance starts playing
- * @param {pc.SoundSlot} slot The slot whose instance started playing
- * @param {pc.SoundInstance} instance The instance that started playing
+ * @param {pc.SoundSlot} slot - The slot whose instance started playing
+ * @param {pc.SoundInstance} instance - The instance that started playing
  */
 
 /**
  * @event
  * @name pc.SoundComponent#pause
  * @description Fired when a sound instance is paused.
- * @param {pc.SoundSlot} slot The slot whose instance was paused
- * @param {pc.SoundInstance} instance The instance that was paused created to play the sound
+ * @param {pc.SoundSlot} slot - The slot whose instance was paused
+ * @param {pc.SoundInstance} instance - The instance that was paused created to play the sound
  */
 
 /**
  * @event
  * @name pc.SoundComponent#resume
  * @description Fired when a sound instance is resumed..
- * @param {pc.SoundSlot} slot The slot whose instance was resumed
- * @param {pc.SoundInstance} instance The instance that was resumed
+ * @param {pc.SoundSlot} slot - The slot whose instance was resumed
+ * @param {pc.SoundInstance} instance - The instance that was resumed
  */
 
 /**
  * @event
  * @name pc.SoundComponent#stop
  * @description Fired when a sound instance is stopped.
- * @param {pc.SoundSlot} slot The slot whose instance was stopped
- * @param {pc.SoundInstance} instance The instance that was stopped
+ * @param {pc.SoundSlot} slot - The slot whose instance was stopped
+ * @param {pc.SoundInstance} instance - The instance that was stopped
  */
 
 /**
  * @event
  * @name pc.SoundComponent#end
  * @description Fired when a sound instance stops playing because it reached its ending.
- * @param {pc.SoundSlot} slot The slot whose instance ended
- * @param {pc.SoundInstance} instance The instance that ended
+ * @param {pc.SoundSlot} slot - The slot whose instance ended
+ * @param {pc.SoundInstance} instance - The instance that ended
  */

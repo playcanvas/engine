@@ -1150,15 +1150,15 @@ Object.assign(pc, function () {
  * @event
  * @name pc.Scene#set:skybox
  * @description Fired when the skybox is set.
- * @param {pc.Texture} usedTex Previously used cubemap texture. New is in the {@link pc.Scene#skybox}.
+ * @param {pc.Texture} usedTex - Previously used cubemap texture. New is in the {@link pc.Scene#skybox}.
  */
 
 /**
  * @event
  * @name pc.Scene#set:layers
  * @description Fired when the layer composition is set. Use this event to add callbacks or advanced properties to your layers.
- * @param {pc.LayerComposition} oldComp Previously used {@link pc.LayerComposition}.
- * @param {pc.LayerComposition} newComp Newly set {@link pc.LayerComposition}.
+ * @param {pc.LayerComposition} oldComp - Previously used {@link pc.LayerComposition}.
+ * @param {pc.LayerComposition} newComp - Newly set {@link pc.LayerComposition}.
  * @example
  * this.app.scene.on('set:layers', function (oldComp, newComp) {
  *     var list = newComp.layerList;

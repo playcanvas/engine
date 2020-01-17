@@ -6,7 +6,7 @@ Object.assign(pc, function () {
      * @name pc.SceneHandler
      * @implements {pc.ResourceHandler}
      * @classdesc Resource handler used for loading {@link pc.Scene} resources
-     * @param {pc.Application} app The running {@link pc.Application}
+     * @param {pc.Application} app - The running {@link pc.Application}
      */
     var SceneHandler = function (app) {
         this._app = app;

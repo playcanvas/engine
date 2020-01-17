@@ -5,12 +5,12 @@ Object.assign(pc, function () {
      * @name pc.SpriteAnimationClip
      * @augments pc.EventHandler
      * @classdesc Handles playing of sprite animations and loading of relevant sprite assets.
-     * @param {pc.SpriteComponent} component The sprite component managing this clip.
-     * @param {object} data Data for the new animation clip.
-     * @param {number} [data.fps] Frames per second for the animation clip.
-     * @param {object} [data.loop] Whether to loop the animation clip.
-     * @param {string} [data.name] The name of the new animation clip.
-     * @param {number} [data.spriteAsset] The id of the sprite asset that this clip will play.
+     * @param {pc.SpriteComponent} component - The sprite component managing this clip.
+     * @param {object} data - Data for the new animation clip.
+     * @param {number} [data.fps] - Frames per second for the animation clip.
+     * @param {object} [data.loop] - Whether to loop the animation clip.
+     * @param {string} [data.name] - The name of the new animation clip.
+     * @param {number} [data.spriteAsset] - The id of the sprite asset that this clip will play.
      * @property {number} spriteAsset The id of the sprite asset used to play the animation.
      * @property {pc.Sprite} sprite The current sprite used to play the animation.
      * @property {number} frame The index of the frame of the {@link pc.Sprite} currently being rendered.
@@ -124,7 +124,7 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.SpriteAnimationClip#_update
-         * @param {number} dt The delta time
+         * @param {number} dt - The delta time
          * @description Advances the animation looping if necessary
          */
         _update: function (dt) {

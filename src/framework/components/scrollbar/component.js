@@ -6,8 +6,8 @@ Object.assign(pc, function () {
      * @augments pc.Component
      * @description Create a new ScrollbarComponent
      * @classdesc A ScrollbarComponent enables a group of entities to behave like a draggable scrollbar.
-     * @param {pc.ScrollbarComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @param {pc.ScrollbarComponentSystem} system - The ComponentSystem that created this Component
+     * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {number} orientation Whether the scrollbar moves horizontally or vertically. Can be:
      * <ul>
      *     <li>{@link pc.ORIENTATION_HORIZONTAL}: The scrollbar animates in the horizontal axis.</li>
@@ -186,5 +186,5 @@ Object.assign(pc, function () {
  * @event
  * @name pc.ScrollbarComponent#set:value
  * @description Fired whenever the scroll value changes.
- * @param {number} value The current scroll value.
+ * @param {number} value - The current scroll value.
  */

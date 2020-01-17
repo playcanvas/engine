@@ -20,7 +20,7 @@ Object.assign(pc, function () {
      * @augments pc.ComponentSystem
      * @description Create a new ScriptComponentSystem
      * @classdesc Allows scripts to be attached to an Entity and executed
-     * @param {pc.Application} app The application
+     * @param {pc.Application} app - The application
      */
     var ScriptComponentSystem = function ScriptComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

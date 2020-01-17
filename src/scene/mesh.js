@@ -72,9 +72,9 @@ Object.assign(pc, function () {
      * @classdesc An instance of a {@link pc.Mesh}. A single mesh can be referenced by many
      * mesh instances that can have different transforms and materials.
      * @description Create a new mesh instance.
-     * @param {pc.GraphNode} node The graph node defining the transform for this instance.
-     * @param {pc.Mesh} mesh The graphics mesh being instanced.
-     * @param {pc.Material} material The material used to render this instance.
+     * @param {pc.GraphNode} node - The graph node defining the transform for this instance.
+     * @param {pc.Mesh} mesh - The graphics mesh being instanced.
+     * @param {pc.Material} material - The material used to render this instance.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
      * var mesh = pc.createBox(graphicsDevice);

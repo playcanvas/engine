@@ -21,7 +21,7 @@ Object.assign(pc, function () {
      * @name pc.TextureAtlasHandler
      * @implements {pc.ResourceHandler}
      * @classdesc Resource handler used for loading {@link pc.TextureAtlas} resources
-     * @param {pc.ResourceLoader} loader The resource loader
+     * @param {pc.ResourceLoader} loader - The resource loader
      */
     var TextureAtlasHandler = function (loader) {
         this._loader = loader;

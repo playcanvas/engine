@@ -86,8 +86,8 @@ Object.assign(pc, function () {
      * Most of the simulation parameters are specified with pc.Curve or pc.CurveSet. Curves are interpolated based on each particle's lifetime, therefore parameters are able to change over time.
      * Most of the curve parameters can also be specified by 2 minimum/maximum curves, this way each particle will pick a random value in-between.
      * @description Create a new ParticleSystemComponent
-     * @param {pc.ParticleSystemComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.Entity} entity The Entity this Component is attached to
+     * @param {pc.ParticleSystemComponentSystem} system - The ComponentSystem that created this Component
+     * @param {pc.Entity} entity - The Entity this Component is attached to
      * @property {boolean} autoPlay Controls whether the particle system plays automatically on creation. If set to false, it is necessary to call {@link pc.ParticleSystemComponent#play} for the particle system to play. Defaults to true.
      * @property {boolean} loop Enables or disables respawning of particles.
      * @property {boolean} preWarm If enabled, the particle system will be initialized as though it had already completed a full cycle. This only works with looping particle systems.

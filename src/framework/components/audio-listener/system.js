@@ -7,8 +7,8 @@ Object.assign(pc, function () {
      * @augments pc.ComponentSystem
      * @classdesc Component System for adding and removing {@link pc.AudioComponent} objects to Entities.
      * @description Create a new AudioListenerComponentSystem
-     * @param {pc.Application} app The application managing this system.
-     * @param {pc.SoundManager} manager A sound manager instance.
+     * @param {pc.Application} app - The application managing this system.
+     * @param {pc.SoundManager} manager - A sound manager instance.
      */
     var AudioListenerComponentSystem = function (app, manager) {
         pc.ComponentSystem.call(this, app);

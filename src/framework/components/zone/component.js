@@ -9,8 +9,8 @@ Object.assign(pc, function () {
      * This can be used in various ways, such as affecting audio reverb when audiolistener is within zone.
      * Or create culling system with portals between zones to hide whole indoor sections for performance reasons.
      * And many other possible options. Zones are building blocks and meant to be used in many different ways.
-     * @param {pc.ZoneComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.Vec3} size The Size of Box of a Zone.
+     * @param {pc.ZoneComponentSystem} system - The ComponentSystem that created this Component
+     * @param {pc.Vec3} size - The Size of Box of a Zone.
      */
 
     var ZoneComponent = function ZoneComponent(system, entity) {
@@ -53,7 +53,7 @@ Object.assign(pc, function () {
      * @name pc.ZoneComponent#state
      * @description Fired when Component changes state to enabled or disabled
      * Note: this event does not take in account entity or any of its parent enabled state
-     * @param {boolean} enabled True if now enabled, False if disabled
+     * @param {boolean} enabled - True if now enabled, False if disabled
      * @example
      * entity.zone.on('state', function (enabled) {
      *     // component changed state

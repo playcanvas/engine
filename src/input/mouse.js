@@ -4,8 +4,8 @@ Object.assign(pc, function () {
      * @name pc.MouseEvent
      * @classdesc MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
      * @description Create an new MouseEvent
-     * @param {pc.Mouse} mouse The Mouse device that is firing this event
-     * @param {MouseEvent} event The original browser event that fired
+     * @param {pc.Mouse} mouse - The Mouse device that is firing this event
+     * @param {MouseEvent} event - The original browser event that fired
      * @property {number} x The x co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to
      * @property {number} y The y co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to
      * @property {number} dx The change in x co-ordinate since the last mouse event
@@ -90,28 +90,28 @@ Object.assign(pc, function () {
      * @event
      * @name pc.Mouse#mousemove
      * @description Fired when the mouse is moved
-     * @param {pc.MouseEvent} event The MouseEvent object
+     * @param {pc.MouseEvent} event - The MouseEvent object
      */
 
     /**
      * @event
      * @name pc.Mouse#mousedown
      * @description Fired when a mouse button is pressed
-     * @param {pc.MouseEvent} event The MouseEvent object
+     * @param {pc.MouseEvent} event - The MouseEvent object
      */
 
     /**
      * @event
      * @name pc.Mouse#mouseup
      * @description Fired when a mouse button is released
-     * @param {pc.MouseEvent} event The MouseEvent object
+     * @param {pc.MouseEvent} event - The MouseEvent object
      */
 
     /**
      * @event
      * @name pc.Mouse#mousewheel
      * @description Fired when a mouse wheel is moved
-     * @param {pc.MouseEvent} event The MouseEvent object
+     * @param {pc.MouseEvent} event - The MouseEvent object
      */
 
     /**
@@ -120,7 +120,7 @@ Object.assign(pc, function () {
      * @augments pc.EventHandler
      * @classdesc A Mouse Device, bound to a DOM Element.
      * @description Create a new Mouse device
-     * @param {Element} [element] The Element that the mouse events are attached to
+     * @param {Element} [element] - The Element that the mouse events are attached to
      */
     var Mouse = function (element) {
         pc.EventHandler.call(this);
@@ -165,7 +165,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Mouse#attach
          * @description Attach mouse events to an Element.
-         * @param {Element} element The DOM element to attach the mouse to.
+         * @param {Element} element - The DOM element to attach the mouse to.
          */
         attach: function (element) {
             this._target = element;
@@ -227,8 +227,8 @@ Object.assign(pc, function () {
          * <li>In some browsers this will only work when the browser is running in fullscreen mode. See {@link pc.Application#enableFullscreen}
          * <li>Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
          * </ul>
-         * @param {pc.callbacks.LockMouse} [success] Function called if the request for mouse lock is successful.
-         * @param {pc.callbacks.LockMouse} [error] Function called if the request for mouse lock is unsuccessful.
+         * @param {pc.callbacks.LockMouse} [success] - Function called if the request for mouse lock is successful.
+         * @param {pc.callbacks.LockMouse} [error] - Function called if the request for mouse lock is unsuccessful.
          */
         enablePointerLock: function (success, error) {
             if (!document.body.requestPointerLock) {
@@ -262,7 +262,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Mouse#disablePointerLock
          * @description Return control of the mouse cursor to the user
-         * @param {pc.callbacks.LockMouse} [success] Function called when the mouse lock is disabled
+         * @param {pc.callbacks.LockMouse} [success] - Function called when the mouse lock is disabled
          */
         disablePointerLock: function (success) {
             if (!document.exitPointerLock) {
@@ -295,7 +295,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Mouse#isPressed
          * @description Returns true if the mouse button is currently pressed
-         * @param {number} button The mouse button to test. Can be:
+         * @param {number} button - The mouse button to test. Can be:
          * <ul>
          *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
          *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
@@ -311,7 +311,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Mouse#wasPressed
          * @description Returns true if the mouse button was pressed this frame (since the last call to update).
-         * @param {number} button The mouse button to test. Can be:
+         * @param {number} button - The mouse button to test. Can be:
          * <ul>
          *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
          *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
@@ -327,7 +327,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Mouse#wasReleased
          * @description Returns true if the mouse button was released this frame (since the last call to update).
-         * @param {number} button The mouse button to test. Can be:
+         * @param {number} button - The mouse button to test. Can be:
          * <ul>
          *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
          *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>

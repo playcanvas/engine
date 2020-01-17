@@ -52,7 +52,7 @@ Object.assign(pc, (function () {
      * @classdesc A curve is a collection of keys (time/value pairs). The shape of the
      * curve is defined by its type that specifies an interpolation scheme for the keys.
      * @description Creates a new curve.
-     * @param {number[]} [data] An array of keys (pairs of numbers with the time first and
+     * @param {number[]} [data] - An array of keys (pairs of numbers with the time first and
      * value second)
      * @property {number} length The number of keys in the curve. [read only]
      * @property {number} type The curve interpolation scheme. Can be:
@@ -84,8 +84,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Curve#add
          * @description Add a new key to the curve.
-         * @param {number} time Time to add new key
-         * @param {number} value Value of new key
+         * @param {number} time - Time to add new key
+         * @param {number} value - Value of new key
          * @returns {number[]} [time, value] pair
          */
         add: function (time, value) {
@@ -108,7 +108,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Curve#get
          * @description Return a specific key.
-         * @param {number} index The index of the key to return
+         * @param {number} index - The index of the key to return
          * @returns {number[]} The key at the specified index
          */
         get: function (index) {
@@ -130,7 +130,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Curve#value
          * @description Returns the interpolated value of the curve at specified time.
-         * @param {number} time The time at which to calculate the value
+         * @param {number} time - The time at which to calculate the value
          * @returns {number} The interpolated value
          */
         value: function (time) {
@@ -177,7 +177,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Curve#quantize
          * @description Sample the curve at regular intervals over the range [0..1]
-         * @param {number} precision The number of samples to return.
+         * @param {number} precision - The number of samples to return.
          * @returns {Float32Array} The set of quantized values.
          */
         quantize: function (precision) {
@@ -201,9 +201,9 @@ Object.assign(pc, (function () {
          * @name pc.Curve#quantizeClamped
          * @description Sample the curve at regular intervals over the range [0..1]
          * and clamp the resulting samples to [min..max].
-         * @param {number} precision The number of samples to return.
-         * @param {number} min The minimum output value.
-         * @param {number} max The maximum output value.
+         * @param {number} precision - The number of samples to return.
+         * @param {number} min - The minimum output value.
+         * @param {number} max - The maximum output value.
          * @returns {Float32Array} The set of quantized values.
          */
         quantizeClamped: function (precision, min, max) {

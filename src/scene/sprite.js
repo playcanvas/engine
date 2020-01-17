@@ -51,19 +51,19 @@ Object.assign(pc, function () {
      * @classdesc A pc.Sprite is contains references to one or more frames of a {@link pc.TextureAtlas}.
      * It can be used by the {@link pc.SpriteComponent} or the {@link pc.ElementComponent} to render a
      * single frame or a sprite animation.
-     * @param {pc.GraphicsDevice} device The graphics device of the application.
-     * @param {object} [options] Options for creating the pc.Sprite.
-     * @param {number} [options.pixelsPerUnit] The number of pixels that map to one PlayCanvas unit.
+     * @param {pc.GraphicsDevice} device - The graphics device of the application.
+     * @param {object} [options] - Options for creating the pc.Sprite.
+     * @param {number} [options.pixelsPerUnit] - The number of pixels that map to one PlayCanvas unit.
      * Defaults to 1.
-     * @param {number} [options.renderMode] The rendering mode of the sprite. Can be:
+     * @param {number} [options.renderMode] - The rendering mode of the sprite. Can be:
      * <ul>
      *     <li>{@link pc.SPRITE_RENDERMODE_SIMPLE}</li>
      *     <li>{@link pc.SPRITE_RENDERMODE_SLICED}</li>
      *     <li>{@link pc.SPRITE_RENDERMODE_TILED}</li>
      * </ul>
      * Defaults to pc.SPRITE_RENDERMODE_SIMPLE.
-     * @param {pc.TextureAtlas} [options.atlas] The texture atlas. Defaults to null.
-     * @param {string[]} [options.frameKeys] The keys of the frames in the sprite atlas that this sprite is
+     * @param {pc.TextureAtlas} [options.atlas] - The texture atlas. Defaults to null.
+     * @param {string[]} [options.frameKeys] - The keys of the frames in the sprite atlas that this sprite is
      * using. Defaults to null.
      * @property {number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit.
      * @property {pc.TextureAtlas} atlas The texture atlas.

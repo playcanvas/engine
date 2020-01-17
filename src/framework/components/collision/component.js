@@ -49,8 +49,8 @@ Object.assign(pc, function () {
      * </table>
      * </p>
      * @description Create a new CollisionComponent
-     * @param {pc.CollisionComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @param {pc.CollisionComponentSystem} system - The ComponentSystem that created this Component
+     * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {string} type The type of the collision volume. Defaults to 'box'. Can be one of the following:
      * <ul>
      * <li><strong>box</strong>: A box-shaped collision volume.</li>
@@ -92,21 +92,21 @@ Object.assign(pc, function () {
      * @event
      * @name pc.CollisionComponent#contact
      * @description The 'contact' event is fired when a contact occurs between two rigid bodies
-     * @param {pc.ContactResult} result Details of the contact between the two rigid bodies.
+     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
      */
 
     /**
      * @event
      * @name pc.CollisionComponent#collisionstart
      * @description The 'collisionstart' event is fired when two rigid bodies start touching.
-     * @param {pc.ContactResult} result Details of the contact between the two Entities.
+     * @param {pc.ContactResult} result - Details of the contact between the two Entities.
      */
 
     /**
      * @event
      * @name pc.CollisionComponent#collisionend
      * @description The 'collisionend' event is fired two rigid-bodies stop touching.
-     * @param {pc.Entity} other The {@link pc.Entity} that stopped touching this collision volume.
+     * @param {pc.Entity} other - The {@link pc.Entity} that stopped touching this collision volume.
      */
 
     /**
@@ -114,7 +114,7 @@ Object.assign(pc, function () {
      * @name pc.CollisionComponent#triggerenter
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
      * a {@link pc.RigidBodyComponent} attached.
-     * @param {pc.Entity} other The {@link pc.Entity} that entered this collision volume.
+     * @param {pc.Entity} other - The {@link pc.Entity} that entered this collision volume.
      */
 
     /**
@@ -122,7 +122,7 @@ Object.assign(pc, function () {
      * @name pc.CollisionComponent#triggerleave
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
      * a {@link pc.RigidBodyComponent} attached.
-     * @param {pc.Entity} other The {@link pc.Entity} that exited this collision volume.
+     * @param {pc.Entity} other - The {@link pc.Entity} that exited this collision volume.
      */
 
     Object.assign(CollisionComponent.prototype, {

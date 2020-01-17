@@ -4,10 +4,10 @@ Object.assign(pc, (function () {
      * @name pc.Color
      * @classdesc Representation of an RGBA color
      * @description Create a new Color object
-     * @param {number|number[]} [r] The value of the red component (0-1). If r is an array of length 3 or 4, the array will be used to populate all components.
-     * @param {number} [g] The value of the green component (0-1)
-     * @param {number} [b] The value of the blue component (0-1)
-     * @param {number} [a] The value of the alpha component (0-1)
+     * @param {number|number[]} [r] - The value of the red component (0-1). If r is an array of length 3 or 4, the array will be used to populate all components.
+     * @param {number} [g] - The value of the green component (0-1)
+     * @param {number} [b] - The value of the blue component (0-1)
+     * @param {number} [a] - The value of the alpha component (0-1)
      * @property {number} r The red component of the color
      * @property {number} g The green component of the color
      * @property {number} b The blue component of the color
@@ -43,7 +43,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Color#copy
          * @description Copies the contents of a source color to a destination color.
-         * @param {pc.Color} rhs A color to copy to the specified color.
+         * @param {pc.Color} rhs - A color to copy to the specified color.
          * @returns {pc.Color} Self for chaining
          * @example
          * var src = new pc.Color(1, 0, 0, 1);
@@ -66,10 +66,10 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Color#set
          * @description Assign values to the color components, including alpha
-         * @param {number} r The value for red (0-1)
-         * @param {number} g The value for blue (0-1)
-         * @param {number} b The value for green (0-1)
-         * @param {number} [a] The value for the alpha (0-1), defaults to 1
+         * @param {number} r - The value for red (0-1)
+         * @param {number} g - The value for blue (0-1)
+         * @param {number} b - The value for green (0-1)
+         * @param {number} [a] - The value for the alpha (0-1), defaults to 1
          * @returns {pc.Color} Self for chaining
          */
         set: function (r, g, b, a) {
@@ -86,9 +86,9 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Color#lerp
          * @description Returns the result of a linear interpolation between two specified colors
-         * @param {pc.Color} lhs The color to interpolate from
-         * @param {pc.Color} rhs The color to interpolate to.
-         * @param {number} alpha The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
+         * @param {pc.Color} lhs - The color to interpolate from
+         * @param {pc.Color} rhs - The color to interpolate to.
+         * @param {number} alpha - The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
          * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
          * a ray extrapolated from this line.
          * @returns {pc.Color} Self for chaining.
@@ -114,7 +114,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Color#fromString
          * @description Set the values of the color from a string representation '#11223344' or '#112233'.
-         * @param {string} hex A string representation in the format '#RRGGBBAA' or '#RRGGBB'. Where RR, GG, BB, AA are red, green, blue and alpha values.
+         * @param {string} hex - A string representation in the format '#RRGGBBAA' or '#RRGGBB'. Where RR, GG, BB, AA are red, green, blue and alpha values.
          * This is the same format used in HTML/CSS.
          * @returns {pc.Color} Self for chaining
          */
@@ -139,7 +139,7 @@ Object.assign(pc, (function () {
          * @description Converts the color to string form. The format is '#RRGGBBAA', where
          * RR, GG, BB, AA are the red, green, blue and alpha values. When the alpha value is not
          * included (the default), this is the same format as used in HTML/CSS.
-         * @param {boolean} alpha If true, the output string will include the alpha value.
+         * @param {boolean} alpha - If true, the output string will include the alpha value.
          * @returns {string} The color in string form.
          * @example
          * var c = new pc.Color(1, 1, 1);

@@ -70,7 +70,7 @@ Object.assign(pc, function () {
      * their render settings and also defines custom callbacks before, after or during rendering.
      * Layers are organized inside {@link pc.LayerComposition} in a desired order.
      * @description Create a new layer.
-     * @param {object} options Object for passing optional arguments. These arguments are the same as properties of the Layer.
+     * @param {object} options - Object for passing optional arguments. These arguments are the same as properties of the Layer.
      * @property {boolean} enabled Enable the layer. Disabled layers are skipped. Defaults to true.
      * @property {string} name Name of the layer. Can be used in {@link pc.LayerComposition#getLayerByName}.
      * @property {number} opaqueSortMode Defines the method used for sorting opaque (that is, not semi-transparent) mesh instances before rendering.
@@ -374,8 +374,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#addMeshInstances
      * @description Adds an array of mesh instances to this layer.
-     * @param {pc.MeshInstance[]} meshInstances Array of {@link pc.MeshInstance}.
-     * @param {boolean} [skipShadowCasters] Set it to true if you don't want these mesh instances to cast shadows in this layer.
+     * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}.
+     * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances to cast shadows in this layer.
      */
     Layer.prototype.addMeshInstances = function (meshInstances, skipShadowCasters) {
         var sceneShaderVer = this._shaderVersion;
@@ -407,8 +407,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#removeMeshInstances
      * @description Removes multiple mesh instances from this layer.
-     * @param {pc.MeshInstance[]} meshInstances Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
-     * @param {boolean} [skipShadowCasters] Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
+     * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
+     * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
      */
     Layer.prototype.removeMeshInstances = function (meshInstances, skipShadowCasters) {
 
@@ -472,7 +472,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#clearMeshInstances
      * @description Removes all mesh instances from this layer.
-     * @param {boolean} [skipShadowCasters] Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
+     * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from removed mesh instances or if they never did cast shadows before.
      */
     Layer.prototype.clearMeshInstances = function (skipShadowCasters) {
         if (this.opaqueMeshInstances.length === 0 && this.transparentMeshInstances.length === 0) {
@@ -488,7 +488,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#addLight
      * @description Adds a light to this layer.
-     * @param {pc.LightComponent} light A {@link pc.LightComponent}.
+     * @param {pc.LightComponent} light - A {@link pc.LightComponent}.
      */
     Layer.prototype.addLight = function (light) {
         if (this._lightComponents.indexOf(light) >= 0) return;
@@ -502,7 +502,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#removeLight
      * @description Removes a light from this layer.
-     * @param {pc.LightComponent} light A {@link pc.LightComponent}.
+     * @param {pc.LightComponent} light - A {@link pc.LightComponent}.
      */
     Layer.prototype.removeLight = function (light) {
         var id = this._lightComponents.indexOf(light);
@@ -531,7 +531,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#addShadowCasters
      * @description Adds an array of mesh instances to this layer, but only as shadow casters (they will not be rendered anywhere, but only cast shadows on other objects).
-     * @param {pc.MeshInstance[]} meshInstances Array of {@link pc.MeshInstance}.
+     * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}.
      */
     Layer.prototype.addShadowCasters = function (meshInstances) {
         var m;
@@ -548,7 +548,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#removeShadowCasters
      * @description Removes multiple mesh instances from the shadow casters list of this layer, meaning they will stop casting shadows.
-     * @param {pc.MeshInstance[]} meshInstances Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
+     * @param {pc.MeshInstance[]} meshInstances - Array of {@link pc.MeshInstance}. If they were added to this layer, they will be removed.
      */
     Layer.prototype.removeShadowCasters = function (meshInstances) {
         var id;
@@ -614,7 +614,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#addCamera
      * @description Adds a camera to this layer.
-     * @param {pc.CameraComponent} camera A {@link pc.CameraComponent}.
+     * @param {pc.CameraComponent} camera - A {@link pc.CameraComponent}.
      */
     Layer.prototype.addCamera = function (camera) {
         if (this.cameras.indexOf(camera) >= 0) return;
@@ -626,7 +626,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Layer#removeCamera
      * @description Removes a camera from this layer.
-     * @param {pc.CameraComponent} camera A {@link pc.CameraComponent}.
+     * @param {pc.CameraComponent} camera - A {@link pc.CameraComponent}.
      */
     Layer.prototype.removeCamera = function (camera) {
         var id = this.cameras.indexOf(camera);

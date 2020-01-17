@@ -7,7 +7,7 @@ Object.assign(pc, function () {
      * @classdesc Edge Detection post effect using Sobel filter
      * @description Creates new instance of the post effect.
      * @augments pc.PostEffect
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application
      */
     var EdgeDetectEffect = function (graphicsDevice) {
         pc.PostEffect.call(this, graphicsDevice);

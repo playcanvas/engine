@@ -27,7 +27,7 @@ Object.assign(pc, function () {
      * @class
      * @name pc.Skeleton
      * @classdesc Represents a skeleton used to play animations.
-     * @param {pc.GraphNode} graph The root pc.GraphNode of the skeleton.
+     * @param {pc.GraphNode} graph - The root pc.GraphNode of the skeleton.
      * @property {boolean} looping Determines whether skeleton is looping its animation.
      */
     var Skeleton = function Skeleton(graph) {
@@ -65,7 +65,7 @@ Object.assign(pc, function () {
      * the skeleton is set to loop, the animation will continue from the beginning.
      * Otherwise, the animation's current time will remain at its duration (i.e. the
      * end).
-     * @param {number} delta The time in seconds to progress the skeleton's animation.
+     * @param {number} delta - The time in seconds to progress the skeleton's animation.
      */
     Skeleton.prototype.addTime = function (delta) {
         if (this._animation !== null) {
@@ -156,9 +156,9 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Skeleton#blend
      * @description Blends two skeletons together.
-     * @param {pc.Skeleton} skel1 Skeleton holding the first pose to be blended.
-     * @param {pc.Skeleton} skel2 Skeleton holding the second pose to be blended.
-     * @param {number} alpha The value controlling the interpolation in relation to the two input
+     * @param {pc.Skeleton} skel1 - Skeleton holding the first pose to be blended.
+     * @param {pc.Skeleton} skel2 - Skeleton holding the second pose to be blended.
+     * @param {number} alpha - The value controlling the interpolation in relation to the two input
      * skeletons. The value is in the range 0 to 1, 0 generating skel1, 1 generating skel2 and anything
      * in between generating a spherical interpolation between the two.
      */
@@ -261,7 +261,7 @@ Object.assign(pc, function () {
      * @description Sets the current time of the currently active animation as set on
      * the specified skeleton. This value must be between zero and the duration of the
      * animation.
-     * @param {number} time The current time of the animation set on the skeleton.
+     * @param {number} time - The current time of the animation set on the skeleton.
      */
     Skeleton.prototype.setCurrentTime = function (time) {
         this.currentTime = time;
@@ -297,7 +297,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Skeleton#setAnimation
      * @description Sets an animation on the specified skeleton.
-     * @param {pc.Animation} animation The animation to set on the skeleton.
+     * @param {pc.Animation} animation - The animation to set on the skeleton.
      */
     Skeleton.prototype.setAnimation = function (animation) {
         this.animation = animation;
@@ -309,7 +309,7 @@ Object.assign(pc, function () {
      * @description Links a skeleton to a node hierarchy. The nodes animated skeleton are
      * then subsequently used to drive the local transformation matrices of the node
      * hierarchy.
-     * @param {pc.GraphNode} graph The root node of the graph that the skeleton is to drive.
+     * @param {pc.GraphNode} graph - The root node of the graph that the skeleton is to drive.
      */
     Skeleton.prototype.setGraph = function (graph) {
         var i;
@@ -364,7 +364,7 @@ Object.assign(pc, function () {
      * @description Specified whether a skeleton should loop its animation or not. If the animation
      * loops, it will wrap back to the start when adding time to the skeleton beyond the duration
      * of the animation. Otherwise, the animation stops at its end after a single play through.
-     * @param {boolean} looping True to cause the animation to loop back to the start on completion
+     * @param {boolean} looping - True to cause the animation to loop back to the start on completion
      * and false otherwise.
      */
     Skeleton.prototype.setLooping = function (looping) {

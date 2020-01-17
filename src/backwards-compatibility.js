@@ -8,8 +8,8 @@ Object.assign(pc, function () {
          * @description Implementation of inheritance for JavaScript objects
          * e.g. Class can access all of Base's function prototypes
          * The super classes prototype is available on the derived class as _super
-         * @param {Function} Self Constructor of derived class
-         * @param {Function} Super Constructor of base class
+         * @param {Function} Self - Constructor of derived class
+         * @param {Function} Super - Constructor of base class
          * @returns {Function} New instance of Self which inherits from Super
          * @example
          * var Base = function () {};

@@ -6,8 +6,8 @@ Object.assign(pc, function () {
      * @augments pc.Component
      * @classdesc The Animation Component allows an Entity to playback animations on models
      * @description Create a new AnimationComponent
-     * @param {pc.AnimationComponentSystem} system The {@link pc.ComponentSystem} that created this Component
-     * @param {pc.Entity} entity The Entity that this Component is attached to
+     * @param {pc.AnimationComponentSystem} system - The {@link pc.ComponentSystem} that created this Component
+     * @param {pc.Entity} entity - The Entity that this Component is attached to
      * @property {number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation
      * @property {boolean} loop If true the animation will restart from the beginning when it reaches the end
      * @property {boolean} activate If true the first animation asset will begin playing when the scene is loaded
@@ -35,8 +35,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AnimationComponent#play
          * @description Start playing an animation
-         * @param {string} name The name of the animation asset to begin playing.
-         * @param {number} [blendTime] The time in seconds to blend from the current
+         * @param {string} name - The name of the animation asset to begin playing.
+         * @param {number} [blendTime] - The time in seconds to blend from the current
          * animation state to the start of the animation being set.
          */
         play: function (name, blendTime) {
@@ -78,7 +78,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AnimationComponent#getAnimation
          * @description Return an animation
-         * @param {string} name The name of the animation asset
+         * @param {string} name - The name of the animation asset
          * @returns {pc.Animation} An Animation
          */
         getAnimation: function (name) {

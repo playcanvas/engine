@@ -69,9 +69,9 @@ Object.assign(pc, function () {
      * @classdesc Represents an input event fired on a {@link pc.ElementComponent}. When an event is raised
      * on an ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
      * @description Create an instance of a pc.ElementInputEvent.
-     * @param {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
-     * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
-     * @param {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
+     * @param {MouseEvent|TouchEvent} event - The MouseEvent or TouchEvent that was originally raised.
+     * @param {pc.ElementComponent} element - The ElementComponent that this event was originally raised on.
+     * @param {pc.CameraComponent} camera - The CameraComponent that this event was originally raised via.
      * @property {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
      * @property {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
      */
@@ -101,13 +101,13 @@ Object.assign(pc, function () {
      * @augments pc.ElementInputEvent
      * @classdesc Represents a Mouse event fired on a {@link pc.ElementComponent}.
      * @description Create an instance of a pc.ElementMouseEvent.
-     * @param {MouseEvent} event The MouseEvent that was originally raised.
-     * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
-     * @param {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
-     * @param {number} x The x coordinate
-     * @param {number} y The y coordinate
-     * @param {number} lastX The last x coordinate
-     * @param {number} lastY The last y coordinate
+     * @param {MouseEvent} event - The MouseEvent that was originally raised.
+     * @param {pc.ElementComponent} element - The ElementComponent that this event was originally raised on.
+     * @param {pc.CameraComponent} camera - The CameraComponent that this event was originally raised via.
+     * @param {number} x - The x coordinate
+     * @param {number} y - The y coordinate
+     * @param {number} lastX - The last x coordinate
+     * @param {number} lastY - The last y coordinate
      * @property {boolean} ctrlKey Whether the ctrl key was pressed
      * @property {boolean} altKey Whether the alt key was pressed
      * @property {boolean} shiftKey Whether the shift key was pressed
@@ -157,12 +157,12 @@ Object.assign(pc, function () {
      * @augments pc.ElementInputEvent
      * @classdesc Represents a TouchEvent fired on a {@link pc.ElementComponent}.
      * @description Create an instance of a pc.ElementTouchEvent.
-     * @param {TouchEvent} event The TouchEvent that was originally raised.
-     * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
-     * @param {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
-     * @param {number} x The x coordinate of the touch that triggered the event
-     * @param {number} y The y coordinate of the touch that triggered the event
-     * @param {pc.ElementInput} input The pc.ElementInput instance
+     * @param {TouchEvent} event - The TouchEvent that was originally raised.
+     * @param {pc.ElementComponent} element - The ElementComponent that this event was originally raised on.
+     * @param {pc.CameraComponent} camera - The CameraComponent that this event was originally raised via.
+     * @param {number} x - The x coordinate of the touch that triggered the event
+     * @param {number} y - The y coordinate of the touch that triggered the event
+     * @param {pc.ElementInput} input - The pc.ElementInput instance
      * @property {pc.Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
      * @property {pc.Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
      */
@@ -183,10 +183,10 @@ Object.assign(pc, function () {
      * @classdesc Handles mouse and touch events for {@link pc.ElementComponent}s. When input events
      * occur on an ElementComponent this fires the appropriate events on the ElementComponent.
      * @description Create a new pc.ElementInput instance.
-     * @param {Element} domElement The DOM element
-     * @param {object} [options] Optional arguments
-     * @param {boolean} [options.useMouse] Whether to allow mouse input. Defaults to true.
-     * @param {boolean} [options.useTouch] Whether to allow touch input. Defaults to true.
+     * @param {Element} domElement - The DOM element
+     * @param {object} [options] - Optional arguments
+     * @param {boolean} [options.useMouse] - Whether to allow mouse input. Defaults to true.
+     * @param {boolean} [options.useTouch] - Whether to allow touch input. Defaults to true.
      */
     var ElementInput = function (domElement, options) {
         this._app = null;
@@ -230,7 +230,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ElementInput#attach
          * @description Attach mouse and touch events to a DOM element.
-         * @param {Element} domElement The DOM element
+         * @param {Element} domElement - The DOM element
          */
         attach: function (domElement) {
             if (this._attached) {
@@ -290,7 +290,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ElementInput#addElement
          * @description Add a {@link pc.ElementComponent} to the internal list of ElementComponents that are being checked for input.
-         * @param {pc.ElementComponent} element The ElementComponent
+         * @param {pc.ElementComponent} element - The ElementComponent
          */
         addElement: function (element) {
             if (this._elements.indexOf(element) === -1)
@@ -301,7 +301,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ElementInput#removeElement
          * @description Remove a {@link pc.ElementComponent} from the internal list of ElementComponents that are being checked for input.
-         * @param {pc.ElementComponent} element The ElementComponent
+         * @param {pc.ElementComponent} element - The ElementComponent
          */
         removeElement: function (element) {
             var idx = this._elements.indexOf(element);

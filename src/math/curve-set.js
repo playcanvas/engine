@@ -6,7 +6,7 @@ Object.assign(pc, (function () {
      * @name pc.CurveSet
      * @classdesc A curve set is a collection of curves.
      * @description Creates a new curve set.
-     * @param {Array<number[]>} [curveKeys] An array of arrays of keys (pairs of numbers with
+     * @param {Array<number[]>} [curveKeys] - An array of arrays of keys (pairs of numbers with
      * the time first and value second).
      */
     var CurveSet = function () {
@@ -42,7 +42,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.CurveSet#get
          * @description Return a specific curve in the curve set.
-         * @param {number} index The index of the curve to return
+         * @param {number} index - The index of the curve to return
          * @returns {pc.Curve} The curve at the specified index
          */
         get: function (index) {
@@ -54,8 +54,8 @@ Object.assign(pc, (function () {
          * @name pc.CurveSet#value
          * @description Returns the interpolated value of all curves in the curve
          * set at the specified time.
-         * @param {number} time The time at which to calculate the value
-         * @param {number[]} [result] The interpolated curve values at the specified time.
+         * @param {number} time - The time at which to calculate the value
+         * @param {number[]} [result] - The interpolated curve values at the specified time.
          * If this parameter is not supplied, the function allocates a new array internally
          * to return the result.
          * @returns {number[]} The interpolated curve values at the specified time
@@ -114,9 +114,9 @@ Object.assign(pc, (function () {
          * @name pc.CurveSet#quantizeClamped
          * @description This function will sample the curveset at regular intervals
          * over the range [0..1] and clamp the result to min and max.
-         * @param {number} precision The number of samples to return.
-         * @param {number} min The minimum output value.
-         * @param {number} max The maximum output value.
+         * @param {number} precision - The number of samples to return.
+         * @param {number} min - The minimum output value.
+         * @param {number} max - The maximum output value.
          * @returns {number[]} The set of quantized values.
          */
         quantizeClamped: function (precision, min, max) {

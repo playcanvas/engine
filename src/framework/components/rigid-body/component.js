@@ -13,8 +13,8 @@ Object.assign(pc, function () {
      * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you
      * can apply forces and impulses to rigid bodies.
      * @description Create a new RigidBodyComponent
-     * @param {pc.RigidBodyComponentSystem} system The ComponentSystem that created this component
-     * @param {pc.Entity} entity The entity this component is attached to
+     * @param {pc.RigidBodyComponentSystem} system - The ComponentSystem that created this component
+     * @param {pc.Entity} entity - The entity this component is attached to
      * @property {number} mass The mass of the body. This is only relevant for {@link pc.BODYTYPE_DYNAMIC}
      * bodies, other types have infinite mass. Defaults to 1.
      * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.
@@ -83,35 +83,35 @@ Object.assign(pc, function () {
      * @event
      * @name pc.RigidBodyComponent#contact
      * @description The 'contact' event is fired when a contact occurs between two rigid bodies
-     * @param {pc.ContactResult} result Details of the contact between the two rigid bodies.
+     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
      */
 
     /**
      * @event
      * @name pc.RigidBodyComponent#collisionstart
      * @description The 'collisionstart' event is fired when two rigid bodies start touching.
-     * @param {pc.ContactResult} result Details of the contact between the two rigid bodies.
+     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
      */
 
     /**
      * @event
      * @name pc.RigidBodyComponent#collisionend
      * @description The 'collisionend' event is fired two rigid-bodies stop touching.
-     * @param {pc.Entity} other The {@link pc.Entity} that stopped touching this rigid body.
+     * @param {pc.Entity} other - The {@link pc.Entity} that stopped touching this rigid body.
      */
 
     /**
      * @event
      * @name pc.RigidBodyComponent#triggerenter
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
-     * @param {pc.Entity} other The {@link pc.Entity} with trigger volume that this rigidbody entered.
+     * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody entered.
      */
 
     /**
      * @event
      * @name pc.RigidBodyComponent#triggerleave
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
-     * @param {pc.Entity} other The {@link pc.Entity} with trigger volume that this rigidbody exited.
+     * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody exited.
      */
 
     Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
@@ -709,7 +709,7 @@ Object.assign(pc, function () {
          * @name pc.RigidBodyComponent#_updateKinematic
          * @description Kinematic objects maintain their own linear and angular velocities. This method updates their transform
          * based on their current velocity. It is called in every frame in the main physics update loop, after the simulation is stepped.
-         * @param {number} dt Delta time for the current frame.
+         * @param {number} dt - Delta time for the current frame.
          */
         _updateKinematic: function (dt) {
             this._displacement.copy(this._linearVelocity).scale(dt);

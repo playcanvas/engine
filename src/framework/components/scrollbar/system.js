@@ -13,7 +13,7 @@ Object.assign(pc, function () {
      * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.ScrollbarComponent}s.
      * @description Create a new ScrollbarComponentSystem
-     * @param {pc.Application} app The application
+     * @param {pc.Application} app - The application
      */
     var ScrollbarComponentSystem = function ScrollbarComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

@@ -6,8 +6,8 @@ Object.assign(pc, function () {
      * @class
      * @name pc.Template
      * @classdesc Create a Template resource from raw database data
-     * @param {pc.Application} app The application
-     * @param {object} data Asset data from the database
+     * @param {pc.Application} app - The application
+     * @param {object} data - Asset data from the database
      */
     var Template = function Template(app, data) {
         this._app = app;

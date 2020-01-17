@@ -27,17 +27,17 @@ Object.assign(pc, function () {
      * @augments pc.EventHandler
      * @classdesc The SoundSlot controls playback of an audio asset.
      * @description Create a new SoundSlot
-     * @param {pc.SoundComponent} component The Component that created this slot.
-     * @param {string} name The name of the slot.
-     * @param {object} options Settings for the slot
-     * @param {number} [options.volume=1] The playback volume, between 0 and 1.
-     * @param {number} [options.pitch=1] The relative pitch, default of 1, plays at normal pitch.
-     * @param {boolean} [options.loop=false] If true the sound will restart when it reaches the end.
-     * @param {number} [options.startTime=0] The start time from which the sound will start playing.
-     * @param {number} [options.duration=null] The duration of the sound that the slot will play starting from startTime.
-     * @param {boolean} [options.overlap=false] If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
-     * @param {boolean} [options.autoPlay=false] If true the slot will start playing as soon as its audio asset is loaded.
-     * @param {number} [options.asset=null] The asset id of the audio asset that is going to be played by this slot.
+     * @param {pc.SoundComponent} component - The Component that created this slot.
+     * @param {string} name - The name of the slot.
+     * @param {object} options - Settings for the slot
+     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
+     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
+     * @param {boolean} [options.loop=false] - If true the sound will restart when it reaches the end.
+     * @param {number} [options.startTime=0] - The start time from which the sound will start playing.
+     * @param {number} [options.duration=null] - The duration of the sound that the slot will play starting from startTime.
+     * @param {boolean} [options.overlap=false] - If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
+     * @param {boolean} [options.autoPlay=false] - If true the slot will start playing as soon as its audio asset is loaded.
+     * @param {number} [options.asset=null] - The asset id of the audio asset that is going to be played by this slot.
      * @property {string} name The name of the slot
      * @property {string} asset The asset id
      * @property {boolean} autoPlay If true the slot will begin playing as soon as it is loaded
@@ -230,8 +230,8 @@ Object.assign(pc, function () {
          * automatically attach the specified nodes to the source that plays the sound. You need to pass
          * the first node of the node graph that you created externally and the last node of that graph. The first
          * node will be connected to the audio source and the last node will be connected to the destination of the AudioContext (e.g. speakers).
-         * @param {AudioNode} firstNode The first node that will be connected to the audio source of sound instances.
-         * @param {AudioNode} [lastNode] The last node that will be connected to the destination of the AudioContext.
+         * @param {AudioNode} firstNode - The first node that will be connected to the audio source of sound instances.
+         * @param {AudioNode} [lastNode] - The last node that will be connected to the destination of the AudioContext.
          * If unspecified then the firstNode will be connected to the destination instead.
          * @example
          * var context = app.systems.sound.context;
@@ -646,33 +646,33 @@ Object.assign(pc, function () {
  * @event
  * @name pc.SoundSlot#play
  * @description Fired when a sound instance starts playing
- * @param {pc.SoundInstance} instance The instance that started playing
+ * @param {pc.SoundInstance} instance - The instance that started playing
  */
 
 /**
  * @event
  * @name pc.SoundSlot#pause
  * @description Fired when a sound instance is paused.
- * @param {pc.SoundInstance} instance The instance that was paused created to play the sound
+ * @param {pc.SoundInstance} instance - The instance that was paused created to play the sound
  */
 
 /**
  * @event
  * @name pc.SoundSlot#resume
  * @description Fired when a sound instance is resumed..
- * @param {pc.SoundInstance} instance The instance that was resumed
+ * @param {pc.SoundInstance} instance - The instance that was resumed
  */
 
 /**
  * @event
  * @name pc.SoundSlot#stop
  * @description Fired when a sound instance is stopped.
- * @param {pc.SoundInstance} instance The instance that was stopped
+ * @param {pc.SoundInstance} instance - The instance that was stopped
  */
 
 /**
  * @event
  * @name pc.SoundSlot#load
  * @description Fired when the asset assigned to the slot is loaded
- * @param {pc.Sound} sound The sound resource that was loaded
+ * @param {pc.Sound} sound - The sound resource that was loaded
  */

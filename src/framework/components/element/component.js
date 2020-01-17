@@ -40,8 +40,8 @@ Object.assign(pc, function () {
      * @classdesc Enables an Entity to be positioned using anchors and screen coordinates under a {@link pc.ScreenComponent} or under other ElementComponents.
      * Depending on its type it can be used to render images, text or just as a layout mechanism to build 2D and 3D user interfaces.
      * If the component is a descendant of a {@link pc.ScreenComponent}, then the Entity's {@link pc.Entity.setLocalPosition} is in the {@link pc.ScreenComponent}'s coordinate system.
-     * @param {pc.ElementComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @param {pc.ElementComponentSystem} system - The ComponentSystem that created this Component
+     * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {string} type The type of the ElementComponent. Can be one of the following:
      * <ul>
      *     <li>pc.ELEMENTTYPE_GROUP: The component can be used as a layout mechanism to create groups of ElementComponents e.g. panels.</li>
@@ -1559,73 +1559,73 @@ Object.assign(pc, function () {
  * @event
  * @name pc.ElementComponent#mousedown
  * @description Fired when the mouse is pressed while the cursor is on the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent} event The event
+ * @param {pc.ElementMouseEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ElementComponent#mouseup
  * @description Fired when the mouse is released while the cursor is on the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent} event The event
+ * @param {pc.ElementMouseEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ElementComponent#mouseenter
  * @description Fired when the mouse cursor enters the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent} event The event
+ * @param {pc.ElementMouseEvent} event - The event
  */
 /**
  * @event
  * @name pc.ElementComponent#mouseleave
  * @description Fired when the mouse cursor leaves the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent} event The event
+ * @param {pc.ElementMouseEvent} event - The event
  */
 /**
  * @event
  * @name pc.ElementComponent#mousemove
  * @description Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent} event The event
+ * @param {pc.ElementMouseEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ElementComponent#mousewheel
  * @description Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent} event The event
+ * @param {pc.ElementMouseEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ElementComponent#click
  * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component. Only fired when useInput is true.
- * @param {pc.ElementMouseEvent|pc.ElementTouchEvent} event The event
+ * @param {pc.ElementMouseEvent|pc.ElementTouchEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ElementComponent#touchstart
  * @description Fired when a touch starts on the component. Only fired when useInput is true.
- * @param {pc.ElementTouchEvent} event The event
+ * @param {pc.ElementTouchEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ElementComponent#touchend
  * @description Fired when a touch ends on the component. Only fired when useInput is true.
- * @param {pc.ElementTouchEvent} event The event
+ * @param {pc.ElementTouchEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ElementComponent#touchmove
  * @description Fired when a touch moves after it started touching the component. Only fired when useInput is true.
- * @param {pc.ElementTouchEvent} event The event
+ * @param {pc.ElementTouchEvent} event - The event
  */
 
 /**
  * @event
  * @name pc.ElementComponent#touchcancel
  * @description Fired when a touch is cancelled on the component. Only fired when useInput is true.
- * @param {pc.ElementTouchEvent} event The event
+ * @param {pc.ElementTouchEvent} event - The event
  */

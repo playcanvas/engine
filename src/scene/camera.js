@@ -102,10 +102,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Camera#worldToScreen
          * @description Convert a point from 3D world space to 2D canvas pixel space.
-         * @param {pc.Vec3} worldCoord The world space coordinate to transform.
-         * @param {number} cw The width of PlayCanvas' canvas element.
-         * @param {number} ch The height of PlayCanvas' canvas element.
-         * @param {pc.Vec3} [screenCoord] 3D vector to receive screen coordinate result.
+         * @param {pc.Vec3} worldCoord - The world space coordinate to transform.
+         * @param {number} cw - The width of PlayCanvas' canvas element.
+         * @param {number} ch - The height of PlayCanvas' canvas element.
+         * @param {pc.Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
          * @returns {pc.Vec3} The screen space coordinate.
          */
         worldToScreen: function (worldCoord, cw, ch, screenCoord) {
@@ -139,12 +139,12 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Camera#screenToWorld
          * @description Convert a point from 2D canvas pixel space to 3D world space.
-         * @param {number} x x coordinate on PlayCanvas' canvas element.
-         * @param {number} y y coordinate on PlayCanvas' canvas element.
-         * @param {number} z The distance from the camera in world space to create the new point.
-         * @param {number} cw The width of PlayCanvas' canvas element.
-         * @param {number} ch The height of PlayCanvas' canvas element.
-         * @param {pc.Vec3} [worldCoord] 3D vector to receive world coordinate result.
+         * @param {number} x - x coordinate on PlayCanvas' canvas element.
+         * @param {number} y - y coordinate on PlayCanvas' canvas element.
+         * @param {number} z - The distance from the camera in world space to create the new point.
+         * @param {number} cw - The width of PlayCanvas' canvas element.
+         * @param {number} ch - The height of PlayCanvas' canvas element.
+         * @param {pc.Vec3} [worldCoord] - 3D vector to receive world coordinate result.
          * @returns {pc.Vec3} The world space coordinate.
          */
         screenToWorld: function (x, y, z, cw, ch, worldCoord) {
@@ -257,10 +257,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Camera#setClearOptions
          * @description Sets the options used to determine how the camera's render target will be cleared.
-         * @param {object} options The options determining the behaviour of subsequent render target clears.
-         * @param {number[]} options.color The options determining the behaviour of subsequent render target clears.
-         * @param {number} options.depth The options determining the behaviour of subsequent render target clears.
-         * @param {number} options.flags The options determining the behaviour of subsequent render target clears.
+         * @param {object} options - The options determining the behaviour of subsequent render target clears.
+         * @param {number[]} options.color - The options determining the behaviour of subsequent render target clears.
+         * @param {number} options.depth - The options determining the behaviour of subsequent render target clears.
+         * @param {number} options.flags - The options determining the behaviour of subsequent render target clears.
          */
         setClearOptions: function (options) {
             this._clearOptions.color[0] = options.color[0];

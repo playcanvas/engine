@@ -23,7 +23,7 @@ Object.assign(pc, function () {
      * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.ScrollViewComponent}s.
      * @description Create a new ScrollViewComponentSystem.
-     * @param {pc.Application} app The application
+     * @param {pc.Application} app - The application
      */
     var ScrollViewComponentSystem = function ScrollViewComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

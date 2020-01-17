@@ -9,9 +9,9 @@ Object.assign(pc, function () {
      * @name pc.Picker
      * @classdesc Picker object used to select mesh instances from screen coordinates.
      * @description Create a new instance of a Picker object
-     * @param {pc.Application} app The application managing this picker instance.
-     * @param {number} width The width of the pick buffer in pixels.
-     * @param {number} height The height of the pick buffer in pixels.
+     * @param {pc.Application} app - The application managing this picker instance.
+     * @param {number} width - The width of the pick buffer in pixels.
+     * @param {number} height - The height of the pick buffer in pixels.
      * @property {number} width Width of the pick buffer in pixels (read-only).
      * @property {number} height Height of the pick buffer in pixels (read-only).
      * @property {pc.RenderTarget} renderTarget The render target used by the picker internally (read-only).
@@ -66,10 +66,10 @@ Object.assign(pc, function () {
      * @name pc.Picker#getSelection
      * @description Return the list of mesh instances selected by the specified rectangle in the
      * previously prepared pick buffer.The rectangle using top-left coordinate system.
-     * @param {number} x The left edge of the rectangle
-     * @param {number} y The top edge of the rectangle
-     * @param {number} [width] The width of the rectangle
-     * @param {number} [height] The height of the rectangle
+     * @param {number} x - The left edge of the rectangle
+     * @param {number} y - The top edge of the rectangle
+     * @param {number} [width] - The width of the rectangle
+     * @param {number} [height] - The height of the rectangle
      * @returns {pc.MeshInstance[]} An array of mesh instances that are in the selection
      * @example
      * // Get the selection at the point (10,20)
@@ -145,9 +145,9 @@ Object.assign(pc, function () {
      * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
      * called multiple times on the same picker object. Therefore, if the models or camera do not change
      * in any way, pc.Picker#prepare does not need to be called again.
-     * @param {pc.CameraComponent} camera The camera component used to render the scene.
-     * @param {pc.Scene} scene The scene containing the pickable mesh instances.
-     * @param {pc.Layer|pc.RenderTarget} [arg] Layer or RenderTarget from which objects will be picked. If not supplied, all layers rendering to backbuffer before this layer will be used.
+     * @param {pc.CameraComponent} camera - The camera component used to render the scene.
+     * @param {pc.Scene} scene - The scene containing the pickable mesh instances.
+     * @param {pc.Layer|pc.RenderTarget} [arg] - Layer or RenderTarget from which objects will be picked. If not supplied, all layers rendering to backbuffer before this layer will be used.
      */
     Picker.prototype.prepare = function (camera, scene, arg) {
         var device = this.device;
@@ -323,8 +323,8 @@ Object.assign(pc, function () {
      * 3D scene. However, the lower the resolution of the pick buffer, the less accurate the selection
      * results returned by pc.Picker#getSelection. On the other hand, smaller pick buffers will
      * yield greater performance, so there is a trade off.
-     * @param {number} width The width of the pick buffer in pixels.
-     * @param {number} height The height of the pick buffer in pixels.
+     * @param {number} width - The width of the pick buffer in pixels.
+     * @param {number} height - The height of the pick buffer in pixels.
      */
     Picker.prototype.resize = function (width, height) {
         this.width = width;

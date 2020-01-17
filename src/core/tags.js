@@ -151,28 +151,28 @@ Object.assign(pc, (function () {
      * @augments pc.EventHandler
      * @classdesc Set of tag names
      * @description Create an instance of a Tags.
-     * @param {object} [parent] Parent object who tags belong to.
+     * @param {object} [parent] - Parent object who tags belong to.
      * Note: Tags are used as addition of `pc.Entity` and `pc.Asset` as `tags` field.
      */
 
     /**
      * @event
      * @name pc.Tags#add
-     * @param {string} tag Name of a tag added to a set.
-     * @param {object} parent Parent object who tags belong to.
+     * @param {string} tag - Name of a tag added to a set.
+     * @param {object} parent - Parent object who tags belong to.
      */
 
     /**
      * @event
      * @name pc.Tags#remove
-     * @param {string} tag Name of a tag removed from a set.
-     * @param {object} parent Parent object who tags belong to.
+     * @param {string} tag - Name of a tag removed from a set.
+     * @param {object} parent - Parent object who tags belong to.
      */
 
     /**
      * @event
      * @name pc.Tags#change
-     * @param {object} [parent] Parent object who tags belong to.
+     * @param {object} [parent] - Parent object who tags belong to.
      * @description Fires when tags been added / removed.
      * It will fire once on bulk changes, while `add`/`remove` will fire on each tag operation
      */
@@ -192,7 +192,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Tags#add
          * @description Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
-         * @param {string} name Name of a tag, or array of tags
+         * @param {string} name - Name of a tag, or array of tags
          * @returns {boolean} true if any tag were added
          * @example
          * tags.add('level-1');
@@ -231,7 +231,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Tags#remove
          * @description Remove tag.
-         * @param {string} name Name of a tag or array of tags
+         * @param {string} name - Name of a tag or array of tags
          * @returns {boolean} true if any tag were removed
          * @example
          * tags.remove('level-1');
@@ -300,7 +300,7 @@ Object.assign(pc, (function () {
          * When an array is provided it will check if tags contain each tag within the array.
          * If any of comma separated argument is satisfied, then it will return true.
          * Any number of combinations are valid, and order is irrelevant.
-         * @param {string} name of tag, or array of names
+         * @param {string} name - of tag, or array of names
          * @returns {boolean} true if filters are satisfied
          * @example
          * tags.has('player'); // player

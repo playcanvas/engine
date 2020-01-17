@@ -11,11 +11,11 @@ Object.assign(pc, function () {
      * // Create an index buffer holding 3 16-bit indices
      * // The buffer is marked as static, hinting that the buffer will never be modified
      * var indexBuffer = new pc.IndexBuffer(graphicsDevice, pc.INDEXFORMAT_UINT16, 3, pc.BUFFER_STATIC);
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this index buffer.
-     * @param {number} format The type of each index to be stored in the index buffer (see pc.INDEXFORMAT_*).
-     * @param {number} numIndices The number of indices to be stored in the index buffer.
-     * @param {number} [usage] The usage type of the vertex buffer (see pc.BUFFER_*).
-     * @param {ArrayBuffer} [initialData] Initial data.
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this index buffer.
+     * @param {number} format - The type of each index to be stored in the index buffer (see pc.INDEXFORMAT_*).
+     * @param {number} numIndices - The number of indices to be stored in the index buffer.
+     * @param {number} [usage] - The usage type of the vertex buffer (see pc.BUFFER_*).
+     * @param {ArrayBuffer} [initialData] - Initial data.
      */
     var IndexBuffer = function (graphicsDevice, format, numIndices, usage, initialData) {
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
