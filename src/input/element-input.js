@@ -74,6 +74,7 @@ Object.assign(pc, function () {
      * @param {pc.CameraComponent} camera - The CameraComponent that this event was originally raised via.
      * @property {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
      * @property {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
+     * @property {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
      */
     var ElementInputEvent = function (event, element, camera) {
         this.event = event;
