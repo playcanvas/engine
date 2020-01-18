@@ -2,15 +2,15 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
-     * @name pc.VerticalTiltShiftEffect
-     * @classdesc Simple fake tilt-shift effect, modulating two pass Gaussian blur by vertical position
+     * @class
+     * @name pc.HorizontalTiltShiftEffect
+     * @classdesc Simple fake tilt-shift effect, modulating two pass Gaussian blur by horizontal position.
      * @description Creates new instance of the post effect.
-     * @extends pc.PostEffect
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
-     * @property {Number} focus Controls where the "focused" horizontal line lies
+     * @augments pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+     * @property {number} focus Controls where the "focused" vertical line lies.
      */
-    var VerticalTiltShiftEffect = function (graphicsDevice) {
+    var HorizontalTiltShiftEffect = function (graphicsDevice) {
         pc.PostEffect.call(this, graphicsDevice);
 
         // Shader author: alteredq / http://alteredqualia.com/
@@ -33,24 +33,24 @@ Object.assign(pc, function () {
                 "precision " + graphicsDevice.precision + " float;",
                 "",
                 "uniform sampler2D uColorBuffer;",
-                "uniform float uV;",
+                "uniform float uH;",
                 "uniform float uR;",
                 "",
                 "varying vec2 vUv0;",
                 "",
                 "void main() {",
                 "    vec4 sum = vec4( 0.0 );",
-                "    float vv = uV * abs( uR - vUv0.y );",
+                "    float hh = uH * abs( uR - vUv0.x );",
                 "",
-                "    sum += texture2D( uColorBuffer, vec2( vUv0.x, vUv0.y - 4.0 * vv ) ) * 0.051;",
-                "    sum += texture2D( uColorBuffer, vec2( vUv0.x, vUv0.y - 3.0 * vv ) ) * 0.0918;",
-                "    sum += texture2D( uColorBuffer, vec2( vUv0.x, vUv0.y - 2.0 * vv ) ) * 0.12245;",
-                "    sum += texture2D( uColorBuffer, vec2( vUv0.x, vUv0.y - 1.0 * vv ) ) * 0.1531;",
+                "    sum += texture2D( uColorBuffer, vec2( vUv0.x - 4.0 * hh, vUv0.y ) ) * 0.051;",
+                "    sum += texture2D( uColorBuffer, vec2( vUv0.x - 3.0 * hh, vUv0.y ) ) * 0.0918;",
+                "    sum += texture2D( uColorBuffer, vec2( vUv0.x - 2.0 * hh, vUv0.y ) ) * 0.12245;",
+                "    sum += texture2D( uColorBuffer, vec2( vUv0.x - 1.0 * hh, vUv0.y ) ) * 0.1531;",
                 "    sum += texture2D( uColorBuffer, vec2( vUv0.x, vUv0.y ) ) * 0.1633;",
-                "    sum += texture2D( uColorBuffer, vec2( vUv0.x, vUv0.y + 1.0 * vv ) ) * 0.1531;",
-                "    sum += texture2D( uColorBuffer, vec2( vUv0.x, vUv0.y + 2.0 * vv ) ) * 0.12245;",
-                "    sum += texture2D( uColorBuffer, vec2( vUv0.x, vUv0.y + 3.0 * vv ) ) * 0.0918;",
-                "    sum += texture2D( uColorBuffer, vec2( vUv0.x, vUv0.y + 4.0 * vv ) ) * 0.051;",
+                "    sum += texture2D( uColorBuffer, vec2( vUv0.x + 1.0 * hh, vUv0.y ) ) * 0.1531;",
+                "    sum += texture2D( uColorBuffer, vec2( vUv0.x + 2.0 * hh, vUv0.y ) ) * 0.12245;",
+                "    sum += texture2D( uColorBuffer, vec2( vUv0.x + 3.0 * hh, vUv0.y ) ) * 0.0918;",
+                "    sum += texture2D( uColorBuffer, vec2( vUv0.x + 4.0 * hh, vUv0.y ) ) * 0.051;",
                 "",
                 "    gl_FragColor = sum;",
                 "}"
@@ -61,15 +61,15 @@ Object.assign(pc, function () {
         this.focus = 0.35;
     };
 
-    VerticalTiltShiftEffect.prototype = Object.create(pc.PostEffect.prototype);
-    VerticalTiltShiftEffect.prototype.constructor = VerticalTiltShiftEffect;
+    HorizontalTiltShiftEffect.prototype = Object.create(pc.PostEffect.prototype);
+    HorizontalTiltShiftEffect.prototype.constructor = HorizontalTiltShiftEffect;
 
-    Object.assign(VerticalTiltShiftEffect.prototype, {
+    Object.assign(HorizontalTiltShiftEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
-            scope.resolve("uV").setValue(1 / inputTarget.height);
+            scope.resolve("uH").setValue(1 / inputTarget.width);
             scope.resolve("uR").setValue(this.focus);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
@@ -77,14 +77,14 @@ Object.assign(pc, function () {
     });
 
     return {
-        VerticalTiltShiftEffect: VerticalTiltShiftEffect
+        HorizontalTiltShiftEffect: HorizontalTiltShiftEffect
     };
 }());
 
 // ----------------- SCRIPT DEFINITION ------------------ //
-var VerticalTiltShift = pc.createScript('verticalTiltShift');
+var HorizontalTiltShift = pc.createScript('horizontalTiltShift');
 
-VerticalTiltShift.attributes.add('focus', {
+HorizontalTiltShift.attributes.add('focus', {
     type: 'number',
     default: 0.35,
     min: 0,
@@ -94,8 +94,8 @@ VerticalTiltShift.attributes.add('focus', {
 });
 
 // initialize code called once per entity
-VerticalTiltShift.prototype.initialize = function () {
-    this.effect = new pc.VerticalTiltShiftEffect(this.app.graphicsDevice);
+HorizontalTiltShift.prototype.initialize = function () {
+    this.effect = new pc.HorizontalTiltShiftEffect(this.app.graphicsDevice);
     this.effect.focus = this.focus;
 
     this.on('attr:focus', function (value) {

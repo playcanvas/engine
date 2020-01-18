@@ -33,44 +33,46 @@ Object.assign(pc, function () {
     var VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
     /**
-     * @constructor
+     * @class
      * @name pc.Asset
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc An asset record of a file or data resource that can be loaded by the engine.
-     * The asset contains three important fields:<br/>
-     * <strong>file</strong>: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset<br/>
-     * <strong>data</strong>: contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model)<br/>
-     * <strong>resource</strong>: contains the final resource when it is loaded. (e.g. a {@link pc.StandardMaterial} or a {@link pc.Texture})<br/>
+     * The asset contains three important fields:
+     *
+     * * `file`: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset.
+     * * `data`: contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model).
+     * * `resource`: contains the final resource when it is loaded. (e.g. a {@link pc.StandardMaterial} or a {@link pc.Texture}).
      *
      * See the {@link pc.AssetRegistry} for details on loading resources from assets.
      * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
-     * @param {String} name A non-unique but human-readable name which can be later used to retrieve the asset.
-     * @param {String} type Type of asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
-     * @param {Object} [file] Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
+     * @param {string} name - A non-unique but human-readable name which can be later used to retrieve the asset.
+     * @param {string} type - Type of asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
+     * @param {object} [file] - Details about the file the asset is made from. At the least must contain the 'url' field. For assets that don't contain file data use null.
      * @example
      * var file = {
-     *   filename: "filename.txt",
-     *   url: "/example/filename.txt",
-     * }
-     * @param {Object} [data] JSON object with additional data about the asset (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of materials)
+     *     filename: "filename.txt",
+     *     url: "/example/filename.txt"
+     * };
+     * @param {object} [data] - JSON object with additional data about the asset (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of materials)
      * @example
      * var asset = new pc.Asset("a texture", "texture", {
      *     url: "http://example.com/my/assets/here/texture.png"
      * });
-     * @property {String} name The name of the asset
-     * @property {Number} id The asset id
-     * @property {String} type The type of the asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
+     * @property {string} name The name of the asset
+     * @property {number} id The asset id
+     * @property {string} type The type of the asset. One of ["animation", "audio", "binary", "cubemap", "css", "font", "json", "html", "material", "model", "script", "shader", "text", "texture"]
      * @property {pc.Tags} tags Interface for tagging. Allows to find assets by tags using {@link pc.AssetRegistry#findByTag} method.
-     * @property {Object} file The file details or null if no file
-     * @property {String} [file.url] The URL of the resource file that contains the asset data
-     * @property {String} [file.filename] The filename of the resource file
-     * @property {Number} [file.size] The size of the resource file
-     * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field
-     * @property {Object} data JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
-     * @property {Object} resource A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
+     * @property {object} file The file details or null if no file
+     * @property {string} [file.url] The URL of the resource file that contains the asset data
+     * @property {string} [file.filename] The filename of the resource file
+     * @property {number} [file.size] The size of the resource file
+     * @property {string} [file.hash] The MD5 hash of the resource file data and the Asset data field
+     * @property {object} data JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
+     * @property {object} resource A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
      * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
-     * @property {Boolean} preload If true the asset will be loaded during the preload phase of application set up.
-     * @property {Boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
+     * @property {boolean} preload If true the asset will be loaded during the preload phase of application set up.
+     * @property {boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
+     * @property {boolean} loading True if the resource is currently being loaded
      * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
      */
     var Asset = function (name, type, file, data) {
@@ -109,49 +111,49 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.Asset#load
-     * @description Fired when the asset has completed loading
-     * @param {pc.Asset} asset The asset that was loaded
+     * @description Fired when the asset has completed loading.
+     * @param {pc.Asset} asset - The asset that was loaded.
      */
 
     /**
      * @event
      * @name pc.Asset#remove
-     * @description Fired when the asset is removed from the asset registry
-     * @param {pc.Asset} asset The asset that was removed
+     * @description Fired when the asset is removed from the asset registry.
+     * @param {pc.Asset} asset - The asset that was removed.
      */
 
     /**
      * @event
      * @name pc.Asset#error
-     * @description Fired if the asset encounters an error while loading
-     * @param {String} err The error message
-     * @param {pc.Asset} asset The asset that generated the error
+     * @description Fired if the asset encounters an error while loading.
+     * @param {string} err - The error message.
+     * @param {pc.Asset} asset - The asset that generated the error.
      */
 
     /**
      * @event
      * @name pc.Asset#change
-     * @description Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed
-     * @param {pc.Asset} asset The asset that was loaded
-     * @param {String} property The name of the property that changed
-     * @param {*} value The new property value
-     * @param {*} oldValue The old property value
+     * @description Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed.
+     * @param {pc.Asset} asset - The asset that was loaded.
+     * @param {string} property - The name of the property that changed.
+     * @param {*} value - The new property value.
+     * @param {*} oldValue - The old property value.
      */
 
     /**
      * @event
      * @name pc.Asset#add:localized
      * @description Fired when we add a new localized asset id to the asset.
-     * @param {String} locale The locale
-     * @param {Number} assetId The asset id we added.
+     * @param {string} locale - The locale.
+     * @param {number} assetId - The asset id we added.
      */
 
     /**
      * @event
      * @name pc.Asset#remove:localized
      * @description Fired when we remove a localized asset id from the asset.
-     * @param {String} locale The locale
-     * @param {Number} assetId The asset id we removed.
+     * @param {string} locale - The locale.
+     * @param {number} assetId - The asset id we removed.
      */
 
     Object.assign(Asset.prototype, {
@@ -159,7 +161,7 @@ Object.assign(pc, function () {
          * @name pc.Asset#getFileUrl
          * @function
          * @description Return the URL required to fetch the file for this asset.
-         * @returns {String} The URL
+         * @returns {string} The URL.
          * @example
          * var assets = app.assets.find("My Image", "texture");
          * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
@@ -225,9 +227,9 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Asset#getLocalizedAssetId
-         * @param {String} locale The desired locale e.g. ar-AR.
+         * @param {string} locale - The desired locale e.g. Ar-AR.
          * @description Returns the asset id of the asset that corresponds to the specified locale.
-         * @returns {Number} An asset id or null if there is no asset specified for the desired locale.
+         * @returns {number} An asset id or null if there is no asset specified for the desired locale.
          */
         getLocalizedAssetId: function (locale) {
             // tries to find either the desired locale or a fallback locale
@@ -239,8 +241,8 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Asset#addLocalizedAssetId
-         * @param {String} locale The locale e.g. ar-AR.
-         * @param {Number} assetId The asset id
+         * @param {string} locale - The locale e.g. Ar-AR.
+         * @param {number} assetId - The asset id.
          * @description Adds a replacement asset id for the specified locale. When the locale in {@link pc.Application#i18n} changes then
          * references to this asset will be replaced with the specified asset id. (Currently only supported by the {@link pc.ElementComponent}).
          */
@@ -253,8 +255,8 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Asset#removeLocalizedAssetId
-         * @param {String} locale The locale e.g. ar-AR.
-         * @description Removes a localized asset
+         * @param {string} locale - The locale e.g. Ar-AR.
+         * @description Removes a localized asset.
          */
         removeLocalizedAssetId: function (locale) {
             var assetId = this._i18n[locale];
@@ -267,9 +269,9 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.Asset#ready
-         * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away
-         * @param {pc.callbacks.AssetReady} callback The function called when the asset is ready. Passed the (asset) arguments
-         * @param {Object} [scope] Scope object to use when calling the callback
+         * @description Take a callback which is called as soon as the asset is loaded. If the asset is already loaded the callback is called straight away.
+         * @param {pc.callbacks.AssetReady} callback - The function called when the asset is ready. Passed the (asset) arguments.
+         * @param {object} [scope] - Scope object to use when calling the callback.
          * @example
          * var asset = app.assets.find("My Asset");
          * asset.ready(function (asset) {
@@ -461,91 +463,91 @@ Object.assign(pc, function () {
 
         /**
          * @constant
-         * @type {String}
+         * @type {string}
          * @name pc.ASSET_ANIMATION
          * @description Asset type name for animation.
          */
         ASSET_ANIMATION: 'animation',
         /**
          * @constant
-         * @type {String}
+         * @type {string}
          * @name pc.ASSET_AUDIO
          * @description Asset type name for audio.
          */
         ASSET_AUDIO: 'audio',
         /**
          * @constant
-         * @type {String}
+         * @type {string}
          * @name pc.ASSET_IMAGE
          * @description Asset type name for image.
          */
         ASSET_IMAGE: 'image',
         /**
          * @constant
-         * @type {String}
+         * @type {string}
          * @name pc.ASSET_JSON
          * @description Asset type name for json.
          */
         ASSET_JSON: 'json',
         /**
          * @constant
-         * @type {String}
+         * @type {string}
          * @name pc.ASSET_MODEL
          * @description Asset type name for model.
          */
         ASSET_MODEL: 'model',
         /**
          * @constant
-         * @type {String}
+         * @type {string}
          * @name pc.ASSET_MATERIAL
          * @description Asset type name for material.
          */
         ASSET_MATERIAL: 'material',
         /**
          * @constant
-         * @type {String}
+         * @type {string}
          * @name pc.ASSET_TEXT
          * @description Asset type name for text.
          */
         ASSET_TEXT: 'text',
         /**
          * @constant
-         * @type {String}
+         * @type {string}
          * @name pc.ASSET_TEXTURE
          * @description Asset type name for texture.
          */
         ASSET_TEXTURE: 'texture',
         /**
          * @constant
-         * @type {String}
+         * @type {string}
          * @name pc.ASSET_CUBEMAP
          * @description Asset type name for cubemap.
          */
         ASSET_CUBEMAP: 'cubemap',
         /**
          * @constant
-         * @type {String}
+         * @type {string}
          * @name pc.ASSET_SHADER
          * @description Asset type name for shader.
          */
         ASSET_SHADER: 'shader',
         /**
          * @constant
-         * @type {String}
+         * @type {string}
          * @name pc.ASSET_CSS
          * @description Asset type name for CSS.
          */
         ASSET_CSS: 'css',
         /**
          * @constant
-         * @type {String}
+         * @type {string}
          * @name pc.ASSET_HTML
          * @description Asset type name for HTML.
          */
         ASSET_HTML: 'html',
         /**
          * @constant
-         * @type {String}
+         * @type {string}
          * @name pc.ASSET_SCRIPT
          * @description Asset type name for script.
          */

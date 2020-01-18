@@ -2,74 +2,73 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.Texture
      * @classdesc A texture is a container for texel data that can be utilized in a fragment shader.
      * Typically, the texel data represents an image that is mapped over geometry.
      * @description Creates a new texture.
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this texture.
-     * @param {Object} [options] Object for passing optional arguments.
-     * @param {Number} [options.width] The width of the texture in pixels. Defaults to 4.
-     * @param {Number} [options.height] The height of the texture in pixels. Defaults to 4.
-     * @param {Number} [options.depth] The number of depth slices in a 3D texture (WebGL2 only). Defaults to 1 (single 2D image).
-     * @param {Number} [options.format] The pixel format of the texture. Can be:
-     * <ul>
-     *     <li>{@link pc.PIXELFORMAT_A8}</li>
-     *     <li>{@link pc.PIXELFORMAT_L8}</li>
-     *     <li>{@link pc.PIXELFORMAT_L8_A8}</li>
-     *     <li>{@link pc.PIXELFORMAT_R5_G6_B5}</li>
-     *     <li>{@link pc.PIXELFORMAT_R5_G5_B5_A1}</li>
-     *     <li>{@link pc.PIXELFORMAT_R4_G4_B4_A4}</li>
-     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8}</li>
-     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8_A8}</li>
-     *     <li>{@link pc.PIXELFORMAT_DXT1}</li>
-     *     <li>{@link pc.PIXELFORMAT_DXT3}</li>
-     *     <li>{@link pc.PIXELFORMAT_DXT5}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGB16F}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGBA16F}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGB32F}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGBA32F}</li>
-     *     <li>{@link pc.PIXELFORMAT_ETC1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_111110F}</li>
-     *     <li>{@link pc.PIXELFORMAT_ASTC_4x4}>/li>
-     *     <li>{@link pc.PIXELFORMAT_ATC_RGB}</li>
-     *     <li>{@link pc.PIXELFORMAT_ATC_RGBA}</li>
-     * </ul>
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
+     * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
+     * @param {number} [options.depth] - The number of depth slices in a 3D texture (WebGL2 only). Defaults to 1 (single 2D image).
+     * @param {number} [options.format] - The pixel format of the texture. Can be:
+     * * {@link pc.PIXELFORMAT_A8}
+     * * {@link pc.PIXELFORMAT_L8}
+     * * {@link pc.PIXELFORMAT_L8_A8}
+     * * {@link pc.PIXELFORMAT_R5_G6_B5}
+     * * {@link pc.PIXELFORMAT_R5_G5_B5_A1}
+     * * {@link pc.PIXELFORMAT_R4_G4_B4_A4}
+     * * {@link pc.PIXELFORMAT_R8_G8_B8}
+     * * {@link pc.PIXELFORMAT_R8_G8_B8_A8}
+     * * {@link pc.PIXELFORMAT_DXT1}
+     * * {@link pc.PIXELFORMAT_DXT3}
+     * * {@link pc.PIXELFORMAT_DXT5}
+     * * {@link pc.PIXELFORMAT_RGB16F}
+     * * {@link pc.PIXELFORMAT_RGBA16F}
+     * * {@link pc.PIXELFORMAT_RGB32F}
+     * * {@link pc.PIXELFORMAT_RGBA32F}
+     * * {@link pc.PIXELFORMAT_ETC1}
+     * * {@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}
+     * * {@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}
+     * * {@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}
+     * * {@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}
+     * * {@link pc.PIXELFORMAT_111110F}
+     * * {@link pc.PIXELFORMAT_ASTC_4x4}>/li>
+     * * {@link pc.PIXELFORMAT_ATC_RGB}
+     * * {@link pc.PIXELFORMAT_ATC_RGBA}
      * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
-     * @param {Number} [options.minFilter] The minification filter type to use. Defaults to {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
-     * @param {Number} [options.magFilter] The magnification filter type to use. Defaults to {@link pc.FILTER_LINEAR}
-     * @param {Number} [options.anisotropy] The level of anisotropic filtering to use. Defaults to 1
-     * @param {Number} [options.addressU] The repeat mode to use in the U direction. Defaults to {@link pc.ADDRESS_REPEAT}
-     * @param {Number} [options.addressV] The repeat mode to use in the V direction. Defaults to {@link pc.ADDRESS_REPEAT}
-     * @param {Number} [options.addressW] The repeat mode to use in the W direction. Defaults to {@link pc.ADDRESS_REPEAT}
-     * @param {Boolean} [options.mipmaps] When enabled try to generate or use mipmaps for this texture. Default is true
-     * @param {Boolean} [options.cubemap] Specifies whether the texture is to be a cubemap. Defaults to false.
-     * @param {Boolean} [options.volume] Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
-     * @param {Boolean} [options.rgbm] Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
-     * @param {Boolean} [options.fixCubemapSeams] Specifies whether this cubemap texture requires special
+     * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
+     * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link pc.FILTER_LINEAR}
+     * @param {number} [options.anisotropy] - The level of anisotropic filtering to use. Defaults to 1
+     * @param {number} [options.addressU] - The repeat mode to use in the U direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {number} [options.addressV] - The repeat mode to use in the V direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {number} [options.addressW] - The repeat mode to use in the W direction. Defaults to {@link pc.ADDRESS_REPEAT}
+     * @param {boolean} [options.mipmaps] - When enabled try to generate or use mipmaps for this texture. Default is true
+     * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap. Defaults to false.
+     * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume (WebGL2 only). Defaults to false.
+     * @param {boolean} [options.rgbm] - Specifies whether the texture contains RGBM-encoded HDR data. Defaults to false.
+     * @param {boolean} [options.swizzleGGGR] - Specifies whether the texture contains swizzled GGGR data for use with tangent space normal
+     * maps. The R component is stored in alpha and G is stored in RGB. This packing can result in higher quality when the texture data
+     * is compressed. Defaults to false.
+     * @param {boolean} [options.fixCubemapSeams] - Specifies whether this cubemap texture requires special
      * seam fixing shader code to look right. Defaults to false.
-     * @param {Boolean} [options.flipY] Specifies whether the texture should be flipped in the Y-direction. Only affects textures
+     * @param {boolean} [options.flipY] - Specifies whether the texture should be flipped in the Y-direction. Only affects textures
      * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures or textures set from raw
      * pixel data. Defaults to true.
-     * @param {Boolean} [options.premultiplyAlpha] If true, the alpha channel of the texture (if present) is multiplied into the color
+     * @param {boolean} [options.premultiplyAlpha] - If true, the alpha channel of the texture (if present) is multiplied into the color
      * channels. Defaults to false.
-     * @param {Boolean} [options.compareOnRead] When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
+     * @param {boolean} [options.compareOnRead] - When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      * Defaults to false.
-     * @param {Number} [options.compareFunc] Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to pc.FUNC_LESS.
+     * @param {number} [options.compareFunc] - Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to pc.FUNC_LESS.
      * Possible values:
-     * <ul>
-     *     <li>pc.FUNC_LESS</li>
-     *     <li>pc.FUNC_LESSEQUAL</li>
-     *     <li>pc.FUNC_GREATER</li>
-     *     <li>pc.FUNC_GREATEREQUAL</li>
-     *     <li>pc.FUNC_EQUAL</li>
-     *     <li>pc.FUNC_NOTEQUAL</li>
-     * </ul>
+     * * {@link pc.FUNC_LESS}
+     * * {@link pc.FUNC_LESSEQUAL}
+     * * {@link pc.FUNC_GREATER}
+     * * {@link pc.FUNC_GREATEREQUAL}
+     * * {@link pc.FUNC_EQUAL}
+     * * {@link pc.FUNC_NOTEQUAL}
      * @example
      * // Create a 8x8x24-bit texture
      * var texture = new pc.Texture(graphicsDevice, {
@@ -89,7 +88,7 @@ Object.assign(pc, function () {
      *     }
      * }
      * texture.unlock();
-     * @property {String} name The name of the texture. Defaults to null.
+     * @property {string} name The name of the texture. Defaults to null.
      */
     var Texture = function (graphicsDevice, options) {
         this.device = graphicsDevice;
@@ -101,6 +100,7 @@ Object.assign(pc, function () {
 
         this._format = pc.PIXELFORMAT_R8_G8_B8_A8;
         this.rgbm = false;
+        this.swizzleGGGR = false;
 
         this._cubemap = false;
         this._volume = false;
@@ -130,6 +130,7 @@ Object.assign(pc, function () {
 
             this._format = (options.format !== undefined) ? options.format : this._format;
             this.rgbm = (options.rgbm !== undefined) ? options.rgbm : this.rgbm;
+            this.swizzleGGGR = (options.swizzleGGGR !== undefined) ? options.swizzleGGGR : this.swizzleGGGR;
 
             if (options.mipmaps !== undefined) {
                 this._mipmaps = options.mipmaps;
@@ -185,16 +186,14 @@ Object.assign(pc, function () {
     // Public properties
     /**
      * @name pc.Texture#minFilter
-     * @type Number
+     * @type {number}
      * @description The minification filter to be applied to the texture. Can be:
-     * <ul>
-     *     <li>{@link pc.FILTER_NEAREST}</li>
-     *     <li>{@link pc.FILTER_LINEAR}</li>
-     *     <li>{@link pc.FILTER_NEAREST_MIPMAP_NEAREST}</li>
-     *     <li>{@link pc.FILTER_NEAREST_MIPMAP_LINEAR}</li>
-     *     <li>{@link pc.FILTER_LINEAR_MIPMAP_NEAREST}</li>
-     *     <li>{@link pc.FILTER_LINEAR_MIPMAP_LINEAR}</li>
-     * </ul>
+     * * {@link pc.FILTER_NEAREST}
+     * * {@link pc.FILTER_LINEAR}
+     * * {@link pc.FILTER_NEAREST_MIPMAP_NEAREST}
+     * * {@link pc.FILTER_NEAREST_MIPMAP_LINEAR}
+     * * {@link pc.FILTER_LINEAR_MIPMAP_NEAREST}
+     * * {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
      */
     Object.defineProperty(Texture.prototype, 'minFilter', {
         get: function () {
@@ -210,12 +209,10 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#magFilter
-     * @type Number
+     * @type {number}
      * @description The magnification filter to be applied to the texture. Can be:
-     * <ul>
-     *     <li>{@link pc.FILTER_NEAREST}</li>
-     *     <li>{@link pc.FILTER_LINEAR}</li>
-     * </ul>
+     * * {@link pc.FILTER_NEAREST}
+     * * {@link pc.FILTER_LINEAR}
      */
     Object.defineProperty(Texture.prototype, 'magFilter', {
         get: function () {
@@ -231,13 +228,11 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#addressU
-     * @type Number
+     * @type {number}
      * @description The addressing mode to be applied to the texture horizontally. Can be:
-     * <ul>
-     *     <li>{@link pc.ADDRESS_REPEAT}</li>
-     *     <li>{@link pc.ADDRESS_CLAMP_TO_EDGE}</li>
-     *     <li>{@link pc.ADDRESS_MIRRORED_REPEAT}</li>
-     * </ul>
+     * * {@link pc.ADDRESS_REPEAT}
+     * * {@link pc.ADDRESS_CLAMP_TO_EDGE}
+     * * {@link pc.ADDRESS_MIRRORED_REPEAT}
      */
     Object.defineProperty(Texture.prototype, 'addressU', {
         get: function () {
@@ -253,13 +248,11 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#addressV
-     * @type Number
+     * @type {number}
      * @description The addressing mode to be applied to the texture vertically. Can be:
-     * <ul>
-     *     <li>{@link pc.ADDRESS_REPEAT}</li>
-     *     <li>{@link pc.ADDRESS_CLAMP_TO_EDGE}</li>
-     *     <li>{@link pc.ADDRESS_MIRRORED_REPEAT}</li>
-     * </ul>
+     * * {@link pc.ADDRESS_REPEAT}
+     * * {@link pc.ADDRESS_CLAMP_TO_EDGE}
+     * * {@link pc.ADDRESS_MIRRORED_REPEAT}
      */
     Object.defineProperty(Texture.prototype, 'addressV', {
         get: function () {
@@ -275,13 +268,11 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#addressW
-     * @type Number
+     * @type {number}
      * @description The addressing mode to be applied to the 3D texture depth (WebGL2 only). Can be:
-     * <ul>
-     *     <li>{@link pc.ADDRESS_REPEAT}</li>
-     *     <li>{@link pc.ADDRESS_CLAMP_TO_EDGE}</li>
-     *     <li>{@link pc.ADDRESS_MIRRORED_REPEAT}</li>
-     * </ul>
+     * * {@link pc.ADDRESS_REPEAT}
+     * * {@link pc.ADDRESS_CLAMP_TO_EDGE}
+     * * {@link pc.ADDRESS_MIRRORED_REPEAT}
      */
     Object.defineProperty(Texture.prototype, 'addressW', {
         get: function () {
@@ -304,7 +295,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#compareOnRead
-     * @type Boolean
+     * @type {boolean}
      * @description When enabled, and if texture format is pc.PIXELFORMAT_DEPTH or pc.PIXELFORMAT_DEPTHSTENCIL,
      * hardware PCF is enabled for this texture, and you can get filtered results of comparison using texture() in your shader (WebGL2 only).
      */
@@ -322,17 +313,15 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#compareFunc
-     * @type Number
+     * @type {number}
      * @description Comparison function when compareOnRead is enabled (WebGL2 only).
      * Possible values:
-     * <ul>
-     *     <li>pc.FUNC_LESS</li>
-     *     <li>pc.FUNC_LESSEQUAL</li>
-     *     <li>pc.FUNC_GREATER</li>
-     *     <li>pc.FUNC_GREATEREQUAL</li>
-     *     <li>pc.FUNC_EQUAL</li>
-     *     <li>pc.FUNC_NOTEQUAL</li>
-     * </ul>
+     * * {@link pc.FUNC_LESS}
+     * * {@link pc.FUNC_LESSEQUAL}
+     * * {@link pc.FUNC_GREATER}
+     * * {@link pc.FUNC_GREATEREQUAL}
+     * * {@link pc.FUNC_EQUAL}
+     * * {@link pc.FUNC_NOTEQUAL}
      */
     Object.defineProperty(Texture.prototype, 'compareFunc', {
         get: function () {
@@ -348,7 +337,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#anisotropy
-     * @type Number
+     * @type {number}
      * @description Integer value specifying the level of anisotropic to apply to the texture
      * ranging from 1 (no anisotropic filtering) to the {@link pc.GraphicsDevice} property maxAnisotropy.
      */
@@ -368,7 +357,7 @@ Object.assign(pc, function () {
      * @private
      * @deprecated
      * @name pc.Texture#autoMipmap
-     * @type Boolean
+     * @type {boolean}
      * @description Toggles automatic mipmap generation. Can't be used on non power of two textures.
      */
     Object.defineProperty(Texture.prototype, 'autoMipmap', {
@@ -382,7 +371,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#mipmaps
-     * @type Boolean
+     * @type {boolean}
      * @description Defines if texture should generate/upload mipmaps if possible.
      */
     Object.defineProperty(Texture.prototype, 'mipmaps', {
@@ -402,7 +391,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Texture#width
-     * @type Number
+     * @type {number}
      * @description The width of the texture in pixels.
      */
     Object.defineProperty(Texture.prototype, 'width', {
@@ -414,7 +403,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Texture#height
-     * @type Number
+     * @type {number}
      * @description The height of the texture in pixels.
      */
     Object.defineProperty(Texture.prototype, 'height', {
@@ -426,7 +415,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Texture#depth
-     * @type Number
+     * @type {number}
      * @description The number of depth slices in a 3D texture (WebGL2 only).
      */
     Object.defineProperty(Texture.prototype, 'depth', {
@@ -438,34 +427,32 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Texture#format
-     * @type Number
+     * @type {number}
      * @description The pixel format of the texture. Can be:
-     * <ul>
-     *     <li>{@link pc.PIXELFORMAT_A8}</li>
-     *     <li>{@link pc.PIXELFORMAT_L8}</li>
-     *     <li>{@link pc.PIXELFORMAT_L8_A8}</li>
-     *     <li>{@link pc.PIXELFORMAT_R5_G6_B5}</li>
-     *     <li>{@link pc.PIXELFORMAT_R5_G5_B5_A1}</li>
-     *     <li>{@link pc.PIXELFORMAT_R4_G4_B4_A4}</li>
-     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8}</li>
-     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8_A8}</li>
-     *     <li>{@link pc.PIXELFORMAT_DXT1}</li>
-     *     <li>{@link pc.PIXELFORMAT_DXT3}</li>
-     *     <li>{@link pc.PIXELFORMAT_DXT5}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGB16F}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGBA16F}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGB32F}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGBA32F}</li>
-     *     <li>{@link pc.PIXELFORMAT_ETC1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_111110F}</li>
-     *     <li>{@link pc.PIXELFORMAT_ASTC_4x4}>/li>
-     *     <li>{@link pc.PIXELFORMAT_ATC_RGB}</li>
-     *     <li>{@link pc.PIXELFORMAT_ATC_RGBA}</li>
-     * </ul>
+     * * {@link pc.PIXELFORMAT_A8}
+     * * {@link pc.PIXELFORMAT_L8}
+     * * {@link pc.PIXELFORMAT_L8_A8}
+     * * {@link pc.PIXELFORMAT_R5_G6_B5}
+     * * {@link pc.PIXELFORMAT_R5_G5_B5_A1}
+     * * {@link pc.PIXELFORMAT_R4_G4_B4_A4}
+     * * {@link pc.PIXELFORMAT_R8_G8_B8}
+     * * {@link pc.PIXELFORMAT_R8_G8_B8_A8}
+     * * {@link pc.PIXELFORMAT_DXT1}
+     * * {@link pc.PIXELFORMAT_DXT3}
+     * * {@link pc.PIXELFORMAT_DXT5}
+     * * {@link pc.PIXELFORMAT_RGB16F}
+     * * {@link pc.PIXELFORMAT_RGBA16F}
+     * * {@link pc.PIXELFORMAT_RGB32F}
+     * * {@link pc.PIXELFORMAT_RGBA32F}
+     * * {@link pc.PIXELFORMAT_ETC1}
+     * * {@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}
+     * * {@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}
+     * * {@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}
+     * * {@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}
+     * * {@link pc.PIXELFORMAT_111110F}
+     * * {@link pc.PIXELFORMAT_ASTC_4x4}>/li>
+     * * {@link pc.PIXELFORMAT_ATC_RGB}
+     * * {@link pc.PIXELFORMAT_ATC_RGBA}
      */
     Object.defineProperty(Texture.prototype, 'format', {
         get: function () {
@@ -476,7 +463,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Texture#cubemap
-     * @type Boolean
+     * @type {boolean}
      * @description Returns true if this texture is a cube map and false otherwise.
      */
     Object.defineProperty(Texture.prototype, 'cubemap', {
@@ -485,76 +472,24 @@ Object.assign(pc, function () {
         }
     });
 
-    var _pixelFormat2Size = null;
-
     Object.defineProperty(Texture.prototype, 'gpuSize', {
         get: function () {
-            if (!_pixelFormat2Size) {
-                _pixelFormat2Size = [];
-                _pixelFormat2Size[pc.PIXELFORMAT_A8] = 1;
-                _pixelFormat2Size[pc.PIXELFORMAT_L8] = 1;
-                _pixelFormat2Size[pc.PIXELFORMAT_L8_A8] = 1;
-                _pixelFormat2Size[pc.PIXELFORMAT_R5_G6_B5] = 2;
-                _pixelFormat2Size[pc.PIXELFORMAT_R5_G5_B5_A1] = 2;
-                _pixelFormat2Size[pc.PIXELFORMAT_R4_G4_B4_A4] = 2;
-                _pixelFormat2Size[pc.PIXELFORMAT_R8_G8_B8] = 4;
-                _pixelFormat2Size[pc.PIXELFORMAT_R8_G8_B8_A8] = 4;
-                _pixelFormat2Size[pc.PIXELFORMAT_RGB16F] = 8;
-                _pixelFormat2Size[pc.PIXELFORMAT_RGBA16F] = 8;
-                _pixelFormat2Size[pc.PIXELFORMAT_RGB32F] = 16;
-                _pixelFormat2Size[pc.PIXELFORMAT_RGBA32F] = 16;
-                _pixelFormat2Size[pc.PIXELFORMAT_R32F] = 4;
-                _pixelFormat2Size[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
-                _pixelFormat2Size[pc.PIXELFORMAT_DEPTHSTENCIL] = 4;
-                _pixelFormat2Size[pc.PIXELFORMAT_111110F] = 4;
-                _pixelFormat2Size[pc.PIXELFORMAT_SRGB] = 4;
-                _pixelFormat2Size[pc.PIXELFORMAT_SRGBA] = 4;
-            }
+            var mips = this.pot &&
+                       (this._mipmaps ||
+                        this._minFilter === pc.FILTER_NEAREST_MIPMAP_NEAREST ||
+                        this._minFilter === pc.FILTER_NEAREST_MIPMAP_LINEAR ||
+                        this._minFilter === pc.FILTER_LINEAR_MIPMAP_NEAREST ||
+                        this._minFilter === pc.FILTER_LINEAR_MIPMAP_LINEAR) &&
+                        !(this._compressed && this._levels.length === 1);
 
-            var mips = 1;
-            if (this.pot && (this._mipmaps || this._minFilter === pc.FILTER_NEAREST_MIPMAP_NEAREST ||
-                this._minFilter === pc.FILTER_NEAREST_MIPMAP_LINEAR || this._minFilter === pc.FILTER_LINEAR_MIPMAP_NEAREST ||
-                this._minFilter === pc.FILTER_LINEAR_MIPMAP_LINEAR) && !(this._compressed && this._levels.length === 1)) {
-
-                mips = Math.round(Math.log2(Math.max(this._width, this._height)) + 1);
-            }
-            var mipWidth = this._width;
-            var mipHeight = this._height;
-            var mipDepth = this._depth;
-            var size = 0;
-
-            for (var i = 0; i < mips; i++) {
-                if (!this._compressed) {
-                    size += mipWidth * mipHeight * mipDepth * _pixelFormat2Size[this._format];
-                } else if (this._format === pc.PIXELFORMAT_ETC1) {
-                    size += Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8 * mipDepth;
-                } else if (this._format === pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 || this._format === pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
-                    size += Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4 * mipDepth;
-                } else if (this._format === pc.PIXELFORMAT_PVRTC_4BPP_RGB_1 || this._format === pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1) {
-                    size += Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2 * mipDepth;
-                } else {
-                    var DXT_BLOCK_WIDTH = 4;
-                    var DXT_BLOCK_HEIGHT = 4;
-                    var blockSize = this._format === pc.PIXELFORMAT_DXT1 ? 8 : 16;
-                    var numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
-                    var numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
-                    var numBlocks = numBlocksAcross * numBlocksDown;
-                    size += numBlocks * blockSize * mipDepth;
-                }
-                mipWidth = Math.max(mipWidth * 0.5, 1);
-                mipHeight = Math.max(mipHeight * 0.5, 1);
-                mipDepth = Math.max(mipDepth * 0.5, 1);
-            }
-
-            if (this._cubemap) size *= 6;
-            return size;
+            return Texture.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
         }
     });
 
     /**
      * @readonly
      * @name pc.Texture#volume
-     * @type Boolean
+     * @type {boolean}
      * @description Returns true if this texture is a 3D volume and false otherwise.
      */
     Object.defineProperty(Texture.prototype, 'volume', {
@@ -565,7 +500,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Texture#flipY
-     * @type Boolean
+     * @type {boolean}
      * @description Specifies whether the texture should be flipped in the Y-direction. Only affects textures
      * with a source that is an image, canvas or video element. Does not affect cubemaps, compressed textures
      * or textures set from raw pixel data. Defaults to true.
@@ -597,12 +532,104 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Texture#pot
-     * @type Boolean
+     * @type {boolean}
      * @description Returns true if all dimensions of the texture are power of two, and false otherwise.
      */
     Object.defineProperty(Texture.prototype, 'pot',  {
         get: function () {
             return pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height);
+        }
+    });
+
+    var _pixelSizeTable = null;
+    var _blockSizeTable = null;
+
+    // static functions
+    Object.assign(Texture, {
+        /**
+         * @private
+         * @function
+         * @name pc.Texture.calcGpuSize
+         * @description Calculate the GPU memory required for a texture.
+         * @param {number} [width] - Texture's width.
+         * @param {number} [height] - Texture's height.
+         * @param {number} [depth] - Texture's depth.
+         * @param {number} [format] - Texture's pixel format (pc.PIXELFORMAT_***).
+         * @param {boolean} [mipmaps] - True if the texture includes mipmaps, false otherwise.
+         * @param {boolean} [cubemap] - True is the texture is a cubemap, false otherwise.
+         * @returns {number} The amount of GPU memory required for the texture, in bytes.
+         */
+        calcGpuSize: function (width, height, depth, format, mipmaps, cubemap) {
+            if (!_pixelSizeTable) {
+                _pixelSizeTable = [];
+                _pixelSizeTable[pc.PIXELFORMAT_A8] = 1;
+                _pixelSizeTable[pc.PIXELFORMAT_L8] = 1;
+                _pixelSizeTable[pc.PIXELFORMAT_L8_A8] = 1;
+                _pixelSizeTable[pc.PIXELFORMAT_R5_G6_B5] = 2;
+                _pixelSizeTable[pc.PIXELFORMAT_R5_G5_B5_A1] = 2;
+                _pixelSizeTable[pc.PIXELFORMAT_R4_G4_B4_A4] = 2;
+                _pixelSizeTable[pc.PIXELFORMAT_R8_G8_B8] = 4;
+                _pixelSizeTable[pc.PIXELFORMAT_R8_G8_B8_A8] = 4;
+                _pixelSizeTable[pc.PIXELFORMAT_RGB16F] = 8;
+                _pixelSizeTable[pc.PIXELFORMAT_RGBA16F] = 8;
+                _pixelSizeTable[pc.PIXELFORMAT_RGB32F] = 16;
+                _pixelSizeTable[pc.PIXELFORMAT_RGBA32F] = 16;
+                _pixelSizeTable[pc.PIXELFORMAT_R32F] = 4;
+                _pixelSizeTable[pc.PIXELFORMAT_DEPTH] = 4; // can be smaller using WebGL1 extension?
+                _pixelSizeTable[pc.PIXELFORMAT_DEPTHSTENCIL] = 4;
+                _pixelSizeTable[pc.PIXELFORMAT_111110F] = 4;
+                _pixelSizeTable[pc.PIXELFORMAT_SRGB] = 4;
+                _pixelSizeTable[pc.PIXELFORMAT_SRGBA] = 4;
+            }
+
+            if (!_blockSizeTable) {
+                _blockSizeTable = [];
+                _blockSizeTable[pc.PIXELFORMAT_ETC1] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_ETC2_RGB] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_PVRTC_2BPP_RGB_1] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_PVRTC_4BPP_RGB_1] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_DXT1] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_ATC_RGB] = 8;
+                _blockSizeTable[pc.PIXELFORMAT_ETC2_RGBA] = 16;
+                _blockSizeTable[pc.PIXELFORMAT_DXT3] = 16;
+                _blockSizeTable[pc.PIXELFORMAT_DXT5] = 16;
+                _blockSizeTable[pc.PIXELFORMAT_ASTC_4x4] = 16;
+                _blockSizeTable[pc.PIXELFORMAT_ATC_RGBA] = 16;
+            }
+
+            var pixelSize = _pixelSizeTable.hasOwnProperty(format) ? _pixelSizeTable[format] : 0;
+            var blockSize = _blockSizeTable.hasOwnProperty(format) ? _blockSizeTable[format] : 0;
+            var result = 0;
+
+            while (1) {
+                if (pixelSize > 0) {
+                    // handle uncompressed formats
+                    result += width * height * depth * pixelSize;
+                } else {
+                    // handle block formats
+                    var blockWidth = Math.floor((width + 3) / 4);
+                    var blockHeight = Math.floor((height + 3) / 4);
+                    var blockDepth = Math.floor((depth + 3) / 4);
+
+                    if (format === pc.PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
+                        format === pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
+                        blockWidth = Math.floor(blockWidth / 2, 1);
+                    }
+
+                    result += blockWidth * blockHeight * blockDepth * blockSize;
+                }
+                // we're done if mipmaps aren't required or we've calculated the smallest mipmap level
+                if (!mipmaps || ((width === 1) && (height === 1) && (depth === 1))) {
+                    break;
+                }
+                width = Math.max(Math.floor(width / 2), 1);
+                height = Math.max(Math.floor(height / 2), 1);
+                depth = Math.max(Math.floor(depth / 2), 1);
+            }
+
+            return result * (cubemap ? 6 : 1);
         }
     });
 
@@ -636,9 +663,9 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Texture#lock
          * @description Locks a miplevel of the texture, returning a typed array to be filled with pixel data.
-         * @param {Object} [options] Optional options object. Valid properties are as follows:
-         * @param {Number} [options.level] The mip level to lock with 0 being the top level. Defaults to 0.
-         * @param {Number} [options.face] If the texture is a cubemap, this is the index of the face to lock.
+         * @param {object} [options] - Optional options object. Valid properties are as follows:
+         * @param {number} [options.level] - The mip level to lock with 0 being the top level. Defaults to 0.
+         * @param {number} [options.face] - If the texture is a cubemap, this is the index of the face to lock.
          * @returns {Uint8Array|Uint16Array|Float32Array} A typed array containing the pixel data of the locked mip level.
          */
         lock: function (options) {
@@ -706,9 +733,9 @@ Object.assign(pc, function () {
          * @name pc.Texture#setSource
          * @description Set the pixel data of the texture from a canvas, image, video DOM element. If the
          * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
-         * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source A canvas, image or video element,
+         * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} source - A canvas, image or video element,
          * or an array of 6 canvas, image or video elements.
-         * @param {Number} [mipLevel] A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
+         * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
          * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
          */
         setSource: function (source, mipLevel) {
@@ -807,7 +834,7 @@ Object.assign(pc, function () {
          * @name pc.Texture#getSource
          * @description Get the pixel data of the texture. If this is a cubemap then an array of 6 images will be returned otherwise
          * a single image.
-         * @param {Number} [mipLevel] A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
+         * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail. Defaults to 0, which represents the base image source.
          * A level value of N, that is greater than 0, represents the image source for the Nth mipmap reduction level.
          * @returns {HTMLImageElement} The source image of this texture. Can be null if source not assigned for specific image level.
          */

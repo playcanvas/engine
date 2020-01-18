@@ -2,28 +2,26 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.BokehEffect
-     * @classdesc Implements the BokehEffect post processing effect
+     * @classdesc Implements the BokehEffect post processing effect.
      * @description Creates new instance of the post effect.
-     * @extends pc.PostEffect
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
-     * @property {Number} maxBlur The maximum amount of blurring. Ranges from 0 to 1
-     * @property {Number} aperture Bigger values create a shallower depth of field
-     * @property {Number} focus Controls the focus of the effect
-     * @property {Number} aspect Controls the blurring effect
+     * @augments pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+     * @property {number} maxBlur The maximum amount of blurring. Ranges from 0 to 1.
+     * @property {number} aperture Bigger values create a shallower depth of field.
+     * @property {number} focus Controls the focus of the effect.
+     * @property {number} aspect Controls the blurring effect.
      */
     var BokehEffect = function (graphicsDevice) {
         pc.PostEffect.call(this, graphicsDevice);
 
         this.needsDepthBuffer = true;
 
-        /**
-        * Shader author: alteredq / http://alteredqualia.com/
-        * Depth-of-field shader with bokeh
-        * ported from GLSL shader by Martins Upitis
-        * http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
-        */
+        // Shader author: alteredq / http://alteredqualia.com/
+        // Depth-of-field shader with bokeh
+        // ported from GLSL shader by Martins Upitis
+        // http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
         this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.SEMANTIC_POSITION

@@ -5,15 +5,23 @@ var categories = [
             "blend"
         ]
     }, {
+        name: "camera",
+        examples: [
+            "first-person",
+            "fly",
+            "orbit"
+        ]
+    }, {
         name: "graphics",
         examples: [
-            "camera-fly",
             "layers",
             "lights",
+            "lights-baked",
             "loader-obj",
             "material-physical",
             "model-asset",
             "model-box",
+            "model-shapes",
             "model-textured-box",
             "portal",
             "particles-snow",
