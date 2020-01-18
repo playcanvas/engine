@@ -8,18 +8,22 @@ Object.assign(pc, function () {
      * for you. You can access your pc.Application instance in your scripts. Below is a
      * skeleton script which shows how you can access the application 'app' property inside
      * the initialize and update functions:
-     * <pre><code class="javascript">// Editor example: accessing the pc.Application from a script
+     *
+     * ```javascript
+     * // Editor example: accessing the pc.Application from a script
      * var MyScript = pc.createScript('myScript');
      *
      * MyScript.prototype.initialize = function() {
      *     // Every script instance has a property 'this.app' accessible in the initialize...
      *     var app = this.app;
-     * }.
+     * };
      *
      * MyScript.prototype.update = function(dt) {
      *     // ...and update functions.
      *     var app = this.app;
-     * }`</pre>
+     * };
+     * ```
+     *
      * If you are using the Engine without the Editor, you have to create the application
      * instance manually.
      * @description Create a new Application.
