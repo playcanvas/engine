@@ -55,15 +55,15 @@ Object.assign(pc, function () {
      *        'element#lose': this._onCheckmarkImageElementLose
      *    });
      * }
-     * </code>
+     * `
      *
-     * Using the above code snippet, the <code>_onCheckmarkImageElementGain()</code> listener will be called
+     * Using the above code snippet, the `_onCheckmarkImageElementGain()` listener will be called
      * in either of the following scenarios:
      *
      *   1. A checkmark entity is assigned and already has an ElementComponent.
      *   2. A checkmark entity is assigned that does not have an ElementComponent, but one is added later.
      *
-     * Similarly, the <code>_onCheckmarkImageElementLose()</code> listener will be called in either of the
+     * Similarly, the `_onCheckmarkImageElementLose()` listener will be called in either of the
      * following scenarios:
      *
      *   1. An ElementComponent is removed from the checkmark entity.
@@ -72,12 +72,12 @@ Object.assign(pc, function () {
      *
      * <h2>Event String Format</h2>
      *
-     * The event string (i.e. "element#gain" in the above examples) is of the format <code>sourceName#eventName</code>,
+     * The event string (i.e. "element#gain" in the above examples) is of the format `sourceName#eventName`,
      * and is defined as follows:
      *
-     *   - <code>sourceName</code>: May be any component name, or the special string "entity", which refers
+     *   - `sourceName`: May be any component name, or the special string "entity", which refers
      *     to the entity itself.
-     *   - <code>eventName</code>: May be the name of any event dispatched by the relevant component or
+     *   - `eventName`: May be the name of any event dispatched by the relevant component or
      *     entity, as well as the special strings "gain" or "lose".
      *
      * Some examples are as follows:
@@ -85,20 +85,20 @@ Object.assign(pc, function () {
      * <code class="javascript hljs">
      * "entity#destroy"    // Called when the entity managed by the entity reference is destroyed.
      * "element#set:width" // Called when the width of an ElementComponent is set.
-     * </code>
+     * `
      *
      * <h2>Ownership and Destruction</h2>
      *
      * The lifetime of an ElementReference is tied to the parent component that instantiated it. This
      * coupling is indicated by the provision of the `this` keyword to the ElementReference's constructor
-     * in the above examples (i.e. <code>new pc.EntityReference(this, ...</code>).
+     * in the above examples (i.e. `new pc.EntityReference(this, ...`).
      *
      * Any event listeners managed by the ElementReference are automatically cleaned up when the parent
      * component is removed or the parent component's entity is destroyed – as such you should never have
      * to worry about dangling listeners.
      *
      * Additionally, any callbacks listed in the event config will automatically be called in the scope
-     * of the parent component – you should never have to worry about manually calling <code>Function.bind()</code>.
+     * of the parent component – you should never have to worry about manually calling `Function.bind()`.
      *
      * @param {pc.Component} parentComponent - A reference to the parent component that owns this entity reference.
      * @param {string} entityPropertyName - The name of the component property that contains the entity guid.

@@ -10,15 +10,15 @@ Object.assign(pc, function () {
      * @param {pc.ModelComponentSystem} system - The ComponentSystem that created this Component.
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {string} type The type of the model, which can be one of the following values:
-     * <ul>
-     *     <li>asset: The component will render a model asset</li>
-     *     <li>box: The component will render a box (1 unit in each dimension)</li>
-     *     <li>capsule: The component will render a capsule (radius 0.5, height 2)</li>
-     *     <li>cone: The component will render a cone (radius 0.5, height 1)</li>
-     *     <li>cylinder: The component will render a cylinder (radius 0.5, height 1)</li>
-     *     <li>plane: The component will render a plane (1 unit in each dimension)</li>
-     *     <li>sphere: The component will render a sphere (radius 0.5)</li>
-     * </ul>.
+     *
+     * * "asset": The component will render a model asset
+     * * "box": The component will render a box (1 unit in each dimension)
+     * * "capsule": The component will render a capsule (radius 0.5, height 2)
+     * * "cone": The component will render a cone (radius 0.5, height 1)
+     * * "cylinder": The component will render a cylinder (radius 0.5, height 1)
+     * * "plane": The component will render a plane (1 unit in each dimension)
+     * * "sphere": The component will render a sphere (radius 0.5)
+     *
      * @property {pc.Asset|number} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
      * @property {boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {boolean} receiveShadows If true, shadows will be cast on this model.

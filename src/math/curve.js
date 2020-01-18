@@ -56,12 +56,12 @@ Object.assign(pc, (function () {
      * value second).
      * @property {number} length The number of keys in the curve. [read only].
      * @property {number} type The curve interpolation scheme. Can be:
-     * <ul>
-     *     <li>{@link pc.CURVE_LINEAR}</li>
-     *     <li>{@link pc.CURVE_SMOOTHSTEP}</li>
-     *     <li>{@link pc.CURVE_SPLINE}</li>
-     *     <li>{@link pc.CURVE_STEP}</li>
-     * </ul>
+     *
+     * * {@link pc.CURVE_LINEAR}
+     * * {@link pc.CURVE_SMOOTHSTEP}
+     * * {@link pc.CURVE_SPLINE}
+     * * {@link pc.CURVE_STEP}
+     *
      * Defaults to {@link pc.CURVE_SMOOTHSTEP}.
      */
     var Curve = function (data) {

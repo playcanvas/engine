@@ -19,7 +19,7 @@ Object.assign(pc, function () {
      * MyScript.prototype.update = function(dt) {
      *     // ...and update functions.
      *     var app = this.app;
-     * }</code></pre>
+     * }`</pre>
      * If you are using the Engine without the Editor, you have to create the application
      * instance manually.
      * @description Create a new Application.
@@ -93,26 +93,25 @@ Object.assign(pc, function () {
      * @type {pc.ComponentSystemRegistry}
      * @description The application's component system registry. The pc.Application
      * constructor adds the following component systems to its component system registry:
-     * <ul>
-     *     <li>animation ({@link pc.AnimationComponentSystem})</li>
-     *     <li>audiolistener ({@link pc.AudioListenerComponentSystem})</li>
-     *     <li>button ({@link pc.ButtonComponentSystem})</li>
-     *     <li>camera ({@link pc.CameraComponentSystem})</li>
-     *     <li>collision ({@link pc.CollisionComponentSystem})</li>
-     *     <li>element ({@link pc.ElementComponentSystem})</li>
-     *     <li>layoutchild ({@link pc.LayoutChildComponentSystem})</li>
-     *     <li>layoutgroup ({@link pc.LayoutGroupComponentSystem})</li>
-     *     <li>light ({@link pc.LightComponentSystem})</li>
-     *     <li>model ({@link pc.ModelComponentSystem})</li>
-     *     <li>particlesystem ({@link pc.ParticleSystemComponentSystem})</li>
-     *     <li>rigidbody ({@link pc.RigidBodyComponentSystem})</li>
-     *     <li>screen ({@link pc.ScreenComponentSystem})</li>
-     *     <li>script ({@link pc.ScriptComponentSystem})</li>
-     *     <li>scrollbar ({@link pc.ScrollbarComponentSystem})</li>
-     *     <li>scrollview ({@link pc.ScrollViewComponentSystem})</li>
-     *     <li>sound ({@link pc.SoundComponentSystem})</li>
-     *     <li>sprite ({@link pc.SpriteComponentSystem})</li>
-     * </ul>
+     *
+     * * animation ({@link pc.AnimationComponentSystem})
+     * * audiolistener ({@link pc.AudioListenerComponentSystem})
+     * * button ({@link pc.ButtonComponentSystem})
+     * * camera ({@link pc.CameraComponentSystem})
+     * * collision ({@link pc.CollisionComponentSystem})
+     * * element ({@link pc.ElementComponentSystem})
+     * * layoutchild ({@link pc.LayoutChildComponentSystem})
+     * * layoutgroup ({@link pc.LayoutGroupComponentSystem})
+     * * light ({@link pc.LightComponentSystem})
+     * * model ({@link pc.ModelComponentSystem})
+     * * particlesystem ({@link pc.ParticleSystemComponentSystem})
+     * * rigidbody ({@link pc.RigidBodyComponentSystem})
+     * * screen ({@link pc.ScreenComponentSystem})
+     * * script ({@link pc.ScriptComponentSystem})
+     * * scrollbar ({@link pc.ScrollbarComponentSystem})
+     * * scrollview ({@link pc.ScrollViewComponentSystem})
+     * * sound ({@link pc.SoundComponentSystem})
+     * * sprite ({@link pc.SpriteComponentSystem})
      * @example
      * // Set global gravity to zero
      * this.app.systems.rigidbody.gravity.set(0, 0, 0);
@@ -1113,14 +1112,12 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Application#start
          * @description Start the application. This function does the following:
-         * <ol>
-         *     <li>Fires an event on the application named 'start'</li>
-         *     <li>Calls initialize for all components on entities in the hierachy</li>
-         *     <li>Fires an event on the application named 'initialize'</li>
-         *     <li>Calls postInitialize for all components on entities in the hierachy</li>
-         *     <li>Fires an event on the application named 'postinitialize'</li>
-         *     <li>Starts executing the main loop of the application</li>
-         * </ol>
+         * 1. Fires an event on the application named 'start'
+         * 2. Calls initialize for all components on entities in the hierachy
+         * 3. Fires an event on the application named 'initialize'
+         * 4. Calls postInitialize for all components on entities in the hierachy
+         * 5. Fires an event on the application named 'postinitialize'
+         * 6. Starts executing the main loop of the application
          * This function is called internally by PlayCanvas applications made in the Editor
          * but you will need to call start yourself if you are using the engine stand-alone.
          * @example
@@ -1307,11 +1304,10 @@ Object.assign(pc, function () {
          * @name pc.Application#setCanvasFillMode
          * @description Controls how the canvas fills the window and resizes when the window changes.
          * @param {string} mode - The mode to use when setting the size of the canvas. Can be:
-         * <ul>
-         *     <li>pc.FILLMODE_NONE: the canvas will always match the size provided.</li>
-         *     <li>pc.FILLMODE_FILL_WINDOW: the canvas will simply fill the window, changing aspect ratio.</li>
-         *     <li>pc.FILLMODE_KEEP_ASPECT: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.</li>
-         * </ul>
+         *
+         * * {@link pc.FILLMODE_NONE}: the canvas will always match the size provided.
+         * * {@link pc.FILLMODE_FILL_WINDOW}: the canvas will simply fill the window, changing aspect ratio.
+         * * {@link pc.FILLMODE_KEEP_ASPECT}: the canvas will grow to fill the window as best it can while maintaining the aspect ratio.
          * @param {number} [width] - The width of the canvas (only used when mode is pc.FILLMODE_NONE).
          * @param {number} [height] - The height of the canvas (only used when mode is pc.FILLMODE_NONE).
          */
@@ -1325,10 +1321,9 @@ Object.assign(pc, function () {
          * @name pc.Application#setCanvasResolution
          * @description Change the resolution of the canvas, and set the way it behaves when the window is resized.
          * @param {string} mode - The mode to use when setting the resolution. Can be:
-         * <ul>
-         *     <li>pc.RESOLUTION_AUTO: if width and height are not provided, canvas will be resized to match canvas client size.</li>
-         *     <li>pc.RESOLUTION_FIXED: resolution of canvas will be fixed.</li>
-         * </ul>
+         *
+         * * {@link pc.RESOLUTION_AUTO}: if width and height are not provided, canvas will be resized to match canvas client size.
+         * * {@link pc.RESOLUTION_FIXED}: resolution of canvas will be fixed.
          * @param {number} [width] - The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used.
          * @param {number} [height] - The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used.
          */
@@ -1441,29 +1436,26 @@ Object.assign(pc, function () {
          * @param {object} settings.render - The rendering settings to be applied.
          * @param {number[]} settings.render.global_ambient - The color of the scene's ambient light. Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
          * @param {string} settings.render.fog - The type of fog used by the scene. Can be:
-         * <ul>
-         *     <li>pc.FOG_NONE</li>
-         *     <li>pc.FOG_LINEAR</li>
-         *     <li>pc.FOG_EXP</li>
-         *     <li>pc.FOG_EXP2</li>
-         * </ul>
+         *
+         * * {@link pc.FOG_NONE}
+         * * {@link pc.FOG_LINEAR}
+         * * {@link pc.FOG_EXP}
+         * * {@link pc.FOG_EXP2}
          * @param {number[]} settings.render.fog_color - The color of the fog (if enabled). Must be a fixed size array with three number elements, corresponding to each color channel [ R, G, B ].
          * @param {number} settings.render.fog_density - The density of the fog (if enabled). This property is only valid if the fog property is set to pc.FOG_EXP or pc.FOG_EXP2.
          * @param {number} settings.render.fog_start - The distance from the viewpoint where linear fog begins. This property is only valid if the fog property is set to pc.FOG_LINEAR.
          * @param {number} settings.render.fog_end - The distance from the viewpoint where linear fog reaches its maximum. This property is only valid if the fog property is set to pc.FOG_LINEAR.
          * @param {number} settings.render.gamma_correction - The gamma correction to apply when rendering the scene. Can be:
-         * <ul>
-         *     <li>pc.GAMMA_NONE</li>
-         *     <li>pc.GAMMA_SRGB</li>
-         * </ul>
+         *
+         * * {@link pc.GAMMA_NONE}
+         * * {@link pc.GAMMA_SRGB}
          * @param {number} settings.render.tonemapping - The tonemapping transform to apply when writing fragments to the
          * frame buffer. Can be:
-         * <ul>
-         *     <li>pc.TONEMAP_LINEAR</li>
-         *     <li>pc.TONEMAP_FILMIC</li>
-         *     <li>pc.TONEMAP_HEJL</li>
-         *     <li>pc.TONEMAP_ACES</li>
-         * </ul>
+         *
+         * * {@link pc.TONEMAP_LINEAR}
+         * * {@link pc.TONEMAP_FILMIC}
+         * * {@link pc.TONEMAP_HEJL}
+         * * {@link pc.TONEMAP_ACES}
          * @param {number} settings.render.exposure - The exposure value tweaks the overall brightness of the scene.
          * @param {number|null} [settings.render.skybox] - The asset ID of the cube map texture to be used as the scene's skybox. Defaults to null.
          * @param {number} settings.render.skyboxIntensity - Multiplier for skybox intensity.
@@ -1471,10 +1463,10 @@ Object.assign(pc, function () {
          * @param {number} settings.render.lightmapSizeMultiplier - The lightmap resolution multiplier.
          * @param {number} settings.render.lightmapMaxResolution - The maximum lightmap resolution.
          * @param {number} settings.render.lightmapMode - The lightmap baking mode. Can be:
-         * <ul>
-         *     <li>pc.BAKE_COLOR: single color lightmap
-         *     <li>pc.BAKE_COLORDIR: single color lightmap + dominant light direction (used for bump/specular)
-         * </ul>
+         *
+         * * {@link pc.BAKE_COLOR}: single color lightmap
+         * * {@link pc.BAKE_COLORDIR}: single color lightmap + dominant light direction (used for bump/specular)
+         *
          * Only lights with bakeDir=true will be used for generating the dominant light direction. Defaults to.
          * @example
          *

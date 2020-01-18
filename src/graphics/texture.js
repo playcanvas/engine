@@ -13,32 +13,30 @@ Object.assign(pc, function () {
      * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
      * @param {number} [options.depth] - The number of depth slices in a 3D texture (WebGL2 only). Defaults to 1 (single 2D image).
      * @param {number} [options.format] - The pixel format of the texture. Can be:
-     * <ul>
-     *     <li>{@link pc.PIXELFORMAT_A8}</li>
-     *     <li>{@link pc.PIXELFORMAT_L8}</li>
-     *     <li>{@link pc.PIXELFORMAT_L8_A8}</li>
-     *     <li>{@link pc.PIXELFORMAT_R5_G6_B5}</li>
-     *     <li>{@link pc.PIXELFORMAT_R5_G5_B5_A1}</li>
-     *     <li>{@link pc.PIXELFORMAT_R4_G4_B4_A4}</li>
-     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8}</li>
-     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8_A8}</li>
-     *     <li>{@link pc.PIXELFORMAT_DXT1}</li>
-     *     <li>{@link pc.PIXELFORMAT_DXT3}</li>
-     *     <li>{@link pc.PIXELFORMAT_DXT5}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGB16F}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGBA16F}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGB32F}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGBA32F}</li>
-     *     <li>{@link pc.PIXELFORMAT_ETC1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_111110F}</li>
-     *     <li>{@link pc.PIXELFORMAT_ASTC_4x4}>/li>
-     *     <li>{@link pc.PIXELFORMAT_ATC_RGB}</li>
-     *     <li>{@link pc.PIXELFORMAT_ATC_RGBA}</li>
-     * </ul>
+     * * {@link pc.PIXELFORMAT_A8}
+     * * {@link pc.PIXELFORMAT_L8}
+     * * {@link pc.PIXELFORMAT_L8_A8}
+     * * {@link pc.PIXELFORMAT_R5_G6_B5}
+     * * {@link pc.PIXELFORMAT_R5_G5_B5_A1}
+     * * {@link pc.PIXELFORMAT_R4_G4_B4_A4}
+     * * {@link pc.PIXELFORMAT_R8_G8_B8}
+     * * {@link pc.PIXELFORMAT_R8_G8_B8_A8}
+     * * {@link pc.PIXELFORMAT_DXT1}
+     * * {@link pc.PIXELFORMAT_DXT3}
+     * * {@link pc.PIXELFORMAT_DXT5}
+     * * {@link pc.PIXELFORMAT_RGB16F}
+     * * {@link pc.PIXELFORMAT_RGBA16F}
+     * * {@link pc.PIXELFORMAT_RGB32F}
+     * * {@link pc.PIXELFORMAT_RGBA32F}
+     * * {@link pc.PIXELFORMAT_ETC1}
+     * * {@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}
+     * * {@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}
+     * * {@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}
+     * * {@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}
+     * * {@link pc.PIXELFORMAT_111110F}
+     * * {@link pc.PIXELFORMAT_ASTC_4x4}>/li>
+     * * {@link pc.PIXELFORMAT_ATC_RGB}
+     * * {@link pc.PIXELFORMAT_ATC_RGBA}
      * Defaults to pc.PIXELFORMAT_R8_G8_B8_A8.
      * @param {number} [options.minFilter] - The minification filter type to use. Defaults to {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
      * @param {number} [options.magFilter] - The magnification filter type to use. Defaults to {@link pc.FILTER_LINEAR}
@@ -65,14 +63,12 @@ Object.assign(pc, function () {
      * Defaults to false.
      * @param {number} [options.compareFunc] - Comparison function when compareOnRead is enabled (WebGL2 only). Defaults to pc.FUNC_LESS.
      * Possible values:
-     * <ul>
-     *     <li>pc.FUNC_LESS</li>
-     *     <li>pc.FUNC_LESSEQUAL</li>
-     *     <li>pc.FUNC_GREATER</li>
-     *     <li>pc.FUNC_GREATEREQUAL</li>
-     *     <li>pc.FUNC_EQUAL</li>
-     *     <li>pc.FUNC_NOTEQUAL</li>
-     * </ul>
+     * * {@link pc.FUNC_LESS}
+     * * {@link pc.FUNC_LESSEQUAL}
+     * * {@link pc.FUNC_GREATER}
+     * * {@link pc.FUNC_GREATEREQUAL}
+     * * {@link pc.FUNC_EQUAL}
+     * * {@link pc.FUNC_NOTEQUAL}
      * @example
      * // Create a 8x8x24-bit texture
      * var texture = new pc.Texture(graphicsDevice, {
@@ -192,14 +188,12 @@ Object.assign(pc, function () {
      * @name pc.Texture#minFilter
      * @type {number}
      * @description The minification filter to be applied to the texture. Can be:
-     * <ul>
-     *     <li>{@link pc.FILTER_NEAREST}</li>
-     *     <li>{@link pc.FILTER_LINEAR}</li>
-     *     <li>{@link pc.FILTER_NEAREST_MIPMAP_NEAREST}</li>
-     *     <li>{@link pc.FILTER_NEAREST_MIPMAP_LINEAR}</li>
-     *     <li>{@link pc.FILTER_LINEAR_MIPMAP_NEAREST}</li>
-     *     <li>{@link pc.FILTER_LINEAR_MIPMAP_LINEAR}</li>
-     * </ul>
+     * * {@link pc.FILTER_NEAREST}
+     * * {@link pc.FILTER_LINEAR}
+     * * {@link pc.FILTER_NEAREST_MIPMAP_NEAREST}
+     * * {@link pc.FILTER_NEAREST_MIPMAP_LINEAR}
+     * * {@link pc.FILTER_LINEAR_MIPMAP_NEAREST}
+     * * {@link pc.FILTER_LINEAR_MIPMAP_LINEAR}
      */
     Object.defineProperty(Texture.prototype, 'minFilter', {
         get: function () {
@@ -217,10 +211,8 @@ Object.assign(pc, function () {
      * @name pc.Texture#magFilter
      * @type {number}
      * @description The magnification filter to be applied to the texture. Can be:
-     * <ul>
-     *     <li>{@link pc.FILTER_NEAREST}</li>
-     *     <li>{@link pc.FILTER_LINEAR}</li>
-     * </ul>
+     * * {@link pc.FILTER_NEAREST}
+     * * {@link pc.FILTER_LINEAR}
      */
     Object.defineProperty(Texture.prototype, 'magFilter', {
         get: function () {
@@ -238,11 +230,9 @@ Object.assign(pc, function () {
      * @name pc.Texture#addressU
      * @type {number}
      * @description The addressing mode to be applied to the texture horizontally. Can be:
-     * <ul>
-     *     <li>{@link pc.ADDRESS_REPEAT}</li>
-     *     <li>{@link pc.ADDRESS_CLAMP_TO_EDGE}</li>
-     *     <li>{@link pc.ADDRESS_MIRRORED_REPEAT}</li>
-     * </ul>
+     * * {@link pc.ADDRESS_REPEAT}
+     * * {@link pc.ADDRESS_CLAMP_TO_EDGE}
+     * * {@link pc.ADDRESS_MIRRORED_REPEAT}
      */
     Object.defineProperty(Texture.prototype, 'addressU', {
         get: function () {
@@ -260,11 +250,9 @@ Object.assign(pc, function () {
      * @name pc.Texture#addressV
      * @type {number}
      * @description The addressing mode to be applied to the texture vertically. Can be:
-     * <ul>
-     *     <li>{@link pc.ADDRESS_REPEAT}</li>
-     *     <li>{@link pc.ADDRESS_CLAMP_TO_EDGE}</li>
-     *     <li>{@link pc.ADDRESS_MIRRORED_REPEAT}</li>
-     * </ul>
+     * * {@link pc.ADDRESS_REPEAT}
+     * * {@link pc.ADDRESS_CLAMP_TO_EDGE}
+     * * {@link pc.ADDRESS_MIRRORED_REPEAT}
      */
     Object.defineProperty(Texture.prototype, 'addressV', {
         get: function () {
@@ -282,11 +270,9 @@ Object.assign(pc, function () {
      * @name pc.Texture#addressW
      * @type {number}
      * @description The addressing mode to be applied to the 3D texture depth (WebGL2 only). Can be:
-     * <ul>
-     *     <li>{@link pc.ADDRESS_REPEAT}</li>
-     *     <li>{@link pc.ADDRESS_CLAMP_TO_EDGE}</li>
-     *     <li>{@link pc.ADDRESS_MIRRORED_REPEAT}</li>
-     * </ul>
+     * * {@link pc.ADDRESS_REPEAT}
+     * * {@link pc.ADDRESS_CLAMP_TO_EDGE}
+     * * {@link pc.ADDRESS_MIRRORED_REPEAT}
      */
     Object.defineProperty(Texture.prototype, 'addressW', {
         get: function () {
@@ -330,14 +316,12 @@ Object.assign(pc, function () {
      * @type {number}
      * @description Comparison function when compareOnRead is enabled (WebGL2 only).
      * Possible values:
-     * <ul>
-     *     <li>pc.FUNC_LESS</li>
-     *     <li>pc.FUNC_LESSEQUAL</li>
-     *     <li>pc.FUNC_GREATER</li>
-     *     <li>pc.FUNC_GREATEREQUAL</li>
-     *     <li>pc.FUNC_EQUAL</li>
-     *     <li>pc.FUNC_NOTEQUAL</li>
-     * </ul>
+     * * {@link pc.FUNC_LESS}
+     * * {@link pc.FUNC_LESSEQUAL}
+     * * {@link pc.FUNC_GREATER}
+     * * {@link pc.FUNC_GREATEREQUAL}
+     * * {@link pc.FUNC_EQUAL}
+     * * {@link pc.FUNC_NOTEQUAL}
      */
     Object.defineProperty(Texture.prototype, 'compareFunc', {
         get: function () {
@@ -445,32 +429,30 @@ Object.assign(pc, function () {
      * @name pc.Texture#format
      * @type {number}
      * @description The pixel format of the texture. Can be:
-     * <ul>
-     *     <li>{@link pc.PIXELFORMAT_A8}</li>
-     *     <li>{@link pc.PIXELFORMAT_L8}</li>
-     *     <li>{@link pc.PIXELFORMAT_L8_A8}</li>
-     *     <li>{@link pc.PIXELFORMAT_R5_G6_B5}</li>
-     *     <li>{@link pc.PIXELFORMAT_R5_G5_B5_A1}</li>
-     *     <li>{@link pc.PIXELFORMAT_R4_G4_B4_A4}</li>
-     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8}</li>
-     *     <li>{@link pc.PIXELFORMAT_R8_G8_B8_A8}</li>
-     *     <li>{@link pc.PIXELFORMAT_DXT1}</li>
-     *     <li>{@link pc.PIXELFORMAT_DXT3}</li>
-     *     <li>{@link pc.PIXELFORMAT_DXT5}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGB16F}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGBA16F}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGB32F}</li>
-     *     <li>{@link pc.PIXELFORMAT_RGBA32F}</li>
-     *     <li>{@link pc.PIXELFORMAT_ETC1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}</li>
-     *     <li>{@link pc.PIXELFORMAT_111110F}</li>
-     *     <li>{@link pc.PIXELFORMAT_ASTC_4x4}>/li>
-     *     <li>{@link pc.PIXELFORMAT_ATC_RGB}</li>
-     *     <li>{@link pc.PIXELFORMAT_ATC_RGBA}</li>
-     * </ul>
+     * * {@link pc.PIXELFORMAT_A8}
+     * * {@link pc.PIXELFORMAT_L8}
+     * * {@link pc.PIXELFORMAT_L8_A8}
+     * * {@link pc.PIXELFORMAT_R5_G6_B5}
+     * * {@link pc.PIXELFORMAT_R5_G5_B5_A1}
+     * * {@link pc.PIXELFORMAT_R4_G4_B4_A4}
+     * * {@link pc.PIXELFORMAT_R8_G8_B8}
+     * * {@link pc.PIXELFORMAT_R8_G8_B8_A8}
+     * * {@link pc.PIXELFORMAT_DXT1}
+     * * {@link pc.PIXELFORMAT_DXT3}
+     * * {@link pc.PIXELFORMAT_DXT5}
+     * * {@link pc.PIXELFORMAT_RGB16F}
+     * * {@link pc.PIXELFORMAT_RGBA16F}
+     * * {@link pc.PIXELFORMAT_RGB32F}
+     * * {@link pc.PIXELFORMAT_RGBA32F}
+     * * {@link pc.PIXELFORMAT_ETC1}
+     * * {@link pc.PIXELFORMAT_PVRTC_2BPP_RGB_1}
+     * * {@link pc.PIXELFORMAT_PVRTC_2BPP_RGBA_1}
+     * * {@link pc.PIXELFORMAT_PVRTC_4BPP_RGB_1}
+     * * {@link pc.PIXELFORMAT_PVRTC_4BPP_RGBA_1}
+     * * {@link pc.PIXELFORMAT_111110F}
+     * * {@link pc.PIXELFORMAT_ASTC_4x4}>/li>
+     * * {@link pc.PIXELFORMAT_ATC_RGB}
+     * * {@link pc.PIXELFORMAT_ATC_RGBA}
      */
     Object.defineProperty(Texture.prototype, 'format', {
         get: function () {

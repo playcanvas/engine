@@ -9,10 +9,10 @@ Object.assign(pc, function () {
      * @param {pc.ScrollbarComponentSystem} system - The ComponentSystem that created this Component.
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
      * @property {number} orientation Whether the scrollbar moves horizontally or vertically. Can be:
-     * <ul>
-     *     <li>{@link pc.ORIENTATION_HORIZONTAL}: The scrollbar animates in the horizontal axis.</li>
-     *     <li>{@link pc.ORIENTATION_VERTICAL}: The scrollbar animates in the vertical axis.</li>
-     * </ul>
+     *
+     * * {@link pc.ORIENTATION_HORIZONTAL}: The scrollbar animates in the horizontal axis.
+     * * {@link pc.ORIENTATION_VERTICAL}: The scrollbar animates in the vertical axis.
+     *
      * Defaults to pc.ORIENTATION_HORIZONTAL.
      * @property {number} value The current position value of the scrollbar, in the range 0 to 1. Defaults to 0.
      * @property {number} handleSize The size of the handle relative to the size of the track, in the range
