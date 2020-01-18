@@ -12,6 +12,8 @@ Object.assign(pc, function () {
      * @classdesc Axis-Aligned Bounding Box.
      * @param {pc.Vec3} [center] - Center of box. The constructor takes a reference of this parameter.
      * @param {pc.Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor takes a reference of this parameter.
+     * @property {pc.Vec3} center Center of box.
+     * @property {pc.Vec3} halfExtents Half the distance across the box in each axis.
      */
     var BoundingBox = function BoundingBox(center, halfExtents) {
         this.center = center || new pc.Vec3(0, 0, 0);
