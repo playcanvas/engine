@@ -740,12 +740,6 @@ Object.assign(pc, function () {
         find: function (name, type) {
             var asset = this.findAll(name, type);
             return asset ? asset[0] : null;
-        },
-
-        // backwards compatibility
-        getAssetById: function (id) {
-            console.warn("DEPRECATED: getAssetById() use get() instead");
-            return this.get(id);
         }
     });
 
