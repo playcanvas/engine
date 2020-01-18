@@ -22,21 +22,21 @@ Object.assign(pc, function () {
          * @description Add a {@link pc.ResourceHandler} for a resource type. Handler should support atleast load() and open().
          * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets.
          * @param {string} type - The name of the resource type that the handler will be registerd with. Can be:
-         * <ul>
-         *     <li>{@link pc.ASSET_ANIMATION}</li>
-         *     <li>{@link pc.ASSET_AUDIO}</li>
-         *     <li>{@link pc.ASSET_IMAGE}</li>
-         *     <li>{@link pc.ASSET_JSON}</li>
-         *     <li>{@link pc.ASSET_MODEL}</li>
-         *     <li>{@link pc.ASSET_MATERIAL}</li>
-         *     <li>{@link pc.ASSET_TEXT}</li>
-         *     <li>{@link pc.ASSET_TEXTURE}</li>
-         *     <li>{@link pc.ASSET_CUBEMAP}</li>
-         *     <li>{@link pc.ASSET_SHADER}</li>
-         *     <li>{@link pc.ASSET_CSS}</li>
-         *     <li>{@link pc.ASSET_HTML}</li>
-         *     <li>{@link pc.ASSET_SCRIPT}</li>
-         * </ul>
+         *
+         * * {@link pc.ASSET_ANIMATION}
+         * * {@link pc.ASSET_AUDIO}
+         * * {@link pc.ASSET_IMAGE}
+         * * {@link pc.ASSET_JSON}
+         * * {@link pc.ASSET_MODEL}
+         * * {@link pc.ASSET_MATERIAL}
+         * * {@link pc.ASSET_TEXT}
+         * * {@link pc.ASSET_TEXTURE}
+         * * {@link pc.ASSET_CUBEMAP}
+         * * {@link pc.ASSET_SHADER}
+         * * {@link pc.ASSET_CSS}
+         * * {@link pc.ASSET_HTML}
+         * * {@link pc.ASSET_SCRIPT}
+         *
          * @param {pc.ResourceHandler} handler - An instance of a resource handler supporting atleast load() and open().
          * @example
          * var loader = new ResourceLoader();

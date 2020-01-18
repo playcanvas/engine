@@ -64,18 +64,16 @@ pc.script = (function () {
          * inside the script instance like so 'this.attributeName' or outside a script instance like so 'entity.script.attributeName'.
          * Script attributes can be edited from the Attribute Editor of the PlayCanvas Editor like normal Components.
          * @param {string} name - The name of the attribute.
-         * @param {string} type - The type of the attribute. Can be one of the following: 'number', 'string', 'boolean', 'asset', 'entity', 'rgb', 'rgba', 'vector', 'enumeration', 'curve', 'colorcurve'.
+         * @param {string} type - The type of the attribute. Can be: 'number', 'string', 'boolean', 'asset', 'entity', 'rgb', 'rgba', 'vector', 'enumeration', 'curve', 'colorcurve'.
          * @param {object} defaultValue - The default value of the attribute.
-         * @param {object} options - Optional parameters for the attribute. Valid values are:
-         * <ul>
-         *   <li>{Number} min: The minimum value of the attribute</li>
-         *   <li>{Number} max: The maximum value of the attribute</li>
-         *   <li>{Number} step: The step that will be used when changing the attribute value in the PlayCanvas Editor</li>
-         *   <li>{Number} decimalPrecision: A number that specifies the number of decimal digits allowed for the value</li>
-         *   <li>{Object[]} enumerations: An array of name, value pairs from which the user can select one if the attribute type is an enumeration</li>
-         *   <li>{String[]} curves: (For 'curve' attributes only) An array of strings that define the names of each curve in the curve editor.</li>
-         *   <li>{Boolean} color: (For 'curve' attributes only) If true then the curve attribute will be a color curve.</li>
-         * </ul>
+         * @param {object} options - Optional parameters for the attribute.
+         * @param {number} options.min - The minimum value of the attribute.
+         * @param {number} options.max - The maximum value of the attribute.
+         * @param {number} options.step - The step that will be used when changing the attribute value in the PlayCanvas Editor.
+         * @param {number} options.decimalPrecision - A number that specifies the number of decimal digits allowed for the value.
+         * @param {object[]} options.enumerations - An array of name, value pairs from which the user can select one if the attribute type is an enumeration.
+         * @param {string[]} options.curves - (For 'curve' attributes only) An array of strings that define the names of each curve in the curve editor.
+         * @param {boolean} options.color - (For 'curve' attributes only) If true then the curve attribute will be a color curve.
          * @example
          * pc.script.attribute('speed', 'number', 5);
          * pc.script.attribute('message', 'string', "My message");

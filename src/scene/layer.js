@@ -75,32 +75,32 @@ Object.assign(pc, function () {
      * @property {string} name Name of the layer. Can be used in {@link pc.LayerComposition#getLayerByName}.
      * @property {number} opaqueSortMode Defines the method used for sorting opaque (that is, not semi-transparent) mesh instances before rendering.
      * Possible values are:
-     * <ul>
-     *     <li>{@link pc.SORTMODE_NONE}</li>
-     *     <li>{@link pc.SORTMODE_MANUAL}</li>
-     *     <li>{@link pc.SORTMODE_MATERIALMESH}</li>
-     *     <li>{@link pc.SORTMODE_BACK2FRONT}</li>
-     *     <li>{@link pc.SORTMODE_FRONT2BACK}</li>
-     * </ul>
+     *
+     * * {@link pc.SORTMODE_NONE}
+     * * {@link pc.SORTMODE_MANUAL}
+     * * {@link pc.SORTMODE_MATERIALMESH}
+     * * {@link pc.SORTMODE_BACK2FRONT}
+     * * {@link pc.SORTMODE_FRONT2BACK}
+     *
      * Defaults to pc.SORTMODE_MATERIALMESH.
      * @property {number} transparentSortMode Defines the method used for sorting semi-transparent mesh instances before rendering.
      * Possible values are:
-     * <ul>
-     *     <li>{@link pc.SORTMODE_NONE}</li>
-     *     <li>{@link pc.SORTMODE_MANUAL}</li>
-     *     <li>{@link pc.SORTMODE_MATERIALMESH}</li>
-     *     <li>{@link pc.SORTMODE_BACK2FRONT}</li>
-     *     <li>{@link pc.SORTMODE_FRONT2BACK}</li>
-     * </ul>
+     *
+     * * {@link pc.SORTMODE_NONE}
+     * * {@link pc.SORTMODE_MANUAL}
+     * * {@link pc.SORTMODE_MATERIALMESH}
+     * * {@link pc.SORTMODE_BACK2FRONT}
+     * * {@link pc.SORTMODE_FRONT2BACK}
+     *
      * Defaults to pc.SORTMODE_BACK2FRONT.
      * @property {pc.RenderTarget} renderTarget Render target to which rendering is performed. If not set, will render simply to the screen.
      * @property {number} shaderPass A type of shader to use during rendering. Possible values are:
-     * <ul>
-     *     <li>{@link pc.SHADER_FORWARD}</li>
-     *     <li>{@link pc.SHADER_FORWARDHDR}</li>
-     *     <li>{@link pc.SHADER_DEPTH}</li>
-     *     <li>Your own custom value. Should be in 19 - 31 range. Use {@link pc.StandardMaterial#onUpdateShader} to apply shader modifications based on this value.</li>
-     * </ul>
+     *
+     * * {@link pc.SHADER_FORWARD}
+     * * {@link pc.SHADER_FORWARDHDR}
+     * * {@link pc.SHADER_DEPTH}
+     * * Your own custom value. Should be in 19 - 31 range. Use {@link pc.StandardMaterial#onUpdateShader} to apply shader modifications based on this value.
+     *
      * Defaults to pc.SHADER_FORWARD.
      * @property {boolean} passThrough Tells that this layer is simple and needs to just render a bunch of mesh instances without lighting, skinning and morphing (faster).
      *
@@ -116,18 +116,18 @@ Object.assign(pc, function () {
      * @property {Function} cullingMask Visibility mask that interacts with {@link pc.MeshInstance#mask}.
      * @property {Function} onEnable Custom function that is called after the layer has been enabled.
      * This happens when:
-     * <ul>
-     *     <li>The layer is created with {@link pc.Layer#enabled} set to true (which is the default value).</li>
-     *     <li>{@link pc.Layer#enabled} was changed from false to true</li>
-     *     <li>{@link pc.Layer#incrementCounter} was called and incremented the counter above zero.</li>
-     * </ul>
+     *
+     * * The layer is created with {@link pc.Layer#enabled} set to true (which is the default value).
+     * * {@link pc.Layer#enabled} was changed from false to true
+     * * {@link pc.Layer#incrementCounter} was called and incremented the counter above zero.
+     *
      * Useful for allocating resources this layer will use (e.g. creating render targets).
      * @property {Function} onDisable Custom function that is called after the layer has been disabled.
      * This happens when:
-     * <ul>
-     *     <li>{@link pc.Layer#enabled} was changed from true to false</li>
-     *     <li>{@link pc.Layer#decrementCounter} was called and set the counter to zero.</li>
-     * </ul>
+     *
+     * * {@link pc.Layer#enabled} was changed from true to false
+     * * {@link pc.Layer#decrementCounter} was called and set the counter to zero.
+     *
      * @property {Function} onPreCull Custom function that is called before visibility culling is performed for this layer.
      * Useful, for example, if you want to modify camera projection while still using the same camera and make frustum culling work correctly with it
      * (see {@link pc.CameraComponent#calculateTransform} and {@link pc.CameraComponent#calculateProjection}).

@@ -34,11 +34,11 @@ Object.assign(pc, function () {
      * @classdesc Enables an Entity to render a simple static sprite or sprite animations.
      * @param {pc.SpriteComponentSystem} system - The ComponentSystem that created this Component.
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
-     * @property {string} type The type of the SpriteComponent. Can be one of the following:
-     * <ul>
-     *     <li>pc.SPRITETYPE_SIMPLE: The component renders a single frame from a sprite asset.
-     *     <li>pc.SPRITETYPE_ANIMATED: The component can play sprite animation clips.
-     * </ul>.
+     * @property {string} type The type of the SpriteComponent. Can be:
+     *
+     * * {@link pc.SPRITETYPE_SIMPLE}: The component renders a single frame from a sprite asset.
+     * * {@link pc.SPRITETYPE_ANIMATED}: The component can play sprite animation clips.
+     *
      * @property {number} frame The frame counter of the sprite. Specifies which frame from the current sprite asset to render.
      * @property {number} spriteAsset The id of the sprite asset to render. Only works for {@link pc.SPRITETYPE_SIMPLE} types.
      * @property {pc.Sprite} sprite The current sprite.

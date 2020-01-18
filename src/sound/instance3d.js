@@ -22,13 +22,25 @@ Object.assign(pc, function () {
          * @param {number} [options.duration=null] - The total time after the startTime when playback will stop or restart if loop is true.
          * @param {pc.Vec3} [options.position=null] - The position of the sound in 3D space.
          * @param {pc.Vec3} [options.velocity=null] - The velocity of the sound.
-         * @param {string} [options.distanceModel=pc.DISTANCE_LINEAR] - Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be one of {@link pc.DISTANCE_LINEAR}, {@link pc.DISTANCE_INVERSE} or {@link pc.DISTANCE_EXPONENTIAL}. Default is {@link pc.DISTANCE_LINEAR}.
+         * @param {string} [options.distanceModel=pc.DISTANCE_LINEAR] - Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be:
+         *
+         * * {@link pc.DISTANCE_LINEAR}
+         * * {@link pc.DISTANCE_INVERSE}
+         * * {@link pc.DISTANCE_EXPONENTIAL}
+         *
+         * Default is {@link pc.DISTANCE_LINEAR}.
          * @param {number} [options.refDistance=1] - The reference distance for reducing volume as the sound source moves further from the listener.
          * @param {number} [options.maxDistance=10000] - The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore.
          * @param {number} [options.rollOffFactor=1] - The factor used in the falloff equation.
          * @property {pc.Vec3} position The position of the sound in 3D space.
          * @property {pc.Vec3} velocity The velocity of the sound.
-         * @property {string} distanceModel Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be one of {@link pc.DISTANCE_LINEAR}, {@link pc.DISTANCE_INVERSE} or {@link pc.DISTANCE_EXPONENTIAL}. Default is {@link pc.DISTANCE_LINEAR}.
+         * @property {string} distanceModel Determines which algorithm to use to reduce the volume of the audio as it moves away from the listener. Can be:
+         *
+         * * {@link pc.DISTANCE_LINEAR}
+         * * {@link pc.DISTANCE_INVERSE}
+         * * {@link pc.DISTANCE_EXPONENTIAL}
+         *
+         * Default is {@link pc.DISTANCE_LINEAR}.
          * @property {number} refDistance The reference distance for reducing volume as the sound source moves further from the listener.
          * @property {number} maxDistance The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore.
          * @property {number} rollOffFactor The factor used in the falloff equation.

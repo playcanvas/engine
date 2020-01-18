@@ -22,14 +22,14 @@ Object.assign(pc, function () {
      * Defaults to true.
      * @param {number} [options.face] - If the colorBuffer parameter is a cubemap, use this option to specify the
      * face of the cubemap to render to. Can be:
-     * <ul>
-     *     <li>pc.CUBEFACE_POSX</li>
-     *     <li>pc.CUBEFACE_NEGX</li>
-     *     <li>pc.CUBEFACE_POSY</li>
-     *     <li>pc.CUBEFACE_NEGY</li>
-     *     <li>pc.CUBEFACE_POSZ</li>
-     *     <li>pc.CUBEFACE_NEGZ</li>
-     * </ul>
+     *
+     * * {@link pc.CUBEFACE_POSX}
+     * * {@link pc.CUBEFACE_NEGX}
+     * * {@link pc.CUBEFACE_POSY}
+     * * {@link pc.CUBEFACE_NEGY}
+     * * {@link pc.CUBEFACE_POSZ}
+     * * {@link pc.CUBEFACE_NEGZ}
+     *
      * Defaults to pc.CUBEFACE_POSX.
      * @example
      * // Create a 512x512x24-bit render target with a depth buffer
@@ -223,14 +223,13 @@ Object.assign(pc, function () {
      * @type {number}
      * @description If the render target is bound to a cubemap, this property
      * specifies which face of the cubemap is rendered to. Can be:
-     * <ul>
-     *     <li>pc.CUBEFACE_POSX</li>
-     *     <li>pc.CUBEFACE_NEGX</li>
-     *     <li>pc.CUBEFACE_POSY</li>
-     *     <li>pc.CUBEFACE_NEGY</li>
-     *     <li>pc.CUBEFACE_POSZ</li>
-     *     <li>pc.CUBEFACE_NEGZ</li>
-     * </ul>.
+     *
+     * * {@link pc.CUBEFACE_POSX}
+     * * {@link pc.CUBEFACE_NEGX}
+     * * {@link pc.CUBEFACE_POSY}
+     * * {@link pc.CUBEFACE_NEGY}
+     * * {@link pc.CUBEFACE_POSZ}
+     * * {@link pc.CUBEFACE_NEGZ}
      */
     Object.defineProperty(RenderTarget.prototype, 'face', {
         get: function () {
