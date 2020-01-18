@@ -184,7 +184,11 @@ pc.path = function () {
                     path = "";
                 }
                 for (i = 0; i < parts.length - 1; ++i) {
-                    path += "/" + parts[i];
+                    if (parts[i] !== "" && parts[i] !== "." && parts[i] !== "..") {
+                        path += "/" + parts[i];
+                    } else if (parts[i] === "..") {
+                        path = ".."
+                    }
                 }
             }
             return path;
