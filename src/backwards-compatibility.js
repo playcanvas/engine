@@ -167,14 +167,14 @@ pc.shape = {
 
 pc.string.startsWith = function (s, subs) {
     // #ifdef DEBUG
-    console.warn("DEPRECATED: pc.string.startsWith is deprecated. Use String.startsWith instead.");
+    console.warn("DEPRECATED: pc.string.startsWith is deprecated. Use String#startsWith instead.");
     // #endif
     return s.startsWith(subs);
 };
 
 pc.string.endsWith = function (s, subs) {
     // #ifdef DEBUG
-    console.warn("DEPRECATED: pc.string.endsWith is deprecated. Use String.endsWith instead.");
+    console.warn("DEPRECATED: pc.string.endsWith is deprecated. Use String#endsWith instead.");
     // #endif
     return s.endsWith(subs);
 };
