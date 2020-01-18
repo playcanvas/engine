@@ -109,7 +109,7 @@ Object.assign(pc, function () {
                                 skeleton.addTime(delta);
                                 if (componentData.speed > 0 && (skeleton._time === skeleton._animation.duration) && !componentData.loop) {
                                     componentData.playing = false;
-                                } else if(componentData.speed < 0 && skeleton._time === 0 && !componentData.loop) {
+                                } else if (componentData.speed < 0 && skeleton._time === 0 && !componentData.loop) {
                                     componentData.playing = false;
                                 }
                             }
