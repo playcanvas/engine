@@ -1,32 +1,5 @@
 Object.assign(pc, function () {
     return {
-        /**
-         * @private
-         * @deprecated
-         * @function
-         * @name pc.inherits
-         * @description Implementation of inheritance for JavaScript objects
-         * e.g. Class can access all of Base's function prototypes
-         * The super classes prototype is available on the derived class as _super.
-         * @param {Function} Self - Constructor of derived class.
-         * @param {Function} Super - Constructor of base class.
-         * @returns {Function} New instance of Self which inherits from Super.
-         * @example
-         * var Base = function () {};
-         * Base.prototype.fn = function () {
-         *     console.log('base');
-         * };
-         * var Class = function () {};
-         * Class = pc.inherits(Class, Base);
-         * Class.prototype.fn = function () {
-         *     // Call overridden method
-         *     Class._super.fn();
-         *     console.log('class');
-         * };
-         *
-         * var c = new Class();
-         * c.fn(); // prints 'base' then 'class'
-         */
         inherits: function (Self, Super) {
             var Temp = function () {};
             var Func = function (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
@@ -139,13 +112,6 @@ Object.assign(pc.input, {
     TouchEvent: pc.TouchEvent
 });
 
-/**
- * @private
- * @deprecated
- * @name pc.math.INV_LOG2
- * @type {number}
- * @description Inverse log 2. Use Math.LOG2E instead.
- */
 pc.math.INV_LOG2 = Math.LOG2E;
 
 pc.math.intToBytes = pc.math.intToBytes32;
@@ -197,6 +163,20 @@ pc.shape = {
     Aabb: pc.BoundingBox,
     Sphere: pc.BoundingSphere,
     Plane: pc.Plane
+};
+
+pc.string.startsWith = function (s, subs) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.string.startsWith is deprecated. Use String#startsWith instead.");
+    // #endif
+    return s.startsWith(subs);
+};
+
+pc.string.endsWith = function (s, subs) {
+    // #ifdef DEBUG
+    console.warn("DEPRECATED: pc.string.endsWith is deprecated. Use String#endsWith instead.");
+    // #endif
+    return s.endsWith(subs);
 };
 
 pc.time = {
@@ -298,32 +278,71 @@ Object.defineProperty(pc.Color.prototype, "data3", {
     }
 });
 
-pc.Material.prototype.getName = function () {
+pc.Application.prototype.isFullscreen = function () {
     // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.Material#getName is deprecated. Use pc.Material#name instead.');
+    console.warn('DEPRECATED: pc.Application#isFullscreen is deprecated. Use the Fullscreen API directly.');
     // #endif
-    return this.name;
+
+    return !!document.fullscreenElement;
 };
 
-pc.Material.prototype.setName = function (name) {
+pc.Application.prototype.enableFullscreen = function (element, success, error) {
     // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.Material#setName is deprecated. Use pc.Material#name instead.');
+    console.warn('DEPRECATED: pc.Application#enableFullscreen is deprecated. Use the Fullscreen API directly.');
     // #endif
-    this.name = name;
+
+    element = element || this.graphicsDevice.canvas;
+
+    // success callback
+    var s = function () {
+        success();
+        document.removeEventListener('fullscreenchange', s);
+    };
+
+    // error callback
+    var e = function () {
+        error();
+        document.removeEventListener('fullscreenerror', e);
+    };
+
+    if (success) {
+        document.addEventListener('fullscreenchange', s, false);
+    }
+
+    if (error) {
+        document.addEventListener('fullscreenerror', e, false);
+    }
+
+    if (element.requestFullscreen) {
+        element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+    } else {
+        error();
+    }
 };
 
-pc.Material.prototype.getShader = function () {
+pc.Application.prototype.disableFullscreen = function (success) {
     // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.Material#getShader is deprecated. Use pc.Material#shader instead.');
+    console.warn('DEPRECATED: pc.Application#disableFullscreen is deprecated. Use the Fullscreen API directly.');
     // #endif
-    return this.shader;
+
+    // success callback
+    var s = function () {
+        success();
+        document.removeEventListener('fullscreenchange', s);
+    };
+
+    if (success) {
+        document.addEventListener('fullscreenchange', s, false);
+    }
+
+    document.exitFullscreen();
 };
 
-pc.Material.prototype.setShader = function (shader) {
+pc.AssetRegistry.prototype.getAssetById = function (id) {
     // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.Material#setShader is deprecated. Use pc.Material#shader instead.');
+    console.warn("DEPRECATED: pc.AssetRegistry#getAssetById is deprecated. Use pc.AssetRegistry#get instead.");
     // #endif
-    this.shader = shader;
+    return this.get(id);
 };
 
 pc.GraphNode.prototype._dirtify = function (local) {
@@ -435,64 +454,32 @@ pc.GraphNode.prototype.setName = function (name) {
     this.name = name;
 };
 
-pc.Application.prototype.isFullscreen = function () {
+pc.Material.prototype.getName = function () {
     // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.Application#isFullscreen is deprecated. Use the Fullscreen API directly.');
+    console.warn('DEPRECATED: pc.Material#getName is deprecated. Use pc.Material#name instead.');
     // #endif
-
-    return !!document.fullscreenElement;
+    return this.name;
 };
 
-pc.Application.prototype.enableFullscreen = function (element, success, error) {
+pc.Material.prototype.setName = function (name) {
     // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.Application#enableFullscreen is deprecated. Use the Fullscreen API directly.');
+    console.warn('DEPRECATED: pc.Material#setName is deprecated. Use pc.Material#name instead.');
     // #endif
-
-    element = element || this.graphicsDevice.canvas;
-
-    // success callback
-    var s = function () {
-        success();
-        document.removeEventListener('fullscreenchange', s);
-    };
-
-    // error callback
-    var e = function () {
-        error();
-        document.removeEventListener('fullscreenerror', e);
-    };
-
-    if (success) {
-        document.addEventListener('fullscreenchange', s, false);
-    }
-
-    if (error) {
-        document.addEventListener('fullscreenerror', e, false);
-    }
-
-    if (element.requestFullscreen) {
-        element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-    } else {
-        error();
-    }
+    this.name = name;
 };
 
-pc.Application.prototype.disableFullscreen = function (success) {
+pc.Material.prototype.getShader = function () {
     // #ifdef DEBUG
-    console.warn('DEPRECATED: pc.Application#disableFullscreen is deprecated. Use the Fullscreen API directly.');
+    console.warn('DEPRECATED: pc.Material#getShader is deprecated. Use pc.Material#shader instead.');
     // #endif
+    return this.shader;
+};
 
-    // success callback
-    var s = function () {
-        success();
-        document.removeEventListener('fullscreenchange', s);
-    };
-
-    if (success) {
-        document.addEventListener('fullscreenchange', s, false);
-    }
-
-    document.exitFullscreen();
+pc.Material.prototype.setShader = function (shader) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Material#setShader is deprecated. Use pc.Material#shader instead.');
+    // #endif
+    this.shader = shader;
 };
 
 pc.RigidBodyComponentSystem.prototype.setGravity = function () {
@@ -505,4 +492,25 @@ pc.RigidBodyComponentSystem.prototype.setGravity = function () {
     } else {
         this.gravity.set(arguments[0], arguments[1], arguments[2]);
     }
+};
+
+pc.SoundManager.prototype.getListener = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.SoundManager#getListener is deprecated. Use pc.SoundManager#listener instead.');
+    // #endif
+    return this.listener;
+};
+
+pc.SoundManager.prototype.getVolume = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.SoundManager#getVolume is deprecated. Use pc.SoundManager#volume instead.');
+    // #endif
+    return this.volume;
+};
+
+pc.SoundManager.prototype.setVolume = function (volume) {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.SoundManager#setVolume is deprecated. Use pc.SoundManager#volume instead.');
+    // #endif
+    this.volume = volume;
 };
