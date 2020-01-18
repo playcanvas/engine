@@ -36,13 +36,13 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.createStyle
-     * @description Creates a &lt;style&gt; DOM element from a string that contains CSS
-     * @param {String} cssString A string that contains valid CSS
+     * @description Creates a &lt;style&gt; DOM element from a string that contains CSS.
+     * @param {string} cssString - A string that contains valid CSS.
      * @example
      * var css = 'body {height: 100;}';
      * var style = pc.createStyle(css);
      * document.head.appendChild(style);
-     * @returns {Element} The style DOM element
+     * @returns {Element} The style DOM element.
      */
     var createStyle = function (cssString) {
         var result = document.createElement('style');

@@ -2,14 +2,14 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.BrightnessContrastEffect
-     * @classdesc Changes the brightness and contrast of the input render target
+     * @classdesc Changes the brightness and contrast of the input render target.
      * @description Creates new instance of the post effect.
-     * @extends pc.PostEffect
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
-     * @property {Number} brightness Controls the brightness of the render target. Ranges from -1 to 1 (-1 is solid black, 0 no change, 1 solid white)
-     * @property {Number} contrast Controls the contrast of the render target. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum contrast)
+     * @augments pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+     * @property {number} brightness Controls the brightness of the render target. Ranges from -1 to 1 (-1 is solid black, 0 no change, 1 solid white).
+     * @property {number} contrast Controls the contrast of the render target. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum contrast).
      */
     var BrightnessContrastEffect = function (graphicsDevice) {
         pc.PostEffect.call(this, graphicsDevice);

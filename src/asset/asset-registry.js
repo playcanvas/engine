@@ -1,13 +1,13 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.AssetRegistry
-     * @extends pc.EventHandler
-     * @classdesc Container for all assets that are available to this application
+     * @augments pc.EventHandler
+     * @classdesc Container for all assets that are available to this application.
      * @description Create an instance of an AssetRegistry.
      * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
-     * @param {pc.ResourceLoader} loader The ResourceLoader used to load the asset files.
-     * @property {String} prefix A URL prefix that will be added to all asset loading requests.
+     * @param {pc.ResourceLoader} loader - The ResourceLoader used to load the asset files.
+     * @property {string} prefix A URL prefix that will be added to all asset loading requests.
      */
     var AssetRegistry = function (loader) {
         pc.EventHandler.call(this);
@@ -28,8 +28,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#load
-     * @description Fired when an asset completes loading
-     * @param {pc.Asset} asset The asset that has just loaded
+     * @description Fired when an asset completes loading.
+     * @param {pc.Asset} asset - The asset that has just loaded.
      * @example
      * app.assets.on("load", function (asset) {
      *     console.log("asset loaded: " + asset.name);
@@ -39,8 +39,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#load:[id]
-     * @description Fired when an asset completes loading
-     * @param {pc.Asset} asset The asset that has just loaded
+     * @description Fired when an asset completes loading.
+     * @param {pc.Asset} asset - The asset that has just loaded.
      * @example
      * var id = 123456;
      * var asset = app.assets.get(id);
@@ -53,8 +53,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#load:url:[url]
-     * @description Fired when an asset completes loading
-     * @param {pc.Asset} asset The asset that has just loaded
+     * @description Fired when an asset completes loading.
+     * @param {pc.Asset} asset - The asset that has just loaded.
      * @example
      * var id = 123456;
      * var asset = app.assets.get(id);
@@ -67,8 +67,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#add
-     * @description Fired when an asset is added to the registry
-     * @param {pc.Asset} asset The asset that was added
+     * @description Fired when an asset is added to the registry.
+     * @param {pc.Asset} asset - The asset that was added.
      * @example
      * app.assets.on("add", function (asset) {
      *     console.log("New asset added: " + asset.name);
@@ -78,8 +78,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#add:[id]
-     * @description Fired when an asset is added to the registry
-     * @param {pc.Asset} asset The asset that was added
+     * @description Fired when an asset is added to the registry.
+     * @param {pc.Asset} asset - The asset that was added.
      * @example
      * var id = 123456;
      * app.assets.on("add:" + id, function (asset) {
@@ -90,15 +90,15 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#add:url:[url]
-     * @description Fired when an asset is added to the registry
-     * @param {pc.Asset} asset The asset that was added
+     * @description Fired when an asset is added to the registry.
+     * @param {pc.Asset} asset - The asset that was added.
      */
 
     /**
      * @event
      * @name pc.AssetRegistry#remove
-     * @description Fired when an asset is removed from the registry
-     * @param {pc.Asset} asset The asset that was removed
+     * @description Fired when an asset is removed from the registry.
+     * @param {pc.Asset} asset - The asset that was removed.
      * @example
      * app.assets.on("remove", function (aseet) {
      *     console.log("Asset removed: " + asset.name);
@@ -108,8 +108,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#remove:[id]
-     * @description Fired when an asset is removed from the registry
-     * @param {pc.Asset} asset The asset that was removed
+     * @description Fired when an asset is removed from the registry.
+     * @param {pc.Asset} asset - The asset that was removed.
      * @example
      * var id = 123456;
      * app.assets.on("remove:" + id, function (asset) {
@@ -120,16 +120,16 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#remove:url:[url]
-     * @description Fired when an asset is removed from the registry
-     * @param {pc.Asset} asset The asset that was removed
+     * @description Fired when an asset is removed from the registry.
+     * @param {pc.Asset} asset - The asset that was removed.
      */
 
     /**
      * @event
      * @name pc.AssetRegistry#error
-     * @description Fired when an error occurs during asset loading
-     * @param {String} err The error message
-     * @param {pc.Asset} asset The asset that generated the error
+     * @description Fired when an error occurs during asset loading.
+     * @param {string} err - The error message.
+     * @param {pc.Asset} asset - The asset that generated the error.
      * @example
      * var id = 123456;
      * var asset = app.assets.get(id);
@@ -142,8 +142,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.AssetRegistry#error:[id]
-     * @description Fired when an error occurs during asset loading
-     * @param {pc.Asset} asset The asset that generated the error
+     * @description Fired when an error occurs during asset loading.
+     * @param {pc.Asset} asset - The asset that generated the error.
      * @example
      * var id = 123456;
      * var asset = app.assets.get(id);
@@ -157,8 +157,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#list
-         * @description Create a filtered list of assets from the registry
-         * @param {Object} filters Properties to filter on, currently supports: 'preload: true|false'
+         * @description Create a filtered list of assets from the registry.
+         * @param {object} filters - Properties to filter on, currently supports: 'preload: true|false'.
          * @returns {pc.Asset[]} The filtered list of assets.
          */
         list: function (filters) {
@@ -175,10 +175,12 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#add
-         * @description Add an asset to the registry
-         * @param {pc.Asset} asset The asset to add
+         * @description Add an asset to the registry.
+         * @param {pc.Asset} asset - The asset to add.
          * @example
-         * var asset = new pc.Asset("My Asset", "texture", {url: "../path/to/image.jpg"});
+         * var asset = new pc.Asset("My Asset", "texture", {
+         *     url: "../path/to/image.jpg"
+         * });
          * app.assets.add(asset);
          */
         add: function (asset) {
@@ -215,9 +217,9 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#remove
-         * @description Remove an asset from the registry
-         * @param {pc.Asset} asset The asset to remove
-         * @returns {Boolean} True if the asset was successfully removed and false otherwise
+         * @description Remove an asset from the registry.
+         * @param {pc.Asset} asset - The asset to remove.
+         * @returns {boolean} True if the asset was successfully removed and false otherwise.
          * @example
          * var asset = app.assets.get(100);
          * app.assets.remove(asset);
@@ -275,9 +277,9 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#get
-         * @description Retrieve an asset from the registry by its id field
-         * @param {Number} id the id of the asset to get
-         * @returns {pc.Asset} The asset
+         * @description Retrieve an asset from the registry by its id field.
+         * @param {number} id - The id of the asset to get.
+         * @returns {pc.Asset} The asset.
          * @example
          * var asset = app.assets.get(100);
          */
@@ -289,9 +291,9 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#getByUrl
-         * @description Retrieve an asset from the registry by it's file's URL field
-         * @param {String} url The url of the asset to get
-         * @returns {pc.Asset} The asset
+         * @description Retrieve an asset from the registry by it's file's URL field.
+         * @param {string} url - The url of the asset to get.
+         * @returns {pc.Asset} The asset.
          * @example
          * var asset = app.assets.getByUrl("../path/to/image.jpg");
          */
@@ -303,22 +305,24 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#load
-         * @description Load the asset's file from a remote source. Listen for "load" events on the asset to find out when it is loaded
-         * @param {pc.Asset} asset The asset to load
+         * @description Load the asset's file from a remote source. Listen for "load" events on the asset to find out when it is loaded.
+         * @param {pc.Asset} asset - The asset to load.
          * @example
          * // load some assets
-         * var toload = [app.assets.find("My Asset"), app.assets.find("Another Asset")]
+         * var assetsToLoad = [
+         *     app.assets.find("My Asset"),
+         *     app.assets.find("Another Asset")
+         * ];
          * var count = 0;
-         * for (var i = 0; i < toload.length; i++) {
-         *     var asset = toload[i];
-         *     asset.ready(function (asset) {
+         * assetsToLoad.forEach(function (assetToLoad) {
+         *     assetToLoad.ready(function (asset) {
          *         count++;
-         *         if (count === toload.length) {
+         *         if (count === assetsToLoad.length) {
          *             // done
          *         }
          *     });
-         *     app.assets.load(asset)
-         * }
+         *     app.assets.load(assetToLoad);
+         * });
          */
         load: function (asset) {
             if (asset.loading)
@@ -439,10 +443,10 @@ Object.assign(pc, function () {
          * @function
          * @name pc.AssetRegistry#loadFromUrl
          * @description Use this to load and create an asset if you don't have assets created. Usually you would only use this
-         * if you are not integrated with the PlayCanvas Editor
-         * @param {String} url The url to load
-         * @param {String} type The type of asset to load
-         * @param {pc.callbacks.LoadAsset} callback Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered
+         * if you are not integrated with the PlayCanvas Editor.
+         * @param {string} url - The url to load.
+         * @param {string} type - The type of asset to load.
+         * @param {pc.callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
          * @example
          * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
          *     var texture = asset.resource;
@@ -640,10 +644,10 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#findAll
-         * @description Return all Assets with the specified name and type found in the registry
-         * @param {String} name The name of the Assets to find
-         * @param {String} [type] The type of the Assets to find
-         * @returns {pc.Asset[]} A list of all Assets found
+         * @description Return all Assets with the specified name and type found in the registry.
+         * @param {string} name - The name of the Assets to find.
+         * @param {string} [type] - The type of the Assets to find.
+         * @returns {pc.Asset[]} A list of all Assets found.
          * @example
          * var assets = app.assets.findAll("myTextureAsset", "texture");
          * console.log("Found " + assets.length + " assets called " + name);
@@ -682,9 +686,9 @@ Object.assign(pc, function () {
          * @description Return all Assets that satisfy the search query.
          * Query can be simply a string, or comma separated strings,
          * to have inclusive results of assets that match at least one query.
-         * A query that consists of an array of tags can be used to match assets that have each tag of array
-         * @param {String} tag Name of a tag or array of tags
-         * @returns {pc.Asset[]} A list of all Assets matched query
+         * A query that consists of an array of tags can be used to match assets that have each tag of array.
+         * @param {...*} query - Name of a tag or array of tags.
+         * @returns {pc.Asset[]} A list of all Assets matched query.
          * @example
          * var assets = app.assets.findByTag("level-1");
          * // returns all assets that tagged by `level-1`
@@ -692,10 +696,10 @@ Object.assign(pc, function () {
          * var assets = app.assets.findByTag("level-1", "level-2");
          * // returns all assets that tagged by `level-1` OR `level-2`
          * @example
-         * var assets = app.assets.findByTag([ "level-1", "monster" ]);
+         * var assets = app.assets.findByTag(["level-1", "monster"]);
          * // returns all assets that tagged by `level-1` AND `monster`
          * @example
-         * var assets = app.assets.findByTag([ "level-1", "monster" ], [ "level-2", "monster" ]);
+         * var assets = app.assets.findByTag(["level-1", "monster"], ["level-2", "monster"]);
          * // returns all assets that tagged by (`level-1` AND `monster`) OR (`level-2` AND `monster`)
          */
         findByTag: function () {
@@ -705,11 +709,11 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#filter
-         * @description Return all Assets that satisfy filter callback
-         * @param {pc.callbacks.FilterAsset} callback The callback function that is used to filter assets, return `true` to include asset to result list
-         * @returns {pc.Asset[]} A list of all Assets found
+         * @description Return all Assets that satisfy filter callback.
+         * @param {pc.callbacks.FilterAsset} callback - The callback function that is used to filter assets, return `true` to include asset to result list.
+         * @returns {pc.Asset[]} A list of all Assets found.
          * @example
-         * var assets = app.assets.filter(function(asset) {
+         * var assets = app.assets.filter(function (asset) {
          *     return asset.name.indexOf('monster') !== -1;
          * });
          * console.log("Found " + assets.length + " assets, where names contains 'monster'");
@@ -726,22 +730,16 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.AssetRegistry#find
-         * @description Return the first Asset with the specified name and type found in the registry
-         * @param {String} name The name of the Asset to find
-         * @param {String} [type] The type of the Asset to find
-         * @returns {pc.Asset} A single Asset or null if no Asset is found
+         * @description Return the first Asset with the specified name and type found in the registry.
+         * @param {string} name - The name of the Asset to find.
+         * @param {string} [type] - The type of the Asset to find.
+         * @returns {pc.Asset} A single Asset or null if no Asset is found.
          * @example
          * var asset = app.assets.find("myTextureAsset", "texture");
          */
         find: function (name, type) {
             var asset = this.findAll(name, type);
             return asset ? asset[0] : null;
-        },
-
-        // backwards compatibility
-        getAssetById: function (id) {
-            console.warn("DEPRECATED: getAssetById() use get() instead");
-            return this.get(id);
         }
     });
 

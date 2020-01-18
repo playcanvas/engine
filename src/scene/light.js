@@ -8,7 +8,7 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.Light
      * @classdesc A light.
      */
