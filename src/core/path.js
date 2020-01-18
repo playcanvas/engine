@@ -187,7 +187,7 @@ pc.path = function () {
                     if (parts[i] !== "" && parts[i] !== "." && parts[i] !== "..") {
                         path += "/" + parts[i];
                     } else if (parts[i] === "..") {
-                        path = ".."
+                        path = "..";
                     }
                 }
             }
