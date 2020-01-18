@@ -2,25 +2,25 @@
 Object.assign(pc, {
     /**
      * @constant
-     * @type {String}
+     * @type {string}
      * @name pc.DISTANCE_LINEAR
-     * @description Linear distance model
+     * @description Linear distance model.
      */
     DISTANCE_LINEAR: 'linear',
 
     /**
      * @constant
-     * @type {String}
+     * @type {string}
      * @name pc.DISTANCE_INVERSE
-     * @description Inverse distance model
+     * @description Inverse distance model.
      */
     DISTANCE_INVERSE: 'inverse',
 
     /**
      * @constant
-     * @type {String}
+     * @type {string}
      * @name pc.DISTANCE_EXPONENTIAL
-     * @description Exponential distance model
+     * @description Exponential distance model.
      */
     DISTANCE_EXPONENTIAL: 'exponential'
 });

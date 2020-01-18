@@ -2,9 +2,9 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.ResourceLoader
-     * @param {pc.Application} app The application
+     * @param {pc.Application} app - The application.
      * @classdesc Load resource data, potentially from remote sources. Caches resource on load to prevent
      * multiple requests. Add ResourceHandlers to handle different types of resources.
      */
@@ -21,23 +21,23 @@ Object.assign(pc, function () {
          * @name pc.ResourceLoader#addHandler
          * @description Add a {@link pc.ResourceHandler} for a resource type. Handler should support atleast load() and open().
          * Handlers can optionally support patch(asset, assets) to handle dependencies on other assets.
-         * @param {String} type The name of the resource type that the handler will be registerd with. Can be:
-         * <ul>
-         *     <li>{@link pc.ASSET_ANIMATION}</li>
-         *     <li>{@link pc.ASSET_AUDIO}</li>
-         *     <li>{@link pc.ASSET_IMAGE}</li>
-         *     <li>{@link pc.ASSET_JSON}</li>
-         *     <li>{@link pc.ASSET_MODEL}</li>
-         *     <li>{@link pc.ASSET_MATERIAL}</li>
-         *     <li>{@link pc.ASSET_TEXT}</li>
-         *     <li>{@link pc.ASSET_TEXTURE}</li>
-         *     <li>{@link pc.ASSET_CUBEMAP}</li>
-         *     <li>{@link pc.ASSET_SHADER}</li>
-         *     <li>{@link pc.ASSET_CSS}</li>
-         *     <li>{@link pc.ASSET_HTML}</li>
-         *     <li>{@link pc.ASSET_SCRIPT}</li>
-         * </ul>
-         * @param {pc.ResourceHandler} handler An instance of a resource handler supporting atleast load() and open().
+         * @param {string} type - The name of the resource type that the handler will be registerd with. Can be:
+         *
+         * * {@link pc.ASSET_ANIMATION}
+         * * {@link pc.ASSET_AUDIO}
+         * * {@link pc.ASSET_IMAGE}
+         * * {@link pc.ASSET_JSON}
+         * * {@link pc.ASSET_MODEL}
+         * * {@link pc.ASSET_MATERIAL}
+         * * {@link pc.ASSET_TEXT}
+         * * {@link pc.ASSET_TEXTURE}
+         * * {@link pc.ASSET_CUBEMAP}
+         * * {@link pc.ASSET_SHADER}
+         * * {@link pc.ASSET_CSS}
+         * * {@link pc.ASSET_HTML}
+         * * {@link pc.ASSET_SCRIPT}
+         *
+         * @param {pc.ResourceHandler} handler - An instance of a resource handler supporting atleast load() and open().
          * @example
          * var loader = new ResourceLoader();
          * loader.addHandler("json", new pc.JsonHandler());
@@ -51,7 +51,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ResourceLoader#removeHandler
          * @description Remove a {@link pc.ResourceHandler} for a resource type.
-         * @param {String} type The name of the type that the handler will be removed.
+         * @param {string} type - The name of the type that the handler will be removed.
          */
         removeHandler: function (type) {
             delete this._handlers[type];
@@ -61,7 +61,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ResourceLoader#getHandler
          * @description Get a {@link pc.ResourceHandler} for a resource type.
-         * @param {String} type The name of the resource type that the handler is registerd with.
+         * @param {string} type - The name of the resource type that the handler is registerd with.
          * @returns {pc.ResourceHandler} The registerd handler.
          */
         getHandler: function (type) {
@@ -74,10 +74,10 @@ Object.assign(pc, function () {
          * @description Make a request for a resource from a remote URL. Parse the returned data using the
          * handler for the specified type. When loaded and parsed, use the callback to return an instance of
          * the resource.
-         * @param {String} url The URL of the resource to load.
-         * @param {String} type The type of resource expected.
-         * @param {pc.callbacks.ResourceLoader} callback The callback used when the resource is loaded or an error occurs.
-         * @param {pc.Asset} [asset] Optional asset that is passed into handler
+         * @param {string} url - The URL of the resource to load.
+         * @param {string} type - The type of resource expected.
+         * @param {pc.callbacks.ResourceLoader} callback - The callback used when the resource is loaded or an error occurs.
+         * @param {pc.Asset} [asset] - Optional asset that is passed into handler
          * Passed (err, resource) where err is null if there are no errors.
          * @example
          * app.loader.load("../path/to/texture.png", "texture", function (err, texture) {
@@ -166,9 +166,9 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.ResourceLoader#open
-         * @description Convert raw resource data into a resource instance. e.g. take 3D model format JSON and return a pc.Model.
-         * @param {String} type The type of resource.
-         * @param {*} data The raw resource data.
+         * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a pc.Model.
+         * @param {string} type - The type of resource.
+         * @param {*} data - The raw resource data.
          * @returns {*} The parsed resource data.
          */
         open: function (type, data) {
@@ -187,8 +187,8 @@ Object.assign(pc, function () {
          * @name pc.ResourceLoader#patch
          * @description Perform any operations on a resource, that requires a dependency on its asset data
          * or any other asset data.
-         * @param {pc.Asset} asset The asset to patch.
-         * @param {pc.AssetRegistry} assets The asset registry.
+         * @param {pc.Asset} asset - The asset to patch.
+         * @param {pc.AssetRegistry} assets - The asset registry.
          */
         patch: function (asset, assets) {
             var handler = this._handlers[asset.type];
@@ -206,8 +206,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ResourceLoader#clearCache
          * @description Remove resource from cache.
-         * @param {String} url The URL of the resource.
-         * @param {String} type The type of resource.
+         * @param {string} url - The URL of the resource.
+         * @param {string} type - The type of resource.
          */
         clearCache: function (url, type) {
             delete this._cache[url + type];
@@ -217,8 +217,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ResourceLoader#getFromCache
          * @description Check cache for resource from a URL. If present, return the cached value.
-         * @param {String} url The URL of the resource to get from the cache.
-         * @param {String} type The type of the resource.
+         * @param {string} url - The URL of the resource to get from the cache.
+         * @param {string} type - The type of the resource.
          * @returns {*} The resource loaded from the cache.
          */
         getFromCache: function (url, type) {

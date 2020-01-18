@@ -4,20 +4,20 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.Trigger
      * @classdesc Creates a trigger object used to create internal physics objects that interact with
-     * rigid bodies and trigger collision events with no collision response
-     * @param {pc.Application} app The running {pc.Application}
-     * @param {pc.Component} component The component for which the trigger will be created
-     * @param {pc.ComponentData} data The data for the component
+     * rigid bodies and trigger collision events with no collision response.
+     * @param {pc.Application} app - The running {pc.Application}.
+     * @param {pc.Component} component - The component for which the trigger will be created.
+     * @param {pc.ComponentData} data - The data for the component.
      */
     var Trigger = function Trigger(app, component, data) {
         this.entity = component.entity;
         this.component = component;
         this.app = app;
 
-        if (typeof Ammo !== 'undefined') {
+        if (typeof Ammo !== 'undefined' && ! ammoVec1) {
             ammoVec1 = new Ammo.btVector3();
             ammoQuat = new Ammo.btQuaternion();
         }
@@ -78,8 +78,10 @@ Object.assign(pc, function () {
         },
 
         destroy: function () {
-            if (this.body)
+            if (this.body) {
                 this.app.systems.rigidbody.removeBody(this.body);
+                Ammo.destroy(this.body);
+            }
         },
 
         syncEntityToBody: function () {

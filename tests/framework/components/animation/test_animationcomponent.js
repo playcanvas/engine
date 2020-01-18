@@ -33,11 +33,11 @@ describe("pc.AnimationComponent", function () {
 
     var loadAssets = function (cb) {
         var assetlist = [
-            new pc.Asset('Playbot.json', 'model', {
-                url: 'base/examples/assets/Playbot/Playbot.json'
+            new pc.Asset('playbot.json', 'model', {
+                url: 'base/examples/assets/models/playbot/playbot.json'
             }),
-            new pc.Asset('Playbot_idle.json', 'animation', {
-                url: 'base/examples/assets/Playbot/Playbot_idle.json'
+            new pc.Asset('playbot-idle.json', 'animation', {
+                url: 'base/examples/assets/animations/playbot/playbot-idle.json'
             })
         ];
 
