@@ -119,24 +119,24 @@ Object.assign(pc, function () {
      */
 
     /**
-     * @typedef {Object} pc.ScriptAttributeArgs
+     * @typedef {object} pc.ScriptAttributeArgs
      * @property {pc.ScriptAttributesType} type Type of an attribute value
      * @property {*} [default] Default attribute value
-     * @property {String} [title] Title for Editor's for field UI
-     * @property {String} [description] Description for Editor's for field UI
-     * @property {String|String[]} [placeholder] Placeholder for Editor's for field UI.
+     * @property {string} [title] Title for Editor's for field UI
+     * @property {string} [description] Description for Editor's for field UI
+     * @property {string|string[]} [placeholder] Placeholder for Editor's for field UI.
      * For multi-field types, such as vec2, vec3, and others use array of strings.
-     * @property {Boolean} [array] If attribute can hold single or multiple values
-     * @property {Number} [size] If attribute is array, maximum number of values can be set
-     * @property {Number} [min] Minimum value for type 'number', if max and min defined, slider will be rendered in Editor's UI
-     * @property {Number} [max] Maximum value for type 'number', if max and min defined, slider will be rendered in Editor's UI
-     * @property {Number} [precision] Level of precision for field type 'number' with floating values
-     * @property {Number} [step] Step value for type 'number'. The amount used to increment the value when using the arrow keys in the Editor's UI.
-     * @property {String} [assetType] Name of asset type to be used in 'asset' type attribute picker in Editor's UI, defaults to '*' (all)
-     * @property {String[]} [curves] List of names for Curves for field type 'curve'
-     * @property {String} [color] String of color channels for Curves for field type 'curve', can be any combination of `rgba` characters.
+     * @property {boolean} [array] If attribute can hold single or multiple values
+     * @property {number} [size] If attribute is array, maximum number of values can be set
+     * @property {number} [min] Minimum value for type 'number', if max and min defined, slider will be rendered in Editor's UI
+     * @property {number} [max] Maximum value for type 'number', if max and min defined, slider will be rendered in Editor's UI
+     * @property {number} [precision] Level of precision for field type 'number' with floating values
+     * @property {number} [step] Step value for type 'number'. The amount used to increment the value when using the arrow keys in the Editor's UI.
+     * @property {string} [assetType] Name of asset type to be used in 'asset' type attribute picker in Editor's UI, defaults to '*' (all)
+     * @property {string[]} [curves] List of names for Curves for field type 'curve'
+     * @property {string} [color] string of color channels for Curves for field type 'curve', can be any combination of `rgba` characters.
      * Defining this property will render Gradient in Editor's field UI
-     * @property {Object[]} [enum] List of fixed choices for field, defined as array of objects, where key in object is a title of an option
+     * @property {object[]} [enum] List of fixed choices for field, defined as array of objects, where key in object is a title of an option
     */
 
     /**
