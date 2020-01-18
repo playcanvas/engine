@@ -561,14 +561,14 @@ Object.assign(pc, function () {
      * @name pc.BatchManager#prepare
      * @description Takes a list of mesh instances to be batched and sorts them into lists one for each draw call.
      * The input list will be split, if:
-     * <ul>
-     *     <li>Mesh instances use different materials</li>
-     *     <li>Mesh instances have different parameters (e.g. lightmaps or static lights)</li>
-     *     <li>Mesh instances have different shader defines (shadow receiving, being aligned to screen space, etc)</li>
-     *     <li>Too many vertices for a single batch (65535 is maximum)</li>
-     *     <li>Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024 on high-end)</li>
-     *     <li>Bounding box of a batch is larger than maxAabbSize in any dimension</li>
-     * </ul>
+     *
+     * * Mesh instances use different materials.
+     * * Mesh instances have different parameters (e.g. lightmaps or static lights).
+     * * Mesh instances have different shader defines (shadow receiving, being aligned to screen space, etc).
+     * * Too many vertices for a single batch (65535 is maximum).
+     * * Too many instances for a single batch (hardware-dependent, expect 128 on low-end and 1024 on high-end).
+     * * Bounding box of a batch is larger than maxAabbSize in any dimension.
+     *
      * @param {pc.MeshInstance[]} meshInstances - Input list of mesh instances
      * @param {boolean} dynamic - Are we preparing for a dynamic batch? Instance count will matter then (otherwise not).
      * @param {number} maxAabbSize - Maximum size of any dimension of a bounding box around batched objects.

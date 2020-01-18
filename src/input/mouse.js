@@ -11,11 +11,11 @@ Object.assign(pc, function () {
      * @property {number} dx The change in x co-ordinate since the last mouse event.
      * @property {number} dy The change in y co-ordinate since the last mouse event.
      * @property {number} button The mouse button associated with this event. Can be:
-     * <ul>
-     *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
-     *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
-     *     <li>{@link pc.MOUSEBUTTON_RIGHT}</li>
-     * </ul>
+     *
+     * * {@link pc.MOUSEBUTTON_LEFT}
+     * * {@link pc.MOUSEBUTTON_MIDDLE}
+     * * {@link pc.MOUSEBUTTON_RIGHT}
+     *
      * @property {number} wheel A value representing the amount the mouse wheel has moved, only valid for {@link mousemove} events.
      * @property {Element} element The element that the mouse was fired from.
      * @property {boolean} ctrlKey True if the ctrl key was pressed when this event was fired.
@@ -23,7 +23,6 @@ Object.assign(pc, function () {
      * @property {boolean} altKey True if the alt key was pressed when this event was fired.
      * @property {boolean} metaKey True if the meta key was pressed when this event was fired.
      * @property {MouseEvent} event The original browser event.
-     * @since 0.88.0
      */
     var MouseEvent = function (mouse, event) {
         var coords = {
@@ -222,11 +221,11 @@ Object.assign(pc, function () {
          * @name pc.Mouse#enablePointerLock
          * @description Request that the browser hides the mouse cursor and locks the mouse to the element.
          * Allowing raw access to mouse movement input without risking the mouse exiting the element.
-         * Notes: <br />
-         * <ul>
-         * <li>In some browsers this will only work when the browser is running in fullscreen mode. See {@link pc.Application#enableFullscreen}
-         * <li>Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
-         * </ul>
+         * Notes:
+         *
+         * * In some browsers this will only work when the browser is running in fullscreen mode. See {@link pc.Application#enableFullscreen}
+         * * Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
+         *
          * @param {pc.callbacks.LockMouse} [success] - Function called if the request for mouse lock is successful.
          * @param {pc.callbacks.LockMouse} [error] - Function called if the request for mouse lock is unsuccessful.
          */
@@ -296,11 +295,11 @@ Object.assign(pc, function () {
          * @name pc.Mouse#isPressed
          * @description Returns true if the mouse button is currently pressed.
          * @param {number} button - The mouse button to test. Can be:
-         * <ul>
-         *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
-         *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
-         *     <li>{@link pc.MOUSEBUTTON_RIGHT}</li>
-         * </ul>
+         *
+         * * {@link pc.MOUSEBUTTON_LEFT}
+         * * {@link pc.MOUSEBUTTON_MIDDLE}
+         * * {@link pc.MOUSEBUTTON_RIGHT}
+         *
          * @returns {boolean} True if the mouse button is current pressed.
          */
         isPressed: function (button) {
@@ -312,11 +311,11 @@ Object.assign(pc, function () {
          * @name pc.Mouse#wasPressed
          * @description Returns true if the mouse button was pressed this frame (since the last call to update).
          * @param {number} button - The mouse button to test. Can be:
-         * <ul>
-         *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
-         *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
-         *     <li>{@link pc.MOUSEBUTTON_RIGHT}</li>
-         * </ul>
+         *
+         * * {@link pc.MOUSEBUTTON_LEFT}
+         * * {@link pc.MOUSEBUTTON_MIDDLE}
+         * * {@link pc.MOUSEBUTTON_RIGHT}
+         *
          * @returns {boolean} True if the mouse button was pressed since the last update.
          */
         wasPressed: function (button) {
@@ -328,11 +327,11 @@ Object.assign(pc, function () {
          * @name pc.Mouse#wasReleased
          * @description Returns true if the mouse button was released this frame (since the last call to update).
          * @param {number} button - The mouse button to test. Can be:
-         * <ul>
-         *     <li>{@link pc.MOUSEBUTTON_LEFT}</li>
-         *     <li>{@link pc.MOUSEBUTTON_MIDDLE}</li>
-         *     <li>{@link pc.MOUSEBUTTON_RIGHT}</li>
-         * </ul>
+         *
+         * * {@link pc.MOUSEBUTTON_LEFT}
+         * * {@link pc.MOUSEBUTTON_MIDDLE}
+         * * {@link pc.MOUSEBUTTON_RIGHT}
+         *
          * @returns {boolean} True if the mouse button was released since the last update.
          */
         wasReleased: function (button) {

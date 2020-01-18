@@ -28,11 +28,9 @@ Object.assign(pc, function () {
      * // Update a property on a light component
      * entity.light.range = 20;
      * @property {string} type The type of light. Can be:
-     * <ul>
-     *     <li>"directional": A light that is infinitely far away and lights the entire scene from one direction.</li>
-     *     <li>"point": A light that illuminates in all directions from a point.</li>
-     *     <li>"spot": A light that illuminates in all directions from a point and is bounded by a cone.</li>
-     * </ul>
+     * * "directional": A light that is infinitely far away and lights the entire scene from one direction.
+     * * "point": A light that illuminates in all directions from a point.
+     * * "spot": A light that illuminates in all directions from a point and is bounded by a cone.
      * Defaults to "directional".
      * @property {pc.Color} color The Color of the light. The alpha component of the color is
      * ignored. Defaults to white (1, 1, 1).
@@ -55,10 +53,8 @@ Object.assign(pc, function () {
      * to 45.
      * @property {number} falloffMode Controls the rate at which a light attentuates from
      * its position. Can be:
-     * <ul>
-     * <li>{@link pc.LIGHTFALLOFF_LINEAR}: Linear.</li>
-     * <li>{@link pc.LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.</li>
-     * </ul>
+     * * {@link pc.LIGHTFALLOFF_LINEAR}: Linear.
+     * * {@link pc.LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.
      * Affects point and spot lights only. Defaults to pc.LIGHTFALLOFF_LINEAR.
      * @property {number} mask Defines a mask to determine which {@link pc.MeshInstance}s are
      * lit by this light. Defaults to 1.
@@ -70,24 +66,18 @@ Object.assign(pc, function () {
      * Intersecting multiple lights with bakeDir=true may lead to incorrect look of specular/bump-mapping in the area of intersection.
      * The error is not always visible though, and highly scene-dependent.
      * @property {number} shadowUpdateMode Tells the renderer how often shadows must be updated for this light. Options:
-     * <ul>
-     * <li>{@link pc.SHADOWUPDATE_NONE}: Don't render shadows.</li>
-     * <li>{@link pc.SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to pc.SHADOWUPDATE_NONE).</li>
-     * <li>{@link pc.SHADOWUPDATE_REALTIME}: Render shadows every frame (default).</li>
-     * </ul>
+     * * {@link pc.SHADOWUPDATE_NONE}: Don't render shadows.
+     * * {@link pc.SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to pc.SHADOWUPDATE_NONE).
+     * * {@link pc.SHADOWUPDATE_REALTIME}: Render shadows every frame (default).
      * @property {number} shadowType Type of shadows being rendered by this light. Options:
-     * <ul>
-     * <li>{@link pc.SHADOW_PCF3}: Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.</li>
-     * <li>{@link pc.SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.</li>
-     * <li>{@link pc.SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.</li>
-     * <li>{@link pc.SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.</li>
-     * <li>{@link pc.SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to pc.SHADOW_PCF3 on WebGL 1.0.</li>
-     * </ul>
+     * * {@link pc.SHADOW_PCF3}: Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3 sampling.
+     * * {@link pc.SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast shadows for this mode to work correctly.
+     * * {@link pc.SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires OES_texture_half_float extension. Falls back to pc.SHADOW_VSM8, if not supported.
+     * * {@link pc.SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires OES_texture_float extension. Falls back to pc.SHADOW_VSM16, if not supported.
+     * * {@link pc.SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5 sampling. Requires WebGL2. Falls back to pc.SHADOW_PCF3 on WebGL 1.0.
      * @property {number} vsmBlurMode Blurring mode for variance shadow maps:
-     * <ul>
-     * <li>{@link pc.BLUR_BOX}: Box filter.</li>
-     * <li>{@link pc.BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.</li>
-     * </ul>
+     * * {@link pc.BLUR_BOX}: Box filter.
+     * * {@link pc.BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.
      * @property {number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only uneven numbers work, even are incremented. Minimum value is 1, maximum is 25.
      * @property {number} cookieAsset Asset that has texture that will be assigned to cookie internally once asset resource is available.
      * @property {pc.Texture} cookie Projection texture. Must be 2D for spot and cubemap for point (ignored if incorrect type is used).

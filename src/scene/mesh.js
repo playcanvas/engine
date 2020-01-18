@@ -17,15 +17,15 @@ Object.assign(pc, function () {
      * @property {object[]} primitive Array of primitive objects defining how vertex (and index) data in the
      * mesh should be interpreted by the graphics device. For details on the primitive object, see.
      * @property {number} primitive[].type The type of primitive to render. Can be:
-     * <ul>
-     *     <li>{@link pc.PRIMITIVE_POINTS}</li>
-     *     <li>{@link pc.PRIMITIVE_LINES}</li>
-     *     <li>{@link pc.PRIMITIVE_LINELOOP}</li>
-     *     <li>{@link pc.PRIMITIVE_LINESTRIP}</li>
-     *     <li>{@link pc.PRIMITIVE_TRIANGLES}</li>
-     *     <li>{@link pc.PRIMITIVE_TRISTRIP}</li>
-     *     <li>{@link pc.PRIMITIVE_TRIFAN}</li>
-     * </ul>
+     *
+     * * {@link pc.PRIMITIVE_POINTS}
+     * * {@link pc.PRIMITIVE_LINES}
+     * * {@link pc.PRIMITIVE_LINELOOP}
+     * * {@link pc.PRIMITIVE_LINESTRIP}
+     * * {@link pc.PRIMITIVE_TRIANGLES}
+     * * {@link pc.PRIMITIVE_TRISTRIP}
+     * * {@link pc.PRIMITIVE_TRIFAN}
+     *
      * @property {number} primitive[].base The offset of the first index or vertex to dispatch in the draw call.
      * @property {number} primitive[].count The number of indices or vertices to dispatch in the draw call.
      * @property {boolean} [primitive[].indexed] True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
@@ -75,12 +75,6 @@ Object.assign(pc, function () {
      * @param {pc.GraphNode} node - The graph node defining the transform for this instance.
      * @param {pc.Mesh} mesh - The graphics mesh being instanced.
      * @param {pc.Material} material - The material used to render this instance.
-     * @example
-     * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
-     * var mesh = pc.createBox(graphicsDevice);
-     * var material = new pc.StandardMaterial();
-     * var node = new pc.GraphNode();
-     * var meshInstance = new pc.MeshInstance(node, mesh, material);
      * @property {pc.BoundingBox} aabb The world space axis-aligned bounding box for this
      * mesh instance.
      * @property {boolean} castShadow Controls whether the mesh instance casts shadows.
@@ -91,16 +85,22 @@ Object.assign(pc, function () {
      * @property {pc.Mesh} mesh The graphics mesh being instanced.
      * @property {pc.Material} material The material used by this mesh instance.
      * @property {number} renderStyle The render style of the mesh instance. Can be:
-     * <ul>
-     *     <li>pc.RENDERSTYLE_SOLID</li>
-     *     <li>pc.RENDERSTYLE_WIREFRAME</li>
-     *     <li>pc.RENDERSTYLE_POINTS</li>
-     * </ul>
+     *
+     * * {@link pc.RENDERSTYLE_SOLID}
+     * * {@link pc.RENDERSTYLE_WIREFRAME}
+     * * {@link pc.RENDERSTYLE_POINTS}
+     *
      * Defaults to pc.RENDERSTYLE_SOLID.
      * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link pc.CameraComponent#frustumCulling}).
      * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
      * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
      * @property {boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
+     * @example
+     * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
+     * var mesh = pc.createBox(graphicsDevice);
+     * var material = new pc.StandardMaterial();
+     * var node = new pc.GraphNode();
+     * var meshInstance = new pc.MeshInstance(node, mesh, material);
      */
     var MeshInstance = function MeshInstance(node, mesh, material) {
         this._key = [0, 0];

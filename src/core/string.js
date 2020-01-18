@@ -209,7 +209,7 @@ pc.string = function () {
          * @function
          * @name pc.string.getCodePoint
          * @description Get the code point number for a character in a string. Polyfill for
-         * [<code>codePointAt</code>]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/codePointAt}.
+         * [`codePointAt`]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/codePointAt}.
          * @param {string} string - The string to get the code point from.
          * @param {number} [i] - The index in the string.
          * @returns {number} The code point value for the character in the string.
@@ -282,7 +282,7 @@ pc.string = function () {
          * @function
          * @name pc.string.fromCodePoint
          * @description Get the string for a given code point or set of code points. Polyfill for
-         * [<code>fromCodePoint</code>]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/fromCodePoint}.
+         * [`fromCodePoint`]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/fromCodePoint}.
          * @param {...number} args - The code points to convert to a string.
          * @returns {string} The converted string.
          */

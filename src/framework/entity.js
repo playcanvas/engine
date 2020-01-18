@@ -87,26 +87,26 @@ Object.assign(pc, function () {
      * @description Create a new component and add it to the entity.
      * Use this to add functionality to the entity like rendering a model, playing sounds and so on.
      * @param {string} type - The name of the component to add. Valid strings are:
-     * <ul>
-     *   <li>"animation" - see {@link pc.AnimationComponent}</li>
-     *   <li>"audiolistener" - see {@link pc.AudioListenerComponent}</li>
-     *   <li>"button" - see {@link pc.ButtonComponent}</li>
-     *   <li>"camera" - see {@link pc.CameraComponent}</li>
-     *   <li>"collision" - see {@link pc.CollisionComponent}</li>
-     *   <li>"element" - see {@link pc.ElementComponent}</li>
-     *   <li>"layoutchild" - see {@link pc.LayoutChildComponent}</li>
-     *   <li>"layoutgroup" - see {@link pc.LayoutGroupComponent}</li>
-     *   <li>"light" - see {@link pc.LightComponent}</li>
-     *   <li>"model" - see {@link pc.ModelComponent}</li>
-     *   <li>"particlesystem" - see {@link pc.ParticleSystemComponent}</li>
-     *   <li>"rigidbody" - see {@link pc.RigidBodyComponent}</li>
-     *   <li>"screen" - see {@link pc.ScreenComponent}</li>
-     *   <li>"script" - see {@link pc.ScriptComponent}</li>
-     *   <li>"scrollbar" - see {@link pc.ScrollbarComponent}</li>
-     *   <li>"scrollview" - see {@link pc.ScrollViewComponent}</li>
-     *   <li>"sound" - see {@link pc.SoundComponent}</li>
-     *   <li>"sprite" - see {@link pc.SpriteComponent}</li>
-     * </ul>.
+     *
+     * * "animation" - see {@link pc.AnimationComponent}
+     * * "audiolistener" - see {@link pc.AudioListenerComponent}
+     * * "button" - see {@link pc.ButtonComponent}
+     * * "camera" - see {@link pc.CameraComponent}
+     * * "collision" - see {@link pc.CollisionComponent}
+     * * "element" - see {@link pc.ElementComponent}
+     * * "layoutchild" - see {@link pc.LayoutChildComponent}
+     * * "layoutgroup" - see {@link pc.LayoutGroupComponent}
+     * * "light" - see {@link pc.LightComponent}
+     * * "model" - see {@link pc.ModelComponent}
+     * * "particlesystem" - see {@link pc.ParticleSystemComponent}
+     * * "rigidbody" - see {@link pc.RigidBodyComponent}
+     * * "screen" - see {@link pc.ScreenComponent}
+     * * "script" - see {@link pc.ScriptComponent}
+     * * "scrollbar" - see {@link pc.ScrollbarComponent}
+     * * "scrollview" - see {@link pc.ScrollViewComponent}
+     * * "sound" - see {@link pc.SoundComponent}
+     * * "sprite" - see {@link pc.SpriteComponent}
+     *
      * @param {object} [data] - The initialization data for the specific component type. Refer to each
      * specific component's API reference page for details on valid values for this parameter.
      * @returns {pc.Component} The new Component that was attached to the entity or null if there

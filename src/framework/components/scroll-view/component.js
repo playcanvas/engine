@@ -13,11 +13,11 @@ Object.assign(pc, function () {
      * @property {boolean} horizontal Whether to enable horizontal scrolling.
      * @property {boolean} vertical Whether to enable vertical scrolling.
      * @property {number} scrollMode Specifies how the scroll view should behave when the user scrolls past the end of the content. Modes are defined as follows:
-     * <ul>
-     *     <li>{@link pc.SCROLL_MODE_CLAMP}: Content does not scroll any further than its bounds.</li>
-     *     <li>{@link pc.SCROLL_MODE_BOUNCE}: Content scrolls past its bounds and then gently bounces back.</li>
-     *     <li>{@link pc.SCROLL_MODE_INFINITE}: Content can scroll forever.</li>
-     * </ul>.
+     *
+     * * {@link pc.SCROLL_MODE_CLAMP}: Content does not scroll any further than its bounds.
+     * * {@link pc.SCROLL_MODE_BOUNCE}: Content scrolls past its bounds and then gently bounces back.
+     * * {@link pc.SCROLL_MODE_INFINITE}: Content can scroll forever.
+     *
      * @property {number} bounceAmount Controls how far the content should move before bouncing back.
      * @property {number} friction Controls how freely the content should move if thrown, i.e. By flicking on a phone or by flinging the scroll wheel on a mouse. A value of 1 means that content will stop immediately; 0 means that content will continue moving forever (or until the bounds of the content are reached, depending on the scrollMode).
      * @property {number} horizontalScrollbarVisibility Controls whether the horizontal scrollbar should be visible all the time, or only visible when the content exceeds the size of the viewport.

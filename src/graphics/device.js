@@ -1979,15 +1979,13 @@ Object.assign(pc, function () {
          * @description Submits a graphical primitive to the hardware for immediate rendering.
          * @param {object} primitive - Primitive object describing how to submit current vertex/index buffers defined as follows:
          * @param {number} primitive.type - The type of primitive to render. Can be:
-         * <ul>
-         *     <li>{@link pc.PRIMITIVE_POINTS}</li>
-         *     <li>{@link pc.PRIMITIVE_LINES}</li>
-         *     <li>{@link pc.PRIMITIVE_LINELOOP}</li>
-         *     <li>{@link pc.PRIMITIVE_LINESTRIP}</li>
-         *     <li>{@link pc.PRIMITIVE_TRIANGLES}</li>
-         *     <li>{@link pc.PRIMITIVE_TRISTRIP}</li>
-         *     <li>{@link pc.PRIMITIVE_TRIFAN}</li>
-         * </ul>
+         * * {@link pc.PRIMITIVE_POINTS}
+         * * {@link pc.PRIMITIVE_LINES}
+         * * {@link pc.PRIMITIVE_LINELOOP}
+         * * {@link pc.PRIMITIVE_LINESTRIP}
+         * * {@link pc.PRIMITIVE_TRIANGLES}
+         * * {@link pc.PRIMITIVE_TRISTRIP}
+         * * {@link pc.PRIMITIVE_TRIFAN}
          * @param {number} primitive.base - The offset of the first index or vertex to dispatch in the draw call.
          * @param {number} primitive.count - The number of indices or vertices to dispatch in the draw call.
          * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
@@ -2133,11 +2131,9 @@ Object.assign(pc, function () {
          * @param {number} options.depth - The depth value to clear the depth buffer to in the range 0.0 to 1.0.
          * @param {number} options.flags - The buffers to clear (the types being color, depth and stencil). Can be any bitwise
          * combination of:
-         * <ul>
-         *     <li>pc.CLEARFLAG_COLOR</li>
-         *     <li>pc.CLEARFLAG_DEPTH</li>
-         *     <li>pc.CLEARFLAG_STENCIL</li>
-         * </ul>
+         * * pc.CLEARFLAG_COLOR
+         * * pc.CLEARFLAG_DEPTH
+         * * pc.CLEARFLAG_STENCIL
          * @example
          * // Clear color buffer to black and depth buffer to 1.0
          * device.clear();
@@ -2294,16 +2290,14 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setDepthFunc
          * @description Configures the depth test.
          * @param {number} func - A function to compare a new depth value with an existing z-buffer value and decide if to write a pixel. Can be:
-         * <ul>
-         *     <li>pc.FUNC_NEVER: don't draw</li>
-         *     <li>pc.FUNC_LESS: draw if new depth < depth buffer</li>
-         *     <li>pc.FUNC_EQUAL: draw if new depth == depth buffer</li>
-         *     <li>pc.FUNC_LESSEQUAL: draw if new depth <= depth buffer</li>
-         *     <li>pc.FUNC_GREATER: draw if new depth > depth buffer</li>
-         *     <li>pc.FUNC_NOTEQUAL: draw if new depth != depth buffer</li>
-         *     <li>pc.FUNC_GREATEREQUAL: draw if new depth >= depth buffer</li>
-         *     <li>pc.FUNC_ALWAYS: always draw</li>
-         * </ul>
+         * * {@link pc.FUNC_NEVER}: don't draw
+         * * {@link pc.FUNC_LESS}: draw if new depth < depth buffer
+         * * {@link pc.FUNC_EQUAL}: draw if new depth == depth buffer
+         * * {@link pc.FUNC_LESSEQUAL}: draw if new depth <= depth buffer
+         * * {@link pc.FUNC_GREATER}: draw if new depth > depth buffer
+         * * {@link pc.FUNC_NOTEQUAL}: draw if new depth != depth buffer
+         * * {@link pc.FUNC_GREATEREQUAL}: draw if new depth >= depth buffer
+         * * {@link pc.FUNC_ALWAYS}: always draw
          */
         setDepthFunc: function (func) {
             if (this.depthFunc === func) return;
@@ -2501,16 +2495,14 @@ Object.assign(pc, function () {
          * @description Configures stencil test for both front and back faces.
          * @param {number} func - A comparison function that decides if the pixel should be written, based on the current stencil buffer value,
          * reference value, and mask value. Can be:
-         * <ul>
-         *     <li>pc.FUNC_NEVER: never pass</li>
-         *     <li>pc.FUNC_LESS: pass if (ref & mask) < (stencil & mask)</li>
-         *     <li>pc.FUNC_EQUAL: pass if (ref & mask) == (stencil & mask)</li>
-         *     <li>pc.FUNC_LESSEQUAL: pass if (ref & mask) <= (stencil & mask)</li>
-         *     <li>pc.FUNC_GREATER: pass if (ref & mask) > (stencil & mask)</li>
-         *     <li>pc.FUNC_NOTEQUAL: pass if (ref & mask) != (stencil & mask)</li>
-         *     <li>pc.FUNC_GREATEREQUAL: pass if (ref & mask) >= (stencil & mask)</li>
-         *     <li>pc.FUNC_ALWAYS: always pass</li>
-         * </ul>
+         * * {@link pc.FUNC_NEVER}: never pass
+         * * {@link pc.FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+         * * {@link pc.FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+         * * {@link pc.FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+         * * {@link pc.FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+         * * {@link pc.FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+         * * {@link pc.FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+         * * {@link pc.FUNC_ALWAYS}: always pass
          * @param {number} ref - Reference value used in comparison.
          * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
          */
@@ -2531,16 +2523,14 @@ Object.assign(pc, function () {
          * @description Configures stencil test for front faces.
          * @param {number} func - A comparison function that decides if the pixel should be written,
          * based on the current stencil buffer value, reference value, and mask value. Can be:
-         * <ul>
-         *     <li>pc.FUNC_NEVER: never pass</li>
-         *     <li>pc.FUNC_LESS: pass if (ref & mask) < (stencil & mask)</li>
-         *     <li>pc.FUNC_EQUAL: pass if (ref & mask) == (stencil & mask)</li>
-         *     <li>pc.FUNC_LESSEQUAL: pass if (ref & mask) <= (stencil & mask)</li>
-         *     <li>pc.FUNC_GREATER: pass if (ref & mask) > (stencil & mask)</li>
-         *     <li>pc.FUNC_NOTEQUAL: pass if (ref & mask) != (stencil & mask)</li>
-         *     <li>pc.FUNC_GREATEREQUAL: pass if (ref & mask) >= (stencil & mask)</li>
-         *     <li>pc.FUNC_ALWAYS: always pass</li>
-         * </ul>
+         * * {@link pc.FUNC_NEVER}: never pass
+         * * {@link pc.FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+         * * {@link pc.FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+         * * {@link pc.FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+         * * {@link pc.FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+         * * {@link pc.FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+         * * {@link pc.FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+         * * {@link pc.FUNC_ALWAYS}: always pass
          * @param {number} ref - Reference value used in comparison.
          * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
          */
@@ -2560,16 +2550,14 @@ Object.assign(pc, function () {
          * @description Configures stencil test for back faces.
          * @param {number} func - A comparison function that decides if the pixel should be written,
          * based on the current stencil buffer value, reference value, and mask value. Can be:
-         * <ul>
-         *     <li>pc.FUNC_NEVER: never pass</li>
-         *     <li>pc.FUNC_LESS: pass if (ref & mask) < (stencil & mask)</li>
-         *     <li>pc.FUNC_EQUAL: pass if (ref & mask) == (stencil & mask)</li>
-         *     <li>pc.FUNC_LESSEQUAL: pass if (ref & mask) <= (stencil & mask)</li>
-         *     <li>pc.FUNC_GREATER: pass if (ref & mask) > (stencil & mask)</li>
-         *     <li>pc.FUNC_NOTEQUAL: pass if (ref & mask) != (stencil & mask)</li>
-         *     <li>pc.FUNC_GREATEREQUAL: pass if (ref & mask) >= (stencil & mask)</li>
-         *     <li>pc.FUNC_ALWAYS: always pass</li>
-         * </ul>
+         * * {@link pc.FUNC_NEVER}: never pass
+         * * {@link pc.FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
+         * * {@link pc.FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
+         * * {@link pc.FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
+         * * {@link pc.FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
+         * * {@link pc.FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
+         * * {@link pc.FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
+         * * {@link pc.FUNC_ALWAYS}: always pass
          * @param {number} ref - Reference value used in comparison.
          * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
          */
@@ -2592,16 +2580,14 @@ Object.assign(pc, function () {
          * @param {number} zfail - Action to take if depth test is failed.
          * @param {number} zpass - Action to take if both depth and stencil test are passed
          * All arguments can be:
-         * <ul>
-         *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
-         *     <li>pc.STENCILOP_ZERO: set value to zero</li>
-         *     <li>pc.STENCILOP_REPLACE: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})</li>
-         *     <li>pc.STENCILOP_INCREMENT: increment the value</li>
-         *     <li>pc.STENCILOP_INCREMENTWRAP: increment the value, but wrap it to zero when it's larger than a maximum representable value</li>
-         *     <li>pc.STENCILOP_DECREMENT: decrement the value</li>
-         *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
-         *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
-         * </ul>
+         * * {@link pc.STENCILOP_KEEP}: don't change the stencil buffer value
+         * * {@link pc.STENCILOP_ZERO}: set value to zero
+         * * {@link pc.STENCILOP_REPLACE}: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})
+         * * {@link pc.STENCILOP_INCREMENT}: increment the value
+         * * {@link pc.STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+         * * {@link pc.STENCILOP_DECREMENT}: decrement the value
+         * * {@link pc.STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+         * * {@link pc.STENCILOP_INVERT}: invert the value bitwise
          * @param {number} writeMask - A bit mask applied to the reference value, when written.
          */
         setStencilOperation: function (fail, zfail, zpass, writeMask) {
@@ -2628,16 +2614,14 @@ Object.assign(pc, function () {
          * @param {number} zfail - Action to take if depth test is failed.
          * @param {number} zpass - Action to take if both depth and stencil test are passed
          * All arguments can be:
-         * <ul>
-         *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
-         *     <li>pc.STENCILOP_ZERO: set value to zero</li>
-         *     <li>pc.STENCILOP_REPLACE: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})</li>
-         *     <li>pc.STENCILOP_INCREMENT: increment the value</li>
-         *     <li>pc.STENCILOP_INCREMENTWRAP: increment the value, but wrap it to zero when it's larger than a maximum representable value</li>
-         *     <li>pc.STENCILOP_DECREMENT: decrement the value</li>
-         *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
-         *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
-         * </ul>
+         * * {@link pc.STENCILOP_KEEP}: don't change the stencil buffer value
+         * * {@link pc.STENCILOP_ZERO}: set value to zero
+         * * {@link pc.STENCILOP_REPLACE}: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})
+         * * {@link pc.STENCILOP_INCREMENT}: increment the value
+         * * {@link pc.STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+         * * {@link pc.STENCILOP_DECREMENT}: decrement the value
+         * * {@link pc.STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+         * * {@link pc.STENCILOP_INVERT}: invert the value bitwise
          * @param {number} writeMask - A bit mask applied to the reference value, when written.
          */
         setStencilOperationFront: function (fail, zfail, zpass, writeMask) {
@@ -2662,16 +2646,14 @@ Object.assign(pc, function () {
          * @param {number} zfail - Action to take if depth test is failed.
          * @param {number} zpass - Action to take if both depth and stencil test are passed
          * All arguments can be:
-         * <ul>
-         *     <li>pc.STENCILOP_KEEP: don't change the stencil buffer value</li>
-         *     <li>pc.STENCILOP_ZERO: set value to zero</li>
-         *     <li>pc.STENCILOP_REPLACE: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})</li>
-         *     <li>pc.STENCILOP_INCREMENT: increment the value</li>
-         *     <li>pc.STENCILOP_INCREMENTWRAP: increment the value, but wrap it to zero when it's larger than a maximum representable value</li>
-         *     <li>pc.STENCILOP_DECREMENT: decrement the value</li>
-         *     <li>pc.STENCILOP_DECREMENTWRAP: decrement the value, but wrap it to a maximum representable value, if the current value is 0</li>
-         *     <li>pc.STENCILOP_INVERT: invert the value bitwise</li>
-         * </ul>
+         * * {@link pc.STENCILOP_KEEP}: don't change the stencil buffer value
+         * * {@link pc.STENCILOP_ZERO}: set value to zero
+         * * {@link pc.STENCILOP_REPLACE}: replace value with the reference value (see {@link pc.GraphicsDevice#setStencilFunc})
+         * * {@link pc.STENCILOP_INCREMENT}: increment the value
+         * * {@link pc.STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger than a maximum representable value
+         * * {@link pc.STENCILOP_DECREMENT}: decrement the value
+         * * {@link pc.STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum representable value, if the current value is 0
+         * * {@link pc.STENCILOP_INVERT}: invert the value bitwise
          * @param {number} writeMask - A bit mask applied to the reference value, when written.
          */
         setStencilOperationBack: function (fail, zfail, zpass, writeMask) {
@@ -2692,19 +2674,17 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setBlendFunction
          * @description Configures blending operations. Both source and destination
          * blend modes can take the following values:
-         * <ul>
-         *     <li>pc.BLENDMODE_ZERO</li>
-         *     <li>pc.BLENDMODE_ONE</li>
-         *     <li>pc.BLENDMODE_SRC_COLOR</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_SRC_COLOR</li>
-         *     <li>pc.BLENDMODE_DST_COLOR</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_DST_COLOR</li>
-         *     <li>pc.BLENDMODE_SRC_ALPHA</li>
-         *     <li>pc.BLENDMODE_SRC_ALPHA_SATURATE</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_SRC_ALPHA</li>
-         *     <li>pc.BLENDMODE_DST_ALPHA</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_DST_ALPHA</li>
-         * </ul>
+         * * {@link pc.BLENDMODE_ZERO}
+         * * {@link pc.BLENDMODE_ONE}
+         * * {@link pc.BLENDMODE_SRC_COLOR}
+         * * {@link pc.BLENDMODE_ONE_MINUS_SRC_COLOR}
+         * * {@link pc.BLENDMODE_DST_COLOR}
+         * * {@link pc.BLENDMODE_ONE_MINUS_DST_COLOR}
+         * * {@link pc.BLENDMODE_SRC_ALPHA}
+         * * {@link pc.BLENDMODE_SRC_ALPHA_SATURATE}
+         * * {@link pc.BLENDMODE_ONE_MINUS_SRC_ALPHA}
+         * * {@link pc.BLENDMODE_DST_ALPHA}
+         * * {@link pc.BLENDMODE_ONE_MINUS_DST_ALPHA}
          * @param {number} blendSrc - The source blend function.
          * @param {number} blendDst - The destination blend function.
          */
@@ -2722,19 +2702,17 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setBlendFunctionSeparate
          * @description Configures blending operations. Both source and destination
          * blend modes can take the following values:
-         * <ul>
-         *     <li>pc.BLENDMODE_ZERO</li>
-         *     <li>pc.BLENDMODE_ONE</li>
-         *     <li>pc.BLENDMODE_SRC_COLOR</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_SRC_COLOR</li>
-         *     <li>pc.BLENDMODE_DST_COLOR</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_DST_COLOR</li>
-         *     <li>pc.BLENDMODE_SRC_ALPHA</li>
-         *     <li>pc.BLENDMODE_SRC_ALPHA_SATURATE</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_SRC_ALPHA</li>
-         *     <li>pc.BLENDMODE_DST_ALPHA</li>
-         *     <li>pc.BLENDMODE_ONE_MINUS_DST_ALPHA</li>
-         * </ul>
+         * * {@link pc.BLENDMODE_ZERO}
+         * * {@link pc.BLENDMODE_ONE}
+         * * {@link pc.BLENDMODE_SRC_COLOR}
+         * * {@link pc.BLENDMODE_ONE_MINUS_SRC_COLOR}
+         * * {@link pc.BLENDMODE_DST_COLOR}
+         * * {@link pc.BLENDMODE_ONE_MINUS_DST_COLOR}
+         * * {@link pc.BLENDMODE_SRC_ALPHA}
+         * * {@link pc.BLENDMODE_SRC_ALPHA_SATURATE}
+         * * {@link pc.BLENDMODE_ONE_MINUS_SRC_ALPHA}
+         * * {@link pc.BLENDMODE_DST_ALPHA}
+         * * {@link pc.BLENDMODE_ONE_MINUS_DST_ALPHA}
          * @param {number} blendSrc - The source blend function.
          * @param {number} blendDst - The destination blend function.
          * @param {number} blendSrcAlpha - The separate source blend function for the alpha channel.
@@ -2758,14 +2736,13 @@ Object.assign(pc, function () {
          * @description Configures the blending equation. The default blend equation is
          * pc.BLENDEQUATION_ADD.
          * @param {number} blendEquation - The blend equation. Can be:
-         * <ul>
-         *     <li>pc.BLENDEQUATION_ADD</li>
-         *     <li>pc.BLENDEQUATION_SUBTRACT</li>
-         *     <li>pc.BLENDEQUATION_REVERSE_SUBTRACT</li>
-         *     <li>pc.BLENDEQUATION_MIN</li>
-         *     <li>pc.BLENDEQUATION_MAX</li>
+         * * {@link pc.BLENDEQUATION_ADD}
+         * * {@link pc.BLENDEQUATION_SUBTRACT}
+         * * {@link pc.BLENDEQUATION_REVERSE_SUBTRACT}
+         * * {@link pc.BLENDEQUATION_MIN}
+         * * {@link pc.BLENDEQUATION_MAX}
+         *
          * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
-         * </ul>
          */
         setBlendEquation: function (blendEquation) {
             if (this.blendEquation !== blendEquation || this.separateAlphaEquation) {
@@ -2781,15 +2758,14 @@ Object.assign(pc, function () {
          * @description Configures the blending equation. The default blend equation is
          * pc.BLENDEQUATION_ADD.
          * @param {number} blendEquation - The blend equation. Can be:
-         * <ul>
-         *     <li>pc.BLENDEQUATION_ADD</li>
-         *     <li>pc.BLENDEQUATION_SUBTRACT</li>
-         *     <li>pc.BLENDEQUATION_REVERSE_SUBTRACT</li>
-         *     <li>pc.BLENDEQUATION_MIN</li>
-         *     <li>pc.BLENDEQUATION_MAX</li>
+         * * {@link pc.BLENDEQUATION_ADD}
+         * * {@link pc.BLENDEQUATION_SUBTRACT}
+         * * {@link pc.BLENDEQUATION_REVERSE_SUBTRACT}
+         * * {@link pc.BLENDEQUATION_MIN}
+         * * {@link pc.BLENDEQUATION_MAX}
+         *
          * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check device.extBlendMinmax).
          * @param {number} blendAlphaEquation - A separate blend equation for the alpha channel. Accepts same values as blendEquation.
-         * </ul>
          */
         setBlendEquationSeparate: function (blendEquation, blendAlphaEquation) {
             if (this.blendEquation !== blendEquation || this.blendAlphaEquation !== blendAlphaEquation || !this.separateAlphaEquation) {
@@ -2806,12 +2782,10 @@ Object.assign(pc, function () {
          * @description Controls how triangles are culled based on their face direction.
          * The default cull mode is pc.CULLFACE_BACK.
          * @param {number} cullMode - The cull mode to set. Can be:
-         * <ul>
-         *     <li>pc.CULLFACE_NONE</li>
-         *     <li>pc.CULLFACE_BACK</li>
-         *     <li>pc.CULLFACE_FRONT</li>
-         *     <li>pc.CULLFACE_FRONTANDBACK</li>
-         * </ul>
+         * * {@link pc.CULLFACE_NONE}
+         * * {@link pc.CULLFACE_BACK}
+         * * {@link pc.CULLFACE_FRONT}
+         * * {@link pc.CULLFACE_FRONTANDBACK}
          */
         setCullMode: function (cullMode) {
             if (this.cullMode !== cullMode) {
