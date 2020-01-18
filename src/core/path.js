@@ -11,13 +11,21 @@ pc.path = function () {
          * @description The character that separates path segments.
          */
         delimiter: "/",
+
         /**
          * @function
          * @name pc.path.join
-         * @description Join two sections of file path together, insert a delimiter if needed.
-         * @param {string} one - First part of path to join.
-         * @param {string} two - Second part of path to join.
+         * @description Join two or more sections of file path together, inserting a
+         * delimiter if needed.
+         * @param {...string} section - Section of path to join. 2 or more can be
+         * provided as parameters.
          * @returns {string} The joined file path.
+         * @example
+         * var path = pc.path.join('foo', 'bar');
+         * console.log(path); // Prints 'foo/bar'
+         * @example
+         * var path = pc.path.join('alpha', 'beta', 'gamma');
+         * console.log(path); // Prints 'alpha/beta/gamma'
          */
         join: function () {
             var index;

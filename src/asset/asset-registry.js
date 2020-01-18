@@ -687,7 +687,7 @@ Object.assign(pc, function () {
          * Query can be simply a string, or comma separated strings,
          * to have inclusive results of assets that match at least one query.
          * A query that consists of an array of tags can be used to match assets that have each tag of array.
-         * @param {string} tag - Name of a tag or array of tags.
+         * @param {...*} query - Name of a tag or array of tags.
          * @returns {pc.Asset[]} A list of all Assets matched query.
          * @example
          * var assets = app.assets.findByTag("level-1");

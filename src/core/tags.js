@@ -300,7 +300,7 @@ Object.assign(pc, (function () {
          * When an array is provided it will check if tags contain each tag within the array.
          * If any of comma separated argument is satisfied, then it will return true.
          * Any number of combinations are valid, and order is irrelevant.
-         * @param {string} name - Of tag, or array of names.
+         * @param {...*} query - Name of a tag or array of tags.
          * @returns {boolean} True if filters are satisfied.
          * @example
          * tags.has('player'); // player
