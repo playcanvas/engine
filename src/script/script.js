@@ -137,7 +137,7 @@ Object.assign(pc, function () {
      * @property {string} [color] string of color channels for Curves for field type 'curve', can be any combination of `rgba` characters.
      * Defining this property will render Gradient in Editor's field UI
      * @property {object[]} [enum] List of fixed choices for field, defined as array of objects, where key in object is a title of an option
-    */
+     */
 
     /**
      * @class
