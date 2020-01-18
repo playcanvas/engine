@@ -514,4 +514,3 @@ pc.SoundManager.prototype.setVolume = function (volume) {
     // #endif
     this.volume = volume;
 };
-
