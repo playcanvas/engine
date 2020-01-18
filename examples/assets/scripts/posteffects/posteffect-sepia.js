@@ -2,13 +2,13 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.SepiaEffect
      * @classdesc Implements the SepiaEffect color filter.
      * @description Creates new instance of the post effect.
-     * @extends pc.PostEffect
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
-     * @property {Number} amount Controls the intensity of the effect. Ranges from 0 to 1.
+     * @augments pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+     * @property {number} amount Controls the intensity of the effect. Ranges from 0 to 1.
      */
     var SepiaEffect = function (graphicsDevice) {
         pc.PostEffect.call(this, graphicsDevice);

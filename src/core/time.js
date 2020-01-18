@@ -1,7 +1,7 @@
 Object.assign(pc, (function () {
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.Timer
      * @description Create a new Timer instance.
      * @classdesc A Timer counts milliseconds from when start() is called until when stop() is called.
@@ -17,7 +17,7 @@ Object.assign(pc, (function () {
          * @private
          * @function
          * @name pc.Timer#start
-         * @description Start the timer
+         * @description Start the timer.
          */
         start: function () {
             this._isRunning = true;
@@ -28,7 +28,7 @@ Object.assign(pc, (function () {
          * @private
          * @function
          * @name pc.Timer#stop
-         * @description Stop the timer
+         * @description Stop the timer.
          */
         stop: function () {
             this._isRunning = false;
@@ -39,8 +39,8 @@ Object.assign(pc, (function () {
          * @private
          * @function
          * @name pc.Timer#getMilliseconds
-         * @description Get the number of milliseconds that passed between start() and stop() being called
-         * @returns {Number} The elapsed milliseconds.
+         * @description Get the number of milliseconds that passed between start() and stop() being called.
+         * @returns {number} The elapsed milliseconds.
          */
         getMilliseconds: function () {
             return this._b - this._a;
@@ -55,7 +55,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.now
          * @description Get current time in milliseconds. Use it to measure time difference. Reference time may differ on different platforms.
-         * @returns {Number} The time in milliseconds
+         * @returns {number} The time in milliseconds.
          */
         now: (typeof window !== 'undefined') && window.performance && window.performance.now && window.performance.timing ? function () {
             return window.performance.now();

@@ -254,13 +254,13 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.TextureHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading 2D and 3D {@link pc.Texture} resources
-     * @param {pc.GraphicsDevice} device The graphics device
-     * @param {pc.AssetRegistry} assets The asset registry
-     * @param {pc.ResourceLoader} loader The resource loader
+     * @classdesc Resource handler used for loading 2D and 3D {@link pc.Texture} resources.
+     * @param {pc.GraphicsDevice} device - The graphics device.
+     * @param {pc.AssetRegistry} assets - The asset registry.
+     * @param {pc.ResourceLoader} loader - The resource loader.
      */
     var TextureHandler = function (device, assets, loader) {
         this._device = device;
@@ -501,6 +501,15 @@ Object.assign(pc, function () {
             var rgbm = !!asset.data.rgbm;
             if (asset.data.hasOwnProperty('rgbm') && texture.rgbm !== rgbm)
                 texture.rgbm = rgbm;
+
+            if (asset.file && asset.getPreferredFile) {
+                var preferredFile = asset.getPreferredFile();
+                if (preferredFile) {
+                    if (preferredFile.opt && ((preferredFile.opt & 8) !== 0)) {
+                        texture.swizzleGGGR = true;
+                    }
+                }
+            }
         }
     });
 

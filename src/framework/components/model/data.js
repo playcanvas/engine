@@ -3,11 +3,11 @@ Object.assign(pc, function () {
     /**
      * @deprecated
      * @private
-     * @constructor
+     * @class
      * @name pc.ModelComponentData
-     * @extends pc.ComponentData
-     * @classdesc Data for a {@link pc.ModelComponent}
-     * @description Create a new data object
+     * @augments pc.ComponentData
+     * @classdesc Data for a {@link pc.ModelComponent}.
+     * @description Create a new data object.
      */
     var ModelComponentData = function () {
         this.enabled = true;

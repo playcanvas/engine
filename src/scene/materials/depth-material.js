@@ -2,7 +2,7 @@ Object.assign(pc, function () {
 
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.DepthMaterial
      * @classdesc A Depth material is for rendering linear depth values to a render target.
      */

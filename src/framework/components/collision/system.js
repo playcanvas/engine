@@ -563,12 +563,12 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @constructor
+     * @class
      * @name pc.CollisionComponentSystem
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.CollisionComponent}s.
      * @description Creates a new CollisionComponentSystem.
-     * @param {pc.Application} app The running {pc.Application}
+     * @param {pc.Application} app - The running {pc.Application}.
      */
     var CollisionComponentSystem = function CollisionComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

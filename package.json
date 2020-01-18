@@ -34,7 +34,7 @@
   ],
   "devDependencies": {
     "@playcanvas/jsdoc-template": "^1.0.9",
-    "@playcanvas/eslint-config": "^1.0.0",
+    "@playcanvas/eslint-config": "^1.0.3",
     "chai": "^4.2.0",
     "eslint": "^6.8.0",
     "fs-extra": "^8.1.0",

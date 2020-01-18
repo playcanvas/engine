@@ -18,12 +18,12 @@ Object.assign(pc, function () {
     var DEFAULT_DRAG_THRESHOLD = 10;
 
     /**
-     * @constructor
+     * @class
      * @name pc.ScrollViewComponentSystem
-     * @extends pc.ComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.ScrollViewComponent}s.
      * @description Create a new ScrollViewComponentSystem.
-     * @param {pc.Application} app The application
+     * @param {pc.Application} app - The application.
      */
     var ScrollViewComponentSystem = function ScrollViewComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
