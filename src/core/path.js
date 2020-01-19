@@ -196,7 +196,7 @@ pc.path = function () {
                             path += "/" + parts[i];
                         }
                     }
-                } else{
+                } else {
                     for (i = 0; i < parts.length - 1; ++i) {
                         path += (i === 0) ? parts[i] : "/" + parts[i];
                     }
