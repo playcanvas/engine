@@ -25,10 +25,10 @@ Object.assign(pc, function () {
      * // Update a property on a camera component
      * entity.camera.nearClip = 2;
      * @property {number} projection The type of projection used to render the camera. Can be:
-     * <ul>
-     *     <li>{@link pc.PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum resembles a truncated pyramid.</li>
-     *     <li>{@link pc.PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera frustum is a cuboid.</li>
-     * </ul>
+     *
+     * * {@link pc.PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum resembles a truncated pyramid.
+     * * {@link pc.PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera frustum is a cuboid.
+     *
      * Defaults to pc.PROJECTION_PERSPECTIVE.
      * @property {number} nearClip The distance from the camera before which no rendering will take place.
      * @property {number} farClip The distance from the camera after which no rendering will take place.
@@ -53,12 +53,14 @@ Object.assign(pc, function () {
      * If false, all mesh instances in the scene are rendered by the camera, regardless of visibility. Defaults to false.
      * @property {pc.callbacks.CalculateMatrix} calculateTransform Custom function you can provide to calculate the camera transformation matrix manually. Can be used for complex effects like reflections. Function is called using component's scope.
      * Arguments:
-     *     <li>{pc.Mat4} transformMatrix: output of the function</li>
-     *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
+     *
+     * * {pc.Mat4} transformMatrix: output of the function.
+     * * {number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.
      * @property {pc.callbacks.CalculateMatrix} calculateProjection Custom function you can provide to calculate the camera projection matrix manually. Can be used for complex effects like doing oblique projection. Function is called using component's scope.
      * Arguments:
-     *     <li>{pc.Mat4} transformMatrix: output of the function</li>
-     *     <li>{Number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.</li>
+     *
+     * * {pc.Mat4} transformMatrix: output of the function
+     * * {number} view: Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.
      * @property {boolean} cullFaces If true the camera will take material.cull into account. Otherwise both front and back faces will be rendered.
      * @property {boolean} flipFaces If true the camera will invert front and back faces. Can be useful for reflection rendering.
      * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this camera should belong.

@@ -37,10 +37,12 @@ Object.assign(pc, function () {
      * @name pc.Asset
      * @augments pc.EventHandler
      * @classdesc An asset record of a file or data resource that can be loaded by the engine.
-     * The asset contains three important fields:<br>
-     * <strong>file</strong>: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset<br>
-     * <strong>data</strong>: contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model)<br>
-     * <strong>resource</strong>: contains the final resource when it is loaded. (e.g. a {@link pc.StandardMaterial} or a {@link pc.Texture})<br>
+     * The asset contains three important fields:
+     *
+     * * `file`: contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset.
+     * * `data`: contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model).
+     * * `resource`: contains the final resource when it is loaded. (e.g. a {@link pc.StandardMaterial} or a {@link pc.Texture}).
+     *
      * See the {@link pc.AssetRegistry} for details on loading resources from assets.
      * @description Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
      * @param {string} name - A non-unique but human-readable name which can be later used to retrieve the asset.
@@ -70,6 +72,7 @@ Object.assign(pc, function () {
      * @property {Array} resources A reference to the resources of the asset when it's loaded. An asset can hold more runtime resources than one e.g. cubemaps
      * @property {boolean} preload If true the asset will be loaded during the preload phase of application set up.
      * @property {boolean} loaded True if the resource is loaded. e.g. if asset.resource is not null
+     * @property {boolean} loading True if the resource is currently being loaded
      * @property {pc.AssetRegistry} registry The asset registry that this Asset belongs to
      */
     var Asset = function (name, type, file, data) {

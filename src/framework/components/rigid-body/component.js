@@ -38,11 +38,11 @@ Object.assign(pc, function () {
      * @property {number} mask The collision mask sets which groups this body collides with. It is a bitfield
      * of 16 bits, the first 8 bits are reserved for engine use. Defaults to 65535.
      * @property {string} type The rigid body type determines how the body is simulated. Can be:
-     * <ul>
-     *     <li>pc.BODYTYPE_STATIC: infinite mass and cannot move.</li>
-     *     <li>pc.BODYTYPE_DYNAMIC: simulated according to applied forces.</li>
-     *     <li>pc.BODYTYPE_KINEMATIC: infinite mass and does not respond to forces but can still be moved by setting their velocity or position.</li>
-     * </ul>
+     *
+     * * {@link pc.BODYTYPE_STATIC}: infinite mass and cannot move.
+     * * {@link pc.BODYTYPE_DYNAMIC}: simulated according to applied forces.
+     * * {@link pc.BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces but can still be moved by setting their velocity or position.
+     *
      * Defaults to pc.BODYTYPE_STATIC.
      */
     var RigidBodyComponent = function RigidBodyComponent(system, entity) {

@@ -317,11 +317,11 @@ Object.assign(pc, function () {
      * @private
      * @name pc.Camera#projection
      * @type {number}
-     * @description Camera's projection type, to specify whether projection is orthographic (parallel projection) or perspective. Can be:
-     * <ul>
-     *     <li>{@link pc.PROJECTION_PERSPECTIVE}</li>
-     *     <li>{@link pc.PROJECTION_ORTHOGRAPHIC}</li>
-     * </ul>.
+     * @description Camera's projection type, to specify whether projection is orthographic
+     * (parallel projection) or perspective. Can be:
+     *
+     * * {@link pc.PROJECTION_PERSPECTIVE}
+     * * {@link pc.PROJECTION_ORTHOGRAPHIC}
      */
     Object.defineProperty(Camera.prototype, 'projection', {
         get: function () {
