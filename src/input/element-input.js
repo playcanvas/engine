@@ -116,7 +116,7 @@ Object.assign(pc, function () {
      * @property {number} button The mouse button.
      * @property {number} dx The amount of horizontal movement of the cursor.
      * @property {number} dy The amount of vertical movement of the cursor.
-     * @property {number} wheel The amount of the wheel movement.
+     * @property {number} wheelDelta The amount of the wheel movement.
      */
     var ElementMouseEvent = function (event, element, camera, x, y, lastX, lastY) {
         ElementInputEvent.call(this, event, element, camera);
@@ -139,14 +139,27 @@ Object.assign(pc, function () {
             this.dy = y - lastY;
         }
 
-        // FF uses 'detail' and returns a value in 'no. of lines' to scroll
-        // WebKit and Opera use 'wheelDelta', WebKit goes in multiples of 120 per wheel notch
-        if (event.detail) {
-            this.wheel = -1 * event.detail;
-        } else if (event.wheelDelta) {
-            this.wheel = event.wheelDelta / 120;
-        } else {
-            this.wheel = 0;
+        // deltaY is in a different range across different browsers. The only thing
+        // that is consistent is the sign of the value so snap to -1/+1.
+        this.wheelDelta =  0;
+        if (event.type === 'wheel') {
+            if (event.deltaY > 0) {
+                this.wheelDelta = 1;
+            } else if (event.deltaY < 0) {
+                this.wheelDelta = -1;
+            }
+        }
+
+        // Backwards compatibility
+        this.wheel =  0;
+        if (event.type === 'wheel') {
+            // FF uses 'detail' and returns a value in 'no. of lines' to scroll
+            // WebKit and Opera use 'wheelDelta', WebKit goes in multiples of 120 per wheel notch
+            if (event.detail) {
+                this.wheel = -1 * event.detail;
+            } else if (event.wheelDelta) {
+                this.wheel = event.wheelDelta / 120;
+            }
         }
     };
     ElementMouseEvent.prototype = Object.create(ElementInputEvent.prototype);
@@ -244,16 +257,16 @@ Object.assign(pc, function () {
             this._target = domElement;
             this._attached = true;
 
+            var opt = pc.platform.passiveEvents ? { passive: true } : false;
             if (this._useMouse) {
-                window.addEventListener('mouseup', this._upHandler, { passive: true });
-                window.addEventListener('mousedown', this._downHandler, { passive: true });
-                window.addEventListener('mousemove', this._moveHandler, { passive: true });
-                window.addEventListener('mousewheel', this._wheelHandler, { passive: true });
-                window.addEventListener('DOMMouseScroll', this._wheelHandler, { passive: true });
+                window.addEventListener('mouseup', this._upHandler, opt);
+                window.addEventListener('mousedown', this._downHandler, opt);
+                window.addEventListener('mousemove', this._moveHandler, opt);
+                window.addEventListener('wheel', this._wheelHandler, opt);
             }
 
             if (this._useTouch && pc.platform.touch) {
-                this._target.addEventListener('touchstart', this._touchstartHandler, { passive: true });
+                this._target.addEventListener('touchstart', this._touchstartHandler, opt);
                 // Passive is not used for the touchend event because some components need to be
                 // able to call preventDefault(). See notes in button/component.js for more details.
                 this._target.addEventListener('touchend', this._touchendHandler, false);
@@ -271,16 +284,16 @@ Object.assign(pc, function () {
             if (!this._attached) return;
             this._attached = false;
 
+            var opt = pc.platform.passiveEvents ? { passive: true } : false;
             if (this._useMouse) {
-                window.removeEventListener('mouseup', this._upHandler, false);
-                window.removeEventListener('mousedown', this._downHandler, false);
-                window.removeEventListener('mousemove', this._moveHandler, false);
-                window.removeEventListener('mousewheel', this._wheelHandler, false);
-                window.removeEventListener('DOMMouseScroll', this._wheelHandler, false);
+                window.removeEventListener('mouseup', this._upHandler, opt);
+                window.removeEventListener('mousedown', this._downHandler, opt);
+                window.removeEventListener('mousemove', this._moveHandler, opt);
+                window.removeEventListener('wheel', this._wheelHandler, opt);
             }
 
             if (this._useTouch) {
-                this._target.removeEventListener('touchstart', this._touchstartHandler, false);
+                this._target.removeEventListener('touchstart', this._touchstartHandler, opt);
                 this._target.removeEventListener('touchend', this._touchendHandler, false);
                 this._target.removeEventListener('touchmove', this._touchmoveHandler, false);
                 this._target.removeEventListener('touchcancel', this._touchcancelHandler, false);
