@@ -163,17 +163,19 @@ Object.assign(pc, function () {
      * @param {pc.CameraComponent} camera - The CameraComponent that this event was originally raised via.
      * @param {number} x - The x coordinate of the touch that triggered the event.
      * @param {number} y - The y coordinate of the touch that triggered the event.
-     * @param {pc.ElementInput} input - The pc.ElementInput instance.
-     * @property {pc.Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
-     * @property {pc.Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
+     * @param {Touch} touch - The touch object that triggered the event.
+     * @property {Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
+     * @property {Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
+     * @property {Touch} touch The touch object that triggered the event.
      */
-    var ElementTouchEvent = function (event, element, camera, x, y, input) {
+    var ElementTouchEvent = function (event, element, camera, x, y, touch) {
         ElementInputEvent.call(this, event, element, camera);
 
         this.touches = event.touches;
         this.changedTouches = event.changedTouches;
         this.x = x;
         this.y = y;
+        this.touch = touch;
     };
     ElementTouchEvent.prototype = Object.create(ElementInputEvent.prototype);
     ElementTouchEvent.prototype.constructor = ElementTouchEvent;
@@ -410,7 +412,7 @@ Object.assign(pc, function () {
                 var oldTouchInfo = this._touchedElements[touch.identifier];
 
                 if (newTouchInfo && (!oldTouchInfo || newTouchInfo.element !== oldTouchInfo.element)) {
-                    this._fireEvent(event.type, new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, this));
+                    this._fireEvent(event.type, new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, touch));
                     this._touchesForWhichTouchLeaveHasFired[touch.identifier] = false;
                 }
             }
@@ -447,7 +449,7 @@ Object.assign(pc, function () {
                 delete this._touchedElements[touch.identifier];
                 delete this._touchesForWhichTouchLeaveHasFired[touch.identifier];
 
-                this._fireEvent(event.type, new ElementTouchEvent(event, element, camera, x, y, this));
+                this._fireEvent(event.type, new ElementTouchEvent(event, element, camera, x, y, touch));
 
                 // check if touch was released over previously touch
                 // element in order to fire click event
@@ -459,7 +461,7 @@ Object.assign(pc, function () {
                         if (hovered === element) {
 
                             if (!this._clickedEntities[element.entity.getGuid()]) {
-                                this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, this));
+                                this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, touch));
                                 this._clickedEntities[element.entity.getGuid()] = true;
                             }
 
@@ -488,7 +490,7 @@ Object.assign(pc, function () {
 
                     // Fire touchleave if we've left the previously touched element
                     if ((!newTouchInfo || newTouchInfo.element !== oldTouchInfo.element) && !this._touchesForWhichTouchLeaveHasFired[touch.identifier]) {
-                        this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, this));
+                        this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, touch));
 
                         // Flag that touchleave has been fired for this touch, so that we don't
                         // re-fire it on the next touchmove. This is required because touchmove
@@ -499,7 +501,7 @@ Object.assign(pc, function () {
                         this._touchesForWhichTouchLeaveHasFired[touch.identifier] = true;
                     }
 
-                    this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, this));
+                    this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, touch));
                 }
             }
         },
