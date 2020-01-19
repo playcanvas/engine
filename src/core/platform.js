@@ -135,8 +135,9 @@ Object.assign(pc, function () {
 
         try {
             var opts = Object.defineProperty({}, 'passive', {
-                get: function() {
+                get: function () {
                     platform.passiveEvents = true;
+                    return false;
                 }
             });
             window.addEventListener("testpassive", null, opts);
