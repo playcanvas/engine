@@ -175,16 +175,31 @@ pc.path = function () {
          * pc.path.extractPath("path/to/file.txt"); // returns "./path/to"
          */
         extractPath: function (s) {
-            var path = ".",
-                parts = s.split("/"),
-                i = 0;
+            var path = "";
+            var parts = s.split("/");
+            var i = 0;
 
             if (parts.length > 1) {
-                if (pc.path.isRelativePath(s) === false) {
-                    path = "";
-                }
-                for (i = 0; i < parts.length - 1; ++i) {
-                    path += "/" + parts[i];
+                if (pc.path.isRelativePath(s) === true) {
+                    if (parts[0] === ".") {
+                        for (i = 0; i < parts.length - 1; ++i) {
+                            path += (i === 0) ? parts[i] : "/" + parts[i];
+
+                        }
+                    } else if (parts[0] === "..") {
+                        for (i = 0; i < parts.length - 1; ++i) {
+                            path += (i === 0) ? parts[i] : "/" + parts[i];
+                        }
+                    } else {
+                        path = ".";
+                        for (i = 0; i < parts.length - 1; ++i) {
+                            path += "/" + parts[i];
+                        }
+                    }
+                } else{
+                    for (i = 0; i < parts.length - 1; ++i) {
+                        path += (i === 0) ? parts[i] : "/" + parts[i];
+                    }
                 }
             }
             return path;
