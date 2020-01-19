@@ -21,13 +21,13 @@
 
     <!-- The script -->
     <script>
-    // if (wasmSupported()) {
-    //     loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.wasm.js', '../lib/ammo/ammo.wasm.wasm', demo);
-    // } else {
-    //     loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.js', '', demo);
-    // }
+    if (wasmSupported()) {
+        loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.wasm.js', '../lib/ammo/ammo.wasm.wasm', demo);
+    } else {
+        loadWasmModuleAsync('Ammo', '../lib/ammo/ammo.js', '', demo);
+    }
 
-    // function demo() {
+    function demo() {
         // ***********    Initialize application   *******************
         var canvas = document.getElementById("application-canvas");
 
@@ -265,7 +265,7 @@
                 }
             }
         });
-    //}
+    }
     </script>
 </body>
 </html>
