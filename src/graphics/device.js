@@ -180,6 +180,7 @@ Object.assign(pc, function () {
         this._enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;
         this.attributesInvalidated = true;
+        this.defaultFramebuffer = null;
         this.boundBuffer = null;
         this.boundElementBuffer = null;
         this.instancedAttribs = { };
@@ -1247,7 +1248,7 @@ Object.assign(pc, function () {
                     this.setFramebuffer(target._glFrameBuffer);
                 }
             } else {
-                this.setFramebuffer(null);
+                this.setFramebuffer(this.defaultFramebuffer);
             }
         },
 

@@ -257,6 +257,8 @@ Object.assign(pc, function () {
         // for compatibility
         this.context = this;
 
+        options.graphicsDeviceOptions.xrCompatible = true;
+
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
         this._audioManager = new pc.SoundManager(options);
@@ -532,7 +534,7 @@ Object.assign(pc, function () {
         if (this.elementInput)
             this.elementInput.app = this;
 
-        this.vr = null;
+        this.xr = new pc.XrManager(this);
 
         this._inTools = false;
 
@@ -1165,8 +1167,6 @@ Object.assign(pc, function () {
 
             this.graphicsDevice.updateClientRect();
 
-            if (this.vr) this.vr.poll();
-
             // #ifdef PROFILER
             this.stats.frame.updateStart = pc.now();
             // #endif
@@ -1572,29 +1572,6 @@ Object.assign(pc, function () {
             }
         },
 
-        /**
-         * @function
-         * @name pc.Application#enableVr
-         * @description Create and assign a {@link pc.VrManager} object to allow this application render in VR.
-         */
-        enableVr: function () {
-            if (!this.vr) {
-                this.vr = new pc.VrManager(this);
-            }
-        },
-
-        /**
-         * @function
-         * @name pc.Application#disableVr
-         * @description Destroy the {@link pc.VrManager}
-         */
-        disableVr: function () {
-            if (this.vr) {
-                this.vr.destroy();
-                this.vr = null;
-            }
-        },
-
         _onSkyboxChange: function (asset) {
             this.scene.setSkybox(asset.resources);
         },
@@ -1747,10 +1724,8 @@ Object.assign(pc, function () {
 
             pc.destroyPostEffectQuad();
 
-            if (this.vr) {
-                this.vr.destroy();
-                this.vr = null;
-            }
+            // TODO
+            // destroy XR
 
             this.graphicsDevice.destroy();
             this.graphicsDevice = null;
@@ -1796,7 +1771,7 @@ Object.assign(pc, function () {
     // create tick function to be wrapped in closure
     var makeTick = function (_app) {
         var app = _app;
-        return function (timestamp) {
+        return function (timestamp, frame) {
             if (!app.graphicsDevice) {
                 return;
             }
@@ -1815,8 +1790,8 @@ Object.assign(pc, function () {
             app._time = now;
 
             // Submit a request to queue up a new animation frame immediately
-            if (app.vr && app.vr.display) {
-                app.vr.display.requestAnimationFrame(app.tick);
+            if (app.xr.session) {
+                app.xr.session.requestAnimationFrame(app.tick);
             } else {
                 requestAnimationFrame(app.tick);
             }
@@ -1828,6 +1803,14 @@ Object.assign(pc, function () {
             // #ifdef PROFILER
             app._fillFrameStats(now, dt, ms);
             // #endif
+
+            if (frame) app.xr.calculateViews(frame);
+
+            if (frame && app.xr.pose) {
+                app.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
+            } else {
+                app.graphicsDevice.defaultFramebuffer = null;
+            }
 
             app.update(dt);
 
@@ -1842,10 +1825,6 @@ Object.assign(pc, function () {
 
             app.fire("frameend", _frameEndData);
             app.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
-
-            if (app.vr && app.vr.display && app.vr.display.presenting) {
-                app.vr.display.submitFrame();
-            }
         };
     };
 

@@ -132,37 +132,6 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @name pc.CameraComponent#vrDisplay
-     * @type pc.VrDisplay
-     * @description The {@link pc.VrDisplay} that the camera is current displaying to. This is set automatically by calls to {@link pc.CameraComponent#enterVr}
-     * or {@link pc.CameraComponent#exitVr}. Setting this property to a display directly enables the camera to use the transformation information
-     * from a display without rendering stereo to it, e.g. for "magic window" style experiences.
-     * @example
-     * // enable magic window style interface
-     * var display = this.app.vr.display;
-     * if (display) {
-     *     this.entity.camera.vrDisplay = display;
-     * }
-     *
-     * var camera = this.entity.camera;
-     * camera.enterVr(function (err) {
-     * if (err) { return; }
-     *     var display = camera.vrDisplay; // access presenting pc.VrDisplay
-     * });
-     */
-    Object.defineProperty(CameraComponent.prototype, "vrDisplay", {
-        get: function () {
-            return this.data.camera.vrDisplay;
-        },
-        set: function (value) {
-            this.data.camera.vrDisplay = value;
-            if (value) {
-                value._camera = this.data.camera;
-            }
-        }
-    });
-
-    /**
      * @readonly
      * @name pc.CameraComponent#node
      * @type pc.GraphNode
@@ -449,112 +418,10 @@ Object.assign(pc, function () {
             this.data.isRendering = false;
         },
 
-        /**
-         * @function
-         * @name pc.CameraComponent#enterVr
-         * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
-         * @param {pc.callbacks.VrCamera} callback Function called once to indicate success of failure. The callback takes one argument (err).
-         * On success it returns null on failure it returns the error message.
-         * @example
-         * // On an entity with a camera component
-         * this.entity.camera.enterVr(function (err) {
-         *     if (err) {
-         *         console.error(err);
-         *         return;
-         *     } else {
-         *         // in VR!
-         *     }
-         * });
-         *//**
-         * @function
-         * @name pc.CameraComponent#enterVr
-         * @variation 2
-         * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
-         * @param {pc.VrDisplay} display The VrDisplay to present. If not supplied this uses {@link pc.VrManager#display} as the default
-         * @param {pc.callbacks.VrCamera} callback Function called once to indicate success of failure. The callback takes one argument (err).
-         * On success it returns null on failure it returns the error message.
-         * @example
-         * // On an entity with a camera component
-         * this.entity.camera.enterVr(function (err) {
-         *     if (err) {
-         *         console.error(err);
-         *         return;
-         *     } else {
-         *         // in VR!
-         *     }
-         * });
-         */
-        enterVr: function (display, callback) {
-            if ((display instanceof Function) && !callback) {
-                callback = display;
-                display = null;
-            }
-
-            if (!this.system.app.vr) {
-                callback("VrManager not created. Enable VR in project settings.");
-                return;
-            }
-
-            if (!display) {
-                display = this.system.app.vr.display;
-            }
-
-            if (display) {
-                var self = this;
-                if (display.capabilities.canPresent) {
-                    // try and present
-                    display.requestPresent(function (err) {
-                        if (!err) {
-                            self.vrDisplay = display;
-                            // camera component uses internal 'before' event
-                            // this means display nulled before anyone other
-                            // code gets to update
-                            self.vrDisplay.once('beforepresentchange', function (display) {
-                                if (!display.presenting) {
-                                    self.vrDisplay = null;
-                                }
-                            });
-                        }
-                        callback(err);
-                    });
-                } else {
-                    // mono rendering
-                    self.vrDisplay = display;
-                    callback();
-                }
-            } else {
-                callback("No pc.VrDisplay to present");
-            }
-        },
-
-        /**
-         * @function
-         * @name pc.CameraComponent#exitVr
-         * @description Attempt to stop presenting this camera.
-         * @param {pc.callbacks.VrCamera} callback Function called once to indicate success of failure. The callback takes one argument (err).
-         * On success it returns null on failure it returns the error message.
-         * @example
-         * this.entity.camera.exitVr(function (err) {
-         *     if (err) {
-         *         console.error(err);
-         *     } else {
-         *
-         *     }
-         * });
-         */
-        exitVr: function (callback) {
-            if (this.vrDisplay) {
-                if (this.vrDisplay.capabilities.canPresent) {
-                    var display = this.vrDisplay;
-                    this.vrDisplay = null;
-                    display.exitPresent(callback);
-                } else {
-                    this.vrDisplay = null;
-                    callback();
-                }
-            } else {
-                callback("Not presenting VR");
-            }
+        // TODO
+        // better API
+        enterXr: function() {
+            this.camera.xr = this.system.app.xr;
         }
     });
 

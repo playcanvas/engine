@@ -34,17 +34,7 @@ Object.assign(pc, function () {
     var viewProjMat = new pc.Mat4();
     var projMat;
 
-    var viewInvL = new pc.Mat4();
-    var viewInvR = new pc.Mat4();
-    var viewL = new pc.Mat4();
-    var viewR = new pc.Mat4();
-    var viewPosL = new pc.Vec3();
-    var viewPosR = new pc.Vec3();
-    var projL, projR;
-    var viewMat3L = new pc.Mat4();
-    var viewMat3R = new pc.Mat4();
-    var viewProjMatL = new pc.Mat4();
-    var viewProjMatR = new pc.Mat4();
+    var viewPos = new pc.Vec3();
 
     var worldMatX = new pc.Vec3();
     var worldMatY = new pc.Vec3();
@@ -544,20 +534,6 @@ Object.assign(pc, function () {
         },
 
         updateCameraFrustum: function (camera) {
-            if (camera.vrDisplay && camera.vrDisplay.presenting) {
-                projMat = camera.vrDisplay.combinedProj;
-                var parent = camera._node.parent;
-                if (parent) {
-                    viewMat.copy(parent.getWorldTransform()).mul(camera.vrDisplay.combinedViewInv).invert();
-                } else {
-                    viewMat.copy(camera.vrDisplay.combinedView);
-                }
-                viewInvMat.copy(viewMat).invert();
-                this.viewInvId.setValue(viewInvMat.data);
-                camera.frustum.update(projMat, viewMat);
-                return;
-            }
-
             projMat = camera.getProjectionMatrix();
             if (camera.overrideCalculateProjection) camera.calculateProjection(projMat, pc.VIEW_CENTER);
 
@@ -576,8 +552,19 @@ Object.assign(pc, function () {
 
         // make sure colorWrite is set to true to all channels, if you want to fully clear the target
         setCamera: function (camera, target, clear, cullBorder) {
-            var vrDisplay = camera.vrDisplay;
-            if (!vrDisplay || !vrDisplay.presenting) {
+            if (camera.xr && camera.xr.session) {
+                // TODO
+                // respect parent transform
+
+                camera._node.setLocalPosition(camera.xr.position);
+                camera._node.setLocalRotation(camera.xr.rotation);
+
+                camera.nearClip = camera.xr.session.renderState.depthNear;
+                camera.farClip = camera.xr.session.renderState.depthFar;
+
+                // TODO
+                // calculate frustum culling
+            } else {
                 // Projection Matrix
                 projMat = camera.getProjectionMatrix();
                 if (camera.overrideCalculateProjection) camera.calculateProjection(projMat, pc.VIEW_CENTER);
@@ -611,71 +598,6 @@ Object.assign(pc, function () {
                 this.viewPos[1] = cameraPos.y;
                 this.viewPos[2] = cameraPos.z;
                 this.viewPosId.setValue(this.viewPos);
-
-                camera.frustum.update(projMat, viewMat);
-            } else {
-                // Projection LR
-                projL = vrDisplay.leftProj;
-                projR = vrDisplay.rightProj;
-                projMat = vrDisplay.combinedProj;
-                if (camera.overrideCalculateProjection) {
-                    camera.calculateProjection(projL, pc.VIEW_LEFT);
-                    camera.calculateProjection(projR, pc.VIEW_RIGHT);
-                    camera.calculateProjection(projMat, pc.VIEW_CENTER);
-                }
-
-                if (camera.overrideCalculateTransform) {
-                    camera.calculateTransform(viewInvL, pc.VIEW_LEFT);
-                    camera.calculateTransform(viewInvR, pc.VIEW_RIGHT);
-                    camera.calculateTransform(viewInvMat, pc.VIEW_CENTER);
-                    viewL.copy(viewInvL).invert();
-                    viewR.copy(viewInvR).invert();
-                    viewMat.copy(viewInvMat).invert();
-                } else {
-                    var parent = camera._node.parent;
-                    if (parent) {
-                        var transform = parent.getWorldTransform();
-
-                        // ViewInverse LR (parent)
-                        viewInvL.mul2(transform, vrDisplay.leftViewInv);
-                        viewInvR.mul2(transform, vrDisplay.rightViewInv);
-
-                        // View LR (parent)
-                        viewL.copy(viewInvL).invert();
-                        viewR.copy(viewInvR).invert();
-
-                        // Combined view (parent)
-                        viewMat.copy(parent.getWorldTransform()).mul(vrDisplay.combinedViewInv).invert();
-                    } else {
-                        // ViewInverse LR
-                        viewInvL.copy(vrDisplay.leftViewInv);
-                        viewInvR.copy(vrDisplay.rightViewInv);
-
-                        // View LR
-                        viewL.copy(vrDisplay.leftView);
-                        viewR.copy(vrDisplay.rightView);
-
-                        // Combined view
-                        viewMat.copy(vrDisplay.combinedView);
-                    }
-                }
-
-                // View 3x3 LR
-                mat3FromMat4(viewMat3L, viewL);
-                mat3FromMat4(viewMat3R, viewR);
-
-                // ViewProjection LR
-                viewProjMatL.mul2(projL, viewL);
-                viewProjMatR.mul2(projR, viewR);
-
-                // View Position LR
-                viewPosL.x = viewInvL.data[12];
-                viewPosL.y = viewInvL.data[13];
-                viewPosL.z = viewInvL.data[14];
-
-                viewPosR.x = viewInvR.data[12];
-                viewPosR.y = viewInvR.data[13];
-                viewPosR.z = viewInvR.data[14];
 
                 camera.frustum.update(projMat, viewMat);
             }
@@ -1510,7 +1432,6 @@ Object.assign(pc, function () {
         renderForward: function (camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer) {
             var device = this.device;
             var scene = this.scene;
-            var vrDisplay = camera.vrDisplay;
             var passFlag = 1 << pass;
 
             var lightHash = layer ? layer._lightHash : 0;
@@ -1695,34 +1616,29 @@ Object.assign(pc, function () {
                         drawCallback(drawCall, i);
                     }
 
-                    if (vrDisplay && vrDisplay.presenting) {
-                        // Left
-                        device.setViewport(0, 0, halfWidth, device.height);
-                        this.projId.setValue(projL.data);
-                        this.viewInvId.setValue(viewInvL.data);
-                        this.viewId.setValue(viewL.data);
-                        this.viewId3.setValue(viewMat3L.data);
-                        this.viewProjId.setValue(viewProjMatL.data);
-                        this.viewPos[0] = viewPosL.x;
-                        this.viewPos[1] = viewPosL.y;
-                        this.viewPos[2] = viewPosL.z;
-                        this.viewPosId.setValue(this.viewPos);
-                        i += this.drawInstance(device, drawCall, mesh, style, true);
-                        this._forwardDrawCalls++;
+                    if (camera.xr && camera.xr.session && camera.xr.views.length) {
+                        var views = camera.xr.views;
 
-                        // Right
-                        device.setViewport(halfWidth, 0, halfWidth, device.height);
-                        this.projId.setValue(projR.data);
-                        this.viewInvId.setValue(viewInvR.data);
-                        this.viewId.setValue(viewR.data);
-                        this.viewId3.setValue(viewMat3R.data);
-                        this.viewProjId.setValue(viewProjMatR.data);
-                        this.viewPos[0] = viewPosR.x;
-                        this.viewPos[1] = viewPosR.y;
-                        this.viewPos[2] = viewPosR.z;
-                        this.viewPosId.setValue(this.viewPos);
-                        i += this.drawInstance2(device, drawCall, mesh, style);
-                        this._forwardDrawCalls++;
+                        for(var v = 0; v < views.length; v++) {
+                            var view = views[v];
+
+                            device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
+
+                            this.projId.setValue(view.projMat.data);
+                            this.viewId.setValue(view.viewMat.data);
+                            this.viewInvId.setValue(view.viewInvMat.data);
+                            this.viewId3.setValue(view.viewMat3.data);
+                            this.viewProjId.setValue(view.projViewMat.data);
+                            this.viewPosId.setValue(view.position.data);
+
+                            if (v === 0) {
+                                i += this.drawInstance(device, drawCall, mesh, style);
+                            } else {
+                                i += this.drawInstance2(device, drawCall, mesh, style);
+                            }
+
+                            this._forwardDrawCalls++;
+                        }
                     } else {
                         i += this.drawInstance(device, drawCall, mesh, style, true);
                         this._forwardDrawCalls++;
