@@ -34,8 +34,6 @@ Object.assign(pc, function () {
     var viewProjMat = new pc.Mat4();
     var projMat;
 
-    var viewPos = new pc.Vec3();
-
     var worldMatX = new pc.Vec3();
     var worldMatY = new pc.Vec3();
     var worldMatZ = new pc.Vec3();
@@ -1445,8 +1443,6 @@ Object.assign(pc, function () {
             var paramName, parameter, parameters;
             var stencilFront, stencilBack;
 
-            var halfWidth = device.width * 0.5;
-
             // Render the scene
             for (i = 0; i < drawCallsCount; i++) {
 
@@ -1619,7 +1615,7 @@ Object.assign(pc, function () {
                     if (camera.xr && camera.xr.session && camera.xr.views.length) {
                         var views = camera.xr.views;
 
-                        for(var v = 0; v < views.length; v++) {
+                        for (var v = 0; v < views.length; v++) {
                             var view = views[v];
 
                             device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);

@@ -420,7 +420,7 @@ Object.assign(pc, function () {
 
         // TODO
         // better API
-        enterXr: function() {
+        enterXr: function () {
             this.camera.xr = this.system.app.xr;
         }
     });

@@ -25,11 +25,11 @@ Object.assign(pc, function () {
         this._session = null;
         this._baseLayer = null;
         this._referenceSpace = null;
-        this._inputSources = [ ];
+        this._inputSources = [];
 
         this._pose = null;
-        this.views = [ ];
-        this.viewsPool = [ ];
+        this.views = [];
+        this.viewsPool = [];
         this.position = new pc.Vec3();
         this.rotation = new pc.Quat();
 
@@ -45,7 +45,7 @@ Object.assign(pc, function () {
         // better APIs
 
         if (this._supported) {
-            navigator.xr.addEventListener('devicechange', function() {
+            navigator.xr.addEventListener('devicechange', function () {
                 self._deviceVailabilityCheck();
             });
             this._deviceVailabilityCheck();
@@ -54,7 +54,7 @@ Object.assign(pc, function () {
     XrManager.prototype = Object.create(pc.EventHandler.prototype);
     XrManager.prototype.constructor = XrManager;
 
-    XrManager.prototype._deviceVailabilityCheck = function() {
+    XrManager.prototype._deviceVailabilityCheck = function () {
         var self = this;
 
         navigator.xr.isSessionSupported('immersive-vr').then(function (available) {
@@ -95,24 +95,10 @@ Object.assign(pc, function () {
         this._session.end();
     };
 
-    XrManager.prototype._onSessionStart = function(session, callback) {
+    XrManager.prototype._onSessionStart = function (session, callback) {
         var self = this;
 
         this._session = session;
-
-        var onEnd = function () {
-            self._session = null;
-            self._referenceSpace = null;
-            self._inputSources = [ ];
-            self._pose = null;
-            self.views = [ ];
-
-            session.removeEventListener('end', onEnd);
-            session.removeEventListener('visibilitychange', onVisibilityChange);
-            session.removeEventListener('inputsourceschange', onInputSourcesChange);
-
-            self.fire('session:end', session);
-        };
 
         var onVisibilityChange = function () {
             self.fire('visibility:change',  session.visibilityState);
@@ -121,12 +107,26 @@ Object.assign(pc, function () {
         var onInputSourcesChange = function (evt) {
             var i;
 
-            for(i = 0; i < evt.removed.length; i++) {
+            for (i = 0; i < evt.removed.length; i++) {
                 self._inputSourceRemove(evt.removed[i]);
             }
-            for(i = 0; i < evt.added.length; i++) {
+            for (i = 0; i < evt.added.length; i++) {
                 self._inputSourceAdd(evt.added[i]);
             }
+        };
+
+        var onEnd = function () {
+            self._session = null;
+            self._referenceSpace = null;
+            self._inputSources = [];
+            self._pose = null;
+            self.views = [];
+
+            session.removeEventListener('end', onEnd);
+            session.removeEventListener('visibilitychange', onVisibilityChange);
+            session.removeEventListener('inputsourceschange', onInputSourcesChange);
+
+            self.fire('session:end', session);
         };
 
         session.addEventListener('end', onEnd);
@@ -139,7 +139,7 @@ Object.assign(pc, function () {
             baseLayer: this._baseLayer
         });
 
-        session.requestReferenceSpace('local').then(function(referenceSpace) {
+        session.requestReferenceSpace('local').then(function (referenceSpace) {
             self._referenceSpace = referenceSpace;
 
             if (callback) callback(null, session);
@@ -159,7 +159,7 @@ Object.assign(pc, function () {
         this.fire('inputSource:remove', inputSource);
     };
 
-    XrManager.prototype.setClipPlanes = function(near, far) {
+    XrManager.prototype.setClipPlanes = function (near, far) {
         if (this.depthNear === near && this.depthFar === far)
             return;
 
@@ -168,7 +168,7 @@ Object.assign(pc, function () {
 
         // TODO
         // update clip planes
-    }
+    };
 
     XrManager.prototype.calculateViews = function (frame) {
         if (! this._session) return;
@@ -178,7 +178,7 @@ Object.assign(pc, function () {
         this._pose = frame.getViewerPose(this._referenceSpace);
 
         if (this._pose.views.length > this.views.length) {
-            for(i = 0; i <= (this._pose.views.length - this.views.length); i++) {
+            for (i = 0; i <= (this._pose.views.length - this.views.length); i++) {
                 view = this.viewsPool.pop();
                 if (! view) {
                     view = {
@@ -196,7 +196,7 @@ Object.assign(pc, function () {
                 this.views.push(view);
             }
         } else if (this._pose.views.length <= this.views.length) {
-            for(i = 0; i < (this.views.length - this._pose.views.length); i++) {
+            for (i = 0; i < (this.views.length - this._pose.views.length); i++) {
                 this.viewsPool.push(this.views.pop());
             }
         }
@@ -205,7 +205,7 @@ Object.assign(pc, function () {
 
         layer = frame.session.renderState.baseLayer;
 
-        for(i = 0; i < this._pose.views.length; i++) {
+        for (i = 0; i < this._pose.views.length; i++) {
             viewRaw = this._pose.views[i];
             view = this.views[i];
             viewport = layer.getViewport(viewRaw);
