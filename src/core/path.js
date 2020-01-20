@@ -180,7 +180,10 @@ pc.path = function () {
          * @param {string} s - The full path to process.
          * @returns {string} The path without a last element from list split by slash.
          * @example
-         * pc.path.extractPath("path/to/file.txt"); // returns "./path/to"
+         * pc.path.extractPath("path/to/file.txt");    // returns "./path/to"
+         * pc.path.extractPath("./path/to/file.txt");  // returns "./path/to"
+         * pc.path.extractPath("../path/to/file.txt"); // returns "../path/to"
+         * pc.path.extractPath("/path/to/file.txt");   // returns "/path/to"
          */
         extractPath: function (s) {
             var path = "";
