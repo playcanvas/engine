@@ -191,7 +191,7 @@ pc.path = function () {
             var i = 0;
 
             if (parts.length > 1) {
-                if (pc.path.isRelativePath(s) === true) {
+                if (pc.path.isRelativePath(s)) {
                     if (parts[0] === ".") {
                         for (i = 0; i < parts.length - 1; ++i) {
                             path += (i === 0) ? parts[i] : "/" + parts[i];
