@@ -1771,12 +1771,18 @@ Object.assign(pc, function () {
     // create tick function to be wrapped in closure
     var makeTick = function (_app) {
         var app = _app;
+        var frameRequest;
+
         return function (timestamp, frame) {
-            if (!app.graphicsDevice) {
+            if (!app.graphicsDevice)
                 return;
-            }
 
             Application._currentApplication = app;
+
+            if (frameRequest) {
+                cancelAnimationFrame(frameRequest);
+                frameRequest = null;
+            }
 
             // have current application pointer in pc
             pc.app = app;
@@ -1791,14 +1797,13 @@ Object.assign(pc, function () {
 
             // Submit a request to queue up a new animation frame immediately
             if (app.xr.session) {
-                app.xr.session.requestAnimationFrame(app.tick);
+                frameRequest = app.xr.session.requestAnimationFrame(app.tick);
             } else {
-                requestAnimationFrame(app.tick);
+                frameRequest = requestAnimationFrame(app.tick);
             }
 
-            if (app.graphicsDevice.contextLost) {
+            if (app.graphicsDevice.contextLost)
                 return;
-            }
 
             // #ifdef PROFILER
             app._fillFrameStats(now, dt, ms);
@@ -1806,7 +1811,7 @@ Object.assign(pc, function () {
 
             if (frame) app.xr.calculateViews(frame);
 
-            if (frame && app.xr.pose) {
+            if (frame) {
                 app.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
             } else {
                 app.graphicsDevice.defaultFramebuffer = null;

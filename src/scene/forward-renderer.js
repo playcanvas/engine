@@ -560,6 +560,35 @@ Object.assign(pc, function () {
                 camera.nearClip = camera.xr.session.renderState.depthNear;
                 camera.farClip = camera.xr.session.renderState.depthFar;
 
+                var parent = camera._node.parent;
+                var transform;
+                if (parent) {
+                    transform = parent.getWorldTransform();
+                }
+
+                var views = camera.xr.views;
+
+                for (var v = 0; v < views.length; v++) {
+                    var view = views[v];
+
+                    if (parent) {
+                        view.viewInvOffMat.mul2(transform, view.viewInvMat);
+                        view.viewOffMat.copy(view.viewInvOffMat).invert();
+                    } else {
+                        view.viewInvOffMat.copy(view.viewInvMat);
+                        view.viewOffMat.copy(view.viewMat);
+                    }
+
+                    mat3FromMat4(view.viewMat3Off, view.viewOffMat);
+                    view.projViewOffMat.mul2(view.projMat, view.viewOffMat);
+
+                    view.positionOff.x = view.viewInvOffMat.data[12];
+                    view.positionOff.y = view.viewInvOffMat.data[13];
+                    view.positionOff.z = view.viewInvOffMat.data[14];
+
+                    camera.frustum.update(view.projMat, view.viewOffMat);
+                }
+
                 // TODO
                 // calculate frustum culling
             } else {
@@ -1621,11 +1650,11 @@ Object.assign(pc, function () {
                             device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
 
                             this.projId.setValue(view.projMat.data);
-                            this.viewId.setValue(view.viewMat.data);
-                            this.viewInvId.setValue(view.viewInvMat.data);
-                            this.viewId3.setValue(view.viewMat3.data);
-                            this.viewProjId.setValue(view.projViewMat.data);
-                            this.viewPosId.setValue(view.position.data);
+                            this.viewId.setValue(view.viewOffMat.data);
+                            this.viewInvId.setValue(view.viewInvOffMat.data);
+                            this.viewId3.setValue(view.viewMat3Off.data);
+                            this.viewProjId.setValue(view.projViewOffMat.data);
+                            this.viewPosId.setValue(view.positionOff.data);
 
                             if (v === 0) {
                                 i += this.drawInstance(device, drawCall, mesh, style);

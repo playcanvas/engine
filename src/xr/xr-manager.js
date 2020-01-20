@@ -126,6 +126,8 @@ Object.assign(pc, function () {
             session.removeEventListener('visibilitychange', onVisibilityChange);
             session.removeEventListener('inputsourceschange', onInputSourcesChange);
 
+            self.app.tick();
+
             self.fire('session:end', session);
         };
 
@@ -141,6 +143,8 @@ Object.assign(pc, function () {
 
         session.requestReferenceSpace('local').then(function (referenceSpace) {
             self._referenceSpace = referenceSpace;
+
+            self.app.tick();
 
             if (callback) callback(null, session);
             self.fire('session:start', session);
@@ -185,10 +189,15 @@ Object.assign(pc, function () {
                         viewport: new pc.Vec4(),
                         projMat: new pc.Mat4(),
                         viewMat: new pc.Mat4(),
+                        viewOffMat: new pc.Mat4(),
                         viewInvMat: new pc.Mat4(),
+                        viewInvOffMat: new pc.Mat4(),
                         projViewMat: new pc.Mat4(),
+                        projViewOffMat: new pc.Mat4(),
                         viewMat3: new pc.Mat3(),
+                        viewMat3Off: new pc.Mat3(),
                         position: new pc.Vec3(),
+                        positionOff: new pc.Vec3(),
                         rotation: new pc.Quat()
                     };
                 }
