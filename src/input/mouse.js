@@ -16,7 +16,8 @@ Object.assign(pc, function () {
      * * {@link pc.MOUSEBUTTON_MIDDLE}
      * * {@link pc.MOUSEBUTTON_RIGHT}
      *
-     * @property {number} wheel A value representing the amount the mouse wheel has moved, only valid for {@link mousemove} events.
+     * @property {number} wheelDelta A value representing the amount the mouse wheel has moved, only
+     * valid for {@link mousewheel} events.
      * @property {Element} element The element that the mouse was fired from.
      * @property {boolean} ctrlKey True if the ctrl key was pressed when this event was fired.
      * @property {boolean} shiftKey True if the shift key was pressed when this event was fired.
@@ -49,14 +50,27 @@ Object.assign(pc, function () {
             return;
         }
 
-        // FF uses 'detail' and returns a value in 'no. of lines' to scroll
-        // WebKit and Opera use 'wheelDelta', WebKit goes in multiples of 120 per wheel notch
-        if (event.detail) {
-            this.wheel = -1 * event.detail;
-        } else if (event.wheelDelta) {
-            this.wheel = event.wheelDelta / 120;
-        } else {
-            this.wheel = 0;
+        // deltaY is in a different range across different browsers. The only thing
+        // that is consistent is the sign of the value so snap to -1/+1.
+        this.wheelDelta =  0;
+        if (event.type === 'wheel') {
+            if (event.deltaY > 0) {
+                this.wheelDelta = 1;
+            } else if (event.deltaY < 0) {
+                this.wheelDelta = -1;
+            }
+        }
+
+        // Backwards compatibility
+        this.wheel =  0;
+        if (event.type === 'wheel') {
+            // FF uses 'detail' and returns a value in 'no. of lines' to scroll
+            // WebKit and Opera use 'wheelDelta', WebKit goes in multiples of 120 per wheel notch
+            if (event.detail) {
+                this.wheel = -1 * event.detail;
+            } else if (event.wheelDelta) {
+                this.wheel = event.wheelDelta / 120;
+            }
         }
 
         // Get the movement delta in this event
@@ -172,11 +186,11 @@ Object.assign(pc, function () {
             if (this._attached) return;
             this._attached = true;
 
-            window.addEventListener("mouseup", this._upHandler, false);
-            window.addEventListener("mousedown", this._downHandler, false);
-            window.addEventListener("mousemove", this._moveHandler, false);
-            window.addEventListener("mousewheel", this._wheelHandler, false); // WekKit
-            window.addEventListener("DOMMouseScroll", this._wheelHandler, false); // Gecko
+            var opts = pc.platform.passiveEvents ? { passive: false } : false;
+            window.addEventListener("mouseup", this._upHandler, opts);
+            window.addEventListener("mousedown", this._downHandler, opts);
+            window.addEventListener("mousemove", this._moveHandler, opts);
+            window.addEventListener("wheel", this._wheelHandler, opts);
         },
 
         /**
@@ -189,11 +203,11 @@ Object.assign(pc, function () {
             this._attached = false;
             this._target = null;
 
-            window.removeEventListener("mouseup", this._upHandler);
-            window.removeEventListener("mousedown", this._downHandler);
-            window.removeEventListener("mousemove", this._moveHandler);
-            window.removeEventListener("mousewheel", this._wheelHandler); // WekKit
-            window.removeEventListener("DOMMouseScroll", this._wheelHandler); // Gecko
+            var opts = pc.platform.passiveEvents ? { passive: false } : false;
+            window.removeEventListener("mouseup", this._upHandler, opts);
+            window.removeEventListener("mousedown", this._downHandler, opts);
+            window.removeEventListener("mousemove", this._moveHandler, opts);
+            window.removeEventListener("wheel", this._wheelHandler, opts);
         },
 
         /**

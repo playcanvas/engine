@@ -88,7 +88,18 @@ Object.assign(pc, function () {
          * @name pc.platform.workers
          * @description If the platform supports Web Workers.
          */
-        workers: false
+        workers: false,
+
+        /**
+         * @private
+         * @static
+         * @readonly
+         * @type {boolean}
+         * @name pc.platform.passiveEvents
+         * @description If the platform supports an options object as the third parameter
+         * to `EventTarget.addEventListener()` and the passive property is supported.
+         */
+        passiveEvents: false
     };
 
     if (typeof navigator !== 'undefined') {
@@ -121,6 +132,17 @@ Object.assign(pc, function () {
         platform.gamepads = 'getGamepads' in navigator;
 
         platform.workers = (typeof(Worker) !== 'undefined');
+
+        try {
+            var opts = Object.defineProperty({}, 'passive', {
+                get: function () {
+                    platform.passiveEvents = true;
+                    return false;
+                }
+            });
+            window.addEventListener("testpassive", null, opts);
+            window.removeEventListener("testpassive", null, opts);
+        } catch (e) {}
     }
 
     return {
