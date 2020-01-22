@@ -180,19 +180,37 @@ pc.path = function () {
          * @param {string} s - The full path to process.
          * @returns {string} The path without a last element from list split by slash.
          * @example
-         * pc.path.extractPath("path/to/file.txt"); // returns "./path/to"
+         * pc.path.extractPath("path/to/file.txt");    // returns "./path/to"
+         * pc.path.extractPath("./path/to/file.txt");  // returns "./path/to"
+         * pc.path.extractPath("../path/to/file.txt"); // returns "../path/to"
+         * pc.path.extractPath("/path/to/file.txt");   // returns "/path/to"
          */
         extractPath: function (s) {
-            var path = ".",
-                parts = s.split("/"),
-                i = 0;
+            var path = "";
+            var parts = s.split("/");
+            var i = 0;
 
             if (parts.length > 1) {
-                if (pc.path.isRelativePath(s) === false) {
-                    path = "";
-                }
-                for (i = 0; i < parts.length - 1; ++i) {
-                    path += "/" + parts[i];
+                if (pc.path.isRelativePath(s)) {
+                    if (parts[0] === ".") {
+                        for (i = 0; i < parts.length - 1; ++i) {
+                            path += (i === 0) ? parts[i] : "/" + parts[i];
+
+                        }
+                    } else if (parts[0] === "..") {
+                        for (i = 0; i < parts.length - 1; ++i) {
+                            path += (i === 0) ? parts[i] : "/" + parts[i];
+                        }
+                    } else {
+                        path = ".";
+                        for (i = 0; i < parts.length - 1; ++i) {
+                            path += "/" + parts[i];
+                        }
+                    }
+                } else {
+                    for (i = 0; i < parts.length - 1; ++i) {
+                        path += (i === 0) ? parts[i] : "/" + parts[i];
+                    }
                 }
             }
             return path;
