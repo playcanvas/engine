@@ -78,6 +78,14 @@
  * @param {number} view - Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.
  */
 
+ /**
+ * @callback pc.callbacks.CalculateSortDistance
+ * @description Callback used by {@link pc.Layer} to calculate the "sort distance" for a {@link pc.MeshInstance}, which determines its place in the render order.
+ * @param {pc.MeshInstance} meshInstance - The mesh instance.
+ * @param {pc.Vec3} cameraPosition - The position of the camera.
+ * @param {pc.Vec3} cameraForward - The forward vector of the camera.
+ */
+
 /**
  * @callback pc.callbacks.VrCamera
  * @description Callback used by {@link pc.CameraComponent#enterVr} and {@link pc.CameraComponent#exitVr}.

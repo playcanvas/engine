@@ -95,6 +95,7 @@ Object.assign(pc, function () {
      * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
      * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
      * @property {boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
+     * @property {pc.callbacks.CalculateSortDistance} calculateSortDistance Set this value to override the default calculation for the "sort distance" for this mesh instance, used to determine its place in the render order.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
      * var mesh = pc.createBox(graphicsDevice);
@@ -135,6 +136,7 @@ Object.assign(pc, function () {
         this.pick = true;
         this._updateAabb = true;
         this._updateAabbFunc = null;
+        this._calculateSortDistance = null;
 
         // 64-bit integer key that defines render order of this mesh instance
         this.updateKey();
@@ -441,6 +443,15 @@ Object.assign(pc, function () {
         set: function (layer) {
             this._layer = layer;
             this.updateKey();
+        }
+    });
+
+    Object.defineProperty(MeshInstance.prototype, 'calculateSortDistance', {
+        get: function () {
+            return this._calculateSortDistance;
+        },
+        set: function (calculateSortDistance) {
+            this._calculateSortDistance = calculateSortDistance;
         }
     });
 
