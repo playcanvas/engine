@@ -2,6 +2,8 @@ describe("pc.ScriptComponent", function () {
     var app;
 
     beforeEach(function (done) {
+        this.timeout(4000); // Double the default 2000ms timeout which often fails on CirclCI
+
         app = new pc.Application(document.createElement("canvas"));
 
         window.initializeCalls = [];
@@ -3115,9 +3117,30 @@ describe("pc.ScriptComponent", function () {
 
                 done();
             });
-
         });
+    });
 
+    it('pc.ScriptComponent#has', function () {
+        var e = new pc.Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB'],
+            scripts: {
+                scriptA: {
+                    enabled: true
+                },
+                scriptB: {
+                    enabled: true
+                }
+            }
+        });
+        app.root.addChild(e);
 
+        expect(e.script.has('scriptA')).to.equal(true);
+        expect(e.script.has('scriptB')).to.equal(true);
+        expect(e.script.has('scriptC')).to.equal(false);
+        expect(e.script.has('')).to.equal(false);
+        expect(e.script.has(undefined)).to.equal(false);
+        expect(e.script.has(null)).to.equal(false);
     });
 });

@@ -5,44 +5,44 @@ Object.assign(pc, function () {
 
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.RigidBodyComponent
+     * @augments pc.Component
      * @classdesc The rigidbody component, when combined with a {@link pc.CollisionComponent}, allows your
      * entities to be simulated using realistic physics.
      * A rigidbody component will fall under gravity and collide with other rigid bodies. Using scripts, you
      * can apply forces and impulses to rigid bodies.
-     * @description Create a new RigidBodyComponent
-     * @param {pc.RigidBodyComponentSystem} system The ComponentSystem that created this component
-     * @param {pc.Entity} entity The entity this component is attached to
-     * @extends pc.Component
-     * @property {Number} mass The mass of the body. This is only relevant for {@link pc.BODYTYPE_DYNAMIC}
+     * @description Create a new RigidBodyComponent.
+     * @param {pc.RigidBodyComponentSystem} system - The ComponentSystem that created this component.
+     * @param {pc.Entity} entity - The entity this component is attached to.
+     * @property {number} mass The mass of the body. This is only relevant for {@link pc.BODYTYPE_DYNAMIC}
      * bodies, other types have infinite mass. Defaults to 1.
      * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.
      * @property {pc.Vec3} angularVelocity Defines the rotational speed of the body around each world axis.
-     * @property {Number} linearDamping Controls the rate at which a body loses linear velocity over time.
+     * @property {number} linearDamping Controls the rate at which a body loses linear velocity over time.
      * Defaults to 0.
-     * @property {Number} angularDamping Controls the rate at which a body loses angular velocity over time.
+     * @property {number} angularDamping Controls the rate at which a body loses angular velocity over time.
      * Defaults to 0.
      * @property {pc.Vec3} linearFactor Scaling factor for linear movement of the body in each axis.
      * Defaults to 1 in all axes.
      * @property {pc.Vec3} angularFactor Scaling factor for angular movement of the body in each axis.
      * Defaults to 1 in all axes.
-     * @property {Number} friction The friction value used when contacts occur between two bodies. A higher
+     * @property {number} friction The friction value used when contacts occur between two bodies. A higher
      * value indicates more friction. Should be set in the range 0 to 1. Defaults to 0.5.
-     * @property {Number} restitution Influences the amount of energy lost when two rigid bodies collide. The
+     * @property {number} restitution Influences the amount of energy lost when two rigid bodies collide. The
      * calculation multiplies the restitution values for both colliding bodies. A multiplied value of 0 means
      * that all energy is lost in the collision while a value of 1 means that no energy is lost. Should be
      * set in the range 0 to 1. Defaults to 0.
-     * @property {Number} group The collision group this body belongs to. Combine the group and the mask to
+     * @property {number} group The collision group this body belongs to. Combine the group and the mask to
      * prevent bodies colliding with each other. Defaults to 1.
-     * @property {Number} mask The collision mask sets which groups this body collides with. It is a bitfield
+     * @property {number} mask The collision mask sets which groups this body collides with. It is a bitfield
      * of 16 bits, the first 8 bits are reserved for engine use. Defaults to 65535.
-     * @property {String} type The rigid body type determines how the body is simulated. Can be:
-     * <ul>
-     *     <li>pc.BODYTYPE_STATIC: infinite mass and cannot move.</li>
-     *     <li>pc.BODYTYPE_DYNAMIC: simulated according to applied forces.</li>
-     *     <li>pc.BODYTYPE_KINEMATIC: infinite mass and does not respond to forces but can still be moved by setting their velocity or position.</li>
-     * </ul>
+     * @property {string} type The rigid body type determines how the body is simulated. Can be:
+     *
+     * * {@link pc.BODYTYPE_STATIC}: infinite mass and cannot move.
+     * * {@link pc.BODYTYPE_DYNAMIC}: simulated according to applied forces.
+     * * {@link pc.BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces but can still be moved by setting their velocity or position.
+     *
      * Defaults to pc.BODYTYPE_STATIC.
      */
     var RigidBodyComponent = function RigidBodyComponent(system, entity) {
@@ -77,6 +77,42 @@ Object.assign(pc, function () {
     };
     RigidBodyComponent.prototype = Object.create(pc.Component.prototype);
     RigidBodyComponent.prototype.constructor = RigidBodyComponent;
+
+    // Events Documentation
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#contact
+     * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
+     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
+     */
+
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#collisionstart
+     * @description The 'collisionstart' event is fired when two rigid bodies start touching.
+     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
+     */
+
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#collisionend
+     * @description The 'collisionend' event is fired two rigid-bodies stop touching.
+     * @param {pc.Entity} other - The {@link pc.Entity} that stopped touching this rigid body.
+     */
+
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#triggerenter
+     * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
+     * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody entered.
+     */
+
+    /**
+     * @event
+     * @name pc.RigidBodyComponent#triggerleave
+     * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
+     * @param {pc.Entity} other - The {@link pc.Entity} with trigger volume that this rigidbody exited.
+     */
 
     Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
         get: function () {
@@ -156,10 +192,8 @@ Object.assign(pc, function () {
             }
 
             if (shape) {
-                if (this.body) {
-                    this.system.removeBody(this.body);
-                    Ammo.destroy(this.body);
-                }
+                if (this.body)
+                    this.system.onRemove(this.entity, this);
 
                 var isStaticOrKinematic = this.isStaticOrKinematic();
                 var mass = isStaticOrKinematic ? 0 : this.mass;
@@ -175,13 +209,19 @@ Object.assign(pc, function () {
 
                 var startTransform = new Ammo.btTransform();
                 startTransform.setIdentity();
-                startTransform.getOrigin().setValue(pos.x, pos.y, pos.z);
+                var origin = startTransform.getOrigin();
+                origin.setValue(pos.x, pos.y, pos.z);
                 startTransform.setRotation(ammoQuat);
 
                 var motionState = new Ammo.btDefaultMotionState(startTransform);
                 var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
+                Ammo.destroy(localInertia);
+                Ammo.destroy(origin);
+                Ammo.destroy(startTransform);
+
                 var body = new Ammo.btRigidBody(bodyInfo);
+                Ammo.destroy(bodyInfo);
 
                 body.setRestitution(this.restitution);
                 body.setFriction(this.friction);
@@ -213,8 +253,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.RigidBodyComponent#isActive
-         * @description Returns true if the rigid body is currently actively being simulated. i.e. not 'sleeping'
-         * @returns {Boolean} True if the body is active
+         * @description Returns true if the rigid body is currently actively being simulated. I.e. Not 'sleeping'.
+         * @returns {boolean} True if the body is active.
          */
         isActive: function () {
             if (this.body) {
@@ -227,7 +267,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.RigidBodyComponent#activate
-         * @description Forcibly activate the rigid body simulation
+         * @description Forcibly activate the rigid body simulation.
          */
         activate: function () {
             if (this.body) {
@@ -274,14 +314,14 @@ Object.assign(pc, function () {
          * body. However, the force can be applied at an offset this point by specifying a world space vector from
          * the body's origin to the point of application. This function has two valid signatures. You can either
          * specify the force (and optional relative point) via 3D-vector or numbers.
-         * @param {pc.Vec3|Number} x - A 3-dimensional vector representing the force in world-space or
+         * @param {pc.Vec3|number} x - A 3-dimensional vector representing the force in world-space or
          * the x-component of the force in world-space.
-         * @param {pc.Vec3|Number} [y] - An optional 3-dimensional vector representing the relative point at
+         * @param {pc.Vec3|number} [y] - An optional 3-dimensional vector representing the relative point at
          * which to apply the impulse in world-space or the y-component of the force in world-space.
-         * @param {Number} [z] - The z-component of the force in world-space.
-         * @param {Number} [px] - The x-component of a world-space offset from the body's position where the force is applied.
-         * @param {Number} [py] - The y-component of a world-space offset from the body's position where the force is applied.
-         * @param {Number} [pz] - The z-component of a world-space offset from the body's position where the force is applied.
+         * @param {number} [z] - The z-component of the force in world-space.
+         * @param {number} [px] - The x-component of a world-space offset from the body's position where the force is applied.
+         * @param {number} [py] - The y-component of a world-space offset from the body's position where the force is applied.
+         * @param {number} [pz] - The z-component of a world-space offset from the body's position where the force is applied.
          * @example
          * // Apply an approximation of gravity at the body's center
          * this.entity.rigidbody.applyForce(0, -10, 0);
@@ -358,10 +398,10 @@ Object.assign(pc, function () {
          * @name pc.RigidBodyComponent#applyTorque
          * @description Apply torque (rotational force) to the body. This function has two valid signatures.
          * You can either specify the torque force with a 3D-vector or with 3 numbers.
-         * @param {pc.Vec3|Number} x - A 3-dimensional vector representing the torque force in world-space or
+         * @param {pc.Vec3|number} x - A 3-dimensional vector representing the torque force in world-space or
          * the x-component of the torque force in world-space.
-         * @param {Number} [y] - The y-component of the torque force in world-space.
-         * @param {Number} [z] - The z-component of the torque force in world-space.
+         * @param {number} [y] - The y-component of the torque force in world-space.
+         * @param {number} [z] - The z-component of the torque force in world-space.
          * @example
          * // Apply via vector
          * var torque = new pc.Vec3(0, 10, 0);
@@ -403,15 +443,15 @@ Object.assign(pc, function () {
          * @description Apply an impulse (instantaneous change of velocity) to the body at a point.
          * This function has two valid signatures. You can either specify the impulse (and optional relative
          * point) via 3D-vector or numbers.
-         * @param {pc.Vec3|Number} x - A 3-dimensional vector representing the impulse in world-space or
+         * @param {pc.Vec3|number} x - A 3-dimensional vector representing the impulse in world-space or
          * the x-component of the impulse in world-space.
-         * @param {pc.Vec3|Number} [y] - An optional 3-dimensional vector representing the relative point at
+         * @param {pc.Vec3|number} [y] - An optional 3-dimensional vector representing the relative point at
          * which to apply the impulse in the local-space of the entity or the y-component of the impulse to
          * apply in world-space.
-         * @param {Number} [z] - The z-component of the impulse to apply in world-space.
-         * @param {Number} [px=0] - The x-component of the point at which to apply the impulse in the local-space of the entity.
-         * @param {Number} [py=0] - The y-component of the point at which to apply the impulse in the local-space of the entity.
-         * @param {Number} [pz=0] - The z-component of the point at which to apply the impulse in the local-space of the entity.
+         * @param {number} [z] - The z-component of the impulse to apply in world-space.
+         * @param {number} [px=0] - The x-component of the point at which to apply the impulse in the local-space of the entity.
+         * @param {number} [py=0] - The y-component of the point at which to apply the impulse in the local-space of the entity.
+         * @param {number} [pz=0] - The z-component of the point at which to apply the impulse in the local-space of the entity.
          * @example
          * // Apply an impulse along the world-space positive y-axis at the entity's position.
          * var impulse = new pc.Vec3(0, 10, 0);
@@ -485,10 +525,10 @@ Object.assign(pc, function () {
          * @description Apply a torque impulse (rotational force applied instantaneously) to the body.
          * This function has two valid signatures. You can either specify the torque force with a 3D-vector
          * or with 3 numbers.
-         * @param {pc.Vec3|Number} x - A 3-dimensional vector representing the torque impulse in world-space or
+         * @param {pc.Vec3|number} x - A 3-dimensional vector representing the torque impulse in world-space or
          * the x-component of the torque impulse in world-space.
-         * @param {Number} [y] - The y-component of the torque impulse in world-space.
-         * @param {Number} [z] - The z-component of the torque impulse in world-space.
+         * @param {number} [y] - The y-component of the torque impulse in world-space.
+         * @param {number} [z] - The z-component of the torque impulse in world-space.
          * @example
          * // Apply via vector
          * var torque = new pc.Vec3(0, 10, 0);
@@ -527,8 +567,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.RigidBodyComponent#isStatic
-         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC}
-         * @returns {Boolean} True if static
+         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC}.
+         * @returns {boolean} True if static.
          */
         isStatic: function () {
             return (this.type === pc.BODYTYPE_STATIC);
@@ -537,8 +577,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.RigidBodyComponent#isStaticOrKinematic
-         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC} or {@link pc.BODYTYPE_KINEMATIC}
-         * @returns {Boolean} True if static or kinematic
+         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC} or {@link pc.BODYTYPE_KINEMATIC}.
+         * @returns {boolean} True if static or kinematic.
          */
         isStaticOrKinematic: function () {
             return (this.type === pc.BODYTYPE_STATIC || this.type === pc.BODYTYPE_KINEMATIC);
@@ -547,8 +587,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.RigidBodyComponent#isKinematic
-         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_KINEMATIC}
-         * @returns {Boolean} True if kinematic
+         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_KINEMATIC}.
+         * @returns {boolean} True if kinematic.
          */
         isKinematic: function () {
             return (this.type === pc.BODYTYPE_KINEMATIC);
@@ -570,7 +610,8 @@ Object.assign(pc, function () {
                 var rot = this.entity.getRotation();
 
                 var transform = body.getWorldTransform();
-                transform.getOrigin().setValue(pos.x, pos.y, pos.z);
+                var origin = transform.getOrigin();
+                origin.setValue(pos.x, pos.y, pos.z);
 
                 ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
                 transform.setRotation(ammoQuat);
@@ -583,6 +624,8 @@ Object.assign(pc, function () {
                     }
                 }
 
+                Ammo.destroy(origin);
+                Ammo.destroy(transform);
                 body.activate();
             }
         },
@@ -617,13 +660,13 @@ Object.assign(pc, function () {
          * The first takes a 3-dimensional vector for the position and an optional 3-dimensional vector for Euler rotation.
          * The second takes a 3-dimensional vector for the position and an optional quaternion for rotation.
          * The third takes 3 numbers for the position and an optional 3 numbers for Euler rotation.
-         * @param {pc.Vec3|Number} x - A 3-dimensional vector holding the new position or the new position x-coordinate.
-         * @param {pc.Vec3|pc.Quat|Number} y - A 3-dimensional vector or quaternion holding the new rotation or the new
+         * @param {pc.Vec3|number} x - A 3-dimensional vector holding the new position or the new position x-coordinate.
+         * @param {pc.Vec3|pc.Quat|number} y - A 3-dimensional vector or quaternion holding the new rotation or the new
          * position y-coordinate.
-         * @param {Number} [z] - The new position z-coordinate.
-         * @param {Number} [rx] - The new Euler x-angle value.
-         * @param {Number} [ry] - The new Euler y-angle value.
-         * @param {Number} [rz] - The new Euler z-angle value.
+         * @param {number} [z] - The new position z-coordinate.
+         * @param {number} [rx] - The new Euler x-angle value.
+         * @param {number} [ry] - The new Euler y-angle value.
+         * @param {number} [rz] - The new Euler z-angle value.
          * @example
          * // Teleport the entity to the origin
          * entity.rigidbody.teleport(pc.Vec3.ZERO);
@@ -666,7 +709,7 @@ Object.assign(pc, function () {
          * @name pc.RigidBodyComponent#_updateKinematic
          * @description Kinematic objects maintain their own linear and angular velocities. This method updates their transform
          * based on their current velocity. It is called in every frame in the main physics update loop, after the simulation is stepped.
-         * @param {Number} dt Delta time for the current frame.
+         * @param {number} dt - Delta time for the current frame.
          */
         _updateKinematic: function (dt) {
             this._displacement.copy(this._linearVelocity).scale(dt);
@@ -710,6 +753,8 @@ Object.assign(pc, function () {
                 body.getCollisionShape().calculateLocalInertia(mass, localInertia);
                 body.setMassProps(mass, localInertia);
                 body.updateInertiaTensor();
+
+                Ammo.destroy(localInertia);
 
                 if (isEnabled) {
                     this.enableSimulation();
@@ -798,7 +843,6 @@ Object.assign(pc, function () {
                 this.body.activate();
             }
         }
-
     });
 
     return {

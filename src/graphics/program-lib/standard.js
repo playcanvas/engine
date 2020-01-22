@@ -223,21 +223,22 @@ pc.programlib.standard = {
      * @private
      * @function
      * @name _getUvSourceExpression
-     * @description Get the code with which to to replace '$UV' in the map shader functions
-     * @param  {String} transformPropName Name of the transform id in the options block. Usually "basenameTransform"
-     * @param  {String} uVPropName        Name of the UV channel in the options block. Usually "basenameUv"
-     * @param  {Object} options           The options passed into createShaderDefinition
-     * @returns {String}                   The code used to replace "$UV" in the shader code
+     * @description Get the code with which to to replace '$UV' in the map shader functions.
+     * @param  {string} transformPropName - Name of the transform id in the options block. Usually "basenameTransform".
+     * @param  {string} uVPropName - Name of the UV channel in the options block. Usually "basenameUv".
+     * @param  {object} options - The options passed into createShaderDefinition.
+     * @returns {string} The code used to replace "$UV" in the shader code.
      */
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
         var transformId = options[transformPropName];
         var uvChannel = options[uVPropName];
 
         var expression;
+        var isMainPass = (options.pass === pc.SHADER_FORWARD || options.pass === pc.SHADER_FORWARDHDR);
 
-        if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
+        if (isMainPass && options.nineSlicedMode === pc.SPRITE_RENDERMODE_SLICED) {
             expression = "nineSlicedUv";
-        } else if (options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
+        } else if (isMainPass && options.nineSlicedMode === pc.SPRITE_RENDERMODE_TILED) {
             expression = "nineSlicedUv, -1000.0";
         } else {
             if (transformId === 0) {
@@ -270,17 +271,18 @@ pc.programlib.standard = {
         s += this._addMapDef("MAPTEXTURE", map);
         return s;
     },
+
     /**
      * @private
      * @function
-     * @name  _addMap
-     * @description Add chunk for Map Types (used for all maps except Normal)
-     * @param {String} propName      The base name of the map: diffuse | emissive | opacity | light | height | metalness | specular | gloss | ao
-     * @param {String} chunkName     The name of the chunk to use. Usually "basenamePS"
-     * @param {Object} options       The options passed into to createShaderDefinition
-     * @param {Object} chunks        The set of shader chunks to choose from
-     * @param {String} samplerFormat Format of texture sampler to use - 0: "texture2DSRGB", 1: "texture2DRGBM", 2: "texture2D"
-     * @returns {String} The shader code to support this map
+     * @name _addMap
+     * @description Add chunk for Map Types (used for all maps except Normal).
+     * @param {string} propName - The base name of the map: diffuse | emissive | opacity | light | height | metalness | specular | gloss | ao.
+     * @param {string} chunkName - The name of the chunk to use. Usually "basenamePS".
+     * @param {object} options - The options passed into to createShaderDefinition.
+     * @param {object} chunks - The set of shader chunks to choose from.
+     * @param {string} samplerFormat - Format of texture sampler to use - 0: "texture2DSRGB", 1: "texture2DRGBM", 2: "texture2D".
+     * @returns {string} The shader code to support this map.
      */
     _addMap: function (propName, chunkName, options, chunks, samplerFormat) {
         var mapPropName = propName + "Map";
@@ -363,12 +365,12 @@ pc.programlib.standard = {
      * @private
      * @function
      * @name _fsAddBaseCode
-     * @description Add "Base" Code section to fragment shader
-     * @param  {String} code Current fragment shader code
-     * @param  {pc.GraphicsDevice} device The graphics device
-     * @param  {Object} chunks All available shader chunks
-     * @param  {Object} options The Shader Definition options
-     * @returns {String} The new fragment shader code (old+new)
+     * @description Add "Base" Code section to fragment shader.
+     * @param  {string} code - Current fragment shader code.
+     * @param  {pc.GraphicsDevice} device - The graphics device.
+     * @param  {object} chunks - All available shader chunks.
+     * @param  {object} options - The Shader Definition options.
+     * @returns {string} The new fragment shader code (old+new).
      */
     _fsAddBaseCode: function (code, device, chunks, options) {
         code += chunks.basePS;
@@ -385,12 +387,12 @@ pc.programlib.standard = {
      * @private
      * @function
      * @name  _fsAddStartCode
-     * @description Add "Start" Code section to fragment shader
-     * @param  {String} code  Current fragment shader code
-     * @param  {pc.GraphicsDevice} device The graphics device
-     * @param  {Object} chunks All available shader chunks
-     * @param  {Object} options The Shader Definition options
-     * @returns {String} The new fragment shader code (old+new)
+     * @description Add "Start" Code section to fragment shader.
+     * @param  {string} code -  Current fragment shader code.
+     * @param  {pc.GraphicsDevice} device - The graphics device.
+     * @param  {object} chunks - All available shader chunks.
+     * @param  {object} options - The Shader Definition options.
+     * @returns {string} The new fragment shader code (old+new).
      */
     _fsAddStartCode: function (code, device, chunks, options) {
         code += chunks.startPS;
@@ -716,7 +718,7 @@ pc.programlib.standard = {
 
         if (options.pass === pc.SHADER_PICK) {
             // ##### PICK PASS #####
-            code += "uniform vec4 uColor;";
+            code += "uniform vec4 uColor;\n";
             code += varyings;
             if (options.alphaTest) {
                 code += "float dAlpha;\n";
@@ -930,7 +932,7 @@ pc.programlib.standard = {
 
 
         var tbn;
-        if (!options.hasTangents) {
+        if (!options.hasTangents && device.extStandardDerivatives) {
             tbn = chunks.TBNderivativePS;
         } else if (options.fastTbn) {
             tbn = chunks.TBNfastPS;

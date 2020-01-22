@@ -84,14 +84,15 @@ Object.assign(pc, function () {
         /**
          * @private
          * @name pc.Untar
-         * @classdesc Untars a tar archive in the form of an array buffer
-         * @param {ArrayBuffer} arrayBuffer The array buffer that holds the tar archive
-         * @description Creates a new instance of pc.Untar
+         * @classdesc Untars a tar archive in the form of an array buffer.
+         * @param {ArrayBuffer} arrayBuffer - The array buffer that holds the tar archive.
+         * @description Creates a new instance of pc.Untar.
          */
         var UntarInternal = function (arrayBuffer) {
             this._arrayBuffer = arrayBuffer || new ArrayBuffer(0);
             this._bufferView = new DataView(this._arrayBuffer);
             this._globalPaxHeader = null;
+            this._paxHeader = null;
             this._bytesRead = 0;
         };
 
@@ -103,8 +104,8 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Untar#_hasNext
-         * @description Whether we have more files to untar
-         * @returns {Boolean} Returns true or false
+         * @description Whether we have more files to untar.
+         * @returns {boolean} Returns true or false.
          */
         UntarInternal.prototype._hasNext = function () {
             return this._bytesRead + 4 < this._arrayBuffer.byteLength && this._bufferView.getUint32(this._bytesRead) !== 0;
@@ -114,9 +115,9 @@ Object.assign(pc, function () {
          * @private
          * @function
          * @name pc.Untar#_readNextFile
-         * @description Untars the next file in the archive
-         * @returns {Object} Returns a file descriptor in the following format:
-         * {name, size, start, url}
+         * @description Untars the next file in the archive.
+         * @returns {object} Returns a file descriptor in the following format:
+         * {name, size, start, url}.
          */
         UntarInternal.prototype._readNextFile = function () {
             var headersDataView = new DataView(this._arrayBuffer, this._bytesRead, 512);
@@ -130,7 +131,6 @@ Object.assign(pc, function () {
             var start = this._bytesRead;
             var url = null;
 
-            var paxHeader;
             var normalFile = false;
             switch (type) {
                 case "0": case "": // Normal file
@@ -146,7 +146,7 @@ Object.assign(pc, function () {
                     this._globalPaxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
                     break;
                 case "x": // PAX header
-                    paxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
+                    this._paxHeader = PaxHeader.parse(this._arrayBuffer, this._bytesRead, size);
                     break;
                 case "1": // Link to another file already archived
                 case "2": // Symbolic link
@@ -189,8 +189,9 @@ Object.assign(pc, function () {
                 this._globalPaxHeader.applyHeader(file);
             }
 
-            if (paxHeader) {
-                paxHeader.applyHeader(file);
+            if (this._paxHeader) {
+                this._paxHeader.applyHeader(file);
+                this._paxHeader = null;
             }
 
             return file;
@@ -201,8 +202,8 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Untar#untar
          * @description Untars the array buffer provided in the constructor.
-         * @param {String} [filenamePrefix] The prefix for each filename in the tar archive. This is usually the {@link pc.AssetRegistry} prefix.
-         * @returns {Object[]} An array of files in this format {name, start, size, url}
+         * @param {string} [filenamePrefix] - The prefix for each filename in the tar archive. This is usually the {@link pc.AssetRegistry} prefix.
+         * @returns {object[]} An array of files in this format {name, start, size, url}.
          */
         UntarInternal.prototype.untar = function (filenamePrefix) {
             if (! utfDecoder) {
@@ -249,32 +250,36 @@ Object.assign(pc, function () {
         }
     }
 
+    // this is the URL that is going to be used for workers
+    var workerUrl = null;
+
     // Convert the UntarScope function to a string and add
     // the onmessage handler for the worker to untar archives
-    var scopeToUrl = function () {
-        // execute UntarScope function in the worker
-        var code = '(' + UntarScope.toString() + ')(true)\n\n';
+    var getWorkerUrl = function () {
+        if (!workerUrl) {
+            // execute UntarScope function in the worker
+            var code = '(' + UntarScope.toString() + ')(true)\n\n';
 
-        // create blob URL for the code above to be used for the worker
-        var blob = new Blob([code], { type: 'application/javascript' });
-        return URL.createObjectURL(blob);
+            // create blob URL for the code above to be used for the worker
+            var blob = new Blob([code], { type: 'application/javascript' });
+
+            workerUrl = URL.createObjectURL(blob);
+        }
+        return workerUrl;
     };
 
-    // this is the URL that is going to be used for workers
-    var WORKER_URL = scopeToUrl();
-
     /**
-    * @private
-    * @name pc.UntarWorker
-    * @classdesc Wraps untar'ing a tar archive with a Web Worker.
-    * @description Creates new instance of a pc.UntarWorker.
-    * @param {String} [filenamePrefix] The prefix that should be added to each file name in the archive. This is usually the {@link pc.AssetRegistry} prefix.
-    */
+     * @private
+     * @name pc.UntarWorker
+     * @classdesc Wraps untar'ing a tar archive with a Web Worker.
+     * @description Creates new instance of a pc.UntarWorker.
+     * @param {string} [filenamePrefix] - The prefix that should be added to each file name in the archive. This is usually the {@link pc.AssetRegistry} prefix.
+     */
     var UntarWorker = function (filenamePrefix) {
         this._requestId = 0;
         this._pendingRequests = {};
         this._filenamePrefix = filenamePrefix;
-        this._worker = new Worker(WORKER_URL);
+        this._worker = new Worker(getWorkerUrl());
         this._worker.addEventListener('message', this._onMessage.bind(this));
     };
 
@@ -308,9 +313,9 @@ Object.assign(pc, function () {
      * @function
      * @name pc.UntarWorker#untar
      * @description Untars the specified array buffer using a Web Worker and returns the result in the callback.
-     * @param {ArrayBuffer} arrayBuffer The array buffer that holds the tar archive.
-     * @param {Function} callback The callback function called when the worker is finished or if there is an error. The
-     * callback has the following arguments: {error, files}, where error is a string if any, and files is an array of file descriptors
+     * @param {ArrayBuffer} arrayBuffer - The array buffer that holds the tar archive.
+     * @param {Function} callback - The callback function called when the worker is finished or if there is an error. The
+     * callback has the following arguments: {error, files}, where error is a string if any, and files is an array of file descriptors.
      */
     UntarWorker.prototype.untar = function (arrayBuffer, callback) {
         var id = this._requestId++;
@@ -332,8 +337,8 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.UntarWorker#hasPendingRequests
-     * @description Returns whether the worker has pending requests to untar array buffers
-     * @returns {Boolean} Returns true of false
+     * @description Returns whether the worker has pending requests to untar array buffers.
+     * @returns {boolean} Returns true of false.
      */
     UntarWorker.prototype.hasPendingRequests = function () {
         for (var key in this._pendingRequests) {
@@ -347,7 +352,7 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.UntarWorker#destroy
-     * @description Destroys the internal Web Worker
+     * @description Destroys the internal Web Worker.
      */
     UntarWorker.prototype.destroy = function () {
         if (this._worker) {

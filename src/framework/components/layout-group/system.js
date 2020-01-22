@@ -4,12 +4,12 @@ Object.assign(pc, function () {
     var MAX_ITERATIONS = 100;
 
     /**
-     * @constructor
+     * @class
      * @name pc.LayoutGroupComponentSystem
-     * @description Create a new LayoutGroupComponentSystem
+     * @augments pc.ComponentSystem
+     * @description Create a new LayoutGroupComponentSystem.
      * @classdesc Manages creation of {@link pc.LayoutGroupComponent}s.
-     * @param {pc.Application} app The application
-     * @extends pc.ComponentSystem
+     * @param {pc.Application} app - The application.
      */
     var LayoutGroupComponentSystem = function LayoutGroupComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

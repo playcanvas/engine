@@ -1,4 +1,6 @@
+../src/polyfill/array-find.js
 ../src/polyfill/math-log2.js
+../src/polyfill/math-sign.js
 ../src/polyfill/object-assign.js
 ../src/polyfill/pointer-lock.js
 ../src/polyfill/request-animation-frame.js
@@ -13,6 +15,7 @@
 ../src/core/path.js
 ../src/core/string.js
 ../src/core/debug.js
+../src/core/event-handler.js
 ../src/core/events.js
 ../src/core/tags.js
 ../src/core/object-pool.js
@@ -115,6 +118,8 @@
 ../src/bundles/bundle-registry.js
 ../src/i18n/i18n-parser.js
 ../src/i18n/i18n.js
+../src/templates/template.js
+../src/templates/template-utils.js
 ../src/framework/script.js
 ../src/framework/application.js
 ../src/framework/stats.js
@@ -228,6 +233,7 @@
 ../src/resources/scene.js
 ../src/resources/hierarchy.js
 ../src/resources/scene-settings.js
+../src/resources/template.js
 ../src/resources/folder.js
 ../src/resources/font.js
 ../src/resources/texture-atlas.js
@@ -235,6 +241,7 @@
 ../src/resources/parser/json-model.js
 ../src/resources/parser/scene.js
 ../src/resources/parser/material/json-standard-material.js
+../src/resources/basis.js
 ../src/asset/asset.js
 ../src/asset/asset-variants.js
 ../src/asset/asset-registry.js

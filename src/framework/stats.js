@@ -1,8 +1,8 @@
 /**
  * @private
- * @constructor
+ * @class
  * @name pc.ApplicationStats
- * @param {pc.GraphicsDevice} device The graphics device.
+ * @param {pc.GraphicsDevice} device - The graphics device.
  */
 pc.ApplicationStats = function (device) {
     this.frame = {
@@ -86,6 +86,4 @@ pc.ApplicationStats = function (device) {
             return pc.Application._currentApplication.batcher._stats;
         }
     });
-
-    pc.events.attach(this);
 };

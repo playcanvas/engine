@@ -4,11 +4,11 @@ Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
-     * @constructor
+     * @class
      * @name pc.SpriteComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.SpriteComponent}s.
-     * @param {pc.Application} app The application
-     * @extends pc.ComponentSystem
+     * @param {pc.Application} app - The application.
      */
     var SpriteComponentSystem = function SpriteComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

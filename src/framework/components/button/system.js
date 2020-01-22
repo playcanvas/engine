@@ -18,12 +18,12 @@ Object.assign(pc, function () {
     ];
 
     /**
-     * @constructor
+     * @class
      * @name pc.ButtonComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.ButtonComponent}s.
-     * @description Create a new ButtonComponentSystem
-     * @param {pc.Application} app The application
-     * @extends pc.ComponentSystem
+     * @description Create a new ButtonComponentSystem.
+     * @param {pc.Application} app - The application.
      */
     var ButtonComponentSystem = function ButtonComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

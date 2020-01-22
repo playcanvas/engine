@@ -146,57 +146,60 @@ Object.assign(pc, (function () {
 
 
     /**
-     * @constructor
+     * @class
      * @name pc.Tags
-     * @classdesc Set of tag names
+     * @augments pc.EventHandler
+     * @classdesc Set of tag names.
      * @description Create an instance of a Tags.
-     * @param {Object} [parent] Parent object who tags belong to.
+     * @param {object} [parent] - Parent object who tags belong to.
      * Note: Tags are used as addition of `pc.Entity` and `pc.Asset` as `tags` field.
      */
 
     /**
      * @event
      * @name pc.Tags#add
-     * @param {String} tag Name of a tag added to a set.
-     * @param {Object} parent Parent object who tags belong to.
+     * @param {string} tag - Name of a tag added to a set.
+     * @param {object} parent - Parent object who tags belong to.
      */
 
     /**
      * @event
      * @name pc.Tags#remove
-     * @param {String} tag Name of a tag removed from a set.
-     * @param {Object} parent Parent object who tags belong to.
+     * @param {string} tag - Name of a tag removed from a set.
+     * @param {object} parent - Parent object who tags belong to.
      */
 
     /**
      * @event
      * @name pc.Tags#change
-     * @param {Object} [parent] Parent object who tags belong to.
+     * @param {object} [parent] - Parent object who tags belong to.
      * @description Fires when tags been added / removed.
-     * It will fire once on bulk changes, while `add`/`remove` will fire on each tag operation
+     * It will fire once on bulk changes, while `add`/`remove` will fire on each tag operation.
      */
 
     var Tags = function (parent) {
+        pc.EventHandler.call(this);
+
         this._index = { };
         this._list = [];
         this._parent = parent;
-
-        pc.events.attach(this);
     };
+    Tags.prototype = Object.create(pc.EventHandler.prototype);
+    Tags.prototype.constructor = Tags;
 
     Object.assign(Tags.prototype, {
         /**
          * @function
          * @name pc.Tags#add
          * @description Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.
-         * @param {String} name Name of a tag, or array of tags
-         * @returns {Boolean} true if any tag were added
+         * @param {string} name - Name of a tag, or array of tags.
+         * @returns {boolean} True if any tag were added.
          * @example
          * tags.add('level-1');
          * @example
          * tags.add('ui', 'settings');
          * @example
-         * tags.add([ 'level-2', 'mob' ]);
+         * tags.add(['level-2', 'mob']);
          */
         add: function () {
             var changed = false;
@@ -228,14 +231,14 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.Tags#remove
          * @description Remove tag.
-         * @param {String} name Name of a tag or array of tags
-         * @returns {Boolean} true if any tag were removed
+         * @param {string} name - Name of a tag or array of tags.
+         * @returns {boolean} True if any tag were removed.
          * @example
          * tags.remove('level-1');
          * @example
          * tags.remove('ui', 'settings');
          * @example
-         * tags.remove([ 'level-2', 'mob' ]);
+         * tags.remove(['level-2', 'mob']);
          */
         remove: function () {
             var changed = false;
@@ -297,16 +300,16 @@ Object.assign(pc, (function () {
          * When an array is provided it will check if tags contain each tag within the array.
          * If any of comma separated argument is satisfied, then it will return true.
          * Any number of combinations are valid, and order is irrelevant.
-         * @param {String} name of tag, or array of names
-         * @returns {Boolean} true if filters are satisfied
+         * @param {...*} query - Name of a tag or array of tags.
+         * @returns {boolean} True if filters are satisfied.
          * @example
          * tags.has('player'); // player
          * @example
          * tags.has('mob', 'player'); // player OR mob
          * @example
-         * tags.has([ 'level-1', 'mob' ]); // monster AND level-1
+         * tags.has(['level-1', 'mob']); // monster AND level-1
          * @example
-         * tags.has([ 'ui', 'settings' ], [ 'ui', 'levels' ]); // (ui AND settings) OR (ui AND levels)
+         * tags.has(['ui', 'settings'], ['ui', 'levels']); // (ui AND settings) OR (ui AND levels)
          */
         has: function () {
             if (!this._list.length)
@@ -349,8 +352,8 @@ Object.assign(pc, (function () {
         /**
          * @function
          * @name pc.Tags#list
-         * @description Returns immutable array of tags
-         * @returns {String[]} copy of tags array
+         * @description Returns immutable array of tags.
+         * @returns {string[]} Copy of tags array.
          */
         list: function () {
             return this._list.slice(0);
@@ -398,9 +401,9 @@ Object.assign(pc, (function () {
     /**
      * @field
      * @readonly
-     * @type Number
      * @name pc.Tags#size
-     * @description Number of tags in set
+     * @type {number}
+     * @description Number of tags in set.
      */
     Object.defineProperty(Tags.prototype, 'size', {
         get: function () {

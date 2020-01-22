@@ -2,12 +2,12 @@ Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
-     * @constructor
+     * @class
      * @name pc.ScreenComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.ScreenComponent}s.
-     * @description Create a new ScreenComponentSystem
-     * @param {pc.Application} app The application
-     * @extends pc.ComponentSystem
+     * @description Create a new ScreenComponentSystem.
+     * @param {pc.Application} app - The application.
      */
     var ScreenComponentSystem = function ScreenComponentSystem(app) {
         pc.ComponentSystem.call(this, app);

@@ -1,22 +1,25 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.VrDisplay
+     * @augments pc.EventHandler
      * @classdesc Represents a single Display for VR content. This could be a Head Mounted display that can present content on a separate screen
      * or a phone which can display content full screen on the same screen. This object contains the native `navigator.VRDisplay` object
      * from the WebVR API.
      * @description Represents a single Display for VR content. This could be a Head Mounted display that can present content on a separate screen
      * or a phone which can display content full screen on the same screen. This object contains the native `navigator.VRDisplay` object
      * from the WebVR API.
-     * @param {pc.Application} app The application outputting to this VR display.
-     * @param {VRDisplay} display The native VRDisplay object from the WebVR API.
-     * @property {Number} id An identifier for this distinct VRDisplay
-     * @property {VRDisplay} display The native VRDisplay object from the WebVR API
-     * @property {Boolean} presenting True if this display is currently presenting VR content
+     * @param {pc.Application} app - The application outputting to this VR display.
+     * @param {VRDisplay} display - The native VRDisplay object from the WebVR API.
+     * @property {number} id An identifier for this distinct VRDisplay.
+     * @property {VRDisplay} display The native VRDisplay object from the WebVR API.
+     * @property {boolean} presenting True if this display is currently presenting VR content.
      * @property {VRDisplayCapabilities} capabilities Returns the <a href="https://w3c.github.io/webvr/#interface-vrdisplaycapabilities" target="_blank">VRDisplayCapabilities</a> object from the VRDisplay.
      * This can be used to determine what features are available on this display.
      */
     var VrDisplay = function (app, display) {
+        pc.EventHandler.call(this);
+
         var self = this;
 
         this._app = app;
@@ -95,15 +98,15 @@ Object.assign(pc, function () {
             }
         };
         window.addEventListener('vrdisplaypresentchange', self._presentChange, false);
-
-        pc.events.attach(this);
     };
+    VrDisplay.prototype = Object.create(pc.EventHandler.prototype);
+    VrDisplay.prototype.constructor = VrDisplay;
 
     Object.assign(VrDisplay.prototype, {
         /**
          * @function
          * @name pc.VrDisplay#destroy
-         * @description Destroy this display object
+         * @description Destroy this display object.
          */
         destroy: function () {
             window.removeEventListener('vrdisplaypresentchange', self._presentChange);
@@ -212,8 +215,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.VrDisplay#requestPresent
-         * @description Try to present full screen VR content on this display
-         * @param {pc.callbacks.VrDisplay} callback Called when the request is completed. Callback takes a single argument (err) that is the error message return
+         * @description Try to present full screen VR content on this display.
+         * @param {pc.callbacks.VrDisplay} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
          * if presenting fails, or null if the call succeeds. Usually called by {@link pc.CameraComponent#enterVr}.
          */
         requestPresent: function (callback) {
@@ -237,8 +240,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.VrDisplay#exitPresent
-         * @description Try to stop presenting VR content on this display
-         * @param {pc.callbacks.VrDisplay} callback Called when the request is completed. Callback takes a single argument (err) that is the error message return
+         * @description Try to stop presenting VR content on this display.
+         * @param {pc.callbacks.VrDisplay} callback - Called when the request is completed. Callback takes a single argument (err) that is the error message return
          * if presenting fails, or null if the call succeeds. Usually called by {@link pc.CameraComponent#exitVr}.
          */
         exitPresent: function (callback) {
@@ -261,8 +264,8 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.VrDisplay#requestAnimationFrame
-         * @description Used in the main application loop instead of the regular `window.requestAnimationFrame`. Usually only called from inside {@link pc.Application}
-         * @param {pc.callbacks.VrFrame} fn Function called when it is time to update the frame.
+         * @description Used in the main application loop instead of the regular `window.requestAnimationFrame`. Usually only called from inside {@link pc.Application}.
+         * @param {pc.callbacks.VrFrame} fn - Function called when it is time to update the frame.
          */
         requestAnimationFrame: function (fn) {
             if (this.display) this.display.requestAnimationFrame(fn);
@@ -290,9 +293,9 @@ Object.assign(pc, function () {
          * @function
          * @name pc.VrDisplay#setClipPlanes
          * @description Set the near and far depth plans of the display. This enables mapping of values in the
-         * render target depth attachment to scene coordinates
-         * @param {Number} n The near depth distance
-         * @param {Number} f The far depth distance
+         * render target depth attachment to scene coordinates.
+         * @param {number} n - The near depth distance.
+         * @param {number} f - The far depth distance.
          */
         setClipPlanes: function (n, f) {
             if (this.display) {
@@ -305,7 +308,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.VrDisplay#getFrameData
          * @description Return the current frame data that is updated during polling.
-         * @returns {VRFrameData} The frame data object
+         * @returns {VRFrameData} The frame data object.
          */
         getFrameData: function () {
             if (this.display) return this._frameData;

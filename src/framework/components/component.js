@@ -1,19 +1,22 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.Component
+     * @augments pc.EventHandler
      * @classdesc Components are used to attach functionality on a {@link pc.Entity}. Components
      * can receive update events each frame, and expose properties to the PlayCanvas Editor.
-     * @description Base constructor for a Component
-     * @param {pc.ComponentSystem} system The ComponentSystem used to create this Component
-     * @param {pc.Entity} entity The Entity that this Component is attached to
-     * @property {Boolean} enabled Enables or disables the component.
+     * @description Base constructor for a Component.
+     * @param {pc.ComponentSystem} system - The ComponentSystem used to create this Component.
+     * @param {pc.Entity} entity - The Entity that this Component is attached to.
+     * @property {pc.ComponentSystem} system The ComponentSystem used to create this Component.
+     * @property {pc.Entity} entity The Entity that this Component is attached to.
+     * @property {boolean} enabled Enables or disables the component.
      */
     var Component = function (system, entity) {
+        pc.EventHandler.call(this);
+
         this.system = system;
         this.entity = entity;
-
-        pc.events.attach(this);
 
         if (this.system.schema && !this._accessorsBuilt) {
             this.buildAccessors(this.system.schema);
@@ -25,6 +28,8 @@ Object.assign(pc, function () {
 
         this.on('set_enabled', this.onSetEnabled, this);
     };
+    Component.prototype = Object.create(pc.EventHandler.prototype);
+    Component.prototype.constructor = Component;
 
     Component._buildAccessors = function (obj, schema) {
         // Create getter/setter pairs for each property defined in the schema
@@ -50,7 +55,7 @@ Object.assign(pc, function () {
         obj._accessorsBuilt = true;
     };
 
-    Component.prototype = {
+    Object.assign(Component.prototype, {
         buildAccessors: function (schema) {
             Component._buildAccessors(this, schema);
         },
@@ -72,7 +77,7 @@ Object.assign(pc, function () {
         onDisable: function () { },
 
         onPostStateChange: function () { }
-    };
+    });
 
     /**
      * @private

@@ -22,37 +22,40 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.SoundSlot
+     * @augments pc.EventHandler
      * @classdesc The SoundSlot controls playback of an audio asset.
-     * @description Create a new SoundSlot
-     * @param {pc.SoundComponent} component The Component that created this slot.
-     * @param {String} name The name of the slot.
-     * @param {Object} options Settings for the slot
-     * @param {Number} [options.volume=1] The playback volume, between 0 and 1.
-     * @param {Number} [options.pitch=1] The relative pitch, default of 1, plays at normal pitch.
-     * @param {Boolean} [options.loop=false] If true the sound will restart when it reaches the end.
-     * @param {Number} [options.startTime=0] The start time from which the sound will start playing.
-     * @param {Number} [options.duration=null] The duration of the sound that the slot will play starting from startTime.
-     * @param {Boolean} [options.overlap=false] If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
-     * @param {Boolean} [options.autoPlay=false] If true the slot will start playing as soon as its audio asset is loaded.
-     * @param {Number} [options.asset=null] The asset id of the audio asset that is going to be played by this slot.
-     * @property {String} name The name of the slot
-     * @property {String} asset The asset id
-     * @property {Boolean} autoPlay If true the slot will begin playing as soon as it is loaded
-     * @property {Number} volume The volume modifier to play the sound with. In range 0-1.
-     * @property {Number} pitch The pitch modifier to play the sound with. Must be larger than 0.01
-     * @property {Number} startTime The start time from which the sound will start playing.
-     * @property {Number} duration The duration of the sound that the slot will play starting from startTime.
-     * @property {Boolean} loop If true the slot will restart when it finishes playing
-     * @property {Boolean} overlap If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
-     * @property {Boolean} isLoaded Returns true if the asset of the slot is loaded.
-     * @property {Boolean} isPlaying Returns true if the slot is currently playing.
-     * @property {Boolean} isPaused Returns true if the slot is currently paused.
-     * @property {Boolean} isStopped Returns true if the slot is currently stopped.
+     * @description Create a new SoundSlot.
+     * @param {pc.SoundComponent} component - The Component that created this slot.
+     * @param {string} name - The name of the slot.
+     * @param {object} options - Settings for the slot.
+     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
+     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
+     * @param {boolean} [options.loop=false] - If true the sound will restart when it reaches the end.
+     * @param {number} [options.startTime=0] - The start time from which the sound will start playing.
+     * @param {number} [options.duration=null] - The duration of the sound that the slot will play starting from startTime.
+     * @param {boolean} [options.overlap=false] - If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
+     * @param {boolean} [options.autoPlay=false] - If true the slot will start playing as soon as its audio asset is loaded.
+     * @param {number} [options.asset=null] - The asset id of the audio asset that is going to be played by this slot.
+     * @property {string} name The name of the slot.
+     * @property {string} asset The asset id.
+     * @property {boolean} autoPlay If true the slot will begin playing as soon as it is loaded.
+     * @property {number} volume The volume modifier to play the sound with. In range 0-1.
+     * @property {number} pitch The pitch modifier to play the sound with. Must be larger than 0.01.
+     * @property {number} startTime The start time from which the sound will start playing.
+     * @property {number} duration The duration of the sound that the slot will play starting from startTime.
+     * @property {boolean} loop If true the slot will restart when it finishes playing.
+     * @property {boolean} overlap If true then sounds played from slot will be played independently of each other. Otherwise the slot will first stop the current sound before starting the new one.
+     * @property {boolean} isLoaded Returns true if the asset of the slot is loaded.
+     * @property {boolean} isPlaying Returns true if the slot is currently playing.
+     * @property {boolean} isPaused Returns true if the slot is currently paused.
+     * @property {boolean} isStopped Returns true if the slot is currently stopped.
      * @property {pc.SoundInstance[]} instances An array that contains all the {@link pc.SoundInstance}s currently being played by the slot.
      */
     var SoundSlot = function (component, name, options) {
+        pc.EventHandler.call(this);
+
         options = options || {};
         this._component = component;
         this._assets = component.system.app.assets;
@@ -80,9 +83,9 @@ Object.assign(pc, function () {
         this._onInstanceEndHandler = this._onInstanceEnd.bind(this);
 
         this.instances = [];
-
-        pc.events.attach(this);
     };
+    SoundSlot.prototype = Object.create(pc.EventHandler.prototype);
+    SoundSlot.prototype.constructor = SoundSlot;
 
     Object.assign(SoundSlot.prototype, {
         /**
@@ -90,12 +93,20 @@ Object.assign(pc, function () {
          * @description Plays a sound. If {@link pc.SoundSlot#overlap} is true the new sound
          * instance will be played independently of any other instances already playing.
          * Otherwise existing sound instances will stop before playing the new sound.
-         * @returns {pc.SoundInstance} The new sound instance
+         * @returns {pc.SoundInstance} The new sound instance.
          */
         play: function () {
             // stop if overlap is false
-            if (!this.overlap && (this.isPlaying || this.isPaused)) {
+            if (!this.overlap) {
                 this.stop();
+            }
+
+            // If not loaded and doesn't have asset - then we cannot play it.  Warn and exit.
+            if (!this.isLoaded && !this._hasAsset()) {
+                // #ifdef DEBUG
+                console.warn("Trying to play SoundSlot " + this._name + " but it is not loaded and doesn't have an asset.");
+                // #endif
+                return;
             }
 
             var instance = this._createInstance();
@@ -126,7 +137,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SoundSlot#pause
          * @description Pauses all sound instances. To continue playback call {@link pc.SoundSlot#resume}.
-         * @returns {Boolean} true if the sound instances paused successfully, false otherwise.
+         * @returns {boolean} True if the sound instances paused successfully, false otherwise.
          */
         pause: function () {
             var paused = false;
@@ -145,7 +156,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SoundSlot#resume
          * @description Resumes playback of all paused sound instances.
-         * @returns {Boolean} True if any instances were resumed.
+         * @returns {boolean} True if any instances were resumed.
          */
         resume: function () {
             var resumed = false;
@@ -162,14 +173,18 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SoundSlot#stop
          * @description Stops playback of all sound instances.
-         * @returns {Boolean} True if any instances were stopped.
+         * @returns {boolean} True if any instances were stopped.
          */
         stop: function () {
             var stopped = false;
             var instances = this.instances;
-            for (var i = 0, len = instances.length; i < len; i++) {
-                if (instances[i].stop())
-                    stopped = true;
+            var i = instances.length;
+            // do this in reverse order because as each instance
+            // is stopped it will be removed from the instances array
+            // by the instance stop event handler
+            while (i--) {
+                instances[i].stop();
+                stopped = true;
             }
 
             instances.length = 0;
@@ -215,8 +230,8 @@ Object.assign(pc, function () {
          * automatically attach the specified nodes to the source that plays the sound. You need to pass
          * the first node of the node graph that you created externally and the last node of that graph. The first
          * node will be connected to the audio source and the last node will be connected to the destination of the AudioContext (e.g. speakers).
-         * @param {AudioNode} firstNode The first node that will be connected to the audio source of sound instances.
-         * @param {AudioNode} [lastNode] The last node that will be connected to the destination of the AudioContext.
+         * @param {AudioNode} firstNode - The first node that will be connected to the audio source of sound instances.
+         * @param {AudioNode} [lastNode] - The last node that will be connected to the destination of the AudioContext.
          * If unspecified then the firstNode will be connected to the destination instead.
          * @example
          * var context = app.systems.sound.context;
@@ -281,7 +296,7 @@ Object.assign(pc, function () {
          * @function
          * @private
          * @name pc.SoundSlot#_hasAsset
-         * @returns {Boolean} Returns true if the slot has an asset assigned.
+         * @returns {boolean} Returns true if the slot has an asset assigned.
          */
         _hasAsset: function () {
             // != intentional
@@ -293,7 +308,7 @@ Object.assign(pc, function () {
          * @private
          * @name pc.SoundSlot#_createInstance
          * @description Creates a new pc.SoundInstance with the properties of the slot.
-         * @returns {pc.SoundInstance} The new instance
+         * @returns {pc.SoundInstance} The new instance.
          */
         _createInstance: function () {
             var instance = null;
@@ -369,6 +384,12 @@ Object.assign(pc, function () {
         },
 
         _onInstanceStop: function (instance) {
+            // remove instance that stopped
+            var idx = this.instances.indexOf(instance);
+            if (idx !== -1) {
+                this.instances.splice(idx, 1);
+            }
+
             // propagate event to slot
             this.fire('stop', instance);
 
@@ -624,34 +645,34 @@ Object.assign(pc, function () {
 /**
  * @event
  * @name pc.SoundSlot#play
- * @description Fired when a sound instance starts playing
- * @param {pc.SoundInstance} instance The instance that started playing
+ * @description Fired when a sound instance starts playing.
+ * @param {pc.SoundInstance} instance - The instance that started playing.
  */
 
 /**
  * @event
  * @name pc.SoundSlot#pause
  * @description Fired when a sound instance is paused.
- * @param {pc.SoundInstance} instance The instance that was paused created to play the sound
+ * @param {pc.SoundInstance} instance - The instance that was paused created to play the sound.
  */
 
 /**
  * @event
  * @name pc.SoundSlot#resume
  * @description Fired when a sound instance is resumed..
- * @param {pc.SoundInstance} instance The instance that was resumed
+ * @param {pc.SoundInstance} instance - The instance that was resumed.
  */
 
 /**
  * @event
  * @name pc.SoundSlot#stop
  * @description Fired when a sound instance is stopped.
- * @param {pc.SoundInstance} instance The instance that was stopped
+ * @param {pc.SoundInstance} instance - The instance that was stopped.
  */
 
 /**
  * @event
  * @name pc.SoundSlot#load
- * @description Fired when the asset assigned to the slot is loaded
- * @param {pc.Sound} sound The sound resource that was loaded
+ * @description Fired when the asset assigned to the slot is loaded.
+ * @param {pc.Sound} sound - The sound resource that was loaded.
  */

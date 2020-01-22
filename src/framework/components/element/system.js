@@ -2,11 +2,11 @@ Object.assign(pc, function () {
     var _schema = ['enabled'];
 
     /**
-     * @constructor
+     * @class
      * @name pc.ElementComponentSystem
+     * @augments pc.ComponentSystem
      * @classdesc Manages creation of {@link pc.ElementComponent}s.
-     * @param {pc.Application} app The application
-     * @extends pc.ComponentSystem
+     * @param {pc.Application} app - The application.
      */
     var ElementComponentSystem = function ElementComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
