@@ -1,8 +1,8 @@
 /**
  * @private
- * @constructor
+ * @class
  * @name pc.ApplicationStats
- * @param {pc.GraphicsDevice} device The graphics device.
+ * @param {pc.GraphicsDevice} device - The graphics device.
  */
 pc.ApplicationStats = function (device) {
     this.frame = {

@@ -2,11 +2,11 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.ScopeId
      * @classdesc The scope for a variable.
-     * @param {String} name The variable name.
-     * @property {String} name The variable name.
+     * @param {string} name - The variable name.
+     * @property {string} name The variable name.
      */
     var ScopeId = function (name) {
         // Set the name
@@ -24,7 +24,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ScopeId#setValue
          * @description Set variable value.
-         * @param {*} value The value.
+         * @param {*} value - The value.
          */
         setValue: function (value) {
             // Set the new value
