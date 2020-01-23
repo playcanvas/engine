@@ -797,6 +797,7 @@ Object.assign(pc, function () {
 
         this._skyboxPrefiltered = [null, null, null, null, null, null];
 
+        this._firstUpdateSkybox = true;
         this._skyboxCubeMap = null;
         this.skyboxModel = null;
 
@@ -1087,6 +1088,12 @@ Object.assign(pc, function () {
 
                 skyLayer.addMeshInstances(model.meshInstances);
                 this.skyLayer = skyLayer;
+
+                // enable the layer on first skybox update (the skybox layer is created disabled)
+                if (this._firstUpdateSkybox) {
+                    skyLayer.enabled = true;
+                    this._firstUpdateSkybox = false;
+                }
 
                 this.fire("set:skybox", usedTex);
             }
