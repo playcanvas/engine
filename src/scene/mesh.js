@@ -94,8 +94,10 @@ Object.assign(pc, function () {
      * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link pc.CameraComponent#frustumCulling}).
      * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
      * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
+     * @property {pc.callbacks.CalculateSortDistance} calculateSortDistance In some circumstances mesh instances are sorted by a distance calculation to determine their rendering order.
+     * Set this callback to override the default distance calculation, which gives the dot product of the camera forward vector and the vector between the camera position and
+     * the center of the mesh instance's axis-aligned bounding box. This option can be particularly useful for rendering transparent meshes in a better order than default.
      * @property {boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
-     * @property {pc.callbacks.CalculateSortDistance} calculateSortDistance Set this value to override the default calculation for the "sort distance" for this mesh instance, used to determine its place in the render order.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
      * var mesh = pc.createBox(graphicsDevice);
