@@ -94,6 +94,9 @@ Object.assign(pc, function () {
      * @property {boolean} cull Controls whether the mesh instance can be culled by with frustum culling ({@link pc.CameraComponent#frustumCulling}).
      * @property {number} drawOrder Use this value to affect rendering order of mesh instances.
      * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
+     * @property {pc.callbacks.CalculateSortDistance} calculateSortDistance In some circumstances mesh instances are sorted by a distance calculation to determine their rendering order.
+     * Set this callback to override the default distance calculation, which gives the dot product of the camera forward vector and the vector between the camera position and
+     * the center of the mesh instance's axis-aligned bounding box. This option can be particularly useful for rendering transparent meshes in a better order than default.
      * @property {boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
@@ -135,6 +138,7 @@ Object.assign(pc, function () {
         this.pick = true;
         this._updateAabb = true;
         this._updateAabbFunc = null;
+        this._calculateSortDistance = null;
 
         // 64-bit integer key that defines render order of this mesh instance
         this.updateKey();
@@ -441,6 +445,15 @@ Object.assign(pc, function () {
         set: function (layer) {
             this._layer = layer;
             this.updateKey();
+        }
+    });
+
+    Object.defineProperty(MeshInstance.prototype, 'calculateSortDistance', {
+        get: function () {
+            return this._calculateSortDistance;
+        },
+        set: function (calculateSortDistance) {
+            this._calculateSortDistance = calculateSortDistance;
         }
     });
 
