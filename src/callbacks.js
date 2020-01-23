@@ -79,6 +79,14 @@
  */
 
 /**
+ * @callback pc.callbacks.CalculateSortDistance
+ * @description Callback used by {@link pc.Layer} to calculate the "sort distance" for a {@link pc.MeshInstance}, which determines its place in the render order.
+ * @param {pc.MeshInstance} meshInstance - The mesh instance.
+ * @param {pc.Vec3} cameraPosition - The position of the camera.
+ * @param {pc.Vec3} cameraForward - The forward vector of the camera.
+ */
+
+/**
  * @callback pc.callbacks.VrCamera
  * @description Callback used by {@link pc.CameraComponent#enterVr} and {@link pc.CameraComponent#exitVr}.
  * @param {string|null} err - On success it is null on failure it is the error message.

@@ -661,6 +661,10 @@ Object.assign(pc, function () {
             drawCall = drawCalls[i];
             if (drawCall.command) continue;
             if (drawCall.layer <= pc.LAYER_FX) continue; // Only alpha sort mesh instances in the main world (backwards comp)
+            if (drawCall.calculateSortDistance) {
+                drawCall.zdist = drawCall.calculateSortDistance(drawCall, camPos, camFwd);
+                continue;
+            }
             meshPos = drawCall.aabb.center;
             tempx = meshPos.x - camPos.x;
             tempy = meshPos.y - camPos.y;
