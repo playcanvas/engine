@@ -97,7 +97,7 @@ Object.assign(pc, function () {
      * @property {boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
      * @property {pc.callbacks.CalculateSortDistance} calculateSortDistance Set this value to override the default calculation for the "sort distance" for this mesh instance, used to determine its place in the render order.
      * Arguments:
-     * 
+     *
      * {pc.MeshInstance} meshInstance - The mesh instance.
      * {pc.Vec3} cameraPosition - The position of the camera.
      * {pc.Vec3} cameraForward - The forward vector of the camera.
