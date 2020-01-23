@@ -78,7 +78,7 @@
  * @param {number} view - Type of view. Can be pc.VIEW_CENTER, pc.VIEW_LEFT or pc.VIEW_RIGHT. Left and right are only used in stereo rendering.
  */
 
- /**
+/**
  * @callback pc.callbacks.CalculateSortDistance
  * @description Callback used by {@link pc.Layer} to calculate the "sort distance" for a {@link pc.MeshInstance}, which determines its place in the render order.
  * @param {pc.MeshInstance} meshInstance - The mesh instance.
