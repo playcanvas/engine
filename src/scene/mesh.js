@@ -96,6 +96,11 @@ Object.assign(pc, function () {
      * Only used when mesh instances are added to a {@link pc.Layer} with {@link pc.Layer#opaqueSortMode} or {@link pc.Layer#transparentSortMode} (depending on the material) set to {@link pc.SORTMODE_MANUAL}.
      * @property {boolean} visibleThisFrame Read this value in {@link pc.Layer#onPostCull} to determine if the object is actually going to be rendered.
      * @property {pc.callbacks.CalculateSortDistance} calculateSortDistance Set this value to override the default calculation for the "sort distance" for this mesh instance, used to determine its place in the render order.
+     * Arguments:
+     * 
+     * {pc.MeshInstance} meshInstance - The mesh instance.
+     * {pc.Vec3} cameraPosition - The position of the camera.
+     * {pc.Vec3} cameraForward - The forward vector of the camera.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
      * var mesh = pc.createBox(graphicsDevice);
