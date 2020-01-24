@@ -48,7 +48,8 @@ var categories = [
     }, {
         name: "physics",
         examples: [
-            "falling-shapes"
+            "falling-shapes",
+            "collision-offset"
         ]
     }, {
         name: "sound",

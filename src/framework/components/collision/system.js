@@ -176,7 +176,7 @@ Object.assign(pc, function () {
             var data = {
                 enabled: src.data.enabled,
                 type: src.data.type,
-                offset: src.data.offset,
+                offset: [src.data.offset.x, src.data.offset.y, src.data.offset.z],
                 halfExtents: [src.data.halfExtents.x, src.data.halfExtents.y, src.data.halfExtents.z],
                 radius: src.data.radius,
                 axis: src.data.axis,
@@ -608,7 +608,7 @@ Object.assign(pc, function () {
         },
 
         initializeComponentData: function (component, _data, properties) {
-            properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
+            properties = ['type', 'offset', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
 
             // duplicate the input data because we are modifying it
             var data = {};
@@ -640,6 +640,10 @@ Object.assign(pc, function () {
 
             if (data.halfExtents && pc.type(data.halfExtents) === 'array') {
                 data.halfExtents = new pc.Vec3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]);
+            }
+
+            if (data.offset && pc.type(data.offset) === 'array') {
+                data.offset = new pc.Vec3(data.offset[0], data.offset[1], data.offset[2]);
             }
 
             var impl = this._createImplementation(data.type);

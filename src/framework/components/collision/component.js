@@ -62,7 +62,7 @@ Object.assign(pc, function () {
      * <li><strong>mesh</strong>: A collision volume that uses a model asset as its shape.</li>
      * <li><strong>sphere</strong>: A sphere-shaped collision volume.</li>
      * </ul>
-     * @property {pc.Vec3} offset The offset that the component position have from its entity position.
+     * @property {pc.Vec3} offset The local space offset of the collision component in relation to its owner entity.
      * @property {pc.Vec3} halfExtents The half-extents of the box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5]
      * @property {Number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision volumes. Defaults to 0.5
      * @property {Number} axis The local space axis with which the capsule, cylinder or cone-shaped collision volume's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
@@ -78,7 +78,7 @@ Object.assign(pc, function () {
         this.entity.on('insert', this._onInsert, this);
 
         this.on('set_type', this.onSetType, this);
-        this.on('set_offset', this.onSetOffset);
+        this.on('set_offset', this.onSetOffset, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         this.on('set_radius', this.onSetRadius, this);
         this.on('set_height', this.onSetHeight, this);
@@ -135,8 +135,9 @@ Object.assign(pc, function () {
         },
 
         onSetOffset: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                this.system.recreatePhysicalShapes(this); // Check that !
+            var rigidbody = this.entity.rigidbody;
+            if (this.data.initialized && rigidbody && !oldValue.equals(newValue)) {
+                rigidbody.syncEntityToBody();
             }
         },
 

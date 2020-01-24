@@ -608,11 +608,11 @@ Object.assign(pc, function () {
             if (body) {
                 var pos = this.entity.getPosition();
                 var rot = this.entity.getRotation();
+                var offset = this.entity.collision.offset;
 
                 var transform = body.getWorldTransform();
                 var origin = transform.getOrigin();
-                origin.setValue(pos.x, pos.y, pos.z);
-
+                origin.setValue(pos.x + offset.x, pos.y + offset.y, pos.z + offset.z);
                 ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
                 transform.setRotation(ammoQuat);
 
@@ -646,8 +646,11 @@ Object.assign(pc, function () {
 
                     var p = ammoTransform.getOrigin();
                     var q = ammoTransform.getRotation();
-                    this.entity.setPosition(p.x(), p.y(), p.z());
                     this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
+                    var rot = this.entity.getRotation();
+
+                    var rotatedOffset = rot.transformVector(this.entity.collision.offset);
+                    this.entity.setPosition(p.x() - rotatedOffset.x, p.y() - rotatedOffset.y, p.z() - rotatedOffset.z);
                 }
             }
         },

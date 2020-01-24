@@ -41,14 +41,14 @@ Object.assign(pc, function () {
                 shape.calculateLocalInertia(mass, localInertia);
 
                 var pos = entity.getPosition();
-                var offsetPos = pos + data.offset;
                 var rot = entity.getRotation();
                 ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+                console.log("Collision/Trigger => Assign/Initialize");
 
                 var startTransform = new Ammo.btTransform();
                 startTransform.setIdentity();
                 var origin = startTransform.getOrigin();
-                origin.setValue(offsetPos.x, offsetPos.y, offsetPos.z);
+                origin.setValue(pos.x + data.offset.x, pos.y + data.offset.y, pos.y + data.offset.y);
                 startTransform.setRotation(ammoQuat);
 
                 var motionState = new Ammo.btDefaultMotionState(startTransform);
@@ -89,12 +89,11 @@ Object.assign(pc, function () {
             var body = this.body;
             if (body) {
                 var position = this.entity.getPosition();
-                var offsetPosition = position + data.offset;
                 var rotation = this.entity.getRotation();
 
                 var transform = body.getWorldTransform();
                 var origin = transform.getOrigin();
-                origin.setValue(offsetPosition.x, offsetPosition.y, offsetPosition.z);
+                origin.setValue(position.x + data.offset.x, position.y + data.offset.y, position.z + data.offset.z);
 
                 ammoQuat.setValue(rotation.x, rotation.y, rotation.z, rotation.w);
                 transform.setRotation(ammoQuat);
