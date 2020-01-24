@@ -192,6 +192,9 @@ Object.assign(pc, function () {
         this.renderTarget = null;
         this.feedback = null;
 
+        // enable temporary texture unit workaround on desktop safari
+        this._tempEnableSafariTextureUnitWorkaround = !!window.safari;
+
         // local width/height without pixelRatio applied
         this._width = 0;
         this._height = 0;
@@ -1115,6 +1118,15 @@ Object.assign(pc, function () {
             this.boundBuffer = null;
             this.boundElementBuffer = null;
 
+            // clear texture units once a frame on desktop safari
+            if (this._tempEnableSafariTextureUnitWorkaround) {
+                for (var unit = 0; unit < this.textureUnits.length; ++unit) {
+                    for (var slot = 0; slot < 3; ++slot) {
+                        this.textureUnits[unit][slot] = null;
+                    }
+                }
+            }
+
             // Set the render target
             var target = this.renderTarget;
             if (target) {
@@ -1904,7 +1916,7 @@ Object.assign(pc, function () {
                 // Ensure the texture is currently bound to the correct target on the specified texture unit.
                 // If the texture is already bound to the correct target on the specified unit, there's no need
                 // to actually make the specified texture unit active because the texture itself does not need
-                // to be udpated.
+                // to be updated.
                 this.bindTextureOnUnit(texture, textureUnit);
             }
         },
