@@ -945,10 +945,10 @@ pc.programlib.standard = {
                 code += options.packedNormal ? chunks.normalXYPS : chunks.normalXYZPS;
 
                 var transformedNormalMapUv = this._getUvSourceExpression("normalMapTransform", "normalMapUv", options);
-                if (options.needsNormalFloat) {
-                    code += (options.fastTbn ? chunks.normalMapFloatTBNfastPS : chunks.normalMapFloatPS).replace(/\$UV/g, transformedNormalMapUv);
-                } else {
+                if (options.normalizeNormalMap) {
                     code += chunks.normalMapPS.replace(/\$UV/g, transformedNormalMapUv);
+                } else {
+                    code += chunks.normalMapFastPS.replace(/\$UV/g, transformedNormalMapUv);
                 }
                 if (!options.hasTangents) tbn = tbn.replace(/\$UV/g, transformedNormalMapUv);
                 code += tbn;
@@ -979,10 +979,10 @@ pc.programlib.standard = {
 
         if (options.useSpecular && (lighting || reflections)) {
             if (options.specularAntialias && options.normalMap) {
-                if (options.needsNormalFloat && needsNormal) {
-                    code += chunks.specularAaToksvigFloatPS;
-                } else {
+                if (options.normalizeNormalMap && needsNormal) {
                     code += chunks.specularAaToksvigPS;
+                } else {
+                    code += chunks.specularAaToksvigFastPS;
                 }
             } else {
                 code += chunks.specularAaNonePS;
