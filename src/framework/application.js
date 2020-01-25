@@ -252,7 +252,6 @@ Object.assign(pc, function () {
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
         this._resolutionMode = pc.RESOLUTION_FIXED;
-        this._allowResize = true;
 
         // for compatibility
         this.context = this;
@@ -1383,7 +1382,9 @@ Object.assign(pc, function () {
          * @returns {Object} A object containing the values calculated to use as width and height.
          */
         resizeCanvas: function (width, height) {
-            if (!this._allowResize) return; // prevent resizing (e.g. if presenting in VR HMD)
+            // prevent resizing when in XR session
+            if (this.xr && this.xr.session)
+                return;
 
             var windowWidth = window.innerWidth;
             var windowHeight = window.innerHeight;

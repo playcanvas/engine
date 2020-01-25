@@ -36,6 +36,9 @@ Object.assign(pc, function () {
         this.depthNear = 0.1;
         this.depthFar = 1000;
 
+        this._width = 0;
+        this._height = 0;
+
         // TODO
         // 1. HMD class with its params
         // 2. Space class
@@ -101,7 +104,7 @@ Object.assign(pc, function () {
         this._session = session;
 
         var onVisibilityChange = function () {
-            self.fire('visibility:change',  session.visibilityState);
+            self.fire('visibility:change', session.visibilityState);
         };
 
         var onInputSourcesChange = function (evt) {
@@ -121,6 +124,8 @@ Object.assign(pc, function () {
             self._inputSources = [];
             self._pose = null;
             self.views = [];
+            self._width = 0;
+            self._height = 0;
 
             session.removeEventListener('end', onEnd);
             session.removeEventListener('visibilitychange', onVisibilityChange);
@@ -178,6 +183,14 @@ Object.assign(pc, function () {
         if (! this._session) return;
 
         var i, view, viewRaw, layer, viewport, position, rotation;
+
+        var width = frame.session.renderState.baseLayer.framebufferWidth;
+        var height = frame.session.renderState.baseLayer.framebufferHeight;
+        if (this._width !== width || this._height !== height) {
+            this._width = width;
+            this._height = height;
+            this.app.graphicsDevice.resizeCanvas(width, height);
+        }
 
         this._pose = frame.getViewerPose(this._referenceSpace);
 

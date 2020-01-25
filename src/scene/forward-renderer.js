@@ -2225,7 +2225,6 @@ Object.assign(pc, function () {
             }
 
             for (pass = 0; pass < passes; pass++) {
-
                 if (type === pc.LIGHTTYPE_POINT) {
                     shadowCamNode.setRotation(pointLightRotations[pass]);
                     shadowCam.renderTarget = light._shadowCubeMap[pass];
