@@ -143,6 +143,18 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @readonly
+     * @name pc.CameraComponent#xr
+     * @type Boolean
+     * @description Queries if camera is in XR mode.
+     */
+    Object.defineProperty(CameraComponent.prototype, "xr", {
+        get: function () {
+            return !! this.camera.xr;
+        }
+    });
+
     Object.assign(CameraComponent.prototype, {
         /**
          * @function
@@ -418,10 +430,44 @@ Object.assign(pc, function () {
             this.data.isRendering = false;
         },
 
-        // TODO
-        // better API
-        enterXr: function () {
-            this.camera.xr = this.system.app.xr;
+        /**
+         * @function
+         * @name pc.CameraComponent#startXr
+         * @description Attempt to start XR session with this camera
+         * @param {pc.callbacks.XrErrSession} callback - Function called once to indicate success or failure. The callback takes two arguments (err) and (session).
+         * @example
+         * // On an entity with a camera component
+         * this.entity.camera.startXr(function (err, session) {
+         *     if (err) {
+         *         console.error(err);
+         *     } else {
+         *         // in XR!
+         *     }
+         * });
+         */
+        startXr: function (type, callback) {
+            this.system.app.xr.sessionStart(this.camera, type, callback);
+        },
+
+        /**
+         * @function
+         * @name pc.CameraComponent#endXr
+         * @description Attempt to end XR of this camera
+         * @param {pc.callbacks.XrSession} callback - Function called once session is ended. The callback takes one argument (old session).
+         * @example
+         * // On an entity with a camera component
+         * this.entity.camera.endXr(function (session) {
+         *     // not anymore in XR!
+         * });
+         */
+        endXr: function(callback) {
+            if (! this.camera.xr || ! this.camera.xr.session)
+                return;
+
+            if (callback)
+                this.camera.xr.once('session:end', callback);
+
+            this.camera.xr.sessionEnd();
         }
     });
 

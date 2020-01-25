@@ -13,6 +13,32 @@ Object.assign(pc, function () {
         m3.data[8] = m4.data[10];
     }
 
+    var sessionTypes = {
+        /**
+         * @constant
+         * @type String
+         * @name pc.XR_TYPE_INLINE
+         * @description XR session type. TODO
+         */
+        XR_TYPE_INLINE: 'inline',
+
+        /**
+         * @constant
+         * @type String
+         * @name pc.XR_TYPE_IMMERSIVE_VR
+         * @description XR session type. TODO
+         */
+        XR_TYPE_IMMERSIVE_VR: 'immersive-vr',
+
+        /**
+         * @constant
+         * @type String
+         * @name pc.XR_TYPE_IMMERSIVE_AR
+         * @description XR session type. TODO
+         */
+        XR_TYPE_IMMERSIVE_AR: 'immersive-ar'
+    };
+
     var XrManager = function (app) {
         pc.EventHandler.call(this);
 
@@ -21,12 +47,19 @@ Object.assign(pc, function () {
         this.app = app;
 
         this._supported = !! navigator.xr;
-        this._available = false;
+
+        this._available = { };
+        for(var key in sessionTypes) {
+            this._available[sessionTypes[key]] = false;
+        }
+
+        this._type = null;
         this._session = null;
         this._baseLayer = null;
         this._referenceSpace = null;
         this._inputSources = [];
 
+        this._camera = null;
         this._pose = null;
         this.views = [];
         this.viewsPool = [];
@@ -49,34 +82,45 @@ Object.assign(pc, function () {
 
         if (this._supported) {
             navigator.xr.addEventListener('devicechange', function () {
-                self._deviceVailabilityCheck();
+                self._deviceAvailabilityCheck();
             });
-            this._deviceVailabilityCheck();
+            this._deviceAvailabilityCheck();
         }
     };
     XrManager.prototype = Object.create(pc.EventHandler.prototype);
     XrManager.prototype.constructor = XrManager;
 
-    XrManager.prototype._deviceVailabilityCheck = function () {
+    XrManager.prototype._deviceAvailabilityCheck = function () {
+        for(var key in this._available) {
+            this._sessionSupportCheck(key);
+        }
+    };
+
+    XrManager.prototype._sessionSupportCheck = function (type) {
         var self = this;
 
-        navigator.xr.isSessionSupported('immersive-vr').then(function (available) {
-            if (self._available === available)
+        navigator.xr.isSessionSupported(type).then(function (available) {
+            if (self._available[type] === available)
                 return;
 
-            self._available = available;
-            self.fire('available', self._available);
+            self._available[type] = available;
+            self.fire('available', type, available);
+            self.fire('available:' + type, available);
         });
     };
 
-    XrManager.prototype.sessionStart = function (callback) {
-        if (! this._available)
+    XrManager.prototype.sessionStart = function (camera, type, callback) {
+        if (! this._available[type])
             return callback(new Error('XR is not available'));
 
         if (this._session)
             return callback(new Error('XR session is already started'));
 
         var self = this;
+
+        this._camera = camera;
+        this._camera.xr = this;
+        this._type = type;
 
         // TODO
         // makeXRCompatible
@@ -86,7 +130,7 @@ Object.assign(pc, function () {
         // 3. probably immersive-vr will fail to be created
         // 4. call makeXRCompatible, very likely will lead to context loss
 
-        navigator.xr.requestSession('immersive-vr').then(function (session) {
+        navigator.xr.requestSession(type).then(function (session) {
             self._onSessionStart(session, callback);
         });
     };
@@ -126,6 +170,12 @@ Object.assign(pc, function () {
             self.views = [];
             self._width = 0;
             self._height = 0;
+            self._type = null;
+
+            if (self._camera) {
+                self._camera.xr = null;
+                self._camera = null;
+            }
 
             session.removeEventListener('end', onEnd);
             session.removeEventListener('visibilitychange', onVisibilityChange);
@@ -189,13 +239,14 @@ Object.assign(pc, function () {
         if (this._width !== width || this._height !== height) {
             this._width = width;
             this._height = height;
-            this.app.graphicsDevice.resizeCanvas(width, height);
+            this.app.graphicsDevice.setResolution(width, height);
         }
 
         this._pose = frame.getViewerPose(this._referenceSpace);
+        var lengthNew = this._pose ? this._pose.views.length : 0;
 
-        if (this._pose.views.length > this.views.length) {
-            for (i = 0; i <= (this._pose.views.length - this.views.length); i++) {
+        if (lengthNew > this.views.length) {
+            for (i = 0; i <= (lengthNew - this.views.length); i++) {
                 view = this.viewsPool.pop();
                 if (! view) {
                     view = {
@@ -217,53 +268,70 @@ Object.assign(pc, function () {
 
                 this.views.push(view);
             }
-        } else if (this._pose.views.length <= this.views.length) {
-            for (i = 0; i < (this.views.length - this._pose.views.length); i++) {
+        } else if (lengthNew <= this.views.length) {
+            for (i = 0; i < (this.views.length - lengthNew); i++) {
                 this.viewsPool.push(this.views.pop());
             }
         }
 
         this.position.set(0, 0, 0);
 
-        layer = frame.session.renderState.baseLayer;
+        if (this._pose) {
+            layer = frame.session.renderState.baseLayer;
 
-        for (i = 0; i < this._pose.views.length; i++) {
-            viewRaw = this._pose.views[i];
-            view = this.views[i];
-            viewport = layer.getViewport(viewRaw);
+            for (i = 0; i < this._pose.views.length; i++) {
+                viewRaw = this._pose.views[i];
+                view = this.views[i];
+                viewport = layer.getViewport(viewRaw);
 
-            view.viewport.x = viewport.x;
-            view.viewport.y = viewport.y;
-            view.viewport.z = viewport.width;
-            view.viewport.w = viewport.height;
+                view.viewport.x = viewport.x;
+                view.viewport.y = viewport.y;
+                view.viewport.z = viewport.width;
+                view.viewport.w = viewport.height;
 
-            view.projMat.set(viewRaw.projectionMatrix);
-            view.viewMat.set(viewRaw.transform.inverse.matrix);
-            view.viewInvMat.set(viewRaw.transform.matrix);
-            view.projViewMat.mul2(view.projMat, view.viewMat);
-            mat3FromMat4(view.viewMat3, view.viewMat);
+                view.projMat.set(viewRaw.projectionMatrix);
+                view.viewMat.set(viewRaw.transform.inverse.matrix);
+                view.viewInvMat.set(viewRaw.transform.matrix);
+                view.projViewMat.mul2(view.projMat, view.viewMat);
+                mat3FromMat4(view.viewMat3, view.viewMat);
 
-            position = viewRaw.transform.position;
-            view.position.set(position.x, position.y, position.z);
-            this.position.add(view.position);
+                position = viewRaw.transform.position;
+                view.position.set(position.x, position.y, position.z);
+                this.position.add(view.position);
 
-            rotation = viewRaw.transform.orientation;
-            view.rotation.set(rotation.x, rotation.y, rotation.z, rotation.w);
-            this.rotation.copy(view.rotation);
+                rotation = viewRaw.transform.orientation;
+                view.rotation.set(rotation.x, rotation.y, rotation.z, rotation.w);
+                this.rotation.copy(view.rotation);
+            }
+
+            this.position.scale(1 / this._pose.views.length);
         }
 
-        this.position.scale(1 / this._pose.views.length);
+        this._camera._node.setLocalPosition(this.position);
+        this._camera._node.setLocalRotation(this.rotation);
     };
 
-    Object.defineProperty(XrManager.prototype, 'isSupported', {
+    Object.defineProperty(XrManager.prototype, 'supported', {
         get: function () {
             return this._supported;
         }
     });
 
-    Object.defineProperty(XrManager.prototype, 'isAvailable', {
+    Object.defineProperty(XrManager.prototype, 'available', {
         get: function () {
             return this._available;
+        }
+    });
+
+    Object.defineProperty(XrManager.prototype, 'active', {
+        get: function () {
+            return !! this._session;
+        }
+    });
+
+    Object.defineProperty(XrManager.prototype, 'type', {
+        get: function () {
+            return this._type;
         }
     });
 
@@ -288,7 +356,12 @@ Object.assign(pc, function () {
         }
     });
 
-    return {
+
+    var obj = {
         XrManager: XrManager
     };
+    Object.assign(obj, sessionTypes);
+
+
+    return obj;
 }());

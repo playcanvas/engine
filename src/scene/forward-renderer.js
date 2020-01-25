@@ -553,10 +553,6 @@ Object.assign(pc, function () {
             if (camera.xr && camera.xr.session) {
                 // TODO
                 // respect parent transform
-
-                camera._node.setLocalPosition(camera.xr.position);
-                camera._node.setLocalRotation(camera.xr.rotation);
-
                 camera.nearClip = camera.xr.session.renderState.depthNear;
                 camera.farClip = camera.xr.session.renderState.depthFar;
 
