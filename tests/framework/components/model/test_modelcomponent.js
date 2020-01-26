@@ -33,12 +33,12 @@ describe("pc.ModelComponent", function () {
 
     var loadAssets = function (cb) {
         var assetlist = [
-            new pc.Asset('Statue_1.json', 'model', {
-                url: 'base/examples/assets/statue/Statue_1.json'
+            new pc.Asset('statue.json', 'model', {
+                url: 'base/examples/assets/models/statue/statue.json'
             }),
-            new pc.Asset('Statue_Material', 'material', {
-                url: 'base/examples/assets/statue/11268/phong9.json'
-            })
+            new pc.Asset('stone.json', 'material', {
+                url: 'base/examples/assets/models/statue/26109516/stone.json'
+            }),
         ];
 
         loadAssetList(assetlist, function () {
@@ -367,8 +367,8 @@ describe("pc.ModelComponent", function () {
     });
 
     it("Asset materials unbound on destroy", function (done) {
-        var modelAsset = new pc.Asset('Statue_1.json', 'model', {
-            url: 'base/examples/assets/statue/Statue_1.json'
+        var modelAsset = new pc.Asset('statue.json', 'model', {
+            url: 'base/examples/assets/models/statue/statue.json'
         }, {
             mapping: [{
                 material: assets.material.id
@@ -395,20 +395,20 @@ describe("pc.ModelComponent", function () {
     });
 
     it("Asset materials unbound on change model", function (done) {
-        var modelAsset = new pc.Asset('Statue_1.json', 'model', {
-            url: 'base/examples/assets/statue/Statue_1.json'
+        var modelAsset = new pc.Asset('statue.json', 'model', {
+            url: 'base/examples/assets/models/statue/statue.json'
         }, {
             mapping: [{
                 material: assets.material.id
             }]
         });
 
-        var materialAsset2 = new pc.Asset('material2', 'material', {
-            url: 'base/examples/assets/statue/11268/phong9.json?t=1'
+        var materialAsset2 = new pc.Asset('stone2.json', 'material', {
+            url: 'base/examples/assets/models/statue/26109516/stone.json?t=1'
         });
 
-        var modelAsset2 = new pc.Asset('Statue_2.json', 'model', {
-            url: 'base/examples/assets/statue/Statue_1.json?t=1'
+        var modelAsset2 = new pc.Asset('statue2.json', 'model', {
+            url: 'base/examples/assets/models/statue/statue.json?t=1'
         }, {
             mapping: [{
                 material: materialAsset2.id

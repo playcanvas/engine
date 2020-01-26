@@ -31,8 +31,8 @@ describe("pc.TextElement", function () {
         element.wrapLines = true;
         element.width = 200;
 
-        fontAsset = new pc.Asset("Arial", "font", {
-            url: "base/examples/assets/Arial/Arial.json"
+        fontAsset = new pc.Asset("arial.json", "font", {
+            url: "base/examples/assets/fonts/arial.json"
         });
 
         fontAsset.ready(function () {
@@ -756,8 +756,8 @@ describe("pc.TextElement", function () {
         element.height = 50;
         element.text = "ab\nab";
         element.autoFitHeight = true;
-        expect(element.fontSize).to.equal(23);
-        expect(element._text._scaledLineHeight).to.equal(23);
+        expect(element.fontSize).to.equal(25);
+        expect(element._text._scaledLineHeight).to.equal(25);
     });
 
     it("does not reduce font size when height is larger then the element height and autoFitHeight is false", function () {
@@ -1505,8 +1505,8 @@ describe("pc.TextElement", function () {
     });
 
     it('changing the locale changes the font asset', function (done) {
-        assets.font2 = new pc.Asset("Arial2", "font", {
-            url: "base/examples/assets/Arial/Arial2.json"
+        assets.font2 = new pc.Asset("courier.json", "font", {
+            url: "base/examples/assets/fonts/courier.json"
         });
 
         app.assets.add(assets.font2);
@@ -1530,8 +1530,8 @@ describe("pc.TextElement", function () {
     });
 
     it('text element that does not use localization uses the default font asset not its localized variant', function (done) {
-        assets.font2 = new pc.Asset("Arial2", "font", {
-            url: "base/examples/assets/Arial/Arial2.json"
+        assets.font2 = new pc.Asset("courier.json", "font", {
+            url: "base/examples/assets/fonts/courier.json"
         });
 
         app.assets.add(assets.font2);
@@ -1552,8 +1552,8 @@ describe("pc.TextElement", function () {
     });
 
     it('if text element is disabled it does not automatically load localizedAssets', function () {
-        assets.font2 = new pc.Asset("Arial2", "font", {
-            url: "base/examples/assets/Arial/Arial2.json"
+        assets.font2 = new pc.Asset("courier.json", "font", {
+            url: "base/examples/assets/fonts/courier.json"
         });
 
         app.assets.add(assets.font2);

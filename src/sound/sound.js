@@ -2,14 +2,14 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.Sound
      * @classdesc Represents the resource of an audio asset.
-     * @param {HTMLAudioElement|AudioBuffer} resource If the Web Audio API is supported, pass an AudioBuffer object, otherwise
+     * @param {HTMLAudioElement|AudioBuffer} resource - If the Web Audio API is supported, pass an AudioBuffer object, otherwise
      * an Audio object.
-     * @property {AudioBuffer} buffer If the Web Audio API is supported this contains the audio data
-     * @property {HTMLAudioElement} audio If the Web Audio API is not supported this contains the audio data
-     * @property {Number} duration Returns the duration of the sound. If the sound is not loaded it returns 0.
+     * @property {AudioBuffer} buffer If the Web Audio API is supported this contains the audio data.
+     * @property {HTMLAudioElement} audio If the Web Audio API is not supported this contains the audio data.
+     * @property {number} duration Returns the duration of the sound. If the sound is not loaded it returns 0.
      */
     var Sound = function (resource) {
         if (resource instanceof Audio) {

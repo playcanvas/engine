@@ -14,13 +14,13 @@ Object.assign(pc, function () {
 
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.ElementDragHelper
-     * @extends pc.EventHandler
-     * @description Create a new ElementDragHelper
+     * @augments pc.EventHandler
+     * @description Create a new ElementDragHelper.
      * @classdesc Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
-     * @param {pc.ElementComponent} element The Element that should become draggable.
-     * @param {String} [axis] Optional axis to constrain to, either 'x', 'y' or null.
+     * @param {pc.ElementComponent} element - The Element that should become draggable.
+     * @param {string} [axis] - Optional axis to constrain to, either 'x', 'y' or null.
      */
     var ElementDragHelper = function ElementDragHelper(element, axis) {
         pc.EventHandler.call(this);
@@ -71,8 +71,10 @@ Object.assign(pc, function () {
             // Note that we handle release events directly on the window object, rather than
             // on app.mouse or app.touch. This is in order to correctly handle cases where the
             // user releases the mouse/touch outside of the window.
-            this._app.mouse[onOrOff]('mousemove', this._onMove, this);
-            window[addOrRemoveEventListener]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            if (this._app.mouse) {
+                this._app.mouse[onOrOff]('mousemove', this._onMove, this);
+                window[addOrRemoveEventListener]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            }
 
             if (pc.platform.touch) {
                 this._app.touch[onOrOff]('touchmove', this._onMove, this);
@@ -246,5 +248,5 @@ Object.assign(pc, function () {
  * @event
  * @name pc.ElementDragHelper#drag:move
  * @description Fired whenever the position of the dragged element changes.
- * @param {pc.Vec3} value The current position.
+ * @param {pc.Vec3} value - The current position.
  */

@@ -1,9 +1,9 @@
 Object.assign(pc, function () {
     /**
      * @private
-     * @constructor
+     * @class
      * @name pc.CameraComponentData
-     * @extends pc.ComponentData
+     * @augments pc.ComponentData
      * @classdesc ComponentData structure for Camera components.
      */
     var CameraComponentData = function () {

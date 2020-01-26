@@ -18,7 +18,7 @@ void getOpacity() {
     #endif
 
     #ifdef MAPVERTEX
-        dAlpha *= saturate(vVertexColor.$VC);
+        dAlpha *= clamp(vVertexColor.$VC, 0.0, 1.0);
     #endif
 }
 
