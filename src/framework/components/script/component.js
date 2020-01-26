@@ -481,10 +481,10 @@ Object.assign(pc, function () {
          * @description Create a script instance using name of a {@link pc.ScriptType} and attach to an entity script component.
          * @param {string|pc.ScriptType} name - The name of the Script Type (or alternatively the {@link pc.ScriptType} to instantiate).
          * @param {object} [args] - Object with arguments for a script.
-         * @param {Boolean} [args.enabled] - If script instance is enabled after creation. Defaults to true.
+         * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to true.
          * @param {object} [args.attributes] - Object with values for attributes (if any), where key is name of an attribute.
-         * @param {Boolean} [args.preloading] - If script instance is created during preload. If true, script and attributes must be initialized manually. Defaults to false.
-         * @param {Number} [args.ind] - The index where to insert the script instance at. Defaults to -1, which means append it at the end.
+         * @param {boolean} [args.preloading] - If script instance is created during preload. If true, script and attributes must be initialized manually. Defaults to false.
+         * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to -1, which means append it at the end.
          * @returns {pc.ScriptType} Returns an instance of a {@link pc.ScriptType} if successfully attached to an entity,
          * or null if it failed because a script with a same name has already been added
          * or if the {@link pc.ScriptType} cannot be found by name in the {@link pc.ScriptRegistry}.
