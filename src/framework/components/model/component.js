@@ -578,7 +578,7 @@ Object.assign(pc, function () {
                         if (!system.torus) {
                             system.torus = pc.createTorus(gd, {
                                 tubeRadius: 0.15,
-                                ringRadius: 0.35,
+                                ringRadius: 0.35
                             });
                         }
                         mesh = system.torus;
