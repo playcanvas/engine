@@ -18,7 +18,7 @@ Object.assign(pc, function () {
      * shader.
      * @param {string} definition.vshader - Vertex shader source (GLSL code).
      * @param {string} definition.fshader - Fragment shader source (GLSL code).
-     * @param {boolean} definition.useTransformFeedback - Specifies that this shader outputs post-VS data to a buffer.
+     * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs post-VS data to a buffer.
      * @example
      * // Create a shader that renders primitives with a solid red color
      * var shaderDefinition = {
