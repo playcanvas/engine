@@ -18,6 +18,7 @@ Object.assign(pc, function () {
      * * "cylinder": The component will render a cylinder (radius 0.5, height 1)
      * * "plane": The component will render a plane (1 unit in each dimension)
      * * "sphere": The component will render a sphere (radius 0.5)
+     * * "torus": The component will render a torus (ring radius 0.35, tube radius 0.15)
      *
      * @property {pc.Asset|number} asset The asset for the model (only applies to models of type 'asset') - can also be an asset id.
      * @property {boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
@@ -572,6 +573,16 @@ Object.assign(pc, function () {
                         }
                         mesh = system.sphere;
                         this._area = { x: Math.PI, y: Math.PI, z: Math.PI, uv: 1 };
+                        break;
+                    case 'torus':
+                        if (!system.torus) {
+                            system.torus = pc.createTorus(gd, {
+                                tubeRadius: 0.15,
+                                ringRadius: 0.35,
+                            });
+                        }
+                        mesh = system.torus;
+                        this._area = { x: 1, y: 1, z: 1, uv: 1 }; // TODO: calculate this correctly
                         break;
                     default:
                         throw new Error("Invalid model type: " + value);
