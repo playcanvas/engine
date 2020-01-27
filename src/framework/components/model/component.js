@@ -9,7 +9,7 @@ Object.assign(pc, function () {
      * @description Create a new ModelComponent.
      * @param {pc.ModelComponentSystem} system - The ComponentSystem that created this Component.
      * @param {pc.Entity} entity - The Entity that this Component is attached to.
-     * @property {string} type The type of the model, which can be one of the following values:
+     * @property {string} type The type of the model, for example the name of a primitive. The following values are available:
      *
      * * "asset": The component will render a model asset
      * * "box": The component will render a box (1 unit in each dimension)
