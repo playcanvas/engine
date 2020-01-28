@@ -76,6 +76,17 @@ Object.assign(pc, function () {
             // select format based on supported formats
             var basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
 
+            // PVR does not support non-square or non-pot textures. In these cases we
+            // transcode to an uncompressed format.
+            if ((basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB ||
+                 basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGBA)) {
+                // if not power-of-two or not square
+                if (((width & (width - 1)) !== 0) || (width !== height)) {
+                    basisFormat = (basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB) ?
+                        BASIS_FORMAT.cTFRGB565 : BASIS_FORMAT.cTFRGBA4444;
+                }
+            }
+
             if (!basisFile.startTranscoding()) {
                 basisFile.close();
                 basisFile.delete();
@@ -94,7 +105,7 @@ Object.assign(pc, function () {
                 }
 
                 var i;
-                if (basisFormat === 14 /* BASIS_FORMAT.cTFRGB565 */ || basisFormat === 16 /* BASIS_FORMAT.cTFRGBA4444 */) {
+                if (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444) {
                     // 16 bit formats require Uint16 typed array
                     var dst16 = new Uint16Array(dstSize / 2);
                     for (i = 0; i < dstSize / 2; ++i) {
