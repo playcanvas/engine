@@ -582,7 +582,7 @@ Object.assign(pc, function () {
                             });
                         }
                         mesh = system.torus;
-                        this._area = { x: 1, y: 1, z: 1, uv: 1 }; // TODO: calculate this correctly
+                        this._area = { x: 2, y: 2, z: 2, uv: 2 / 3 };
                         break;
                     default:
                         throw new Error("Invalid model type: " + value);
