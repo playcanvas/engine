@@ -2,10 +2,10 @@ Object.assign(pc, function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.AnimationHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading {@link pc.Animation} resources
+     * @classdesc Resource handler used for loading {@link pc.Animation} resources.
      */
     var AnimationHandler = function () {
         this.retryRequests = false;

@@ -1,14 +1,14 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.VrManager
-     * @extends pc.EventHandler
+     * @augments pc.EventHandler
      * @classdesc Manage and update {@link pc.VrDisplay}s that are attached to this device.
      * @description Manage and update {@link pc.VrDisplay}s that are attached to this device.
-     * @param {pc.Application} app The main application
-     * @property {pc.VrDisplay[]} displays The list of {@link pc.VrDisplay}s that are attached to this device
-     * @property {pc.VrDisplay} display The default {@link pc.VrDisplay} to be used. Usually the first in the `displays` list
-     * @property {Boolean} isSupported Reports whether this device supports the WebVR API
+     * @param {pc.Application} app - The main application.
+     * @property {pc.VrDisplay[]} displays The list of {@link pc.VrDisplay}s that are attached to this device.
+     * @property {pc.VrDisplay} display The default {@link pc.VrDisplay} to be used. Usually the first in the `displays` list.
+     * @property {boolean} isSupported Reports whether this device supports the WebVR API.
      */
     var VrManager = function (app) {
         pc.EventHandler.call(this);
@@ -48,8 +48,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.VrManager#displayconnect
-     * @description Fired when an VR display is connected
-     * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been connected
+     * @description Fired when an VR display is connected.
+     * @param {pc.VrDisplay} display - The {@link pc.VrDisplay} that has just been connected.
      * @example
      * this.app.vr.on("displayconnect", function (display) {
      *     // use `display` here
@@ -59,8 +59,8 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.VrManager#displaydisconnect
-     * @description Fired when an VR display is disconnected
-     * @param {pc.VrDisplay} display The {@link pc.VrDisplay} that has just been disconnected
+     * @description Fired when an VR display is disconnected.
+     * @param {pc.VrDisplay} display - The {@link pc.VrDisplay} that has just been disconnected.
      * @example
      * this.app.vr.on("displaydisconnect", function (display) {
      *     // `display` is no longer connected
@@ -70,8 +70,8 @@ Object.assign(pc, function () {
     /**
      * @static
      * @name pc.VrManager.isSupported
-     * @type Boolean
-     * @description Reports whether this device supports the WebVR API
+     * @type {boolean}
+     * @description Reports whether this device supports the WebVR API.
      */
     if (typeof navigator !== 'undefined') {
         VrManager.isSupported = !!navigator.getVRDisplays;
@@ -93,7 +93,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.VrManager#destroy
-         * @description Remove events and clear up manager
+         * @description Remove events and clear up manager.
          */
         destroy: function () {
             this._detach();
@@ -102,7 +102,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.VrManager#poll
-         * @description Called once per frame to poll all attached displays
+         * @description Called once per frame to poll all attached displays.
          */
         poll: function () {
             var l = this.displays.length;

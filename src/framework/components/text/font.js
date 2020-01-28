@@ -3,13 +3,13 @@ Object.assign(pc, function () {
     pc.FONT_BITMAP = 'bitmap';
 
     /**
-     * @constructor
+     * @class
      * @name pc.Font
      * @classdesc Represents the resource of a font asset.
-     * @param {pc.Texture[]} textures The font textures
-     * @param {Object} data The font data
-     * @property {Number} intensity The font intensity
-     * @property {pc.Texture[]} textures The font textures
+     * @param {pc.Texture[]} textures - The font textures.
+     * @param {object} data - The font data.
+     * @property {number} intensity The font intensity.
+     * @property {pc.Texture[]} textures The font textures.
      */
     var Font = function (textures, data) {
         this.type = data ? data.type || pc.FONT_MSDF : pc.FONT_MSDF;

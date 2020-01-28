@@ -1,256 +1,80 @@
 <!DOCTYPE html>
-<html lang='en'>
-<head>
-    <meta charset="utf-8">
-    <title>PlayCanvas Examples</title>
-
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
-
-    <meta name="author" content="PlayCanvas" />
-    <meta name="description" content="" />
-    <meta name="keywords" content="" />
-
-    <link href="./style.css" rel="stylesheet" />
-</head>
-
-<body>
-    <h1 id='header'>
-        <img src='http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png' alt='logo' class='logo' />
-        <div class='back no-select'>&#9664;</div>
-        <span class='title'>PlayCanvas Engine Examples</span>
-    </h1>
-
-    <div id='examples' class='active'>
-
-        <div class='example' data-link='spinning_cube/index.html'>
-            <div class='inner'>
-                <img src="images/spinning_cube.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Spinning Cube</h2>
+<html>
+    <head>
+        <title>PlayCanvas Examples</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <link rel="icon" type="image/png" href="playcanvas-favicon.png" />
+        <link href="style.css" rel="stylesheet" />
+    </head>
+    <body>
+        <div class="sidenav-toggle">
+            <svg fill="white" id="Layer_1" style="enable-background:new 0 0 32 32;" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M4,10h24c1.104,0,2-0.896,2-2s-0.896-2-2-2H4C2.896,6,2,6.896,2,8S2.896,10,4,10z M28,14H4c-1.104,0-2,0.896-2,2  s0.896,2,2,2h24c1.104,0,2-0.896,2-2S29.104,14,28,14z M28,22H4c-1.104,0-2,0.896-2,2s0.896,2,2,2h24c1.104,0,2-0.896,2-2  S29.104,22,28,22z"/></svg>
         </div>
+        <div class="sidenav closed"></div>
+        <iframe id="example"></iframe>
 
-
-        <div class='example' data-link='spinning_cube/textured.html'>
-            <div class='inner'>
-                <img src="images/textured_cube.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Textured Spinning Cube</h2>
-        </div>
-
-        <div class='example' data-link='load_model/index.html'>
-            <div class='inner'>
-                <img src="images/load_model.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Load a Model</h2>
-        </div>
-
-        <div class='example' data-link='animation/index.html'>
-            <div class='inner'>
-                <img src="images/animation.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Animation</h2>
-        </div>
-
-        <div class='example' data-link='glb-asset/index.html'>
-            <div class='inner'>
-                <img src="images/animation.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>GLB Asset</h2>
-        </div>
-
-        <div class='example' data-link='light_and_shadows/index.html'>
-            <div class='inner'>
-                <img src="images/lights_and_shadows.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Light and Shadows</h2>
-        </div>
-
-        <div class='example' data-link='portal/index.html'>
-            <div class='inner'>
-                <img src="images/portal.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Portal</h2>
-        </div>
-
-        <div class='example' data-link='post_effects/index.html'>
-            <div class='inner'>
-                <img src="images/post_effects.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Post Effects</h2>
-        </div>
-
-        <div class='example' data-link='physics/falling_shapes/index.html'>
-            <div class='inner'>
-                <img src="images/physics.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Rigidbody Physics - Falling shapes</h2>
-        </div>
-
-        <div class='example' data-link='camera/first_person/index.html'>
-            <div class='inner'>
-                <img src="images/fps.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Fly Camera</h2>
-        </div>
-
-        <div class='example' data-link='audio/3D/index.html'>
-            <div class='inner'>
-                <img src="images/3D_audio.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>3D Positional Audio</h2>
-        </div>
-
-        <div class='example' data-link='particle_system/simple/index.html'>
-            <div class='inner'>
-                <img src="images/particle_system_simple.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Particle System: Simple</h2>
-        </div>
-
-        <div class='example' data-link='particle_system/sparks/index.html'>
-            <div class='inner'>
-                <img src="images/particle_system_sparks.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Particle System: Sparks</h2>
-        </div>
-
-        <div class='example' data-link='shaders/custom/index.html'>
-            <div class='inner'>
-                <img src="images/custom_shader.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Writing Custom Shaders</h2>
-        </div>
-
-        <div class='example' data-link='shaders/custom/burn.html'>
-            <div class='inner'>
-                <img src="images/burn_shader.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Burn Shader</h2>
-        </div>
-
-        <div class='example' data-link='shaders/custom/toon.html'>
-            <div class='inner'>
-                <img src="images/toon_shader.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Toon Shader</h2>
-        </div>
-
-        <div class='example' data-link='input/keyboard/index.html'>
-            <div class='inner'>
-                <img src="images/input_keyboard.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Keyboard input</h2>
-        </div>
-
-        <div class='example' data-link='input/mouse/index.html'>
-            <div class='inner'>
-                <img src="images/input_mouse.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>Mouse input</h2>
-        </div>
-
-        <div class='example' data-link='ui/index.html'>
-            <div class='inner'>
-                <img src="images/ui.png" />
-                <div class='overlay'><span class='play'></span></div>
-            </div>
-            <h2>UI</h2>
-        </div>
-
-    </div>
-
-    <iframe id='example' frameborder='0' marginwidth='0' scrolling='no' hspace='0' vspace='0' seamless='seamless'></iframe>
-
-    <script type='text/javascript'>
-
-        // DOM shim
-        HTMLElement="undefiend"!=typeof HTMLElement?HTMLElement:Element;HTMLElement.prototype.addClass=function(a){a instanceof Array||(a=a.split(" "));for(var b=0,c=a.length;b<c;++b)a[b]&&!(new RegExp("(\\s+|^)"+a[b]+"(\\s+|$)")).test(this.className)&&(this.className=this.className.trim()+" "+a[b])};HTMLElement.prototype.removeClass=function(a){a instanceof Array||(a=a.split(" "));for(var b=0,c=a.length;b<c;++b)this.className=this.className.replace(new RegExp("(\\s+|^)"+a[b]+"(\\s+|$)")," ").trim()};
-        HTMLElement.prototype.toggleClass=function(a){if(a){if((new RegExp("(\\s+|^)"+a+"(\\s+|$)")).test(this.className))return this.className=this.className.replace(new RegExp("(\\s+|^)"+a+"(\\s+|$)")," ").trim(),!1;this.className=this.className.trim()+" "+a;return!0}};HTMLElement.prototype.hasClass=function(a){return a&&(new RegExp("(\\s+|^)"+a+"(\\s+|$)")).test(this.className)};
-
-        // elements
-        var examples = document.getElementById('examples');
-        var frame = document.getElementById('example');
-        var headerTitle = document.querySelector('#header > .title');
-        var initialTitle = headerTitle.textContent;
-
-        // BACK button
-        document.querySelector('#header > .back').addEventListener('click', function() {
-            history.back();
-        });
-
-        // make all examples clickable
-        var exampleElements = examples.querySelectorAll('.example');
-        var i = exampleElements.length;
-        while(i--) {
-            exampleElements[i].addEventListener('click', function() {
-                var title = this.querySelector('h2').textContent;
-                var url = this.getAttribute('data-link');
-                openExample(title, url);
-            });
-        }
-
-        // OPEN example
-        function openExample(title, url) {
-            frame.contentWindow.location.replace(url);
-            document.body.addClass('preview');
-            headerTitle.textContent = title;
-            location.hash = url;
-        }
-
-        // CLOSE example
-        function closeExample() {
-            frame.contentWindow.location.replace('/examples');
-            frame.disabled = true;
-            document.body.removeClass('preview');
-            headerTitle.textContent = initialTitle;
-            location.hash = '#';
-        }
-
-        var lastHash = null;
-
-        function processLocation(url) {
-            if (location.hash && location.hash !== '#') {
-                var url = location.hash.slice(1);
-
-                var element = document.querySelector('#examples .example[data-link="' + url + '"]');
-                if (element) {
-                    var title = element.querySelector('h2').textContent;
-                    var url = element.getAttribute('data-link');
-                    openExample(title, url);
-                    lastHash = true;
-                    return;
+        <script src="examples.js"></script>
+        <script>
+            function titleCase(string) {
+                let sentence = string.toLowerCase().split('-');
+                for(let i = 0; i < sentence.length; i++){
+                    sentence[i] = sentence[i][0].toUpperCase() + sentence[i].slice(1);
                 }
+                return sentence.join(' ');
             }
 
-            if (lastHash) {
-                closeExample();
+            function loadExample(example) {
+                let iframe = document.getElementById('example');
+                iframe.src = example;
+                location.href = location.protocol +'//' +
+                                location.host +
+                                location.pathname +
+                                '#' +
+                                example;
             }
-            lastHash = true;
-        }
 
-        processLocation();
+            // Load the initial example (loading the first one if none is specified)
+            let url = location.href;
+            let hashIndex = url.indexOf('#');
+            if (hashIndex === -1) {
+                loadExample(categories[0].name + '/' + categories[0].examples[0] + '.html');
+            } else {
+                loadExample(url.substring(hashIndex + 1));
+            }
 
-        // HISTORY
-        window.addEventListener('hashchange', processLocation, false);
-    </script>
+            // Procedurally build the navigation sidebar
+            let sidenav = document.querySelector(".sidenav");
+            categories.forEach(function (category) {
+                let categoryEntry = document.createElement('p');
+                categoryEntry.innerText = titleCase(category.name);
+                sidenav.appendChild(categoryEntry);
 
-</body>
+                category.examples.forEach(function (example) {
+                    let exampleEntry = document.createElement('a');
+                    exampleEntry.addEventListener("click", function (event) {
+                        loadExample(category.name + '/' + example + '.html');
+                        let activeLink = document.getElementsByClassName("active")[0];
+                        activeLink.classList.remove("active");
+                        exampleEntry.classList.add("active");
+                        sidenav.classList.add("closed");
+                    }, false);
+
+                    let currentExample = window.location.hash.substr(1).split("/")[1].split(".")[0];
+                    if (example === currentExample) {
+                        exampleEntry.classList.add("active");
+                    }
+
+                    exampleEntry.innerText = titleCase(example);
+                    sidenav.appendChild(exampleEntry);
+                });
+            });
+
+            // Navigation
+            let navigationToggle = document.querySelector(".sidenav-toggle");
+            navigationToggle.addEventListener("click", function (event){
+                sidenav.classList.toggle("closed");
+            })
+        </script>
+    </body>
 </html>

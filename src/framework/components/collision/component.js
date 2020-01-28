@@ -1,74 +1,59 @@
 Object.assign(pc, function () {
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.CollisionComponent
-     * @extends pc.Component
-     * @classdesc A collision volume. Use this in conjunction with a {@link pc.RigidBodyComponent} to make a collision volume that can be simulated using the physics engine.
-     * <p>If the {@link pc.Entity} does not have a {@link pc.RigidBodyComponent} then this collision volume will act as a trigger volume. When an entity with a dynamic
-     * or kinematic body enters or leaves an entity with a trigger volume, both entities will receive trigger events.
-     * <p>The following table shows all the events that can be fired between two Entities:
-     * <table class="table table-striped table-condensed">
-     *  <tr><td></td><td><strong>Rigid Body (Static)</strong></td><td><strong>Rigid Body (Dynamic or Kinematic)</strong></td><td><strong>Trigger Volume</strong></td></tr>
-     *  <tr>
-     *       <td><strong>Rigid Body (Static)</strong></td>
-     *       <td>-</td>
-     *       <td><ul class="list-group">
-     *           <li class="list-group-item">contact</li>
-     *           <li class="list-group-item">collisionstart</li>
-     *           <li class="list-group-item">collisionend</li>
-     *       </td>
-     *       <td>-</td>
-     *   </tr>
-     *  <tr>
-     *       <td><strong>Rigid Body (Dynamic or Kinematic)</strong></td>
-     *       <td><ul class="list-group">
-     *           <li class="list-group-item">contact</li>
-     *           <li class="list-group-item">collisionstart</li>
-     *           <li class="list-group-item">collisionend</li>
-     *       </td>
-     *       <td><ul class="list-group">
-     *           <li class="list-group-item">contact</li>
-     *           <li class="list-group-item">collisionstart</li>
-     *           <li class="list-group-item">collisionend</li>
-     *       </td>
-     *       <td><ul class="list-group">
-     *           <li class="list-group-item">triggerenter</li>
-     *           <li class="list-group-item">triggerleave</li>
-     *       </td>
-     *   </tr>
-     *  <tr>
-     *       <td><strong>Trigger Volume</strong></td>
-     *       <td>-</td>
-     *       <td><ul class="list-group">
-     *           <li class="list-group-item">triggerenter</li>
-     *           <li class="list-group-item">triggerleave</li>
-     *       </td>
-     *       <td>-</td>
-     *   </tr>
-     * </table>
-     * </p>
-     * @description Create a new CollisionComponent
-     * @param {pc.CollisionComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @property {String} type The type of the collision volume. Defaults to 'box'. Can be one of the following:
-     * <ul>
-     * <li><strong>box</strong>: A box-shaped collision volume.</li>
-     * <li><strong>sphere</strong>: A sphere-shaped collision volume.</li>
-     * <li><strong>capsule</strong>: A capsule-shaped collision volume.</li>
-     * <li><strong>cylinder</strong>: A cylinder-shaped collision volume.</li>
-     * <li><strong>cone</strong>: A cone-shaped collision volume.</li>
-     * <li><strong>mesh</strong>: A collision volume that uses a model asset as its shape.</li>
-     * </ul>
-     * @property {pc.Vec3} halfExtents The half-extents of the box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5]
-     * @property {Number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision volumes. Defaults to 0.5
-     * @property {Number} axis The local space axis with which the capsule, cylinder or cone-shaped collision volume's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
-     * @property {Number} height The total height of the capsule, cylinder or cone-shaped collision volume from tip to tip. Defaults to 2.
-     * @property {pc.Asset} asset The asset for the model of the mesh collision volume - can also be an asset id.
-     * @property {pc.Model} model The model that is added to the scene graph for the mesh collision volume.
+     * @augments pc.Component
+     * @classdesc A collision volume. Use this in conjunction with a {@link pc.RigidBodyComponent}
+     * to make a collision volume that can be simulated using the physics engine.
+     *
+     * If the {@link pc.Entity} does not have a {@link pc.RigidBodyComponent} then this collision
+     * volume will act as a trigger volume. When an entity with a dynamic or kinematic body enters
+     * or leaves an entity with a trigger volume, both entities will receive trigger events.
+     *
+     * The following table shows all the events that can be fired between two Entities:
+     *
+     * |                                       | Rigid Body (Static)                                                   | Rigid Body (Dynamic or Kinematic)                                     | Trigger Volume                                      |
+     * | ------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------- |
+     * | **Rigid Body (Static)**               |                                                                       | <ul><li>contact</li><li>collisionstart</li><li>collisionend</li></ul> |                                                     |
+     * | **Rigid Body (Dynamic or Kinematic)** | <ul><li>contact</li><li>collisionstart</li><li>collisionend</li></ul> | <ul><li>contact</li><li>collisionstart</li><li>collisionend</li></ul> | <ul><li>triggerenter</li><li>triggerleave</li></ul> |
+     * | **Trigger Volume**                    |                                                                       | <ul><li>triggerenter</li><li>triggerleave</li></ul>                   |                                                     |
+     *
+     * @description Create a new CollisionComponent.
+     * @param {pc.CollisionComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {pc.Entity} entity - The Entity that this Component is attached to.
+     * @property {string} type The type of the collision volume. Can be:
+     *
+     * * "box": A box-shaped collision volume.
+     * * "capsule": A capsule-shaped collision volume.
+     * * "compound": A compound shape. Any descendent entities with a collision component
+     * of type box, capsule, cone, cylinder or sphere will be combined into a single, rigid
+     * shape.
+     * * "cone": A cone-shaped collision volume.
+     * * "cylinder": A cylinder-shaped collision volume.
+     * * "mesh": A collision volume that uses a model asset as its shape.
+     * * "sphere": A sphere-shaped collision volume.
+     *
+     * Defaults to "box".
+     * @property {pc.Vec3} halfExtents The half-extents of the box-shaped collision volume in the
+     * x, y and z axes. Defaults to [0.5, 0.5, 0.5].
+     * @property {number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision
+     * volumes. Defaults to 0.5.
+     * @property {number} axis The local space axis with which the capsule, cylinder or cone-shaped
+     * collision volume's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
+     * @property {number} height The total height of the capsule, cylinder or cone-shaped collision
+     * volume from tip to tip. Defaults to 2.
+     * @property {pc.Asset} asset The asset for the model of the mesh collision volume - can also be
+     * an asset id. Defaults to null.
+     * @property {pc.Model} model The model that is added to the scene graph for the mesh collision
+     * volume.
      */
     var CollisionComponent = function CollisionComponent(system, entity) {
         pc.Component.call(this, system, entity);
+
+        this._compoundParent = null;
+
+        this.entity.on('insert', this._onInsert, this);
 
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
@@ -85,22 +70,22 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.CollisionComponent#contact
-     * @description The 'contact' event is fired when a contact occurs between two rigid bodies
-     * @param {pc.ContactResult} result Details of the contact between the two rigid bodies.
+     * @description The 'contact' event is fired when a contact occurs between two rigid bodies.
+     * @param {pc.ContactResult} result - Details of the contact between the two rigid bodies.
      */
 
     /**
      * @event
      * @name pc.CollisionComponent#collisionstart
      * @description The 'collisionstart' event is fired when two rigid bodies start touching.
-     * @param {pc.ContactResult} result Details of the contact between the two Entities.
+     * @param {pc.ContactResult} result - Details of the contact between the two Entities.
      */
 
     /**
      * @event
      * @name pc.CollisionComponent#collisionend
      * @description The 'collisionend' event is fired two rigid-bodies stop touching.
-     * @param {pc.Entity} other The {@link pc.Entity} that stopped touching this collision volume.
+     * @param {pc.Entity} other - The {@link pc.Entity} that stopped touching this collision volume.
      */
 
     /**
@@ -108,7 +93,7 @@ Object.assign(pc, function () {
      * @name pc.CollisionComponent#triggerenter
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
      * a {@link pc.RigidBodyComponent} attached.
-     * @param {pc.Entity} other The {@link pc.Entity} that entered this collision volume.
+     * @param {pc.Entity} other - The {@link pc.Entity} that entered this collision volume.
      */
 
     /**
@@ -116,11 +101,10 @@ Object.assign(pc, function () {
      * @name pc.CollisionComponent#triggerleave
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
      * a {@link pc.RigidBodyComponent} attached.
-     * @param {pc.Entity} other The {@link pc.Entity} that exited this collision volume.
+     * @param {pc.Entity} other - The {@link pc.Entity} that exited this collision volume.
      */
 
     Object.assign(CollisionComponent.prototype, {
-
         onSetType: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
                 this.system.changeType(this, oldValue, newValue);
@@ -206,6 +190,47 @@ Object.assign(pc, function () {
             }
         },
 
+        _getCompoundChildShapeIndex: function (shape) {
+            var compound = this.data.shape;
+            var shapes = compound.getNumChildShapes();
+
+            for (var i = 0; i < shapes; i++) {
+                var childShape = compound.getChildShape(i);
+                if (childShape.ptr === shape.ptr) {
+                    return i;
+                }
+            }
+
+            return null;
+        },
+
+        _onInsert: function (parent) {
+            // TODO
+            // if is child of compound shape
+            // and there is no change of compoundParent, then update child transform
+            // once updateChildTransform is exposed in ammo.js
+
+            if (typeof Ammo === 'undefined')
+                return;
+
+            if (this._compoundParent) {
+                this.system.recreatePhysicalShapes(this);
+            } else if (! this.entity.rigidbody) {
+                var ancestor = this.entity.parent;
+                while (ancestor) {
+                    if (ancestor.collision && ancestor.collision.type === 'compound') {
+                        if (ancestor.collision.shape.getNumChildShapes() === 0) {
+                            this.system.recreatePhysicalShapes(ancestor.collision);
+                        } else {
+                            this.system.recreatePhysicalShapes(this);
+                        }
+                        break;
+                    }
+                    ancestor = ancestor.parent;
+                }
+            }
+        },
+
         onEnable: function () {
             if (this.data.type === 'mesh' && this.data.asset && this.data.initialized) {
                 var asset = this.system.app.assets.get(this.data.asset);
@@ -217,21 +242,43 @@ Object.assign(pc, function () {
                 }
             }
 
-            if (this.entity.trigger) {
-                this.entity.trigger.enable();
-            } else if (this.entity.rigidbody) {
+            if (this.entity.rigidbody) {
                 if (this.entity.rigidbody.enabled) {
                     this.entity.rigidbody.enableSimulation();
                 }
+            } else if (this._compoundParent && this !== this._compoundParent) {
+                if (this._compoundParent.shape.getNumChildShapes() === 0) {
+                    this.system.recreatePhysicalShapes(this._compoundParent);
+                } else {
+                    var transform = this.system._getNodeTransform(this.entity, this._compoundParent.entity);
+                    this._compoundParent.shape.addChildShape(transform, this.data.shape);
+                    Ammo.destroy(transform);
+
+                    if (this._compoundParent.entity.rigidbody)
+                        this._compoundParent.entity.rigidbody.activate();
+                }
+            } else if (this.entity.trigger) {
+                this.entity.trigger.enable();
             }
         },
 
         onDisable: function () {
-            if (this.entity.trigger) {
-                this.entity.trigger.disable();
-            } else if (this.entity.rigidbody) {
+            if (this.entity.rigidbody) {
                 this.entity.rigidbody.disableSimulation();
+            } else if (this._compoundParent && this !== this._compoundParent) {
+                if (! this._compoundParent.entity._destroying) {
+                    this.system._removeCompoundChild(this._compoundParent, this.data.shape);
+
+                    if (this._compoundParent.entity.rigidbody)
+                        this._compoundParent.entity.rigidbody.activate();
+                }
+            } else if (this.entity.trigger) {
+                this.entity.trigger.disable();
             }
+        },
+
+        onBeforeRemove: function () {
+            this.entity.off('insert', this._onInsert, this);
         }
     });
 

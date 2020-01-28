@@ -24,11 +24,11 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @constructor
+     * @class
      * @name pc.Skeleton
      * @classdesc Represents a skeleton used to play animations.
-     * @param {pc.GraphNode} graph The root pc.GraphNode of the skeleton.
-     * @property {Boolean} looping Determines whether skeleton is looping its animation.
+     * @param {pc.GraphNode} graph - The root pc.GraphNode of the skeleton.
+     * @property {boolean} looping Determines whether skeleton is looping its animation.
      */
     var Skeleton = function Skeleton(graph) {
         this._animation = null;
@@ -67,12 +67,12 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.Skeleton#addTime
-     * @description Progresses the animation assigned to the specified skeleton by the
+     * @description Progresses The animation assigned to The specified skeleton by The
      * supplied time delta. If the delta takes the animation passed its end point, if
      * the skeleton is set to loop, the animation will continue from the beginning.
      * Otherwise, the animation's current time will remain at its duration (i.e. the
      * end).
-     * @param {Number} delta The time in seconds to progress the skeleton's animation.
+     * @param {number} delta - The time in seconds to progress the skeleton's animation.
      */
     Skeleton.prototype.addTime = function (delta) {
         if (this._animation !== null) {
@@ -185,9 +185,9 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Skeleton#blend
      * @description Blends two skeletons together.
-     * @param {pc.Skeleton} skel1 Skeleton holding the first pose to be blended.
-     * @param {pc.Skeleton} skel2 Skeleton holding the second pose to be blended.
-     * @param {Number} alpha The value controlling the interpolation in relation to the two input
+     * @param {pc.Skeleton} skel1 - Skeleton holding the first pose to be blended.
+     * @param {pc.Skeleton} skel2 - Skeleton holding the second pose to be blended.
+     * @param {number} alpha - The value controlling the interpolation in relation to the two input
      * skeletons. The value is in the range 0 to 1, 0 generating skel1, 1 generating skel2 and anything
      * in between generating a spherical interpolation between the two.
      */
@@ -232,7 +232,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Skeleton#animation
-     * @type pc.Animation
+     * @type {pc.Animation}
      * @description Animation currently assigned to skeleton.
      */
     Object.defineProperty(Skeleton.prototype, 'animation', {
@@ -259,7 +259,7 @@ Object.assign(pc, function () {
 
     /**
      * @name pc.Skeleton#currentTime
-     * @type Number
+     * @type {number}
      * @description Current time of currently active animation in seconds.
      * This value is between zero and the duration of the animation.
      */
@@ -289,7 +289,7 @@ Object.assign(pc, function () {
      * @description Returns the current time of the currently active animation as set on
      * the specified skeleton. This value will be between zero and the duration of the
      * animation.
-     * @returns {Number} The current time of the animation set on the skeleton.
+     * @returns {number} The current time of the animation set on the skeleton.
      */
     Skeleton.prototype.getCurrentTime = function () {
         return this._time;
@@ -303,7 +303,7 @@ Object.assign(pc, function () {
      * @description Sets the current time of the currently active animation as set on
      * the specified skeleton. This value must be between zero and the duration of the
      * animation.
-     * @param {Number} time The current time of the animation set on the skeleton.
+     * @param {number} time - The current time of the animation set on the skeleton.
      */
     Skeleton.prototype.setCurrentTime = function (time) {
         this.currentTime = time;
@@ -312,7 +312,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.Skeleton#numNodes
-     * @type Number
+     * @type {number}
      * @description Read-only property that returns number of nodes of a skeleton.
      */
     Object.defineProperty(Skeleton.prototype, 'numNodes', {
@@ -327,7 +327,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Skeleton#getNumNodes
      * @description Returns the number of nodes held by the specified skeleton.
-     * @returns {Number} The number of nodes held by the specified skeleton.
+     * @returns {number} The number of nodes held by the specified skeleton.
      */
     Skeleton.prototype.getNumNodes = function () {
         return this._interpolatedKeys.length;
@@ -339,7 +339,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Skeleton#setAnimation
      * @description Sets an animation on the specified skeleton.
-     * @param {pc.Animation} animation The animation to set on the skeleton.
+     * @param {pc.Animation} animation - The animation to set on the skeleton.
      */
     Skeleton.prototype.setAnimation = function (animation) {
         this.animation = animation;
@@ -351,7 +351,7 @@ Object.assign(pc, function () {
      * @description Links a skeleton to a node hierarchy. The nodes animated skeleton are
      * then subsequently used to drive the local transformation matrices of the node
      * hierarchy.
-     * @param {pc.GraphNode} graph The root node of the graph that the skeleton is to drive.
+     * @param {pc.GraphNode} graph - The root node of the graph that the skeleton is to drive.
      */
     Skeleton.prototype.setGraph = function (graph) {
         var i;
@@ -404,7 +404,7 @@ Object.assign(pc, function () {
      * @description Specified whether a skeleton should loop its animation or not. If the animation
      * loops, it will wrap back to the start when adding time to the skeleton beyond the duration
      * of the animation. Otherwise, the animation stops at its end after a single play through.
-     * @param {Boolean} looping True to cause the animation to loop back to the start on completion
+     * @param {boolean} looping - True to cause the animation to loop back to the start on completion
      * and false otherwise.
      */
     Skeleton.prototype.setLooping = function (looping) {
@@ -417,7 +417,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Skeleton#getLooping
      * @description Queries the specified skeleton to determine whether it is looping its animation.
-     * @returns {Boolean} True if the skeleton is looping the animation, false otherwise.
+     * @returns {boolean} True if the skeleton is looping the animation, false otherwise.
      */
     Skeleton.prototype.getLooping = function () {
         return this.looping;

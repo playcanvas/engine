@@ -598,4 +598,178 @@ describe('I18n tests', function () {
         app.assets.add(asset);
         app.assets.load(asset);
     });
+
+    it('locale for Indonesian should always start with "id"', function () {
+        app.i18n.locale = 'id';
+        expect(app.i18n.locale).to.equal('id');
+
+        app.i18n.locale = 'id-ID';
+        expect(app.i18n.locale).to.equal('id-ID');
+
+        app.i18n.locale = 'in';
+        expect(app.i18n.locale).to.equal('id');
+
+        app.i18n.locale = 'in-ID';
+        expect(app.i18n.locale).to.equal('id-ID');
+
+        // sanity checks
+        app.i18n.locale = 'en';
+        expect(app.i18n.locale).to.equal('en');
+
+        app.i18n.locale = 'en-US';
+        expect(app.i18n.locale).to.equal('en-US');
+    });
+
+    it('getText() zh-HK should use zh-HK if it exists', function () {
+        addText('zh-CN', 'key', 'cn');
+        addText('zh-HK', 'key', 'hk');
+        addText('zh-TW', 'key', 'tw');
+        app.i18n.locale = 'zh-HK';
+        expect(app.i18n.getText('key')).to.equal('hk');
+    });
+
+    it('getText() zh-HK should fall back to zh-TW', function () {
+        addText('zh-CN', 'key', 'cn');
+        addText('zh-TW', 'key', 'hk');
+        app.i18n.locale = 'zh-HK';
+        expect(app.i18n.getText('key')).to.equal('hk');
+    });
+
+    it('getText() zh-TW should fall back to zh-HK', function () {
+        addText('zh-CN', 'key', 'cn');
+        addText('zh-HK', 'key', 'tw');
+        app.i18n.locale = 'zh-TW';
+        expect(app.i18n.getText('key')).to.equal('tw');
+    });
+
+    it('getText() zh-SG should fall back to zh-CN', function () {
+        addText('zh-HK', 'key', 'hk');
+        addText('zh-CN', 'key', 'cn');
+        addText('zh-TW', 'key', 'tw');
+        app.i18n.locale = 'zh-SG';
+        expect(app.i18n.getText('key')).to.equal('cn');
+    });
+
+    it('getPluralText() zh-HK should use zh-HK if it exists', function () {
+        addText('zh-CN', 'key', ['cn']);
+        addText('zh-HK', 'key', ['hk']);
+        addText('zh-TW', 'key', ['tw']);
+        app.i18n.locale = 'zh-HK';
+        expect(app.i18n.getPluralText('key')).to.equal('hk');
+    });
+
+    it('getPluralText() zh-HK should fall back to zh-TW', function () {
+        addText('zh-CN', 'key', ['cn']);
+        addText('zh-TW', 'key', ['hk']);
+        app.i18n.locale = 'zh-HK';
+        expect(app.i18n.getPluralText('key')).to.equal('hk');
+    });
+
+    it('getPluralText() zh-TW should fall back to zh-HK', function () {
+        addText('zh-CN', 'key', ['cn']);
+        addText('zh-HK', 'key', ['tw']);
+        app.i18n.locale = 'zh-TW';
+        expect(app.i18n.getPluralText('key')).to.equal('tw');
+    });
+
+    it('getPluralText() zh-SG should fall back to zh-CN', function () {
+        addText('zh-HK', 'key', ['hk']);
+        addText('zh-CN', 'key', ['cn']);
+        addText('zh-TW', 'key', ['tw']);
+        app.i18n.locale = 'zh-SG';
+        expect(app.i18n.getPluralText('key')).to.equal('cn');
+    });
+
+    it('pc.Asset#getLocalizedAssetId should return null if no localizations exist', function () {
+        var asset = new pc.Asset('asset', 'font');
+        asset.id = 1000;
+        expect(asset.getLocalizedAssetId('en')).to.equal(null);
+    });
+
+    it('pc.Asset#getLocalizedAssetId should return fallback language if available', function () {
+        var asset = new pc.Asset('asset', 'font');
+
+        let id = 1000;
+        for (const key in DEFAULT_LOCALE_FALLBACKS) {
+            asset.addLocalizedAssetId(DEFAULT_LOCALE_FALLBACKS[key], id);
+            id++;
+        }
+
+        id = 1000;
+        for (const key in DEFAULT_LOCALE_FALLBACKS) {
+            expect(asset.getLocalizedAssetId(key)).to.equal(id);
+            id++;
+        }
+    });
+
+    it('pc.Asset#getLocalizedAssetId should return fallback language if available', function () {
+        var asset = new pc.Asset('asset', 'font');
+
+        let id = 1000;
+        for (const key in DEFAULT_LOCALE_FALLBACKS) {
+            asset.addLocalizedAssetId(DEFAULT_LOCALE_FALLBACKS[key], id);
+            id++;
+        }
+
+        id = 1000;
+        for (const key in DEFAULT_LOCALE_FALLBACKS) {
+            expect(asset.getLocalizedAssetId(key)).to.equal(id);
+            id++;
+        }
+    });
+
+    it('pc.Asset#getLocalizedAssetId should return fallback language if available', function () {
+        var asset = new pc.Asset('asset', 'font');
+
+        let id = 1;
+        for (const key in DEFAULT_LOCALE_FALLBACKS) {
+            asset.addLocalizedAssetId(key + '-test', 1000 + id); // add other locale with same language which shouldn't be used
+            asset.addLocalizedAssetId(DEFAULT_LOCALE_FALLBACKS[key], 2000 + id);
+            id++;
+        }
+
+        id = 1;
+        for (const key in DEFAULT_LOCALE_FALLBACKS) {
+            expect(asset.getLocalizedAssetId(key)).to.equal(2000 + id);
+            id++;
+        }
+    });
+
+    it('pc.Asset#getLocalizedAssetId zh-HK should return zh-HK if it exists', function () {
+        var asset = new pc.Asset('asset', 'font');
+
+        asset.addLocalizedAssetId('zh-CN', 1);
+        asset.addLocalizedAssetId('zh-HK', 2);
+        asset.addLocalizedAssetId('zh-TW', 3);
+
+        expect(asset.getLocalizedAssetId('zh-HK')).to.equal(2);
+    });
+
+    it('pc.Asset#getLocalizedAssetId zh-HK should fallback to zh-TW', function () {
+        var asset = new pc.Asset('asset', 'font');
+
+        asset.addLocalizedAssetId('zh-CN', 1);
+        asset.addLocalizedAssetId('zh-TW', 2);
+
+        expect(asset.getLocalizedAssetId('zh-HK')).to.equal(2);
+    });
+
+    it('pc.Asset#getLocalizedAssetId zh-TW should fallback to zh-HK', function () {
+        var asset = new pc.Asset('asset', 'font');
+
+        asset.addLocalizedAssetId('zh-CN', 1);
+        asset.addLocalizedAssetId('zh-HK', 2);
+
+        expect(asset.getLocalizedAssetId('zh-TW')).to.equal(2);
+    });
+
+    it('pc.Asset#getLocalizedAssetId zh-SG should fallback to zh-CN', function () {
+        var asset = new pc.Asset('asset', 'font');
+
+        asset.addLocalizedAssetId('zh-HK', 1);
+        asset.addLocalizedAssetId('zh-CN', 2);
+        asset.addLocalizedAssetId('zh-TW', 2);
+
+        expect(asset.getLocalizedAssetId('zh-SG')).to.equal(2);
+    });
 });

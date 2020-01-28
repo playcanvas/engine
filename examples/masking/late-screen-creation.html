@@ -1,8 +1,10 @@
 <!doctype html>
 <html>
     <head>
-        <meta charset="UTF-8">
         <title>PlayCanvas UI Example</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
         <script src="../../build/output/playcanvas.js"></script>
         <style>
             body {
@@ -26,6 +28,10 @@
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
+
             // use device pixel ratio
             app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
@@ -45,7 +51,7 @@
             var assetsToLoad = [
                 new pc.Asset('red_button_atlas.json', "textureatlas", {url: "../assets/button/red_button_atlas.json"}),
                 new pc.Asset('red_button_sprite', "sprite", {url: "../assets/button/red_button_sprite.json"}),
-                new pc.Asset('snowflake.png', "texture", {url: "../assets/snowflake.png"})
+                new pc.Asset('snowflake.png', "texture", {url: "../assets/textures/snowflake.png"})
             ]
 
             var count =0;
@@ -193,15 +199,6 @@
                 var p = createPanel(parent2);
                 var panel2 = app.root.findByName("Panel2");
             }, 1000)
-
-            // update every frame
-            app.on("update", function (dt) {
-            });
-
-            // hook up window resize events
-            window.addEventListener("resize", function () {
-                app.resizeCanvas(canvas.width, canvas.height);
-            });
         </script>
     </body>
 </html>

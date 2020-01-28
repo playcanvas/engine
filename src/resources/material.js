@@ -16,11 +16,11 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.MaterialHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading {@link pc.Material} resources
-     * @param {pc.Application} app The running {@link pc.Application}
+     * @classdesc Resource handler used for loading {@link pc.Material} resources.
+     * @param {pc.Application} app - The running {@link pc.Application}.
      */
     var MaterialHandler = function (app) {
         this._assets = app.assets;
