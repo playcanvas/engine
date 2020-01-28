@@ -113,8 +113,15 @@ Object.assign(pc, function () {
             var i, l = ids.length;
 
             var onAssetReady = function (asset) {
-                self.animations[asset.name] = asset.resource;
-                self.animationsIndex[asset.id] = asset.name;
+                if (asset.resources.length > 1) {
+                    for (var i = 0; i < asset.resources.length; i++) {
+                        self.animations[asset.resources[i].name] = asset.resources[i];
+                        self.animationsIndex[asset.id] = asset.resources[i].name;
+                    }
+                } else {
+                    self.animations[asset.name] = asset.resource;
+                    self.animationsIndex[asset.id] = asset.name;
+                }
                 /* eslint-disable no-self-assign */
                 self.animations = self.animations; // assigning ensures set_animations event is fired
                 /* eslint-enable no-self-assign */
@@ -147,19 +154,64 @@ Object.assign(pc, function () {
         },
 
         onAssetChanged: function (asset, attribute, newValue, oldValue) {
-            if (attribute === 'resource') {
+            var i;
+            if (attribute === 'resource' || attribute === 'resources') {
                 // replace old animation with new one
                 if (newValue) {
-                    this.animations[asset.name] = newValue;
-                    this.animationsIndex[asset.id] = asset.name;
+                    var restarted = false;
+                    if (newValue.length > 1) {
+                        if (oldValue && oldValue.length > 1) {
+                            for (i = 0; i < oldValue.length; i++) {
+                                delete this.animations[oldValue[i].name];
+                            }
+                        } else {
+                            delete this.animations[asset.name];
+                        }
+                        restarted = false;
+                        for (i = 0; i < newValue.length; i++) {
+                            this.animations[newValue[i].name] = newValue[i];
 
-                    if (this.data.currAnim === asset.name) {
-                        // restart animation
-                        if (this.data.playing && this.data.enabled && this.entity.enabled)
-                            this.play(asset.name, 0);
+                            if (!restarted && this.data.currAnim === newValue[i].name) {
+                                // restart animation
+                                if (this.data.playing && this.data.enabled && this.entity.enabled) {
+                                    restarted = true;
+                                    this.play(newValue[i].name, 0);
+                                }
+                            }
+                        }
+                        if (!restarted) {
+                            this._stopCurrentAnimation();
+                            this.onSetAnimations();
+                        }
+                    } else {
+                        if (oldValue && oldValue.length > 1) {
+                            for (i = 0; i < oldValue.length; i++) {
+                                delete this.animations[oldValue[i].name];
+                            }
+                        }
+                        this.animations[asset.name] = newValue[0] || newValue;
+                        restarted = false;
+                        if (this.data.currAnim === asset.name) {
+                            // restart animation
+                            if (this.data.playing && this.data.enabled && this.entity.enabled) {
+                                restarted = true;
+                                this.play(asset.name, 0);
+                            }
+                        }
+                        if (!restarted) {
+                            this._stopCurrentAnimation();
+                            this.onSetAnimations();
+                        }
                     }
+                    this.animationsIndex[asset.id] = asset.name;
                 } else {
-                    delete this.animations[asset.name];
+                    if (oldValue.length > 1) {
+                        for (i = 0; i < oldValue.length; i++) {
+                            delete this.animations[oldValue[i].name];
+                        }
+                    } else {
+                        delete this.animations[asset.name];
+                    }
                     delete this.animationsIndex[asset.id];
                 }
             }
@@ -168,12 +220,19 @@ Object.assign(pc, function () {
         onAssetRemoved: function (asset) {
             asset.off('remove', this.onAssetRemoved, this);
 
-            if (this.animations && this.animations[asset.name]) {
-                delete this.animations[asset.name];
+            if (this.animations) {
+                if (asset.resources.length > 1) {
+                    for (var i = 0; i < asset.resources.length; i++) {
+                        delete this.animations[asset.resources[i].name];
+                        if (this.data.currAnim === asset.resources[i].name)
+                            this._stopCurrentAnimation();
+                    }
+                } else {
+                    delete this.animations[asset.name];
+                    if (this.data.currAnim === asset.name)
+                        this._stopCurrentAnimation();
+                }
                 delete this.animationsIndex[asset.id];
-
-                if (this.data.currAnim === asset.name)
-                    this._stopCurrentAnimation();
             }
         },
 

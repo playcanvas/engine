@@ -15,6 +15,13 @@ Object.assign(pc, function () {
 
         this.addParser(new pc.JsonModelParser(this._device), function (url, data) {
             return (pc.path.getExtension(url) === '.json');
+        }, function (url, data) {
+            return (pc.path.getExtension(url) === '.json');
+        });
+        this.addParser(new pc.GlbModelParser(this._device), function (url, data) {
+            return false;
+        }, function (url, data) {
+            return (pc.path.getExtension(url) === '.glb');
         });
     };
 
@@ -67,15 +74,32 @@ Object.assign(pc, function () {
          * @returns {pc.Model} The loaded model.
          */
         open: function (url, data) {
+            var model = null, onLoad = function (m) {
+                model = m;
+            };
             for (var i = 0; i < this._parsers.length; i++) {
                 var p = this._parsers[i];
 
                 if (p.decider(url, data)) {
-                    return p.parser.parse(data);
+                    var result = p.parser.parse(data, onLoad);
+                    return model ? model : result;
                 }
             }
             logWARNING(pc.string.format("No model parser found for: {0}", url));
             return null;
+        },
+
+        openAsync: function (url, data, asset, onLoaded, onFailed) {
+            for (var i = 0; i < this._parsers.length; i++) {
+                var p = this._parsers[i];
+
+                if (p.deciderAsync && p.deciderAsync(url, data)) {
+                    p.parser.parse(data, onLoaded, onFailed);
+                    return true;
+                }
+            }
+            logWARNING(pc.string.format("No model parser found for: {0}", url));
+            return false;
         },
 
         patch: function (asset, assets) {
@@ -148,11 +172,13 @@ Object.assign(pc, function () {
          * @param {pc.callbacks.AddParser} decider - Function that decides on which parser to use.
          * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link pc.Model}.
          * The first parser to return true is used.
+         * @param {Function} deciderAsync same as above but for async loading.
          */
-        addParser: function (parser, decider) {
+        addParser: function (parser, decider, deciderAsync) {
             this._parsers.push({
                 parser: parser,
-                decider: decider
+                decider: decider,
+                deciderAsync: deciderAsync
             });
         }
     });

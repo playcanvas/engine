@@ -1,9 +1,22 @@
+Object.assign(pc, {
+    // animation key channels
+    KEYTYPE_POS: 0,
+    KEYTYPE_ROT: 1,
+    KEYTYPE_SCL: 2
+});
+
 Object.assign(pc, function () {
+    // depricated class - use Keyframe instead
     var Key = function Key(time, position, rotation, scale) {
         this.time = time;
         this.position = position;
         this.rotation = rotation;
         this.scale = scale;
+    };
+
+    var Keyframe = function Keyframe(time, value) {
+        this.time = time;
+        this.value = value;
     };
 
     /**
@@ -14,7 +27,7 @@ Object.assign(pc, function () {
      */
     var Node = function Node() {
         this._name = "";
-        this._keys = [];
+        this._keys = [[], [], []];
     };
 
     /**
@@ -129,6 +142,7 @@ Object.assign(pc, function () {
     return {
         Animation: Animation,
         Key: Key,
+        Keyframe: Keyframe,
         Node: Node
     };
 }());

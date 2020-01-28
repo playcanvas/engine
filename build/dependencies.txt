@@ -239,6 +239,9 @@
 ../src/resources/texture-atlas.js
 ../src/resources/sprite.js
 ../src/resources/parser/json-model.js
+../src/resources/parser/glb-model.js
+../src/resources/parser/glb-animation.js
+../src/resources/parser/glb-helpers.js
 ../src/resources/parser/scene.js
 ../src/resources/parser/material/json-standard-material.js
 ../src/resources/basis.js
