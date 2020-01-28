@@ -16,8 +16,9 @@ Object.assign(pc, function () {
             cTFATC_RGB: 11,                     // ATC rgb
             cTFATC_RGBA_INTERPOLATED_ALPHA: 12, // ATC rgba
             // uncompressed (fallback) formats
+            cTFRGBA32: 13,                      // rgba 8888
             cTFRGB565: 14,                      // rgb 565
-            cTFRGBA4444: 16                     // rgbq 4444
+            cTFRGBA4444: 16                     // rgba 4444
         };
 
         // Map GPU to basis format for textures without alpha
@@ -53,6 +54,7 @@ Object.assign(pc, function () {
         basisToEngineMapping[BASIS_FORMAT.cTFASTC_4x4]      = pc.PIXELFORMAT_ASTC_4x4;
         basisToEngineMapping[BASIS_FORMAT.cTFATC_RGB]       = pc.PIXELFORMAT_ATC_RGB;
         basisToEngineMapping[BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA] = pc.PIXELFORMAT_ATC_RGBA;
+        basisToEngineMapping[BASIS_FORMAT.cTFRGBA32]        = pc.PIXELFORMAT_R8_G8_B8_A8;
         basisToEngineMapping[BASIS_FORMAT.cTFRGB565]        = pc.PIXELFORMAT_R5_G6_B5;
         basisToEngineMapping[BASIS_FORMAT.cTFRGBA4444]      = pc.PIXELFORMAT_R4_G4_B4_A4;
 
@@ -83,7 +85,7 @@ Object.assign(pc, function () {
                 // if not power-of-two or not square
                 if (((width & (width - 1)) !== 0) || (width !== height)) {
                     basisFormat = (basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB) ?
-                        BASIS_FORMAT.cTFRGB565 : BASIS_FORMAT.cTFRGBA4444;
+                        BASIS_FORMAT.cTFRGB565 : BASIS_FORMAT.cTFRGBA32;
                 }
             }
 
