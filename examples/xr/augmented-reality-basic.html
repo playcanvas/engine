@@ -6,7 +6,6 @@
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
         <script src="../../build/output/playcanvas.js"></script>
-        <script src="https://code.playcanvas.com/webvr-polyfill.91fbc44.js"></script>
         <style>
             body {
                 margin: 0;
@@ -20,9 +19,11 @@
             }
             .message {
                 position: absolute;
+                padding: 8px 16px;
                 left: 20px;
                 bottom: 0px;
                 color: #ccc;
+                background-color: rgba(0, 0, 0, .5);
                 font-family: "Proxima Nova", Arial, sans-serif;
             }
         </style>
@@ -64,7 +65,7 @@
             var app = new pc.Application(canvas, {
                 mouse: new pc.Mouse(canvas),
                 touch: new pc.TouchDevice(canvas),
-                vr: true
+                keyboard: new pc.Keyboard(window)
             });
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -81,7 +82,7 @@
             // create camera
             var c = new pc.Entity();
             c.addComponent('camera', {
-                clearColor: new pc.Color(44/255, 62/255, 80/255),
+                clearColor: new pc.Color(0, 0, 0, 0),
                 farClip: 10000
             });
             app.root.addChild(c);
@@ -100,49 +101,70 @@
                 cube.addComponent("model", {
                     type: "box",
                 });
-                cube.setLocalScale(1,1,1);
-                cube.translate(x, y, z);
+                cube.setLocalScale(.5, .5, .5);
+                cube.translate(x * .5, y, z * .5);
                 app.root.addChild(cube);
             };
 
             // create a grid of cubes
-            var SIZE = 16;
+            var SIZE = 4;
             for (var x = 0; x < SIZE; x++) {
                 for (var y = 0; y < SIZE; y++) {
-                    createCube(2*x - SIZE, -1.5, 2*y - SIZE);
+                    createCube(2*x - SIZE, -1, 2*y - SIZE);
                 }
             }
 
-            var activate = function () {
-                if (app.vr && app.vr.display) {
-                    c.camera.enterVr(function (err) {
-                        if (err) {message(err);}
-                        message("");
-                    });
-                } else {
-                    message("WebVR not available")
-                }
-            };
-
-            app.mouse.on("mousedown", function () {
-                activate();
-            });
-
-            if (app.touch) {
-                app.touch.on("touchend", function () {
-                    if (!c.camera.vrDisplay) {
-                        // if not in VR, activate
-                        activate();
+            if (app.xr.supported) {
+                var activate = function () {
+                    if (app.xr.isAvailable(pc.XR_TYPE_IMMERSIVE_AR)) {
+                        c.camera.startXr(pc.XR_TYPE_IMMERSIVE_AR, function (err) {
+                            if (err) message("WebXR Immersive AR failed to start: " + err.message);
+                        });
                     } else {
-                        // otherwise reset camera
-                        c.camera.vrDisplay.reset();
+                        message("WebXR Immersive AR is not available");
+                    }
+                };
+
+                app.mouse.on("mousedown", function () {
+                    if (! app.xr.active)
+                        activate();
+                });
+
+                if (app.touch) {
+                    app.touch.on("touchend", function () {
+                        if (! app.xr.active) {
+                            // if not in VR, activate
+                            activate();
+                        } else {
+                            // otherwise reset camera
+                            c.camera.endXr();
+                        }
+                    });
+                }
+
+                // end session by keyboard ESC
+                app.keyboard.on('keydown', function (evt) {
+                    if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+                        app.xr.sessionEnd();
                     }
                 });
-            }
 
-            app.vr.on("ready", function (displays) {
-                message("VRDisplays: " + displays.length);
-            });
+                app.xr.on('session:start', function () {
+                    message("WebXR Immersive AR session has started");
+                });
+                app.xr.on('session:end', function () {
+                    message("WebXR Immersive AR session has ended");
+                });
+                app.xr.on('available:' + pc.XR_TYPE_IMMERSIVE_AR, function (available) {
+                    message("WebXR Immersive AR is now " + (available ? 'available' : 'unavailable'));
+                });
+
+                if (! app.xr.isAvailable(pc.XR_TYPE_IMMERSIVE_AR)) {
+                    message("WebXR Immersive AR is not available");
+                }
+            } else {
+                message("WebXR is not supported");
+            }
         </script>
     </body>
 </html>

@@ -30,8 +30,7 @@ var categories = [
             "shader-burn",
             "shader-toon",
             "shader-wobble",
-            "texture-basis",
-            "virtual-reality"
+            "texture-basis"
         ]
     }, {
         name: "input",
@@ -69,6 +68,12 @@ var categories = [
             "text-typewriter",
             "text-wrap",
             "various"
+        ]
+    }, {
+        name: "xr",
+        examples: [
+            'augmented-reality-basic',
+            'virtual-reality-basic'
         ]
     }
 ];
