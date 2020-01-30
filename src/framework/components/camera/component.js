@@ -434,40 +434,45 @@ Object.assign(pc, function () {
          * @function
          * @name pc.CameraComponent#startXr
          * @description Attempt to start XR session with this camera
-         * @param {pc.callbacks.XrErrSession} callback - Function called once to indicate success or failure. The callback takes two arguments (err) and (session).
+         * @param {String} type - The type of session. Can be one of the following:
+         *
+         * * {@link pc.XR_TYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+         * * {@link pc.XR_TYPE_IMMERSIVE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+         * * {@link pc.XR_TYPE_IMMERSIVE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+         *
+         * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
          * @example
          * // On an entity with a camera component
-         * this.entity.camera.startXr(function (err, session) {
+         * this.entity.camera.startXr(PC.XR_TYPE_IMMERSIVE_VR, function (err) {
          *     if (err) {
-         *         console.error(err);
+         *         // failed to start XR session
          *     } else {
-         *         // in XR!
+         *         // in XR
          *     }
          * });
          */
         startXr: function (type, callback) {
-            this.system.app.xr.sessionStart(this.camera, type, callback);
+            this.system.app.xr.sessionStart(this, type, callback);
         },
 
         /**
          * @function
          * @name pc.CameraComponent#endXr
-         * @description Attempt to end XR of this camera
-         * @param {pc.callbacks.XrSession} callback - Function called once session is ended. The callback takes one argument (old session).
+         * @description Attempt to end XR session of this camera
+         * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is ended. The callback has one argument Error - it is null if successfully ended XR session.
          * @example
          * // On an entity with a camera component
-         * this.entity.camera.endXr(function (session) {
-         *     // not anymore in XR!
+         * this.entity.camera.endXr(function (err) {
+         *     // not anymore in XR
          * });
          */
-        endXr: function(callback) {
-            if (! this.camera.xr || ! this.camera.xr.session)
+        endXr: function (callback) {
+            if (! this.camera.xr) {
+                if (callback) callback(new Error("Camera is not in XR"));
                 return;
+            }
 
-            if (callback)
-                this.camera.xr.once('session:end', callback);
-
-            this.camera.xr.sessionEnd();
+            this.camera.xr.sessionEnd(callback);
         }
     });
 

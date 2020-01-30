@@ -1,24 +1,10 @@
 Object.assign(pc, function () {
-    function mat3FromMat4(m3, m4) {
-        m3.data[0] = m4.data[0];
-        m3.data[1] = m4.data[1];
-        m3.data[2] = m4.data[2];
-
-        m3.data[3] = m4.data[4];
-        m3.data[4] = m4.data[5];
-        m3.data[5] = m4.data[6];
-
-        m3.data[6] = m4.data[8];
-        m3.data[7] = m4.data[9];
-        m3.data[8] = m4.data[10];
-    }
-
     var sessionTypes = {
         /**
          * @constant
          * @type String
          * @name pc.XR_TYPE_INLINE
-         * @description XR session type. TODO
+         * @description Inline - always available type of session. It has limited features availability and is rendered into HTML element.
          */
         XR_TYPE_INLINE: 'inline',
 
@@ -26,7 +12,7 @@ Object.assign(pc, function () {
          * @constant
          * @type String
          * @name pc.XR_TYPE_IMMERSIVE_VR
-         * @description XR session type. TODO
+         * @description Immersive VR - session that provides exclusive access to VR device with best available tracking features.
          */
         XR_TYPE_IMMERSIVE_VR: 'immersive-vr',
 
@@ -34,11 +20,23 @@ Object.assign(pc, function () {
          * @constant
          * @type String
          * @name pc.XR_TYPE_IMMERSIVE_AR
-         * @description XR session type. TODO
+         * @description Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
          */
         XR_TYPE_IMMERSIVE_AR: 'immersive-ar'
     };
 
+
+    /**
+     * @class
+     * @name pc.XrManager
+     * @augments pc.EventHandler
+     * @classdesc Manage and update XR session and its states.
+     * @description Manage and update XR session and its states.
+     * @param {pc.Application} app - The main application.
+     * @property {Boolean} supported Returns true if XR is supported.
+     * @property {Boolean} active Returns true if XR session is running.
+     * @property {String|Null} type Returns type of curently running XR session or null if no session is running.
+     */
     var XrManager = function (app) {
         pc.EventHandler.call(this);
 
@@ -49,7 +47,7 @@ Object.assign(pc, function () {
         this._supported = !! navigator.xr;
 
         this._available = { };
-        for(var key in sessionTypes) {
+        for (var key in sessionTypes) {
             this._available[sessionTypes[key]] = false;
         }
 
@@ -66,8 +64,8 @@ Object.assign(pc, function () {
         this.position = new pc.Vec3();
         this.rotation = new pc.Quat();
 
-        this.depthNear = 0.1;
-        this.depthFar = 1000;
+        this._depthNear = 0.1;
+        this._depthFar = 1000;
 
         this._width = 0;
         this._height = 0;
@@ -76,9 +74,6 @@ Object.assign(pc, function () {
         // 1. HMD class with its params
         // 2. Space class
         // 3. Controllers class
-
-        // TODO
-        // better APIs
 
         if (this._supported) {
             navigator.xr.addEventListener('devicechange', function () {
@@ -90,8 +85,143 @@ Object.assign(pc, function () {
     XrManager.prototype = Object.create(pc.EventHandler.prototype);
     XrManager.prototype.constructor = XrManager;
 
+    /**
+     * @event
+     * @name pc.XrManager#available
+     * @description Fired when availability of specific XR type is changed.
+     * @param {String} type The session type that has changed availability.
+     * @param {Boolean} available True if specified session type is now available.
+     * @example
+     * app.xr.on('available', function (type, available) {
+     *     console.log('"' + type + '" XR session is now ' + (available ? 'available' : 'unavailable'));
+     * });
+     */
+
+    /**
+     * @event
+     * @name pc.XrManager#available:[type]
+     * @description Fired when availability of specific XR type is changed.
+     * @param {Boolean} available True if specified session type is now available.
+     * @example
+     * app.xr.on('available:' + pc.XR_TYPE_IMMERSIVE_VR, function (available) {
+     *     console.log('Immersive VR session is now ' + (available ? 'available' : 'unavailable'));
+     * });
+     */
+
+    /**
+     * @event
+     * @name pc.XrManager#session:start
+     * @description Fired when XR session is started
+     * @example
+     * app.xr.on('session:start', function () {
+     *     // XR session has started
+     * });
+     */
+
+    /**
+     * @event
+     * @name pc.XrManager#session:end
+     * @description Fired when XR session is ended
+     * @example
+     * app.xr.on('session:end', function () {
+     *     // XR session has ended
+     * });
+     */
+
+    /**
+     * @function
+     * @name pc.XrManager#sessionStart
+     * @description Attempts to start XR session for provided {@link pc.CameraComponent} and optionally fires callback when session is created or failed to create.
+     * @param {pc.CameraComponent} camera it will be used to render XR session and manipulated based on pose tracking
+     * @param {String} type session type. Can be one of the following:
+     *
+     * * {@link pc.XR_TYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+     * * {@link pc.XR_TYPE_IMMERSIVE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+     * * {@link pc.XR_TYPE_IMMERSIVE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+     *
+     * @example
+     * button.on('click', function () {
+     *     app.xr.sessionStart(camera, PC.XR_TYPE_IMMERSIVE_VR);
+     * });
+     * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+     */
+    XrManager.prototype.sessionStart = function (camera, type, callback) {
+        if (! this._available[type]) {
+            if (callback) callback(new Error('XR is not available'));
+            return;
+        }
+
+        if (this._session) {
+            if (callback) callback(new Error('XR session is already started'));
+            return;
+        }
+
+        var self = this;
+
+        this._camera = camera;
+        this._camera.camera.xr = this;
+        this._type = type;
+
+        this._setClipPlanes(camera.nearClip, camera.farClip);
+
+        // TODO
+        // makeXRCompatible
+        // scenario to test:
+        // 1. app is running on integrated GPU
+        // 2. XR device is connected, to another GPU
+        // 3. probably immersive-vr will fail to be created
+        // 4. call makeXRCompatible, very likely will lead to context loss
+
+        navigator.xr.requestSession(type).then(function (session) {
+            self._onSessionStart(session, callback);
+        });
+    };
+
+    /**
+     * @function
+     * @name pc.XrManager#sessionEnd
+     * @description Attempts to end XR session and optionally fires callback when session is ended or failed to end.
+     * @example
+     * app.keyboard.on('keydown', function (evt) {
+     *     if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+     *         app.xr.sessionEnd();
+     *     }
+     * });
+     * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+     */
+    XrManager.prototype.sessionEnd = function (callback) {
+        if (! this._session) {
+            if (callback) callback(new Error('XR Session is not initialized'));
+            return;
+        }
+
+        if (callback) this.once('session:end', callback);
+
+        this._session.end();
+    };
+
+    /**
+     * @function
+     * @name pc.XrManager#isAvailable
+     * @description Check if specific type of session is available
+     * @param {String} type session type. Can be one of the following:
+     *
+     * * {@link pc.XR_TYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+     * * {@link pc.XR_TYPE_IMMERSIVE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+     * * {@link pc.XR_TYPE_IMMERSIVE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+     *
+     * @example
+     * if (app.xr.isAvailable(pc.XR_TYPE_IMMERSIVE_VR)) {
+     *     // VR is available
+     * }
+     * @returns {Boolean} True if specified session type is available.
+     */
+    XrManager.prototype.isAvailable = function (type) {
+        return this._available[type];
+    };
+
     XrManager.prototype._deviceAvailabilityCheck = function () {
-        for(var key in this._available) {
+        for (var key in this._available) {
             this._sessionSupportCheck(key);
         }
     };
@@ -107,39 +237,6 @@ Object.assign(pc, function () {
             self.fire('available', type, available);
             self.fire('available:' + type, available);
         });
-    };
-
-    XrManager.prototype.sessionStart = function (camera, type, callback) {
-        if (! this._available[type])
-            return callback(new Error('XR is not available'));
-
-        if (this._session)
-            return callback(new Error('XR session is already started'));
-
-        var self = this;
-
-        this._camera = camera;
-        this._camera.xr = this;
-        this._type = type;
-
-        // TODO
-        // makeXRCompatible
-        // scenario to test:
-        // 1. app is running on integrated GPU
-        // 2. XR device is connected, to another GPU
-        // 3. probably immersive-vr will fail to be created
-        // 4. call makeXRCompatible, very likely will lead to context loss
-
-        navigator.xr.requestSession(type).then(function (session) {
-            self._onSessionStart(session, callback);
-        });
-    };
-
-    XrManager.prototype.sessionEnd = function () {
-        if (! this._session)
-            return;
-
-        this._session.end();
     };
 
     XrManager.prototype._onSessionStart = function (session, callback) {
@@ -162,6 +259,11 @@ Object.assign(pc, function () {
             }
         };
 
+        var onClipPlanesChange = function () {
+            self._setClipPlanes(self._camera.nearClip, self._camera.farClip);
+        };
+
+        // clean up once session is ended
         var onEnd = function () {
             self._session = null;
             self._referenceSpace = null;
@@ -173,7 +275,10 @@ Object.assign(pc, function () {
             self._type = null;
 
             if (self._camera) {
-                self._camera.xr = null;
+                self._camera.off('set_nearClip', onClipPlanesChange);
+                self._camera.off('set_farClip', onClipPlanesChange);
+
+                self._camera.camera.xr = null;
                 self._camera = null;
             }
 
@@ -181,28 +286,38 @@ Object.assign(pc, function () {
             session.removeEventListener('visibilitychange', onVisibilityChange);
             session.removeEventListener('inputsourceschange', onInputSourcesChange);
 
+            // old requestAnimationFrame will never be triggered,
+            // so queue up new tick
             self.app.tick();
 
-            self.fire('session:end', session);
+            self.fire('session:end');
         };
 
         session.addEventListener('end', onEnd);
         session.addEventListener('visibilitychange', onVisibilityChange);
         session.addEventListener('inputsourceschange', onInputSourcesChange);
 
+        this._camera.on('set_nearClip', onClipPlanesChange);
+        this._camera.on('set_farClip', onClipPlanesChange);
+
         this._baseLayer = new XRWebGLLayer(session, this.app.graphicsDevice.gl);
 
         session.updateRenderState({
-            baseLayer: this._baseLayer
+            baseLayer: this._baseLayer,
+            depthNear: this._depthNear,
+            depthFar: this._depthFar
         });
 
+        // request reference space
         session.requestReferenceSpace('local').then(function (referenceSpace) {
             self._referenceSpace = referenceSpace;
 
+            // old requestAnimationFrame will never be triggered,
+            // so queue up new tick
             self.app.tick();
 
-            if (callback) callback(null, session);
-            self.fire('session:start', session);
+            if (callback) callback(null);
+            self.fire('session:start');
         });
     };
 
@@ -218,22 +333,35 @@ Object.assign(pc, function () {
         this.fire('inputSource:remove', inputSource);
     };
 
-    XrManager.prototype.setClipPlanes = function (near, far) {
-        if (this.depthNear === near && this.depthFar === far)
+    XrManager.prototype._setClipPlanes = function (near, far) {
+        near = Math.min(0.0001, Math.max(0.1, near));
+        far = Math.max(1000, far);
+
+        if (this._depthNear === near && this._depthFar === far)
             return;
 
-        this.depthNear = near;
-        this.depthFar = far;
+        this._depthNear = near;
+        this._depthFar = far;
 
-        // TODO
-        // update clip planes
+        if (! this._session)
+            return;
+
+        // if session is available,
+        // queue up render state update
+        this._session.updateRenderState({
+            depthNear: this._depthNear,
+            depthFar: this._depthFar
+        });
     };
 
     XrManager.prototype.calculateViews = function (frame) {
         if (! this._session) return;
 
-        var i, view, viewRaw, layer, viewport, position, rotation;
+        var i, view, viewRaw, layer;
+        var viewport, position, rotation;
+        var lengthNew;
 
+        // canvas resolution should be set on first frame availability or resolution changes
         var width = frame.session.renderState.baseLayer.framebufferWidth;
         var height = frame.session.renderState.baseLayer.framebufferHeight;
         if (this._width !== width || this._height !== height) {
@@ -243,9 +371,10 @@ Object.assign(pc, function () {
         }
 
         this._pose = frame.getViewerPose(this._referenceSpace);
-        var lengthNew = this._pose ? this._pose.views.length : 0;
+        lengthNew = this._pose ? this._pose.views.length : 0;
 
         if (lengthNew > this.views.length) {
+            // add new views into list
             for (i = 0; i <= (lengthNew - this.views.length); i++) {
                 view = this.viewsPool.pop();
                 if (! view) {
@@ -256,10 +385,8 @@ Object.assign(pc, function () {
                         viewOffMat: new pc.Mat4(),
                         viewInvMat: new pc.Mat4(),
                         viewInvOffMat: new pc.Mat4(),
-                        projViewMat: new pc.Mat4(),
                         projViewOffMat: new pc.Mat4(),
                         viewMat3: new pc.Mat3(),
-                        viewMat3Off: new pc.Mat3(),
                         position: new pc.Vec3(),
                         positionOff: new pc.Vec3(),
                         rotation: new pc.Quat()
@@ -269,17 +396,20 @@ Object.assign(pc, function () {
                 this.views.push(view);
             }
         } else if (lengthNew <= this.views.length) {
+            // remove views from list into pool
             for (i = 0; i < (this.views.length - lengthNew); i++) {
                 this.viewsPool.push(this.views.pop());
             }
         }
 
+        // reset position
         this.position.set(0, 0, 0);
 
         if (this._pose) {
             layer = frame.session.renderState.baseLayer;
 
             for (i = 0; i < this._pose.views.length; i++) {
+                // for each view, calculate matrices
                 viewRaw = this._pose.views[i];
                 view = this.views[i];
                 viewport = layer.getViewport(viewRaw);
@@ -292,8 +422,6 @@ Object.assign(pc, function () {
                 view.projMat.set(viewRaw.projectionMatrix);
                 view.viewMat.set(viewRaw.transform.inverse.matrix);
                 view.viewInvMat.set(viewRaw.transform.matrix);
-                view.projViewMat.mul2(view.projMat, view.viewMat);
-                mat3FromMat4(view.viewMat3, view.viewMat);
 
                 position = viewRaw.transform.position;
                 view.position.set(position.x, position.y, position.z);
@@ -301,25 +429,21 @@ Object.assign(pc, function () {
 
                 rotation = viewRaw.transform.orientation;
                 view.rotation.set(rotation.x, rotation.y, rotation.z, rotation.w);
-                this.rotation.copy(view.rotation);
+
+                if (i === 0) this.rotation.copy(view.rotation);
             }
 
             this.position.scale(1 / this._pose.views.length);
         }
 
-        this._camera._node.setLocalPosition(this.position);
-        this._camera._node.setLocalRotation(this.rotation);
+        // position and rotate camera based on calculated vectors
+        this._camera.camera._node.setLocalPosition(this.position);
+        this._camera.camera._node.setLocalRotation(this.rotation);
     };
 
     Object.defineProperty(XrManager.prototype, 'supported', {
         get: function () {
             return this._supported;
-        }
-    });
-
-    Object.defineProperty(XrManager.prototype, 'available', {
-        get: function () {
-            return this._available;
         }
     });
 
@@ -347,12 +471,6 @@ Object.assign(pc, function () {
                 return null;
 
             return this._session.visibilityState;
-        }
-    });
-
-    Object.defineProperty(XrManager.prototype, 'inputSources', {
-        get: function () {
-            return this._inputSources;
         }
     });
 

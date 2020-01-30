@@ -551,11 +551,6 @@ Object.assign(pc, function () {
         // make sure colorWrite is set to true to all channels, if you want to fully clear the target
         setCamera: function (camera, target, clear, cullBorder) {
             if (camera.xr && camera.xr.session) {
-                // TODO
-                // respect parent transform
-                camera.nearClip = camera.xr.session.renderState.depthNear;
-                camera.farClip = camera.xr.session.renderState.depthFar;
-
                 var parent = camera._node.parent;
                 var transform;
                 if (parent) {
@@ -575,7 +570,7 @@ Object.assign(pc, function () {
                         view.viewOffMat.copy(view.viewMat);
                     }
 
-                    mat3FromMat4(view.viewMat3Off, view.viewOffMat);
+                    mat3FromMat4(view.viewMat3, view.viewOffMat);
                     view.projViewOffMat.mul2(view.projMat, view.viewOffMat);
 
                     view.positionOff.x = view.viewInvOffMat.data[12];
@@ -584,9 +579,6 @@ Object.assign(pc, function () {
 
                     camera.frustum.update(view.projMat, view.viewOffMat);
                 }
-
-                // TODO
-                // calculate frustum culling
             } else {
                 // Projection Matrix
                 projMat = camera.getProjectionMatrix();
@@ -1648,7 +1640,7 @@ Object.assign(pc, function () {
                             this.projId.setValue(view.projMat.data);
                             this.viewId.setValue(view.viewOffMat.data);
                             this.viewInvId.setValue(view.viewInvOffMat.data);
-                            this.viewId3.setValue(view.viewMat3Off.data);
+                            this.viewId3.setValue(view.viewMat3.data);
                             this.viewProjId.setValue(view.projViewOffMat.data);
                             this.viewPosId.setValue(view.positionOff.data);
 

@@ -79,12 +79,6 @@
  */
 
 /**
- * @callback pc.callbacks.VrCamera
- * @description Callback used by {@link pc.CameraComponent#enterVr} and {@link pc.CameraComponent#exitVr}.
- * @param {String|Null} err On success it is null on failure it is the error message.
- */
-
-/**
  * @private
  * @callback pc.callbacks.CreateScript
  * @description Callback used by {@link pc.script.create}.
@@ -154,12 +148,7 @@
  */
 
 /**
- * @callback pc.callbacks.VrDisplay
- * @description Callback used by {@link pc.VrDisplay#requestPresent} and {@link pc.VrDisplay#exitPresent}.
- * @param {String|Null} err The error message if presenting fails, or null if the call succeeds.
- */
-
-/**
- * @callback pc.callbacks.VrFrame
- * @description Callback used by {@link pc.VrDisplay#requestAnimationFrame}.
+ * @callback pc.callbacks.XrError
+ * @description Callback used by {@link pc.XrManager#endXr} and {@link pc.XrManager#startXr}.
+ * @param {Error|Null} err The Error object or null if operation was successfull.
  */

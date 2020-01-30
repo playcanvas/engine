@@ -1725,8 +1725,7 @@ Object.assign(pc, function () {
 
             pc.destroyPostEffectQuad();
 
-            // TODO
-            // destroy XR
+            this.xr.sessionEnd();
 
             this.graphicsDevice.destroy();
             this.graphicsDevice = null;
