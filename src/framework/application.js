@@ -270,6 +270,9 @@ Object.assign(pc, function () {
         // for compatibility
         this.context = this;
 
+        if (! options.graphicsDeviceOptions)
+            options.graphicsDeviceOptions = { };
+            
         options.graphicsDeviceOptions.xrCompatible = true;
 
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
