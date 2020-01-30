@@ -89,8 +89,8 @@ Object.assign(pc, function () {
      * @event
      * @name pc.XrManager#available
      * @description Fired when availability of specific XR type is changed.
-     * @param {string} type The session type that has changed availability.
-     * @param {boolean} available True if specified session type is now available.
+     * @param {string} type - The session type that has changed availability.
+     * @param {boolean} available - True if specified session type is now available.
      * @example
      * app.xr.on('available', function (type, available) {
      *     console.log('"' + type + '" XR session is now ' + (available ? 'available' : 'unavailable'));
@@ -101,7 +101,7 @@ Object.assign(pc, function () {
      * @event
      * @name pc.XrManager#available:[type]
      * @description Fired when availability of specific XR type is changed.
-     * @param {boolean} available True if specified session type is now available.
+     * @param {boolean} available - True if specified session type is now available.
      * @example
      * app.xr.on('available:' + pc.XR_TYPE_IMMERSIVE_VR, function (available) {
      *     console.log('Immersive VR session is now ' + (available ? 'available' : 'unavailable'));
@@ -132,8 +132,8 @@ Object.assign(pc, function () {
      * @function
      * @name pc.XrManager#sessionStart
      * @description Attempts to start XR session for provided {@link pc.CameraComponent} and optionally fires callback when session is created or failed to create.
-     * @param {pc.CameraComponent} camera it will be used to render XR session and manipulated based on pose tracking
-     * @param {string} type session type. Can be one of the following:
+     * @param {pc.CameraComponent} camera - it will be used to render XR session and manipulated based on pose tracking
+     * @param {string} type - session type. Can be one of the following:
      *
      * * {@link pc.XR_TYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
      * * {@link pc.XR_TYPE_IMMERSIVE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
@@ -204,7 +204,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.XrManager#isAvailable
      * @description Check if specific type of session is available
-     * @param {String} type session type. Can be one of the following:
+     * @param {string} type - session type. Can be one of the following:
      *
      * * {@link pc.XR_TYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
      * * {@link pc.XR_TYPE_IMMERSIVE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
