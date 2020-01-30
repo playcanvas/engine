@@ -514,3 +514,36 @@ pc.SoundManager.prototype.setVolume = function (volume) {
     // #endif
     this.volume = volume;
 };
+
+Object.defineProperty(pc.Application.prototype, "vr", {
+    get: function () {
+        // #ifdef DEBUG
+        console.warn('DEPRECATED: pc.Application#vr is deprecated, use pc.Application#xr instead.');
+        // #endif
+        return { isSupported: false };
+    }
+});
+
+pc.Application.prototype.enableVr = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Application#enableVr is deprecated. Use pc.Application#xr instead.');
+    // #endif
+};
+
+pc.Application.prototype.disableVr = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.Application#disableVr is deprecated. Use pc.Application#xr instead.');
+    // #endif
+};
+
+pc.CameraComponent.prototype.enterVr = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.CameraComponent#enterVr is deprecated. Use pc.CameraComponent#startXr instead.');
+    // #endif
+};
+
+pc.CameraComponent.prototype.exitVr = function () {
+    // #ifdef DEBUG
+    console.warn('DEPRECATED: pc.CameraComponent#exitVr is deprecated. Use pc.CameraComponent#endXr instead.');
+    // #endif
+};
