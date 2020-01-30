@@ -1,8 +1,8 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.Entity
-     * @extends pc.GraphNode
+     * @augments pc.GraphNode
      * @classdesc The Entity is the core primitive of a PlayCanvas game. Generally speaking an object in your game will consist of an {@link pc.Entity},
      * and a set of {@link pc.Component}s which are managed by their respective {@link pc.ComponentSystem}s. One of those components maybe a
      * {@link pc.ScriptComponent} which allows you to write custom code to attach to your Entity.
@@ -12,8 +12,8 @@ Object.assign(pc, function () {
      * The Component and ComponentSystem provide the logic to give an Entity a specific type of behavior. e.g. the ability to
      * render a model or play a sound. Components are specific to an instance of an Entity and are attached (e.g. `this.entity.model`)
      * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
-     * @param {String} [name] The non-unique name of the entity, default is "Untitled".
-     * @param {pc.Application} [app] The application the entity belongs to, default is the current application.
+     * @param {string} [name] - The non-unique name of the entity, default is "Untitled".
+     * @param {pc.Application} [app] - The application the entity belongs to, default is the current application.
      * @property {pc.AnimationComponent} [animation] Gets the {@link pc.AnimationComponent} attached to this entity. [read only]
      * @property {pc.AudioListenerComponent} [audiolistener] Gets the {@link pc.AudioSourceComponent} attached to this entity. [read only]
      * @property {pc.ButtonComponent} [button] Gets the {@link pc.ButtonComponent} attached to this entity. [read only]
@@ -32,15 +32,13 @@ Object.assign(pc, function () {
      * @property {pc.SoundComponent} [sound] Gets the {@link pc.SoundComponent} attached to this entity. [read only]
      * @property {pc.SpriteComponent} [sprite] Gets the {@link pc.SpriteComponent} attached to this entity. [read only]
      * @example
-     * var app = ... // Get the pc.Application
-     *
      * var entity = new pc.Entity();
      *
      * // Add a Component to the Entity
      * entity.addComponent("camera", {
-     *   fov: 45,
-     *   nearClip: 1,
-     *   farClip: 10000
+     *     fov: 45,
+     *     nearClip: 1,
+     *     farClip: 10000
      * });
      *
      * // Add the Entity into the scene graph
@@ -76,7 +74,6 @@ Object.assign(pc, function () {
         }
 
         this._guid = null;
-        this._request = null;
 
         // used by component systems to speed up destruction
         this._destroying = false;
@@ -89,37 +86,41 @@ Object.assign(pc, function () {
      * @name pc.Entity#addComponent
      * @description Create a new component and add it to the entity.
      * Use this to add functionality to the entity like rendering a model, playing sounds and so on.
-     * @param {String} type The name of the component to add. Valid strings are:
-     * <ul>
-     *   <li>"animation" - see {@link pc.AnimationComponent}</li>
-     *   <li>"audiolistener" - see {@link pc.AudioListenerComponent}</li>
-     *   <li>"button" - see {@link pc.ButtonComponent}</li>
-     *   <li>"camera" - see {@link pc.CameraComponent}</li>
-     *   <li>"collision" - see {@link pc.CollisionComponent}</li>
-     *   <li>"element" - see {@link pc.ElementComponent}</li>
-     *   <li>"layoutchild" - see {@link pc.LayoutChildComponent}</li>
-     *   <li>"layoutgroup" - see {@link pc.LayoutGroupComponent}</li>
-     *   <li>"light" - see {@link pc.LightComponent}</li>
-     *   <li>"model" - see {@link pc.ModelComponent}</li>
-     *   <li>"particlesystem" - see {@link pc.ParticleSystemComponent}</li>
-     *   <li>"rigidbody" - see {@link pc.RigidBodyComponent}</li>
-     *   <li>"screen" - see {@link pc.ScreenComponent}</li>
-     *   <li>"script" - see {@link pc.ScriptComponent}</li>
-     *   <li>"scrollbar" - see {@link pc.ScrollbarComponent}</li>
-     *   <li>"scrollview" - see {@link pc.ScrollViewComponent}</li>
-     *   <li>"sound" - see {@link pc.SoundComponent}</li>
-     *   <li>"sprite" - see {@link pc.SpriteComponent}</li>
-     * </ul>
-     * @param {Object} [data] The initialization data for the specific component type. Refer to each
+     * @param {string} type - The name of the component to add. Valid strings are:
+     *
+     * * "animation" - see {@link pc.AnimationComponent}
+     * * "audiolistener" - see {@link pc.AudioListenerComponent}
+     * * "button" - see {@link pc.ButtonComponent}
+     * * "camera" - see {@link pc.CameraComponent}
+     * * "collision" - see {@link pc.CollisionComponent}
+     * * "element" - see {@link pc.ElementComponent}
+     * * "layoutchild" - see {@link pc.LayoutChildComponent}
+     * * "layoutgroup" - see {@link pc.LayoutGroupComponent}
+     * * "light" - see {@link pc.LightComponent}
+     * * "model" - see {@link pc.ModelComponent}
+     * * "particlesystem" - see {@link pc.ParticleSystemComponent}
+     * * "rigidbody" - see {@link pc.RigidBodyComponent}
+     * * "screen" - see {@link pc.ScreenComponent}
+     * * "script" - see {@link pc.ScriptComponent}
+     * * "scrollbar" - see {@link pc.ScrollbarComponent}
+     * * "scrollview" - see {@link pc.ScrollViewComponent}
+     * * "sound" - see {@link pc.SoundComponent}
+     * * "sprite" - see {@link pc.SpriteComponent}
+     *
+     * @param {object} [data] - The initialization data for the specific component type. Refer to each
      * specific component's API reference page for details on valid values for this parameter.
      * @returns {pc.Component} The new Component that was attached to the entity or null if there
      * was an error.
      * @example
      * var entity = new pc.Entity();
-     * entity.addComponent("light"); // Add a light component with default properties
-     * entity.addComponent("camera", { // Add a camera component with some specified properties
-     *   fov: 45,
-     *   clearColor: new pc.Color(1,0,0),
+     *
+     * // Add a light component with default properties
+     * entity.addComponent("light");
+     *
+     * // Add a camera component with some specified properties
+     * entity.addComponent("camera", {
+     *     fov: 45,
+     *     clearColor: new pc.Color(1, 0, 0)
      * });
      */
     Entity.prototype.addComponent = function (type, data) {
@@ -143,11 +144,11 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Entity#removeComponent
      * @description Remove a component from the Entity.
-     * @param {String} type The name of the Component type
+     * @param {string} type - The name of the Component type.
      * @example
      * var entity = new pc.Entity();
      * entity.addComponent("light"); // add new light component
-     * //...
+     *
      * entity.removeComponent("light"); // remove light component
      */
     Entity.prototype.removeComponent = function (type) {
@@ -171,7 +172,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Entity#findComponent
      * @description Search the entity and all of its descendants for the first component of specified type.
-     * @param {String} type The name of the component type to retrieve.
+     * @param {string} type - The name of the component type to retrieve.
      * @returns {pc.Component} A component of specified type, if the entity or any of its descendants has
      * one. Returns undefined otherwise.
      * @example
@@ -189,7 +190,7 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Entity#findComponents
      * @description Search the entity and all of its descendants for all components of specified type.
-     * @param {String} type The name of the component type to retrieve.
+     * @param {string} type - The name of the component type to retrieve.
      * @returns {pc.Component} All components of specified type in the entity or any of its descendants.
      * Returns empty array if none found.
      * @example
@@ -209,8 +210,8 @@ Object.assign(pc, function () {
      * @private
      * @function
      * @name pc.Entity#getGuid
-     * @description Get the GUID value for this Entity
-     * @returns {String} The GUID of the Entity
+     * @description Get the GUID value for this Entity.
+     * @returns {string} The GUID of the Entity.
      */
     Entity.prototype.getGuid = function () {
         // if the guid hasn't been set yet then set it now
@@ -229,7 +230,7 @@ Object.assign(pc, function () {
      * @description Set the GUID value for this Entity.
      *
      * N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
-     * @param {String} guid The GUID to assign to the Entity
+     * @param {string} guid - The GUID to assign to the Entity.
      */
     Entity.prototype.setGuid = function (guid) {
         // remove current guid from entityIndex
@@ -304,33 +305,11 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @private
-     * @function
-     * @name pc.Entity#setRequest
-     * @description Used during resource loading to ensure that child resources of Entities are tracked
-     * @param {ResourceRequest} request The request being used to load this entity
-     */
-    Entity.prototype.setRequest = function (request) {
-        this._request = request;
-    };
-
-    /**
-     * @private
-     * @function
-     * @name pc.Entity#getRequest
-     * @description Get the Request that is being used to load this Entity
-     * @returns {ResourceRequest} The Request
-     */
-    Entity.prototype.getRequest = function () {
-        return this._request;
-    };
-
-    /**
      * @function
      * @name pc.Entity#findByGuid
-     * @description Find a descendant of this Entity with the GUID
-     * @param {String} guid The GUID to search for.
-     * @returns {pc.Entity} The Entity with the GUID or null
+     * @description Find a descendant of this Entity with the GUID.
+     * @param {string} guid - The GUID to search for.
+     * @returns {pc.Entity} The Entity with the GUID or null.
      */
     Entity.prototype.findByGuid = function (guid) {
         if (this._guid === guid) return this;
@@ -346,7 +325,7 @@ Object.assign(pc, function () {
     /**
      * @function
      * @name pc.Entity#destroy
-     * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
+     * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities.
      * @example
      * var firstChild = this.entity.children[0];
      * firstChild.destroy(); // delete child, all components and remove from hierarchy
@@ -406,8 +385,10 @@ Object.assign(pc, function () {
      * Note, this Entity is not in the hierarchy and must be added manually.
      * @returns {pc.Entity} A new Entity which is a deep copy of the original.
      * @example
-     *   var e = this.entity.clone(); // Clone Entity
-     *   this.entity.parent.addChild(e); // Add it as a sibling to the original
+     * var e = this.entity.clone();
+     *
+     * // Add clone as a sibling to the original
+     * this.entity.parent.addChild(e);
      */
     Entity.prototype.clone = function () {
         var duplicatedIdsMap = {};
@@ -511,7 +492,7 @@ Object.assign(pc, function () {
  * @event
  * @name pc.Entity#destroy
  * @description Fired after the entity is destroyed.
- * @param {pc.Entity} entity The entity that was destroyed.
+ * @param {pc.Entity} entity - The entity that was destroyed.
  * @example
  * entity.on("destroy", function (e) {
  *     console.log('entity ' + e.name + ' has been destroyed');

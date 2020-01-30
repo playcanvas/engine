@@ -2,12 +2,12 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.LuminosityEffect
      * @classdesc Outputs the luminosity of the input render target.
      * @description Creates new instance of the post effect.
-     * @extends pc.PostEffect
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
+     * @augments pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
      */
     var LuminosityEffect = function (graphicsDevice) {
         pc.PostEffect.call(this, graphicsDevice);

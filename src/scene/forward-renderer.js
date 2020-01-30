@@ -327,11 +327,11 @@ Object.assign(pc, function () {
     }
 
     /**
-     * @constructor
+     * @class
      * @name pc.ForwardRenderer
      * @classdesc The forward renderer render scene objects.
      * @description Creates a new forward renderer object.
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used by the renderer.
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
      */
     function ForwardRenderer(graphicsDevice) {
         this.device = graphicsDevice;
@@ -2280,7 +2280,7 @@ Object.assign(pc, function () {
 
             // 3. Transform the 8 corners of the camera frustum into the shadow camera's view space
             shadowCamView.copy( shadowCamNode.getWorldTransform() ).invert();
-            c2sc.copy( shadowCamView ).mul( camera._node.worldTransform );
+            c2sc.copy( shadowCamView ).mul( camera._node.getWorldTransform() );
             for (i = 0; i < 8; i++) {
                 c2sc.transformPoint(frustumPoints[i], frustumPoints[i]);
             }

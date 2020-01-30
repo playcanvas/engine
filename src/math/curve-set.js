@@ -2,11 +2,11 @@ Object.assign(pc, (function () {
     'use strict';
 
     /**
-     * @constructor
+     * @class
      * @name pc.CurveSet
      * @classdesc A curve set is a collection of curves.
      * @description Creates a new curve set.
-     * @param {Array<Number[]>} [curveKeys] An array of arrays of keys (pairs of numbers with
+     * @param {Array<number[]>} [curveKeys] - An array of arrays of keys (pairs of numbers with
      * the time first and value second).
      */
     var CurveSet = function () {
@@ -42,8 +42,8 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.CurveSet#get
          * @description Return a specific curve in the curve set.
-         * @param {Number} index The index of the curve to return
-         * @returns {pc.Curve} The curve at the specified index
+         * @param {number} index - The index of the curve to return.
+         * @returns {pc.Curve} The curve at the specified index.
          */
         get: function (index) {
             return this.curves[index];
@@ -54,11 +54,11 @@ Object.assign(pc, (function () {
          * @name pc.CurveSet#value
          * @description Returns the interpolated value of all curves in the curve
          * set at the specified time.
-         * @param {Number} time The time at which to calculate the value
-         * @param {Number[]} [result] The interpolated curve values at the specified time.
+         * @param {number} time - The time at which to calculate the value.
+         * @param {number[]} [result] - The interpolated curve values at the specified time.
          * If this parameter is not supplied, the function allocates a new array internally
          * to return the result.
-         * @returns {Number[]} The interpolated curve values at the specified time
+         * @returns {number[]} The interpolated curve values at the specified time.
          */
         value: function (time, result) {
             var length = this.curves.length;
@@ -76,7 +76,7 @@ Object.assign(pc, (function () {
          * @function
          * @name pc.CurveSet#clone
          * @description Returns a clone of the specified curve set object.
-         * @returns {pc.CurveSet} A clone of the specified curve set
+         * @returns {pc.CurveSet} A clone of the specified curve set.
          */
         clone: function () {
             var result = new pc.CurveSet();
@@ -114,10 +114,10 @@ Object.assign(pc, (function () {
          * @name pc.CurveSet#quantizeClamped
          * @description This function will sample the curveset at regular intervals
          * over the range [0..1] and clamp the result to min and max.
-         * @param {Number} precision The number of samples to return.
-         * @param {Number} min The minimum output value.
-         * @param {Number} max The maximum output value.
-         * @returns {Number[]} The set of quantized values.
+         * @param {number} precision - The number of samples to return.
+         * @param {number} min - The minimum output value.
+         * @param {number} max - The maximum output value.
+         * @returns {number[]} The set of quantized values.
          */
         quantizeClamped: function (precision, min, max) {
             var result = this.quantize(precision);
@@ -131,7 +131,7 @@ Object.assign(pc, (function () {
     /**
      * @readonly
      * @name pc.CurveSet#length
-     * @type Number
+     * @type {number}
      * @description The number of curves in the curve set.
      */
     Object.defineProperty(CurveSet.prototype, 'length', {
@@ -142,15 +142,15 @@ Object.assign(pc, (function () {
 
     /**
      * @name pc.CurveSet#type
-     * @type Number
+     * @type {number}
      * @description The interpolation scheme applied to all curves in the curve set. Can be:
-     * <ul>
-     *     <li>{@link pc.CURVE_LINEAR}</li>
-     *     <li>{@link pc.CURVE_SMOOTHSTEP}</li>
-     *     <li>{@link pc.CURVE_SPLINE}</li>
-     *     <li>{@link pc.CURVE_STEP}</li>
-     * </ul>
-     * Defaults to {@link pc.CURVE_SMOOTHSTEP};
+     *
+     * * {@link pc.CURVE_LINEAR}
+     * * {@link pc.CURVE_SMOOTHSTEP}
+     * * {@link pc.CURVE_SPLINE}
+     * * {@link pc.CURVE_STEP}
+     *
+     * Defaults to {@link pc.CURVE_SMOOTHSTEP}.
      */
     Object.defineProperty(CurveSet.prototype, 'type', {
         get: function () {

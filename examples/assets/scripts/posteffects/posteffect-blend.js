@@ -2,14 +2,14 @@
 Object.assign(pc, function () {
 
     /**
-     * @constructor
+     * @class
      * @name pc.BlendEffect
-     * @classdesc Blends the input render target with another texture
+     * @classdesc Blends the input render target with another texture.
      * @description Creates new instance of the post effect.
-     * @extends pc.PostEffect
-     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
-     * @property {pc.Texture} blendMap The texture with which to blend the input render target with
-     * @property {Number} mixRatio The amount of blending between the input and the blendMap. Ranges from 0 to 1
+     * @augments pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device of the application.
+     * @property {pc.Texture} blendMap The texture with which to blend the input render target with.
+     * @property {number} mixRatio The amount of blending between the input and the blendMap. Ranges from 0 to 1.
      */
     var BlendEffect = function (graphicsDevice) {
         pc.PostEffect.call(this, graphicsDevice);

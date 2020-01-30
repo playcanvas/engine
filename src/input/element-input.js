@@ -64,16 +64,17 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @constructor
+     * @class
      * @name pc.ElementInputEvent
      * @classdesc Represents an input event fired on a {@link pc.ElementComponent}. When an event is raised
      * on an ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
      * @description Create an instance of a pc.ElementInputEvent.
-     * @param {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
-     * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
-     * @param {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
+     * @param {MouseEvent|TouchEvent} event - The MouseEvent or TouchEvent that was originally raised.
+     * @param {pc.ElementComponent} element - The ElementComponent that this event was originally raised on.
+     * @param {pc.CameraComponent} camera - The CameraComponent that this event was originally raised via.
      * @property {MouseEvent|TouchEvent} event The MouseEvent or TouchEvent that was originally raised.
      * @property {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
+     * @property {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
      */
     var ElementInputEvent = function (event, element, camera) {
         this.event = event;
@@ -96,26 +97,26 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @constructor
+     * @class
      * @name pc.ElementMouseEvent
-     * @extends pc.ElementInputEvent
+     * @augments pc.ElementInputEvent
      * @classdesc Represents a Mouse event fired on a {@link pc.ElementComponent}.
      * @description Create an instance of a pc.ElementMouseEvent.
-     * @param {MouseEvent} event The MouseEvent that was originally raised.
-     * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
-     * @param {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
-     * @param {Number} x The x coordinate
-     * @param {Number} y The y coordinate
-     * @param {Number} lastX The last x coordinate
-     * @param {Number} lastY The last y coordinate
-     * @property {Boolean} ctrlKey Whether the ctrl key was pressed
-     * @property {Boolean} altKey Whether the alt key was pressed
-     * @property {Boolean} shiftKey Whether the shift key was pressed
-     * @property {Boolean} metaKey Whether the meta key was pressed
-     * @property {Number} button The mouse button
-     * @property {Number} dx The amount of horizontal movement of the cursor
-     * @property {Number} dy The amount of vertical movement of the cursor
-     * @property {Number} wheel The amount of the wheel movement
+     * @param {MouseEvent} event - The MouseEvent that was originally raised.
+     * @param {pc.ElementComponent} element - The ElementComponent that this event was originally raised on.
+     * @param {pc.CameraComponent} camera - The CameraComponent that this event was originally raised via.
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @param {number} lastX - The last x coordinate.
+     * @param {number} lastY - The last y coordinate.
+     * @property {boolean} ctrlKey Whether the ctrl key was pressed.
+     * @property {boolean} altKey Whether the alt key was pressed.
+     * @property {boolean} shiftKey Whether the shift key was pressed.
+     * @property {boolean} metaKey Whether the meta key was pressed.
+     * @property {number} button The mouse button.
+     * @property {number} dx The amount of horizontal movement of the cursor.
+     * @property {number} dy The amount of vertical movement of the cursor.
+     * @property {number} wheelDelta The amount of the wheel movement.
      */
     var ElementMouseEvent = function (event, element, camera, x, y, lastX, lastY) {
         ElementInputEvent.call(this, event, element, camera);
@@ -138,55 +139,70 @@ Object.assign(pc, function () {
             this.dy = y - lastY;
         }
 
-        // FF uses 'detail' and returns a value in 'no. of lines' to scroll
-        // WebKit and Opera use 'wheelDelta', WebKit goes in multiples of 120 per wheel notch
-        if (event.detail) {
-            this.wheel = -1 * event.detail;
-        } else if (event.wheelDelta) {
-            this.wheel = event.wheelDelta / 120;
-        } else {
-            this.wheel = 0;
+        // deltaY is in a different range across different browsers. The only thing
+        // that is consistent is the sign of the value so snap to -1/+1.
+        this.wheelDelta =  0;
+        if (event.type === 'wheel') {
+            if (event.deltaY > 0) {
+                this.wheelDelta = 1;
+            } else if (event.deltaY < 0) {
+                this.wheelDelta = -1;
+            }
+        }
+
+        // Backwards compatibility
+        this.wheel =  0;
+        if (event.type === 'wheel') {
+            // FF uses 'detail' and returns a value in 'no. of lines' to scroll
+            // WebKit and Opera use 'wheelDelta', WebKit goes in multiples of 120 per wheel notch
+            if (event.detail) {
+                this.wheel = -1 * event.detail;
+            } else if (event.wheelDelta) {
+                this.wheel = event.wheelDelta / 120;
+            }
         }
     };
     ElementMouseEvent.prototype = Object.create(ElementInputEvent.prototype);
     ElementMouseEvent.prototype.constructor = ElementMouseEvent;
 
     /**
-     * @constructor
+     * @class
      * @name pc.ElementTouchEvent
-     * @extends pc.ElementInputEvent
+     * @augments pc.ElementInputEvent
      * @classdesc Represents a TouchEvent fired on a {@link pc.ElementComponent}.
      * @description Create an instance of a pc.ElementTouchEvent.
-     * @param {TouchEvent} event The TouchEvent that was originally raised.
-     * @param {pc.ElementComponent} element The ElementComponent that this event was originally raised on.
-     * @param {pc.CameraComponent} camera The CameraComponent that this event was originally raised via.
-     * @param {Number} x The x coordinate of the touch that triggered the event
-     * @param {Number} y The y coordinate of the touch that triggered the event
-     * @param {pc.ElementInput} input The pc.ElementInput instance
-     * @property {pc.Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
-     * @property {pc.Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
+     * @param {TouchEvent} event - The TouchEvent that was originally raised.
+     * @param {pc.ElementComponent} element - The ElementComponent that this event was originally raised on.
+     * @param {pc.CameraComponent} camera - The CameraComponent that this event was originally raised via.
+     * @param {number} x - The x coordinate of the touch that triggered the event.
+     * @param {number} y - The y coordinate of the touch that triggered the event.
+     * @param {Touch} touch - The touch object that triggered the event.
+     * @property {Touch[]} touches The Touch objects representing all current points of contact with the surface, regardless of target or changed status.
+     * @property {Touch[]} changedTouches The Touch objects representing individual points of contact whose states changed between the previous touch event and this one.
+     * @property {Touch} touch The touch object that triggered the event.
      */
-    var ElementTouchEvent = function (event, element, camera, x, y, input) {
+    var ElementTouchEvent = function (event, element, camera, x, y, touch) {
         ElementInputEvent.call(this, event, element, camera);
 
         this.touches = event.touches;
         this.changedTouches = event.changedTouches;
         this.x = x;
         this.y = y;
+        this.touch = touch;
     };
     ElementTouchEvent.prototype = Object.create(ElementInputEvent.prototype);
     ElementTouchEvent.prototype.constructor = ElementTouchEvent;
 
     /**
-     * @constructor
+     * @class
      * @name pc.ElementInput
      * @classdesc Handles mouse and touch events for {@link pc.ElementComponent}s. When input events
      * occur on an ElementComponent this fires the appropriate events on the ElementComponent.
      * @description Create a new pc.ElementInput instance.
-     * @param {Element} domElement The DOM element
-     * @param {Object} [options] Optional arguments
-     * @param {Boolean} [options.useMouse] Whether to allow mouse input. Defaults to true.
-     * @param {Boolean} [options.useTouch] Whether to allow touch input. Defaults to true.
+     * @param {Element} domElement - The DOM element.
+     * @param {object} [options] - Optional arguments.
+     * @param {boolean} [options.useMouse] - Whether to allow mouse input. Defaults to true.
+     * @param {boolean} [options.useTouch] - Whether to allow touch input. Defaults to true.
      */
     var ElementInput = function (domElement, options) {
         this._app = null;
@@ -230,7 +246,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ElementInput#attach
          * @description Attach mouse and touch events to a DOM element.
-         * @param {Element} domElement The DOM element
+         * @param {Element} domElement - The DOM element.
          */
         attach: function (domElement) {
             if (this._attached) {
@@ -241,16 +257,16 @@ Object.assign(pc, function () {
             this._target = domElement;
             this._attached = true;
 
+            var opts = pc.platform.passiveEvents ? { passive: true } : false;
             if (this._useMouse) {
-                window.addEventListener('mouseup', this._upHandler, { passive: true });
-                window.addEventListener('mousedown', this._downHandler, { passive: true });
-                window.addEventListener('mousemove', this._moveHandler, { passive: true });
-                window.addEventListener('mousewheel', this._wheelHandler, { passive: true });
-                window.addEventListener('DOMMouseScroll', this._wheelHandler, { passive: true });
+                window.addEventListener('mouseup', this._upHandler, opts);
+                window.addEventListener('mousedown', this._downHandler, opts);
+                window.addEventListener('mousemove', this._moveHandler, opts);
+                window.addEventListener('wheel', this._wheelHandler, opts);
             }
 
             if (this._useTouch && pc.platform.touch) {
-                this._target.addEventListener('touchstart', this._touchstartHandler, { passive: true });
+                this._target.addEventListener('touchstart', this._touchstartHandler, opts);
                 // Passive is not used for the touchend event because some components need to be
                 // able to call preventDefault(). See notes in button/component.js for more details.
                 this._target.addEventListener('touchend', this._touchendHandler, false);
@@ -262,22 +278,22 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.ElementInput#detach
-         * @description Remove mouse and touch events from the DOM element that it is attached to
+         * @description Remove mouse and touch events from the DOM element that it is attached to.
          */
         detach: function () {
             if (!this._attached) return;
             this._attached = false;
 
+            var opts = pc.platform.passiveEvents ? { passive: true } : false;
             if (this._useMouse) {
-                window.removeEventListener('mouseup', this._upHandler, false);
-                window.removeEventListener('mousedown', this._downHandler, false);
-                window.removeEventListener('mousemove', this._moveHandler, false);
-                window.removeEventListener('mousewheel', this._wheelHandler, false);
-                window.removeEventListener('DOMMouseScroll', this._wheelHandler, false);
+                window.removeEventListener('mouseup', this._upHandler, opts);
+                window.removeEventListener('mousedown', this._downHandler, opts);
+                window.removeEventListener('mousemove', this._moveHandler, opts);
+                window.removeEventListener('wheel', this._wheelHandler, opts);
             }
 
             if (this._useTouch) {
-                this._target.removeEventListener('touchstart', this._touchstartHandler, false);
+                this._target.removeEventListener('touchstart', this._touchstartHandler, opts);
                 this._target.removeEventListener('touchend', this._touchendHandler, false);
                 this._target.removeEventListener('touchmove', this._touchmoveHandler, false);
                 this._target.removeEventListener('touchcancel', this._touchcancelHandler, false);
@@ -290,7 +306,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ElementInput#addElement
          * @description Add a {@link pc.ElementComponent} to the internal list of ElementComponents that are being checked for input.
-         * @param {pc.ElementComponent} element The ElementComponent
+         * @param {pc.ElementComponent} element - The ElementComponent.
          */
         addElement: function (element) {
             if (this._elements.indexOf(element) === -1)
@@ -301,7 +317,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.ElementInput#removeElement
          * @description Remove a {@link pc.ElementComponent} from the internal list of ElementComponents that are being checked for input.
-         * @param {pc.ElementComponent} element The ElementComponent
+         * @param {pc.ElementComponent} element - The ElementComponent.
          */
         removeElement: function (element) {
             var idx = this._elements.indexOf(element);
@@ -409,7 +425,7 @@ Object.assign(pc, function () {
                 var oldTouchInfo = this._touchedElements[touch.identifier];
 
                 if (newTouchInfo && (!oldTouchInfo || newTouchInfo.element !== oldTouchInfo.element)) {
-                    this._fireEvent(event.type, new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, this));
+                    this._fireEvent(event.type, new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, touch));
                     this._touchesForWhichTouchLeaveHasFired[touch.identifier] = false;
                 }
             }
@@ -446,7 +462,7 @@ Object.assign(pc, function () {
                 delete this._touchedElements[touch.identifier];
                 delete this._touchesForWhichTouchLeaveHasFired[touch.identifier];
 
-                this._fireEvent(event.type, new ElementTouchEvent(event, element, camera, x, y, this));
+                this._fireEvent(event.type, new ElementTouchEvent(event, element, camera, x, y, touch));
 
                 // check if touch was released over previously touch
                 // element in order to fire click event
@@ -458,7 +474,7 @@ Object.assign(pc, function () {
                         if (hovered === element) {
 
                             if (!this._clickedEntities[element.entity.getGuid()]) {
-                                this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, this));
+                                this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, touch));
                                 this._clickedEntities[element.entity.getGuid()] = true;
                             }
 
@@ -487,7 +503,7 @@ Object.assign(pc, function () {
 
                     // Fire touchleave if we've left the previously touched element
                     if ((!newTouchInfo || newTouchInfo.element !== oldTouchInfo.element) && !this._touchesForWhichTouchLeaveHasFired[touch.identifier]) {
-                        this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, this));
+                        this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, touch));
 
                         // Flag that touchleave has been fired for this touch, so that we don't
                         // re-fire it on the next touchmove. This is required because touchmove
@@ -498,7 +514,7 @@ Object.assign(pc, function () {
                         this._touchesForWhichTouchLeaveHasFired[touch.identifier] = true;
                     }
 
-                    this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, this));
+                    this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, touch));
                 }
             }
         },
