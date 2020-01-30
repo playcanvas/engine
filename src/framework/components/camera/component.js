@@ -436,7 +436,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.CameraComponent#startXr
          * @description Attempt to start XR session with this camera
-         * @param {String} type - The type of session. Can be one of the following:
+         * @param {string} type - The type of session. Can be one of the following:
          *
          * * {@link pc.XR_TYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
          * * {@link pc.XR_TYPE_IMMERSIVE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.

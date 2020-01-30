@@ -2,7 +2,7 @@ Object.assign(pc, function () {
     var sessionTypes = {
         /**
          * @constant
-         * @type String
+         * @type string
          * @name pc.XR_TYPE_INLINE
          * @description Inline - always available type of session. It has limited features availability and is rendered into HTML element.
          */
@@ -10,7 +10,7 @@ Object.assign(pc, function () {
 
         /**
          * @constant
-         * @type String
+         * @type string
          * @name pc.XR_TYPE_IMMERSIVE_VR
          * @description Immersive VR - session that provides exclusive access to VR device with best available tracking features.
          */
@@ -18,7 +18,7 @@ Object.assign(pc, function () {
 
         /**
          * @constant
-         * @type String
+         * @type string
          * @name pc.XR_TYPE_IMMERSIVE_AR
          * @description Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
          */
@@ -33,9 +33,9 @@ Object.assign(pc, function () {
      * @classdesc Manage and update XR session and its states.
      * @description Manage and update XR session and its states.
      * @param {pc.Application} app - The main application.
-     * @property {Boolean} supported Returns true if XR is supported.
-     * @property {Boolean} active Returns true if XR session is running.
-     * @property {String|Null} type Returns type of curently running XR session or null if no session is running.
+     * @property {boolean} supported Returns true if XR is supported.
+     * @property {boolean} active Returns true if XR session is running.
+     * @property {string|null} type Returns type of curently running XR session or null if no session is running.
      */
     var XrManager = function (app) {
         pc.EventHandler.call(this);
@@ -89,8 +89,8 @@ Object.assign(pc, function () {
      * @event
      * @name pc.XrManager#available
      * @description Fired when availability of specific XR type is changed.
-     * @param {String} type The session type that has changed availability.
-     * @param {Boolean} available True if specified session type is now available.
+     * @param {string} type The session type that has changed availability.
+     * @param {boolean} available True if specified session type is now available.
      * @example
      * app.xr.on('available', function (type, available) {
      *     console.log('"' + type + '" XR session is now ' + (available ? 'available' : 'unavailable'));
@@ -101,7 +101,7 @@ Object.assign(pc, function () {
      * @event
      * @name pc.XrManager#available:[type]
      * @description Fired when availability of specific XR type is changed.
-     * @param {Boolean} available True if specified session type is now available.
+     * @param {boolean} available True if specified session type is now available.
      * @example
      * app.xr.on('available:' + pc.XR_TYPE_IMMERSIVE_VR, function (available) {
      *     console.log('Immersive VR session is now ' + (available ? 'available' : 'unavailable'));
@@ -133,7 +133,7 @@ Object.assign(pc, function () {
      * @name pc.XrManager#sessionStart
      * @description Attempts to start XR session for provided {@link pc.CameraComponent} and optionally fires callback when session is created or failed to create.
      * @param {pc.CameraComponent} camera it will be used to render XR session and manipulated based on pose tracking
-     * @param {String} type session type. Can be one of the following:
+     * @param {string} type session type. Can be one of the following:
      *
      * * {@link pc.XR_TYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
      * * {@link pc.XR_TYPE_IMMERSIVE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
@@ -214,7 +214,7 @@ Object.assign(pc, function () {
      * if (app.xr.isAvailable(pc.XR_TYPE_IMMERSIVE_VR)) {
      *     // VR is available
      * }
-     * @returns {Boolean} True if specified session type is available.
+     * @returns {boolean} True if specified session type is available.
      */
     XrManager.prototype.isAvailable = function (type) {
         return this._available[type];

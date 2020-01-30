@@ -158,5 +158,5 @@
 /**
  * @callback pc.callbacks.XrError
  * @description Callback used by {@link pc.XrManager#endXr} and {@link pc.XrManager#startXr}.
- * @param {Error|Null} err The Error object or null if operation was successfull.
+ * @param {Error|null} err The Error object or null if operation was successfull.
  */

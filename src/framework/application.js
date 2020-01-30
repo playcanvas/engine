@@ -125,6 +125,17 @@ Object.assign(pc, function () {
      */
 
     /**
+     * @name pc.Application#xr
+     * @type {pc.XrManager}
+     * @description The XR Manager that provides ability to start VR/AR sessions.
+     * @example
+     * // check if VR is available
+     * if (app.xr.isAvailable(pc.XR_TYPE_IMMERSIVE_VR)) {
+     *     // VR is available
+     * }
+     */
+
+    /**
      * @name pc.Application#loader
      * @type {pc.ResourceLoader}
      * @description The resource loader.
