@@ -214,7 +214,7 @@ Object.assign(pc, function () {
      * @name pc.BatchManager#removeGroup
      * @description Remove global batch group by id.
      * Note, this traverses the entire scene graph and clears the batch group id from all components.
-     * @param {string} id - Group id.
+     * @param {number} id - Batch Group ID.
      */
     BatchManager.prototype.removeGroup = function (id) {
         if (!this._batchGroups[id]) {
@@ -240,9 +240,8 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @private
      * @function
-     * @name pc.BatchManager.markGroupDirty
+     * @name pc.BatchManager#markGroupDirty
      * @description Mark a specific batch group as dirty. Dirty groups are re-batched before the next frame is rendered.
      * Note, re-batching a group is a potentially expensive operation.
      * @param  {number} id - Batch Group ID to mark as dirty.
