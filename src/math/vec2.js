@@ -257,7 +257,7 @@ Object.assign(pc, (function () {
         /**
          * @function
          * @name pc.Vec2#normalize
-         * @description Returns the specified 2-dimensional vector copied and converted to a unit vector.
+         * @description Returns this 2-dimensional vector converted to a unit vector in place.
          * If the vector has a length of zero, the vector's elements will be set to zero.
          * @returns {pc.Vec2} Self for chaining.
          * @example
