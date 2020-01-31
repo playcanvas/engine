@@ -304,7 +304,7 @@ Object.assign(pc, (function () {
          *
          * v.normalize();
          *
-         * // Should output 1, 0, 0, 0
+         * // Should output 1, 0, 0
          * console.log("The result of the vector normalization is: " + v.toString());
          */
         normalize: function () {
