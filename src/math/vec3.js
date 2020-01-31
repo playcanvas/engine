@@ -296,9 +296,9 @@ Object.assign(pc, (function () {
         /**
          * @function
          * @name pc.Vec3#normalize
-         * @description Returns the specified 3-dimensional vector copied and converted to a unit vector.
+         * @description Returns this 3-dimensional vector converted to a unit vector in place.
          * If the vector has a length of zero, the vector's elements will be set to zero.
-         * @returns {pc.Vec3} The result of the normalization.
+         * @returns {pc.Vec3} Self for chaining.
          * @example
          * var v = new pc.Vec3(25, 0, 0);
          *
