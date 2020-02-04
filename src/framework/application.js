@@ -1816,9 +1816,8 @@ Object.assign(pc, function () {
             app._fillFrameStats(now, dt, ms);
             // #endif
 
-            if (frame) app.xr.calculateViews(frame);
-
             if (frame) {
+                app.xr.calculateViews(frame);
                 app.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
             } else {
                 app.graphicsDevice.defaultFramebuffer = null;
