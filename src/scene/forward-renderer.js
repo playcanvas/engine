@@ -619,6 +619,7 @@ Object.assign(pc, function () {
                 this.viewPos[0] = cameraPos.x;
                 this.viewPos[1] = cameraPos.y;
                 this.viewPos[2] = cameraPos.z;
+
                 this.viewPosId.setValue(this.viewPos);
 
                 camera.frustum.update(projMat, viewMat);
@@ -1652,9 +1653,9 @@ Object.assign(pc, function () {
                             this.viewPosId.setValue(view.positionOff.data);
 
                             if (v === 0) {
-                                i += this.drawInstance(device, drawCall, mesh, style);
+                                i += this.drawInstance(device, drawCall, mesh, style, true);
                             } else {
-                                i += this.drawInstance2(device, drawCall, mesh, style);
+                                i += this.drawInstance2(device, drawCall, mesh, style, true);
                             }
 
                             this._forwardDrawCalls++;

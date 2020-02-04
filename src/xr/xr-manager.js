@@ -403,7 +403,10 @@ Object.assign(pc, function () {
         }
 
         // reset position
-        this.position.set(0, 0, 0);
+        var posePosition = this._pose.transform.position;
+        var poseOrientation = this._pose.transform.orientation;
+        this.position.set(posePosition.x, posePosition.y, posePosition.z);
+        this.rotation.set(poseOrientation.x, poseOrientation.y, poseOrientation.z, poseOrientation.w);
 
         if (this._pose) {
             layer = frame.session.renderState.baseLayer;
@@ -422,18 +425,7 @@ Object.assign(pc, function () {
                 view.projMat.set(viewRaw.projectionMatrix);
                 view.viewMat.set(viewRaw.transform.inverse.matrix);
                 view.viewInvMat.set(viewRaw.transform.matrix);
-
-                position = viewRaw.transform.position;
-                view.position.set(position.x, position.y, position.z);
-                this.position.add(view.position);
-
-                rotation = viewRaw.transform.orientation;
-                view.rotation.set(rotation.x, rotation.y, rotation.z, rotation.w);
-
-                if (i === 0) this.rotation.copy(view.rotation);
             }
-
-            this.position.scale(1 / this._pose.views.length);
         }
 
         // position and rotate camera based on calculated vectors
