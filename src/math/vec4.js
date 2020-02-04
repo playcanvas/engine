@@ -257,9 +257,9 @@ Object.assign(pc, (function () {
         /**
          * @function
          * @name pc.Vec4#normalize
-         * @description Returns the specified 4-dimensional vector copied and converted to a unit vector.
+         * @description Returns this 4-dimensional vector converted to a unit vector in place.
          * If the vector has a length of zero, the vector's elements will be set to zero.
-         * @returns {pc.Vec4} The result of the normalization.
+         * @returns {pc.Vec4} Self for chaining.
          * @example
          * var v = new pc.Vec4(25, 0, 0, 0);
          *
