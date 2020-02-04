@@ -532,6 +532,13 @@ Object.assign(pc, function () {
         },
 
         updateCameraFrustum: function (camera) {
+            // calculate frustum based on XR view
+            if (camera.xr && camera.xr.views.length) {
+                var view = camera.xr.views[0];
+                camera.frustum.update(view.projMat, view.viewOffMat);
+                return;
+            }
+
             projMat = camera.getProjectionMatrix();
             if (camera.overrideCalculateProjection) camera.calculateProjection(projMat, pc.VIEW_CENTER);
 
