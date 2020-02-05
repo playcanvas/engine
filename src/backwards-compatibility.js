@@ -514,3 +514,15 @@ pc.SoundManager.prototype.setVolume = function (volume) {
     // #endif
     this.volume = volume;
 };
+
+Object.defineProperty(pc.ElementInput.prototype, 'wheel', {
+    get: function () {
+        return this.wheelDelta * -2;
+    }
+});
+
+Object.defineProperty(pc.MouseEvent.prototype, 'wheel', {
+    get: function () {
+        return this.wheelDelta * -2;
+    }
+});
