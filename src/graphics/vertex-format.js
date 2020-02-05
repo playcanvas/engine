@@ -114,7 +114,33 @@ Object.assign(pc, function () {
         }
     };
 
-    return {
+     /**
+     * @function
+     * @name pc.VertexFormat.getInstancedStreamDefaultVertexFormat
+     * @description Returns description of vertex format which is used by {@link pc.VertexFormat} to
+     * construct a vertex format used for hardware geometry instancing. This represents 16 float values
+     * which represent a {@link pc.Mat4}
+     */
+    VertexFormat.getInstancedStreamDefaultVertexFormat = function() {
+        var formatDesc = [
+            {
+                semantic:pc.SEMANTIC_TEXCOORD2, components:4, type:pc.ELEMENTTYPE_FLOAT32
+            }, 
+            {
+                semantic:pc.SEMANTIC_TEXCOORD3, components:4, type:pc.ELEMENTTYPE_FLOAT32
+            }, 
+            {
+                semantic:pc.SEMANTIC_TEXCOORD4, components:4, type:pc.ELEMENTTYPE_FLOAT32
+            }, 
+            {
+                semantic:pc.SEMANTIC_TEXCOORD5, components:4, type:pc.ELEMENTTYPE_FLOAT32
+            }
+        ];
+    
+        return formatDesc;
+    };    
+
+     return {
         VertexFormat: VertexFormat
     };
 }());

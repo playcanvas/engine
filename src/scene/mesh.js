@@ -569,6 +569,10 @@ Object.assign(pc, function () {
             if (this._buffer) {
                 this._buffer.setData(this.buffer);
             }
+        },
+
+        setVertexBuffer: function(vb) {
+            this._buffer = vb;
         }
     });
 

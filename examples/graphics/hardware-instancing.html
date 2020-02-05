@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Hardware Instancing</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/output/playcanvas.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+        // Create an Entity with a point light component and a sphere model component.
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "point",
+            color: new pc.Color(1, 0, 1),
+            radius: 10
+        });
+
+        // Create an Entity with a camera component
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
+        });
+
+        // Add the new Entities to the hierarchy
+        app.root.addChild(light);
+        app.root.addChild(camera);
+
+        // Move the camera back to see the cubes
+        camera.translate(0, 0, 10);
+
+        // create standard material and enable instancing on it        
+        var material = new pc.StandardMaterial();
+        material.onUpdateShader = function(options) {
+            options.useInstancing = true;
+            return options;
+        };
+        material.update();
+
+        // Create a Entity with a Box model component and the instancing material
+        var box = new pc.Entity();
+        box.addComponent("model", {
+            material: material,
+            type: "box",
+        });
+
+        // add the box entity to the hierarchy
+        app.root.addChild(box);
+
+        // mesh we want to instance (the box geometry)
+        var meshInst = box.model.model.meshInstances[0];    
+        
+        // create static vertex buffer to store matrices of instances
+        var instanceCount = 15;
+        meshInst.instancingData = new pc.InstancingData(instanceCount, false);    
+        var vertexFormatInstances = new pc.VertexFormat(this.app.graphicsDevice, pc.VertexFormat.getInstancedStreamDefaultVertexFormat());    
+        meshInst.instancingData.setVertexBuffer(new pc.VertexBuffer(this.app.graphicsDevice, vertexFormatInstances, meshInst.instancingData.count, pc.BUFFER_STATIC));
+
+        // store matrices for individual instances into array
+        matrices = [ ];
+    
+        var pos = new pc.Vec3();
+        var rot = new pc.Quat();
+        var scl = pc.Vec3.ONE.clone().scale(0.1);
+        var matrix = new pc.Mat4();
+
+        for (var i = 0; i < instanceCount; i++) {
+            pos.x = i * 0.2 - instanceCount * 0.5 * 0.2;
+            rot.setFromEulerAngles(i * 30, i * 50, i * 70);
+            matrix.setTRS(pos, rot, scl);
+
+            // copy matrix elements into array of floats
+            for (var m = 0; m < 16; m++)
+                matrices.push(matrix.data[m]);
+        }
+
+        // assign matrices to instancing buffer, and update vertex buffer with it
+        meshInst.instancingData.buffer.set(matrices);
+        meshInst.instancingData.update();
+
+    </script>
+</body>
+</html>

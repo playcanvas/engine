@@ -1962,7 +1962,7 @@ Object.assign(pc, function () {
                             element.offset + vbOffset
                         );
 
-                        if (element.stream === 1 && numInstances > 1) {
+                        if (element.stream === 1 && numInstances > 0) {
                             if (!this.instancedAttribs[locationId]) {
                                 gl.vertexAttribDivisor(locationId, 1);
                                 this.instancedAttribs[locationId] = true;
@@ -2021,7 +2021,7 @@ Object.assign(pc, function () {
             var samplers = shader.samplers;
             var uniforms = shader.uniforms;
 
-            if (numInstances > 1) {
+            if (numInstances > 0) {
                 this.boundBuffer = null;
                 this.attributesInvalidated = true;
             }
@@ -2107,7 +2107,7 @@ Object.assign(pc, function () {
                 var format = indexBuffer.glFormat;
                 var offset = primitive.base * indexBuffer.bytesPerIndex;
 
-                if (numInstances > 1) {
+                if (numInstances > 0) {
                     gl.drawElementsInstanced(mode, count, format, offset, numInstances);
                 } else {
                     gl.drawElements(mode, count, format, offset);
@@ -2115,7 +2115,7 @@ Object.assign(pc, function () {
             } else {
                 var first = primitive.base;
 
-                if (numInstances > 1) {
+                if (numInstances > 0) {
                     gl.drawArraysInstanced(mode, first, count, numInstances);
                 } else {
                     gl.drawArrays(mode, first, count);
