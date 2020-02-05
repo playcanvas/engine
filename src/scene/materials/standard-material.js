@@ -156,6 +156,7 @@ Object.assign(pc, function () {
      * @property {boolean} pixelSnap Align vertices to pixel co-ordinates when rendering. Useful for pixel perfect 2D graphics
      * @property {boolean} twoSidedLighting Calculate proper normals (and therefore lighting) on backfaces
      * @property {object} chunks Object containing custom shader chunks that will replace default ones.
+     * @property {boolean} async If set to true, will ensure shader compilation will not freeze the thread at runtime. Shader will be compiled in async maner, so if shader is not compiled, meshes with this material will not be rendered.
      *
      * @property {pc.callbacks.UpdateShader} onUpdateShader A custom function that will be called after all shader generator properties are collected and before shader code is generated.
      * This function will receive an object with shader generator settings (based on current material and scene properties), that you can change and then return.
@@ -884,14 +885,18 @@ Object.assign(pc, function () {
             var minimalOptions = pass > pc.SHADER_FORWARDHDR && pass <= pc.SHADER_PICK;
             var options = minimalOptions ? generator.optionsContextMin : generator.optionsContext;
 
-            if (minimalOptions)
+            if (minimalOptions) {
                 this.shaderOptBuilder.updateMinRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
-            else
+            } else {
                 this.shaderOptBuilder.updateRef(options, device, scene, this, objDefs, staticLightList, pass, sortedLights, prefilteredCubeMap128);
+            }
 
             if (this.onUpdateShader) {
                 options = this.onUpdateShader(options);
             }
+
+            if (pass === pc.SHADER_FORWARD || pass === pc.SHADER_FORWARDHDR)
+                options.async = this.async;
 
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('standard', options);
@@ -962,6 +967,8 @@ Object.assign(pc, function () {
         });
 
         _defineChunks(obj);
+
+        _defineFlag(obj, "async", true);
 
         _defineFlag(obj, "ambientTint", false);
 

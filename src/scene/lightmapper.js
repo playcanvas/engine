@@ -664,7 +664,11 @@ Object.assign(pc, function () {
                         this.renderer.renderForward(lmCamera,
                                                     rcv, rcv.length,
                                                     lightArray,
-                                                    pc.SHADER_FORWARDHDR);
+                                                    pc.SHADER_FORWARDHDR,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    true);
 
                         // #ifdef PROFILER
                         stats.shadowMapTime += this.renderer._shadowMapTime;

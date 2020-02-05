@@ -3,6 +3,7 @@
     pc.StandardMaterial.PARAMETER_TYPES = {
         name: 'string',
         chunks: 'chunks',
+        async: 'boolean',
 
         mappingFormat: 'string',
         _engine: 'boolean', // internal param for engine-only loading

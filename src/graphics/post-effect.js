@@ -120,7 +120,7 @@ Object.assign(pc, function () {
         device.setColorWrite(true, true, true, true);
 
         device.setVertexBuffer(vertexBuffer, 0);
-        device.setShader(shader);
+        device.setShader(shader, true);
 
         device.draw(primitive);
 

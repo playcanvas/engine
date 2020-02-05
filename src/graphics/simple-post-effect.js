@@ -85,7 +85,7 @@ Object.assign(pc, (function () {
         if (!useBlend) device.setBlending(false);
 
         device.setVertexBuffer(_postEffectQuadVB, 0);
-        device.setShader(shader);
+        device.setShader(shader, true);
 
         device.draw(_postEffectQuadDraw);
 

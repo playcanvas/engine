@@ -1392,7 +1392,7 @@ Object.assign(pc, function () {
                                 shadowShader = meshInstance._shader[pc.SHADER_SHADOW + smode];
                                 meshInstance._key[pc.SORTKEY_DEPTH] = getDepthKey(meshInstance);
                             }
-                            device.setShader(shadowShader);
+                            device.setShader(shadowShader, true);
                             // set buffers
                             style = meshInstance.renderStyle;
                             device.setVertexBuffer((meshInstance.morphInstance && meshInstance.morphInstance._vertexBuffer) ?
@@ -1507,7 +1507,7 @@ Object.assign(pc, function () {
             this.device.setCullMode(mode);
         },
 
-        renderForward: function (camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer) {
+        renderForward: function (camera, drawCalls, drawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, forceShaderLink) {
             var device = this.device;
             var scene = this.scene;
             var vrDisplay = camera.vrDisplay;
@@ -1587,14 +1587,10 @@ Object.assign(pc, function () {
                             drawCall._lightHash = lightHash;
                         }
 
-                        // #ifdef DEBUG
-                        if (!device.setShader(drawCall._shader[pass])) {
-                            console.error('Error in material "' + material.name + '" with flags ' + objDefs);
-                            drawCall.material = scene.defaultMaterial;
+                        if (!device.setShader(drawCall._shader[pass], forceShaderLink)) {
+                            // skip draw if shader is not compiled yet
+                            continue;
                         }
-                        // #else
-                        device.setShader(drawCall._shader[pass]);
-                        // #endif
 
                         // Uniforms I: material
                         parameters = material.parameters;

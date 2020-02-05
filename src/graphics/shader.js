@@ -19,6 +19,7 @@ Object.assign(pc, function () {
      * @param {string} definition.vshader - Vertex shader source (GLSL code).
      * @param {string} definition.fshader - Fragment shader source (GLSL code).
      * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs post-VS data to a buffer.
+     * @param {boolean} async - Set to true to enable async shader compilation, which will skip rendering of meshes if shader is not yet compiled. This avoids freezes related to shader recompilation.
      * @example
      * // Create a shader that renders primitives with a solid red color
      * var shaderDefinition = {
@@ -45,9 +46,10 @@ Object.assign(pc, function () {
      *
      * var shader = new pc.Shader(graphicsDevice, shaderDefinition);
      */
-    var Shader = function (graphicsDevice, definition) {
+    var Shader = function (graphicsDevice, definition, async) {
         this.device = graphicsDevice;
         this.definition = definition;
+        this.async = async || false;
 
         this.attributes = [];
         this.uniforms = [];
