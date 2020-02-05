@@ -52,24 +52,20 @@ Object.assign(pc, function () {
 
         // deltaY is in a different range across different browsers. The only thing
         // that is consistent is the sign of the value so snap to -1/+1.
-        this.wheelDelta =  0;
+        this.wheel = 0; // Deprecated value for reporting mouse wheel delta
+        this.wheelDelta = 0;
         if (event.type === 'wheel') {
             if (event.deltaY > 0) {
+                // In Chrome, one mouse wheel event would report +/-240 and PlayCanvas
+                // used to divide by 120, always reporting +/-2. Other browsers would
+                // report different values, producing different results when wheel
+                // scrolling. So now, for any apps using wheel instead of wheelDelta
+                // still, all browsers will now produce the same results as Chrome.
+                this.wheel = -2;
                 this.wheelDelta = 1;
             } else if (event.deltaY < 0) {
+                this.wheel = 2;
                 this.wheelDelta = -1;
-            }
-        }
-
-        // Backwards compatibility
-        this.wheel =  0;
-        if (event.type === 'wheel') {
-            // FF uses 'detail' and returns a value in 'no. of lines' to scroll
-            // WebKit and Opera use 'wheelDelta', WebKit goes in multiples of 120 per wheel notch
-            if (event.detail) {
-                this.wheel = -1 * event.detail;
-            } else if (event.wheelDelta) {
-                this.wheel = event.wheelDelta / 120;
             }
         }
 
