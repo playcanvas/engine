@@ -1732,7 +1732,7 @@ Object.assign(pc, function () {
 
             pc.destroyPostEffectQuad();
 
-            this.xr.sessionEnd();
+            this.xr.end();
 
             this.graphicsDevice.destroy();
             this.graphicsDevice = null;

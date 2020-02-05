@@ -454,7 +454,7 @@ Object.assign(pc, function () {
          * });
          */
         startXr: function (type, callback) {
-            this.system.app.xr.sessionStart(this, type, callback);
+            this.system.app.xr.start(this, type, callback);
         },
 
         /**
@@ -474,7 +474,7 @@ Object.assign(pc, function () {
                 return;
             }
 
-            this.camera.xr.sessionEnd(callback);
+            this.camera.xr.end(callback);
         }
     });
 

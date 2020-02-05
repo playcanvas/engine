@@ -145,14 +145,14 @@
                 // end session by keyboard ESC
                 app.keyboard.on('keydown', function (evt) {
                     if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
-                        app.xr.sessionEnd();
+                        app.xr.end();
                     }
                 });
 
-                app.xr.on('session:start', function () {
+                app.xr.on('start', function () {
                     message("WebXR Immersive AR session has started");
                 });
-                app.xr.on('session:end', function () {
+                app.xr.on('end', function () {
                     message("WebXR Immersive AR session has ended");
                 });
                 app.xr.on('available:' + pc.XR_TYPE_IMMERSIVE_AR, function (available) {

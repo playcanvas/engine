@@ -110,27 +110,27 @@ Object.assign(pc, function () {
 
     /**
      * @event
-     * @name pc.XrManager#session:start
+     * @name pc.XrManager#start
      * @description Fired when XR session is started
      * @example
-     * app.xr.on('session:start', function () {
+     * app.xr.on('start', function () {
      *     // XR session has started
      * });
      */
 
     /**
      * @event
-     * @name pc.XrManager#session:end
+     * @name pc.XrManager#end
      * @description Fired when XR session is ended
      * @example
-     * app.xr.on('session:end', function () {
+     * app.xr.on('end', function () {
      *     // XR session has ended
      * });
      */
 
     /**
      * @function
-     * @name pc.XrManager#sessionStart
+     * @name pc.XrManager#start
      * @description Attempts to start XR session for provided {@link pc.CameraComponent} and optionally fires callback when session is created or failed to create.
      * @param {pc.CameraComponent} camera - it will be used to render XR session and manipulated based on pose tracking
      * @param {string} type - session type. Can be one of the following:
@@ -141,11 +141,11 @@ Object.assign(pc, function () {
      *
      * @example
      * button.on('click', function () {
-     *     app.xr.sessionStart(camera, PC.XR_TYPE_IMMERSIVE_VR);
+     *     app.xr.start(camera, PC.XR_TYPE_IMMERSIVE_VR);
      * });
      * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
-    XrManager.prototype.sessionStart = function (camera, type, callback) {
+    XrManager.prototype.start = function (camera, type, callback) {
         if (! this._available[type]) {
             if (callback) callback(new Error('XR is not available'));
             return;
@@ -179,23 +179,23 @@ Object.assign(pc, function () {
 
     /**
      * @function
-     * @name pc.XrManager#sessionEnd
+     * @name pc.XrManager#end
      * @description Attempts to end XR session and optionally fires callback when session is ended or failed to end.
      * @example
      * app.keyboard.on('keydown', function (evt) {
      *     if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
-     *         app.xr.sessionEnd();
+     *         app.xr.end();
      *     }
      * });
      * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
-    XrManager.prototype.sessionEnd = function (callback) {
+    XrManager.prototype.end = function (callback) {
         if (! this._session) {
             if (callback) callback(new Error('XR Session is not initialized'));
             return;
         }
 
-        if (callback) this.once('session:end', callback);
+        if (callback) this.once('end', callback);
 
         this._session.end();
     };
@@ -290,7 +290,7 @@ Object.assign(pc, function () {
             // so queue up new tick
             self.app.tick();
 
-            self.fire('session:end');
+            self.fire('end');
         };
 
         session.addEventListener('end', onEnd);
@@ -317,7 +317,7 @@ Object.assign(pc, function () {
             self.app.tick();
 
             if (callback) callback(null);
-            self.fire('session:start');
+            self.fire('start');
         });
     };
 
