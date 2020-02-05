@@ -87,6 +87,12 @@
  */
 
 /**
+ * @callback pc.callbacks.VrCamera
+ * @description Callback used by {@link pc.CameraComponent#enterVr} and {@link pc.CameraComponent#exitVr}.
+ * @param {string|null} err - On success it is null on failure it is the error message.
+ */
+
+/**
  * @private
  * @callback pc.callbacks.CreateScript
  * @description Callback used by {@link pc.script.create}.
@@ -153,6 +159,17 @@
  * @param {object} options - An object with shader generator settings (based on current material and scene properties), that you can change and then return.
  * Properties of the object passed into this function are documented in {@link pc.StandardMaterial#onUpdateShader}.
  * @returns {object} Returned settings will be used by the shader.
+ */
+
+/**
+ * @callback pc.callbacks.VrDisplay
+ * @description Callback used by {@link pc.VrDisplay#requestPresent} and {@link pc.VrDisplay#exitPresent}.
+ * @param {string|null} err - The error message if presenting fails, or null if the call succeeds.
+ */
+
+/**
+ * @callback pc.callbacks.VrFrame
+ * @description Callback used by {@link pc.VrDisplay#requestAnimationFrame}.
  */
 
 /**

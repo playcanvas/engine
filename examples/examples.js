@@ -30,7 +30,8 @@ var categories = [
             "shader-burn",
             "shader-toon",
             "shader-wobble",
-            "texture-basis"
+            "texture-basis",
+            "virtual-reality"
         ]
     }, {
         name: "input",

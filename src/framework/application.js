@@ -266,6 +266,7 @@ Object.assign(pc, function () {
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
         this._resolutionMode = pc.RESOLUTION_FIXED;
+        this._allowResize = true;
 
         // for compatibility
         this.context = this;
@@ -550,6 +551,7 @@ Object.assign(pc, function () {
         if (this.elementInput)
             this.elementInput.app = this;
 
+        this.vr = null;
         this.xr = new pc.XrManager(this);
 
         this._inTools = false;
@@ -1178,6 +1180,8 @@ Object.assign(pc, function () {
 
             this.graphicsDevice.updateClientRect();
 
+            if (this.vr) this.vr.poll();
+
             // #ifdef PROFILER
             this.stats.frame.updateStart = pc.now();
             // #endif
@@ -1392,6 +1396,8 @@ Object.assign(pc, function () {
          * @returns {object} A object containing the values calculated to use as width and height.
          */
         resizeCanvas: function (width, height) {
+            if (!this._allowResize) return; // prevent resizing (e.g. if presenting in VR HMD)
+
             // prevent resizing when in XR session
             if (this.xr && this.xr.session)
                 return;
@@ -1580,6 +1586,29 @@ Object.assign(pc, function () {
             }
         },
 
+        /**
+         * @function
+         * @name pc.Application#enableVr
+         * @description Create and assign a {@link pc.VrManager} object to allow this application render in VR.
+         */
+        enableVr: function () {
+            if (!this.vr) {
+                this.vr = new pc.VrManager(this);
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.Application#disableVr
+         * @description Destroy the {@link pc.VrManager}.
+         */
+        disableVr: function () {
+            if (this.vr) {
+                this.vr.destroy();
+                this.vr = null;
+            }
+        },
+
         _onSkyboxChange: function (asset) {
             this.scene.setSkybox(asset.resources);
         },
@@ -1732,6 +1761,10 @@ Object.assign(pc, function () {
 
             pc.destroyPostEffectQuad();
 
+            if (this.vr) {
+                this.vr.destroy();
+                this.vr = null;
+            }
             this.xr.end();
 
             this.graphicsDevice.destroy();
@@ -1803,7 +1836,9 @@ Object.assign(pc, function () {
             app._time = now;
 
             // Submit a request to queue up a new animation frame immediately
-            if (app.xr.session) {
+            if (app.vr && app.vr.display) {
+                frameRequest = app.vr.display.requestAnimationFrame(app.tick);
+            } else if (app.xr.session) {
                 frameRequest = app.xr.session.requestAnimationFrame(app.tick);
             } else {
                 frameRequest = requestAnimationFrame(app.tick);
@@ -1836,6 +1871,10 @@ Object.assign(pc, function () {
 
             app.fire("frameend", _frameEndData);
             app.fire("frameEnd", _frameEndData);// deprecated old event, remove when editor updated
+
+            if (app.vr && app.vr.display && app.vr.display.presenting) {
+                app.vr.display.submitFrame();
+            }
         };
     };
 

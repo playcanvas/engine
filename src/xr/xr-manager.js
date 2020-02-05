@@ -357,8 +357,7 @@ Object.assign(pc, function () {
     XrManager.prototype.calculateViews = function (frame) {
         if (! this._session) return;
 
-        var i, view, viewRaw, layer;
-        var viewport, position, rotation;
+        var i, view, viewRaw, layer, viewport;
         var lengthNew;
 
         // canvas resolution should be set on first frame availability or resolution changes
