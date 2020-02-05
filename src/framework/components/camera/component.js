@@ -167,7 +167,7 @@ Object.assign(pc, function () {
     /**
      * @readonly
      * @name pc.CameraComponent#node
-     * @type pc.GraphNode
+     * @type {pc.GraphNode}
      * @description Queries the camera's GraphNode. Can be used to get position and rotation.
      */
     Object.defineProperty(CameraComponent.prototype, "node", {
