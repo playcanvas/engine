@@ -644,7 +644,17 @@ Object.assign(pc, function () {
             if (this._model === value)
                 return;
 
+            // return if the model has been flagged as immutable
+            if (value && value._immutable) {
+                // #ifdef DEBUG
+                console.error('Invalid attempt to assign a model to multiple ModelComponents');
+                // #endif
+                return;
+            }
+
             if (this._model) {
+                this._model._immutable = false;
+
                 this.removeModelFromLayers();
                 this.entity.removeChild(this._model.getGraph());
                 delete this._model._entity;
@@ -662,6 +672,9 @@ Object.assign(pc, function () {
             this._model = value;
 
             if (this._model) {
+                // flag the model as being assigned to a component
+                this._model._immutable = true;
+
                 var meshInstances = this._model.meshInstances;
 
                 for (i = 0; i < meshInstances.length; i++) {
