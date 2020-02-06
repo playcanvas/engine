@@ -662,10 +662,6 @@ Object.assign(pc, function () {
                 if (this._clonedModel) {
                     this._model.destroy();
                     this._clonedModel = false;
-                } else if (this._model) {
-                    for (i = 0; i < this._model.meshInstances.length; i++) {
-                        this._model.meshInstances[i].material = null;
-                    }
                 }
             }
 
