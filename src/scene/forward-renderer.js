@@ -1760,18 +1760,9 @@ Object.assign(pc, function () {
         },
 
         setupInstancing: function (device) {
-            if (!pc._instanceVertexFormat) {
-                var formatDesc = [
-                    { semantic: pc.SEMANTIC_TEXCOORD2, components: 4, type: pc.TYPE_FLOAT32 },
-                    { semantic: pc.SEMANTIC_TEXCOORD3, components: 4, type: pc.TYPE_FLOAT32 },
-                    { semantic: pc.SEMANTIC_TEXCOORD4, components: 4, type: pc.TYPE_FLOAT32 },
-                    { semantic: pc.SEMANTIC_TEXCOORD5, components: 4, type: pc.TYPE_FLOAT32 }
-                ];
-                pc._instanceVertexFormat = new pc.VertexFormat(device, formatDesc);
-            }
             if (device.enableAutoInstancing) {
                 if (!pc._autoInstanceBuffer) {
-                    pc._autoInstanceBuffer = new pc.VertexBuffer(device, pc._instanceVertexFormat, device.autoInstancingMaxObjects, pc.BUFFER_DYNAMIC);
+                    pc._autoInstanceBuffer = new pc.VertexBuffer(device, pc.VertexFormat.defaultInstancingFormat, device.autoInstancingMaxObjects, pc.BUFFER_DYNAMIC);
                     pc._autoInstanceBufferData = new Float32Array(pc._autoInstanceBuffer.lock());
                 }
             }

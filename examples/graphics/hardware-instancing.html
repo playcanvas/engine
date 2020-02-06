@@ -69,7 +69,7 @@
         var box = new pc.Entity();
         box.addComponent("model", {
             material: material,
-            type: "box",
+            type: "box"
         });
 
         // add the box entity to the hierarchy
@@ -80,16 +80,17 @@
         
         // create static vertex buffer to store matrices of instances
         var instanceCount = 15;
-        meshInst.instancingData = new pc.InstancingData(instanceCount, false);    
-        var vertexFormatInstances = new pc.VertexFormat(this.app.graphicsDevice, pc.VertexFormat.getInstancedStreamDefaultVertexFormat());    
-        meshInst.instancingData.setVertexBuffer(new pc.VertexBuffer(this.app.graphicsDevice, vertexFormatInstances, meshInst.instancingData.count, pc.BUFFER_STATIC));
+
+        // initialise instancing using specified vertex buffer
+        var vertexBuffer = new pc.VertexBuffer(this.app.graphicsDevice, pc.VertexFormat.defaultInstancingFormat, instanceCount, pc.BUFFER_STATIC);
+        meshInst.setInstancing(vertexBuffer);
 
         // store matrices for individual instances into array
         matrices = [ ];
     
         var pos = new pc.Vec3();
         var rot = new pc.Quat();
-        var scl = pc.Vec3.ONE.clone().scale(0.1);
+        var scl = new pc.Vec3(0.1, 0.1, 0.1);
         var matrix = new pc.Mat4();
 
         for (var i = 0; i < instanceCount; i++) {
@@ -102,10 +103,8 @@
                 matrices.push(matrix.data[m]);
         }
 
-        // assign matrices to instancing buffer, and update vertex buffer with it
-        meshInst.instancingData.buffer.set(matrices);
-        meshInst.instancingData.update();
-
+        // assign matrices to vertex buffer
+        meshInst.instancingVertexData = matrices;
     </script>
 </body>
 </html>

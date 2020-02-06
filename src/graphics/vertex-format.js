@@ -74,6 +74,7 @@ Object.assign(pc, function () {
         this.hasUv1 = false;
         this.hasColor = false;
         this.hasTangents = false;
+        this._defaultInstancingFormat = null;
 
         this.size = 0;
         for (i = 0, len = description.length; i < len; i++) {
@@ -114,31 +115,32 @@ Object.assign(pc, function () {
         }
     };
 
-     /**
-     * @function
-     * @name pc.VertexFormat.getInstancedStreamDefaultVertexFormat
-     * @description Returns description of vertex format which is used by {@link pc.VertexFormat} to
-     * construct a vertex format used for hardware geometry instancing. This represents 16 float values
-     * which represent a {@link pc.Mat4}
-     */
-    VertexFormat.getInstancedStreamDefaultVertexFormat = function() {
+    VertexFormat.init = function(graphicsDevice) {
         var formatDesc = [
-            {
-                semantic:pc.SEMANTIC_TEXCOORD2, components:4, type:pc.ELEMENTTYPE_FLOAT32
-            }, 
-            {
-                semantic:pc.SEMANTIC_TEXCOORD3, components:4, type:pc.ELEMENTTYPE_FLOAT32
-            }, 
-            {
-                semantic:pc.SEMANTIC_TEXCOORD4, components:4, type:pc.ELEMENTTYPE_FLOAT32
-            }, 
-            {
-                semantic:pc.SEMANTIC_TEXCOORD5, components:4, type:pc.ELEMENTTYPE_FLOAT32
-            }
+            { semantic: pc.SEMANTIC_TEXCOORD2, components: 4, type: pc.TYPE_FLOAT32 },
+            { semantic: pc.SEMANTIC_TEXCOORD3, components: 4, type: pc.TYPE_FLOAT32 },
+            { semantic: pc.SEMANTIC_TEXCOORD4, components: 4, type: pc.TYPE_FLOAT32 },
+            { semantic: pc.SEMANTIC_TEXCOORD5, components: 4, type: pc.TYPE_FLOAT32 }
         ];
-    
-        return formatDesc;
-    };    
+
+        this._defaultInstancingFormat = new pc.VertexFormat(graphicsDevice, formatDesc);    
+    }
+
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.VertexFormat.defaultInstancingFormat
+     * @type {pc.VertexFormat}
+     * @description Returns {@link pc.VertexFormat} used to store matrices of type {@link pc.Mat4} for hardware instancing. 
+    */
+    Object.defineProperty(VertexFormat, 'defaultInstancingFormat', {
+        get: (function () {
+            return function () {
+                return this._defaultInstancingFormat;
+            };
+        }())
+    });
 
      return {
         VertexFormat: VertexFormat

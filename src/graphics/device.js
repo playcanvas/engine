@@ -145,6 +145,12 @@ Object.assign(pc, function () {
      * @description The maximum supported texture anisotropy setting.
      */
     /**
+     * @readonly
+     * @name pc.GraphicsDevice#extInstancing
+     * @type {boolean}
+     * @description True if hardware instancing is supported.
+     */
+    /**
      * @event
      * @name pc.GraphicsDevice#resizecanvas
      * @description The 'resizecanvas' event is fired when the canvas is resized.
@@ -593,6 +599,8 @@ Object.assign(pc, function () {
         this._textureFloatHighPrecision = undefined;
 
         this.createGrabPass(options.alpha);
+
+        pc.VertexFormat.init(this);
     };
     GraphicsDevice.prototype = Object.create(pc.EventHandler.prototype);
     GraphicsDevice.prototype.constructor = GraphicsDevice;
