@@ -3,26 +3,26 @@ Object.assign(pc, function () {
         /**
          * @constant
          * @type string
-         * @name pc.XR_TYPE_INLINE
+         * @name pc.XRTYPE_INLINE
          * @description Inline - always available type of session. It has limited features availability and is rendered into HTML element.
          */
-        XR_TYPE_INLINE: 'inline',
+        XRTYPE_INLINE: 'inline',
 
         /**
          * @constant
          * @type string
-         * @name pc.XR_TYPE_IMMERSIVE_VR
+         * @name pc.XRTYPE_VR
          * @description Immersive VR - session that provides exclusive access to VR device with best available tracking features.
          */
-        XR_TYPE_IMMERSIVE_VR: 'immersive-vr',
+        XRTYPE_VR: 'immersive-vr',
 
         /**
          * @constant
          * @type string
-         * @name pc.XR_TYPE_IMMERSIVE_AR
+         * @name pc.XRTYPE_AR
          * @description Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
          */
-        XR_TYPE_IMMERSIVE_AR: 'immersive-ar'
+        XRTYPE_AR: 'immersive-ar'
     };
 
 
@@ -103,7 +103,7 @@ Object.assign(pc, function () {
      * @description Fired when availability of specific XR type is changed.
      * @param {boolean} available - True if specified session type is now available.
      * @example
-     * app.xr.on('available:' + pc.XR_TYPE_IMMERSIVE_VR, function (available) {
+     * app.xr.on('available:' + pc.XRTYPE_VR, function (available) {
      *     console.log('Immersive VR session is now ' + (available ? 'available' : 'unavailable'));
      * });
      */
@@ -135,13 +135,13 @@ Object.assign(pc, function () {
      * @param {pc.CameraComponent} camera - it will be used to render XR session and manipulated based on pose tracking
      * @param {string} type - session type. Can be one of the following:
      *
-     * * {@link pc.XR_TYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
-     * * {@link pc.XR_TYPE_IMMERSIVE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
-     * * {@link pc.XR_TYPE_IMMERSIVE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+     * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+     * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+     * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
      *
      * @example
      * button.on('click', function () {
-     *     app.xr.start(camera, PC.XR_TYPE_IMMERSIVE_VR);
+     *     app.xr.start(camera, PC.XRTYPE_VR);
      * });
      * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
@@ -206,12 +206,12 @@ Object.assign(pc, function () {
      * @description Check if specific type of session is available
      * @param {string} type - session type. Can be one of the following:
      *
-     * * {@link pc.XR_TYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
-     * * {@link pc.XR_TYPE_IMMERSIVE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
-     * * {@link pc.XR_TYPE_IMMERSIVE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+     * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+     * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+     * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
      *
      * @example
-     * if (app.xr.isAvailable(pc.XR_TYPE_IMMERSIVE_VR)) {
+     * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
      *     // VR is available
      * }
      * @returns {boolean} True if specified session type is available.
