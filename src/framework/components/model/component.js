@@ -659,7 +659,11 @@ Object.assign(pc, function () {
                 }
             }
 
-            this._model = value;
+            if (value && value.immutable) {
+                this._model = value.clone();
+            } else {
+                this._model = value;
+            }
 
             if (this._model) {
                 var meshInstances = this._model.meshInstances;

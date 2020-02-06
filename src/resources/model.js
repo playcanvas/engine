@@ -84,6 +84,8 @@ Object.assign(pc, function () {
 
             var data = asset.data;
 
+            asset.resource.immutable = true;
+
             var self = this;
             asset.resource.meshInstances.forEach(function (meshInstance, i) {
                 if (data.mapping) {
