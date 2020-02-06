@@ -176,18 +176,6 @@ Object.assign(pc, function () {
         }
     });
 
-    /**
-     * @readonly
-     * @name pc.CameraComponent#isXr
-     * @type boolean
-     * @description Queries if camera is in XR mode.
-     */
-    Object.defineProperty(CameraComponent.prototype, "isXr", {
-        get: function () {
-            return !! this.camera.xr;
-        }
-    });
-
     Object.assign(CameraComponent.prototype, {
         /**
          * @function
