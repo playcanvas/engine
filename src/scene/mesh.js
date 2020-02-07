@@ -411,8 +411,8 @@ Object.assign(pc, function () {
                 }
             }
 
-            var prevBlend = this._material ? (this._material.blendType !== pc.BLEND_NONE) : false;
             var prevMat = this._material;
+
             this._material = material;
 
             if (this._material) {
@@ -421,8 +421,9 @@ Object.assign(pc, function () {
 
                 this.updateKey();
 
-                if ((this._material.blendType !== pc.BLEND_NONE) !== prevBlend) {
-
+                var prevBlend = prevMat && (prevMat.blendType !== pc.BLEND_NONE);
+                var thisBlend = this._material.blendType !== pc.BLEND_NONE;
+                if (prevBlend !== thisBlend) {
                     var scene = this._material._scene;
                     if (!scene && prevMat && prevMat._scene) scene = prevMat._scene;
 
