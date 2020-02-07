@@ -101,7 +101,7 @@
         var vertexBuffer = new pc.VertexBuffer(this.app.graphicsDevice, pc.VertexFormat.defaultInstancingFormat, instanceCount, pc.BUFFER_STATIC, matrices);
 
         // initialise instancing using the vertex buffer on meshInstance of the created box
-        var boxMeshInst = box.model.model.meshInstances[0];    
+        var boxMeshInst = box.model.meshInstances[0];    
         boxMeshInst.setInstancing(vertexBuffer);
     </script>
 </body>

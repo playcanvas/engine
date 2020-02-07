@@ -520,6 +520,21 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @name pc.MeshInstance#instancingCount
+     * @type {number}
+     * @description Number of instances when using hardware instancing to render the mesh.
+     */
+    Object.defineProperty(MeshInstance.prototype, 'instancingCount', {
+        get: function () {
+            return this.instancingData ? this.instancingData.count : 0;
+        },
+        set: function (value) {
+            if (this.instancingData)
+                this.instancingData.count = value;
+        }
+    });
+
     Object.assign(MeshInstance.prototype, {
         syncAabb: function () {
             // Deprecated
@@ -530,6 +545,27 @@ Object.assign(pc, function () {
             this._key[pc.SORTKEY_FORWARD] = getKey(this.layer,
                                                    (material.alphaToCoverage || material.alphaTest) ? pc.BLEND_NORMAL : material.blendType, // render alphatest/atoc after opaque
                                                    false, material.id);
+        },
+
+        /**
+         * @function
+         * @name pc.MeshInstance#setInstancing
+         * @description Sets up {@link pc.MeshInstance} to be rendered using Hardware Instancing.
+         * @param {pc.VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data (usually world matrices).
+         * Pass null to turn off hardware instancing.
+         */
+        setInstancing: function (vertexBuffer) {
+            if (vertexBuffer) {
+                this.instancingData = new pc.InstancingData(vertexBuffer.numVertices);
+                this.instancingData.offset = 0;
+                this.instancingData.vertexBuffer = vertexBuffer;
+
+                // turn off culling - we do not do per-instance culling, all instances are submitted to GPU
+                this.cull = false;
+            } else {
+                this.instancingData = null;
+                this.cull = true;
+            }
         },
 
         setParameter: pc.Material.prototype.setParameter,
@@ -561,44 +597,6 @@ Object.assign(pc, function () {
         this.vertexBuffer = null;
         this.offset = 0;
     };
-
-     /**
-      * @function
-      * @name pc.MeshInstance#setInstancing
-      * @description Sets up {@link pc.MeshInstance} to be rendered using Hardware Instancing.
-      * @param {pc.VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data (usually world matrices).
-      * Pass null to turn off hardware instancing.
-      */
-    Object.assign(MeshInstance.prototype, {
-        setInstancing: function (vertexBuffer) {
-            if (vertexBuffer) {
-                this.instancingData = new pc.InstancingData(vertexBuffer.numVertices);
-                this.instancingData.offset = 0;
-                this.instancingData.vertexBuffer = vertexBuffer;
-
-                // turn off culling - we do not do per-instance culling, all instances are submitted to GPU
-                this.cull = false;
-            } else {
-                this.instancingData = null;
-                this.cull = true;
-            }
-        }
-    });
-
-    /**
-     * @name pc.MeshInstance#instancingCount
-     * @type {number}
-     * @description Number of instances when using hardware instancing to render the mesh.
-     */
-    Object.defineProperty(MeshInstance.prototype, 'instancingCount', {
-        get: function () {
-            return this.instancingData ? this.instancingData.count : 0;
-        },
-        set: function (value) {
-            if (this.instancingData)
-                this.instancingData.count = value;
-        }
-    });
 
     function getKey(layer, blendType, isCommand, materialId) {
         // Key definition:
