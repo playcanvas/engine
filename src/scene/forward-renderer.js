@@ -1182,9 +1182,9 @@ Object.assign(pc, function () {
                 if (instancingData.count > 0) {
                     this._instancedDrawCalls++;
                     this._removedByInstancing += instancingData.count;
-                    device.setVertexBuffer(instancingData._buffer, 1, instancingData.offset);
+                    device.setVertexBuffer(instancingData.vertexBuffer, 1, instancingData.offset);
                     device.draw(mesh.primitive[style], instancingData.count);
-                    if (instancingData._buffer === pc._autoInstanceBuffer) {
+                    if (instancingData.vertexBuffer === pc._autoInstanceBuffer) {
                         meshInstance.instancingData = null;
                         return instancingData.count - 1;
                     }
@@ -1215,9 +1215,9 @@ Object.assign(pc, function () {
                 if (instancingData.count > 0) {
                     this._instancedDrawCalls++;
                     this._removedByInstancing += instancingData.count;
-                    device.setVertexBuffer(instancingData._buffer, 1, instancingData.offset);
+                    device.setVertexBuffer(instancingData.vertexBuffer, 1, instancingData.offset);
                     device.draw(mesh.primitive[style], instancingData.count);
-                    if (instancingData._buffer === pc._autoInstanceBuffer) {
+                    if (instancingData.vertexBuffer === pc._autoInstanceBuffer) {
                         meshInstance.instancingData = null;
                         return instancingData.count - 1;
                     }

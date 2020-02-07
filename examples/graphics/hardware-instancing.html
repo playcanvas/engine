@@ -75,18 +75,12 @@
         // add the box entity to the hierarchy
         app.root.addChild(box);
 
-        // mesh we want to instance (the box geometry)
-        var meshInst = box.model.model.meshInstances[0];    
-        
-        // create static vertex buffer to store matrices of instances
+        // number of instances to render
         var instanceCount = 15;
 
-        // initialise instancing using specified vertex buffer
-        var vertexBuffer = new pc.VertexBuffer(this.app.graphicsDevice, pc.VertexFormat.defaultInstancingFormat, instanceCount, pc.BUFFER_STATIC);
-        meshInst.setInstancing(vertexBuffer);
-
         // store matrices for individual instances into array
-        matrices = [ ];
+        var matrices = new Float32Array(instanceCount * 16);
+        var matrixIndex = 0;
     
         var pos = new pc.Vec3();
         var rot = new pc.Quat();
@@ -100,11 +94,15 @@
 
             // copy matrix elements into array of floats
             for (var m = 0; m < 16; m++)
-                matrices.push(matrix.data[m]);
+                matrices[matrixIndex++] = matrix.data[m];
         }
 
-        // assign matrices to vertex buffer
-        meshInst.instancingVertexData = matrices;
+        // create static vertex buffer containing the matrices
+        var vertexBuffer = new pc.VertexBuffer(this.app.graphicsDevice, pc.VertexFormat.defaultInstancingFormat, instanceCount, pc.BUFFER_STATIC, matrices);
+
+        // initialise instancing using the vertex buffer on meshInstance of the created box
+        var boxMeshInst = box.model.model.meshInstances[0];    
+        boxMeshInst.setInstancing(vertexBuffer);
     </script>
 </body>
 </html>

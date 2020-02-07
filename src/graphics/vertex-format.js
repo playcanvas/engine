@@ -115,7 +115,7 @@ Object.assign(pc, function () {
         }
     };
 
-    VertexFormat.init = function(graphicsDevice) {
+    VertexFormat.init = function (graphicsDevice) {
         var formatDesc = [
             { semantic: pc.SEMANTIC_TEXCOORD2, components: 4, type: pc.TYPE_FLOAT32 },
             { semantic: pc.SEMANTIC_TEXCOORD3, components: 4, type: pc.TYPE_FLOAT32 },
@@ -123,8 +123,8 @@ Object.assign(pc, function () {
             { semantic: pc.SEMANTIC_TEXCOORD5, components: 4, type: pc.TYPE_FLOAT32 }
         ];
 
-        this._defaultInstancingFormat = new pc.VertexFormat(graphicsDevice, formatDesc);    
-    }
+        this._defaultInstancingFormat = new pc.VertexFormat(graphicsDevice, formatDesc);
+    };
 
     /**
      * @field
@@ -132,8 +132,8 @@ Object.assign(pc, function () {
      * @readonly
      * @name pc.VertexFormat.defaultInstancingFormat
      * @type {pc.VertexFormat}
-     * @description Returns {@link pc.VertexFormat} used to store matrices of type {@link pc.Mat4} for hardware instancing. 
-    */
+     * @description Returns {@link pc.VertexFormat} used to store matrices of type {@link pc.Mat4} for hardware instancing.
+     */
     Object.defineProperty(VertexFormat, 'defaultInstancingFormat', {
         get: (function () {
             return function () {
@@ -142,7 +142,7 @@ Object.assign(pc, function () {
         }())
     });
 
-     return {
+    return {
         VertexFormat: VertexFormat
     };
 }());

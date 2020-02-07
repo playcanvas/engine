@@ -556,51 +556,31 @@ Object.assign(pc, function () {
     });
 
     // internal data structure used to store data used by hardware instancing
-    var InstancingData = function (numObjects, instanceFloatSize) {
-        this.buffer = new Float32Array(numObjects * instanceFloatSize);
+    var InstancingData = function (numObjects) {
         this.count = numObjects;
-
-        // vertex buffer and offset into it
-        this._buffer = null;
+        this.vertexBuffer = null;
         this.offset = 0;
     };
 
      /**
-     * @function
-     * @name pc.MeshInstance#setInstancing
-     * @description Sets up {@link pc.MeshInstance} to be rendered using Hardware Instancing. 
-     * @param {pc.VertexBuffer|null} vertexBuffer Vertex buffer to hold per-instance vertex data (usually world matrices).
-     * Pass null to turn off hardware instancing.
-     */
+      * @function
+      * @name pc.MeshInstance#setInstancing
+      * @description Sets up {@link pc.MeshInstance} to be rendered using Hardware Instancing.
+      * @param {pc.VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data (usually world matrices).
+      * Pass null to turn off hardware instancing.
+      */
     Object.assign(MeshInstance.prototype, {
         setInstancing: function (vertexBuffer) {
             if (vertexBuffer) {
-                this.instancingData = new pc.InstancingData(vertexBuffer.numVertices, vertexBuffer.getFormat().size / 4);
+                this.instancingData = new pc.InstancingData(vertexBuffer.numVertices);
                 this.instancingData.offset = 0;
-                this.instancingData._buffer = vertexBuffer;
+                this.instancingData.vertexBuffer = vertexBuffer;
 
                 // turn off culling - we do not do per-instance culling, all instances are submitted to GPU
                 this.cull = false;
-            } 
-            else {
+            } else {
                 this.instancingData = null;
                 this.cull = true;
-            }
-        },
-    });
-
-     /**
-     * @name pc.MeshInstance#instancingVertexData
-     * @type {number[]}
-     * @description Set per-instance vertex data to be used by hardware instancing.
-     */
-    Object.defineProperty(MeshInstance.prototype, 'instancingVertexData', {
-        set: function (value) {
-            var instancingData = this.instancingData;
-            if (instancingData) {
-                instancingData.buffer.set(value);
-                if (instancingData._buffer)
-                    instancingData._buffer.setData(instancingData.buffer);
             }
         }
     });
