@@ -58,9 +58,11 @@ Object.assign(pc, function () {
         basisToEngineMapping[BASIS_FORMAT.cTFRGB565]        = pc.PIXELFORMAT_R5_G6_B5;
         basisToEngineMapping[BASIS_FORMAT.cTFRGBA4444]      = pc.PIXELFORMAT_R4_G4_B4_A4;
 
+        var hasPerformance = typeof performance !== 'undefined';
+
         // transcode the basis super-compressed data into one of the runtime gpu native formats
         var transcode = function (basis, url, format, data) {
-            var funcStart = performance.now();
+            var funcStart = hasPerformance ? performance.now() : 0;
             var basisFile = new basis.BasisFile(new Uint8Array(data));
 
             var width = basisFile.getImageWidth(0, 0);
@@ -129,7 +131,7 @@ Object.assign(pc, function () {
                 levels: levelData,
                 cubemap: false,
                 mipmaps: true,
-                transcodeTime: performance.now() - funcStart,
+                transcodeTime: hasPerformance ? (performance.now() - funcStart) : 0,
                 url: url
             };
         };
