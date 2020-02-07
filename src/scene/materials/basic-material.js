@@ -72,6 +72,10 @@ Object.assign(pc, function () {
                 diffuseMap: this.colorMap,
                 pass: pass
             };
+
+            if (pass === pc.SHADER_FORWARD || pass === pc.SHADER_FORWARDHDR)
+                options.async = this.async;
+
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('basic', options);
         }

@@ -145,6 +145,11 @@ Object.assign(pc, function () {
      * @description The maximum supported texture anisotropy setting.
      */
     /**
+     * @name pc.GraphicsDevice#asyncShaderCompilation
+     * @type {boolean}
+     * @description Enables async shader compilation if it is supported (graphicsDevice.extParallelShaderCompile).
+     */
+    /**
      * @event
      * @name pc.GraphicsDevice#resizecanvas
      * @description The 'resizecanvas' event is fired when the canvas is resized.
@@ -191,6 +196,7 @@ Object.assign(pc, function () {
         this._maxPixelRatio = 1;
         this.renderTarget = null;
         this.feedback = null;
+        this.asyncShaderCompilation = true;
 
         // enable temporary texture unit workaround on desktop safari
         this._tempEnableSafariTextureUnitWorkaround = !!window.safari;
@@ -540,6 +546,7 @@ Object.assign(pc, function () {
         // Profiler stats
         this._drawCallsPerFrame = 0;
         this._shaderSwitchesPerFrame = 0;
+        this._asyncShaderCompilationsFrame = 0;
         this._primsPerFrame = [];
         for (i = pc.PRIMITIVE_POINTS; i <= pc.PRIMITIVE_TRIFAN; i++) {
             this._primsPerFrame[i] = 0;
@@ -3066,12 +3073,23 @@ Object.assign(pc, function () {
          * @name pc.GraphicsDevice#setShader
          * @description Sets the active shader to be used during subsequent draw calls.
          * @param {pc.Shader} shader - The shader to set to assign to the device.
+         * @param {boolean} forceLink - if true, will ignore shader.async option and force sync compilation.
          * @returns {boolean} True if the shader was successfully set, false otherwise.
          */
-        setShader: function (shader) {
+        setShader: function (shader, forceLink) {
             if (shader !== this.shader) {
-                if (!shader.ready) {
-                    if (!this.postLink(shader)) {
+                if (! shader.ready) {
+                    if (this.asyncShaderCompilation && ! forceLink && shader.async && this.extParallelShaderCompile) {
+                        if (! this.gl.getProgramParameter(shader._glProgram, this.extParallelShaderCompile.COMPLETION_STATUS_KHR)) {
+                            // shader is not async compiled
+                            this._asyncShaderCompilationsFrame++;
+                            return false;
+                        } else if (! this.postLink(shader)) {
+                            // shader has failed to link
+                            return false;
+                        }
+                    } else if (! this.postLink(shader)) {
+                        // shader has failed to link
                         return false;
                     }
                 }

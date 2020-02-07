@@ -1239,6 +1239,7 @@ Object.assign(pc, function () {
             stats.cameras = this.renderer._camerasRendered;
             stats.materials = this.renderer._materialSwitches;
             stats.shaders = this.graphicsDevice._shaderSwitchesPerFrame;
+            stats.asyncShaderCompilations = this.graphicsDevice._asyncShaderCompilationsFrame;
             stats.shadowMapUpdates = this.renderer._shadowMapUpdates;
             stats.shadowMapTime = this.renderer._shadowMapTime;
             stats.depthMapTime = this.renderer._depthMapTime;
@@ -1821,6 +1822,8 @@ Object.assign(pc, function () {
             // #ifdef PROFILER
             app._fillFrameStats(now, dt, ms);
             // #endif
+
+            app.graphicsDevice._asyncShaderCompilationsFrame = 0;
 
             app.update(dt);
 

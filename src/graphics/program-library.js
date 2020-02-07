@@ -68,7 +68,7 @@ Object.assign(pc, function () {
                 console.warn("ProgramLibrary#getProgram: Cache miss for shader", name, "key", key, "after shaders precaching");
 
             var shaderDefinition = generator.createShaderDefinition(gd, options);
-            shader = this._cache[key] = new pc.Shader(gd, shaderDefinition);
+            shader = this._cache[key] = new pc.Shader(gd, shaderDefinition, options.async);
         }
         return shader;
     };

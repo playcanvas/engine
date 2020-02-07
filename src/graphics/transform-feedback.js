@@ -133,7 +133,7 @@ Object.assign(pc, function () {
             device.setVertexBuffer(this._inputBuffer, 0);
             device.setRaster(false);
             device.setTransformFeedbackBuffer(this._outputBuffer);
-            device.setShader(shader);
+            device.setShader(shader, true);
             device.draw({
                 type: pc.PRIMITIVE_POINTS,
                 base: 0,
