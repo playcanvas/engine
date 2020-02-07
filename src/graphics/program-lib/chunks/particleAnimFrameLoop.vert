@@ -1,3 +1,3 @@
 
-    float animFrame = floor(texCoordsAlphaLife.w * animTexParams.z);
+    float animFrame = mod(floor(texCoordsAlphaLife.w * animTexParams.y), animTexParams.z);
 
