@@ -421,15 +421,15 @@ Object.assign(pc, function () {
 
                 this.updateKey();
 
-                if ((material.blendType !== pc.BLEND_NONE) !== prevBlend) {
+                if ((this._material.blendType !== pc.BLEND_NONE) !== prevBlend) {
 
-                    var scene = material._scene;
+                    var scene = this._material._scene;
                     if (!scene && prevMat && prevMat._scene) scene = prevMat._scene;
 
                     if (scene) {
                         scene.layers._dirtyBlend = true;
                     } else {
-                        material._dirtyBlend = true;
+                        this._material._dirtyBlend = true;
                     }
                 }
             }
