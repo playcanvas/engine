@@ -420,9 +420,7 @@ Object.assign(pc, function () {
                 this._material.meshInstances.push(this);
 
                 this.updateKey();
-            }
 
-            if (material) {
                 if ((material.blendType !== pc.BLEND_NONE) !== prevBlend) {
 
                     var scene = material._scene;
