@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Start Frame Particles</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="playcanvas.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <script>
+        function createMaterial(colors) {
+            var material = new pc.StandardMaterial();
+            for (var param in colors) {
+                material[param] = colors[param];
+            }
+            material.update();
+            return material;
+        }
+
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        // Create an Entity with a camera component
+        var cameraEntity = new pc.Entity();
+        cameraEntity.addComponent("camera", {
+            clearColor: new pc.Color(0.75,0.75,0.75)
+        });
+        cameraEntity.rotateLocal(0, 0, 0);
+        cameraEntity.translateLocal(0, 0, 20);
+
+        // Create a directional light
+        var lightDirEntity = new pc.Entity();
+        lightDirEntity.addComponent("light", {
+            type: "directional",
+            color: new pc.Color(1, 1, 1),
+            intensity: 1
+        });
+        lightDirEntity.setLocalEulerAngles(45,0,0);
+
+        // Add Entities into the scene hierarchy
+        app.root.addChild(cameraEntity);
+        app.root.addChild(lightDirEntity);
+
+        // Create entity for first particle system
+        var particleEntity1 = new pc.Entity();
+        app.root.addChild(particleEntity1);
+        particleEntity1.setLocalPosition(-2, 2, 0);
+
+        // Create entity for second particle system
+        var particleEntity2 = new pc.Entity();
+        app.root.addChild(particleEntity2);
+        particleEntity2.setLocalPosition(2, 2, 0);
+
+        // Create entity for third particle system
+        var particleEntity3 = new pc.Entity();
+        app.root.addChild(particleEntity3);
+        particleEntity3.setLocalPosition(-2, -2, 0);
+
+        // Create entity for fourth particle system
+        var particleEntity4 = new pc.Entity();
+        app.root.addChild(particleEntity4);
+        particleEntity4.setLocalPosition(2, -2, 0);
+
+        // load varying font texture
+        app.assets.loadFromUrl('../assets/textures/particles-numbers.png', 'texture', function (err, asset) {
+
+            // when texture is loaded add particlesystem components to particle entities
+
+            particleEntity1.addComponent("particlesystem", {
+                numParticles: 1,
+                lifetime: 4,
+                colorMap: asset.resource,
+                animLoop: true,
+                animTilesX: 4,
+                animTilesY: 4,
+                // set the animation start frame to 0 for the first particle system
+                animStartFrame: 0,
+                animNumFrames: 4,
+                animSpeed: 1,
+                autoPlay: true
+            });
+
+            particleEntity2.addComponent("particlesystem", {
+                numParticles: 1,
+                lifetime: 4,
+                colorMap: asset.resource,
+                animLoop: true,
+                animTilesX: 4,
+                animTilesY: 4,
+                // set the animation start frame to 4 for the first particle system
+                animStartFrame: 4,
+                animNumFrames: 4,
+                animSpeed: 1,
+                autoPlay: true
+            });
+
+            particleEntity3.addComponent("particlesystem", {
+                numParticles: 1,
+                lifetime: 4,
+                colorMap: asset.resource,
+                animLoop: true,
+                animTilesX: 4,
+                animTilesY: 4,
+                // set the animation start frame to 8 for the first particle system
+                animStartFrame: 8,
+                animNumFrames: 4,
+                animSpeed: 1,
+                autoPlay: true
+            });
+
+            particleEntity4.addComponent("particlesystem", {
+                numParticles: 1,
+                lifetime: 4,
+                colorMap: asset.resource,
+                animLoop: true,
+                animTilesX: 4,
+                animTilesY: 4,
+                // set the animation start frame to 12 for the first particle system
+                animStartFrame: 12,
+                animNumFrames: 4,
+                animSpeed: 1,
+                autoPlay: true
+            });
+        });
+    </script>
+</body>
+</html>
