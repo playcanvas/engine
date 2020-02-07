@@ -411,8 +411,8 @@ Object.assign(pc, function () {
                 }
             }
 
-            var prevBlend = this._material ? (this._material.blendType !== pc.BLEND_NONE) : false;
             var prevMat = this._material;
+
             this._material = material;
 
             if (this._material) {
@@ -420,18 +420,17 @@ Object.assign(pc, function () {
                 this._material.meshInstances.push(this);
 
                 this.updateKey();
-            }
 
-            if (material) {
-                if ((material.blendType !== pc.BLEND_NONE) !== prevBlend) {
-
-                    var scene = material._scene;
+                var prevBlend = prevMat && (prevMat.blendType !== pc.BLEND_NONE);
+                var thisBlend = this._material.blendType !== pc.BLEND_NONE;
+                if (prevBlend !== thisBlend) {
+                    var scene = this._material._scene;
                     if (!scene && prevMat && prevMat._scene) scene = prevMat._scene;
 
                     if (scene) {
                         scene.layers._dirtyBlend = true;
                     } else {
-                        material._dirtyBlend = true;
+                        this._material._dirtyBlend = true;
                     }
                 }
             }
