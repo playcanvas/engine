@@ -420,16 +420,18 @@ Object.assign(pc, function () {
                 this._material.meshInstances.push(this);
 
                 this.updateKey();
+            }
 
-                if ((this._material.blendType !== pc.BLEND_NONE) !== prevBlend) {
+            if (material) {
+                if ((material.blendType !== pc.BLEND_NONE) !== prevBlend) {
 
-                    var scene = this._material._scene;
+                    var scene = material._scene;
                     if (!scene && prevMat && prevMat._scene) scene = prevMat._scene;
 
                     if (scene) {
                         scene.layers._dirtyBlend = true;
                     } else {
-                        this._material._dirtyBlend = true;
+                        material._dirtyBlend = true;
                     }
                 }
             }
