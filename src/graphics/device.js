@@ -146,7 +146,7 @@ Object.assign(pc, function () {
      */
     /**
      * @readonly
-     * @name pc.GraphicsDevice#extInstancing
+     * @name pc.GraphicsDevice#supportsInstancing
      * @type {boolean}
      * @description True if hardware instancing is supported.
      */
@@ -708,6 +708,8 @@ Object.assign(pc, function () {
             this.extCompressedTextureATC = getExtension('WEBGL_compressed_texture_atc');
             this.extCompressedTextureASTC = getExtension('WEBGL_compressed_texture_astc');
             this.extParallelShaderCompile = getExtension('KHR_parallel_shader_compile');
+
+            this.supportsInstancing = !!this.extInstancing;
         },
 
         initializeCapabilities: function () {
