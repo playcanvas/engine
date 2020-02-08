@@ -125,6 +125,17 @@ Object.assign(pc, function () {
      */
 
     /**
+     * @name pc.Application#xr
+     * @type {pc.XrManager}
+     * @description The XR Manager that provides ability to start VR/AR sessions.
+     * @example
+     * // check if VR is available
+     * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+     *     // VR is available
+     * }
+     */
+
+    /**
      * @name pc.Application#loader
      * @type {pc.ResourceLoader}
      * @description The resource loader.
@@ -259,6 +270,11 @@ Object.assign(pc, function () {
 
         // for compatibility
         this.context = this;
+
+        if (! options.graphicsDeviceOptions)
+            options.graphicsDeviceOptions = { };
+
+        options.graphicsDeviceOptions.xrCompatible = true;
 
         this.graphicsDevice = new pc.GraphicsDevice(canvas, options.graphicsDeviceOptions);
         this.stats = new pc.ApplicationStats(this.graphicsDevice);
@@ -536,6 +552,7 @@ Object.assign(pc, function () {
             this.elementInput.app = this;
 
         this.vr = null;
+        this.xr = new pc.XrManager(this);
 
         this._inTools = false;
 
@@ -1381,6 +1398,10 @@ Object.assign(pc, function () {
         resizeCanvas: function (width, height) {
             if (!this._allowResize) return; // prevent resizing (e.g. if presenting in VR HMD)
 
+            // prevent resizing when in XR session
+            if (this.xr && this.xr.session)
+                return;
+
             var windowWidth = window.innerWidth;
             var windowHeight = window.innerHeight;
 
@@ -1744,6 +1765,7 @@ Object.assign(pc, function () {
                 this.vr.destroy();
                 this.vr = null;
             }
+            this.xr.end();
 
             this.graphicsDevice.destroy();
             this.graphicsDevice = null;
@@ -1789,12 +1811,18 @@ Object.assign(pc, function () {
     // create tick function to be wrapped in closure
     var makeTick = function (_app) {
         var app = _app;
-        return function (timestamp) {
-            if (!app.graphicsDevice) {
+        var frameRequest;
+
+        return function (timestamp, frame) {
+            if (!app.graphicsDevice)
                 return;
-            }
 
             Application._currentApplication = app;
+
+            if (frameRequest) {
+                cancelAnimationFrame(frameRequest);
+                frameRequest = null;
+            }
 
             // have current application pointer in pc
             pc.app = app;
@@ -1809,18 +1837,26 @@ Object.assign(pc, function () {
 
             // Submit a request to queue up a new animation frame immediately
             if (app.vr && app.vr.display) {
-                app.vr.display.requestAnimationFrame(app.tick);
+                frameRequest = app.vr.display.requestAnimationFrame(app.tick);
+            } else if (app.xr.session) {
+                frameRequest = app.xr.session.requestAnimationFrame(app.tick);
             } else {
-                requestAnimationFrame(app.tick);
+                frameRequest = requestAnimationFrame(app.tick);
             }
 
-            if (app.graphicsDevice.contextLost) {
+            if (app.graphicsDevice.contextLost)
                 return;
-            }
 
             // #ifdef PROFILER
             app._fillFrameStats(now, dt, ms);
             // #endif
+
+            if (frame) {
+                app.xr.calculateViews(frame);
+                app.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
+            } else {
+                app.graphicsDevice.defaultFramebuffer = null;
+            }
 
             app.update(dt);
 

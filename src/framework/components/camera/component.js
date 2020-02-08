@@ -556,6 +556,51 @@ Object.assign(pc, function () {
             } else {
                 callback("Not presenting VR");
             }
+        },
+
+        /**
+         * @function
+         * @name pc.CameraComponent#startXr
+         * @description Attempt to start XR session with this camera
+         * @param {string} type - The type of session. Can be one of the following:
+         *
+         * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+         * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+         * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+         *
+         * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+         * @example
+         * // On an entity with a camera component
+         * this.entity.camera.startXr(pc.XRTYPE_VR, function (err) {
+         *     if (err) {
+         *         // failed to start XR session
+         *     } else {
+         *         // in XR
+         *     }
+         * });
+         */
+        startXr: function (type, callback) {
+            this.system.app.xr.start(this, type, callback);
+        },
+
+        /**
+         * @function
+         * @name pc.CameraComponent#endXr
+         * @description Attempt to end XR session of this camera
+         * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is ended. The callback has one argument Error - it is null if successfully ended XR session.
+         * @example
+         * // On an entity with a camera component
+         * this.entity.camera.endXr(function (err) {
+         *     // not anymore in XR
+         * });
+         */
+        endXr: function (callback) {
+            if (! this.camera.xr) {
+                if (callback) callback(new Error("Camera is not in XR"));
+                return;
+            }
+
+            this.camera.xr.end(callback);
         }
     });
 

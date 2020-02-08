@@ -71,5 +71,11 @@ var categories = [
             "text-wrap",
             "various"
         ]
+    }, {
+        name: "xr",
+        examples: [
+            'augmented-reality-basic',
+            'virtual-reality-basic'
+        ]
     }
 ];
