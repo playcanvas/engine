@@ -21,6 +21,10 @@ Object.assign(pc, function () {
         this.lights = [];
 
         this._shadersVersion = 0;
+
+        // used by the model component to flag that this
+        // model has been assigned
+        this._immutable = false;
     };
 
     Object.assign(Model.prototype, {
