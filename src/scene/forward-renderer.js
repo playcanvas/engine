@@ -1208,16 +1208,19 @@ Object.assign(pc, function () {
             }
         },
 
+        // returns number of extra draw calls to skip - used to skip auto instanced meshes draw calls. by default return 0 to not skip any additional draw calls
         drawInstance: function (device, meshInstance, mesh, style, normal) {
             instancingData = meshInstance.instancingData;
             if (instancingData) {
-                this._instancedDrawCalls++;
-                this._removedByInstancing += instancingData.count;
-                device.setVertexBuffer(instancingData._buffer, 1, instancingData.offset);
-                device.draw(mesh.primitive[style], instancingData.count);
-                if (instancingData._buffer === pc._autoInstanceBuffer) {
-                    meshInstance.instancingData = null;
-                    return instancingData.count - 1;
+                if (instancingData.count > 0) {
+                    this._instancedDrawCalls++;
+                    this._removedByInstancing += instancingData.count;
+                    device.setVertexBuffer(instancingData.vertexBuffer, 1, instancingData.offset);
+                    device.draw(mesh.primitive[style], instancingData.count);
+                    if (instancingData.vertexBuffer === pc._autoInstanceBuffer) {
+                        meshInstance.instancingData = null;
+                        return instancingData.count - 1;
+                    }
                 }
             } else {
                 modelMatrix = meshInstance.node.worldTransform;
@@ -1234,27 +1237,29 @@ Object.assign(pc, function () {
                 }
 
                 device.draw(mesh.primitive[style]);
-                return 0;
             }
+            return 0;
         },
 
         // used for stereo
         drawInstance2: function (device, meshInstance, mesh, style) {
             instancingData = meshInstance.instancingData;
             if (instancingData) {
-                this._instancedDrawCalls++;
-                this._removedByInstancing += instancingData.count;
-                device.setVertexBuffer(instancingData._buffer, 1, instancingData.offset);
-                device.draw(mesh.primitive[style], instancingData.count);
-                if (instancingData._buffer === pc._autoInstanceBuffer) {
-                    meshInstance.instancingData = null;
-                    return instancingData.count - 1;
+                if (instancingData.count > 0) {
+                    this._instancedDrawCalls++;
+                    this._removedByInstancing += instancingData.count;
+                    device.setVertexBuffer(instancingData.vertexBuffer, 1, instancingData.offset);
+                    device.draw(mesh.primitive[style], instancingData.count);
+                    if (instancingData.vertexBuffer === pc._autoInstanceBuffer) {
+                        meshInstance.instancingData = null;
+                        return instancingData.count - 1;
+                    }
                 }
             } else {
                 // matrices are already set
                 device.draw(mesh.primitive[style]);
-                return 0;
             }
+            return 0;
         },
 
         renderShadows: function (lights, cameraPass) {
@@ -1811,18 +1816,9 @@ Object.assign(pc, function () {
         },
 
         setupInstancing: function (device) {
-            if (!pc._instanceVertexFormat) {
-                var formatDesc = [
-                    { semantic: pc.SEMANTIC_TEXCOORD2, components: 4, type: pc.TYPE_FLOAT32 },
-                    { semantic: pc.SEMANTIC_TEXCOORD3, components: 4, type: pc.TYPE_FLOAT32 },
-                    { semantic: pc.SEMANTIC_TEXCOORD4, components: 4, type: pc.TYPE_FLOAT32 },
-                    { semantic: pc.SEMANTIC_TEXCOORD5, components: 4, type: pc.TYPE_FLOAT32 }
-                ];
-                pc._instanceVertexFormat = new pc.VertexFormat(device, formatDesc);
-            }
             if (device.enableAutoInstancing) {
                 if (!pc._autoInstanceBuffer) {
-                    pc._autoInstanceBuffer = new pc.VertexBuffer(device, pc._instanceVertexFormat, device.autoInstancingMaxObjects, pc.BUFFER_DYNAMIC);
+                    pc._autoInstanceBuffer = new pc.VertexBuffer(device, pc.VertexFormat.defaultInstancingFormat, device.autoInstancingMaxObjects, pc.BUFFER_DYNAMIC);
                     pc._autoInstanceBufferData = new Float32Array(pc._autoInstanceBuffer.lock());
                 }
             }

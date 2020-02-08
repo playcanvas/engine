@@ -411,8 +411,8 @@ Object.assign(pc, function () {
                 }
             }
 
-            var prevBlend = this._material ? (this._material.blendType !== pc.BLEND_NONE) : false;
             var prevMat = this._material;
+
             this._material = material;
 
             if (this._material) {
@@ -420,18 +420,17 @@ Object.assign(pc, function () {
                 this._material.meshInstances.push(this);
 
                 this.updateKey();
-            }
 
-            if (material) {
-                if ((material.blendType !== pc.BLEND_NONE) !== prevBlend) {
-
-                    var scene = material._scene;
+                var prevBlend = prevMat && (prevMat.blendType !== pc.BLEND_NONE);
+                var thisBlend = this._material.blendType !== pc.BLEND_NONE;
+                if (prevBlend !== thisBlend) {
+                    var scene = this._material._scene;
                     if (!scene && prevMat && prevMat._scene) scene = prevMat._scene;
 
                     if (scene) {
                         scene.layers._dirtyBlend = true;
                     } else {
-                        material._dirtyBlend = true;
+                        this._material._dirtyBlend = true;
                     }
                 }
             }
@@ -520,6 +519,21 @@ Object.assign(pc, function () {
         }
     });
 
+    /**
+     * @name pc.MeshInstance#instancingCount
+     * @type {number}
+     * @description Number of instances when using hardware instancing to render the mesh.
+     */
+    Object.defineProperty(MeshInstance.prototype, 'instancingCount', {
+        get: function () {
+            return this.instancingData ? this.instancingData.count : 0;
+        },
+        set: function (value) {
+            if (this.instancingData)
+                this.instancingData.count = value;
+        }
+    });
+
     Object.assign(MeshInstance.prototype, {
         syncAabb: function () {
             // Deprecated
@@ -530,6 +544,27 @@ Object.assign(pc, function () {
             this._key[pc.SORTKEY_FORWARD] = getKey(this.layer,
                                                    (material.alphaToCoverage || material.alphaTest) ? pc.BLEND_NORMAL : material.blendType, // render alphatest/atoc after opaque
                                                    false, material.id);
+        },
+
+        /**
+         * @function
+         * @name pc.MeshInstance#setInstancing
+         * @description Sets up {@link pc.MeshInstance} to be rendered using Hardware Instancing.
+         * @param {pc.VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data (usually world matrices).
+         * Pass null to turn off hardware instancing.
+         */
+        setInstancing: function (vertexBuffer) {
+            if (vertexBuffer) {
+                this.instancingData = new pc.InstancingData(vertexBuffer.numVertices);
+                this.instancingData.offset = 0;
+                this.instancingData.vertexBuffer = vertexBuffer;
+
+                // turn off culling - we do not do per-instance culling, all instances are submitted to GPU
+                this.cull = false;
+            } else {
+                this.instancingData = null;
+                this.cull = true;
+            }
         },
 
         setParameter: pc.Material.prototype.setParameter,
@@ -555,22 +590,12 @@ Object.assign(pc, function () {
         }
     });
 
-    var InstancingData = function (numObjects, dynamic, instanceSize) {
-        instanceSize = instanceSize || 16;
-        this.buffer = new Float32Array(numObjects * instanceSize);
+    // internal data structure used to store data used by hardware instancing
+    var InstancingData = function (numObjects) {
         this.count = numObjects;
+        this.vertexBuffer = null;
         this.offset = 0;
-        this.usage = dynamic ? pc.BUFFER_DYNAMIC : pc.BUFFER_STATIC;
-        this._buffer = null;
     };
-
-    Object.assign(InstancingData.prototype, {
-        update: function () {
-            if (this._buffer) {
-                this._buffer.setData(this.buffer);
-            }
-        }
-    });
 
     function getKey(layer, blendType, isCommand, materialId) {
         // Key definition:
