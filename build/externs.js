@@ -11,3 +11,6 @@ var Module = {};
 // temp
 var performance = {};
 var WebAssembly = {};
+
+// WebXR
+var XRWebGLLayer = {};
