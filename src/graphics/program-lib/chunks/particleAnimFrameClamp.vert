@@ -1,3 +1,3 @@
 
-    float animFrame = min(floor(texCoordsAlphaLife.w * animTexParams.z), animTexParams.w);
+    float animFrame = min(floor(texCoordsAlphaLife.w * animTexParams.y), animTexParams.z);
 

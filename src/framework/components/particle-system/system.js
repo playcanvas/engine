@@ -53,6 +53,7 @@ Object.assign(pc, function () {
         'normalMap',
         'animTilesX',
         'animTilesY',
+        'animStartFrame',
         'animNumFrames',
         'animSpeed',
         'animLoop',
