@@ -24,6 +24,7 @@ var categories = [
             "model-box",
             "model-shapes",
             "model-textured-box",
+            "point-cloud",
             "portal",
             "particles-snow",
             "particles-sparks",
