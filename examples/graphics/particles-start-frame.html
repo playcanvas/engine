@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
-    <script src="playcanvas.js"></script>
+    <script src="../../build/output/playcanvas.js"></script>
     <style>
         body { 
             margin: 0;
@@ -95,7 +95,7 @@
         particleEntity4.setLocalPosition(3, -3, 0);
 
         // load varying font texture
-        app.assets.loadFromUrl('particles-numbers.png', 'texture', function (err, asset) {
+        app.assets.loadFromUrl('../assets/textures/particles-numbers.png', 'texture', function (err, asset) {
 
             // when the texture is loaded add particlesystem components to particle entities
 
