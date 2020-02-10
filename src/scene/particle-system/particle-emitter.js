@@ -208,7 +208,7 @@ Object.assign(pc, function () {
 
         setProperty("animTilesX", 1);
         setProperty("animTilesY", 1);
-        setProperty("animStartFrame", 1);
+        setProperty("animStartFrame", 0);
         setProperty("animNumFrames", 1);
         setProperty("animSpeed", 1);
         setProperty("animLoop", true);
