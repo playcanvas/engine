@@ -55,7 +55,7 @@ Object.assign(pc, function () {
         this._session = null;
         this._baseLayer = null;
         this._referenceSpace = null;
-        this._inputSources = [];
+        this.input = new pc.XrInputSources(this);
 
         this._camera = null;
         this._pose = null;
@@ -248,17 +248,6 @@ Object.assign(pc, function () {
             self.fire('visibility:change', session.visibilityState);
         };
 
-        var onInputSourcesChange = function (evt) {
-            var i;
-
-            for (i = 0; i < evt.removed.length; i++) {
-                self._inputSourceRemove(evt.removed[i]);
-            }
-            for (i = 0; i < evt.added.length; i++) {
-                self._inputSourceAdd(evt.added[i]);
-            }
-        };
-
         var onClipPlanesChange = function () {
             self._setClipPlanes(self._camera.nearClip, self._camera.farClip);
         };
@@ -267,7 +256,6 @@ Object.assign(pc, function () {
         var onEnd = function () {
             self._session = null;
             self._referenceSpace = null;
-            self._inputSources = [];
             self._pose = null;
             self.views = [];
             self._width = 0;
@@ -284,7 +272,6 @@ Object.assign(pc, function () {
 
             session.removeEventListener('end', onEnd);
             session.removeEventListener('visibilitychange', onVisibilityChange);
-            session.removeEventListener('inputsourceschange', onInputSourcesChange);
 
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
@@ -295,7 +282,6 @@ Object.assign(pc, function () {
 
         session.addEventListener('end', onEnd);
         session.addEventListener('visibilitychange', onVisibilityChange);
-        session.addEventListener('inputsourceschange', onInputSourcesChange);
 
         this._camera.on('set_nearClip', onClipPlanesChange);
         this._camera.on('set_farClip', onClipPlanesChange);
@@ -321,18 +307,6 @@ Object.assign(pc, function () {
         });
     };
 
-    XrManager.prototype._inputSourceAdd = function (inputSource) {
-        this._inputSources.push(inputSource);
-        this.fire('inputSource:add', inputSource);
-    };
-
-    XrManager.prototype._inputSourceRemove = function (inputSource) {
-        var ind = this._inputSources.indexOf(inputSource);
-        if (ind === -1) return;
-        this._inputSources.splice(ind, 1);
-        this.fire('inputSource:remove', inputSource);
-    };
-
     XrManager.prototype._setClipPlanes = function (near, far) {
         near = Math.min(0.0001, Math.max(0.1, near));
         far = Math.max(1000, far);
@@ -354,7 +328,7 @@ Object.assign(pc, function () {
         });
     };
 
-    XrManager.prototype.calculateViews = function (frame) {
+    XrManager.prototype.update = function (frame) {
         if (! this._session) return;
 
         var i, view, viewRaw, layer, viewport;
@@ -401,13 +375,13 @@ Object.assign(pc, function () {
             }
         }
 
-        // reset position
-        var posePosition = this._pose.transform.position;
-        var poseOrientation = this._pose.transform.orientation;
-        this.position.set(posePosition.x, posePosition.y, posePosition.z);
-        this.rotation.set(poseOrientation.x, poseOrientation.y, poseOrientation.z, poseOrientation.w);
-
         if (this._pose) {
+            // reset position
+            var posePosition = this._pose.transform.position;
+            var poseOrientation = this._pose.transform.orientation;
+            this.position.set(posePosition.x, posePosition.y, posePosition.z);
+            this.rotation.set(poseOrientation.x, poseOrientation.y, poseOrientation.z, poseOrientation.w);
+
             layer = frame.session.renderState.baseLayer;
 
             for (i = 0; i < this._pose.views.length; i++) {
@@ -430,6 +404,8 @@ Object.assign(pc, function () {
         // position and rotate camera based on calculated vectors
         this._camera.camera._node.setLocalPosition(this.position);
         this._camera.camera._node.setLocalRotation(this.rotation);
+
+        this.input.update(frame);
     };
 
     Object.defineProperty(XrManager.prototype, 'supported', {
