@@ -116,8 +116,8 @@
 
             if (app.xr.supported) {
                 var activate = function () {
-                    if (app.xr.isAvailable(pc.XR_TYPE_IMMERSIVE_AR)) {
-                        c.camera.startXr(pc.XR_TYPE_IMMERSIVE_AR, function (err) {
+                    if (app.xr.isAvailable(pc.XRTYPE_AR)) {
+                        c.camera.startXr(pc.XRTYPE_AR, function (err) {
                             if (err) message("WebXR Immersive AR failed to start: " + err.message);
                         });
                     } else {
@@ -155,11 +155,11 @@
                 app.xr.on('end', function () {
                     message("WebXR Immersive AR session has ended");
                 });
-                app.xr.on('available:' + pc.XR_TYPE_IMMERSIVE_AR, function (available) {
+                app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
                     message("WebXR Immersive AR is now " + (available ? 'available' : 'unavailable'));
                 });
 
-                if (! app.xr.isAvailable(pc.XR_TYPE_IMMERSIVE_AR)) {
+                if (! app.xr.isAvailable(pc.XRTYPE_AR)) {
                     message("WebXR Immersive AR is not available");
                 }
             } else {
