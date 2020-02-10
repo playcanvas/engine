@@ -14,6 +14,7 @@ var categories = [
     }, {
         name: "graphics",
         examples: [
+            "hardware-instancing",
             "layers",
             "lights",
             "lights-baked",
@@ -69,6 +70,12 @@ var categories = [
             "text-typewriter",
             "text-wrap",
             "various"
+        ]
+    }, {
+        name: "xr",
+        examples: [
+            'augmented-reality-basic',
+            'virtual-reality-basic'
         ]
     }
 ];

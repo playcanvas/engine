@@ -145,6 +145,12 @@ Object.assign(pc, function () {
      * @description The maximum supported texture anisotropy setting.
      */
     /**
+     * @readonly
+     * @name pc.GraphicsDevice#supportsInstancing
+     * @type {boolean}
+     * @description True if hardware instancing is supported.
+     */
+    /**
      * @event
      * @name pc.GraphicsDevice#resizecanvas
      * @description The 'resizecanvas' event is fired when the canvas is resized.
@@ -180,6 +186,7 @@ Object.assign(pc, function () {
         this._enableAutoInstancing = false;
         this.autoInstancingMaxObjects = 16384;
         this.attributesInvalidated = true;
+        this.defaultFramebuffer = null;
         this.boundBuffer = null;
         this.boundElementBuffer = null;
         this.instancedAttribs = { };
@@ -593,6 +600,8 @@ Object.assign(pc, function () {
         this._textureFloatHighPrecision = undefined;
 
         this.createGrabPass(options.alpha);
+
+        pc.VertexFormat.init(this);
     };
     GraphicsDevice.prototype = Object.create(pc.EventHandler.prototype);
     GraphicsDevice.prototype.constructor = GraphicsDevice;
@@ -700,6 +709,8 @@ Object.assign(pc, function () {
             this.extCompressedTextureATC = getExtension('WEBGL_compressed_texture_atc');
             this.extCompressedTextureASTC = getExtension('WEBGL_compressed_texture_astc');
             this.extParallelShaderCompile = getExtension('KHR_parallel_shader_compile');
+
+            this.supportsInstancing = !!this.extInstancing;
         },
 
         initializeCapabilities: function () {
@@ -1259,7 +1270,7 @@ Object.assign(pc, function () {
                     this.setFramebuffer(target._glFrameBuffer);
                 }
             } else {
-                this.setFramebuffer(null);
+                this.setFramebuffer(this.defaultFramebuffer);
             }
         },
 
@@ -1962,7 +1973,7 @@ Object.assign(pc, function () {
                             element.offset + vbOffset
                         );
 
-                        if (element.stream === 1 && numInstances > 1) {
+                        if (element.stream === 1 && numInstances > 0) {
                             if (!this.instancedAttribs[locationId]) {
                                 gl.vertexAttribDivisor(locationId, 1);
                                 this.instancedAttribs[locationId] = true;
@@ -2021,7 +2032,7 @@ Object.assign(pc, function () {
             var samplers = shader.samplers;
             var uniforms = shader.uniforms;
 
-            if (numInstances > 1) {
+            if (numInstances > 0) {
                 this.boundBuffer = null;
                 this.attributesInvalidated = true;
             }
@@ -2107,7 +2118,7 @@ Object.assign(pc, function () {
                 var format = indexBuffer.glFormat;
                 var offset = primitive.base * indexBuffer.bytesPerIndex;
 
-                if (numInstances > 1) {
+                if (numInstances > 0) {
                     gl.drawElementsInstanced(mode, count, format, offset, numInstances);
                 } else {
                     gl.drawElements(mode, count, format, offset);
@@ -2115,7 +2126,7 @@ Object.assign(pc, function () {
             } else {
                 var first = primitive.base;
 
-                if (numInstances > 1) {
+                if (numInstances > 0) {
                     gl.drawArraysInstanced(mode, first, count, numInstances);
                 } else {
                     gl.drawArrays(mode, first, count);
