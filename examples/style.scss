@@ -48,7 +48,7 @@ body {
     }
   }
 }
- 
+
 .sidenav-toggle {
   position: absolute;
   right: 12px;
@@ -108,8 +108,8 @@ iframe {
   border: 0px;
   left: 0;
   right: 0;
-  padding-left: 160px;
-  width: calc(100% - 160px);
+  padding-left: 240px;
+  width: calc(100% - 240px);
   height: 100%;
   overflow: auto;
   @media screen and (max-width: $break-medium) {

@@ -555,6 +555,10 @@ Object.assign(pc, function () {
                 viewInvMat.copy(viewMat).invert();
                 this.viewInvId.setValue(viewInvMat.data);
                 camera.frustum.update(projMat, viewMat);
+            } else if (camera.xr && camera.xr.views.length) {
+                // calculate frustum based on XR view
+                var view = camera.xr.views[0];
+                camera.frustum.update(view.projMat, view.viewOffMat);
                 return;
             }
 
@@ -577,43 +581,9 @@ Object.assign(pc, function () {
         // make sure colorWrite is set to true to all channels, if you want to fully clear the target
         setCamera: function (camera, target, clear, cullBorder) {
             var vrDisplay = camera.vrDisplay;
-            if (!vrDisplay || !vrDisplay.presenting) {
-                // Projection Matrix
-                projMat = camera.getProjectionMatrix();
-                if (camera.overrideCalculateProjection) camera.calculateProjection(projMat, pc.VIEW_CENTER);
-                this.projId.setValue(projMat.data);
+            var parent, transform;
 
-                // ViewInverse Matrix
-                if (camera.overrideCalculateTransform) {
-                    camera.calculateTransform(viewInvMat, pc.VIEW_CENTER);
-                } else {
-                    var pos = camera._node.getPosition();
-                    var rot = camera._node.getRotation();
-                    viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
-                }
-                this.viewInvId.setValue(viewInvMat.data);
-
-                // View Matrix
-                viewMat.copy(viewInvMat).invert();
-                this.viewId.setValue(viewMat.data);
-
-                // View 3x3
-                mat3FromMat4(viewMat3, viewMat);
-                this.viewId3.setValue(viewMat3.data);
-
-                // ViewProjection Matrix
-                viewProjMat.mul2(projMat, viewMat);
-                this.viewProjId.setValue(viewProjMat.data);
-
-                // View Position (world space)
-                var cameraPos = camera._node.getPosition();
-                this.viewPos[0] = cameraPos.x;
-                this.viewPos[1] = cameraPos.y;
-                this.viewPos[2] = cameraPos.z;
-                this.viewPosId.setValue(this.viewPos);
-
-                camera.frustum.update(projMat, viewMat);
-            } else {
+            if (vrDisplay && vrDisplay.presenting) {
                 // Projection LR
                 projL = vrDisplay.leftProj;
                 projR = vrDisplay.rightProj;
@@ -632,9 +602,9 @@ Object.assign(pc, function () {
                     viewR.copy(viewInvR).invert();
                     viewMat.copy(viewInvMat).invert();
                 } else {
-                    var parent = camera._node.parent;
+                    parent = camera._node.parent;
                     if (parent) {
-                        var transform = parent.getWorldTransform();
+                        transform = parent.getWorldTransform();
 
                         // ViewInverse LR (parent)
                         viewInvL.mul2(transform, vrDisplay.leftViewInv);
@@ -676,6 +646,69 @@ Object.assign(pc, function () {
                 viewPosR.x = viewInvR.data[12];
                 viewPosR.y = viewInvR.data[13];
                 viewPosR.z = viewInvR.data[14];
+
+                camera.frustum.update(projMat, viewMat);
+            } else if (camera.xr && camera.xr.session) {
+                parent = camera._node.parent;
+                if (parent) transform = parent.getWorldTransform();
+
+                var views = camera.xr.views;
+
+                for (var v = 0; v < views.length; v++) {
+                    var view = views[v];
+
+                    if (parent) {
+                        view.viewInvOffMat.mul2(transform, view.viewInvMat);
+                        view.viewOffMat.copy(view.viewInvOffMat).invert();
+                    } else {
+                        view.viewInvOffMat.copy(view.viewInvMat);
+                        view.viewOffMat.copy(view.viewMat);
+                    }
+
+                    mat3FromMat4(view.viewMat3, view.viewOffMat);
+                    view.projViewOffMat.mul2(view.projMat, view.viewOffMat);
+
+                    view.positionOff.x = view.viewInvOffMat.data[12];
+                    view.positionOff.y = view.viewInvOffMat.data[13];
+                    view.positionOff.z = view.viewInvOffMat.data[14];
+
+                    camera.frustum.update(view.projMat, view.viewOffMat);
+                }
+            } else {
+                // Projection Matrix
+                projMat = camera.getProjectionMatrix();
+                if (camera.overrideCalculateProjection) camera.calculateProjection(projMat, pc.VIEW_CENTER);
+                this.projId.setValue(projMat.data);
+
+                // ViewInverse Matrix
+                if (camera.overrideCalculateTransform) {
+                    camera.calculateTransform(viewInvMat, pc.VIEW_CENTER);
+                } else {
+                    var pos = camera._node.getPosition();
+                    var rot = camera._node.getRotation();
+                    viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+                }
+                this.viewInvId.setValue(viewInvMat.data);
+
+                // View Matrix
+                viewMat.copy(viewInvMat).invert();
+                this.viewId.setValue(viewMat.data);
+
+                // View 3x3
+                mat3FromMat4(viewMat3, viewMat);
+                this.viewId3.setValue(viewMat3.data);
+
+                // ViewProjection Matrix
+                viewProjMat.mul2(projMat, viewMat);
+                this.viewProjId.setValue(viewProjMat.data);
+
+                // View Position (world space)
+                var cameraPos = camera._node.getPosition();
+                this.viewPos[0] = cameraPos.x;
+                this.viewPos[1] = cameraPos.y;
+                this.viewPos[2] = cameraPos.z;
+
+                this.viewPosId.setValue(this.viewPos);
 
                 camera.frustum.update(projMat, viewMat);
             }
@@ -1175,16 +1208,19 @@ Object.assign(pc, function () {
             }
         },
 
+        // returns number of extra draw calls to skip - used to skip auto instanced meshes draw calls. by default return 0 to not skip any additional draw calls
         drawInstance: function (device, meshInstance, mesh, style, normal) {
             instancingData = meshInstance.instancingData;
             if (instancingData) {
-                this._instancedDrawCalls++;
-                this._removedByInstancing += instancingData.count;
-                device.setVertexBuffer(instancingData._buffer, 1, instancingData.offset);
-                device.draw(mesh.primitive[style], instancingData.count);
-                if (instancingData._buffer === pc._autoInstanceBuffer) {
-                    meshInstance.instancingData = null;
-                    return instancingData.count - 1;
+                if (instancingData.count > 0) {
+                    this._instancedDrawCalls++;
+                    this._removedByInstancing += instancingData.count;
+                    device.setVertexBuffer(instancingData.vertexBuffer, 1, instancingData.offset);
+                    device.draw(mesh.primitive[style], instancingData.count);
+                    if (instancingData.vertexBuffer === pc._autoInstanceBuffer) {
+                        meshInstance.instancingData = null;
+                        return instancingData.count - 1;
+                    }
                 }
             } else {
                 modelMatrix = meshInstance.node.worldTransform;
@@ -1201,27 +1237,29 @@ Object.assign(pc, function () {
                 }
 
                 device.draw(mesh.primitive[style]);
-                return 0;
             }
+            return 0;
         },
 
         // used for stereo
         drawInstance2: function (device, meshInstance, mesh, style) {
             instancingData = meshInstance.instancingData;
             if (instancingData) {
-                this._instancedDrawCalls++;
-                this._removedByInstancing += instancingData.count;
-                device.setVertexBuffer(instancingData._buffer, 1, instancingData.offset);
-                device.draw(mesh.primitive[style], instancingData.count);
-                if (instancingData._buffer === pc._autoInstanceBuffer) {
-                    meshInstance.instancingData = null;
-                    return instancingData.count - 1;
+                if (instancingData.count > 0) {
+                    this._instancedDrawCalls++;
+                    this._removedByInstancing += instancingData.count;
+                    device.setVertexBuffer(instancingData.vertexBuffer, 1, instancingData.offset);
+                    device.draw(mesh.primitive[style], instancingData.count);
+                    if (instancingData.vertexBuffer === pc._autoInstanceBuffer) {
+                        meshInstance.instancingData = null;
+                        return instancingData.count - 1;
+                    }
                 }
             } else {
                 // matrices are already set
                 device.draw(mesh.primitive[style]);
-                return 0;
             }
+            return 0;
         },
 
         renderShadows: function (lights, cameraPass) {
@@ -1723,6 +1761,29 @@ Object.assign(pc, function () {
                         this.viewPosId.setValue(this.viewPos);
                         i += this.drawInstance2(device, drawCall, mesh, style);
                         this._forwardDrawCalls++;
+                    } else if (camera.xr && camera.xr.session && camera.xr.views.length) {
+                        var views = camera.xr.views;
+
+                        for (var v = 0; v < views.length; v++) {
+                            var view = views[v];
+
+                            device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
+
+                            this.projId.setValue(view.projMat.data);
+                            this.viewId.setValue(view.viewOffMat.data);
+                            this.viewInvId.setValue(view.viewInvOffMat.data);
+                            this.viewId3.setValue(view.viewMat3.data);
+                            this.viewProjId.setValue(view.projViewOffMat.data);
+                            this.viewPosId.setValue(view.positionOff.data);
+
+                            if (v === 0) {
+                                i += this.drawInstance(device, drawCall, mesh, style, true);
+                            } else {
+                                i += this.drawInstance2(device, drawCall, mesh, style, true);
+                            }
+
+                            this._forwardDrawCalls++;
+                        }
                     } else {
                         i += this.drawInstance(device, drawCall, mesh, style, true);
                         this._forwardDrawCalls++;
@@ -1755,18 +1816,9 @@ Object.assign(pc, function () {
         },
 
         setupInstancing: function (device) {
-            if (!pc._instanceVertexFormat) {
-                var formatDesc = [
-                    { semantic: pc.SEMANTIC_TEXCOORD2, components: 4, type: pc.TYPE_FLOAT32 },
-                    { semantic: pc.SEMANTIC_TEXCOORD3, components: 4, type: pc.TYPE_FLOAT32 },
-                    { semantic: pc.SEMANTIC_TEXCOORD4, components: 4, type: pc.TYPE_FLOAT32 },
-                    { semantic: pc.SEMANTIC_TEXCOORD5, components: 4, type: pc.TYPE_FLOAT32 }
-                ];
-                pc._instanceVertexFormat = new pc.VertexFormat(device, formatDesc);
-            }
             if (device.enableAutoInstancing) {
                 if (!pc._autoInstanceBuffer) {
-                    pc._autoInstanceBuffer = new pc.VertexBuffer(device, pc._instanceVertexFormat, device.autoInstancingMaxObjects, pc.BUFFER_DYNAMIC);
+                    pc._autoInstanceBuffer = new pc.VertexBuffer(device, pc.VertexFormat.defaultInstancingFormat, device.autoInstancingMaxObjects, pc.BUFFER_DYNAMIC);
                     pc._autoInstanceBufferData = new Float32Array(pc._autoInstanceBuffer.lock());
                 }
             }
@@ -2284,7 +2336,6 @@ Object.assign(pc, function () {
             }
 
             for (pass = 0; pass < passes; pass++) {
-
                 if (type === pc.LIGHTTYPE_POINT) {
                     shadowCamNode.setRotation(pointLightRotations[pass]);
                     shadowCam.renderTarget = light._shadowCubeMap[pass];

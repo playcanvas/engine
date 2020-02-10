@@ -148,6 +148,13 @@ Object.assign(pc, function () {
             gl.bufferData(gl.ARRAY_BUFFER, this.storage, glUsage);
         },
 
+        /**
+         * @function
+         * @name pc.VertexBuffer#setData
+         * @description Copies data into vertex buffer's memory.
+         * @param {ArrayBuffer} [data] - Source data to copy.
+         * @returns {boolean} True if function finished successfuly, false otherwise.
+         */
         setData: function (data) {
             if (data.byteLength !== this.numBytes) {
                 console.error("VertexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
