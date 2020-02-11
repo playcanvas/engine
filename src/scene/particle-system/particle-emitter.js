@@ -208,6 +208,7 @@ Object.assign(pc, function () {
 
         setProperty("animTilesX", 1);
         setProperty("animTilesY", 1);
+        setProperty("animStartFrame", 0);
         setProperty("animNumFrames", 1);
         setProperty("animSpeed", 1);
         setProperty("animLoop", true);
@@ -251,7 +252,8 @@ Object.assign(pc, function () {
         this.lightCubeDir[4] = new pc.Vec3(0, 0, -1);
         this.lightCubeDir[5] = new pc.Vec3(0, 0, 1);
 
-        this.animParams = new Float32Array(4);
+        this.animTilesParams = new Float32Array(2);
+        this.animParams = new Float32Array(3);
 
         this.internalTex0 = null;
         this.internalTex1 = null;
@@ -815,6 +817,7 @@ Object.assign(pc, function () {
 
             material.setParameter('stretch', this.stretch);
             if (this._isAnimated()) {
+                material.setParameter('animTexTilesParams', this.animTilesParams);
                 material.setParameter('animTexParams', this.animParams);
             }
             material.setParameter('colorMult', this.intensity);
@@ -1067,11 +1070,13 @@ Object.assign(pc, function () {
             this.calculateWorldBounds();
 
             if (this._isAnimated()) {
+                var tilesParams = this.animTilesParams;
+                tilesParams[0] = 1.0 / this.animTilesX; // animTexTilesParams.x
+                tilesParams[1] = 1.0 / this.animTilesY; // animTexTilesParams.y
                 var params = this.animParams;
-                params[0] = 1.0 / this.animTilesX;
-                params[1] = 1.0 / this.animTilesY;
-                params[2] = this.animNumFrames * this.animSpeed;
-                params[3] = this.animNumFrames - 1;
+                params[0] = this.animStartFrame; // animTexParams.x
+                params[1] = this.animNumFrames * this.animSpeed; // animTexParams.y
+                params[2] = this.animNumFrames - 1; // animTexParams.z
             }
 
             if (this.scene) {
