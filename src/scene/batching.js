@@ -625,6 +625,15 @@ Object.assign(pc, function () {
             scaleSign = getScaleSign(meshInstancesLeftA[0]);
             skipTranslucentAabb = null;
 
+            // maximum number of verticies that can be used for batch based on index buffer format (no limit without index buffer)
+            var maxNumVerticies = 0xffffffff;
+            var indexFormat = -1;
+            var ib0 = meshInstancesLeftA[0].mesh.indexBuffer;
+            if (ib0 && ib0.length > 0) {
+                indexFormat = ib0[0].getFormat();
+                maxNumVerticies = 0xffffffff >>> (32 - (8 * ib0[0].bytesPerIndex));
+            }
+
             for (i = 1; i < meshInstancesLeftA.length; i++) {
                 mi = meshInstancesLeftA[i];
 
@@ -638,7 +647,7 @@ Object.assign(pc, function () {
                 if ((material !== mi.material) ||
                     (layer !== mi.layer) ||
                     (defs !== mi._shaderDefs) ||
-                    (vertCount + mi.mesh.vertexBuffer.getNumVertices() > 0xFFFF)) {
+                    (vertCount + mi.mesh.vertexBuffer.getNumVertices() > maxNumVerticies)) {
                     skipMesh(mi);
                     continue;
                 }
@@ -658,11 +667,22 @@ Object.assign(pc, function () {
                         continue;
                     }
                 }
-                // Split by negavive scale
+                // Split by negative scale
                 if (scaleSign != getScaleSign(mi)) {
                     skipMesh(mi);
                     continue;
                 }
+
+                // split by matching index buffer format
+                var currentIndexFormat = -1;
+                ib0 = mi.mesh.indexBuffer;
+                if (ib0 && ib0.length > 0)
+                    currentIndexFormat = ib0[0].getFormat();
+                if (currentIndexFormat != indexFormat) {
+                    skipMesh(mi);
+                    continue;
+                }
+
                 // Split by parameters
                 if (!equalParamSets(params, mi.parameters)) {
                     skipMesh(mi);
@@ -730,6 +750,7 @@ Object.assign(pc, function () {
         var batchNumVerts = 0;
         var batchNumIndices = 0;
         var visibleMeshInstanceCount = 0;
+        var indexBufferFormat = 0;
         for (i = 0; i < meshInstances.length; i++) {
             if (!meshInstances[i].visible)
                 continue;
@@ -747,6 +768,8 @@ Object.assign(pc, function () {
                 }
             }
             mesh = meshInstances[i].mesh;
+            if (mesh.indexBuffer && mesh.indexBuffer.length > 0)
+                indexBufferFormat = mesh.indexBuffer[0].getFormat();
             elems = mesh.vertexBuffer.format.elements;
             numVerts = mesh.vertexBuffer.numVertices;
             batchNumVerts += numVerts;
@@ -797,11 +820,18 @@ Object.assign(pc, function () {
         var batchData = new Float32Array(arrayBuffer);
         var batchData8 = new Uint8Array(arrayBuffer);
 
-        var indexBuffer = new pc.IndexBuffer(this.device, pc.INDEXFORMAT_UINT16, batchNumIndices, pc.BUFFER_STATIC);
-        var batchIndexData = new Uint16Array(indexBuffer.lock());
-        var vertSizeF;
+        // create index buffer and access array in correct format
+        var indexBuffer = new pc.IndexBuffer(this.device, indexBufferFormat, batchNumIndices, pc.BUFFER_STATIC);
+        var batchIndexData = null;
+        if (indexBufferFormat == pc.INDEXFORMAT_UINT8)
+            batchIndexData = new Uint8Array(indexBuffer.lock());
+        if (indexBufferFormat == pc.INDEXFORMAT_UINT16)
+            batchIndexData = new Uint16Array(indexBuffer.lock());
+        if (indexBufferFormat == pc.INDEXFORMAT_UINT32)
+            batchIndexData = new Uint32Array(indexBuffer.lock());
 
         // Fill vertex/index/matrix buffers
+        var vertSizeF;
         var data, data8, indexBase, numIndices, indexData;
         var verticesOffset = 0;
         var indexOffset = 0;
@@ -888,10 +918,18 @@ Object.assign(pc, function () {
                     batchData[j * batchVertSizeF + batchOffsetEF + vbOffset] = i;
             }
 
+            // index buffer
             indexBase = mesh.primitive[0].base;
             numIndices = mesh.primitive[0].count;
             if (mesh.primitive[0].indexed) {
-                indexData = new Uint16Array(mesh.indexBuffer[0].storage);
+                // source index buffer data mapped to its format
+                var srcFormat = mesh.indexBuffer[0].getFormat();
+                if (srcFormat == pc.INDEXFORMAT_UINT8)
+                    indexData = new Uint8Array(mesh.indexBuffer[0].storage);
+                if (srcFormat == pc.INDEXFORMAT_UINT16)
+                    indexData = new Uint16Array(mesh.indexBuffer[0].storage);
+                if (srcFormat == pc.INDEXFORMAT_UINT32)
+                    indexData = new Uint32Array(mesh.indexBuffer[0].storage);
             } else if (numIndices === 4) {
                 // Special case for UI image elements (pc.PRIMITIVE_TRIFAN)
                 indexBase = 0;
