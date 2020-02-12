@@ -625,13 +625,13 @@ Object.assign(pc, function () {
             scaleSign = getScaleSign(meshInstancesLeftA[0]);
             skipTranslucentAabb = null;
 
-            // maximum number of verticies that can be used for batch based on index buffer format (no limit without index buffer)
-            var maxNumVerticies = 0xffffffff;
+            // maximum number of vertices that can be used for batch based on index buffer format (no limit without index buffer)
+            var maxNumVertices = 0xffffffff;
             var indexFormat = -1;
             var ib0 = meshInstancesLeftA[0].mesh.indexBuffer;
             if (ib0 && ib0.length > 0) {
                 indexFormat = ib0[0].getFormat();
-                maxNumVerticies = 0xffffffff >>> (32 - (8 * ib0[0].bytesPerIndex));
+                maxNumVertices = 0xffffffff >>> (32 - (8 * ib0[0].bytesPerIndex));
             }
 
             for (i = 1; i < meshInstancesLeftA.length; i++) {
@@ -647,7 +647,7 @@ Object.assign(pc, function () {
                 if ((material !== mi.material) ||
                     (layer !== mi.layer) ||
                     (defs !== mi._shaderDefs) ||
-                    (vertCount + mi.mesh.vertexBuffer.getNumVertices() > maxNumVerticies)) {
+                    (vertCount + mi.mesh.vertexBuffer.getNumVertices() > maxNumVertices)) {
                     skipMesh(mi);
                     continue;
                 }
