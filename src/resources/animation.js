@@ -43,11 +43,11 @@ Object.assign(pc, function () {
             return this["_parseAnimationV" + data.animation.version](data);
         },
 
-        openAsync: function (url, data, asset, onLoaded, onFailed) {
+        openAsync: function (url, data, asset, callback) {
             if (pc.path.getExtension(url) === '.glb') {
-                this._glbParser.parse(data, onLoaded, onFailed);
+                this._glbParser.parse(data, callback);
             } else {
-                onLoaded(this["_parseAnimationV" + data.animation.version](data));
+                callback(null, this["_parseAnimationV" + data.animation.version](data));
             }
             return true;
         },

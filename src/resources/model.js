@@ -89,12 +89,12 @@ Object.assign(pc, function () {
             return null;
         },
 
-        openAsync: function (url, data, asset, onLoaded, onFailed) {
+        openAsync: function (url, data, asset, callback) {
             for (var i = 0; i < this._parsers.length; i++) {
                 var p = this._parsers[i];
 
                 if (p.deciderAsync && p.deciderAsync(url, data)) {
-                    p.parser.parse(data, onLoaded, onFailed);
+                    p.parser.parse(data, callback);
                     return true;
                 }
             }

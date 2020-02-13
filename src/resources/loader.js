@@ -126,16 +126,17 @@ Object.assign(pc, function () {
                         if (!err) {
                             try {
                                 if (!handler.openAsync ||
-                                    !handler.openAsync(urlObj.original, data, asset,
-                                                       loader._onLoaded.bind(loader, key, extra),
-                                                       loader._onLoadFailed.bind(loader, key))) {
-                                    loader._onLoaded(key, extra, handler.open(urlObj.original, data, asset));
+                                    !handler.openAsync(urlObj.original,
+                                                       data,
+                                                       asset,
+                                                       loader._handleOpen.bind(loader, key, extra))) {
+                                    loader._handleOpen(key, extra, null, handler.open(urlObj.original, data, asset));
                                 }
-                            } catch (ex) {
-                                loader._onLoadFailed(key, ex);
+                            } catch (e) {
+                                loader._handleOpen(key, null, e);
                             }
                         } else {
-                            loader._onLoadFailed(key, err);
+                            loader._handleOpen(key, null, err);
                         }
                     }, asset);
                 };
@@ -157,18 +158,19 @@ Object.assign(pc, function () {
             }
         },
 
-        _onLoaded: function (key, extra, resource) {
-            this._cache[key] = resource;
-            for (var i = 0; i < this._requests[key].length; i++)
-                this._requests[key][i](null, resource, extra);
-            delete this._requests[key];
-        },
-
-        _onLoadFailed: function (key, err) {
-            console.error(err);
-            for (var i = 0; i < this._requests[key].length; i++)
-                this._requests[key][i](err);
-            delete this._requests[key];
+        // handle an async open response
+        _handleOpen: function (key, extra, err, result) {
+            if (err) {
+                console.error(err);
+                for (var i = 0; i < this._requests[key].length; i++)
+                    this._requests[key][i](err);
+                delete this._requests[key];
+            } else {
+                this._cache[key] = result;
+                for (var i = 0; i < this._requests[key].length; i++)
+                    this._requests[key][i](null, result, extra);
+                delete this._requests[key];
+            }
         },
 
         /**

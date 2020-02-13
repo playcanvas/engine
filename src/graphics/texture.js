@@ -9,6 +9,7 @@ Object.assign(pc, function () {
      * @description Creates a new texture.
      * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this texture.
      * @param {object} [options] - Object for passing optional arguments.
+     * @param {string} [options.name] - The name of the texture.
      * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
      * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
      * @param {number} [options.depth] - The number of depth slices in a 3D texture (WebGL2 only). Defaults to 1 (single 2D image).
@@ -125,6 +126,9 @@ Object.assign(pc, function () {
         // #endif
 
         if (options !== undefined) {
+            if (options.name !== undefined) {
+                this.name = options.name;
+            }
             this._width = (options.width !== undefined) ? options.width : this._width;
             this._height = (options.height !== undefined) ? options.height : this._height;
 
