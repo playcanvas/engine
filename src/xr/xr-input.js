@@ -1,4 +1,13 @@
 Object.assign(pc, function () {
+    /**
+     * @class
+     * @name pc.XrInput
+     * @augments pc.EventHandler
+     * @classdesc Provides access to input sources for WebXR.
+     * @description Provides access to input sources for WebXR.
+     * @param {pc.XrManager} manager - WebXR Manager.
+     * @property {pc.XrInputSource[]]} inputSources List of active {pc.XrInputSource}
+     */
     var XrInput = function (manager) {
         pc.EventHandler.call(this);
 
@@ -18,12 +27,57 @@ Object.assign(pc, function () {
     XrInput.prototype = Object.create(pc.EventHandler.prototype);
     XrInput.prototype.constructor = XrInput;
 
-    // EVENTS:
-    // add
-    // remove
-    // select
-    // selectstart
-    // selectend
+    /**
+     * @event
+     * @name pc.XrInput#add
+     * @description Fired when new {pc.XrInputSource} is added to the list.
+     * @param {pc.XrInputSource} inputSource - Input source that has been added
+     * @example
+     * app.xr.input.on('add', function (inputSource) {
+     *     // new input source is added
+     * });
+     */
+
+    /**
+     * @event
+     * @name pc.XrInput#remove
+     * @description Fired when {pc.XrInputSource} is removed to the list.
+     * @param {pc.XrInputSource} inputSource - Input source that has been removed
+     * @example
+     * app.xr.input.on('remove', function (inputSource) {
+     *     // input source is removed
+     * });
+     */
+
+    /**
+     * @event
+     * @name pc.XrInput#select
+     * @description Fired when {pc.XrInputSource} has triggered primary action. This could be pressing a trigger button, or touching a screen.
+     * @param {pc.XrInputSource} inputSource - Input source that triggered select event
+     * @param {XRInputSourceEvent} evt - Raw event data from WebXR API
+     * @example
+     * app.xr.input.on('select', function (inputSource, evt) {
+     *     if (obj.intersectsRay(inputSource.ray)) {
+     *         // selected an object with input source
+     *     }
+     * });
+     */
+
+    /**
+     * @event
+     * @name pc.XrInput#selectstart
+     * @description Fired when {pc.XrInputSource} has started to trigger primary action.
+     * @param {pc.XrInputSource} inputSource - Input source that triggered selectstart event
+     * @param {XRInputSourceEvent} evt - Raw event data from WebXR API
+     */
+
+    /**
+     * @event
+     * @name pc.XrInput#selectend
+     * @description Fired when {pc.XrInputSource} has ended triggerring primary action.
+     * @param {pc.XrInputSource} inputSource - Input source that triggered selectend event
+     * @param {XRInputSourceEvent} evt - Raw event data from WebXR API
+     */
 
     XrInput.prototype._onSessionStart = function () {
         this._session = this.manager.session;
@@ -40,30 +94,32 @@ Object.assign(pc, function () {
         this._session.addEventListener('selectstart', function (evt) {
             var inputSource = self._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
+            inputSource._selecting = true;
             inputSource.fire('selectstart', evt);
             self.fire('selectstart', inputSource, evt);
         });
         this._session.addEventListener('selectend', function (evt) {
             var inputSource = self._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
+            inputSource._selecting = false;
             inputSource.fire('selectend', evt);
             self.fire('selectend', inputSource, evt);
         });
 
         // add input sources
-        var sources = this._session.inputSources;
-        for (var i = 0; i < sources.length; i++) {
-            this._addInputSource(sources[i]);
+        var inputSources = this._session.inputSources;
+        for (var i = 0; i < inputSources.length; i++) {
+            this._addInputSource(inputSources[i]);
         }
     };
 
     XrInput.prototype._onSessionEnd = function () {
         var i = this._inputSources.length;
         while (i--) {
-            var source = this._inputSources[i];
+            var inputSource = this._inputSources[i];
             this._inputSources.splice(i, 1);
-            source.fire('remove');
-            this.fire('remove', source);
+            inputSource.fire('remove');
+            this.fire('remove', inputSource);
         }
 
         this._session.removeEventListener('inputsourceschange', this._onInputSourcesChangeEvt);
@@ -84,9 +140,9 @@ Object.assign(pc, function () {
         }
     };
 
-    XrInput.prototype._getByInputSource = function (inputSource) {
+    XrInput.prototype._getByInputSource = function (xrInputSource) {
         for (var i = 0; i < this._inputSources.length; i++) {
-            if (this._inputSources[i]._inputSource === inputSource) {
+            if (this._inputSources[i].inputSource === xrInputSource) {
                 return this._inputSources[i];
             }
         }
@@ -94,21 +150,21 @@ Object.assign(pc, function () {
         return null;
     };
 
-    XrInput.prototype._addInputSource = function (inputSource) {
-        var source = new pc.XrInputSource(this.manager, inputSource);
-        this._inputSources.push(source);
-        this.fire('add', source);
+    XrInput.prototype._addInputSource = function (xrInputSource) {
+        var inputSource = new pc.XrInputSource(this.manager, xrInputSource);
+        this._inputSources.push(inputSource);
+        this.fire('add', inputSource);
     };
 
-    XrInput.prototype._removeInputSource = function (inputSource) {
+    XrInput.prototype._removeInputSource = function (xrInputSource) {
         for (var i = 0; i < this._inputSources.length; i++) {
-            if (this._inputSources[i]._inputSource !== inputSource)
+            if (this._inputSources[i].inputSource !== xrInputSource)
                 continue;
 
-            var source = this._inputSources[i];
+            var inputSource = this._inputSources[i];
             this._inputSources.splice(i, 1);
-            source.fire('remove');
-            this.fire('remove', source);
+            inputSource.fire('remove');
+            this.fire('remove', inputSource);
             return;
         }
     };
