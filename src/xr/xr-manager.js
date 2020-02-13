@@ -446,7 +446,5 @@ Object.assign(pc, function () {
         XrManager: XrManager
     };
     Object.assign(obj, sessionTypes);
-
-
     return obj;
 }());

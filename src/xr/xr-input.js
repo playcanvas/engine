@@ -6,9 +6,9 @@ Object.assign(pc, function () {
 
         this.manager = manager;
         this._session = null;
-        this._inputSources = [ ];
+        this._inputSources = [];
 
-        this._onInputSourcesChangeEvt = function(evt) {
+        this._onInputSourcesChangeEvt = function (evt) {
             self._onInputSourcesChange(evt);
         };
 
@@ -31,19 +31,19 @@ Object.assign(pc, function () {
 
         var self = this;
 
-        this._session.addEventListener('select', function(evt) {
+        this._session.addEventListener('select', function (evt) {
             var inputSource = self._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource.fire('select', evt);
             self.fire('select', inputSource, evt);
         });
-        this._session.addEventListener('selectstart', function(evt) {
+        this._session.addEventListener('selectstart', function (evt) {
             var inputSource = self._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource.fire('selectstart', evt);
             self.fire('selectstart', inputSource, evt);
         });
-        this._session.addEventListener('selectend', function(evt) {
+        this._session.addEventListener('selectend', function (evt) {
             var inputSource = self._getByInputSource(evt.inputSource);
             inputSource.update(evt.frame);
             inputSource.fire('selectend', evt);
@@ -52,14 +52,14 @@ Object.assign(pc, function () {
 
         // add input sources
         var sources = this._session.inputSources;
-        for(var i = 0; i < sources.length; i++) {
+        for (var i = 0; i < sources.length; i++) {
             this._addInputSource(sources[i]);
         }
     };
 
     XrInput.prototype._onSessionEnd = function () {
         var i = this._inputSources.length;
-        while(i--) {
+        while (i--) {
             var source = this._inputSources[i];
             this._inputSources.splice(i, 1);
             source.fire('remove');
@@ -71,19 +71,21 @@ Object.assign(pc, function () {
     };
 
     XrInput.prototype._onInputSourcesChange = function (evt) {
+        var i;
+
         // remove
-        for(var i = 0; i < evt.removed.length; i++) {
+        for (i = 0; i < evt.removed.length; i++) {
             this._removeInputSource(evt.removed[i]);
         }
 
         // add
-        for(var i = 0; i < evt.added.length; i++) {
+        for (i = 0; i < evt.added.length; i++) {
             this._addInputSource(evt.added[i]);
         }
     };
 
-    XrInput.prototype._getByInputSource = function(inputSource) {
-        for(var i = 0; i < this._inputSources.length; i++) {
+    XrInput.prototype._getByInputSource = function (inputSource) {
+        for (var i = 0; i < this._inputSources.length; i++) {
             if (this._inputSources[i]._inputSource === inputSource) {
                 return this._inputSources[i];
             }
@@ -99,7 +101,7 @@ Object.assign(pc, function () {
     };
 
     XrInput.prototype._removeInputSource = function (inputSource) {
-        for(var i = 0; i < this._inputSources.length; i++) {
+        for (var i = 0; i < this._inputSources.length; i++) {
             if (this._inputSources[i]._inputSource !== inputSource)
                 continue;
 
@@ -111,8 +113,8 @@ Object.assign(pc, function () {
         }
     };
 
-    XrInput.prototype.update = function(frame) {
-        for(var i = 0; i < this._inputSources.length; i++) {
+    XrInput.prototype.update = function (frame) {
+        for (var i = 0; i < this._inputSources.length; i++) {
             this._inputSources[i].update(frame);
         }
     };
