@@ -78,7 +78,8 @@ var categories = [
         examples: [
             'augmented-reality-basic',
             'virtual-reality-basic',
-            'xr-picking'
+            'xr-picking',
+            'vr-controllers'
         ]
     }
 ];
