@@ -116,8 +116,8 @@
 
             if (app.xr.supported) {
                 var activate = function () {
-                    if (app.xr.isAvailable(pc.XR_TYPE_IMMERSIVE_VR)) {
-                        c.camera.startXr(pc.XR_TYPE_IMMERSIVE_VR, function (err) {
+                    if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+                        c.camera.startXr(pc.XRTYPE_VR, function (err) {
                             if (err) message("WebXR Immersive VR failed to start: " + err.message);
                         });
                     } else {
@@ -155,11 +155,11 @@
                 app.xr.on('end', function () {
                     message("WebXR Immersive VR session has ended");
                 });
-                app.xr.on('available:' + pc.XR_TYPE_IMMERSIVE_VR, function (available) {
+                app.xr.on('available:' + pc.XRTYPE_VR, function (available) {
                     message("WebXR Immersive VR is now " + (available ? 'available' : 'unavailable'));
                 });
 
-                if (! app.xr.isAvailable(pc.XR_TYPE_IMMERSIVE_VR)) {
+                if (! app.xr.isAvailable(pc.XRTYPE_VR)) {
                     message("WebXR Immersive VR is not available");
                 }
             } else {
