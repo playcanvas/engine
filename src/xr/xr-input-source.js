@@ -61,8 +61,8 @@ Object.assign(pc, function () {
      * @classdesc Represents an XR input source, which is any input mechanism which allows the user to perform targeted actions in the same virtual space as the viewer. Example XR input sources include, but are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods that operate on the viewer's pose.
      * @description Represents an XR input source, which is any input mechanism which allows the user to perform targeted actions in the same virtual space as the viewer. Example XR input sources include, but are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods that operate on the viewer's pose.
      * @param {pc.XrManager} manager - WebXR Manager.
-     * @param {XRInputSource} xrInputSource - WebXR object that represent input source.
-     * @property {XRInputSource} inputSource WebXR object that represent input source.
+     * @param {object} xrInputSource - XRInputSource object that is created by WebXR API.
+     * @property {object} inputSource XRInputSource object that is associated with this input source.
      * @property {string} targetRayMode Type of ray Input Device is based on. Can be one of the following:
      *
      * * {@link pc.XRTARGETRAY_GAZE}: Gaze - indicates the target ray will originate at the viewer and follow the direction it is facing. (This is commonly referred to as a "gaze input" device in the context of head-mounted displays.)
@@ -112,7 +112,7 @@ Object.assign(pc, function () {
      * @event
      * @name pc.XrInputSource#select
      * @description Fired when input source has triggered primary action. This could be pressing a trigger button, or touching a screen.
-     * @param {XRInputSourceEvent} evt - Raw event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
      * @example
      * app.xr.input.on('select', function (evt) {
      *     if (obj.intersectsRay(inputSource.ray)) {
@@ -125,22 +125,19 @@ Object.assign(pc, function () {
      * @event
      * @name pc.XrInputSource#selectstart
      * @description Fired when input source has started to trigger primary action.
-     * @param {XRInputSourceEvent} evt - Raw event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 
     /**
      * @event
      * @name pc.XrInputSource#selectend
      * @description Fired when input source has ended triggerring primary action.
-     * @param {XRInputSourceEvent} evt - Raw event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 
     XrInputSource.prototype.update = function (frame) {
         var targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
-        if (! targetRayPose) {
-            console.log('no targetRayPose', i);
-            return;
-        }
+        if (! targetRayPose) return;
 
         var camera = this._manager._camera;
         var parent = (camera.entity && camera.entity.parent) || null;

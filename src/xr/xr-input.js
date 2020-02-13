@@ -54,7 +54,7 @@ Object.assign(pc, function () {
      * @name pc.XrInput#select
      * @description Fired when {pc.XrInputSource} has triggered primary action. This could be pressing a trigger button, or touching a screen.
      * @param {pc.XrInputSource} inputSource - Input source that triggered select event
-     * @param {XRInputSourceEvent} evt - Raw event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
      * @example
      * app.xr.input.on('select', function (inputSource, evt) {
      *     if (obj.intersectsRay(inputSource.ray)) {
@@ -68,7 +68,7 @@ Object.assign(pc, function () {
      * @name pc.XrInput#selectstart
      * @description Fired when {pc.XrInputSource} has started to trigger primary action.
      * @param {pc.XrInputSource} inputSource - Input source that triggered selectstart event
-     * @param {XRInputSourceEvent} evt - Raw event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 
     /**
@@ -76,7 +76,7 @@ Object.assign(pc, function () {
      * @name pc.XrInput#selectend
      * @description Fired when {pc.XrInputSource} has ended triggerring primary action.
      * @param {pc.XrInputSource} inputSource - Input source that triggered selectend event
-     * @param {XRInputSourceEvent} evt - Raw event data from WebXR API
+     * @param {object} evt - XRInputSourceEvent event data from WebXR API
      */
 
     XrInput.prototype._onSessionStart = function () {
