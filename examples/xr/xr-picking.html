@@ -82,7 +82,7 @@
             // create camera
             var c = new pc.Entity();
             c.addComponent('camera', {
-                clearColor: new pc.Color(0, 0, 0, 0),
+                clearColor: new pc.Color(44/255, 62/255, 80/255),
                 farClip: 10000
             });
             app.root.addChild(c);
@@ -95,33 +95,36 @@
             l.translate(0,10,0);
             app.root.addChild(l);
 
+            var cubes = [ ];
 
             var createCube = function(x,y,z) {
                 var cube = new pc.Entity();
                 cube.addComponent("model", {
                     type: "box",
+                    material: new pc.StandardMaterial()
                 });
-                cube.setLocalScale(.5, .5, .5);
-                cube.translate(x * .5, y, z * .5);
+                cube.setLocalScale(1,1,1);
+                cube.translate(x, y, z);
                 app.root.addChild(cube);
+                cubes.push(cube);
             };
 
             // create a grid of cubes
             var SIZE = 4;
-            for (var x = 0; x < SIZE; x++) {
-                for (var y = 0; y < SIZE; y++) {
-                    createCube(2*x - SIZE, -1, 2*y - SIZE);
+            for (var x = 0; x <= SIZE; x++) {
+                for (var y = 0; y <= SIZE; y++) {
+                    createCube(2*x - SIZE, -1.5, 2*y - SIZE);
                 }
             }
 
             if (app.xr.supported) {
                 var activate = function () {
-                    if (app.xr.isAvailable(pc.XRTYPE_AR)) {
-                        c.camera.startXr(pc.XRTYPE_AR, function (err) {
-                            if (err) message("Immersive AR failed to start: " + err.message);
+                    if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+                        c.camera.startXr(pc.XRTYPE_VR, function (err) {
+                            if (err) message("Immersive VR failed to start: " + err.message);
                         });
                     } else {
-                        message("Immersive AR is not available");
+                        message("Immersive VR is not available");
                     }
                 };
 
@@ -150,18 +153,66 @@
                 });
 
                 app.xr.on('start', function () {
-                    message("Immersive AR session has started");
+                    message("Pick any box");
                 });
                 app.xr.on('end', function () {
-                    message("Immersive AR session has ended");
+                    message("Immersive VR session has ended");
                 });
-                app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
-                    message("Immersive AR is " + (available ? 'available' : 'unavailable'));
+                app.xr.on('available:' + pc.XRTYPE_VR, function (available) {
+                    message("Immersive VR is " + (available ? 'available' : 'unavailable'));
                 });
 
-                if (! app.xr.isAvailable(pc.XRTYPE_AR)) {
-                    message("Immersive AR is not available");
+                if (! app.xr.isAvailable(pc.XRTYPE_VR)) {
+                    message("Immersive VR is not available");
                 }
+
+                // when input source is triggers select
+                // pick closest box and change its color
+                app.xr.input.on('select', function(inputSource) {
+                    var candidate = null;
+                    var candidateDist = Infinity;
+
+                    for(var i = 0; i < cubes.length; i++) {
+                        var mesh = cubes[i].model.meshInstances[0];
+
+                        // check if mesh bounding box intersects with input source ray
+                        if (mesh.aabb.intersectsRay(inputSource.ray)) {
+                            // check distance to camera
+                            var dist = mesh.aabb.center.distance(c.getPosition());
+
+                            // if it is closer than previous distance
+                            if (dist < candidateDist) {
+
+                                // set new candidate
+                                candidate = mesh;
+                                candidateDist = dist;
+                            }
+                        }
+                    }
+
+                    // if we have picked candidate
+                    if (candidate) {
+                        // randomize its color
+                        candidate.material.diffuse.set(Math.random(), Math.random(), Math.random());
+                        candidate.material.update();
+                    }
+                });
+
+                var tmpVec = new pc.Vec3();
+                var lineColor = new pc.Color(1, 1, 1);
+
+                // on each app update
+                // render input source rays as a line
+                app.on('update', function() {
+                    for(var i = 0; i < app.xr.input.inputSources.length; i++) {
+                        var inputSource = app.xr.input.inputSources[i];
+
+                        tmpVec.copy(inputSource.ray.direction);
+                        tmpVec.scale(100).add(inputSource.ray.origin);
+
+                        app.renderLine(inputSource.ray.origin, tmpVec, lineColor);
+                    }
+                });
             } else {
                 message("WebXR is not supported");
             }

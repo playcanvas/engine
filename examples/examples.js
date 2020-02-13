@@ -77,7 +77,8 @@ var categories = [
         name: "xr",
         examples: [
             'augmented-reality-basic',
-            'virtual-reality-basic'
+            'virtual-reality-basic',
+            'xr-picking'
         ]
     }
 ];
