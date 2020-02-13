@@ -55,7 +55,7 @@ Object.assign(pc, function () {
         this._session = null;
         this._baseLayer = null;
         this._referenceSpace = null;
-        this.input = new pc.XrInputSources(this);
+        this.input = new pc.XrInput(this);
 
         this._camera = null;
         this._pose = null;

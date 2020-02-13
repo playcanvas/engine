@@ -109,10 +109,11 @@
 ../src/input/touch.js
 ../src/input/controller.js
 ../src/input/element-input.js
-../src/input/xr.js
 ../src/vr/vr-manager.js
 ../src/vr/vr-display.js
 ../src/xr/xr-manager.js
+../src/xr/xr-input.js
+../src/xr/xr-input-source.js
 ../src/net/http.js
 ../src/script/script-registry.js
 ../src/script/script.js
