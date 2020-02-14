@@ -12,7 +12,8 @@ Object.assign(pc.Application.prototype, function () {
             { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 },
             { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
         ]);
-        this.lineBatches = [];
+        this.lineBatchesDepth = [];
+        this.lineBatchesNoDepth = [];
         this.layers = [];
         this.layerToBatch = {};
         this.quadMesh = null;
@@ -145,21 +146,32 @@ Object.assign(pc.Application.prototype, function () {
         var idx = this._immediateData.getLayerIdx(layer);
         if (idx === undefined) {
             // Init used batch once
-            var batch = new LineBatch();
-            batch.init(this.graphicsDevice, this._immediateData.lineVertexFormat, layer, position.length / 2);
-            batch.material.depthTest = options.depthTest;
-            if (options.mask) batch.meshInstance.mask = options.mask;
+            var batchDepth = new LineBatch();
+            batchDepth.init(this.graphicsDevice, this._immediateData.lineVertexFormat, layer, position.length / 2);
+            batchDepth.material.depthTest = true;
+            if (options.mask) batchDepth.meshInstance.mask = options.mask;
 
-            idx = this._immediateData.lineBatches.push(batch) - 1; // push into list and get index
+            var batchNoDepth = new LineBatch();
+            batchNoDepth.init(this.graphicsDevice, this._immediateData.lineVertexFormat, layer, position.length / 2);
+            batchNoDepth.material.depthTest = false;
+            if (options.mask) batchNoDepth.meshInstance.mask = options.mask;
+
+            // push into both lists and get index
+            idx = this._immediateData.lineBatchesDepth.push(batchDepth) - 1;
+            this._immediateData.lineBatchesNoDepth.push(batchNoDepth);
+
             this._immediateData.addLayerIdx(idx, layer);
         } else {
             // Possibly reallocate buffer if it's small
-            this._immediateData.lineBatches[idx].init(this.graphicsDevice, this._immediateData.lineVertexFormat, layer, position.length / 2);
-            this._immediateData.lineBatches[idx].material.depthTest = options.depthTest;
-            if (options.mask) this._immediateData.lineBatches[idx].meshInstance.mask = options.mask;
+            var useLineBatch = options.depthTest ? this._immediateData.lineBatchesDepth : this._immediateData.lineBatchesNoDepth;
+            useLineBatch[idx].init(this.graphicsDevice, this._immediateData.lineVertexFormat, layer, position.length / 2);
+            useLineBatch[idx].material.depthTest = options.depthTest;
+            if (options.mask) useLineBatch[idx].meshInstance.mask = options.mask;
         }
+
         // Append
-        this._immediateData.lineBatches[idx].addLines(position, color);
+        var lineBatch = options.depthTest ? this._immediateData.lineBatchesDepth : this._immediateData.lineBatchesNoDepth;
+        lineBatch[idx].addLines(position, color);
     }
 
     /**
@@ -375,9 +387,16 @@ Object.assign(pc.Application.prototype, function () {
     }
 
     function _preRenderImmediate() {
-        for (var i = 0; i < this._immediateData.lineBatches.length; i++) {
-            if (this._immediateData.lineBatches[i]) {
-                this._immediateData.lineBatches[i].finalize();
+        var i;
+        for (i = 0; i < this._immediateData.lineBatchesDepth.length; i++) {
+            if (this._immediateData.lineBatchesDepth[i]) {
+                this._immediateData.lineBatchesDepth[i].finalize();
+            }
+        }
+
+        for (i = 0; i < this._immediateData.lineBatchesNoDepth.length; i++) {
+            if (this._immediateData.lineBatchesNoDepth[i]) {
+                this._immediateData.lineBatchesNoDepth[i].finalize();
             }
         }
     }

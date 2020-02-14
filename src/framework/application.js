@@ -194,6 +194,12 @@ Object.assign(pc, function () {
      * calls, thereby boosting performance.
      */
 
+     /**
+      * @name pc.Application#debugDraw
+      * @type {pc.DebugDraw}
+      * @description Access to debug drawing functionality.
+      */
+
     /**
      * @name pc.Application#autoRender
      * @type {boolean}
@@ -542,6 +548,7 @@ Object.assign(pc, function () {
         this.once('prerender', this._firstBake, this);
         this.batcher = new pc.BatchManager(this.graphicsDevice, this.root, this.scene);
         this.once('prerender', this._firstBatch, this);
+        this.debugDraw = new pc.DebugDraw();
 
         this.keyboard = options.keyboard || null;
         this.mouse = options.mouse || null;

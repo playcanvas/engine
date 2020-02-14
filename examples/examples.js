@@ -14,6 +14,7 @@ var categories = [
     }, {
         name: "graphics",
         examples: [
+            "debug-lines",
             "hardware-instancing",
             "layers",
             "lights",

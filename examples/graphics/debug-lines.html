@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Debug Lines</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/output/playcanvas.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var app = new pc.Application(canvas);
+        app.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        // ground
+        var ground = new pc.Entity();
+        ground.addComponent("model", {
+            type: "plane"
+        });
+        app.root.addChild(ground);
+        ground.setLocalPosition(0, -0.1, 0);
+        ground.setLocalScale(10, 10, 10);
+
+        // box
+        var box = new pc.Entity();
+        box.addComponent("model", {
+            type: "box"
+        });
+        app.root.addChild(box);
+        box.setLocalPosition(-2, 4, 5);
+        box.setLocalScale(2, 2, 2);
+        box.setLocalEulerAngles(20, 70, 30);
+
+        // directional light
+        var light = new pc.Entity();
+        light.addComponent("light", {
+            type: "directional",
+            intensity: 0.5
+        });
+        app.root.addChild(light);
+        light.setLocalEulerAngles(70, 40, 0);
+
+        // Create an entity with a camera component
+        var camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.1, 0.1, 0.1),
+            farClip: 100,
+            nearClip: 0.05
+        });
+        app.root.addChild(camera);
+        camera.setLocalPosition(0, 10, 15);
+        camera.setLocalEulerAngles(-30, 0, 0);
+
+        // rainbow debug lines with different durations and alternating depth test state
+        var self = this;
+        function lineFan() {
+            for (var i = 0; i < 40; i++) {
+                var start = new pc.Vec3(-4, 4, i * 0.2);
+                var end = new pc.Vec3(4, 4, 5);
+                var col = new pc.Color(1, i / 40, 0, 1);
+                self.app.debugDraw.addLine(start, end, col, i, { depthTest: i % 3 });
+            }
+        }
+        
+        // trigger rainbow lines now and every 40 seconds when lines are all removed
+        lineFan();
+        setInterval(lineFan, 40 * 1000);
+
+        var currentTime = 0;
+        var timeSinceLastBatch = 0;
+        
+        app.on("update", function (dt) {
+            currentTime += dt;
+ 
+            box.rotate(0, 10 * dt, 0);
+
+            // single frame sphere
+            var center = new pc.Vec3(Math.sin(currentTime), 3, Math.cos(currentTime));
+            self.app.debugDraw.addSphere(center, 1.7, 30, pc.Color.GREEN);
+
+            // single frame line
+            var start = new pc.Vec3(0,0,0);
+            self.app.debugDraw.addLine(start, center, pc.Color.RED, 0);
+            
+            // single frame box without depth testing (renders on top of box)
+            self.app.debugDraw.addBox(center.clone().sub(pc.Vec3.ONE), center.clone().add(pc.Vec3.ONE), pc.Color.MAGENTA, 0, { depthTest: false });
+            
+            // add sphere and triangle with long duration and manually remove and recreate them using an id at random times
+            var id = "uniqueId";    
+            timeSinceLastBatch -= dt;
+            if (timeSinceLastBatch <= 0.0) {
+                timeSinceLastBatch = Math.random();
+                
+                // remove old ones
+                self.app.debugDraw.removeIds(id);
+                
+                // add new white sphere
+                center.y = 6;
+                self.app.debugDraw.addSphere(center, 1, 30, pc.Color.WHITE, 1000, undefined, id);
+                
+                // add cyan triangle inside this sphere with the same id
+                var pt0 = new pc.Vec3(center.x + 0.5, center.y, center.z + 0.5);
+                var pt1 = new pc.Vec3(center.x - 0.5, center.y, center.z + 0.5);
+                var points = [center, pt0, pt0, pt1, pt1, center];
+                var colors = [pc.Color.CYAN, pc.Color.CYAN, pc.Color.CYAN, pc.Color.CYAN, pc.Color.CYAN, pc.Color.CYAN];
+                self.app.debugDraw.addLines(points, colors, 1000, undefined, id);
+            }  
+        });
+
+    </script>
+</body>
+</html>

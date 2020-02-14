@@ -212,6 +212,7 @@
 ../src/framework/entity.js
 ../src/framework/utils/entity-reference.js
 ../src/framework/utils/sorted-loop-array.js
+../src/framework/utils/debug-draw.js
 ../src/resources/loader.js
 ../src/resources/handler.js
 ../src/resources/bundle.js
