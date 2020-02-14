@@ -170,14 +170,6 @@ Object.assign(pc, (function () {
      * @type {pc.Color}
      * @description A constant color set to black [0, 0, 0, 1].
      */
-    Object.defineProperty(Color, 'BLACK', {
-        get: (function () {
-            var black = new Color(0, 0, 0, 1);
-            return function () {
-                return black;
-            };
-        }())
-    });
 
     /**
      * @field
@@ -187,14 +179,6 @@ Object.assign(pc, (function () {
      * @type {pc.Color}
      * @description A constant color set to blue [0, 0, 1, 1].
      */
-    Object.defineProperty(Color, 'BLUE', {
-        get: (function () {
-            var blue = new Color(0, 0, 1, 1);
-            return function () {
-                return blue;
-            };
-        }())
-    });
 
     /**
      * @field
@@ -204,14 +188,6 @@ Object.assign(pc, (function () {
      * @type {pc.Color}
      * @description A constant color set to cyan [0, 1, 1, 1].
      */
-    Object.defineProperty(Color, 'CYAN', {
-        get: (function () {
-            var cyan = new Color(0, 1, 1, 1);
-            return function () {
-                return cyan;
-            };
-        }())
-    });
 
      /**
       * @field
@@ -221,14 +197,6 @@ Object.assign(pc, (function () {
       * @type {pc.Color}
       * @description A constant color set to gray [0.5, 0.5, 0.5, 1].
       */
-    Object.defineProperty(Color, 'GRAY', {
-        get: (function () {
-            var gray = new Color(0.5, 0.5, 0.5, 1);
-            return function () {
-                return gray;
-            };
-        }())
-    });
 
      /**
       * @field
@@ -238,14 +206,6 @@ Object.assign(pc, (function () {
       * @type {pc.Color}
       * @description A constant color set to green [0, 1, 0, 1].
       */
-    Object.defineProperty(Color, 'GREEN', {
-        get: (function () {
-            var green = new Color(0, 1, 0, 1);
-            return function () {
-                return green;
-            };
-        }())
-    });
 
      /**
       * @field
@@ -255,14 +215,6 @@ Object.assign(pc, (function () {
       * @type {pc.Color}
       * @description A constant color set to magenta [1, 0, 1, 1].
       */
-    Object.defineProperty(Color, 'MAGENTA', {
-        get: (function () {
-            var magenta = new Color(1, 0, 1, 1);
-            return function () {
-                return magenta;
-            };
-        }())
-    });
 
      /**
       * @field
@@ -272,14 +224,6 @@ Object.assign(pc, (function () {
       * @type {pc.Color}
       * @description A constant color set to red [1, 0, 0, 1].
       */
-    Object.defineProperty(Color, 'RED', {
-        get: (function () {
-            var red = new Color(1, 0, 0, 1);
-            return function () {
-                return red;
-            };
-        }())
-    });
 
      /**
       * @field
@@ -289,14 +233,6 @@ Object.assign(pc, (function () {
       * @type {pc.Color}
       * @description A constant color set to white [1, 1, 1, 1].
       */
-    Object.defineProperty(Color, 'WHITE', {
-        get: (function () {
-            var white = new Color(1, 1, 1, 1);
-            return function () {
-                return white;
-            };
-        }())
-    });
 
      /**
       * @field
@@ -306,13 +242,17 @@ Object.assign(pc, (function () {
       * @type {pc.Color}
       * @description A constant color set to yellow [1, 1, 0, 1].
       */
-    Object.defineProperty(Color, 'YELLOW', {
-        get: (function () {
-            var yellow = new Color(1, 1, 0, 1);
-            return function () {
-                return yellow;
-            };
-        }())
+
+    Object.defineProperties(Color, {
+        BLACK: { value: new Color(0, 0, 0, 1) },
+        WHITE: { value: new Color(1, 1, 1, 1) },
+        YELLOW: { value: new Color(1, 1, 0, 1) },
+        RED: { value: new Color(1, 0, 0, 1) },
+        MAGENTA: { value: new Color(1, 0, 1, 1) },
+        GREEN: { value: new Color(0, 1, 0, 1) },
+        GRAY: { value: new Color(0.5, 0.5, 0.5, 1) },
+        CYAN: { value: new Color(0, 1, 1, 1) },
+        BLUE: { value: new Color(0, 0, 1, 1) }
     });
 
     return {
