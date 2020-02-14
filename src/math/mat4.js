@@ -1241,14 +1241,6 @@ Object.assign(pc, (function () {
      * @type {pc.Mat4}
      * @description A constant matrix set to the identity.
      */
-    Object.defineProperty(Mat4, 'IDENTITY', {
-        get: (function () {
-            var identity = new Mat4();
-            return function () {
-                return identity;
-            };
-        }())
-    });
 
     /**
      * @field
@@ -1258,13 +1250,10 @@ Object.assign(pc, (function () {
      * @type {pc.Mat4}
      * @description A constant matrix with all elements set to 0.
      */
-    Object.defineProperty(Mat4, 'ZERO', {
-        get: (function () {
-            var zero = new Mat4().set([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-            return function () {
-                return zero;
-            };
-        }())
+
+    Object.defineProperties(Mat4, {
+        ZERO: { value: new Mat4().set([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) },
+        IDENTITY: { value: new Mat4() }
     });
 
     return {
