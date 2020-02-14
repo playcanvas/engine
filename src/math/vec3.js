@@ -504,14 +504,6 @@ Object.assign(pc, (function () {
      * @type {pc.Vec3}
      * @description A constant vector set to [0, 0, 1].
      */
-    Object.defineProperty(Vec3, 'BACK', {
-        get: (function () {
-            var back = new Vec3(0, 0, 1);
-            return function () {
-                return back;
-            };
-        }())
-    });
 
     /**
      * @static
@@ -520,14 +512,6 @@ Object.assign(pc, (function () {
      * @type {pc.Vec3}
      * @description A constant vector set to [0, -1, 0].
      */
-    Object.defineProperty(Vec3, 'DOWN', {
-        get: (function () {
-            var down = new Vec3(0, -1, 0);
-            return function () {
-                return down;
-            };
-        }())
-    });
 
     /**
      * @static
@@ -536,14 +520,6 @@ Object.assign(pc, (function () {
      * @type {pc.Vec3}
      * @description A constant vector set to [0, 0, -1].
      */
-    Object.defineProperty(Vec3, 'FORWARD', {
-        get: (function () {
-            var forward = new Vec3(0, 0, -1);
-            return function () {
-                return forward;
-            };
-        }())
-    });
 
     /**
      * @field
@@ -553,14 +529,6 @@ Object.assign(pc, (function () {
      * @type {pc.Vec3}
      * @description A constant vector set to [-1, 0, 0].
      */
-    Object.defineProperty(Vec3, 'LEFT', {
-        get: (function () {
-            var left = new Vec3(-1, 0, 0);
-            return function () {
-                return left;
-            };
-        }())
-    });
 
     /**
      * @field
@@ -570,14 +538,6 @@ Object.assign(pc, (function () {
      * @type {pc.Vec3}
      * @description A constant vector set to [1, 1, 1].
      */
-    Object.defineProperty(Vec3, 'ONE', {
-        get: (function () {
-            var one = new Vec3(1, 1, 1);
-            return function () {
-                return one;
-            };
-        }())
-    });
 
     /**
      * @field
@@ -587,14 +547,6 @@ Object.assign(pc, (function () {
      * @type {pc.Vec3}
      * @description A constant vector set to [1, 0, 0].
      */
-    Object.defineProperty(Vec3, 'RIGHT', {
-        get: (function () {
-            var right = new Vec3(1, 0, 0);
-            return function () {
-                return right;
-            };
-        }())
-    });
 
     /**
      * @field
@@ -604,14 +556,6 @@ Object.assign(pc, (function () {
      * @type {pc.Vec3}
      * @description A constant vector set to [0, 1, 0].
      */
-    Object.defineProperty(Vec3, 'UP', {
-        get: (function () {
-            var down = new Vec3(0, 1, 0);
-            return function () {
-                return down;
-            };
-        }())
-    });
 
     /**
      * @field
@@ -621,13 +565,16 @@ Object.assign(pc, (function () {
      * @type {pc.Vec3}
      * @description A constant vector set to [0, 0, 0].
      */
-    Object.defineProperty(Vec3, 'ZERO', {
-        get: (function () {
-            var zero = new Vec3(0, 0, 0);
-            return function () {
-                return zero;
-            };
-        }())
+
+    Object.defineProperties(Vec3, {
+        ZERO: { value: new Vec3(0, 0, 0) },
+        ONE: { value: new Vec3(1, 1, 1) },
+        UP: { value: new Vec3(0, 1, 0) },
+        DOWN: { value: new Vec3(0, -1, 0) },
+        RIGHT: { value: new Vec3(1, 0, 0) },
+        LEFT: { value: new Vec3(-1, 0, 0) },
+        FORWARD: { value: new Vec3(0, 0, -1) },
+        BACK: { value: new Vec3(0, 0, 1) }
     });
 
     return {
