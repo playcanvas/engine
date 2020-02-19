@@ -23,8 +23,8 @@ Object.assign(pc, function () {
         return Math.pow(2, Math.round(Math.log(n) / Math.log(2)));
     };
 
-    var getAccessorTypeSize = function (type) {
-        switch (type) {
+    var getNumComponents = function (accessorType) {
+        switch (accessorType) {
             case 'SCALAR': return 1;
             case 'VEC2': return 2;
             case 'VEC3': return 3;
@@ -36,13 +36,37 @@ Object.assign(pc, function () {
         }
     }
 
+    var getComponentType = function (componentType) {
+        switch (componentType) {
+            case 5120: return pc.TYPE_INT8;
+            case 5121: return pc.TYPE_UINT8;
+            case 5122: return pc.TYPE_INT16;
+            case 5123: return pc.TYPE_UINT16;
+            case 5125: return pc.TYPE_UINT32;
+            case 5126: return pc.TYPE_FLOAT32;
+            default: return 0;
+        }
+    }
+
+    var getComponentSizeInBytes = function (componentType) {
+        switch (componentType) {
+            case 5120: return 1;    // int8
+            case 5121: return 1;    // uint8
+            case 5122: return 2;    // int16
+            case 5123: return 2;    // uint16
+            case 5125: return 4;    // uint32
+            case 5126: return 4;    // float32
+            default: return 0;
+        }
+    }
+
     var getAccessorData = function (accessor, bufferViews, buffers) {
         var bufferView = bufferViews[accessor.bufferView];
         var typedArray = buffers[bufferView.buffer];
         var accessorByteOffset = accessor.hasOwnProperty('byteOffset') ? accessor.byteOffset : 0;
         var bufferViewByteOffset = bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0;
         var byteOffset = typedArray.byteOffset + accessorByteOffset + bufferViewByteOffset;
-        var length = accessor.count * getAccessorTypeSize(accessor.type);
+        var length = accessor.count * getNumComponents(accessor.type);
 
         switch (accessor.componentType) {
             case 5120: return new Int8Array(typedArray.buffer, byteOffset, length);
@@ -55,7 +79,7 @@ Object.assign(pc, function () {
         }
     }
 
-    function getPrimitiveType(primitive) {
+    var getPrimitiveType = function (primitive) {
         if (!primitive.hasOwnProperty('mode')) {
             return pc.PRIMITIVE_TRIANGLES;
         }
@@ -72,57 +96,130 @@ Object.assign(pc, function () {
         }
     }
 
-    var createSkin = function (skinData, accessors, bufferViews, nodes, buffers) {
-        var i, j, bindMatrix;
-        var joints = skinData.joints;
-        var numJoints = joints.length;
-        var ibp = [];
-        if (skinData.hasOwnProperty('inverseBindMatrices')) {
-            var inverseBindMatrices = skinData.inverseBindMatrices;
-            var ibmData = getAccessorData(accessors[inverseBindMatrices], bufferViews, buffers);
-            var ibmValues = [];
+    var createVertexBuffer = function (attributes, indices, accessors, bufferViews, buffers) {
+        var useFastPacking = true;
+        if (useFastPacking) {
+            var semanticMap = {
+                'POSITION': pc.SEMANTIC_POSITION,
+                'NORMAL': pc.SEMANTIC_NORMAL,
+                'TANGENT': pc.SEMANTIC_TANGENT,
+                'TEXCOORD_0': pc.SEMANTIC_TEXCOORD0,
+                'TEXCOORD_1': pc.SEMANTIC_TEXCOORD1,
+                'COLOR_0': pc.SEMANTIC_COLOR,
+                'JOINTS_0': pc.SEMANTIC_BLENDINDICES,
+                'WEIGHTS_0': pc.SEMANTIC_BLENDWEIGHT,
+            };
 
-            for (i = 0; i < numJoints; i++) {
-                for (j = 0; j < 16; j++) {
-                    ibmValues[j] = ibmData[i * 16 + j];
+            // build vertex buffer format desc
+            var vertexDesc = [];
+            var sourceDesc = {};
+            for (var attrib in attributes) {
+                if (attributes.hasOwnProperty(attrib)) {
+                    var accessor = accessors[attributes[attrib]];
+                    var bufferView = bufferViews[accessor.bufferView];
+
+                    if (semanticMap.hasOwnProperty(attrib)) {
+                        var semantic = semanticMap[attrib];
+                        var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
+                        vertexDesc.push({
+                            semantic: semantic,
+                            components: getNumComponents(accessor.type),
+                            type: getComponentType(accessor.componentType)
+                        });
+                        // store the info we'll need to copy this data into the vertex buffer
+                        var buffer = buffers[bufferView.buffer];
+                        sourceDesc[semantic] = {
+                            array: new Uint32Array(buffer.buffer),
+                            buffer: bufferView.buffer,
+                            size: size,
+                            offset: accessor.byteOffset + bufferView.byteOffset + buffer.byteOffset,
+                            stride: bufferView.hasOwnProperty('stride') ? bufferView.stride : size,
+                            count: accessor.count
+                        };
+                    }
                 }
-                bindMatrix = new pc.Mat4();
-                bindMatrix.set(ibmValues);
-                ibp.push(bindMatrix);
             }
+
+            // order vertexDesc to match the rest of the engine
+            var elementOrder = [
+                pc.SEMANTIC_POSITION,
+                pc.SEMANTIC_NORMAL,
+                pc.SEMANTIC_TANGENT,
+                pc.SEMANTIC_TEXCOORD0,
+                pc.SEMANTIC_TEXCOORD1,
+                pc.SEMANTIC_COLOR,
+                pc.SEMANTIC_BLENDINDICES,
+                pc.SEMANTIC_BLENDWEIGHT
+            ];
+
+            vertexDesc.sort(function (lhs, rhs) {
+                var lhsOrder = elementOrder.indexOf(lhs.semantic);
+                var rhsOrder = elementOrder.indexOf(rhs.semantic);
+                return (lhsOrder < rhsOrder) ? -1 : (rhsOrder < lhsOrder ? 1 : 0);
+            });
+
+            // get position attribute
+            var positionDesc = sourceDesc[pc.SEMANTIC_POSITION];
+            var numVertices = positionDesc.count;
+
+            // create vertex buffer
+            var vertexBuffer = new pc.VertexBuffer(globals.device,
+                new pc.VertexFormat(globals.device, vertexDesc),
+                numVertices,
+                pc.BUFFER_STATIC);
+
+            // check whether source data is correctly interleaved
+            var isCorrectlyInterleaved = true;
+            for (var i=0; i<vertexBuffer.format.elements.length; ++i) {
+                var target = vertexBuffer.format.elements[i];
+                var source = sourceDesc[target.name];
+                var sourceOffset = source.offset - positionDesc.offset;
+                if ((source.buffer !== positionDesc.buffer) ||
+                    (source.stride !== target.stride) ||
+                    (source.size !== target.size) ||
+                    (sourceOffset !== target.offset)) {
+                    isCorrectlyInterleaved = false;
+                    break;
+                }
+            }
+
+            var vertexData = vertexBuffer.lock();
+            var targetArray = new Uint32Array(vertexData);
+
+            if (isCorrectlyInterleaved) {
+                // copy data
+                var sourceArray = new Uint32Array(positionDesc.array,
+                                                  positionDesc.offset,
+                                                  numVertices * vertexBuffer.format.size / 4);
+                targetArray.set(sourceArray);
+            } else {
+                // interleave data
+                for (var i=0; i<vertexBuffer.format.elements.length; ++i) {
+                    var target = vertexBuffer.format.elements[i];
+                    var targetStride = target.stride / 4;
+
+                    var source = sourceDesc[target.name];
+                    var sourceArray = source.array;
+                    var sourceStride = source.stride / 4;
+
+                    var src = source.offset / 4;
+                    var dst = target.offset / 4;
+
+                    for (var j=0; j<numVertices; ++j) {
+
+                        for (var k=0; k<source.size / 4; ++k) {
+                            targetArray[dst + k] = sourceArray[src + k];
+                        }
+
+                        src += sourceStride;
+                        dst += targetStride;
+                    }
+                }
+            }
+
+            vertexBuffer.unlock();
+            return vertexBuffer;
         } else {
-            for (i = 0; i < numJoints; i++) {
-                bindMatrix = new pc.Mat4();
-                ibp.push(bindMatrix);
-            }
-        }
-
-        var boneNames = [];
-        for (i = 0; i < numJoints; i++) {
-            boneNames[i] = nodes[joints[i]].name;
-        }
-
-        var skeleton = skinData.skeleton;
-
-        var skin = new pc.Skin(globals.device, ibp, boneNames);
-        skin.skeleton = nodes[skeleton];
-
-        skin.bones = [];
-        for (i = 0; i < joints.length; i++) {
-            skin.bones[i] = nodes[joints[i]];
-        }
-
-        return skin;
-    }
-
-    var tempMat = new pc.Mat4();
-    var tempVec = new pc.Vec3();
-    var createMesh = function (meshData, accessors, bufferViews, buffers) {
-        var meshes = [];
-
-        meshData.primitives.forEach(function (primitive) {
-            var attributes = primitive.attributes;
-
             var positions = null;
             var normals = null;
             var tangents = null;
@@ -131,142 +228,43 @@ Object.assign(pc, function () {
             var colors = null;
             var joints = null;
             var weights = null;
-            var indices = null;
 
             var i;
-
-            // Start by looking for compressed vertex data for this primitive
-            if (primitive.hasOwnProperty('extensions')) {
-                var extensions = primitive.extensions;
-                if (extensions.hasOwnProperty('KHR_draco_mesh_compression')) {
-                    var extDraco = extensions.KHR_draco_mesh_compression;
-
-                    var bufferView = bufferViews[extDraco.bufferView];
-                    var arrayBuffer = buffers[bufferView.buffer];
-                    var byteOffset = bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0;
-                    var uint8Buffer = new Int8Array(arrayBuffer, byteOffset, bufferView.byteLength);
-
-                    var decoderModule = decoderModule;
-                    var buffer = new decoderModule.DecoderBuffer();
-                    buffer.Init(uint8Buffer, uint8Buffer.length);
-
-                    var decoder = new decoderModule.Decoder();
-                    var geometryType = decoder.GetEncodedGeometryType(buffer);
-
-                    var outputGeometry, status;
-                    switch (geometryType) {
-                        case decoderModule.INVALID_GEOMETRY_TYPE:
-                            console.error('Invalid geometry type');
-                            break;
-                        case decoderModule.POINT_CLOUD:
-                            outputGeometry = new decoderModule.PointCloud();
-                            status = decoder.DecodeBufferToPointCloud(buffer, outputGeometry);
-                            break;
-                        case decoderModule.TRIANGULAR_MESH:
-                            outputGeometry = new decoderModule.Mesh();
-                            status = decoder.DecodeBufferToMesh(buffer, outputGeometry);
-                            break;
-                    }
-
-                    if (!status.ok() || outputGeometry.ptr == 0) {
-                        var errorMsg = status.error_msg();
-                        console.error(errorMsg);
-                    }
-
-                    var numPoints = outputGeometry.num_points();
-                    var numFaces = outputGeometry.num_faces();
-
-                    if (extDraco.hasOwnProperty('attributes')) {
-                        var extractAttribute = function (uniqueId) {
-                            var attribute = decoder.GetAttributeByUniqueId(outputGeometry, uniqueId);
-                            var attributeData = new decoderModule.DracoFloat32Array();
-                            decoder.GetAttributeFloatForAllPoints(outputGeometry, attribute, attributeData);
-                            var numValues = numPoints * attribute.num_components();
-                            var values = new Float32Array(numValues);
-
-                            for (i = 0; i < numValues; i++) {
-                                values[i] = attributeData.GetValue(i);
-                            }
-
-                            decoderModule.destroy(attributeData);
-                            return values;
-                        };
-
-                        var dracoAttribs = extDraco.attributes;
-                        if (dracoAttribs.hasOwnProperty('POSITION'))
-                            positions = extractAttribute(dracoAttribs.POSITION);
-                        if (dracoAttribs.hasOwnProperty('NORMAL'))
-                            normals   = extractAttribute(dracoAttribs.NORMAL);
-                        if (dracoAttribs.hasOwnProperty('TANGENT'))
-                            tangents  = extractAttribute(dracoAttribs.TANGENT);
-                        if (dracoAttribs.hasOwnProperty('TEXCOORD_0'))
-                            texCoord0 = extractAttribute(dracoAttribs.TEXCOORD_0);
-                        if (dracoAttribs.hasOwnProperty('TEXCOORD_1'))
-                            texCoord1 = extractAttribute(dracoAttribs.TEXCOORD_1);
-                        if (dracoAttribs.hasOwnProperty('COLOR_0'))
-                            colors    = extractAttribute(dracoAttribs.COLOR_0);
-                        if (dracoAttribs.hasOwnProperty('JOINTS_0'))
-                            joints    = extractAttribute(dracoAttribs.JOINTS_0);
-                        if (dracoAttribs.hasOwnProperty('WEIGHTS_0'))
-                            weights   = extractAttribute(dracoAttribs.WEIGHTS_0);
-                    }
-
-                    if (geometryType == decoderModule.TRIANGULAR_MESH) {
-                        var face = new decoderModule.DracoInt32Array();
-                        indices = (numPoints > 65535) ? new Uint32Array(numFaces * 3) : new Uint16Array(numFaces * 3);
-                        for (i = 0; i < numFaces; ++i) {
-                            decoder.GetFaceFromMesh(outputGeometry, i, face);
-                            indices[i * 3]     = face.GetValue(0);
-                            indices[i * 3 + 1] = face.GetValue(1);
-                            indices[i * 3 + 2] = face.GetValue(2);
-                        }
-                        decoderModule.destroy(face);
-                    }
-
-                    decoderModule.destroy(outputGeometry);
-                    decoderModule.destroy(decoder);
-                    decoderModule.destroy(buffer);
-                }
-            }
 
             // Grab typed arrays for all vertex data
             var accessor;
 
             if (attributes.hasOwnProperty('POSITION') && positions === null) {
-                accessor = accessors[primitive.attributes.POSITION];
+                accessor = accessors[attributes.POSITION];
                 positions = getAccessorData(accessor, bufferViews, buffers);
             }
             if (attributes.hasOwnProperty('NORMAL') && normals === null) {
-                accessor = accessors[primitive.attributes.NORMAL];
+                accessor = accessors[attributes.NORMAL];
                 normals = getAccessorData(accessor, bufferViews, buffers);
             }
             if (attributes.hasOwnProperty('TANGENT') && tangents === null) {
-                accessor = accessors[primitive.attributes.TANGENT];
+                accessor = accessors[attributes.TANGENT];
                 tangents = getAccessorData(accessor, bufferViews, buffers);
             }
             if (attributes.hasOwnProperty('TEXCOORD_0') && texCoord0 === null) {
-                accessor = accessors[primitive.attributes.TEXCOORD_0];
+                accessor = accessors[attributes.TEXCOORD_0];
                 texCoord0 = getAccessorData(accessor, bufferViews, buffers);
             }
             if (attributes.hasOwnProperty('TEXCOORD_1') && texCoord1 === null) {
-                accessor = accessors[primitive.attributes.TEXCOORD_1];
+                accessor = accessors[attributes.TEXCOORD_1];
                 texCoord1 = getAccessorData(accessor, bufferViews, buffers);
             }
             if (attributes.hasOwnProperty('COLOR_0') && colors === null) {
-                accessor = accessors[primitive.attributes.COLOR_0];
+                accessor = accessors[attributes.COLOR_0];
                 colors = getAccessorData(accessor, bufferViews, buffers);
             }
             if (attributes.hasOwnProperty('JOINTS_0') && joints === null) {
-                accessor = accessors[primitive.attributes.JOINTS_0];
+                accessor = accessors[attributes.JOINTS_0];
                 joints = getAccessorData(accessor, bufferViews, buffers);
             }
             if (attributes.hasOwnProperty('WEIGHTS_0') && weights === null) {
-                accessor = accessors[primitive.attributes.WEIGHTS_0];
+                accessor = accessors[attributes.WEIGHTS_0];
                 weights = getAccessorData(accessor, bufferViews, buffers);
-            }
-            if (primitive.hasOwnProperty('indices') && indices === null) {
-                accessor = accessors[primitive.indices];
-                indices = getAccessorData(accessor, bufferViews, buffers);
             }
 
             var numVertices = positions.length / 3;
@@ -403,7 +401,7 @@ Object.assign(pc, function () {
                 dstOffset = attr.offset;
                 dstStride = attr.stride;
 
-                accessor = accessors[primitive.attributes.COLOR_0];
+                accessor = accessors[attributes.COLOR_0];
 
                 for (i = 0; i < numVertices; i++) {
                     dstIndex = dstOffset + i * dstStride;
@@ -450,6 +448,165 @@ Object.assign(pc, function () {
             }
 
             vertexBuffer.unlock();
+            return vertexBuffer;
+        }
+    }
+
+    var createSkin = function (skinData, accessors, bufferViews, nodes, buffers) {
+        var i, j, bindMatrix;
+        var joints = skinData.joints;
+        var numJoints = joints.length;
+        var ibp = [];
+        if (skinData.hasOwnProperty('inverseBindMatrices')) {
+            var inverseBindMatrices = skinData.inverseBindMatrices;
+            var ibmData = getAccessorData(accessors[inverseBindMatrices], bufferViews, buffers);
+            var ibmValues = [];
+
+            for (i = 0; i < numJoints; i++) {
+                for (j = 0; j < 16; j++) {
+                    ibmValues[j] = ibmData[i * 16 + j];
+                }
+                bindMatrix = new pc.Mat4();
+                bindMatrix.set(ibmValues);
+                ibp.push(bindMatrix);
+            }
+        } else {
+            for (i = 0; i < numJoints; i++) {
+                bindMatrix = new pc.Mat4();
+                ibp.push(bindMatrix);
+            }
+        }
+
+        var boneNames = [];
+        for (i = 0; i < numJoints; i++) {
+            boneNames[i] = nodes[joints[i]].name;
+        }
+
+        var skeleton = skinData.skeleton;
+
+        var skin = new pc.Skin(globals.device, ibp, boneNames);
+        skin.skeleton = nodes[skeleton];
+
+        skin.bones = [];
+        for (i = 0; i < joints.length; i++) {
+            skin.bones[i] = nodes[joints[i]];
+        }
+
+        return skin;
+    }
+
+    var tempMat = new pc.Mat4();
+    var tempVec = new pc.Vec3();
+    var createMesh = function (meshData, accessors, bufferViews, buffers) {
+        var meshes = [];
+
+        meshData.primitives.forEach(function (primitive) {
+            var attributes = primitive.attributes;
+
+            var i;
+
+            /*
+            // Start by looking for compressed vertex data for this primitive
+            if (primitive.hasOwnProperty('extensions')) {
+                var extensions = primitive.extensions;
+                if (extensions.hasOwnProperty('KHR_draco_mesh_compression')) {
+                    var extDraco = extensions.KHR_draco_mesh_compression;
+
+                    var bufferView = bufferViews[extDraco.bufferView];
+                    var arrayBuffer = buffers[bufferView.buffer];
+                    var byteOffset = bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0;
+                    var uint8Buffer = new Int8Array(arrayBuffer, byteOffset, bufferView.byteLength);
+
+                    var decoderModule = decoderModule;
+                    var buffer = new decoderModule.DecoderBuffer();
+                    buffer.Init(uint8Buffer, uint8Buffer.length);
+
+                    var decoder = new decoderModule.Decoder();
+                    var geometryType = decoder.GetEncodedGeometryType(buffer);
+
+                    var outputGeometry, status;
+                    switch (geometryType) {
+                        case decoderModule.INVALID_GEOMETRY_TYPE:
+                            console.error('Invalid geometry type');
+                            break;
+                        case decoderModule.POINT_CLOUD:
+                            outputGeometry = new decoderModule.PointCloud();
+                            status = decoder.DecodeBufferToPointCloud(buffer, outputGeometry);
+                            break;
+                        case decoderModule.TRIANGULAR_MESH:
+                            outputGeometry = new decoderModule.Mesh();
+                            status = decoder.DecodeBufferToMesh(buffer, outputGeometry);
+                            break;
+                    }
+
+                    if (!status.ok() || outputGeometry.ptr == 0) {
+                        var errorMsg = status.error_msg();
+                        console.error(errorMsg);
+                    }
+
+                    var numPoints = outputGeometry.num_points();
+                    var numFaces = outputGeometry.num_faces();
+
+                    if (extDraco.hasOwnProperty('attributes')) {
+                        var extractAttribute = function (uniqueId) {
+                            var attribute = decoder.GetAttributeByUniqueId(outputGeometry, uniqueId);
+                            var attributeData = new decoderModule.DracoFloat32Array();
+                            decoder.GetAttributeFloatForAllPoints(outputGeometry, attribute, attributeData);
+                            var numValues = numPoints * attribute.num_components();
+                            var values = new Float32Array(numValues);
+
+                            for (i = 0; i < numValues; i++) {
+                                values[i] = attributeData.GetValue(i);
+                            }
+
+                            decoderModule.destroy(attributeData);
+                            return values;
+                        };
+
+                        var dracoAttribs = extDraco.attributes;
+                        if (dracoAttribs.hasOwnProperty('POSITION'))
+                            positions = extractAttribute(dracoAttribs.POSITION);
+                        if (dracoAttribs.hasOwnProperty('NORMAL'))
+                            normals   = extractAttribute(dracoAttribs.NORMAL);
+                        if (dracoAttribs.hasOwnProperty('TANGENT'))
+                            tangents  = extractAttribute(dracoAttribs.TANGENT);
+                        if (dracoAttribs.hasOwnProperty('TEXCOORD_0'))
+                            texCoord0 = extractAttribute(dracoAttribs.TEXCOORD_0);
+                        if (dracoAttribs.hasOwnProperty('TEXCOORD_1'))
+                            texCoord1 = extractAttribute(dracoAttribs.TEXCOORD_1);
+                        if (dracoAttribs.hasOwnProperty('COLOR_0'))
+                            colors    = extractAttribute(dracoAttribs.COLOR_0);
+                        if (dracoAttribs.hasOwnProperty('JOINTS_0'))
+                            joints    = extractAttribute(dracoAttribs.JOINTS_0);
+                        if (dracoAttribs.hasOwnProperty('WEIGHTS_0'))
+                            weights   = extractAttribute(dracoAttribs.WEIGHTS_0);
+                    }
+
+                    if (geometryType == decoderModule.TRIANGULAR_MESH) {
+                        var face = new decoderModule.DracoInt32Array();
+                        indices = (numPoints > 65535) ? new Uint32Array(numFaces * 3) : new Uint16Array(numFaces * 3);
+                        for (i = 0; i < numFaces; ++i) {
+                            decoder.GetFaceFromMesh(outputGeometry, i, face);
+                            indices[i * 3]     = face.GetValue(0);
+                            indices[i * 3 + 1] = face.GetValue(1);
+                            indices[i * 3 + 2] = face.GetValue(2);
+                        }
+                        decoderModule.destroy(face);
+                    }
+
+                    decoderModule.destroy(outputGeometry);
+                    decoderModule.destroy(decoder);
+                    decoderModule.destroy(buffer);
+                }
+            }
+            //*/
+
+            // get indices
+            var indices =
+                primitive.hasOwnProperty('indices') ?
+                    getAccessorData(accessors[primitive.indices], bufferViews, buffers) : null;
+
+            var vertexBuffer = createVertexBuffer(attributes, indices, accessors, bufferViews, buffers);
 
             var mesh = new pc.Mesh();
             mesh.vertexBuffer = vertexBuffer;
@@ -470,12 +627,12 @@ Object.assign(pc, function () {
                 mesh.indexBuffer[0] = indexBuffer;
                 mesh.primitive[0].count = indices.length;
             } else {
-                mesh.primitive[0].count = numVertices;
+                mesh.primitive[0].count = vertexBuffer.numVertices;
             }
 
             mesh.materialIndex = primitive.material;
 
-            accessor = accessors[primitive.attributes.POSITION];
+            var accessor = accessors[primitive.attributes.POSITION];
             var min = accessor.min;
             var max = accessor.max;
             var aabb = new pc.BoundingBox(

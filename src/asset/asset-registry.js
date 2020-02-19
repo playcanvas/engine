@@ -537,7 +537,6 @@ Object.assign(pc, function () {
                 // other model format (e.g. obj)
                 _loadAsset(asset);
             }
-
         },
 
         // private method used for engine-only loading of model data
