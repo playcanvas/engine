@@ -100,15 +100,41 @@ Object.assign(pc, function () {
         var useFastPacking = true;
         if (useFastPacking) {
             var semanticMap = {
-                'POSITION': pc.SEMANTIC_POSITION,
-                'NORMAL': pc.SEMANTIC_NORMAL,
-                'TANGENT': pc.SEMANTIC_TANGENT,
+                'POSITION'  : pc.SEMANTIC_POSITION,
+                'NORMAL'    : pc.SEMANTIC_NORMAL,
+                'TANGENT'   : pc.SEMANTIC_TANGENT,
+                'BINORMAL'   : pc.SEMANTIC_BINORMAL,
+                'COLOR_0'   : pc.SEMANTIC_COLOR,
+                'JOINTS_0'  : pc.SEMANTIC_BLENDINDICES,
+                'WEIGHTS_0' : pc.SEMANTIC_BLENDWEIGHT,
                 'TEXCOORD_0': pc.SEMANTIC_TEXCOORD0,
                 'TEXCOORD_1': pc.SEMANTIC_TEXCOORD1,
-                'COLOR_0': pc.SEMANTIC_COLOR,
-                'JOINTS_0': pc.SEMANTIC_BLENDINDICES,
-                'WEIGHTS_0': pc.SEMANTIC_BLENDWEIGHT,
+                'TEXCOORD_2': pc.SEMANTIC_TEXCOORD2,
+                'TEXCOORD_3': pc.SEMANTIC_TEXCOORD3,            
+                'TEXCOORD_4': pc.SEMANTIC_TEXCOORD4,
+                'TEXCOORD_5': pc.SEMANTIC_TEXCOORD5,
+                'TEXCOORD_6': pc.SEMANTIC_TEXCOORD6,
+                'TEXCOORD_7': pc.SEMANTIC_TEXCOORD7,
             };
+
+            // order vertexDesc to match the rest of the engine
+            var elementOrder = [
+                pc.SEMANTIC_POSITION,
+                pc.SEMANTIC_NORMAL,
+                pc.SEMANTIC_TANGENT,
+                pc.SEMANTIC_BINORMAL,
+                pc.SEMANTIC_COLOR,
+                pc.SEMANTIC_BLENDINDICES,
+                pc.SEMANTIC_BLENDWEIGHT,
+                pc.SEMANTIC_TEXCOORD0,
+                pc.SEMANTIC_TEXCOORD1,
+                pc.SEMANTIC_TEXCOORD2,
+                pc.SEMANTIC_TEXCOORD3,            
+                pc.SEMANTIC_TEXCOORD4,
+                pc.SEMANTIC_TEXCOORD5,
+                pc.SEMANTIC_TEXCOORD6,
+                pc.SEMANTIC_TEXCOORD7,
+            ];
 
             // build vertex buffer format desc
             var vertexDesc = [];
@@ -133,25 +159,14 @@ Object.assign(pc, function () {
                             buffer: bufferView.buffer,
                             size: size,
                             offset: accessor.byteOffset + bufferView.byteOffset + buffer.byteOffset,
-                            stride: bufferView.hasOwnProperty('stride') ? bufferView.stride : size,
+                            stride: bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size,
                             count: accessor.count
                         };
                     }
                 }
             }
 
-            // order vertexDesc to match the rest of the engine
-            var elementOrder = [
-                pc.SEMANTIC_POSITION,
-                pc.SEMANTIC_NORMAL,
-                pc.SEMANTIC_TANGENT,
-                pc.SEMANTIC_TEXCOORD0,
-                pc.SEMANTIC_TEXCOORD1,
-                pc.SEMANTIC_COLOR,
-                pc.SEMANTIC_BLENDINDICES,
-                pc.SEMANTIC_BLENDWEIGHT
-            ];
-
+            // sort by engine-ideal order
             vertexDesc.sort(function (lhs, rhs) {
                 var lhsOrder = elementOrder.indexOf(lhs.semantic);
                 var rhsOrder = elementOrder.indexOf(rhs.semantic);
@@ -188,7 +203,7 @@ Object.assign(pc, function () {
 
             if (isCorrectlyInterleaved) {
                 // copy data
-                var sourceArray = new Uint32Array(positionDesc.array,
+                var sourceArray = new Uint32Array(positionDesc.array.buffer,
                                                   positionDesc.offset,
                                                   numVertices * vertexBuffer.format.size / 4);
                 targetArray.set(sourceArray);
