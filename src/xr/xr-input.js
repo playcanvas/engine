@@ -151,6 +151,9 @@ Object.assign(pc, function () {
     };
 
     XrInput.prototype._addInputSource = function (xrInputSource) {
+        if (this._getByInputSource(xrInputSource))
+            return;
+
         var inputSource = new pc.XrInputSource(this.manager, xrInputSource);
         this._inputSources.push(inputSource);
         this.fire('add', inputSource);

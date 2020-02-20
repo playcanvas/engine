@@ -76,10 +76,10 @@ Object.assign(pc, function () {
      * * {@link pc.XRHAND_RIGHT}: Right - indicates that input source is meant to be held in right hand.
      *
      * @property {string[]} profiles List of input profile names indicating both the prefered visual representation and behavior of the input source.
-     * @property {pc.Ray} ray Ray that is calculated based on {pc.XrInputSource#targetRayMode} that can be used for interacting with virtual objects.
+     * @property {pc.Ray} ray Ray that is calculated based on {pc.XrInputSource#targetRayMode} that can be used for interacting with virtual objects. Its origin and direction are in local space of XR session.
      * @property {boolean} grip If input source can be held, then it will have node with its world transformation, that can be used to position and rotate virtual joystics based on it.
-     * @property {pc.Vec3|null} position If {pc.XrInputSource#grip} is true, then position will represent world space position of handheld input source.
-     * @property {pc.Quat|null} rotation If {pc.XrInputSource#grip} is true, then rotation will represent world space rotation of handheld input source.
+     * @property {pc.Vec3|null} position If {pc.XrInputSource#grip} is true, then position will represent position of handheld input source in local space of XR session.
+     * @property {pc.Quat|null} rotation If {pc.XrInputSource#grip} is true, then rotation will represent rotation of handheld input source in local space of XR session.
      * @property {Gamepad|null} gamepad If input source has buttons, triggers, thumbstick or touchpad, then this object provides access to its states.
      * @property {boolean} selecting True if input source is in active primary action between selectstart and selectend events.
      */
@@ -139,14 +139,8 @@ Object.assign(pc, function () {
         var targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
         if (! targetRayPose) return;
 
-        var camera = this._manager._camera;
-        var parent = (camera.entity && camera.entity.parent) || null;
-        var parentPosition = parent && parent.getPosition();
-
         // ray
         this._ray.origin.copy(targetRayPose.transform.position);
-        // relative to XR camera parent
-        if (parentPosition) this._ray.origin.add(parentPosition);
 
         this._ray.direction.set(0, 0, -1);
         quat.copy(targetRayPose.transform.orientation);

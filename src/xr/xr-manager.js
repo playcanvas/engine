@@ -33,9 +33,10 @@ Object.assign(pc, function () {
      * @classdesc Manage and update XR session and its states.
      * @description Manage and update XR session and its states.
      * @param {pc.Application} app - The main application.
-     * @property {boolean} supported Returns true if XR is supported.
-     * @property {boolean} active Returns true if XR session is running.
-     * @property {string|null} type Returns type of curently running XR session or null if no session is running.
+     * @property {boolean} supported True if XR is supported.
+     * @property {boolean} active True if XR session is running.
+     * @property {string|null} type Type of curently running XR session or null if no session is running.
+     * @property {pc.Entity|null} camera Active camera for which XR session is running or null.
      */
     var XrManager = function (app) {
         pc.EventHandler.call(this);
@@ -295,7 +296,11 @@ Object.assign(pc, function () {
         });
 
         // request reference space
-        session.requestReferenceSpace('local').then(function (referenceSpace) {
+        var spaceType = 'local';
+        if (this._type === pc.XRTYPE_INLINE)
+            spaceType = 'viewer';
+
+        session.requestReferenceSpace(spaceType).then(function (referenceSpace) {
             self._referenceSpace = referenceSpace;
 
             // old requestAnimationFrame will never be triggered,
@@ -438,6 +443,12 @@ Object.assign(pc, function () {
                 return null;
 
             return this._session.visibilityState;
+        }
+    });
+
+    Object.defineProperty(XrManager.prototype, 'camera', {
+        get: function () {
+            return this._camera ? this._camera.entity : null;
         }
     });
 
