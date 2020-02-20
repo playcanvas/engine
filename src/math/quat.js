@@ -713,14 +713,6 @@ Object.assign(pc, (function () {
      * @type {pc.Quat}
      * @description A constant quaternion set to [0, 0, 0, 1] (the identity).
      */
-    Object.defineProperty(Quat, 'IDENTITY', {
-        get: (function () {
-            var identity = new Quat();
-            return function () {
-                return identity;
-            };
-        }())
-    });
 
     /**
      * @field
@@ -730,13 +722,10 @@ Object.assign(pc, (function () {
      * @type {pc.Quat}
      * @description A constant quaternion set to [0, 0, 0, 0].
      */
-    Object.defineProperty(Quat, 'ZERO', {
-        get: (function () {
-            var zero = new Quat(0, 0, 0, 0);
-            return function () {
-                return zero;
-            };
-        }())
+
+    Object.defineProperties(Quat, {
+        ZERO: { value: new Quat(0, 0, 0, 0) },
+        IDENTITY: { value: new Quat(0, 0, 0, 1) }
     });
 
     return {
