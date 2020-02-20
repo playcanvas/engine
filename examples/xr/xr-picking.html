@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>PlayCanvas Virtual Reality</title>
+        <title>PlayCanvas XR Picking</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
@@ -152,19 +152,7 @@
                     }
                 });
 
-                app.xr.on('start', function () {
-                    message("Pick any box");
-                });
-                app.xr.on('end', function () {
-                    message("Immersive VR session has ended");
-                });
-                app.xr.on('available:' + pc.XRTYPE_VR, function (available) {
-                    message("Immersive VR is " + (available ? 'available' : 'unavailable'));
-                });
-
-                if (! app.xr.isAvailable(pc.XRTYPE_VR)) {
-                    message("Immersive VR is not available");
-                }
+                message("Tap on screen to enter VR, and then pick objects");
 
                 // when input source is triggers select
                 // pick closest box and change its color

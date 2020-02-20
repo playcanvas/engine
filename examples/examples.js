@@ -79,7 +79,8 @@ var categories = [
             'augmented-reality-basic',
             'virtual-reality-basic',
             'xr-picking',
-            'vr-controllers'
+            'vr-controllers',
+            'vr-movement'
         ]
     }
 ];
