@@ -28,6 +28,7 @@ var categories = [
             "portal",
             "particles-snow",
             "particles-sparks",
+            "particles-start-frame",
             "post-effects",
             "shader-burn",
             "shader-toon",
