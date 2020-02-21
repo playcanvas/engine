@@ -1002,6 +1002,12 @@ pc.programlib.standard = {
             }
         }
 
+        if (options.clearcoat) {
+            code += this._addMap("clearcoat", "clearcoatPS", options, chunks);
+            code += this._addMap("clearcoatRoughness", "clearcoatRoughnessPS", options, chunks);
+            code += this._addMap("clearcoatNormal", "clearcoatNormalPS", options, chunks);
+        }
+
         if (options.heightMap) {
             if (!options.normalMap) {
                 var transformedHeightMapUv = this._getUvSourceExpression("heightMapTransform", "heightMapUv", options);
@@ -1234,6 +1240,12 @@ pc.programlib.standard = {
             code += "   getSpecularity();\n";
             code += "   getGlossiness();\n";
             if (options.fresnelModel > 0) code += "   getFresnel();\n";
+        }
+
+        if (options.clearcoat) {
+            code += "   getClearCoat();\n";
+            code += "   getClearCoatRoughness();\n";
+            code += "   getClearCoatNormal();\n";
         }
 
         if (addAmbient) {
