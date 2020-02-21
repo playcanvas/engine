@@ -117,11 +117,11 @@
             if (app.xr.supported) {
                 var activate = function () {
                     if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-                        c.camera.startXr(pc.XRTYPE_VR, function (err) {
+                        c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, function (err) {
                             if (err) message("WebXR Immersive VR failed to start: " + err.message);
                         });
                     } else {
-                        message("WebXR Immersive VR is not available");
+                        message("Immersive VR is not available");
                     }
                 };
 
@@ -131,7 +131,7 @@
                 });
 
                 if (app.touch) {
-                    app.touch.on("touchend", function () {
+                    app.touch.on("touchend", function (evt) {
                         if (! app.xr.active) {
                             // if not in VR, activate
                             activate();
@@ -139,6 +139,9 @@
                             // otherwise reset camera
                             c.camera.endXr();
                         }
+
+                        evt.preventDefault();
+                        evt.stopPropagation();
                     });
                 }
 
@@ -150,17 +153,17 @@
                 });
 
                 app.xr.on('start', function () {
-                    message("WebXR Immersive VR session has started");
+                    message("Immersive VR session has started");
                 });
                 app.xr.on('end', function () {
-                    message("WebXR Immersive VR session has ended");
+                    message("Immersive VR session has ended");
                 });
                 app.xr.on('available:' + pc.XRTYPE_VR, function (available) {
-                    message("WebXR Immersive VR is now " + (available ? 'available' : 'unavailable'));
+                    message("Immersive VR is " + (available ? 'available' : 'unavailable'));
                 });
 
                 if (! app.xr.isAvailable(pc.XRTYPE_VR)) {
-                    message("WebXR Immersive VR is not available");
+                    message("Immersive VR is not available");
                 }
             } else {
                 message("WebXR is not supported");
