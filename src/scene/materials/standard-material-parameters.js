@@ -134,7 +134,25 @@
         prefilteredCubeMap32: 'texture',
         prefilteredCubeMap16: 'texture',
         prefilteredCubeMap8: 'texture',
-        prefilteredCubeMap4: 'texture'
+        prefilteredCubeMap4: 'texture',
+
+        useClearcoat: 'boolean',
+        clearcoat: 'number',
+        clearcoatMap: 'texture',
+        clearcoatMapChannel: 'string',
+        clearcoatMapUv: 'number',
+        clearcoatMapTiling: 'vec2',
+        clearcoatMapOffset: 'vec2',
+        clearcoatRoughness: 'number',
+        clearcoatRoughnessMap: 'texture',
+        clearcoatRoughnessMapChannel: 'string',
+        clearcoatRoughnessMapUv: 'number',
+        clearcoatRoughnessMapTiling: 'vec2',
+        clearcoatRoughnessMapOffset: 'vec2',
+        clearcoatNormalMap: 'texture',
+        clearcoatNormalMapTiling: 'vec2',
+        clearcoatNormalMapOffset: 'vec2',
+        clearcoatNormalMapUv: 'number'
 
         // twoSidedLighting
         // nineSlicedMode

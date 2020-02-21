@@ -692,6 +692,11 @@ Object.assign(pc, function () {
                 this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
             }
 
+            if (this.useClearcoat) {
+                this._setParameter('material_clearcoat', this.clearcoat);
+                this._setParameter('material_clearcoatRoughness', this.clearcoatRoughness);
+            }
+
             if (this.refraction > 0) {
                 this._setParameter('material_refraction', this.refraction);
                 this._setParameter('material_refractionIndex', this.refractionIndex);
@@ -942,6 +947,8 @@ Object.assign(pc, function () {
         _defineFloat(obj, "refractionIndex", 1.0 / 1.5); // approx. (air ior / glass ior)
         _defineFloat(obj, "metalness", 1);
         _defineFloat(obj, "aoUvSet", 0, null); // legacy
+        _defineFloat(obj, "clearcoat", 1);
+        _defineFloat(obj, "clearcoatRoughness", 1);
 
         _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
             return { name: "ambientSH[0]", value: val };
@@ -989,6 +996,7 @@ Object.assign(pc, function () {
         _defineFlag(obj, "pixelSnap", false);
         _defineFlag(obj, "twoSidedLighting", false);
         _defineFlag(obj, "nineSlicedMode", pc.SPRITE_RENDERMODE_SLICED);
+        _defineFlag(obj, "useClearcoat", false);
 
         _defineTex2D(obj, "diffuse", 0, 3);
         _defineTex2D(obj, "specular", 0, 3);
@@ -1001,6 +1009,9 @@ Object.assign(pc, function () {
         _defineTex2D(obj, "ao", 0, 1);
         _defineTex2D(obj, "light", 1, 3);
         _defineTex2D(obj, "msdf", 0, 3);
+        _defineTex2D(obj, "clearcoat", 0, 1);
+        _defineTex2D(obj, "clearcoatRoughness", 0, 1);
+        _defineTex2D(obj, "clearcoatNormal", 0, -1);
 
         _defineObject(obj, "cubeMap");
         _defineObject(obj, "sphereMap");
