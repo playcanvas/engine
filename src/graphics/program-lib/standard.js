@@ -1445,6 +1445,9 @@ pc.programlib.standard = {
         if (code.includes("dAtten3")) structCode += "vec3 dAtten3;\n";
         if (code.includes("dAo")) structCode += "float dAo;\n";
         if (code.includes("dMsdf")) structCode += "vec4 dMsdf;\n";
+        if (code.includes("dClearcoat")) structCode += "float dClearcoat;\n";
+        if (code.includes("dClearcoatRoughness")) structCode += "float dClearcoatRoughness;\n";
+        if (code.includes("dClearcoatNormalW")) structCode += "vec3 dClearcoatNormalW;\n";
 
         code = codeBegin + structCode + code;
 

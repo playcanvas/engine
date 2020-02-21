@@ -6,17 +6,15 @@ uniform float material_clearcoatRoughness;
 uniform sampler2D texture_clearcoatRoughnessMap;
 #endif
 
-float getClearcoatRoughness() {
-    float clearcoatRoughness = 1.0;
+void getClearcoatRoughness() {
+    dClearcoatRoughness = 1.0;
 
     #ifdef MAPFLOAT
-        clearcoatRoughness *= material_clearcoatRoughness;
+        dClearcoatRoughness *= material_clearcoatRoughness;
     #endif
 
     #ifdef MAPTEXTURE
-        clearcoatRoughness *= texture2D(texture_clearcoatRoughnessMap, $UV).$CH;
+        dClearcoatRoughness *= texture2D(texture_clearcoatRoughnessMap, $UV).$CH;
     #endif
-
-    return clearcoatRoughness;
 }
 
