@@ -4,7 +4,8 @@ Object.assign(pc, function () {
          * @constant
          * @type string
          * @name pc.XRTYPE_INLINE
-         * @description Inline - always available type of session. It has limited features availability and is rendered into HTML element.
+         * @description Inline - always available type of session. It has limited features availability and is rendered
+         * into HTML element.
          */
         XRTYPE_INLINE: 'inline',
 
@@ -12,7 +13,8 @@ Object.assign(pc, function () {
          * @constant
          * @type string
          * @name pc.XRTYPE_VR
-         * @description Immersive VR - session that provides exclusive access to VR device with best available tracking features.
+         * @description Immersive VR - session that provides exclusive access to VR device with best available tracking
+         * features.
          */
         XRTYPE_VR: 'immersive-vr',
 
@@ -20,7 +22,8 @@ Object.assign(pc, function () {
          * @constant
          * @type string
          * @name pc.XRTYPE_AR
-         * @description Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+         * @description Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended
+         * with real-world environment.
          */
         XRTYPE_AR: 'immersive-ar'
     };
@@ -30,7 +33,7 @@ Object.assign(pc, function () {
          * @constant
          * @type string
          * @name pc.XRSPACE_VIEWER
-         * @description Viewer - awlays supported space with some basic tracking capabilities.
+         * @description Viewer - always supported space with some basic tracking capabilities.
          */
         XRSPACE_VIEWER: 'viewer',
 
@@ -38,7 +41,11 @@ Object.assign(pc, function () {
          * @constant
          * @type string
          * @name pc.XRSPACE_LOCAL
-         * @description Local - it represents a tracking space with a native origin near the viewer at the time of creation. The exact position and orientation will be initialized based on the conventions of the underlying platform. When using this reference space the user is not expected to move beyond their initial position much, if at all, and tracking is optimized for that purpose. For devices with 6DoF tracking, local reference spaces should emphasize keeping the origin stable relative to the user’s environment.
+         * @description Local - represents a tracking space with a native origin near the viewer at the time of creation.
+         * The exact position and orientation will be initialized based on the conventions of the underlying platform.
+         * When using this reference space the user is not expected to move beyond their initial position much, if at all,
+         * and tracking is optimized for that purpose. For devices with 6DoF tracking, local reference spaces should
+         * emphasize keeping the origin stable relative to the user’s environment.
          */
         XRSPACE_LOCAL: 'local',
 
@@ -46,7 +53,12 @@ Object.assign(pc, function () {
          * @constant
          * @type string
          * @name pc.XRSPACE_LOCALFLOOR
-         * @description Local Floor - it represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level, with the x and z position and orientation initialized based on the conventions of the underlying platform. Floor level value might be estimated by underlying platform. When using this reference space the user is not expected to move beyond their initial position much, if at all, and tracking is optimized for that purpose. For devices with 6DoF tracking, local-floor reference spaces should emphasize keeping the origin stable relative to the user’s environment.
+         * @description Local Floor - represents a tracking space with a native origin at the floor in a safe position for
+         * the user to stand. The y axis equals 0 at floor level, with the x and z position and orientation initialized
+         * based on the conventions of the underlying platform. Floor level value might be estimated by the underlying
+         * platform. When using this reference space, the user is not expected to move beyond their initial position much,
+         * if at all, and tracking is optimized for that purpose. For devices with 6DoF tracking, local-floor reference
+         * spaces should emphasize keeping the origin stable relative to the user’s environment.
          */
         XRSPACE_LOCALFLOOR: 'local-floor',
 
@@ -54,7 +66,9 @@ Object.assign(pc, function () {
          * @constant
          * @type string
          * @name pc.XRSPACE_BOUNDEDFLOOR
-         * @description Bounded Floor - it represents a tracking space with it’s native origin at the floor, where the user is expected to move within a pre-established boundary. Tracking in a bounded-floor reference space is optimized for keeping the native origin and boundsGeometry stable relative to the user’s environment.
+         * @description Bounded Floor - represents a tracking space with its native origin at the floor, where the user
+         * is expected to move within a pre-established boundary. Tracking in a bounded-floor reference space is optimized
+         * for keeping the native origin and bounds geometry stable relative to the user’s environment.
          */
         XRSPACE_BOUNDEDFLOOR: 'bounded-floor',
 
@@ -62,7 +76,9 @@ Object.assign(pc, function () {
          * @constant
          * @type string
          * @name pc.XRSPACE_UNBOUNDED
-         * @description Unbounded - it represents a tracking space where the user is expected to move freely around their environment, potentially even long distances from their starting point. Tracking in an unbounded reference space is optimized for stability around the user’s current position, and as such the native origin may drift over time.
+         * @description Unbounded - represents a tracking space where the user is expected to move freely around their
+         * environment, potentially even long distances from their starting point. Tracking in an unbounded reference space
+         * is optimized for stability around the user’s current position, and as such the native origin may drift over time.
          */
         XRSPACE_UNBOUNDED: 'unbounded'
     };
