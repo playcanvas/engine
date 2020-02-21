@@ -117,8 +117,8 @@
             if (app.xr.supported) {
                 var activate = function () {
                     if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-                        c.camera.startXr(pc.XRTYPE_VR, function (err) {
-                            if (err) message("Immersive VR failed to start: " + err.message);
+                        c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, function (err) {
+                            if (err) message("WebXR Immersive VR failed to start: " + err.message);
                         });
                     } else {
                         message("Immersive VR is not available");
@@ -131,7 +131,7 @@
                 });
 
                 if (app.touch) {
-                    app.touch.on("touchend", function () {
+                    app.touch.on("touchend", function (evt) {
                         if (! app.xr.active) {
                             // if not in VR, activate
                             activate();
@@ -139,6 +139,9 @@
                             // otherwise reset camera
                             c.camera.endXr();
                         }
+
+                        evt.preventDefault();
+                        evt.stopPropagation();
                     });
                 }
 

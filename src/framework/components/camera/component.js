@@ -568,10 +568,18 @@ Object.assign(pc, function () {
          * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
          * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
          *
+         * @param {string} spaceType - reference space type. Can be one of the following:
+         *
+         * * {@link pc.XRSPACE_VIEWER}: Viewer - awlays supported space with some basic tracking capabilities.
+         * * {@link pc.XRSPACE_LOCAL}: Local - it represents a tracking space with a native origin near the viewer at the time of creation. It is meant for seated or basic local XR sessions.
+         * * {@link pc.XRSPACE_LOCALFLOOR}: Local Floor - it represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by underlying platform. It is meant for seated or basic local XR sessions.
+         * * {@link pc.XRSPACE_BOUNDEDFLOOR}: Bounded Floor - it represents a tracking space with it’s native origin at the floor, where the user is expected to move within a pre-established boundary.
+         * * {@link pc.XRSPACE_UNBOUNDED}: Unbounded - it represents a tracking space where the user is expected to move freely around their environment, potentially even long distances from their starting point.
+         *
          * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
          * @example
          * // On an entity with a camera component
-         * this.entity.camera.startXr(pc.XRTYPE_VR, function (err) {
+         * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, function (err) {
          *     if (err) {
          *         // failed to start XR session
          *     } else {
@@ -579,8 +587,8 @@ Object.assign(pc, function () {
          *     }
          * });
          */
-        startXr: function (type, callback) {
-            this.system.app.xr.start(this, type, callback);
+        startXr: function (type, spaceType, callback) {
+            this.system.app.xr.start(this, type, spaceType, callback);
         },
 
         /**

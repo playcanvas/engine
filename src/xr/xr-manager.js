@@ -25,6 +25,48 @@ Object.assign(pc, function () {
         XRTYPE_AR: 'immersive-ar'
     };
 
+    var spaceTypes = {
+        /**
+         * @constant
+         * @type string
+         * @name pc.XRSPACE_VIEWER
+         * @description Viewer - awlays supported space with some basic tracking capabilities.
+         */
+        XRSPACE_VIEWER: 'viewer',
+
+        /**
+         * @constant
+         * @type string
+         * @name pc.XRSPACE_LOCAL
+         * @description Local - it represents a tracking space with a native origin near the viewer at the time of creation. The exact position and orientation will be initialized based on the conventions of the underlying platform. When using this reference space the user is not expected to move beyond their initial position much, if at all, and tracking is optimized for that purpose. For devices with 6DoF tracking, local reference spaces should emphasize keeping the origin stable relative to the user’s environment.
+         */
+        XRSPACE_LOCAL: 'local',
+
+        /**
+         * @constant
+         * @type string
+         * @name pc.XRSPACE_LOCALFLOOR
+         * @description Local Floor - it represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level, with the x and z position and orientation initialized based on the conventions of the underlying platform. Floor level value might be estimated by underlying platform. When using this reference space the user is not expected to move beyond their initial position much, if at all, and tracking is optimized for that purpose. For devices with 6DoF tracking, local-floor reference spaces should emphasize keeping the origin stable relative to the user’s environment.
+         */
+        XRSPACE_LOCALFLOOR: 'local-floor',
+
+        /**
+         * @constant
+         * @type string
+         * @name pc.XRSPACE_BOUNDEDFLOOR
+         * @description Bounded Floor - it represents a tracking space with it’s native origin at the floor, where the user is expected to move within a pre-established boundary. Tracking in a bounded-floor reference space is optimized for keeping the native origin and boundsGeometry stable relative to the user’s environment.
+         */
+        XRSPACE_BOUNDEDFLOOR: 'bounded-floor',
+
+        /**
+         * @constant
+         * @type string
+         * @name pc.XRSPACE_UNBOUNDED
+         * @description Unbounded - it represents a tracking space where the user is expected to move freely around their environment, potentially even long distances from their starting point. Tracking in an unbounded reference space is optimized for stability around the user’s current position, and as such the native origin may drift over time.
+         */
+        XRSPACE_UNBOUNDED: 'unbounded',
+    };
+
 
     /**
      * @class
@@ -35,7 +77,8 @@ Object.assign(pc, function () {
      * @param {pc.Application} app - The main application.
      * @property {boolean} supported True if XR is supported.
      * @property {boolean} active True if XR session is running.
-     * @property {string|null} type Type of curently running XR session or null if no session is running.
+     * @property {string|null} type Returns type of curently running XR session or null if no session is running. Can be any of pc.XRTYPE_*.
+     * @property {string|null} spaceType Returns reference space type of curently running XR session or null if no session is running. Can be any of pc.XRSPACE_*.
      * @property {pc.Entity|null} camera Active camera for which XR session is running or null.
      */
     var XrManager = function (app) {
@@ -53,6 +96,7 @@ Object.assign(pc, function () {
         }
 
         this._type = null;
+        this._spaceType = null;
         this._session = null;
         this._baseLayer = null;
         this._referenceSpace = null;
@@ -129,6 +173,17 @@ Object.assign(pc, function () {
      * });
      */
 
+     /**
+      * @event
+      * @name pc.XrManager#error
+      * @param {Error} error - Error object related to failure of session start.
+      * @description Fired when XR session is failed to start
+      * @example
+      * app.xr.on('error', function (ex) {
+      *     // XR session has failed to start
+      * });
+      */
+
     /**
      * @function
      * @name pc.XrManager#start
@@ -140,13 +195,21 @@ Object.assign(pc, function () {
      * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
      * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
      *
+     * @param {string} spaceType - reference space type. Can be one of the following:
+     *
+     * * {@link pc.XRSPACE_VIEWER}: Viewer - awlays supported space with some basic tracking capabilities.
+     * * {@link pc.XRSPACE_LOCAL}: Local - it represents a tracking space with a native origin near the viewer at the time of creation. It is meant for seated or basic local XR sessions.
+     * * {@link pc.XRSPACE_LOCALFLOOR}: Local Floor - it represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by underlying platform. It is meant for seated or basic local XR sessions.
+     * * {@link pc.XRSPACE_BOUNDEDFLOOR}: Bounded Floor - it represents a tracking space with it’s native origin at the floor, where the user is expected to move within a pre-established boundary.
+     * * {@link pc.XRSPACE_UNBOUNDED}: Unbounded - it represents a tracking space where the user is expected to move freely around their environment, potentially even long distances from their starting point.
+     *
      * @example
      * button.on('click', function () {
-     *     app.xr.start(camera, PC.XRTYPE_VR);
+     *     app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCAL);
      * });
      * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
      */
-    XrManager.prototype.start = function (camera, type, callback) {
+    XrManager.prototype.start = function (camera, type, spaceType, callback) {
         if (! this._available[type]) {
             if (callback) callback(new Error('XR is not available'));
             return;
@@ -162,6 +225,7 @@ Object.assign(pc, function () {
         this._camera = camera;
         this._camera.camera.xr = this;
         this._type = type;
+        this._spaceType = spaceType;
 
         this._setClipPlanes(camera.nearClip, camera.farClip);
 
@@ -173,8 +237,18 @@ Object.assign(pc, function () {
         // 3. probably immersive-vr will fail to be created
         // 4. call makeXRCompatible, very likely will lead to context loss
 
-        navigator.xr.requestSession(type).then(function (session) {
-            self._onSessionStart(session, callback);
+        navigator.xr.requestSession(type, {
+            requiredFeatures: [ spaceType ]
+        }).then(function (session) {
+            self._onSessionStart(session, spaceType, callback);
+        }).catch(function (ex) {
+            self._camera.camera.xr = null;
+            self._camera = null;
+            self._type = null;
+            self._spaceType = null;
+
+            if (callback) callback(ex);
+            self.fire('error', ex);
         });
     };
 
@@ -240,8 +314,9 @@ Object.assign(pc, function () {
         });
     };
 
-    XrManager.prototype._onSessionStart = function (session, callback) {
+    XrManager.prototype._onSessionStart = function (session, spaceType, callback) {
         var self = this;
+        var failed = false;
 
         this._session = session;
 
@@ -262,6 +337,7 @@ Object.assign(pc, function () {
             self._width = 0;
             self._height = 0;
             self._type = null;
+            self._spaceType = null;
 
             if (self._camera) {
                 self._camera.off('set_nearClip', onClipPlanesChange);
@@ -278,7 +354,7 @@ Object.assign(pc, function () {
             // so queue up new tick
             self.app.tick();
 
-            self.fire('end');
+            if (! failed) self.fire('end');
         };
 
         session.addEventListener('end', onEnd);
@@ -296,10 +372,6 @@ Object.assign(pc, function () {
         });
 
         // request reference space
-        var spaceType = 'local';
-        if (this._type === pc.XRTYPE_INLINE)
-            spaceType = 'viewer';
-
         session.requestReferenceSpace(spaceType).then(function (referenceSpace) {
             self._referenceSpace = referenceSpace;
 
@@ -309,6 +381,11 @@ Object.assign(pc, function () {
 
             if (callback) callback(null);
             self.fire('start');
+        }).catch(function (ex) {
+            failed = true;
+            session.end();
+            if (callback) callback(ex);
+            self.fire('error', ex);
         });
     };
 
@@ -431,6 +508,12 @@ Object.assign(pc, function () {
         }
     });
 
+    Object.defineProperty(XrManager.prototype, 'spaceType', {
+        get: function () {
+            return this._spaceType;
+        }
+    });
+
     Object.defineProperty(XrManager.prototype, 'session', {
         get: function () {
             return this._session;
@@ -457,5 +540,8 @@ Object.assign(pc, function () {
         XrManager: XrManager
     };
     Object.assign(obj, sessionTypes);
+    Object.assign(obj, spaceTypes);
+
+
     return obj;
 }());
