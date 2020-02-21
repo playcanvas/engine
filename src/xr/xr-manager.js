@@ -93,8 +93,10 @@ Object.assign(pc, function () {
      * @param {pc.Application} app - The main application.
      * @property {boolean} supported True if XR is supported.
      * @property {boolean} active True if XR session is running.
-     * @property {string|null} type Returns type of curently running XR session or null if no session is running. Can be any of pc.XRTYPE_*.
-     * @property {string|null} spaceType Returns reference space type of curently running XR session or null if no session is running. Can be any of pc.XRSPACE_*.
+     * @property {string|null} type Returns type of currently running XR session or null if no session is running. Can be
+     * any of pc.XRTYPE_*.
+     * @property {string|null} spaceType Returns reference space type of currently running XR session or null if no session
+     * is running. Can be any of pc.XRSPACE_*.
      * @property {pc.Entity|null} camera Active camera for which XR session is running or null.
      */
     var XrManager = function (app) {
