@@ -64,7 +64,7 @@ Object.assign(pc, function () {
          * @name pc.XRSPACE_UNBOUNDED
          * @description Unbounded - it represents a tracking space where the user is expected to move freely around their environment, potentially even long distances from their starting point. Tracking in an unbounded reference space is optimized for stability around the user’s current position, and as such the native origin may drift over time.
          */
-        XRSPACE_UNBOUNDED: 'unbounded',
+        XRSPACE_UNBOUNDED: 'unbounded'
     };
 
 
@@ -238,7 +238,7 @@ Object.assign(pc, function () {
         // 4. call makeXRCompatible, very likely will lead to context loss
 
         navigator.xr.requestSession(type, {
-            requiredFeatures: [ spaceType ]
+            requiredFeatures: [spaceType]
         }).then(function (session) {
             self._onSessionStart(session, spaceType, callback);
         }).catch(function (ex) {
