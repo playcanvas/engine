@@ -39,7 +39,7 @@ Object.assign(pc, function () {
      * @param {boolean} [options.autoPlay=false] - If true the slot will start playing as soon as its audio asset is loaded.
      * @param {number} [options.asset=null] - The asset id of the audio asset that is going to be played by this slot.
      * @property {string} name The name of the slot.
-     * @property {string} asset The asset id.
+     * @property {number|null} asset The asset id.
      * @property {boolean} autoPlay If true the slot will begin playing as soon as it is loaded.
      * @property {number} volume The volume modifier to play the sound with. In range 0-1.
      * @property {number} pitch The pitch modifier to play the sound with. Must be larger than 0.01.
