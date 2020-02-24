@@ -1587,6 +1587,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#enableVr
          * @description Create and assign a {@link pc.VrManager} object to allow this application render in VR.
@@ -1598,6 +1600,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#disableVr
          * @description Destroy the {@link pc.VrManager}.
