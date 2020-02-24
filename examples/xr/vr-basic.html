@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>PlayCanvas Virtual Reality</title>
+        <title>PlayCanvas Basic VR</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
         <script src="../../build/output/playcanvas.js"></script>
-        <script src="https://code.playcanvas.com/webvr-polyfill.91fbc44.js"></script>
         <style>
             body {
                 margin: 0;
@@ -20,9 +19,11 @@
             }
             .message {
                 position: absolute;
+                padding: 8px 16px;
                 left: 20px;
                 bottom: 0px;
                 color: #ccc;
+                background-color: rgba(0, 0, 0, .5);
                 font-family: "Proxima Nova", Arial, sans-serif;
             }
         </style>
@@ -64,7 +65,7 @@
             var app = new pc.Application(canvas, {
                 mouse: new pc.Mouse(canvas),
                 touch: new pc.TouchDevice(canvas),
-                vr: true
+                keyboard: new pc.Keyboard(window)
             });
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -113,36 +114,60 @@
                 }
             }
 
-            var activate = function () {
-                if (app.vr && app.vr.display) {
-                    c.camera.enterVr(function (err) {
-                        if (err) {message(err);}
-                        message("");
-                    });
-                } else {
-                    message("WebVR not available")
-                }
-            };
-
-            app.mouse.on("mousedown", function () {
-                activate();
-            });
-
-            if (app.touch) {
-                app.touch.on("touchend", function () {
-                    if (!c.camera.vrDisplay) {
-                        // if not in VR, activate
-                        activate();
+            if (app.xr.supported) {
+                var activate = function () {
+                    if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+                        c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, function (err) {
+                            if (err) message("WebXR Immersive VR failed to start: " + err.message);
+                        });
                     } else {
-                        // otherwise reset camera
-                        c.camera.vrDisplay.reset();
+                        message("Immersive VR is not available");
+                    }
+                };
+
+                app.mouse.on("mousedown", function () {
+                    if (! app.xr.active)
+                        activate();
+                });
+
+                if (app.touch) {
+                    app.touch.on("touchend", function (evt) {
+                        if (! app.xr.active) {
+                            // if not in VR, activate
+                            activate();
+                        } else {
+                            // otherwise reset camera
+                            c.camera.endXr();
+                        }
+
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                    });
+                }
+
+                // end session by keyboard ESC
+                app.keyboard.on('keydown', function (evt) {
+                    if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+                        app.xr.end();
                     }
                 });
-            }
 
-            app.vr.on("ready", function (displays) {
-                message("VRDisplays: " + displays.length);
-            });
+                app.xr.on('start', function () {
+                    message("Immersive VR session has started");
+                });
+                app.xr.on('end', function () {
+                    message("Immersive VR session has ended");
+                });
+                app.xr.on('available:' + pc.XRTYPE_VR, function (available) {
+                    message("Immersive VR is " + (available ? 'available' : 'unavailable'));
+                });
+
+                if (! app.xr.isAvailable(pc.XRTYPE_VR)) {
+                    message("Immersive VR is not available");
+                }
+            } else {
+                message("WebXR is not supported");
+            }
         </script>
     </body>
 </html>

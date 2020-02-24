@@ -1587,6 +1587,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#enableVr
          * @description Create and assign a {@link pc.VrManager} object to allow this application render in VR.
@@ -1598,6 +1600,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.Application#disableVr
          * @description Destroy the {@link pc.VrManager}.
@@ -1820,7 +1824,7 @@ Object.assign(pc, function () {
             Application._currentApplication = app;
 
             if (frameRequest) {
-                cancelAnimationFrame(frameRequest);
+                window.cancelAnimationFrame(frameRequest);
                 frameRequest = null;
             }
 
@@ -1841,7 +1845,7 @@ Object.assign(pc, function () {
             } else if (app.xr.session) {
                 frameRequest = app.xr.session.requestAnimationFrame(app.tick);
             } else {
-                frameRequest = requestAnimationFrame(app.tick);
+                frameRequest = window.requestAnimationFrame(app.tick);
             }
 
             if (app.graphicsDevice.contextLost)
@@ -1852,7 +1856,7 @@ Object.assign(pc, function () {
             // #endif
 
             if (frame) {
-                app.xr.calculateViews(frame);
+                app.xr.update(frame);
                 app.graphicsDevice.defaultFramebuffer = frame.session.renderState.baseLayer.framebuffer;
             } else {
                 app.graphicsDevice.defaultFramebuffer = null;

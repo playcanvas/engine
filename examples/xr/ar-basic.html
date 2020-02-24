@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>PlayCanvas Virtual Reality</title>
+        <title>PlayCanvas Basic AR</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
@@ -117,11 +117,11 @@
             if (app.xr.supported) {
                 var activate = function () {
                     if (app.xr.isAvailable(pc.XRTYPE_AR)) {
-                        c.camera.startXr(pc.XRTYPE_AR, function (err) {
+                        c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_VIEWER, function (err) {
                             if (err) message("WebXR Immersive AR failed to start: " + err.message);
                         });
                     } else {
-                        message("WebXR Immersive AR is not available");
+                        message("Immersive AR is not available");
                     }
                 };
 
@@ -150,17 +150,17 @@
                 });
 
                 app.xr.on('start', function () {
-                    message("WebXR Immersive AR session has started");
+                    message("Immersive AR session has started");
                 });
                 app.xr.on('end', function () {
-                    message("WebXR Immersive AR session has ended");
+                    message("Immersive AR session has ended");
                 });
                 app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
-                    message("WebXR Immersive AR is now " + (available ? 'available' : 'unavailable'));
+                    message("Immersive AR is " + (available ? 'available' : 'unavailable'));
                 });
 
                 if (! app.xr.isAvailable(pc.XRTYPE_AR)) {
-                    message("WebXR Immersive AR is not available");
+                    message("Immersive AR is not available");
                 }
             } else {
                 message("WebXR is not supported");

@@ -134,6 +134,8 @@ Object.assign(pc, function () {
     });
 
     /**
+     * @private
+     * @deprecated
      * @name pc.CameraComponent#vrDisplay
      * @type {pc.VrDisplay}
      * @description The {@link pc.VrDisplay} that the camera is current displaying to. This is set automatically by calls to {@link pc.CameraComponent#enterVr}
@@ -452,6 +454,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.CameraComponent#enterVr
          * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
@@ -468,6 +472,8 @@ Object.assign(pc, function () {
          * });
          */
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.CameraComponent#enterVr
          * @variation 2
@@ -529,6 +535,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.CameraComponent#exitVr
          * @description Attempt to stop presenting this camera.
@@ -564,14 +572,22 @@ Object.assign(pc, function () {
          * @description Attempt to start XR session with this camera
          * @param {string} type - The type of session. Can be one of the following:
          *
-         * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has limited features availability and is rendered into HTML element.
-         * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to VR device with best available tracking features.
-         * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to VR/AR device that is intended to be blended with real-world environment.
+         * * {@link pc.XRTYPE_INLINE}: Inline - always available type of session. It has limited feature availability and is rendered into HTML element.
+         * * {@link pc.XRTYPE_VR}: Immersive VR - session that provides exclusive access to the VR device with the best available tracking features.
+         * * {@link pc.XRTYPE_AR}: Immersive AR - session that provides exclusive access to the VR/AR device that is intended to be blended with the real-world environment.
          *
-         * @param {pc.callbacks.XrError} [callback] - Optional callback function called once session is started. The callback has one argument Error - it is null if successfully started XR session.
+         * @param {string} spaceType - reference space type. Can be one of the following:
+         *
+         * * {@link pc.XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking capabilities.
+         * * {@link pc.XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the viewer at the time of creation. It is meant for seated or basic local XR sessions.
+         * * {@link pc.XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin at the floor in a safe position for the user to stand. The y axis equals 0 at floor level. Floor level value might be estimated by the underlying platform. It is meant for seated or basic local XR sessions.
+         * * {@link pc.XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native origin at the floor, where the user is expected to move within a pre-established boundary.
+         * * {@link pc.XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is expected to move freely around their environment, potentially long distances from their starting point.
+         *
+         * @param {pc.callbacks.XrError} [callback] - Optional callback function called once the session is started. The callback has one argument Error - it is null if the XR session started successfully.
          * @example
          * // On an entity with a camera component
-         * this.entity.camera.startXr(pc.XRTYPE_VR, function (err) {
+         * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, function (err) {
          *     if (err) {
          *         // failed to start XR session
          *     } else {
@@ -579,8 +595,8 @@ Object.assign(pc, function () {
          *     }
          * });
          */
-        startXr: function (type, callback) {
-            this.system.app.xr.start(this, type, callback);
+        startXr: function (type, spaceType, callback) {
+            this.system.app.xr.start(this, type, spaceType, callback);
         },
 
         /**
