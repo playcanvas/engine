@@ -33,8 +33,7 @@ var categories = [
             "shader-burn",
             "shader-toon",
             "shader-wobble",
-            "texture-basis",
-            "virtual-reality"
+            "texture-basis"
         ]
     }, {
         name: "input",
@@ -76,11 +75,11 @@ var categories = [
     }, {
         name: "xr",
         examples: [
-            'augmented-reality-basic',
-            'virtual-reality-basic',
-            'xr-picking',
+            'ar-basic',
+            'vr-basic',
             'vr-controllers',
-            'vr-movement'
+            'vr-movement',
+            'xr-picking'
         ]
     }
 ];
