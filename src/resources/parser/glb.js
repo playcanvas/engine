@@ -103,18 +103,12 @@ Object.assign(pc, function () {
                 'POSITION'  : pc.SEMANTIC_POSITION,
                 'NORMAL'    : pc.SEMANTIC_NORMAL,
                 'TANGENT'   : pc.SEMANTIC_TANGENT,
-                'BINORMAL'   : pc.SEMANTIC_BINORMAL,
+                'BINORMAL'  : pc.SEMANTIC_BINORMAL,
                 'COLOR_0'   : pc.SEMANTIC_COLOR,
                 'JOINTS_0'  : pc.SEMANTIC_BLENDINDICES,
                 'WEIGHTS_0' : pc.SEMANTIC_BLENDWEIGHT,
                 'TEXCOORD_0': pc.SEMANTIC_TEXCOORD0,
-                'TEXCOORD_1': pc.SEMANTIC_TEXCOORD1,
-                'TEXCOORD_2': pc.SEMANTIC_TEXCOORD2,
-                'TEXCOORD_3': pc.SEMANTIC_TEXCOORD3,            
-                'TEXCOORD_4': pc.SEMANTIC_TEXCOORD4,
-                'TEXCOORD_5': pc.SEMANTIC_TEXCOORD5,
-                'TEXCOORD_6': pc.SEMANTIC_TEXCOORD6,
-                'TEXCOORD_7': pc.SEMANTIC_TEXCOORD7,
+                'TEXCOORD_1': pc.SEMANTIC_TEXCOORD1
             };
 
             // order vertexDesc to match the rest of the engine
@@ -127,13 +121,7 @@ Object.assign(pc, function () {
                 pc.SEMANTIC_BLENDINDICES,
                 pc.SEMANTIC_BLENDWEIGHT,
                 pc.SEMANTIC_TEXCOORD0,
-                pc.SEMANTIC_TEXCOORD1,
-                pc.SEMANTIC_TEXCOORD2,
-                pc.SEMANTIC_TEXCOORD3,            
-                pc.SEMANTIC_TEXCOORD4,
-                pc.SEMANTIC_TEXCOORD5,
-                pc.SEMANTIC_TEXCOORD6,
-                pc.SEMANTIC_TEXCOORD7,
+                pc.SEMANTIC_TEXCOORD1
             ];
 
             // build vertex buffer format desc
