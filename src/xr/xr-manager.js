@@ -260,9 +260,6 @@ Object.assign(pc, function () {
         }).then(function (session) {
             self._onSessionStart(session, spaceType, callback);
         }).catch(function (ex) {
-            // #ifdef DEBUG
-            console.warn('WebXR: xr.requestSession failed to execute', ex);
-            // #endif
             self._camera.camera.xr = null;
             self._camera = null;
             self._type = null;
@@ -333,9 +330,6 @@ Object.assign(pc, function () {
             self.fire('available', type, available);
             self.fire('available:' + type, available);
         }).catch(function (ex) {
-            // #ifdef DEBUG
-            console.warn('WebXR: xr.isSessionSupported failed to execute', ex);
-            // #endif
             self.fire('error', ex);
         });
     };
@@ -408,9 +402,6 @@ Object.assign(pc, function () {
             if (callback) callback(null);
             self.fire('start');
         }).catch(function (ex) {
-            // #ifdef DEBUG
-            console.warn('WebXR: session.requestReferenceSpace failed to execute', ex);
-            // #endif
             failed = true;
             session.end();
             if (callback) callback(ex);

@@ -155,7 +155,7 @@
                 });
 
                 if (app.touch) {
-                    app.touch.on("touchend", function () {
+                    app.touch.on("touchend", function (evt) {
                         if (! app.xr.active) {
                             // if not in VR, activate
                             activate();
@@ -163,6 +163,9 @@
                             // otherwise reset camera
                             c.camera.endXr();
                         }
+
+                        evt.event.preventDefault();
+                        evt.event.stopPropagation();
                     });
                 }
 
