@@ -110,14 +110,14 @@
             var SIZE = 4;
             for (var x = 0; x < SIZE; x++) {
                 for (var y = 0; y < SIZE; y++) {
-                    createCube(2*x - SIZE, -1, 2*y - SIZE);
+                    createCube(2*x - SIZE, 0.25, 2*y - SIZE);
                 }
             }
 
             if (app.xr.supported) {
                 var activate = function () {
                     if (app.xr.isAvailable(pc.XRTYPE_AR)) {
-                        c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_VIEWER, function (err) {
+                        c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, function (err) {
                             if (err) message("WebXR Immersive AR failed to start: " + err.message);
                         });
                     } else {
@@ -131,7 +131,7 @@
                 });
 
                 if (app.touch) {
-                    app.touch.on("touchend", function () {
+                    app.touch.on("touchend", function (evt) {
                         if (! app.xr.active) {
                             // if not in VR, activate
                             activate();
@@ -139,6 +139,9 @@
                             // otherwise reset camera
                             c.camera.endXr();
                         }
+
+                        evt.event.preventDefault();
+                        evt.event.stopPropagation();
                     });
                 }
 
