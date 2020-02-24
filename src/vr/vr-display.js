@@ -1,5 +1,6 @@
 Object.assign(pc, function () {
     /**
+     * @private
      * @class
      * @name pc.VrDisplay
      * @augments pc.EventHandler
@@ -104,6 +105,7 @@ Object.assign(pc, function () {
 
     Object.assign(VrDisplay.prototype, {
         /**
+         * @private
          * @function
          * @name pc.VrDisplay#destroy
          * @description Destroy this display object.
@@ -115,6 +117,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.VrDisplay#poll
          * @description Called once per frame to update the current status from the display. Usually called by {@link pc.VrManager}.
@@ -213,6 +216,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.VrDisplay#requestPresent
          * @description Try to present full screen VR content on this display.
@@ -238,6 +242,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.VrDisplay#exitPresent
          * @description Try to stop presenting VR content on this display.
@@ -262,6 +267,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.VrDisplay#requestAnimationFrame
          * @description Used in the main application loop instead of the regular `window.requestAnimationFrame`. Usually only called from inside {@link pc.Application}.
@@ -272,6 +278,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.VrDisplay#submitFrame
          * @description Called when animation update is complete and the frame is ready to be sent to the display. Usually only called from inside {@link pc.Application}.
@@ -281,6 +288,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.VrDisplay#reset
          * @description Called to reset the pose of the pc.VrDisplay. Treating its current pose as the origin/zero. This should only be called in 'sitting' experiences.
@@ -290,6 +298,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.VrDisplay#setClipPlanes
          * @description Set the near and far depth plans of the display. This enables mapping of values in the
@@ -305,6 +314,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.VrDisplay#getFrameData
          * @description Return the current frame data that is updated during polling.

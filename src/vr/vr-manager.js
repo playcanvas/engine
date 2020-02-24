@@ -1,5 +1,6 @@
 Object.assign(pc, function () {
     /**
+     * @private
      * @class
      * @name pc.VrManager
      * @augments pc.EventHandler
@@ -46,6 +47,7 @@ Object.assign(pc, function () {
     VrManager.prototype.constructor = VrManager;
 
     /**
+     * @private
      * @event
      * @name pc.VrManager#displayconnect
      * @description Fired when an VR display is connected.
@@ -57,6 +59,7 @@ Object.assign(pc, function () {
      */
 
     /**
+     * @private
      * @event
      * @name pc.VrManager#displaydisconnect
      * @description Fired when an VR display is disconnected.
@@ -68,6 +71,7 @@ Object.assign(pc, function () {
      */
 
     /**
+     * @private
      * @static
      * @name pc.VrManager.isSupported
      * @type {boolean}
@@ -91,6 +95,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.VrManager#destroy
          * @description Remove events and clear up manager.
@@ -100,6 +105,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.VrManager#poll
          * @description Called once per frame to poll all attached displays.
