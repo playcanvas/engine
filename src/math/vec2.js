@@ -424,14 +424,6 @@ Object.assign(pc, (function () {
      * @type {pc.Vec2}
      * @description A constant vector set to [1, 1].
      */
-    Object.defineProperty(Vec2, 'ONE', {
-        get: (function () {
-            var one = new Vec2(1, 1);
-            return function () {
-                return one;
-            };
-        }())
-    });
 
     /**
      * @field
@@ -441,14 +433,15 @@ Object.assign(pc, (function () {
      * @type {pc.Vec2}
      * @description A constant vector set to [1, 0].
      */
-    Object.defineProperty(Vec2, 'RIGHT', {
-        get: (function () {
-            var right = new Vec2(1, 0);
-            return function () {
-                return right;
-            };
-        }())
-    });
+
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @name pc.Vec2.LEFT
+     * @type {pc.Vec2}
+     * @description A constant vector set to [-1, 0].
+     */
 
     /**
      * @field
@@ -458,14 +451,15 @@ Object.assign(pc, (function () {
      * @type {pc.Vec2}
      * @description A constant vector set to [0, 1].
      */
-    Object.defineProperty(Vec2, 'UP', {
-        get: (function () {
-            var down = new Vec2(0, 1);
-            return function () {
-                return down;
-            };
-        }())
-    });
+
+     /**
+      * @field
+      * @static
+      * @readonly
+      * @name pc.Vec2.DOWN
+      * @type {pc.Vec2}
+      * @description A constant vector set to [0, -1].
+      */
 
     /**
      * @field
@@ -475,13 +469,14 @@ Object.assign(pc, (function () {
      * @type {pc.Vec2}
      * @description A constant vector set to [0, 0].
      */
-    Object.defineProperty(Vec2, 'ZERO', {
-        get: (function () {
-            var zero = new Vec2(0, 0);
-            return function () {
-                return zero;
-            };
-        }())
+
+    Object.defineProperties(Vec2, {
+        ZERO: { value: new Vec2(0, 0) },
+        ONE: { value: new Vec2(1, 1) },
+        UP: { value: new Vec2(0, 1) },
+        DOWN: { value: new Vec2(0, -1) },
+        RIGHT: { value: new Vec2(1, 0) },
+        LEFT: { value: new Vec2(-1, 0) }
     });
 
     return {
