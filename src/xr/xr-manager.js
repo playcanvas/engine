@@ -325,6 +325,10 @@ Object.assign(pc, function () {
     XrManager.prototype._sessionSupportCheck = function (type) {
         var self = this;
 
+        // do not check AR as Specs are unstable
+        if (type === sessionTypes.XRTYPE_AR)
+            return;
+
         navigator.xr.isSessionSupported(type).then(function (available) {
             if (self._available[type] === available)
                 return;
