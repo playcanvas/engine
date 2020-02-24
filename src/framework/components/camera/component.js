@@ -134,6 +134,8 @@ Object.assign(pc, function () {
     });
 
     /**
+     * @private
+     * @deprecated
      * @name pc.CameraComponent#vrDisplay
      * @type {pc.VrDisplay}
      * @description The {@link pc.VrDisplay} that the camera is current displaying to. This is set automatically by calls to {@link pc.CameraComponent#enterVr}
@@ -452,6 +454,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.CameraComponent#enterVr
          * @description Attempt to start presenting this camera to a {@link pc.VrDisplay}.
@@ -468,6 +472,8 @@ Object.assign(pc, function () {
          * });
          */
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.CameraComponent#enterVr
          * @variation 2
@@ -529,6 +535,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.CameraComponent#exitVr
          * @description Attempt to stop presenting this camera.
