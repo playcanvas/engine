@@ -43,7 +43,7 @@
         material2.diffuse = new pc.Color(0, 1, 1);
         material2.update();
 
-        // create a single BatchGroup. Make it dynamic to allowing batched meshes to be freely moved every frame.
+        // create a single BatchGroup. Make it dynamic to allow batched meshes to be freely moved every frame.
         var batchGroup = pc.app.batcher.addGroup("Meshes", true, 100);
 
         // create various primitive instances using one of the two materials
@@ -62,7 +62,7 @@
             // randomly assign a material
             entity.model.material = Math.random() < 0.5 ? material1 : material2;
 
-            // add the entity to the batchGroup - this instructs engine to try and render these meshes in small number of draw calls
+            // add the entity to the batchGroup - this instructs engine to try and render these meshes in a small number of draw calls
             // there will be at least 2 draw calls, one for each material
             entity.model.batchGroupId = batchGroup.id;
 
