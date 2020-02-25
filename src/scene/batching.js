@@ -629,7 +629,7 @@ Object.assign(pc, function () {
             var maxNumVertices = 0xffffffff;
             var indexFormat = -1;
             var ib0 = meshInstancesLeftA[0].mesh.indexBuffer;
-            if (ib0 && ib0.length > 0) {
+            if (ib0 && ib0.length > 0 && ib0[0]) {
                 indexFormat = ib0[0].getFormat();
                 maxNumVertices = 0xffffffff >>> (32 - (8 * ib0[0].bytesPerIndex));
             }
@@ -676,7 +676,7 @@ Object.assign(pc, function () {
                 // split by matching index buffer format
                 var currentIndexFormat = -1;
                 ib0 = mi.mesh.indexBuffer;
-                if (ib0 && ib0.length > 0)
+                if (ib0 && ib0.length > 0 && ib0[0])
                     currentIndexFormat = ib0[0].getFormat();
                 if (currentIndexFormat != indexFormat) {
                     skipMesh(mi);
@@ -768,7 +768,7 @@ Object.assign(pc, function () {
                 }
             }
             mesh = meshInstances[i].mesh;
-            if (mesh.indexBuffer && mesh.indexBuffer.length > 0)
+            if (mesh.indexBuffer && mesh.indexBuffer.length > 0 && mesh.indexBuffer[0])
                 indexBufferFormat = mesh.indexBuffer[0].getFormat();
             elems = mesh.vertexBuffer.format.elements;
             numVerts = mesh.vertexBuffer.numVertices;
