@@ -93,6 +93,7 @@
 ../src/scene/sync-queue.js
 ../src/scene/texture-atlas.js
 ../src/scene/stencil-parameters.js
+../src/anim/anim.js
 ../src/anim/animation.js
 ../src/anim/skeleton.js
 ../src/sound/manager.js

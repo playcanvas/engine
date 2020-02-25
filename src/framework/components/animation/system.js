@@ -121,6 +121,13 @@ Object.assign(pc, function () {
 
                             skeleton.updateGraph();
                         }
+
+                        // anim controller update
+                        var animController = componentData.animController;
+                        var model = componentData.model;
+                        if (animController && model) {
+                            animController.update(dt);
+                        }
                     }
                 }
             }

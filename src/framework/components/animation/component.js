@@ -57,17 +57,25 @@ Object.assign(pc, function () {
             data.currAnim = name;
 
             if (data.model) {
-                data.blending = blendTime > 0 && data.prevAnim;
-                if (data.blending) {
-                    // Blend from the current time of the current animation to the start of
-                    // the newly specified animation over the specified blend time period.
-                    data.blendTime = blendTime;
-                    data.blendTimeRemaining = blendTime;
-                    data.fromSkel.animation = data.animations[data.prevAnim];
-                    data.fromSkel.addTime(data.skeleton._time);
-                    data.toSkel.animation = data.animations[data.currAnim];
-                } else {
-                    data.skeleton.animation = data.animations[data.currAnim];
+                if (data.skeleton) {
+                    data.blending = blendTime > 0 && data.prevAnim;
+                    if (data.blending) {
+                        // Blend from the current time of the current animation to the start of
+                        // the newly specified animation over the specified blend time period.
+                        data.blendTime = blendTime;
+                        data.blendTimeRemaining = blendTime;
+                        data.fromSkel.animation = data.animations[data.prevAnim];
+                        data.fromSkel.addTime(data.skeleton._time);
+                        data.toSkel.animation = data.animations[data.currAnim];
+                    } else {
+                        data.skeleton.animation = data.animations[data.currAnim];
+                    }
+                }
+
+                if (data.animController) {
+                    if (data.animController.findClip(data.currAnim) === -1) {
+                        data.animController.addClip(new pc.AnimClip(data.animations[data.currAnim], 0, true, 1.0, true));
+                    }
                 }
             }
 
@@ -90,11 +98,16 @@ Object.assign(pc, function () {
             if (model) {
                 // Create skeletons
                 var graph = model.getGraph();
+
+                /*
                 data.fromSkel = new pc.Skeleton(graph);
                 data.toSkel = new pc.Skeleton(graph);
                 data.skeleton = new pc.Skeleton(graph);
                 data.skeleton.looping = data.loop;
                 data.skeleton.setGraph(graph);
+                */
+
+                data.animController = new pc.AnimController(graph);
             }
             data.model = model;
 
@@ -243,6 +256,11 @@ Object.assign(pc, function () {
                 this.data.skeleton.currentTime = 0;
                 this.data.skeleton.animation = null;
             }
+            if (this.data.animController) {
+                for (var i=0; i<this.data.animController.numClips; ++i) {
+                    this.data.animController.getClip(i).pause();
+                }
+            }
         },
 
         onSetAnimations: function (name, oldValue, newValue) {
@@ -253,7 +271,7 @@ Object.assign(pc, function () {
             if (modelComponent) {
                 var m = modelComponent.model;
                 if (m && m !== data.model) {
-                    this.entity.animation.setModel(m);
+                    this.setModel(m);
                 }
             }
 
@@ -299,12 +317,26 @@ Object.assign(pc, function () {
             if (this.data.skeleton) {
                 this.data.skeleton.looping = this.data.loop;
             }
+
+            if (this.data.animController) {
+                for (var i=0; i<this.data.animController.numClips; ++i) {
+                    this.data.animController.getClip(i).loop = this.data.loop;
+                }
+            }
         },
 
         onSetCurrentTime: function (name, oldValue, newValue) {
-            this.data.skeleton.currentTime = newValue;
-            this.data.skeleton.addTime(0); // update
-            this.data.skeleton.updateGraph();
+            if (this.data.skeleton) {
+                this.data.skeleton.currentTime = newValue;
+                this.data.skeleton.addTime(0); // update
+                this.data.skeleton.updateGraph();
+            }
+
+            if (this.data.animController) {
+                for (var i=0; i<this.data.animController.numClips; ++i) {
+                    this.data.animController.getClip(i).time = newValue;
+                }
+            }
         },
 
         onEnable: function () {
@@ -345,6 +377,8 @@ Object.assign(pc, function () {
             delete this.data.skeleton;
             delete this.data.fromSkel;
             delete this.data.toSkel;
+
+            delete this.animController;
         }
     });
 

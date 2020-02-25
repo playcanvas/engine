@@ -19,6 +19,9 @@ Object.assign(pc, function () {
         this.blendTime = 0;
         this.blendTimeRemaining = 0;
         this.playing = false;
+
+        // new
+        this.animController = null;
     };
 
     return {

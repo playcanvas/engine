@@ -1148,6 +1148,85 @@ Object.assign(pc, function () {
         return anim;
     };
 
+    // create the anim structure
+    var createAnim = function (animationData, accessors, bufferViews, nodes, buffers) {
+
+        // create animation data block for the accessor
+        var createAnimData = function (accessor) {
+            var data = getAccessorData(accessor, bufferViews, buffers);
+            // TODO: this assumes data is tightly packed, handle the case data is interleaved
+            return new pc.AnimData(getNumComponents(accessor.type), new data.constructor(data));
+        };
+
+        var interpMap = {
+            "STEP": pc.AnimInterpolation.STEP,
+            "LINEAR": pc.AnimInterpolation.LINEAR,
+            "CUBICSPLINE": pc.AnimInterpolation.CUBIC
+        }
+
+        var pathMap = {
+            "translation": "_translation",
+            "rotation": "_rotation",
+            "scale": "_scale"
+        }
+
+        var inputMap = { };
+        var inputs = [];
+
+        var outputMap = { };
+        var outputs = [];
+
+        var curves = [];
+
+        // convert samplers
+        for (var i=0; i<animationData.samplers.length; ++i) {
+            var sampler = animationData.samplers[i];
+
+            // get input data
+            if (!inputMap.hasOwnProperty(sampler.input)) {
+                inputMap[sampler.input] = inputs.length;
+                inputs.push(createAnimData(accessors[sampler.input]));
+            }
+
+            // get output data
+            if (!outputMap.hasOwnProperty(sampler.output)) {
+                outputMap[sampler.output] = outputs.length;
+                outputs.push(createAnimData(accessors[sampler.output]));
+            }
+
+            // create curve
+            curves.push(new pc.AnimCurve(
+                inputMap[sampler.input],
+                outputMap[sampler.output],
+                interpMap[sampler.interpolation]));
+        }
+
+        // convert nodes -> anim targets
+        var targets = nodes.map(function (node) {
+            return new pc.AnimTarget(node.name, -1, -1, -1);
+        });
+
+        // convert anim target channels
+        for (var i=0; i<animationData.channels.length; ++i) {
+            var channel = animationData.channels[i];
+            var target = channel.target;
+            targets[target.node][pathMap[target.path]] = channel.sampler;
+        }
+
+        // calculate duration of the animation as maximum time value
+        var duration = inputs.reduce(function (value, input) {
+            return Math.max(value, input[input.length - 1]);
+        });
+
+        return new pc.AnimTrack(
+            animationData.hasOwnProperty('name') ? animationData.name : ("animation_" + globals.animId++),
+            duration,
+            inputs,
+            outputs,
+            curves,
+            targets);
+    };
+
     var createNode = function (nodeData) {
         var entity = new pc.GraphNode();
 
@@ -1234,7 +1313,8 @@ Object.assign(pc, function () {
             return [];
         } else {
             return gltf.animations.map(function (animationData) {
-                return createAnimation(animationData, gltf.accessors, gltf.bufferViews, nodes, buffers);
+                //return createAnimation(animationData, gltf.accessors, gltf.bufferViews, nodes, buffers);
+                return createAnim(animationData, gltf.accessors, gltf.bufferViews, nodes, buffers);
             });
         }
     }
