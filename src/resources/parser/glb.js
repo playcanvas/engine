@@ -1215,8 +1215,9 @@ Object.assign(pc, function () {
 
         // calculate duration of the animation as maximum time value
         var duration = inputs.reduce(function (value, input) {
-            return Math.max(value, input[input.length - 1]);
-        });
+            var data  = input._data;
+            return Math.max(value, data.length === 0 ? 0 : data[data.length - 1]);
+        }, 0);
 
         return new pc.AnimTrack(
             animationData.hasOwnProperty('name') ? animationData.name : ("animation_" + globals.animId++),

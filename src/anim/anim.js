@@ -19,8 +19,8 @@ Object.assign(pc, function () {
     // cache data for the evaluation of a single curve
     var AnimCache = function () {
         // these members are calculated per-segment
-        this._left = -Infinity;     // time of left knot
-        this._right = Infinity;     // time of right knot
+        this._left = Infinity;     // time of left knot
+        this._right = -Infinity;     // time of right knot
         this._len = 0;              // distance between current knots
         this._recip = 0;            // reciprocal len
         this._p0 = 0;               // index of the left knot
@@ -39,11 +39,7 @@ Object.assign(pc, function () {
 
     Object.assign(AnimCache.prototype, {
         update: function (time, input) {
-            // calculate normalized time
-            this._t = (time - this._left) * this._recip;
-            this._hermiteValid = false;
-
-            if (time < this._left || time > this._right) {
+            if (time < this._left || time >= this._right) {
                 // recalculate knots
                 var len = input.length;
                 if (!len) {
@@ -81,6 +77,10 @@ Object.assign(pc, function () {
                     }
                 }
             }
+
+            // calculate normalized time
+            this._t = (time - this._left) * this._recip;
+            this._hermiteValid = false;
         },
 
         _findKey: function (time, input) {
@@ -233,16 +233,15 @@ Object.assign(pc, function () {
 
             // evaluate inputs on the snapshot cache
             for (var i=0; i<inputs.length; ++i) {
-                cache[i].update(time, inputs[i].data);
+                cache[i].update(time, inputs[i]._data);
             }
 
             // evalute curve outputs
             for (var i=0; i<curves.length; ++i) {
                 var curve = curves[i];
                 var output = outputs[curve._output];
-                var cache = cache[curve._input];
                 var result = results[i];
-                cache[i].eval(result, curve._interpolation, output);
+                cache[curve._input].eval(result, curve._interpolation, output);
             }
         }
     });
@@ -270,9 +269,9 @@ Object.assign(pc, function () {
         var outputs = animTrack._outputs;
         for (var i=0; i<curves.length; ++i) {
             var curve = curves[i];
-            var output = outputs[curve.output];
+            var output = outputs[curve._output];
             var storage = [];
-            for (var j=0; j<output.dimension; ++j) {
+            for (var j=0; j<output._dimension; ++j) {
                 storage[j] = 0;
             }
             this._results[i] = storage;
@@ -414,7 +413,7 @@ Object.assign(pc, function () {
     Object.assign(AnimController.prototype, {
         addClip: function (clip) {
             var targets = clip.track.targets;
-            var snapshot = clip.clip.snapshot;
+            var snapshot = clip.snapshot;
 
             // create links between the target node and animation curve results for t, r, s
             var links = [ ];
@@ -422,12 +421,15 @@ Object.assign(pc, function () {
                 var target = targets[i];
                 var name = target.name;
                 if (this._nodes.hasOwnProperty(name)) {
-                    links.push({
+                    var link = {
                         node: this._nodes[name],
                         translation: target.translation !== -1 ? snapshot._results[target.translation] : null,
                         rotation: target.rotation !== -1 ? snapshot._results[target.rotation] : null,
                         scale: target.scale !== -1 ? snapshot._results[target.scale] : null
-                    });
+                    };
+                    if (link.translation || link.rotation || link.scale) {
+                        links.push(link);
+                    }
                 }
             }
 
@@ -462,15 +464,11 @@ Object.assign(pc, function () {
         update: function (deltaTime) {
             var clips = this._clips;
 
-            // update clips
-            for (var i=0; i<clips.length; ++i) {
-                clips[i].clip._update(deltaTime);
-            }
-
             // apply clips to nodes
-            var clips = this._clips;
             for (var c=0; c<clips.length; ++c) {
                 var clip = clips[c];
+
+                clip._update(deltaTime);
 
                 for (var i=0; i<clip.links.length; ++i) {
                     var link = clip.links[i];
