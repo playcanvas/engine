@@ -1043,10 +1043,15 @@ Object.assign(pc, function () {
         meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
         meshInstance.parameters = batch.origMeshInstances[0].parameters;
         meshInstance.isStatic = batch.origMeshInstances[0].isStatic;
-        meshInstance.cull = batch.origMeshInstances[0].cull;
         meshInstance.layer = batch.origMeshInstances[0].layer;
         meshInstance._staticLightList = batch.origMeshInstances[0]._staticLightList;
         meshInstance._shaderDefs = batch.origMeshInstances[0]._shaderDefs;
+
+        // meshInstance culling - don't cull UI elements, as they use custom culling Component.isVisibleForCamera
+        meshInstance.cull = batch.origMeshInstances[0].cull;
+        var batchGroup = this._batchGroups[batchGroupId];
+        if (batchGroup && batchGroup._ui)
+            meshInstance.cull = false;
 
         if (dynamic) {
             // Create skinInstance
