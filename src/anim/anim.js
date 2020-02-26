@@ -452,12 +452,21 @@ Object.assign(pc, function () {
             // decrement node drivers
             var links = this._clips[index].links;
             var nodeDrivers = this._nodeDrivers;
+            var basePose = this._basePose;
+            var activePose = this._activePose;
             for (var i=0; i<links.length; ++i) {
-                nodeDrivers[links[i].node]--;
+                var node = links[i].node;
+                nodeDrivers[node]--;
 
-                // TODO: if the node is no longer driven as a result 
-                // of the clip being removed, it's base pose state
-                // must be copied to the active state
+                // if the node is no longer driven by a clip as a result 
+                // of this removal, then we must reset the tree to the
+                // base pose
+                if (nodeDrivers[node] === 0) {
+                    for (var j=0; j<10; ++j) {
+                        activePose[i*10+j] = basePose[i*10+j];
+                    }
+                    this._applyActiveNodeToTree(node);
+                }
             }
 
             // remove clip
@@ -505,13 +514,13 @@ Object.assign(pc, function () {
                 if (weight >= 1.0) {
                     // overwrite active pose
                     for (var i=0; i<links.length; ++i) {
-                        this._setLink(links[i]);
+                        this._setActive(links[i]);
                     }
                 } else if (weight > 0) {
                     // blend onto active pose
                     var oneMinusWeight = 1.0 - weight;
                     for (var i=0; i<links.length; ++i) {
-                        this._blendLink(links[i], weight, oneMinusWeight);
+                        this._blendActive(links[i], weight, oneMinusWeight);
                     }
                 }
             }
@@ -519,36 +528,13 @@ Object.assign(pc, function () {
             // apply activePose to the node hierarchy
             for (var i=0; i<nodes.length; ++i) {
                 if (nodeDrivers[i] > 0) {
-                    var node = nodes[i];
-                    var p = node.localPosition;
-                    var r = node.localRotation;
-                    var s = node.localScale;
-                    var idx = i * 10;
-                    p.x = activePose[idx++];
-                    p.y = activePose[idx++];
-                    p.z = activePose[idx++];
-                    r.x = activePose[idx++];
-                    r.y = activePose[idx++];
-                    r.z = activePose[idx++];
-                    r.w = activePose[idx++];
-                    s.x = activePose[idx++];
-                    s.y = activePose[idx++];
-                    s.z = activePose[idx++];
-
-                    // TODO: decide at what point to renormalize quaternions, options are:
-                    // after curve evaluation
-                    // after link blending
-                    // right at the end
-                    // all of the above
-
-                    // TODO: this is not an optimal way of dirtifying the hierarchy
-                    node._dirtifyLocal();
+                    this._applyActiveNodeToTree(i);
                 }
             }
         }
 
         // set the active pose t, r, s for the specified link into the active pose
-        , _setLink: function (link) {
+        , _setActive: function (link) {
             var activePose = this._activePose;
             var idx = link.node * 10;
             var t = link.translation;
@@ -560,7 +546,7 @@ Object.assign(pc, function () {
         }
 
         // blend the t, r, s for the specified link into the active pose
-        , _blendLink: function (link, weight, oneMinusWeight) {
+        , _blendActive: function (link, weight, oneMinusWeight) {
             var activePose = this._activePose;
             var idx = link.node * 10;
             var t = link.translation;
@@ -581,6 +567,35 @@ Object.assign(pc, function () {
                     activePose[idx+7+i] = activePose[idx+7+i] * oneMinusWeight + s[i] * weight;
                 }
             }
+        },
+
+        _applyActiveNodeToTree: function (nodeIndex) {
+            var activePose = this._activePose;
+            var node = this._nodes[nodeIndex];
+            var p = node.localPosition;
+            var r = node.localRotation;
+            var s = node.localScale;
+
+            var idx = nodeIndex * 10;
+            p.x = activePose[idx++];
+            p.y = activePose[idx++];
+            p.z = activePose[idx++];
+            r.x = activePose[idx++];
+            r.y = activePose[idx++];
+            r.z = activePose[idx++];
+            r.w = activePose[idx++];
+            s.x = activePose[idx++];
+            s.y = activePose[idx++];
+            s.z = activePose[idx++];
+
+            // TODO: decide at what point to renormalize quaternions, options are:
+            // after curve evaluation
+            // after link blending
+            // right at the end
+            // all of the above
+
+            // TODO: this is not an optimal way of dirtifying the hierarchy
+            node._dirtifyLocal();
         }
     });
 
