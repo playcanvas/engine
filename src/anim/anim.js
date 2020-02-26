@@ -373,17 +373,32 @@ Object.assign(pc, function () {
     // stores a set of clips and blends between them
     var AnimController = function (graph) {
 
-        // build flat list of nodes
-        var nodes = { };
+        // build list of skeleton nodes
+        var nodesMap = { };
+        var nodes = [ ];
+        var nodeDrivers = [ ];
+        var basePose = [ ];
+
         var flatten = function (node) {
-            nodes[node.name] = node;
+            var p = node.localPosition;
+            var r = node.localRotation;
+            var s = node.localScale;
+            nodesMap[node.name] = nodes.length;
+            nodes.push(node);
+            nodeDrivers.push(0);
+            basePose.splice(basePose.length, 0, p.x, p.y, p.z, r.x, r.y, r.z, r.w, s.x, s.y, s.z);
+
             for (var i=0; i<node.children.length; ++i) {
                 flatten(node.children[i]);
             }
         };
         flatten(graph);
 
-        this._nodes = nodes;
+        this._nodesMap = nodesMap;              // node name -> index
+        this._nodes = nodes;                    // list of nodes
+        this._nodeDrivers = nodeDrivers;        // number of curves applied to each node (those with 0 can be skipped)
+        this._basePose = basePose;              // list of bind pose data
+        this._activePose = basePose.slice();
         this._clips = [ ];
     };
 
@@ -391,15 +406,16 @@ Object.assign(pc, function () {
         addClip: function (clip) {
             var targets = clip.track.targets;
             var snapshot = clip.snapshot;
+            var nodesMap = this._nodesMap;
 
-            // create links between the target node and animation curve results for t, r, s
+            // create links between the target node and animation curve outputs for t, r, s
             var links = [ ];
             for (var i=0; i<targets.length; ++i) {
                 var target = targets[i];
                 var name = target.name;
-                if (this._nodes.hasOwnProperty(name)) {
+                if (nodesMap.hasOwnProperty(name)) {
                     var link = {
-                        node: this._nodes[name],
+                        node: nodesMap[name],
                         translation: target.translation !== -1 ? snapshot._results[target.translation] : null,
                         rotation: target.rotation !== -1 ? snapshot._results[target.rotation] : null,
                         scale: target.scale !== -1 ? snapshot._results[target.scale] : null
@@ -410,11 +426,18 @@ Object.assign(pc, function () {
                 }
             }
 
+            // add clip
             this._clips.push({
                 clip: clip,
                 links: links,
                 weight: 1.0
             });
+
+            // increment node drivers
+            var nodeDrivers = this._nodeDrivers;
+            for (var i=0; i<links.length; ++i) {
+                nodeDrivers[links[i].node]++;
+            }
         },
 
         numClips: function () {
@@ -422,6 +445,18 @@ Object.assign(pc, function () {
         },
 
         removeClip: function (index) {
+            // decrement node drivers
+            var links = this._clips[index].links;
+            var nodeDrivers = this._nodeDrivers;
+            for (var i=0; i<links.length; ++i) {
+                nodeDrivers[links[i].node]--;
+
+                // TODO: if the node is no longer driven as a result 
+                // of the clip being removed, it's base pose state
+                // must be copied to the active state
+            }
+
+            // remove clip
             this._clips.splice(index, 1);
         },
 
@@ -440,44 +475,115 @@ Object.assign(pc, function () {
 
         update: function (deltaTime) {
             var clips = this._clips;
+            var nodes = this._nodes;
+            var nodeDrivers = this._nodeDrivers;
+            var basePose = this._basePose;
+            var activePose = this._activePose;
 
-            // apply clips to nodes
+            // reset base pose on active nodes
+            for (var i=0; i<nodes.length; ++i) {
+                if (nodeDrivers[i] > 0) {
+                    for (var j=0; j<10; ++j) {
+                        activePose[i*10+j] = basePose[i*10+j];
+                    }
+                }
+            }
+
+            // blend animation clips onto the activePose
             for (var c=0; c<clips.length; ++c) {
                 var clip = clips[c];
+                var links = clip.links;
 
+                // update animation clip
                 clip.clip._update(deltaTime);
 
-                for (var i=0; i<clip.links.length; ++i) {
-                    var link = clip.links[i];
-                    var node = link.node;
-                    // TODO: these should blend, rotation should renormalize
-                    if (link.translation) {
-                        this._copyVec3(node.localPosition, link.translation);
+                var weight = clip.weight;
+                if (weight >= 1.0) {
+                    // overwrite active pose
+                    for (var i=0; i<links.length; ++i) {
+                        this._setActive(links[i]);
                     }
-                    if (link.rotation) {
-                        this._copyQuat(node.localRotation, link.rotation);
+                } else if (weight > 0) {
+                    // blend onto active pose
+                    var oneMinusWeight = 1.0 - weight;
+                    for (var i=0; i<links.length; ++i) {
+                        this._blendActive(links[i], weight, oneMinusWeight);
                     }
-                    if (link.scale) {
-                        this._copyVec3(node.localScale, link.scale);
-                    }
+                }
+            }
+
+            // apply activePose to the node hierarchy
+            for (var i=0; i<nodes.length; ++i) {
+                if (nodeDrivers[i] > 0) {
+                    var node = nodes[i];
+                    var p = node.localPosition;
+                    var r = node.localRotation;
+                    var s = node.localScale;
+                    var idx = i * 10;
+                    p.x = activePose[idx++];
+                    p.y = activePose[idx++];
+                    p.z = activePose[idx++];
+                    r.x = activePose[idx++];
+                    r.y = activePose[idx++];
+                    r.z = activePose[idx++];
+                    r.w = activePose[idx++];
+                    s.x = activePose[idx++];
+                    s.y = activePose[idx++];
+                    s.z = activePose[idx++];
+
+                    // TODO: this is not an optimal way of dirtifying the hierarchy
                     node._dirtifyLocal();
                 }
             }
-        },
+        }
 
-        _copyVec3: function (dst, src) {
-            dst.x = src[0];
-            dst.y = src[1];
-            dst.z = src[2];
-        },
+        , _setActive: function (link) {
+            var activePose = this._activePose;
+            var idx = link.node * 10;
+            var t = link.translation;
+            var r = link.rotation;
+            var s = link.scale;
+            if (t) { for (var i=0; i<3; ++i) { activePose[idx+i] = t[i]; } }
+            if (r) { for (var i=0; i<4; ++i) { activePose[idx+3+i] = r[i]; } }
+            if (s) { for (var i=0; i<3; ++i) { activePose[idx+7+i] = s[i]; } }
+        }
 
-        _copyQuat: function (dst, src) {
-            dst.x = src[0];
-            dst.y = src[1];
-            dst.z = src[2];
-            dst.w = src[3];
+        , blendActive: function (link, weight, oneMinusWeight) {
+            var activePose = this._activePose;
+            var idx = link.node * 10;
+            var t = link.translation;
+            var r = link.rotation;
+            var s = link.scale;
+            if (t) {
+                for (var i=0; i<3; ++i) {
+                    activePose[idx+i] = activePose[idx+i] * oneMinusWeight + t[i] * weight;
+                }
+            }
+            if (r) {
+                for (var i=0; i<4; ++i) {
+                    activePose[idx+3+i] = activePose[idx+3+i] * oneMinusWeight + r[i] * weight;
+                }
+            }
+            if (s) {
+                for (var i=0; i<3; ++i) {
+                    activePose[idx+7+i] = activePose[idx+7+i] * oneMinusWeight + s[i] * weight;
+                }
+            }
         }
     });
+
+    AnimController._set = function (dst, dstIndex, src) {
+        for (var i=0; i<src.length; ++i) {
+            dst[dstIndex+i] = src[i];
+        }
+    };
+
+    AnimController._blend = function (dst, dstIndex, dstWeight, src, srcWeight) {
+        for (var i=0; i<src.length; ++i) {
+            dst[dstIndex+i] = dstWeight * dst[dstIndex+i] +
+                              srcWeight * src[i];
+        }
+    };
 
     return {
         AnimInterpolation: AnimInterpolation,

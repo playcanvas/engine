@@ -13,16 +13,22 @@ Object.assign(pc, function () {
         this._defaultMaterial = defaultMaterial;
         this.retryRequests = false;
 
-        this.addParser(new pc.JsonModelParser(this._device), function (url, data) {
-            return (pc.path.getExtension(url) === '.json');
-        }, function (url, data) {
-            return (pc.path.getExtension(url) === '.json');
-        });
-        this.addParser(new pc.GlbModelParser(this._device), function (url, data) {
-            return false;
-        }, function (url, data) {
-            return (pc.path.getExtension(url) === '.glb');
-        });
+        this.addParser(
+            new pc.JsonModelParser(this._device),
+            function (url, data) {
+                return (pc.path.getExtension(url) === '.json');
+            },
+            function (url, data) {
+                return (pc.path.getExtension(url) === '.json');
+            });
+        this.addParser(
+            new pc.GlbModelParser(this._device),
+            function (url, data) {
+                return false;
+            },
+            function (url, data) {
+                return (pc.path.getExtension(url) === '.glb');
+            });
     };
 
     Object.assign(ModelHandler.prototype, {
