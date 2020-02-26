@@ -166,29 +166,19 @@ Object.assign(pc, function () {
         this._scale = scale;
     };
 
-    /*
-    Object.assign(AnimTarget.prototype, {
-        get name() { return this._name },
-        get translation() { return this._translation },
-        get rotation() { return this._rotation },
-        get scale() { return this._scale }
-    });
-    */
-
-    Object.defineProperty(AnimTarget.prototype, 'name', {
-        get: function () { return this._name; }
-    });
-
-    Object.defineProperty(AnimTarget.prototype, 'translation', {
-        get: function () { return this._translation; }
-    });
-
-    Object.defineProperty(AnimTarget.prototype, 'rotation', {
-        get: function () { return this._rotation; }
-    });
-
-    Object.defineProperty(AnimTarget.prototype, 'scale', {
-        get: function () { return this._scale; }
+    Object.defineProperties(AnimTarget.prototype, {
+        name: {
+            get: function() { return this._name; }
+        },
+        translation: {
+            get: function() { return this._translation; }
+        },
+        rotation: {
+            get: function () { return this._rotation; }
+        },
+        scale: {
+            get: function() { return this._scale; }
+        }
     });
 
     // animation track
@@ -203,23 +193,19 @@ Object.assign(pc, function () {
         this._targets = targets;
     };
 
-    Object.defineProperty(AnimTrack.prototype, 'name', {
-        get: function () { return this._name; }
-    });
-
-    Object.defineProperty(AnimTrack.prototype, 'duration', {
-        get: function () { return this._duration; }
-    });
-
-    Object.defineProperty(AnimTrack.prototype, 'targets', {
-        get: function () { return this._targets; }
+    Object.defineProperties(AnimTrack.prototype, {
+        'name': {
+            get: function () { return this._name; }
+        },
+        'duration': {
+            get: function () { return this._duration; }
+        },
+        'targets': {
+            get: function () { return this._targets; }
+        }
     });
 
     Object.assign(AnimTrack.prototype, {
-        //get name() { return this._name },
-        //get duration() { return this._duration },
-        //get targets() { return this._targets },
-
         // evaluate all the curves in the track at the specified time and store
         // results in the snapshot instance.
         eval: function (time, snapshot) {
@@ -291,47 +277,31 @@ Object.assign(pc, function () {
         this._loop = loop;
     };
 
-    Object.defineProperty(AnimClip.prototype, 'name', {
-        get: function () { return this._track._name; }
-    });
-
-    Object.defineProperty(AnimClip.prototype, 'track', {
-        get: function () { return this._track; }
-    });
-
-    Object.defineProperty(AnimClip.prototype, 'snapshot', {
-        get: function () { return this._snapshot; }
-    });
-
-    Object.defineProperty(AnimClip.prototype, 'time', {
-        get: function () { return this._time; },
-        set: function (time) { this._time = time; }
-    });
-
-    Object.defineProperty(AnimClip.prototype, 'speed', {
-        get: function () { return this._speed; },
-        set: function (speed) { this._speed = speed; }
-    });
-
-    Object.defineProperty(AnimClip.prototype, 'loop', {
-        get: function () { return this._loop; },
-        set: function (loop) { this._loop = loop; }
+    Object.defineProperties(AnimClip.prototype, {
+        'name': {
+            get: function () { return this._track._name; }
+        },
+        'track': {
+            get: function () { return this._track; }
+        },
+        'snapshot': {
+            get: function () { return this._snapshot; }
+        },
+        'time': {
+            get: function () { return this._time; },
+            set: function (time) { this._time = time; }
+        },
+        'speed': {
+            get: function () { return this._speed; },
+            set: function (speed) { this._speed = speed; }
+        },
+        'loop': {
+            get: function () { return this._loop; },
+            set: function (loop) { this._loop = loop; }
+        }
     });
 
     Object.assign(AnimClip.prototype, {
-        /*
-        get name() { return this._track.name },
-        get track() { return this._track },
-        get snapshot() { return this._snapshot },
-        get time() { return this._time },
-        get speed() { return this._speed },
-        get loop() { return this._loop },
-
-        set time(time) { this._time = time; },
-        set speed(speed) { this._speed = speed; },
-        set loop(loop) { this._loop = loop; },
-        */
-
         _update: function (deltaTime) {
             if (!this._playing) {
                 return;

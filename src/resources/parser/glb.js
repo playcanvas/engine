@@ -1041,115 +1041,8 @@ Object.assign(pc, function () {
         return result;
     }
 
-    var createAnimation = function (animationData, accessors, bufferViews, nodes, buffers) {
-        var _insertKey = function (key, idx, keys, skip) {
-            if (idx === 0) {
-                keys.push(key);
-            } else if (keys[keys.length - 1].value.equals(key.value)) {
-                skip = key;
-            } else {
-                if (skip) {
-                    keys.push(skip);
-                }
-                skip = null;
-                keys.push(key);
-            }
-            return skip;
-        };
-    
-        var _insertKeysVec3 = function (keys, interpolation, times, values) {
-            var time, value, i;
-            var skip = null;
-            if (interpolation === "CUBICSPLINE") {
-                for (i = 0; i < times.length; i++) {
-                    time = times[i];
-                    value = new pc.Vec3(values[9 * i + 3], values[9 * i + 4], values[9 * i + 5]);
-                    skip = _insertKey(new pc.Keyframe(time, value), i, keys, skip);
-                }
-            } else {
-                for (i = 0; i < times.length; i++) {
-                    time = times[i];
-                    value = new pc.Vec3(values[3 * i + 0], values[3 * i + 1], values[3 * i + 2]);
-                    skip = _insertKey(new pc.Keyframe(time, value), i, keys, skip);
-                }
-            }
-        };
-    
-        var _insertKeysQuat = function (keys, interpolation, times, values) {
-            var time, value, i;
-            var skip = null;
-            if (interpolation === "CUBICSPLINE") {
-                for (i = 0; i < times.length; i++) {
-                    time = times[i];
-                    value = new pc.Quat(values[12 * i + 4], values[12 * i + 5], values[12 * i + 6], values[12 * i + 7]);
-                    skip = _insertKey(new pc.Keyframe(time, value), i, keys, skip);
-                }
-            } else {
-                for (i = 0; i < times.length; i++) {
-                    time = times[i];
-                    value = new pc.Quat(values[4 * i + 0], values[4 * i + 1], values[4 * i + 2], values[4 * i + 3]);
-                    skip = _insertKey(new pc.Keyframe(time, value), i, keys, skip);
-                }
-            }
-        };
-
-        var anim = new pc.Animation();
-        anim.loop = true;
-        anim.setName(animationData.hasOwnProperty('name') ? animationData.name : ("animation_" + globals.animId++));
-
-        var nodesMap = {};
-        var node = null;
-        var timeMin = Number.POSITIVE_INFINITY;
-        var timeMax = Number.NEGATIVE_INFINITY;
-
-        for (var channel, idx = 0; idx < animationData.channels.length; idx++) {
-            channel = animationData.channels[idx];
-
-            var sampler = animationData.samplers[channel.sampler];
-            var times = getAccessorData(accessors[sampler.input], bufferViews, buffers);
-            var values = getAccessorData(accessors[sampler.output], bufferViews, buffers);
-
-            var target = channel.target;
-            var path = target.path;
-
-            node = nodesMap[target.node];
-            if (!node) {
-                node = new pc.Node();
-                var entity = nodes[target.node];
-                node._name = entity.name;
-                anim.addNode(node);
-                nodesMap[target.node] = node;
-            }
-
-            switch (path) {
-                case "translation":
-                    _insertKeysVec3(node._keys[pc.KEYTYPE_POS], sampler.interpolation, times, values);
-                    break;
-                case "scale":
-                    _insertKeysVec3(node._keys[pc.KEYTYPE_SCL], sampler.interpolation, times, values);
-                    break;
-                case "rotation":
-                    _insertKeysQuat(node._keys[pc.KEYTYPE_ROT], sampler.interpolation, times, values);
-                    break;
-                case 'weights':
-                    // console.log("GLB animations for weights not supported");
-                    break;
-            }
-
-            // update animation time
-            for (var i = 0; i < times.length; ++i) {
-                timeMin = Math.min(timeMin, times[i]);
-                timeMax = Math.max(timeMax, times[i]);
-            }
-        }
-
-        anim.duration = timeMax - timeMin;
-
-        return anim;
-    };
-
     // create the anim structure
-    var createAnim = function (animationData, accessors, bufferViews, nodes, buffers) {
+    var createAnimation = function (animationData, accessors, bufferViews, nodes, buffers) {
 
         // create animation data block for the accessor
         var createAnimData = function (accessor) {
@@ -1314,8 +1207,7 @@ Object.assign(pc, function () {
             return [];
         } else {
             return gltf.animations.map(function (animationData) {
-                //return createAnimation(animationData, gltf.accessors, gltf.bufferViews, nodes, buffers);
-                return createAnim(animationData, gltf.accessors, gltf.bufferViews, nodes, buffers);
+                return createAnimation(animationData, gltf.accessors, gltf.bufferViews, nodes, buffers);
             });
         }
     }
