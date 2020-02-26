@@ -26,7 +26,7 @@ Object.assign(pc, function () {
         this._p0 = 0;               // index of the left knot
         this._p1 = 0;               // index of the right knot
 
-        // these members are calculated per-time
+        // these members are calculated per-time evaluation
         this._t = 0;                // normalized time
         this._hermite = {           // hermite weights, calculated on demand
             valid: false,
@@ -276,6 +276,7 @@ Object.assign(pc, function () {
         this._eval = -1;            // evaluation time
         this._speed = speed;
         this._loop = loop;
+        this._weight = 1.0;         // blend weight 0..1
     };
 
     Object.defineProperties(AnimClip.prototype, {
@@ -299,6 +300,10 @@ Object.assign(pc, function () {
         'loop': {
             get: function () { return this._loop; },
             set: function (loop) { this._loop = loop; }
+        },
+        'weight': {
+            get: function () { return this._weight; },
+            set: function (weight) { this._weight = weight; }
         }
     });
 
@@ -429,8 +434,7 @@ Object.assign(pc, function () {
             // add clip
             this._clips.push({
                 clip: clip,
-                links: links,
-                weight: 1.0
+                links: links
             });
 
             // increment node drivers
@@ -497,17 +501,17 @@ Object.assign(pc, function () {
                 // update animation clip
                 clip.clip._update(deltaTime);
 
-                var weight = clip.weight;
+                var weight = clip.clip.weight;
                 if (weight >= 1.0) {
                     // overwrite active pose
                     for (var i=0; i<links.length; ++i) {
-                        this._setActive(links[i]);
+                        this._setLink(links[i]);
                     }
                 } else if (weight > 0) {
                     // blend onto active pose
                     var oneMinusWeight = 1.0 - weight;
                     for (var i=0; i<links.length; ++i) {
-                        this._blendActive(links[i], weight, oneMinusWeight);
+                        this._blendLink(links[i], weight, oneMinusWeight);
                     }
                 }
             }
@@ -531,13 +535,20 @@ Object.assign(pc, function () {
                     s.y = activePose[idx++];
                     s.z = activePose[idx++];
 
+                    // TODO: decide at what point to renormalize quaternions, options are:
+                    // after curve evaluation
+                    // after link blending
+                    // right at the end
+                    // all of the above
+
                     // TODO: this is not an optimal way of dirtifying the hierarchy
                     node._dirtifyLocal();
                 }
             }
         }
 
-        , _setActive: function (link) {
+        // set the active pose t, r, s for the specified link into the active pose
+        , _setLink: function (link) {
             var activePose = this._activePose;
             var idx = link.node * 10;
             var t = link.translation;
@@ -548,7 +559,8 @@ Object.assign(pc, function () {
             if (s) { for (var i=0; i<3; ++i) { activePose[idx+7+i] = s[i]; } }
         }
 
-        , blendActive: function (link, weight, oneMinusWeight) {
+        // blend the t, r, s for the specified link into the active pose
+        , _blendLink: function (link, weight, oneMinusWeight) {
             var activePose = this._activePose;
             var idx = link.node * 10;
             var t = link.translation;
@@ -571,19 +583,6 @@ Object.assign(pc, function () {
             }
         }
     });
-
-    AnimController._set = function (dst, dstIndex, src) {
-        for (var i=0; i<src.length; ++i) {
-            dst[dstIndex+i] = src[i];
-        }
-    };
-
-    AnimController._blend = function (dst, dstIndex, dstWeight, src, srcWeight) {
-        for (var i=0; i<src.length; ++i) {
-            dst[dstIndex+i] = dstWeight * dst[dstIndex+i] +
-                              srcWeight * src[i];
-        }
-    };
 
     return {
         AnimInterpolation: AnimInterpolation,
