@@ -92,34 +92,36 @@ Object.assign(pc, function () {
                 if (components.hasOwnProperty(id)) {
                     var component = components[id];
                     var componentData = component.data;
-                    if (componentData.enabled && componentData.playing && component.entity.enabled) {
-                        var skeleton = componentData.skeleton;
-                        if (skeleton !== null && componentData.model !== null) {
-                            if (componentData.blending) {
-                                componentData.blendTimeRemaining -= dt;
-                                if (componentData.blendTimeRemaining < 0.0) {
-                                    componentData.blendTimeRemaining = 0.0;
+                    if (componentData.enabled && component.entity.enabled) {
+                        if (componentData.playing) {
+                            var skeleton = componentData.skeleton;
+                            if (skeleton !== null && componentData.model !== null) {
+                                if (componentData.blending) {
+                                    componentData.blendTimeRemaining -= dt;
+                                    if (componentData.blendTimeRemaining < 0.0) {
+                                        componentData.blendTimeRemaining = 0.0;
+                                    }
+                                    var alpha = 1.0 - (componentData.blendTimeRemaining / componentData.blendTime);
+                                    skeleton.blend(componentData.fromSkel, componentData.toSkel, alpha);
+                                } else {
+                                    // Advance the animation, interpolating keyframes at each animated node in
+                                    // skeleton
+                                    var delta = dt * componentData.speed;
+                                    skeleton.addTime(delta);
+                                    if (componentData.speed > 0 && (skeleton._time === skeleton._animation.duration) && !componentData.loop) {
+                                        componentData.playing = false;
+                                    } else if (componentData.speed < 0 && skeleton._time === 0 && !componentData.loop) {
+                                        componentData.playing = false;
+                                    }
                                 }
-                                var alpha = 1.0 - (componentData.blendTimeRemaining / componentData.blendTime);
-                                skeleton.blend(componentData.fromSkel, componentData.toSkel, alpha);
-                            } else {
-                                // Advance the animation, interpolating keyframes at each animated node in
-                                // skeleton
-                                var delta = dt * componentData.speed;
-                                skeleton.addTime(delta);
-                                if (componentData.speed > 0 && (skeleton._time === skeleton._animation.duration) && !componentData.loop) {
-                                    componentData.playing = false;
-                                } else if (componentData.speed < 0 && skeleton._time === 0 && !componentData.loop) {
-                                    componentData.playing = false;
+
+                                if (componentData.blending && (componentData.blendTimeRemaining === 0.0)) {
+                                    componentData.blending = false;
+                                    skeleton.animation = componentData.toSkel._animation;
                                 }
-                            }
 
-                            if (componentData.blending && (componentData.blendTimeRemaining === 0.0)) {
-                                componentData.blending = false;
-                                skeleton.animation = componentData.toSkel._animation;
+                                skeleton.updateGraph();
                             }
-
-                            skeleton.updateGraph();
                         }
 
                         // anim controller update
