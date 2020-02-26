@@ -468,23 +468,37 @@ Object.assign(pc, function () {
             for (var c=0; c<clips.length; ++c) {
                 var clip = clips[c];
 
-                clip._update(deltaTime);
+                clip.clip._update(deltaTime);
 
                 for (var i=0; i<clip.links.length; ++i) {
                     var link = clip.links[i];
                     var node = link.node;
                     // TODO: these should blend, rotation should renormalize
                     if (link.translation) {
-                        node.localPosition.copy(link.translation)
+                        this._copyVec3(node.localPosition, link.translation);
                     }
                     if (link.rotation) {
-                        node.localRotation.copy(link.rotation);
+                        this._copyQuat(node.localRotation, link.rotation);
                     }
                     if (link.scale) {
-                        node.localScale.copy(link.scale);
+                        this._copyVec3(node.localScale, link.scale);
                     }
+                    node._dirtifyLocal();
                 }
             }
+        },
+
+        _copyVec3: function (dst, src) {
+            dst.x = src[0];
+            dst.y = src[1];
+            dst.z = src[2];
+        },
+
+        _copyQuat: function (dst, src) {
+            dst.x = src[0];
+            dst.y = src[1];
+            dst.z = src[2];
+            dst.w = src[3];
         }
     });
 
