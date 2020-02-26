@@ -57,6 +57,14 @@ Object.assign(pc, function () {
             data.currAnim = name;
 
             if (data.model) {
+
+                if (!data.skeleton && !data.animController) {
+                    this._createAnimationController();
+                }
+
+                var prevAnim = data.animations[data.prevAnim];
+                var currAnim = data.animations[data.currAnim];
+
                 if (data.skeleton) {
                     data.blending = blendTime > 0 && data.prevAnim;
                     if (data.blending) {
@@ -64,17 +72,21 @@ Object.assign(pc, function () {
                         // the newly specified animation over the specified blend time period.
                         data.blendTime = blendTime;
                         data.blendTimeRemaining = blendTime;
-                        data.fromSkel.animation = data.animations[data.prevAnim];
+                        data.fromSkel.animation = prevAnim;
                         data.fromSkel.addTime(data.skeleton._time);
-                        data.toSkel.animation = data.animations[data.currAnim];
+                        data.toSkel.animation = currAnim;
                     } else {
-                        data.skeleton.animation = data.animations[data.currAnim];
+                        data.skeleton.animation = currAnim;
                     }
                 }
 
                 if (data.animController) {
-                    if (data.animController.findClip(data.currAnim) === -1) {
-                        data.animController.addClip(new pc.AnimClip(data.animations[data.currAnim], 0, true, 1.0, true));
+                    var clip = data.animController.findClip(data.currAnim);
+                    if (!clip) {
+                        clip = new pc.AnimClip(data.animations[data.currAnim], 0, true, 1.0, true);
+                        data.animController.addClip(clip);
+                    } else {
+                        clip.reset();
                     }
                 }
             }
@@ -95,25 +107,58 @@ Object.assign(pc, function () {
 
         setModel: function (model) {
             var data = this.data;
-            if (model) {
-                // Create skeletons
-                var graph = model.getGraph();
 
-                /*
-                data.fromSkel = new pc.Skeleton(graph);
-                data.toSkel = new pc.Skeleton(graph);
-                data.skeleton = new pc.Skeleton(graph);
-                data.skeleton.looping = data.loop;
-                data.skeleton.setGraph(graph);
-                */
+            // reset animation controller
+            this._resetAnimationController();
 
-                data.animController = new pc.AnimController(graph);
-            }
+            // set the model
             data.model = model;
 
             // Reset the current animation on the new model
             if (data.animations && data.currAnim && data.animations[data.currAnim]) {
                 this.play(data.currAnim);
+            }
+        },
+
+        _resetAnimationController: function () {
+            var data = this.data;
+            data.skeleton = null;
+            data.fromSkel = null;
+            data.toSkel = null;
+            data.animController = null;
+        },
+
+        _createAnimationController: function () {
+            var data = this.data;
+            var model = data.model;
+
+            if (model) {
+                var animations = data.animations;
+
+                // check which type of animations are loaded
+                var hasJson = false;
+                var hasGlb = false;
+                for (var animation in animations) {
+                    if (animations.hasOwnProperty(animation)) {
+                        var anim = animations[animation];
+                        if (anim.constructor === pc.AnimTrack) {
+                            hasGlb = true;
+                        } else {
+                            hasJson = true;
+                        }
+                    }
+                }
+
+                var graph = model.getGraph();
+                if (hasJson) {
+                    data.fromSkel = new pc.Skeleton(graph);
+                    data.toSkel = new pc.Skeleton(graph);
+                    data.skeleton = new pc.Skeleton(graph);
+                    data.skeleton.looping = data.loop;
+                    data.skeleton.setGraph(graph);
+                } else if (hasGlb) {
+                    data.animController = new pc.AnimController(graph);
+                }
             }
         },
 
@@ -250,15 +295,16 @@ Object.assign(pc, function () {
         },
 
         _stopCurrentAnimation: function () {
-            this.data.currAnim = null;
-            this.data.playing = false;
-            if (this.data.skeleton) {
-                this.data.skeleton.currentTime = 0;
-                this.data.skeleton.animation = null;
+            var data = this.data;
+            data.currAnim = null;
+            data.playing = false;
+            if (data.skeleton) {
+                data.skeleton.currentTime = 0;
+                data.skeleton.animation = null;
             }
-            if (this.data.animController) {
-                for (var i=0; i<this.data.animController.numClips; ++i) {
-                    this.data.animController.getClip(i).pause();
+            if (data.animController) {
+                for (var i=0; i<data.animController.numClips(); ++i) {
+                    data.animController.getClip(i).stop();
                 }
             }
         },

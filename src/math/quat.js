@@ -654,6 +654,35 @@ Object.assign(pc, (function () {
 
         /**
          * @function
+         * @name pc.Quat#slerp
+         * @description Performs a normalized interpolation between two quaternions. The result of
+         * the interpolation is written to the quaternion calling the function.
+         * @param {pc.Quat} lhs - The quaternion to interpolate from.
+         * @param {pc.Quat} rhs - The quaternion to interpolate to.
+         * @param {number} alpha - The value controlling the interpolation in relation to the two input
+         * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
+         * in between generating a spherical interpolation between the two.
+         * @returns {pc.Quat} Self for chaining.
+         * @example
+         * var q1 = new pc.Quat(-0.11, -0.15, -0.46, 0.87);
+         * var q2 = new pc.Quat(-0.21, -0.21, -0.67, 0.68);
+         *
+         * var result;
+         * result = new pc.Quat().nlerp(q1, q2, 0);   // Return q1
+         * result = new pc.Quat().nlerp(q1, q2, 0.5); // Return the midpoint interpolant
+         * result = new pc.Quat().nlerp(q1, q2, 1);   // Return q2
+         */
+        nlerp: function (lhs, rhs, alpha) {
+            var oneMinusAlpha = 1.0 - alpha;
+            this.x = lhs.x * oneMinusAlpha + rhs.x * alpha;
+            this.y = lhs.y * oneMinusAlpha + rhs.y * alpha;
+            this.z = lhs.z * oneMinusAlpha + rhs.z * alpha;
+            this.w = lhs.w * oneMinusAlpha + rhs.w * alpha;
+            return this.normalize();
+        },
+
+        /**
+         * @function
          * @name pc.Quat#transformVector
          * @description Transforms a 3-dimensional vector by the specified quaternion.
          * @param {pc.Vec3} vec - The 3-dimensional vector to be transformed.

@@ -9,18 +9,20 @@ Object.assign(pc, function () {
 
         // Non-serialized
         this.animations = { };
-        this.skeleton = null;
         this.model = null;
         this.prevAnim = null;
         this.currAnim = null;
-        this.fromSkel = null;
-        this.toSkel = null;
         this.blending = false;
         this.blendTime = 0;
         this.blendTimeRemaining = 0;
         this.playing = false;
 
-        // new
+        // json animation skeleton
+        this.skeleton = null;
+        this.fromSkel = null;
+        this.toSkel = null;
+
+        // glb animation controller
         this.animController = null;
     };
 

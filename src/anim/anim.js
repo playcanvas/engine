@@ -272,7 +272,8 @@ Object.assign(pc, function () {
         this._track = track;
         this._snapshot = new AnimSnapshot(track);
         this._playing = playing;
-        this._time = time;
+        this._time = time;          // play cursor
+        this._eval = -1;            // evaluation time
         this._speed = speed;
         this._loop = loop;
     };
@@ -303,61 +304,67 @@ Object.assign(pc, function () {
 
     Object.assign(AnimClip.prototype, {
         _update: function (deltaTime) {
-            if (!this._playing) {
-                return;
-            }
+            if (this._playing) {
+                var time = this._time;
+                var duration = this._track.duration;
+                var speed = this._speed;
+                var loop = this._loop;
 
-            // update time
-            var time = this._time + this._speed * deltaTime;
-            var duration = this._track.duration;
-            var speed = this._speed;
-            var loop = this._loop;
+                // update time
+                time += speed * deltaTime;
 
-            // perform looping
-            if (speed >= 0) {
-                // playing forwards
-                if (time > duration) {
-                    if (loop) {
-                        time = time % duration;
-                    } else {
-                        time = this._track.duration;
-                        this._pause();
+                // perform looping
+                if (speed >= 0) {
+                    // playing forwards
+                    if (time > duration) {
+                        if (loop) {
+                            time = time % duration;
+                        } else {
+                            time = this._track.duration;
+                            this._pause();
+                        }
+                    }
+                } else {
+                    // playing backwards
+                    if (time < 0) {
+                        if (loop) {
+                            time = duration + (time % duration);
+                        } else {
+                            time = 0;
+                            this._pause();
+                        }
                     }
                 }
-            } else {
-                // playing backwards
-                if (time < 0) {
-                    if (loop) {
-                        time = duration + (time % duration);
-                    } else {
-                        time = 0;
-                        this._pause();
-                    }
-                }
+                this._time = time;
             }
 
             // if time has changed, update snapshot
-            if (time != this._time) {
-                this._track.eval(time, this._snapshot);
-                this._time = time;
+            if (this._time != this._eval) {
+                this._eval = this._time;
+                this._track.eval(this._eval, this._snapshot);
             }
         },
 
         play: function () {
             this._playing = true;
+            this._time = 0;
+        },
+
+        stop: function() {
+            this._playing = false;
+            this._time = 0;
         },
 
         pause: function () {
             this._playing = false;
         },
 
-        reset: function () {
-            this._time = 0;
+        resume: function () {
+            this._playing = true;
         },
 
-        restart: function () {
-            this.reset();
-            this.play();
+        reset: function () {
+            this._time = 0;
         }
     });
 
@@ -425,10 +432,10 @@ Object.assign(pc, function () {
         findClip: function (name) {
             for (var i=0; i<this._clips.length; ++i) {
                 if (this._clips[i].name === name) {
-                    return i;
+                    return this._clips[i].clip;
                 }
             }
-            return -1;
+            return null;
         },
 
         update: function (deltaTime) {
