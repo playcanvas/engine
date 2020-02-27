@@ -23,24 +23,10 @@ Object.assign(pc, (function () {
     };
 
     Object.assign(EventHandler.prototype, {
-        /**
-         * @function
-         * @name pc.EventHandler#on
-         * @description Attach an event handler to an event.
-         * @param {string} name - Name of the event to bind the callback to.
-         * @param {pc.callbacks.HandleEvent} callback - Function that is called when event is fired. Note the callback is limited to 8 arguments.
-         * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to current this.
-         * @param {boolean} [once] - True if the callback should be called only once.
-         * @returns {pc.EventHandler} Self for chaining.
-         * @example
-         * obj.on('test', function (a, b) {
-         *     console.log(a + b);
-         * });
-         * obj.fire('test', 1, 2); // prints 3 to the console
-         */
-        on: function (name, callback, scope, once) {
+
+        _addCallback: function (name, callback, scope, once) {
             if (!name || typeof name !== 'string' || !callback)
-                return this;
+                return;
 
             if (!this._callbacks[name])
                 this._callbacks[name] = [];
@@ -53,6 +39,24 @@ Object.assign(pc, (function () {
                 scope: scope || this,
                 once: once || false
             });
+        },
+
+        /**
+         * @function
+         * @name pc.EventHandler#on
+         * @description Attach an event handler to an event.
+         * @param {string} name - Name of the event to bind the callback to.
+         * @param {pc.callbacks.HandleEvent} callback - Function that is called when event is fired. Note the callback is limited to 8 arguments.
+         * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to current this.
+         * @returns {pc.EventHandler} Self for chaining.
+         * @example
+         * obj.on('test', function (a, b) {
+         *     console.log(a + b);
+         * });
+         * obj.fire('test', 1, 2); // prints 3 to the console
+         */
+        on: function (name, callback, scope) {
+            this._addCallback(name, callback, scope, false);
 
             return this;
         },
@@ -196,7 +200,7 @@ Object.assign(pc, (function () {
          * obj.fire('test', 1, 2); // not going to get handled
          */
         once: function (name, callback, scope) {
-            this.on(name, callback, scope, true);
+            this._addCallback(name, callback, scope, true);
             return this;
         },
 

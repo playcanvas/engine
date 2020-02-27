@@ -5,6 +5,7 @@ describe("pc.events", function () {
         pc.events.attach(o);
 
         expect(o.on).to.exist;
+        expect(o.once).to.exist;
         expect(o.off).to.exist;
         expect(o.fire).to.exist;
     });
@@ -316,8 +317,7 @@ describe("pc.events", function () {
           count++;
         };
 
-        var o = {};
-        pc.events.attach(o);
+        var o = new pc.EventHandler();
 
         o.once("eventA", fn);
         o.on("eventB", fn);
@@ -339,8 +339,7 @@ describe("pc.events", function () {
           count++;
         };
 
-        var o = {};
-        pc.events.attach(o);
+        var o = new pc.EventHandler();
 
         o.once("eventA", fn);
         o.once("eventA", fn);
