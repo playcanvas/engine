@@ -323,7 +323,7 @@ Object.assign(pc, function () {
                     // playing forwards
                     if (time > duration) {
                         if (loop) {
-                            time = time % duration;
+                            time = (time % duration) || 0;  // if duration is 0, % is NaN
                         } else {
                             time = this._track.duration;
                             this._pause();
@@ -333,7 +333,7 @@ Object.assign(pc, function () {
                     // playing backwards
                     if (time < 0) {
                         if (loop) {
-                            time = duration + (time % duration);
+                            time = duration + ((time % duration) || 0);
                         } else {
                             time = 0;
                             this._pause();
