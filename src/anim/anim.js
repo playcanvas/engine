@@ -57,7 +57,7 @@ Object.assign(pc, function () {
                         this._len = 0;
                         this._recip = 0;
                         this._p0 = this._p1 = 0;
-                    } else if (time > input[len - 1]) {
+                    } else if (time >= input[len - 1]) {
                         // time falls after the last key
                         this._left = input[len - 1];
                         this._right = Infinity;
@@ -378,11 +378,10 @@ Object.assign(pc, function () {
     // stores a set of clips and blends between them
     var AnimController = function (graph) {
 
-        // build list of skeleton nodes
         var nodesMap = { };
         var nodes = [ ];
-        var nodeDrivers = [ ];
         var basePose = [ ];
+        var activeNodes = [ ];
 
         var flatten = function (node) {
             var p = node.localPosition;
@@ -390,8 +389,8 @@ Object.assign(pc, function () {
             var s = node.localScale;
             nodesMap[node.name] = nodes.length;
             nodes.push(node);
-            nodeDrivers.push(0);
             basePose.splice(basePose.length, 0, p.x, p.y, p.z, r.x, r.y, r.z, r.w, s.x, s.y, s.z);
+            activeNodes.push(0);
 
             for (var i=0; i<node.children.length; ++i) {
                 flatten(node.children[i]);
@@ -401,9 +400,9 @@ Object.assign(pc, function () {
 
         this._nodesMap = nodesMap;              // node name -> index
         this._nodes = nodes;                    // list of nodes
-        this._nodeDrivers = nodeDrivers;        // number of curves applied to each node (those with 0 can be skipped)
         this._basePose = basePose;              // list of bind pose data
         this._activePose = basePose.slice();
+        this._activeNodes = activeNodes;        // number of curves applied to each node (those with 0 can be skipped)
         this._clips = [ ];
     };
 
@@ -438,9 +437,9 @@ Object.assign(pc, function () {
             });
 
             // increment node drivers
-            var nodeDrivers = this._nodeDrivers;
+            var activeNodes = this._activeNodes;
             for (var i=0; i<links.length; ++i) {
-                nodeDrivers[links[i].node]++;
+                activeNodes[links[i].node]++;
             }
         },
 
@@ -451,17 +450,17 @@ Object.assign(pc, function () {
         removeClip: function (index) {
             // decrement node drivers
             var links = this._clips[index].links;
-            var nodeDrivers = this._nodeDrivers;
+            var activeNodes = this._activeNodes;
             var basePose = this._basePose;
             var activePose = this._activePose;
             for (var i=0; i<links.length; ++i) {
                 var node = links[i].node;
-                nodeDrivers[node]--;
+                activeNodes[node]--;
 
                 // if the node is no longer driven by a clip as a result 
                 // of this removal, then we must reset the tree to the
                 // base pose
-                if (nodeDrivers[node] === 0) {
+                if (activeNodes[node] === 0) {
                     for (var j=0; j<10; ++j) {
                         activePose[i*10+j] = basePose[i*10+j];
                     }
@@ -489,13 +488,13 @@ Object.assign(pc, function () {
         update: function (deltaTime) {
             var clips = this._clips;
             var nodes = this._nodes;
-            var nodeDrivers = this._nodeDrivers;
+            var activeNodes = this._activeNodes;
             var basePose = this._basePose;
             var activePose = this._activePose;
 
             // reset base pose on active nodes
             for (var i=0; i<nodes.length; ++i) {
-                if (nodeDrivers[i] > 0) {
+                if (activeNodes[i] > 0) {
                     for (var j=0; j<10; ++j) {
                         activePose[i*10+j] = basePose[i*10+j];
                     }
@@ -525,9 +524,9 @@ Object.assign(pc, function () {
                 }
             }
 
-            // apply activePose to the node hierarchy
+            // apply the activePose to the node hierarchy
             for (var i=0; i<nodes.length; ++i) {
-                if (nodeDrivers[i] > 0) {
+                if (activeNodes[i] > 0) {
                     this._applyActiveNodeToTree(i);
                 }
             }

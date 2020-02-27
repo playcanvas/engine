@@ -108,15 +108,17 @@ Object.assign(pc, function () {
         setModel: function (model) {
             var data = this.data;
 
-            // reset animation controller
-            this._resetAnimationController();
+            if (model !== data.model) {
+                // reset animation controller
+                this._resetAnimationController();
 
-            // set the model
-            data.model = model;
+                // set the model
+                data.model = model;
 
-            // Reset the current animation on the new model
-            if (data.animations && data.currAnim && data.animations[data.currAnim]) {
-                this.play(data.currAnim);
+                // Reset the current animation on the new model
+                if (data.animations && data.currAnim && data.animations[data.currAnim]) {
+                    this.play(data.currAnim);
+                }
             }
         },
 
@@ -131,34 +133,31 @@ Object.assign(pc, function () {
         _createAnimationController: function () {
             var data = this.data;
             var model = data.model;
+            var animations = data.animations;
 
-            if (model) {
-                var animations = data.animations;
-
-                // check which type of animations are loaded
-                var hasJson = false;
-                var hasGlb = false;
-                for (var animation in animations) {
-                    if (animations.hasOwnProperty(animation)) {
-                        var anim = animations[animation];
-                        if (anim.constructor === pc.AnimTrack) {
-                            hasGlb = true;
-                        } else {
-                            hasJson = true;
-                        }
+            // check which type of animations are loaded
+            var hasJson = false;
+            var hasGlb = false;
+            for (var animation in animations) {
+                if (animations.hasOwnProperty(animation)) {
+                    var anim = animations[animation];
+                    if (anim.constructor === pc.AnimTrack) {
+                        hasGlb = true;
+                    } else {
+                        hasJson = true;
                     }
                 }
+            }
 
-                var graph = model.getGraph();
-                if (hasJson) {
-                    data.fromSkel = new pc.Skeleton(graph);
-                    data.toSkel = new pc.Skeleton(graph);
-                    data.skeleton = new pc.Skeleton(graph);
-                    data.skeleton.looping = data.loop;
-                    data.skeleton.setGraph(graph);
-                } else if (hasGlb) {
-                    data.animController = new pc.AnimController(graph);
-                }
+            var graph = model.getGraph();
+            if (hasJson) {
+                data.fromSkel = new pc.Skeleton(graph);
+                data.toSkel = new pc.Skeleton(graph);
+                data.skeleton = new pc.Skeleton(graph);
+                data.skeleton.looping = data.loop;
+                data.skeleton.setGraph(graph);
+            } else if (hasGlb) {
+                data.animController = new pc.AnimController(graph);
             }
         },
 

@@ -126,8 +126,7 @@ Object.assign(pc, function () {
 
                         // anim controller update
                         var animController = componentData.animController;
-                        var model = componentData.model;
-                        if (animController && model) {
+                        if (animController) {
                             animController.update(dt);
                         }
                     }
