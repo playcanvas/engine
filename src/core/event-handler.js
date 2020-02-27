@@ -161,7 +161,10 @@ Object.assign(pc, (function () {
                 var evt = (callbacks || this._callbackActive[name])[i];
                 evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 
-                if (evt.callback.once) {
+                // if callback with this name is set up for firing once
+                if (evt.callback.hasOwnProperty("once") && evt.callback.once.hasOwnProperty(name)) {
+                    delete evt.callback.once[name];
+                    
                     var ind = this._callbacks[name].indexOf(evt);
                     if (ind !== -1) {
                         if (this._callbackActive[name] === this._callbacks[name])
@@ -194,7 +197,12 @@ Object.assign(pc, (function () {
          * obj.fire('test', 1, 2); // not going to get handled
          */
         once: function (name, callback, scope) {
-            callback.once = true;
+
+            // store name of the event with once flag
+            if (!callback.hasOwnProperty("once"))
+                callback.once = {};
+            callback.once[name] = true;
+
             this.on(name, callback, scope);
             return this;
         },
