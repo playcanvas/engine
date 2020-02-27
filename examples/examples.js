@@ -31,6 +31,7 @@ var categories = [
             "particles-sparks",
             "particles-start-frame",
             "post-effects",
+            "render-to-texture",
             "shader-burn",
             "shader-toon",
             "shader-wobble",
