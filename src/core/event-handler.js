@@ -30,6 +30,7 @@ Object.assign(pc, (function () {
          * @param {string} name - Name of the event to bind the callback to.
          * @param {pc.callbacks.HandleEvent} callback - Function that is called when event is fired. Note the callback is limited to 8 arguments.
          * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to current this.
+         * @param {boolean} [once] - True if the callback should be called only once.
          * @returns {pc.EventHandler} Self for chaining.
          * @example
          * obj.on('test', function (a, b) {
@@ -37,7 +38,7 @@ Object.assign(pc, (function () {
          * });
          * obj.fire('test', 1, 2); // prints 3 to the console
          */
-        on: function (name, callback, scope) {
+        on: function (name, callback, scope, once) {
             if (!name || typeof name !== 'string' || !callback)
                 return this;
 
@@ -49,7 +50,8 @@ Object.assign(pc, (function () {
 
             this._callbacks[name].push({
                 callback: callback,
-                scope: scope || this
+                scope: scope || this,
+                once: once || false
             });
 
             return this;
@@ -161,10 +163,7 @@ Object.assign(pc, (function () {
                 var evt = (callbacks || this._callbackActive[name])[i];
                 evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 
-                // if callback with this name is set up for firing once
-                if (evt.callback.hasOwnProperty("once") && evt.callback.once.hasOwnProperty(name)) {
-                    delete evt.callback.once[name];
-
+                if (evt.once) {
                     var ind = this._callbacks[name].indexOf(evt);
                     if (ind !== -1) {
                         if (this._callbackActive[name] === this._callbacks[name])
@@ -197,13 +196,7 @@ Object.assign(pc, (function () {
          * obj.fire('test', 1, 2); // not going to get handled
          */
         once: function (name, callback, scope) {
-
-            // store name of the event with once flag
-            if (!callback.hasOwnProperty("once"))
-                callback.once = {};
-            callback.once[name] = true;
-
-            this.on(name, callback, scope);
+            this.on(name, callback, scope, true);
             return this;
         },
 

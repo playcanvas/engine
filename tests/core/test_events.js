@@ -332,4 +332,21 @@ describe("pc.events", function () {
 
         expect(count).to.equal(4);
     });
+
+    it("Fire once callback with the same name twice", function () {
+        var count = 0;
+        var fn = function () {
+          count++;
+        };
+
+        var o = {};
+        pc.events.attach(o);
+
+        o.once("eventA", fn);
+        o.once("eventA", fn);
+        o.fire("eventA");
+
+        expect(count).to.equal(2);
+    });
+
 });
