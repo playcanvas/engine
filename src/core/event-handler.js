@@ -164,7 +164,7 @@ Object.assign(pc, (function () {
                 // if callback with this name is set up for firing once
                 if (evt.callback.hasOwnProperty("once") && evt.callback.once.hasOwnProperty(name)) {
                     delete evt.callback.once[name];
-                    
+
                     var ind = this._callbacks[name].indexOf(evt);
                     if (ind !== -1) {
                         if (this._callbackActive[name] === this._callbacks[name])
