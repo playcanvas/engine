@@ -23,6 +23,24 @@ Object.assign(pc, (function () {
     };
 
     Object.assign(EventHandler.prototype, {
+
+        _addCallback: function (name, callback, scope, once) {
+            if (!name || typeof name !== 'string' || !callback)
+                return;
+
+            if (!this._callbacks[name])
+                this._callbacks[name] = [];
+
+            if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
+                this._callbackActive[name] = this._callbackActive[name].slice();
+
+            this._callbacks[name].push({
+                callback: callback,
+                scope: scope || this,
+                once: once || false
+            });
+        },
+
         /**
          * @function
          * @name pc.EventHandler#on
@@ -38,19 +56,7 @@ Object.assign(pc, (function () {
          * obj.fire('test', 1, 2); // prints 3 to the console
          */
         on: function (name, callback, scope) {
-            if (!name || typeof name !== 'string' || !callback)
-                return this;
-
-            if (!this._callbacks[name])
-                this._callbacks[name] = [];
-
-            if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
-                this._callbackActive[name] = this._callbackActive[name].slice();
-
-            this._callbacks[name].push({
-                callback: callback,
-                scope: scope || this
-            });
+            this._addCallback(name, callback, scope, false);
 
             return this;
         },
@@ -161,7 +167,7 @@ Object.assign(pc, (function () {
                 var evt = (callbacks || this._callbackActive[name])[i];
                 evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 
-                if (evt.callback.once) {
+                if (evt.once) {
                     var ind = this._callbacks[name].indexOf(evt);
                     if (ind !== -1) {
                         if (this._callbackActive[name] === this._callbacks[name])
@@ -194,8 +200,7 @@ Object.assign(pc, (function () {
          * obj.fire('test', 1, 2); // not going to get handled
          */
         once: function (name, callback, scope) {
-            callback.once = true;
-            this.on(name, callback, scope);
+            this._addCallback(name, callback, scope, true);
             return this;
         },
 
