@@ -309,4 +309,27 @@ describe("pc.events", function () {
 
         o.fire("test", value, value2);
     });
+
+    it("Fire once and on for the same callback", function () {
+        var count = 0;
+        var fn = function () {
+          count++;
+        };
+
+        var o = {};
+        pc.events.attach(o);
+
+        o.once("eventA", fn);
+        o.on("eventB", fn);
+        o.once("eventC", fn);
+
+        o.fire("eventA", "a");
+        o.fire("eventA", "b");
+        o.fire("eventB", "c");
+        o.fire("eventB", "d");
+        o.fire("eventC", "e");
+        o.fire("eventC", "f");
+
+        expect(count).to.equal(4);
+    });
 });
