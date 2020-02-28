@@ -13,6 +13,7 @@ pc.events = {
      */
     attach: function (target) {
         var ev = pc.events;
+        target._addCallback = ev._addCallback;
         target.on = ev.on;
         target.off = ev.off;
         target.fire = ev.fire;
@@ -23,6 +24,7 @@ pc.events = {
         return target;
     },
 
+    _addCallback: pc.EventHandler.prototype._addCallback,
     on: pc.EventHandler.prototype.on,
     off: pc.EventHandler.prototype.off,
     fire: pc.EventHandler.prototype.fire,
