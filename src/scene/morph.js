@@ -39,7 +39,7 @@ Object.assign(pc, function () {
      * @class
      * @name pc.Morph
      * @classdesc Contains a list of pc.MorphTarget, a combined AABB and some associated data.
-     * @param {pc.MoprhTarget[]} targets - A list of morph targets.
+     * @param {pc.MorphTarget[]} targets - A list of morph targets.
      */
     var Morph = function (targets) {
         this.aabb = new pc.BoundingBox();
@@ -138,7 +138,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Morph#addTarget
          * @description Adds a new morph target to the list.
-         * @param {pc.MoprhTarget} target - A new morph target.
+         * @param {pc.MorphTarget} target - A new morph target.
          */
         addTarget: function (target) {
             this._targets.push(target);
@@ -149,7 +149,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.Morph#removeTarget
          * @description Remove the specified morph target from the list.
-         * @param {pc.MoprhTarget} target - A morph target to delete.
+         * @param {pc.MorphTarget} target - A morph target to delete.
          */
         removeTarget: function (target) {
             var index = this._targets.indexOf(target);
