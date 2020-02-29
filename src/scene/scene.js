@@ -1113,7 +1113,9 @@ Object.assign(pc, function () {
      * @function
      * @name pc.Scene#setSkybox
      * @description Sets the cubemap for the scene skybox.
-     * @param {pc.Texture[]} [cubemaps] - An array of 7 cubemap textures (index 0 is original and index 1-6 are prefiltered). If undefined scene will remove skybox.
+     * @param {pc.Texture[]} [cubemaps] - An array of cubemaps corresponding to the skybox at different mip levels. If undefined, scene will remove skybox.
+     * Cubemap array should be of size 7, with the first element (index 0) corresponding to the base cubemap (mip level 0) with original resolution.
+     * Each remaining element (index 1-6) corresponds to a fixed prefiltered resolution (128x128, 64x64, 32x32, 16x16, 8x8, 4x4).
      */
     Scene.prototype.setSkybox = function (cubemaps) {
         var i;
