@@ -1109,6 +1109,12 @@ Object.assign(pc, function () {
         this.updateSkybox = true;
     };
 
+    /**
+     * @function
+     * @name pc.Scene#setSkybox
+     * @description Sets the cubemap for the scene skybox.
+     * @param {pc.Texture[]} [cubemaps] - An array of 7 cubemap textures (index 0 is original and index 1-6 are prefiltered). If undefined scene will remove skybox.
+     */
     Scene.prototype.setSkybox = function (cubemaps) {
         var i;
         if (!cubemaps)
