@@ -31,6 +31,7 @@ Object.assign(pc, function () {
      * @property {boolean} [primitive[].indexed] True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
      * {@link pc.GraphicsDevice#draw}. The primitive is ordered based on render style like the indexBuffer property.
      * @property {pc.BoundingBox} aabb The axis-aligned bounding box for the object space vertices of this mesh.
+     * @property {pc.Morph} [morph] The list of pc.MorphTarget (if any) for this mesh.
      */
     var Mesh = function () {
         this._refCount = 0;
