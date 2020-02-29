@@ -10,6 +10,7 @@ Object.assign(pc, function () {
      * var model = new pc.Model();
      * @property {pc.GraphNode} graph The root node of the model's graph node hierarchy.
      * @property {pc.MeshInstance[]} meshInstances An array of meshInstances contained in this model.
+     * @property {pc.MorphInstance[]} morphInstances An array of MorphInstances contained in this model.
      */
     var Model = function Model() {
         this.graph = null;
