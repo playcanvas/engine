@@ -750,8 +750,13 @@ Object.assign(pc, function () {
      * Defaults to pc.TONEMAP_LINEAR.
      * @property {number} exposure The exposure value tweaks the overall brightness of
      * the scene. Defaults to 1.
-     * @property {pc.Texture} skybox A cube map texture used as the scene's skybox. Defaults
-     * to null.
+     * @property {pc.Texture} skybox The base cubemap texture used as the scene's skybox, if mip level is 0. Defaults to null.
+     * @property {pc.Texture} skyboxPrefiltered128 The prefiltered cubemap texture (size 128x128) used as the scene's skybox, if mip level 1. Defaults to null.
+     * @property {pc.Texture} skyboxPrefiltered64 The prefiltered cubemap texture (size 64x64) used as the scene's skybox, if mip level 2. Defaults to null.
+     * @property {pc.Texture} skyboxPrefiltered32 The prefiltered cubemap texture (size 32x32) used as the scene's skybox, if mip level 3. Defaults to null.
+     * @property {pc.Texture} skyboxPrefiltered16 The prefiltered cubemap texture (size 16x16) used as the scene's skybox, if mip level 4. Defaults to null.
+     * @property {pc.Texture} skyboxPrefiltered8 The prefiltered cubemap texture (size 8x8) used as the scene's skybox, if mip level 5. Defaults to null.
+     * @property {pc.Texture} skyboxPrefiltered4 The prefiltered cubemap texture (size 4x4) used as the scene's skybox, if mip level 6. Defaults to null.
      * @property {number} skyboxIntensity Multiplier for skybox intensity. Defaults to 1.
      * @property {number} skyboxMip The mip level of the skybox to be displayed. Only valid
      * for prefiltered cubemap skyboxes. Defaults to 0 (base level).
