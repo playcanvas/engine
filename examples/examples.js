@@ -64,6 +64,7 @@ var categories = [
         examples: [
             "button-basic",
             "button-sprite",
+            "scroll-view",
             "text-basic",
             "text-canvas-font",
             "text-drop-shadow",
