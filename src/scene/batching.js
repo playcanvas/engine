@@ -774,17 +774,17 @@ Object.assign(pc, function () {
             numVerts = mesh.vertexBuffer.numVertices;
             batchNumVerts += numVerts;
             for (j = 0; j < elems.length; j++) {
-                if (elems[j].name === pc.SEMANTIC_POSITION) {
+                if (elems[j].semantic === pc.SEMANTIC_POSITION) {
                     hasPos = true;
-                } else if (elems[j].name === pc.SEMANTIC_NORMAL) {
+                } else if (elems[j].semantic === pc.SEMANTIC_NORMAL) {
                     hasNormal = true;
-                } else if (elems[j].name === pc.SEMANTIC_TEXCOORD0) {
+                } else if (elems[j].semantic === pc.SEMANTIC_TEXCOORD0) {
                     hasUv = true;
-                } else if (elems[j].name === pc.SEMANTIC_TEXCOORD1) {
+                } else if (elems[j].semantic === pc.SEMANTIC_TEXCOORD1) {
                     hasUv2 = true;
-                } else if (elems[j].name === pc.SEMANTIC_TANGENT) {
+                } else if (elems[j].semantic === pc.SEMANTIC_TANGENT) {
                     hasTangent = true;
-                } else if (elems[j].name === pc.SEMANTIC_COLOR) {
+                } else if (elems[j].semantic === pc.SEMANTIC_COLOR) {
                     hasColor = true;
                 }
             }
@@ -850,17 +850,17 @@ Object.assign(pc, function () {
             vertSize = mesh.vertexBuffer.format.size;
             vertSizeF = vertSize / 4;
             for (j = 0; j < elems.length; j++) {
-                if (elems[j].name === pc.SEMANTIC_POSITION) {
+                if (elems[j].semantic === pc.SEMANTIC_POSITION) {
                     offsetPF = elems[j].offset / 4;
-                } else if (elems[j].name === pc.SEMANTIC_NORMAL) {
+                } else if (elems[j].semantic === pc.SEMANTIC_NORMAL) {
                     offsetNF = elems[j].offset / 4;
-                } else if (elems[j].name === pc.SEMANTIC_TEXCOORD0) {
+                } else if (elems[j].semantic === pc.SEMANTIC_TEXCOORD0) {
                     offsetUF = elems[j].offset / 4;
-                } else if (elems[j].name === pc.SEMANTIC_TEXCOORD1) {
+                } else if (elems[j].semantic === pc.SEMANTIC_TEXCOORD1) {
                     offsetU2F = elems[j].offset / 4;
-                } else if (elems[j].name === pc.SEMANTIC_TANGENT) {
+                } else if (elems[j].semantic === pc.SEMANTIC_TANGENT) {
                     offsetTF = elems[j].offset / 4;
-                } else if (elems[j].name === pc.SEMANTIC_COLOR) {
+                } else if (elems[j].semantic === pc.SEMANTIC_COLOR) {
                     offsetCF = elems[j].offset / 4;
                 }
             }

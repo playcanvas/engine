@@ -958,7 +958,7 @@ Object.assign(pc, function () {
                     meshData = new Float32Array(this.mesh.vertexBuffer.lock());
                     stride = meshData.length / this.mesh.vertexBuffer.numVertices;
                     for (var elem = 0; elem < this.mesh.vertexBuffer.format.elements.length; elem++) {
-                        if (this.mesh.vertexBuffer.format.elements[elem].name === pc.SEMANTIC_TEXCOORD0) {
+                        if (this.mesh.vertexBuffer.format.elements[elem].semantic === pc.SEMANTIC_TEXCOORD0) {
                             texCoordOffset = this.mesh.vertexBuffer.format.elements[elem].offset / 4;
                             break;
                         }

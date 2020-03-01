@@ -74,11 +74,11 @@ Object.assign(pc, function () {
             var elems = this._baseBuffer.format.elements;
             var vertSize = this._baseBuffer.format.size;
             for (var j = 0; j < elems.length; j++) {
-                if (elems[j].name === pc.SEMANTIC_POSITION) {
+                if (elems[j].semantic === pc.SEMANTIC_POSITION) {
                     offsetP = elems[j].offset;
-                } else if (elems[j].name === pc.SEMANTIC_NORMAL) {
+                } else if (elems[j].semantic === pc.SEMANTIC_NORMAL) {
                     offsetN = elems[j].offset;
-                } else if (elems[j].name === pc.SEMANTIC_TANGENT) {
+                } else if (elems[j].semantic === pc.SEMANTIC_TANGENT) {
                     offsetT = elems[j].offset;
                 }
             }
