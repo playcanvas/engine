@@ -115,6 +115,8 @@ Object.assign(pc, function () {
      *     { semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.TYPE_FLOAT32 },
      *     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
      * ]);
+     *
+     * @property {pc.VertexAttributeElement[]} elements The vertex attribute elements.
      */
     var VertexFormat = function (graphicsDevice, description) {
         var i, len, element;
@@ -130,15 +132,19 @@ Object.assign(pc, function () {
         for (i = 0, len = description.length; i < len; i++) {
             var elementDesc = description[i];
             element = {
-                name: elementDesc.semantic,
+                semantic: elementDesc.semantic,
                 offset: 0,
                 stride: 0,
                 stream: -1,
                 scopeId: graphicsDevice.scope.resolve(elementDesc.semantic),
-                dataType: elementDesc.type,
-                numComponents: elementDesc.components,
+                type: elementDesc.type,
+                components: elementDesc.components,
                 normalize: (elementDesc.normalize === undefined) ? false : elementDesc.normalize,
-                size: elementDesc.components * _typeSize[elementDesc.type]
+                size: elementDesc.components * _typeSize[elementDesc.type],
+
+                name: elementDesc.semantic, // backwards compatibility
+                dataType: elementDesc.type, // backwards compatibility
+                numComponents: elementDesc.components // backwards compatibility
             };
             this.elements.push(element);
             // This buffer will be accessed by a Float32Array and so must be 4 byte aligned
