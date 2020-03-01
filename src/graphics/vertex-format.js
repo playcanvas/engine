@@ -11,14 +11,14 @@ Object.assign(pc, function () {
     _typeSize[pc.TYPE_FLOAT32] = 4;
 
     /**
-     * @class
-     * @name pc.VertexFormat
-     * @classdesc A vertex format is a descriptor that defines the layout of vertex data inside
-     * a {@link pc.VertexBuffer}.
-     * @description Returns a new pc.VertexFormat object.
-     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
-     * @param {object[]} description - An array of vertex attribute descriptions.
-     * @param {string} description[].semantic - The meaning of the vertex element. This is used to link
+     * @interface
+     * @name pc.VertexAttributeDescription
+     * @description Interface for describing a vertex attribute in {@link pc.VertexFormat}.
+     */
+    /**
+     * @name pc.VertexAttributeDescription#semantic
+     * @type {string}
+     * @description The meaning of the vertex element. This is used to link
      * the vertex data to a shader input. Can be:
      *
      * * {@link pc.SEMANTIC_POSITION}
@@ -38,9 +38,17 @@ Object.assign(pc, function () {
      *
      * If vertex data has a meaning other that one of those listed above, use the user-defined
      * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
-     * @param {number} description[].components - The number of components of the vertex attribute.
+     */
+    /**
+     * @name pc.VertexAttributeDescription#components
+     * @type {number}
+     * @description The number of components of the vertex attribute.
      * Can be 1, 2, 3 or 4.
-     * @param {number} description[].type - The data type of the attribute. Can be:
+     */
+    /**
+     * @name pc.VertexAttributeDescription#type
+     * @type {number}
+     * @description The data type of the attribute. Can be:
      *
      * * {@link pc.TYPE_INT8}
      * * {@link pc.TYPE_UINT8}
@@ -49,10 +57,24 @@ Object.assign(pc, function () {
      * * {@link pc.TYPE_INT32}
      * * {@link pc.TYPE_UINT32}
      * * {@link pc.TYPE_FLOAT32}
-     *
-     * @param {boolean} [description[].normalize] - If true, vertex attribute data will be mapped from a
+     */
+    /**
+     * @name pc.VertexAttributeDescription#[normalize]
+     * @type {boolean}
+     * @description If true, vertex attribute data will be mapped from a
      * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
      * unchanged. If this property is unspecified, false is assumed.
+     */
+    var VertexAttributeDescription = function () {};
+
+    /**
+     * @class
+     * @name pc.VertexFormat
+     * @classdesc A vertex format is a descriptor that defines the layout of vertex data inside
+     * a {@link pc.VertexBuffer}.
+     * @description Returns a new pc.VertexFormat object.
+     * @param {pc.GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
+     * @param {pc.VertexAttributeDescription[]} description - An array of vertex attribute descriptions.
      * @example
      * // Specify 3-component positions (x, y, z)
      * var vertexFormat = new pc.VertexFormat(graphicsDevice, [
@@ -143,6 +165,7 @@ Object.assign(pc, function () {
     });
 
     return {
+        VertexAttributeDescription: VertexAttributeDescription,
         VertexFormat: VertexFormat
     };
 }());
