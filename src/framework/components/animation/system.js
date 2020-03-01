@@ -18,12 +18,12 @@ Object.assign(pc, function () {
     ];
 
     /**
-     * @constructor
+     * @class
      * @name pc.AnimationComponentSystem
-     * @extends pc.ComponentSystem
-     * @classdesc The AnimationComponentSystem manages creating and deleting AnimationComponents
-     * @description Create an AnimationComponentSystem
-     * @param {pc.Application} app The application managing this system.
+     * @augments pc.ComponentSystem
+     * @classdesc The AnimationComponentSystem manages creating and deleting AnimationComponents.
+     * @description Create an AnimationComponentSystem.
+     * @param {pc.Application} app - The application managing this system.
      */
     var AnimationComponentSystem = function AnimationComponentSystem(app) {
         pc.ComponentSystem.call(this, app);
@@ -107,7 +107,9 @@ Object.assign(pc, function () {
                                 // skeleton
                                 var delta = dt * componentData.speed;
                                 skeleton.addTime(delta);
-                                if ((skeleton._time === skeleton._animation.duration) && !componentData.loop) {
+                                if (componentData.speed > 0 && (skeleton._time === skeleton._animation.duration) && !componentData.loop) {
+                                    componentData.playing = false;
+                                } else if (componentData.speed < 0 && skeleton._time === 0 && !componentData.loop) {
                                     componentData.playing = false;
                                 }
                             }

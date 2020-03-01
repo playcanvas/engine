@@ -1,24 +1,41 @@
 Object.assign(pc, function () {
     /**
-     * @constructor
+     * @class
      * @name pc.ScriptType
-     * @extends pc.EventHandler
-     * @classdesc Represents the type of a script. It is returned by {@link pc.createScript}. Also referred to as Script Type.<br />
-     * The type is to be extended using its JavaScript prototype. There is a <strong>list of methods</strong>
-     * that will be executed by the engine on instances of this type, such as: <ul><li>initialize</li><li>postInitialize</li><li>update</li><li>postUpdate</li><li>swap</li></ul>
-     * <strong>initialize</strong> and <strong>postInitialize</strong> - are called if defined when script is about to run for the first time - postInitialize will run after all initialize methods are executed in the same tick or enabling chain of actions.<br />
-     * <strong>update</strong> and <strong>postUpdate</strong> - methods are called if defined for enabled (running state) scripts on each tick.<br />
-     * <strong>swap</strong> - This method will be called when a {@link pc.ScriptType} that already exists in the registry gets redefined.
-     * If the new {@link pc.ScriptType} has a `swap` method in its prototype, then it will be executed to perform hot-reload at runtime.
-     * @property {pc.Application} app The {@link pc.Application} that the instance of this type belongs to.
+     * @augments pc.EventHandler
+     * @classdesc Represents the type of a script. It is returned by {@link pc.createScript}.
+     * Also referred to as Script Type.
+     *
+     * The type is to be extended using its JavaScript prototype. There is a **list of methods**
+     * that will be executed by the engine on instances of this type, such as:
+     *
+     * * initialize
+     * * postInitialize
+     * * update
+     * * postUpdate
+     * * swap
+     *
+     * **initialize** and **postInitialize** - are called if defined when script is about to run
+     * for the first time - postInitialize will run after all initialize methods are executed in
+     * the same tick or enabling chain of actions.
+     *
+     * **update** and **postUpdate** - methods are called if defined for enabled (running state)
+     * scripts on each tick.
+     *
+     * **swap** - This method will be called when a {@link pc.ScriptType} that already exists in
+     * the registry gets redefined. If the new {@link pc.ScriptType} has a `swap` method in its
+     * prototype, then it will be executed to perform hot-reload at runtime.
+     * @property {pc.Application} app The {@link pc.Application} that the instance of this type
+     * belongs to.
      * @property {pc.Entity} entity The {@link pc.Entity} that the instance of this type belongs to.
-     * @property {Boolean} enabled True if the instance of this type is in running state. False when script is not running,
-     * because the Entity or any of its parents are disabled or the Script Component is disabled or the Script Instance is disabled.
-     * When disabled no update methods will be called on each tick.
-     * initialize and postInitialize methods will run once when the script instance is in `enabled` state during app tick.
-     * @param {Object} args The input arguments object
-     * @param {pc.Application} args.app The {@link pc.Application} that is running the script
-     * @param {pc.Entity} args.entity The {@link pc.Entity} that the script is attached to
+     * @property {boolean} enabled True if the instance of this type is in running state. False
+     * when script is not running, because the Entity or any of its parents are disabled or the
+     * Script Component is disabled or the Script Instance is disabled. When disabled no update
+     * methods will be called on each tick. initialize and postInitialize methods will run once
+     * when the script instance is in `enabled` state during app tick.
+     * @param {object} args - The input arguments object
+     * @param {pc.Application} args.app - The {@link pc.Application} that is running the script
+     * @param {pc.Entity} args.entity - The {@link pc.Entity} that the script is attached to
      *
      */
     var ScriptType = function (args) {
@@ -52,7 +69,7 @@ Object.assign(pc, function () {
      * @readonly
      * @static
      * @name pc.ScriptType.__name
-     * @type String
+     * @type {string}
      * @description Name of a Script Type.
      */
     ScriptType.__name = name;
@@ -61,9 +78,9 @@ Object.assign(pc, function () {
      * @field
      * @static
      * @readonly
-     * @type pc.ScriptAttributes
-     * @name pc.ScriptType.attributes
-     * @description The interface to define attributes for Script Types. Refer to {@link pc.ScriptAttributes}
+     * @name pc.ScriptType#attributes
+     * @type {pc.ScriptAttributes}
+     * @description The interface to define attributes for Script Types. Refer to {@link pc.ScriptAttributes}.
      * @example
      * var PlayerController = pc.createScript('playerController');
      *
@@ -102,19 +119,19 @@ Object.assign(pc, function () {
      * @static
      * @function
      * @name pc.ScriptType.extend
-     * @param {Object} methods Object with methods, where key - is name of method, and value - is function.
+     * @param {object} methods - Object with methods, where key - is name of method, and value - is function.
      * @description Shorthand function to extend Script Type prototype with list of methods.
      * @example
      * var PlayerController = pc.createScript('playerController');
      *
      * PlayerController.extend({
-     *     initialize: function() {
+     *     initialize: function () {
      *         // called once on initialize
      *     },
-     *     update: function(dt) {
+     *     update: function (dt) {
      *         // called each tick
      *     }
-     * })
+     * });
      */
     ScriptType.extend = function (methods) {
         for (var key in methods) {
@@ -141,12 +158,14 @@ Object.assign(pc, function () {
      * @function
      * @name pc.ScriptType#[update]
      * @description Called for enabled (running state) scripts on each tick.
+     * @param {number} dt - The delta time in seconds since the last frame.
      */
 
     /**
      * @function
      * @name pc.ScriptType#[postUpdate]
      * @description Called for enabled (running state) scripts on each tick, after update.
+     * @param {number} dt - The delta time in seconds since the last frame.
      */
 
     /**
@@ -160,10 +179,10 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.ScriptType#enable
-     * @description Fired when a script instance becomes enabled
+     * @description Fired when a script instance becomes enabled.
      * @example
-     * PlayerController.prototype.initialize = function() {
-     *     this.on('enable', function() {
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('enable', function () {
      *         // Script Instance is now enabled
      *     });
      * };
@@ -172,10 +191,10 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.ScriptType#disable
-     * @description Fired when a script instance becomes disabled
+     * @description Fired when a script instance becomes disabled.
      * @example
-     * PlayerController.prototype.initialize = function() {
-     *     this.on('disable', function() {
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('disable', function () {
      *         // Script Instance is now disabled
      *     });
      * };
@@ -184,11 +203,11 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.ScriptType#state
-     * @description Fired when a script instance changes state to enabled or disabled
-     * @param {Boolean} enabled True if now enabled, False if disabled
+     * @description Fired when a script instance changes state to enabled or disabled.
+     * @param {boolean} enabled - True if now enabled, False if disabled.
      * @example
-     * PlayerController.prototype.initialize = function() {
-     *     this.on('state', function(enabled) {
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('state', function (enabled) {
      *         console.log('Script Instance is now ' + (enabled ? 'enabled' : 'disabled'));
      *     });
      * };
@@ -197,10 +216,10 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.ScriptType#destroy
-     * @description Fired when a script instance is destroyed and removed from component
+     * @description Fired when a script instance is destroyed and removed from component.
      * @example
-     * PlayerController.prototype.initialize = function() {
-     *     this.on('destroy', function() {
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('destroy', function () {
      *         // no more part of an entity
      *         // good place to cleanup entity from destroyed script
      *     });
@@ -210,13 +229,13 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.ScriptType#attr
-     * @description Fired when any script attribute has been changed
-     * @param {String} name Name of attribute
-     * @param {Object} value New value
-     * @param {Object} valueOld Old value
+     * @description Fired when any script attribute has been changed.
+     * @param {string} name - Name of attribute.
+     * @param {object} value - New value.
+     * @param {object} valueOld - Old value.
      * @example
-     * PlayerController.prototype.initialize = function() {
-     *     this.on('attr', function(name, value, valueOld) {
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('attr', function (name, value, valueOld) {
      *         console.log(name + ' been changed from ' + valueOld + ' to ' + value);
      *     });
      * };
@@ -225,12 +244,12 @@ Object.assign(pc, function () {
     /**
      * @event
      * @name pc.ScriptType#attr:[name]
-     * @description Fired when a specific script attribute has been changed
-     * @param {Object} value New value
-     * @param {Object} valueOld Old value
+     * @description Fired when a specific script attribute has been changed.
+     * @param {object} value - New value.
+     * @param {object} valueOld - Old value.
      * @example
-     * PlayerController.prototype.initialize = function() {
-     *     this.on('attr:speed', function(value, valueOld) {
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('attr:speed', function (value, valueOld) {
      *         console.log('speed been changed from ' + valueOld + ' to ' + value);
      *     });
      * };
@@ -240,11 +259,11 @@ Object.assign(pc, function () {
      * @event
      * @name pc.ScriptType#error
      * @description Fired when a script instance had an exception. The script instance will be automatically disabled.
-     * @param {Error} err Native JavaScript Error object with details of error
-     * @param {String} method The method of the script instance that the exception originated from.
+     * @param {Error} err - Native JavaScript Error object with details of error.
+     * @param {string} method - The method of the script instance that the exception originated from.
      * @example
-     * PlayerController.prototype.initialize = function() {
-     *     this.on('error', function(err, method) {
+     * PlayerController.prototype.initialize = function () {
+     *     this.on('error', function (err, method) {
      *         // caught an exception
      *         console.log(err.stack);
      *     });

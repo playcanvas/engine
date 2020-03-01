@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlayCanvas Orbit Camera</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <script src="../../build/output/playcanvas.js"></script>
+    <style>
+        body { 
+            margin: 0;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the app and start the update loop
+        var app = new pc.Application(canvas, {
+            mouse: new pc.Mouse(document.body),
+            touch: new pc.TouchDevice(document.body)
+        });
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        window.addEventListener("resize", function () {
+            app.resizeCanvas(canvas.width, canvas.height);
+        });
+
+        // A list of assets that need to be loaded
+        var assetManifest = [
+            {
+                type: "model",
+                url: "../assets/models/statue/statue.json"
+            },
+            {
+                type: "script",
+                url: "../assets/scripts/camera/orbit-camera.js"
+            }
+        ];
+
+        // Load all assets and then run the example
+        var assetsToLoad = assetManifest.length;
+        assetManifest.forEach(function (entry) {
+            app.assets.loadFromUrl(entry.url, entry.type, function (err, asset) {
+                if (!err && asset) {
+                    assetsToLoad--;
+                    entry.asset = asset;
+                    if (assetsToLoad === 0) {
+                        run();
+                    }
+                }
+            });
+        });
+
+        function run() {
+            // Create a model entity and assign the statue model
+            var model = new pc.Entity();
+            model.addComponent("model", {
+                type: "asset",
+                asset: assetManifest[0].asset
+            });
+            app.root.addChild(model);
+
+            // Create a camera with an orbit camera script
+            var camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.4, 0.45, 0.5)
+            });
+            camera.addComponent("script");
+            camera.script.create("orbitCamera", {
+                attributes: {
+                    inertiaFactor: 0.2 // Override default of 0 (no inertia)
+                }
+            });
+            camera.script.create("orbitCameraInputMouse");
+            camera.script.create("orbitCameraInputTouch");
+            app.root.addChild(camera);
+
+            // Create a directional light
+            var light = new pc.Entity();
+            light.addComponent("light", {
+                type: "directional"
+            });
+            app.root.addChild(light);
+            light.setLocalEulerAngles(45, 30, 0);
+
+            app.start();
+        }
+    </script>
+</body>
+</html>

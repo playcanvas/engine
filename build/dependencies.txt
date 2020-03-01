@@ -1,4 +1,6 @@
+../src/polyfill/array-find.js
 ../src/polyfill/math-log2.js
+../src/polyfill/math-sign.js
 ../src/polyfill/object-assign.js
 ../src/polyfill/pointer-lock.js
 ../src/polyfill/request-animation-frame.js
@@ -109,6 +111,9 @@
 ../src/input/element-input.js
 ../src/vr/vr-manager.js
 ../src/vr/vr-display.js
+../src/xr/xr-manager.js
+../src/xr/xr-input.js
+../src/xr/xr-input-source.js
 ../src/net/http.js
 ../src/script/script-registry.js
 ../src/script/script.js
@@ -239,6 +244,7 @@
 ../src/resources/parser/json-model.js
 ../src/resources/parser/scene.js
 ../src/resources/parser/material/json-standard-material.js
+../src/resources/basis.js
 ../src/asset/asset.js
 ../src/asset/asset-variants.js
 ../src/asset/asset-registry.js

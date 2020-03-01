@@ -82,6 +82,8 @@ Object.assign(pc, function () {
             emissiveTint = emissiveTint ? 3 : (stdMat.emissiveIntensity !== 1 ? 1 : 0);
         }
 
+        var isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === pc.PIXELFORMAT_DXT5 || stdMat.normalMap.swizzleGGGR) : false;
+
         options.opacityTint = (stdMat.opacity !== 1 && stdMat.blendType !== pc.BLEND_NONE) ? 1 : 0;
         options.blendMapsWithColors = true;
         options.ambientTint = stdMat.ambientTint;
@@ -91,7 +93,7 @@ Object.assign(pc, function () {
         options.glossTint = 1;
         options.emissiveTint = emissiveTint;
         options.alphaToCoverage = stdMat.alphaToCoverage;
-        options.needsNormalFloat = stdMat.normalizeNormalMap;
+        options.normalizeNormalMap = stdMat.normalizeNormalMap;
         options.sphereMap = !!stdMat.sphereMap;
         options.cubeMap = !!stdMat.cubeMap;
         options.dpAtlas = !!stdMat.dpAtlas;
@@ -99,14 +101,14 @@ Object.assign(pc, function () {
         options.useSpecular = useSpecular;
         options.emissiveFormat = stdMat.emissiveMap ? (stdMat.emissiveMap.rgbm ? 1 : (stdMat.emissiveMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
         options.lightMapFormat = stdMat.lightMap ? (stdMat.lightMap.rgbm ? 1 : (stdMat.lightMap.format === pc.PIXELFORMAT_RGBA32F ? 2 : 0)) : null;
-        options.specularAntialias = stdMat.specularAntialias;
+        options.specularAntialias = stdMat.specularAntialias && (!!stdMat.normalMap) && (!!stdMat.normalMap.mipmaps) && !isPackedNormalMap;
         options.conserveEnergy = stdMat.conserveEnergy;
         options.occludeSpecular = stdMat.occludeSpecular;
         options.occludeSpecularFloat = (stdMat.occludeSpecularIntensity !== 1.0);
         options.occludeDirect = stdMat.occludeDirect;
         options.shadingModel = stdMat.shadingModel;
         options.fresnelModel = stdMat.fresnelModel;
-        options.packedNormal = stdMat.normalMap ? (stdMat.normalMap.format === pc.PIXELFORMAT_DXT5) : false;
+        options.packedNormal = isPackedNormalMap;
         options.fastTbn = stdMat.fastTbn;
         options.cubeMapProjection = stdMat.cubeMapProjection;
         options.customFragmentShader = stdMat.customFragmentShader;

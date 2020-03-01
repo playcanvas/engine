@@ -5,6 +5,7 @@ describe("pc.events", function () {
         pc.events.attach(o);
 
         expect(o.on).to.exist;
+        expect(o.once).to.exist;
         expect(o.off).to.exist;
         expect(o.fire).to.exist;
     });
@@ -309,4 +310,42 @@ describe("pc.events", function () {
 
         o.fire("test", value, value2);
     });
+
+    it("Fire once and on for the same callback", function () {
+        var count = 0;
+        var fn = function () {
+          count++;
+        };
+
+        var o = new pc.EventHandler();
+
+        o.once("eventA", fn);
+        o.on("eventB", fn);
+        o.once("eventC", fn);
+
+        o.fire("eventA", "a");
+        o.fire("eventA", "b");
+        o.fire("eventB", "c");
+        o.fire("eventB", "d");
+        o.fire("eventC", "e");
+        o.fire("eventC", "f");
+
+        expect(count).to.equal(4);
+    });
+
+    it("Fire once callback with the same name twice", function () {
+        var count = 0;
+        var fn = function () {
+          count++;
+        };
+
+        var o = new pc.EventHandler();
+
+        o.once("eventA", fn);
+        o.once("eventA", fn);
+        o.fire("eventA");
+
+        expect(count).to.equal(2);
+    });
+
 });

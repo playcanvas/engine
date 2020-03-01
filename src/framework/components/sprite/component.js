@@ -3,7 +3,7 @@ Object.assign(pc, function () {
 
     /**
      * @constant
-     * @type {String}
+     * @type {string}
      * @name pc.SPRITETYPE_SIMPLE
      * @description A {@link pc.SpriteComponent} that displays a single frame from a sprite asset.
      */
@@ -12,7 +12,7 @@ Object.assign(pc, function () {
 
     /**
      * @constant
-     * @type {String}
+     * @type {string}
      * @name pc.SPRITETYPE_ANIMATED
      * @description A {@link pc.SpriteComponent} that renders sprite animations.
      */
@@ -28,31 +28,33 @@ Object.assign(pc, function () {
 
     /**
      * @component
-     * @constructor
+     * @class
      * @name pc.SpriteComponent
-     * @extends pc.Component
+     * @augments pc.Component
      * @classdesc Enables an Entity to render a simple static sprite or sprite animations.
-     * @param {pc.SpriteComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.Entity} entity The Entity that this Component is attached to.
-     * @property {String} type The type of the SpriteComponent. Can be one of the following:
-     * <ul>
-     *     <li>pc.SPRITETYPE_SIMPLE: The component renders a single frame from a sprite asset.
-     *     <li>pc.SPRITETYPE_ANIMATED: The component can play sprite animation clips.
-     * </ul>
-     * @property {Number} frame The frame counter of the sprite. Specifies which frame from the current sprite asset to render.
-     * @property {Number} spriteAsset The id of the sprite asset to render. Only works for {@link pc.SPRITETYPE_SIMPLE} types.
+     * @param {pc.SpriteComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {pc.Entity} entity - The Entity that this Component is attached to.
+     * @property {string} type The type of the SpriteComponent. Can be:
+     *
+     * * {@link pc.SPRITETYPE_SIMPLE}: The component renders a single frame from a sprite asset.
+     * * {@link pc.SPRITETYPE_ANIMATED}: The component can play sprite animation clips.
+     *
+     * @property {number} frame The frame counter of the sprite. Specifies which frame from the current sprite asset to render.
+     * @property {number} spriteAsset The id of the sprite asset to render. Only works for {@link pc.SPRITETYPE_SIMPLE} types.
      * @property {pc.Sprite} sprite The current sprite.
+     * @property {number} width The width of the sprite when rendering using 9-Slicing. The width and height are only used when the render mode of the sprite asset is Sliced or Tiled.
+     * @property {number} height The height of the sprite when rendering using 9-Slicing. The width and height are only used when the render mode of the sprite asset is Sliced or Tiled.
      * @property {pc.Color} color The color tint of the sprite.
-     * @property {Number} opacity The opacity of the sprite.
-     * @property {Boolean} flipX Flip the X axis when rendering a sprite.
-     * @property {Boolean} flipY Flip the Y axis when rendering a sprite.
-     * @property {Object} clips A dictionary that contains {@link pc.SpriteAnimationClip}s.
+     * @property {number} opacity The opacity of the sprite.
+     * @property {boolean} flipX Flip the X axis when rendering a sprite.
+     * @property {boolean} flipY Flip the Y axis when rendering a sprite.
+     * @property {object} clips A dictionary that contains {@link pc.SpriteAnimationClip}s.
      * @property {pc.SpriteAnimationClip} currentClip The current clip being played.
-     * @property {Number} speed A global speed modifier used when playing sprite animation clips.
-     * @property {Number} batchGroupId Assign sprite to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
-     * @property {String} autoPlayClip The name of the clip to play automatically when the component is enabled and the clip exists.
-     * @property {Number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this sprite should belong.
-     * @property {Number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components in the same layer.
+     * @property {number} speed A global speed modifier used when playing sprite animation clips.
+     * @property {number} batchGroupId Assign sprite to a specific batch group (see {@link pc.BatchGroup}). Default value is -1 (no group).
+     * @property {string} autoPlayClip The name of the clip to play automatically when the component is enabled and the clip exists.
+     * @property {number[]} layers An array of layer IDs ({@link pc.Layer#id}) to which this sprite should belong.
+     * @property {number} drawOrder The draw order of the component. A higher value means that the component will be rendered on top of other components in the same layer.
      */
     var SpriteComponent = function SpriteComponent(system, entity) {
         pc.Component.call(this, system, entity);
@@ -453,11 +455,11 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SpriteComponent#addClip
          * @description Creates and adds a new {@link pc.SpriteAnimationClip} to the component's clips.
-         * @param {Object} data Data for the new animation clip.
-         * @param {String} [data.name] The name of the new animation clip.
-         * @param {Number} [data.fps] Frames per second for the animation clip.
-         * @param {Object} [data.loop] Whether to loop the animation clip.
-         * @param {Number} [data.spriteAsset] The id of the sprite asset that this clip will play.
+         * @param {object} data - Data for the new animation clip.
+         * @param {string} [data.name] - The name of the new animation clip.
+         * @param {number} [data.fps] - Frames per second for the animation clip.
+         * @param {object} [data.loop] - Whether to loop the animation clip.
+         * @param {number} [data.spriteAsset] - The id of the sprite asset that this clip will play.
          * @returns {pc.SpriteAnimationClip} The new clip that was added.
          */
         addClip: function (data) {
@@ -480,7 +482,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SpriteComponent#removeClip
          * @description Removes a clip by name.
-         * @param {String} name The name of the animation clip to remove.
+         * @param {string} name - The name of the animation clip to remove.
          */
         removeClip: function (name) {
             delete this._clips[name];
@@ -490,7 +492,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SpriteComponent#clip
          * @description Get an animation clip by name.
-         * @param {String} name The name of the clip.
+         * @param {string} name - The name of the clip.
          * @returns {pc.SpriteAnimationClip} The clip.
          */
         clip: function (name) {
@@ -501,7 +503,7 @@ Object.assign(pc, function () {
          * @function
          * @name pc.SpriteComponent#play
          * @description Plays a sprite animation clip by name. If the animation clip is already playing then this will do nothing.
-         * @param {String} name The name of the clip to play.
+         * @param {string} name - The name of the clip to play.
          * @returns {pc.SpriteAnimationClip} The clip that started playing.
          */
         play: function (name) {
@@ -895,41 +897,41 @@ Object.assign(pc, function () {
 /**
  * @event
  * @name pc.SpriteComponent#play
- * @description Fired when an animation clip starts playing
- * @param {pc.SpriteAnimationClip} clip The clip that started playing
+ * @description Fired when an animation clip starts playing.
+ * @param {pc.SpriteAnimationClip} clip - The clip that started playing.
  */
 
 /**
  * @event
  * @name pc.SpriteComponent#pause
  * @description Fired when an animation clip is paused.
- * @param {pc.SpriteAnimationClip} clip The clip that was paused
+ * @param {pc.SpriteAnimationClip} clip - The clip that was paused.
  */
 
 /**
  * @event
  * @name pc.SpriteComponent#resume
  * @description Fired when an animation clip is resumed.
- * @param {pc.SpriteAnimationClip} clip The clip that was resumed
+ * @param {pc.SpriteAnimationClip} clip - The clip that was resumed.
  */
 
 /**
  * @event
  * @name pc.SpriteComponent#stop
  * @description Fired when an animation clip is stopped.
- * @param {pc.SpriteAnimationClip} clip The clip that was stopped
+ * @param {pc.SpriteAnimationClip} clip - The clip that was stopped.
  */
 
 /**
  * @event
  * @name pc.SpriteComponent#end
  * @description Fired when an animation clip stops playing because it reached its ending.
- * @param {pc.SpriteAnimationClip} clip The clip that ended
+ * @param {pc.SpriteAnimationClip} clip - The clip that ended.
  */
 
 /**
  * @event
  * @name pc.SpriteComponent#loop
  * @description Fired when an animation clip reached the end of its current loop.
- * @param {pc.SpriteAnimationClip} clip The clip
+ * @param {pc.SpriteAnimationClip} clip - The clip.
  */

@@ -8,3 +8,9 @@ var Ammo = {};
 // CRN, DDS support?
 var Module = {};
 
+// temp
+var performance = {};
+var WebAssembly = {};
+
+// WebXR
+var XRWebGLLayer = {};
