@@ -68,6 +68,34 @@ Object.assign(pc, function () {
     var VertexAttributeDescription = function () {};
 
     /**
+     * @interface
+     * @implements VertexAttributeDescription
+     * @name pc.VertexAttributeElement
+     * @description Interface of a vertex attribute element in {@link pc.VertexFormat}.
+     */
+    /**
+     * @name pc.VertexAttributeElement#offset
+     * @type {number}
+     * @description The number of initial bytes at the start of a vertex that are not relevant to this attribute.
+     */
+    /**
+     * @name pc.VertexAttributeElement#stride
+     * @type {number}
+     * @description The number of total bytes that are between the start of one vertex, and the start of the next.
+     */
+    /**
+     * @name pc.VertexAttributeElement#scopeId
+     * @type {pc.ScopeId}
+     * @description The shader input variable corresponding to the attribute.
+     */
+    /**
+     * @name pc.VertexAttributeElement#size
+     * @type {number}
+     * @description The size of the attribute in bytes.
+     */
+    var VertexAttributeElement = function () {};
+
+    /**
      * @class
      * @name pc.VertexFormat
      * @classdesc A vertex format is a descriptor that defines the layout of vertex data inside
@@ -166,6 +194,7 @@ Object.assign(pc, function () {
 
     return {
         VertexAttributeDescription: VertexAttributeDescription,
+        VertexAttributeElement: VertexAttributeElement,
         VertexFormat: VertexFormat
     };
 }());
