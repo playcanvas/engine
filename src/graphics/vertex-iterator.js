@@ -1,6 +1,14 @@
 Object.assign(pc, function () {
     'use strict';
 
+    /**
+     * @class
+     * @name pc.VertexIteratorAccessor
+     * @classdesc Helps with accessing a specific vertex attribute.
+     * @description Returns a new pc.VertexIteratorAccessor object.
+     * @param {ArrayBuffer} buffer - The vertex buffer containing the attribute to be accessed.
+     * @param {pc.VertexAttributeElement} vertexElement - The vertex attribute to be accessed.
+     */
     function VertexIteratorAccessor(buffer, vertexElement) {
         this.index = 0;
 
@@ -37,8 +45,28 @@ Object.assign(pc, function () {
         }
     }
 
+    /**
+     * @function
+     * @name pc.VertexIteratorAccessor#get
+     * @description Get a attribute component at the current index.
+     * @param {number} offset - The component offset. Should be either 0, 1, 2, or 3.
+     * @returns {number} The value of a attribute component.
+     */
     VertexIteratorAccessor.prototype.get = function (offset) {
         return this.array[this.index + offset];
+    };
+
+    /**
+     * @function
+     * @name pc.VertexIteratorAccessor#set
+     * @description Set all the attribute components at the current index.
+     * @param {number} a - The first component value.
+     * @param {number} [b] - The second component value (if applicable).
+     * @param {number} [c] - The third component value (if applicable).
+     * @param {number} [d] - The fourth component value (if applicable).
+     */
+    VertexIteratorAccessor.prototype.set = function (a, b, c, d) {
+        // Will be replaced with specialized implementation based on number of components
     };
 
     function VertexIteratorAccessor_set1(a) {
@@ -148,6 +176,7 @@ Object.assign(pc, function () {
     });
 
     return {
+        VertexIteratorAccessor: VertexIteratorAccessor,
         VertexIterator: VertexIterator
     };
 }());
