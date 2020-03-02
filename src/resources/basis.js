@@ -60,8 +60,45 @@ Object.assign(pc, function () {
 
         var hasPerformance = typeof performance !== 'undefined';
 
+        // unswizzle two-component gggr8888 normal data into rgba8888
+        var unswizzleGGGR = function (data) {
+            // given R and G generate B
+            var genB = function(R, G) {
+                var r = R * (2.0 / 255.0) - 1.0;
+                var g = G * (2.0 / 255.0) - 1.0;
+                var b = Math.sqrt(1.0 - Math.min(1.0, r * r + g * g));
+                return Math.max(0, Math.min(255, Math.floor(((b + 1.0) * 0.5) * 255.0)));
+            };
+
+            for (var offset=0; offset<data.length; offset += 4) {
+                var R = data[offset+3];
+                var G = data[offset+1]
+                data[offset+0] = R;
+                data[offset+2] = genB(R, G);
+                data[offset+3] = 255;
+            }
+
+            return data;
+        };
+
+        // pack rgba8888 data into rgb565
+        var pack565 = function (data) {
+            var result = new Uint16Array(data.length / 4);
+
+            for (var offset=0; offset<data.length; offset += 4) {
+                var R = data[offset+0];
+                var G = data[offset+1];
+                var B = data[offset+2];
+                result[offset / 4] = ((R & 0xf8) << 8) |  // 5
+                                     ((G & 0xfc) << 3) |  // 6
+                                     ((B >> 3));          // 5
+            }
+
+            return result;
+        };
+
         // transcode the basis super-compressed data into one of the runtime gpu native formats
-        var transcode = function (basis, url, format, data) {
+        var transcode = function (basis, url, format, data, options) {
             var funcStart = hasPerformance ? performance.now() : 0;
             var basisFile = new basis.BasisFile(new Uint8Array(data));
 
@@ -89,6 +126,11 @@ Object.assign(pc, function () {
                     basisFormat = (basisFormat === BASIS_FORMAT.cTFPVRTC1_4_RGB) ?
                         BASIS_FORMAT.cTFRGB565 : BASIS_FORMAT.cTFRGBA32;
                 }
+            }
+
+            if (options && options.unswizzleGGGR) {
+                // in order unswizzle we need gggr8888
+                basisFormat = BASIS_FORMAT.cTFRGBA32;
             }
 
             if (!basisFile.startTranscoding()) {
@@ -124,6 +166,14 @@ Object.assign(pc, function () {
             basisFile.close();
             basisFile.delete();
 
+            // handle unswizzle option
+            if (options && options.unswizzleGGGR) {
+                basisFormat = BASIS_FORMAT.cTFRGB565;
+                for (var i=0; i<levelData.length; ++i) {
+                    levelData[i] = pack565(unswizzleGGGR(levelData[i]));
+                }
+            }
+
             return {
                 format: basisToEngineMapping[basisFormat],
                 width: (width + 3) & ~3,
@@ -141,20 +191,16 @@ Object.assign(pc, function () {
 
         // download and transcode the file given the basis module and
         // file url
-        var workerTranscode = function (url, format, data) {
-            if (basis) {
-                try {
-                    // texture data has been provided
-                    var result = transcode(basis, url, format, data);
-                    result.levels = result.levels.map(function (v) {
-                        return v.buffer;
-                    });
-                    self.postMessage( { url: url, data: result }, result.levels);
-                } catch (err) {
-                    self.postMessage( { url: url.toString(), err: err.toString() } );
-                }
-            } else {
-                queue.push([url, format, data]);
+        var workerTranscode = function (url, format, data, options) {
+            try {
+                // texture data has been provided
+                var result = transcode(basis, url, format, data, options);
+                result.levels = result.levels.map(function (v) {
+                    return v.buffer;
+                });
+                self.postMessage( { url: url, data: result }, result.levels);
+            } catch (err) {
+                self.postMessage( { url: url.toString(), err: err.toString() } );
             }
         };
 
@@ -173,9 +219,9 @@ Object.assign(pc, function () {
                 basis = instance;
                 basis.initializeBasis();
                 for (var i = 0; i < queue.length; ++i) {
-                    workerTranscode(queue[i][0], queue[i][1], queue[i][2]);
+                    workerTranscode(queue[i].url, queue[i].format, queue[i].data, queue[i].options);
                 }
-                queue = null;
+                queue = [];
             } );
         };
 
@@ -187,7 +233,11 @@ Object.assign(pc, function () {
                     workerInit(data.module);
                     break;
                 case 'transcode':
-                    workerTranscode(data.url, data.format, data.data);
+                    if (basis) {
+                        workerTranscode(data.url, data.format, data.data, data.options);
+                    } else {
+                        queue.push(data);
+                    }
                     break;
             }
         };
@@ -206,7 +256,7 @@ Object.assign(pc, function () {
     })();
 
     // select the most desirable gpu texture compression format given the device's capabilities
-    var selectTextureCompressionFormat = function (device) {
+    var chooseTargetFormat = function (device) {
         if (device.extCompressedTextureASTC) {
             return 'astc';
         } else if (device.extCompressedTextureS3TC) {
@@ -229,6 +279,13 @@ Object.assign(pc, function () {
     var callbacks = { };
     var format = null;
     var transcodeQueue = [];
+
+    var basisTargetFormat = function () {
+        if (!format) {
+            format = chooseTargetFormat(pc.app.graphicsDevice)
+        }
+        return format;
+    };
 
     var handleWorkerResponse = function (message) {
         var url = message.data.url;
@@ -268,14 +325,11 @@ Object.assign(pc, function () {
     };
 
     // post a transcode job to the web worker
-    var transcode = function (url, data, callback) {
+    var transcode = function (url, data, callback, options) {
         if (!callbacks.hasOwnProperty(url)) {
-            if (!format) {
-                format = selectTextureCompressionFormat(pc.app.graphicsDevice);
-            }
             // store url and kick off worker job
             callbacks[url] = [callback];
-            worker.postMessage({ type: 'transcode', url: url, format: format, data: data }, [data]);
+            worker.postMessage({ type: 'transcode', url: url, format: basisTargetFormat(), data: data, options: options }, [data]);
         } else {
             // the basis worker is already busy processing this url, store callback
             // (this shouldn't really happen since the asset system only requests
@@ -316,7 +370,7 @@ Object.assign(pc, function () {
         // module is initialized, initiate queued jobs
         for (var i = 0; i < transcodeQueue.length; ++i) {
             var entry = transcodeQueue[i];
-            transcode(entry[0], entry[1], entry[2]);
+            transcode(entry.url, entry.data, entry.callback, entry.options);
         }
     };
 
@@ -407,20 +461,25 @@ Object.assign(pc, function () {
     };
 
     // render thread worker manager
-    var basisTranscode = function (url, data, callback) {
+    // options supports the following members:
+    //   unswizzleGGGR - convert the two-component GGGR normal data to RGB
+    //                   and pack into 565 format. this is used to overcome
+    //                   quality issues on apple devices.
+    var basisTranscode = function (url, data, callback, options) {
         if (!worker) {
             // store transcode job if no worker exists
-            transcodeQueue.push([url, data, callback]);
+            transcodeQueue.push({ url: url, data: data, callback: callback, options: options });
             // if the basis module download has not yet been initiated, do so now
             if (!downloadInitiated) {
                 basisDownloadFromConfig();
             }
         } else {
-            transcode(url, data, callback);
+            transcode(url, data, callback, options);
         }
     };
 
     return {
+        basisTargetFormat: basisTargetFormat,
         basisInitialize: basisInitialize,
         basisDownload: basisDownload,
         basisDownloadFromConfig: basisDownloadFromConfig,

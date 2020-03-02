@@ -3,7 +3,6 @@ Object.assign(pc, function () {
     var _morphMax = new pc.Vec3();
 
     /**
-     * @private
      * @class
      * @name pc.MorphTarget
      * @classdesc A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
@@ -37,11 +36,10 @@ Object.assign(pc, function () {
     };
 
     /**
-     * @private
      * @class
      * @name pc.Morph
      * @classdesc Contains a list of pc.MorphTarget, a combined AABB and some associated data.
-     * @param {pc.MoprhTarget[]} targets - A list of morph targets.
+     * @param {pc.MorphTarget[]} targets - A list of morph targets.
      */
     var Morph = function (targets) {
         this.aabb = new pc.BoundingBox();
@@ -137,11 +135,10 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.Morph#addTarget
          * @description Adds a new morph target to the list.
-         * @param {pc.MoprhTarget} target - A new morph target.
+         * @param {pc.MorphTarget} target - A new morph target.
          */
         addTarget: function (target) {
             this._targets.push(target);
@@ -149,11 +146,10 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.Morph#removeTarget
          * @description Remove the specified morph target from the list.
-         * @param {pc.MoprhTarget} target - A morph target to delete.
+         * @param {pc.MorphTarget} target - A morph target to delete.
          */
         removeTarget: function (target) {
             var index = this._targets.indexOf(target);
@@ -164,7 +160,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.Morph#getTarget
          * @description Gets the morph target by index.
@@ -177,7 +172,6 @@ Object.assign(pc, function () {
     });
 
     /**
-     * @private
      * @class
      * @name pc.MorphInstance
      * @classdesc An instance of pc.Morph. Contains weights to assign to every pc.MorphTarget, holds morphed buffer and associated data.
@@ -209,7 +203,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.MorphInstance#destroy
          * @description Frees video memory allocated by this object.
@@ -222,7 +215,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.MorphInstance#getWeight
          * @description Gets current weight of the specified morph target.
@@ -234,7 +226,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.MorphInstance#setWeight
          * @description Sets weight of the specified morph target.
@@ -247,7 +238,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.MorphInstance#updateBounds
          * @param {pc.Mesh} mesh - Base mesh for the morph.
@@ -267,7 +257,6 @@ Object.assign(pc, function () {
         },
 
         /**
-         * @private
          * @function
          * @name pc.MorphInstance#update
          * @param {pc.Mesh} mesh - Base mesh for the morph.
