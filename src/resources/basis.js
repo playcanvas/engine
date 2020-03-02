@@ -63,19 +63,19 @@ Object.assign(pc, function () {
         // unswizzle two-component gggr8888 normal data into rgba8888
         var unswizzleGGGR = function (data) {
             // given R and G generate B
-            var genB = function(R, G) {
+            var genB = function (R, G) {
                 var r = R * (2.0 / 255.0) - 1.0;
                 var g = G * (2.0 / 255.0) - 1.0;
                 var b = Math.sqrt(1.0 - Math.min(1.0, r * r + g * g));
                 return Math.max(0, Math.min(255, Math.floor(((b + 1.0) * 0.5) * 255.0)));
             };
 
-            for (var offset=0; offset<data.length; offset += 4) {
-                var R = data[offset+3];
-                var G = data[offset+1]
-                data[offset+0] = R;
-                data[offset+2] = genB(R, G);
-                data[offset+3] = 255;
+            for (var offset = 0; offset < data.length; offset += 4) {
+                var R = data[offset + 3];
+                var G = data[offset + 1];
+                data[offset + 0] = R;
+                data[offset + 2] = genB(R, G);
+                data[offset + 3] = 255;
             }
 
             return data;
@@ -85,10 +85,10 @@ Object.assign(pc, function () {
         var pack565 = function (data) {
             var result = new Uint16Array(data.length / 4);
 
-            for (var offset=0; offset<data.length; offset += 4) {
-                var R = data[offset+0];
-                var G = data[offset+1];
-                var B = data[offset+2];
+            for (var offset = 0; offset < data.length; offset += 4) {
+                var R = data[offset + 0];
+                var G = data[offset + 1];
+                var B = data[offset + 2];
                 result[offset / 4] = ((R & 0xf8) << 8) |  // 5
                                      ((G & 0xfc) << 3) |  // 6
                                      ((B >> 3));          // 5
@@ -139,6 +139,8 @@ Object.assign(pc, function () {
                 throw new Error('Failed to start transcoding url=' + url);
             }
 
+            var i;
+
             var levelData = [];
             for (var mip = 0; mip < levels; ++mip) {
                 var dstSize = basisFile.getImageTranscodedSizeInBytes(0, mip, basisFormat);
@@ -150,7 +152,6 @@ Object.assign(pc, function () {
                     throw new Error('Failed to transcode image url=' + url);
                 }
 
-                var i;
                 if (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444) {
                     // 16 bit formats require Uint16 typed array
                     var dst16 = new Uint16Array(dstSize / 2);
@@ -169,7 +170,7 @@ Object.assign(pc, function () {
             // handle unswizzle option
             if (options && options.unswizzleGGGR) {
                 basisFormat = BASIS_FORMAT.cTFRGB565;
-                for (var i=0; i<levelData.length; ++i) {
+                for (i = 0; i < levelData.length; ++i) {
                     levelData[i] = pack565(unswizzleGGGR(levelData[i]));
                 }
             }
@@ -282,7 +283,7 @@ Object.assign(pc, function () {
 
     var basisTargetFormat = function () {
         if (!format) {
-            format = chooseTargetFormat(pc.app.graphicsDevice)
+            format = chooseTargetFormat(pc.app.graphicsDevice);
         }
         return format;
     };
