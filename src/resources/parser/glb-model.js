@@ -9,21 +9,21 @@ Object.assign(pc, function () {
     Object.assign(GlbModelParser.prototype, {
         parse: function (data, callback) {
             var self = this;
-            pc.GlbParser.parse(data, this._device, (function (err, result) {
+            pc.GlbParser.parse(data, this._device, function (err, result) {
                 if (err) {
                     callback(err);
                 } else {
                     // construct model
                     callback(null, self.createModel(result));
                 }
-            }));
+            });
         },
 
         createModel: function (glb) {
             var model = new pc.Model();
 
             var rootNodes = [];
-            for (var i=0; i<glb.nodes.length; i++) {
+            for (var i = 0; i < glb.nodes.length; i++) {
                 var node = glb.nodes[i];
                 if (node.parent === null) {
                     rootNodes.push(node);
@@ -43,7 +43,7 @@ Object.assign(pc, function () {
                 model.graph = rootNodes[0];
             } else {
                 model.graph = new pc.GraphNode('SceneGroup');
-                for (var i=0; i<rootNodes.length; ++i) {
+                for (var i = 0; i < rootNodes.length; ++i) {
                     model.graph.addChild(rootNodes[i]);
                 }
             }
@@ -83,7 +83,7 @@ Object.assign(pc, function () {
             }
 
             model.meshInstances.push(meshInstance);
-        },
+        }
     });
 
     return {

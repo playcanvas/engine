@@ -302,7 +302,7 @@ Object.assign(pc, function () {
                 data.skeleton.animation = null;
             }
             if (data.animController) {
-                for (var i=0; i<data.animController.numClips(); ++i) {
+                for (var i = 0; i < data.animController.numClips(); ++i) {
                     data.animController.getClip(i).stop();
                 }
             }
@@ -364,7 +364,7 @@ Object.assign(pc, function () {
             }
 
             if (this.data.animController) {
-                for (var i=0; i<this.data.animController.numClips; ++i) {
+                for (var i = 0; i < this.data.animController.numClips; ++i) {
                     this.data.animController.getClip(i).loop = this.data.loop;
                 }
             }
@@ -378,7 +378,7 @@ Object.assign(pc, function () {
             }
 
             if (this.data.animController) {
-                for (var i=0; i<this.data.animController.numClips; ++i) {
+                for (var i = 0; i < this.data.animController.numClips; ++i) {
                     this.data.animController.getClip(i).time = newValue;
                 }
             }

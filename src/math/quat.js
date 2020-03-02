@@ -654,7 +654,7 @@ Object.assign(pc, (function () {
 
         /**
          * @function
-         * @name pc.Quat#slerp
+         * @name pc.Quat#nlerp
          * @description Performs a normalized interpolation between two quaternions. The result of
          * the interpolation is written to the quaternion calling the function.
          * @param {pc.Quat} lhs - The quaternion to interpolate from.

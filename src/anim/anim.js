@@ -33,7 +33,7 @@ Object.assign(pc, function () {
             p0: 0,
             m0: 0,
             p1: 0,
-            m1: 0,
+            m1: 0
         };
     };
 
@@ -99,7 +99,7 @@ Object.assign(pc, function () {
             var p0 = this._p0 * dim;
 
             if (interpolation === AnimInterpolation.STEP) {
-                for (var i=0; i<dim; ++i) {
+                for (var i = 0; i < dim; ++i) {
                     result[i] = data[p0 + i];
                 }
             } else {
@@ -108,7 +108,7 @@ Object.assign(pc, function () {
 
                 switch (interpolation) {
                     case AnimInterpolation.LINEAR:
-                        for (var i=0; i<dim; ++i) {
+                        for (var i = 0; i < dim; ++i) {
                             result[i] = pc.math.lerp(data[p0 + i], data[p1 + i], t);
                         }
                         break;
@@ -135,9 +135,9 @@ Object.assign(pc, function () {
                         var p1 = (this._p1 * 3 + 1) * dim;     // point at k + 1
                         var m1 = (this._p1 * 3 + 0) * dim;     // in-tangent at k + 1
 
-                        for (var i=0; i<dim; ++i) {
+                        for (var i = 0; i < dim; ++i) {
                             result[i] = hermite.p0 * data[p0 + i] +
-                                        hermite.m0 * data[m0 + i] * this._tlen + 
+                                        hermite.m0 * data[m0 + i] * this._tlen +
                                         hermite.p1 * data[p1 + i] +
                                         hermite.m1 * data[m1 + i] * this._tlen;
                         }
@@ -168,16 +168,24 @@ Object.assign(pc, function () {
 
     Object.defineProperties(AnimTarget.prototype, {
         name: {
-            get: function() { return this._name; }
+            get: function () {
+                return this._name;
+            }
         },
         translation: {
-            get: function() { return this._translation; }
+            get: function () {
+                return this._translation;
+            }
         },
         rotation: {
-            get: function () { return this._rotation; }
+            get: function () {
+                return this._rotation;
+            }
         },
         scale: {
-            get: function() { return this._scale; }
+            get: function () {
+                return this._scale;
+            }
         }
     });
 
@@ -195,19 +203,25 @@ Object.assign(pc, function () {
 
     Object.defineProperties(AnimTrack.prototype, {
         'name': {
-            get: function () { return this._name; }
+            get: function () {
+                return this._name;
+            }
         },
         'duration': {
-            get: function () { return this._duration; }
+            get: function () {
+                return this._duration;
+            }
         },
         'targets': {
-            get: function () { return this._targets; }
+            get: function () {
+                return this._targets;
+            }
         }
     });
 
     Object.assign(AnimTrack.prototype, {
-        // evaluate all the curves in the track at the specified time and store
-        // results in the snapshot instance.
+        // evaluate all track curves at the specified time and store results
+        // in the provided snapshot.
         eval: function (time, snapshot) {
             snapshot._time = time;
 
@@ -217,13 +231,13 @@ Object.assign(pc, function () {
             var cache = snapshot._cache;
             var results = snapshot._results;
 
-            // evaluate inputs on the snapshot cache
-            for (var i=0; i<inputs.length; ++i) {
+            // evaluate inputs
+            for (var i = 0; i < inputs.length; ++i) {
                 cache[i].update(time, inputs[i]._data);
             }
 
-            // evalute curve outputs
-            for (var i=0; i<curves.length; ++i) {
+            // evalute outputs
+            for (var i = 0; i < curves.length; ++i) {
                 var curve = curves[i];
                 var output = outputs[curve._output];
                 var result = results[i];
@@ -239,25 +253,25 @@ Object.assign(pc, function () {
         this._name = animTrack.name + 'Snapshot';
         this._time = -1;
 
-        // input cache structure per curve
+        // per-curve input cache
         this._cache = [];
 
-        // contains evaluation results
+        // per-curve evaluation results
         this._results = [];
 
         // pre-allocate input caches
-        for (var i=0; i<animTrack._inputs.length; ++i) {
+        for (var i = 0; i < animTrack._inputs.length; ++i) {
             this._cache[i] = new AnimCache();
         }
 
         // pre-allocate storage for evaluation results
         var curves = animTrack._curves;
         var outputs = animTrack._outputs;
-        for (var i=0; i<curves.length; ++i) {
+        for (var i = 0; i < curves.length; ++i) {
             var curve = curves[i];
             var output = outputs[curve._output];
             var storage = [];
-            for (var j=0; j<output._dimension; ++j) {
+            for (var j = 0; j < output._dimension; ++j) {
                 storage[j] = 0;
             }
             this._results[i] = storage;
@@ -265,7 +279,7 @@ Object.assign(pc, function () {
     };
 
     // animation clip
-    // 
+    //
     // stores the running state of an animation track
     // TODO: add configurable looping start/end times?
     var AnimClip = function (track, time, playing, speed, loop) {
@@ -273,7 +287,6 @@ Object.assign(pc, function () {
         this._snapshot = new AnimSnapshot(track);
         this._playing = playing;
         this._time = time;          // play cursor
-        this._eval = -1;            // evaluation time
         this._speed = speed;
         this._loop = loop;
         this._weight = 1.0;         // blend weight 0..1
@@ -281,29 +294,51 @@ Object.assign(pc, function () {
 
     Object.defineProperties(AnimClip.prototype, {
         'name': {
-            get: function () { return this._track._name; }
+            get: function () {
+                return this._track._name;
+            }
         },
         'track': {
-            get: function () { return this._track; }
+            get: function () {
+                return this._track;
+            }
         },
         'snapshot': {
-            get: function () { return this._snapshot; }
+            get: function () {
+                return this._snapshot;
+            }
         },
         'time': {
-            get: function () { return this._time; },
-            set: function (time) { this._time = time; }
+            get: function () {
+                return this._time;
+            },
+            set: function (time) {
+                this._time = time;
+            }
         },
         'speed': {
-            get: function () { return this._speed; },
-            set: function (speed) { this._speed = speed; }
+            get: function () {
+                return this._speed;
+            },
+            set: function (speed) {
+                this._speed = speed;
+            }
         },
         'loop': {
-            get: function () { return this._loop; },
-            set: function (loop) { this._loop = loop; }
+            get: function () {
+                return this._loop;
+            },
+            set: function (loop) {
+                this._loop = loop;
+            }
         },
         'weight': {
-            get: function () { return this._weight; },
-            set: function (weight) { this._weight = weight; }
+            get: function () {
+                return this._weight;
+            },
+            set: function (weight) {
+                this._weight = weight;
+            }
         }
     });
 
@@ -343,10 +378,9 @@ Object.assign(pc, function () {
                 this._time = time;
             }
 
-            // if time has changed, update snapshot
-            if (this._time != this._eval) {
-                this._eval = this._time;
-                this._track.eval(this._eval, this._snapshot);
+            // update snapshot if time has changed
+            if (this._time != this._snapshot._time) {
+                this._track.eval(this._time, this._snapshot);
             }
         },
 
@@ -355,7 +389,7 @@ Object.assign(pc, function () {
             this._time = 0;
         },
 
-        stop: function() {
+        stop: function () {
             this._playing = false;
             this._time = 0;
         },
@@ -374,14 +408,14 @@ Object.assign(pc, function () {
     });
 
     // animation controller
-    // 
+    //
     // stores a set of clips and blends between them
     var AnimController = function (graph) {
 
         var nodesMap = { };
-        var nodes = [ ];
-        var basePose = [ ];
-        var activeNodes = [ ];
+        var nodes = [];
+        var basePose = [];
+        var activeNodes = [];
 
         var flatten = function (node) {
             var p = node.localPosition;
@@ -392,7 +426,7 @@ Object.assign(pc, function () {
             basePose.splice(basePose.length, 0, p.x, p.y, p.z, r.x, r.y, r.z, r.w, s.x, s.y, s.z);
             activeNodes.push(0);
 
-            for (var i=0; i<node.children.length; ++i) {
+            for (var i = 0; i < node.children.length; ++i) {
                 flatten(node.children[i]);
             }
         };
@@ -402,8 +436,8 @@ Object.assign(pc, function () {
         this._nodes = nodes;                    // list of nodes
         this._basePose = basePose;              // list of bind pose data
         this._activePose = basePose.slice();
-        this._activeNodes = activeNodes;        // number of curves applied to each node (those with 0 can be skipped)
-        this._clips = [ ];
+        this._activeNodes = activeNodes;        // store per-node active curves (those with 0 can be skipped)
+        this._clips = [];
     };
 
     Object.assign(AnimController.prototype, {
@@ -412,9 +446,9 @@ Object.assign(pc, function () {
             var snapshot = clip.snapshot;
             var nodesMap = this._nodesMap;
 
-            // create links between the target node and animation curve outputs for t, r, s
-            var links = [ ];
-            for (var i=0; i<targets.length; ++i) {
+            // create links between the target nodes and their corresponding animation curves for t, r, s
+            var links = [];
+            for (var i = 0; i < targets.length; ++i) {
                 var target = targets[i];
                 var name = target.name;
                 if (nodesMap.hasOwnProperty(name)) {
@@ -436,9 +470,9 @@ Object.assign(pc, function () {
                 links: links
             });
 
-            // increment node drivers
+            // count per-node active curves
             var activeNodes = this._activeNodes;
-            for (var i=0; i<links.length; ++i) {
+            for (var i = 0; i < links.length; ++i) {
                 activeNodes[links[i].node]++;
             }
         },
@@ -453,18 +487,18 @@ Object.assign(pc, function () {
             var activeNodes = this._activeNodes;
             var basePose = this._basePose;
             var activePose = this._activePose;
-            for (var i=0; i<links.length; ++i) {
+            for (var i = 0; i < links.length; ++i) {
                 var node = links[i].node;
                 activeNodes[node]--;
 
-                // if the node is no longer driven by a clip as a result 
+                // if the node is no longer driven by a clip as a result
                 // of this removal, then we must reset the tree to the
                 // base pose
                 if (activeNodes[node] === 0) {
-                    for (var j=0; j<10; ++j) {
-                        activePose[i*10+j] = basePose[i*10+j];
+                    for (var j = 0; j < 10; ++j) {
+                        activePose[i * 10 + j] = basePose[i * 10 + j];
                     }
-                    this._applyActiveNodeToTree(node);
+                    this._applyActive(node);
                 }
             }
 
@@ -477,7 +511,7 @@ Object.assign(pc, function () {
         },
 
         findClip: function (name) {
-            for (var i=0; i<this._clips.length; ++i) {
+            for (var i = 0; i < this._clips.length; ++i) {
                 if (this._clips[i].name === name) {
                     return this._clips[i].clip;
                 }
@@ -493,16 +527,16 @@ Object.assign(pc, function () {
             var activePose = this._activePose;
 
             // reset base pose on active nodes
-            for (var i=0; i<nodes.length; ++i) {
+            for (var i = 0; i < nodes.length; ++i) {
                 if (activeNodes[i] > 0) {
-                    for (var j=0; j<10; ++j) {
-                        activePose[i*10+j] = basePose[i*10+j];
+                    for (var j = 0; j < 10; ++j) {
+                        activePose[i * 10 + j] = basePose[i * 10 + j];
                     }
                 }
             }
 
             // blend animation clips onto the activePose
-            for (var c=0; c<clips.length; ++c) {
+            for (var c = 0; c < clips.length; ++c) {
                 var clip = clips[c];
                 var links = clip.links;
 
@@ -512,63 +546,76 @@ Object.assign(pc, function () {
                 var weight = clip.clip.weight;
                 if (weight >= 1.0) {
                     // overwrite active pose
-                    for (var i=0; i<links.length; ++i) {
+                    for (var i = 0; i < links.length; ++i) {
                         this._setActive(links[i]);
                     }
                 } else if (weight > 0) {
                     // blend onto active pose
                     var oneMinusWeight = 1.0 - weight;
-                    for (var i=0; i<links.length; ++i) {
+                    for (var i = 0; i < links.length; ++i) {
                         this._blendActive(links[i], weight, oneMinusWeight);
                     }
-                }
+                } // skip clips with weight <= 0
             }
 
             // apply the activePose to the node hierarchy
-            for (var i=0; i<nodes.length; ++i) {
+            for (var i = 0; i < nodes.length; ++i) {
                 if (activeNodes[i] > 0) {
-                    this._applyActiveNodeToTree(i);
+                    this._applyActive(i);
                 }
             }
-        }
+        },
 
-        // set the active pose t, r, s for the specified link into the active pose
-        , _setActive: function (link) {
-            var activePose = this._activePose;
-            var idx = link.node * 10;
-            var t = link.translation;
-            var r = link.rotation;
-            var s = link.scale;
-            if (t) { for (var i=0; i<3; ++i) { activePose[idx+i] = t[i]; } }
-            if (r) { for (var i=0; i<4; ++i) { activePose[idx+3+i] = r[i]; } }
-            if (s) { for (var i=0; i<3; ++i) { activePose[idx+7+i] = s[i]; } }
-        }
-
-        // blend the t, r, s for the specified link into the active pose
-        , _blendActive: function (link, weight, oneMinusWeight) {
+        // set the link's t, r, s on the active pose node
+        _setActive: function (link) {
             var activePose = this._activePose;
             var idx = link.node * 10;
             var t = link.translation;
             var r = link.rotation;
             var s = link.scale;
             if (t) {
-                for (var i=0; i<3; ++i) {
-                    activePose[idx+i] = activePose[idx+i] * oneMinusWeight + t[i] * weight;
+                for (var i = 0; i < 3; ++i) {
+                    activePose[idx + i] = t[i];
                 }
             }
             if (r) {
-                for (var i=0; i<4; ++i) {
-                    activePose[idx+3+i] = activePose[idx+3+i] * oneMinusWeight + r[i] * weight;
+                for (var i = 0; i < 4; ++i) {
+                    activePose[idx + 3 + i] = r[i];
                 }
             }
             if (s) {
-                for (var i=0; i<3; ++i) {
-                    activePose[idx+7+i] = activePose[idx+7+i] * oneMinusWeight + s[i] * weight;
+                for (var i = 0; i < 3; ++i) {
+                    activePose[idx + 7 + i] = s[i];
                 }
             }
         },
 
-        _applyActiveNodeToTree: function (nodeIndex) {
+        // blend the link's t, r, s onto the active pose node
+        _blendActive: function (link, weight, oneMinusWeight) {
+            var activePose = this._activePose;
+            var idx = link.node * 10;
+            var t = link.translation;
+            var r = link.rotation;
+            var s = link.scale;
+            if (t) {
+                for (var i = 0; i < 3; ++i) {
+                    activePose[idx + i] = activePose[idx + i] * oneMinusWeight + t[i] * weight;
+                }
+            }
+            if (r) {
+                for (var i = 0; i < 4; ++i) {
+                    activePose[idx + 3 + i] = activePose[idx + 3 + i] * oneMinusWeight + r[i] * weight;
+                }
+            }
+            if (s) {
+                for (var i = 0; i < 3; ++i) {
+                    activePose[idx + 7 + i] = activePose[idx + 7 + i] * oneMinusWeight + s[i] * weight;
+                }
+            }
+        },
+
+        // apply the active node transform to the target
+        _applyActive: function (nodeIndex) {
             var activePose = this._activePose;
             var node = this._nodes[nodeIndex];
             var p = node.localPosition;
@@ -593,7 +640,7 @@ Object.assign(pc, function () {
             // right at the end
             // all of the above
 
-            // TODO: this is not an optimal way of dirtifying the hierarchy
+            // TODO: is this the optimal way of dirtifying the hierarchy?
             node._dirtifyLocal();
         }
     });
@@ -606,6 +653,6 @@ Object.assign(pc, function () {
         AnimTrack: AnimTrack,
         AnimSnapshot: AnimSnapshot,
         AnimClip: AnimClip,
-        AnimController: AnimController,
+        AnimController: AnimController
     };
 }());
