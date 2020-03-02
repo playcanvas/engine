@@ -518,9 +518,9 @@ Object.assign(pc, function () {
                 self.load(assetToLoad);
             };
 
-            if (ext === '.json') {
+            if (ext === '.json' || ext === '.glb') {
                 // playcanvas model format supports material mapping file
-                var mappingUrl = pc.path.join(dir, basename.replace(".json", ".mapping.json"));
+                var mappingUrl = pc.path.join(dir, basename.replace(ext, ".mapping.json"));
                 this._loader.load(mappingUrl, 'json', function (err, data) {
                     if (err) {
                         asset.data = { mapping: [] };

@@ -2,7 +2,8 @@ var categories = [
     {
         name: "animation",
         examples: [
-            "blend"
+            "blend",
+            "blend-glb"
         ]
     }, {
         name: "camera",
