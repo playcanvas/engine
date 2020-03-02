@@ -139,6 +139,8 @@ Object.assign(pc, function () {
                 throw new Error('Failed to start transcoding url=' + url);
             }
 
+            var i;
+
             var levelData = [];
             for (var mip = 0; mip < levels; ++mip) {
                 var dstSize = basisFile.getImageTranscodedSizeInBytes(0, mip, basisFormat);
@@ -150,7 +152,6 @@ Object.assign(pc, function () {
                     throw new Error('Failed to transcode image url=' + url);
                 }
 
-                var i;
                 if (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444) {
                     // 16 bit formats require Uint16 typed array
                     var dst16 = new Uint16Array(dstSize / 2);
@@ -169,7 +170,7 @@ Object.assign(pc, function () {
             // handle unswizzle option
             if (options && options.unswizzleGGGR) {
                 basisFormat = BASIS_FORMAT.cTFRGB565;
-                for (var i = 0; i < levelData.length; ++i) {
+                for (i = 0; i < levelData.length; ++i) {
                     levelData[i] = pack565(unswizzleGGGR(levelData[i]));
                 }
             }
