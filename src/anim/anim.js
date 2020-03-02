@@ -96,20 +96,21 @@ Object.assign(pc, function () {
         eval: function (result, interpolation, output) {
             var data = output._data;
             var dim = output._dimension;
-            var p0 = this._p0 * dim;
+            var idx0 = this._p0 * dim;
+            var i;
 
             if (interpolation === AnimInterpolation.STEP) {
-                for (var i = 0; i < dim; ++i) {
-                    result[i] = data[p0 + i];
+                for (i = 0; i < dim; ++i) {
+                    result[i] = data[idx0 + i];
                 }
             } else {
                 var t = this._t;
-                var p1 = this._p1 * dim;
+                var idx1 = this._p1 * dim;
 
                 switch (interpolation) {
                     case AnimInterpolation.LINEAR:
-                        for (var i = 0; i < dim; ++i) {
-                            result[i] = pc.math.lerp(data[p0 + i], data[p1 + i], t);
+                        for (i = 0; i < dim; ++i) {
+                            result[i] = pc.math.lerp(data[idx0 + i], data[idx1 + i], t);
                         }
                         break;
 
@@ -135,7 +136,7 @@ Object.assign(pc, function () {
                         var p1 = (this._p1 * 3 + 1) * dim;     // point at k + 1
                         var m1 = (this._p1 * 3 + 0) * dim;     // in-tangent at k + 1
 
-                        for (var i = 0; i < dim; ++i) {
+                        for (i = 0; i < dim; ++i) {
                             result[i] = hermite.p0 * data[p0 + i] +
                                         hermite.m0 * data[m0 + i] * this._tlen +
                                         hermite.p1 * data[p1 + i] +
@@ -231,13 +232,15 @@ Object.assign(pc, function () {
             var cache = snapshot._cache;
             var results = snapshot._results;
 
+            var i;
+
             // evaluate inputs
-            for (var i = 0; i < inputs.length; ++i) {
+            for (i = 0; i < inputs.length; ++i) {
                 cache[i].update(time, inputs[i]._data);
             }
 
             // evalute outputs
-            for (var i = 0; i < curves.length; ++i) {
+            for (i = 0; i < curves.length; ++i) {
                 var curve = curves[i];
                 var output = outputs[curve._output];
                 var result = results[i];
@@ -259,15 +262,17 @@ Object.assign(pc, function () {
         // per-curve evaluation results
         this._results = [];
 
+        var i;
+
         // pre-allocate input caches
-        for (var i = 0; i < animTrack._inputs.length; ++i) {
+        for (i = 0; i < animTrack._inputs.length; ++i) {
             this._cache[i] = new AnimCache();
         }
 
         // pre-allocate storage for evaluation results
         var curves = animTrack._curves;
         var outputs = animTrack._outputs;
-        for (var i = 0; i < curves.length; ++i) {
+        for (i = 0; i < curves.length; ++i) {
             var curve = curves[i];
             var output = outputs[curve._output];
             var storage = [];
@@ -446,9 +451,11 @@ Object.assign(pc, function () {
             var snapshot = clip.snapshot;
             var nodesMap = this._nodesMap;
 
+            var i;
+
             // create links between the target nodes and their corresponding animation curves for t, r, s
             var links = [];
-            for (var i = 0; i < targets.length; ++i) {
+            for (i = 0; i < targets.length; ++i) {
                 var target = targets[i];
                 var name = target.name;
                 if (nodesMap.hasOwnProperty(name)) {
@@ -472,7 +479,7 @@ Object.assign(pc, function () {
 
             // count per-node active curves
             var activeNodes = this._activeNodes;
-            for (var i = 0; i < links.length; ++i) {
+            for (i = 0; i < links.length; ++i) {
                 activeNodes[links[i].node]++;
             }
         },
@@ -526,17 +533,19 @@ Object.assign(pc, function () {
             var basePose = this._basePose;
             var activePose = this._activePose;
 
+            var i, j, c;
+
             // reset base pose on active nodes
-            for (var i = 0; i < nodes.length; ++i) {
+            for (i = 0; i < nodes.length; ++i) {
                 if (activeNodes[i] > 0) {
-                    for (var j = 0; j < 10; ++j) {
+                    for (j = 0; j < 10; ++j) {
                         activePose[i * 10 + j] = basePose[i * 10 + j];
                     }
                 }
             }
 
             // blend animation clips onto the activePose
-            for (var c = 0; c < clips.length; ++c) {
+            for (c = 0; c < clips.length; ++c) {
                 var clip = clips[c];
                 var links = clip.links;
 
@@ -546,20 +555,20 @@ Object.assign(pc, function () {
                 var weight = clip.clip.weight;
                 if (weight >= 1.0) {
                     // overwrite active pose
-                    for (var i = 0; i < links.length; ++i) {
+                    for (i = 0; i < links.length; ++i) {
                         this._setActive(links[i]);
                     }
                 } else if (weight > 0) {
                     // blend onto active pose
                     var oneMinusWeight = 1.0 - weight;
-                    for (var i = 0; i < links.length; ++i) {
+                    for (i = 0; i < links.length; ++i) {
                         this._blendActive(links[i], weight, oneMinusWeight);
                     }
                 } // skip clips with weight <= 0
             }
 
             // apply the activePose to the node hierarchy
-            for (var i = 0; i < nodes.length; ++i) {
+            for (i = 0; i < nodes.length; ++i) {
                 if (activeNodes[i] > 0) {
                     this._applyActive(i);
                 }
@@ -573,18 +582,20 @@ Object.assign(pc, function () {
             var t = link.translation;
             var r = link.rotation;
             var s = link.scale;
+            var i;
+
             if (t) {
-                for (var i = 0; i < 3; ++i) {
+                for (i = 0; i < 3; ++i) {
                     activePose[idx + i] = t[i];
                 }
             }
             if (r) {
-                for (var i = 0; i < 4; ++i) {
+                for (i = 0; i < 4; ++i) {
                     activePose[idx + 3 + i] = r[i];
                 }
             }
             if (s) {
-                for (var i = 0; i < 3; ++i) {
+                for (i = 0; i < 3; ++i) {
                     activePose[idx + 7 + i] = s[i];
                 }
             }
@@ -597,18 +608,20 @@ Object.assign(pc, function () {
             var t = link.translation;
             var r = link.rotation;
             var s = link.scale;
+            var i;
+
             if (t) {
-                for (var i = 0; i < 3; ++i) {
+                for (i = 0; i < 3; ++i) {
                     activePose[idx + i] = activePose[idx + i] * oneMinusWeight + t[i] * weight;
                 }
             }
             if (r) {
-                for (var i = 0; i < 4; ++i) {
+                for (i = 0; i < 4; ++i) {
                     activePose[idx + 3 + i] = activePose[idx + 3 + i] * oneMinusWeight + r[i] * weight;
                 }
             }
             if (s) {
-                for (var i = 0; i < 3; ++i) {
+                for (i = 0; i < 3; ++i) {
                     activePose[idx + 7 + i] = activePose[idx + 7 + i] * oneMinusWeight + s[i] * weight;
                 }
             }

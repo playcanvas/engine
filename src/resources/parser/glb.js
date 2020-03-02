@@ -96,362 +96,371 @@ Object.assign(pc, function () {
         }
     };
 
-    var createVertexBuffer = function (attributes, indices, accessors, bufferViews, buffers) {
-        var useFastPacking = true;
-        var vertexBuffer = null;
-        if (useFastPacking) {
-            var semanticMap = {
-                'POSITION': pc.SEMANTIC_POSITION,
-                'NORMAL': pc.SEMANTIC_NORMAL,
-                'TANGENT': pc.SEMANTIC_TANGENT,
-                'BINORMAL': pc.SEMANTIC_BINORMAL,
-                'COLOR_0': pc.SEMANTIC_COLOR,
-                'JOINTS_0': pc.SEMANTIC_BLENDINDICES,
-                'WEIGHTS_0': pc.SEMANTIC_BLENDWEIGHT,
-                'TEXCOORD_0': pc.SEMANTIC_TEXCOORD0,
-                'TEXCOORD_1': pc.SEMANTIC_TEXCOORD1
-            };
+    var createVertexBufferFast = function (attributes, indices, accessors, bufferViews, buffers) {
+        var semanticMap = {
+            'POSITION': pc.SEMANTIC_POSITION,
+            'NORMAL': pc.SEMANTIC_NORMAL,
+            'TANGENT': pc.SEMANTIC_TANGENT,
+            'BINORMAL': pc.SEMANTIC_BINORMAL,
+            'COLOR_0': pc.SEMANTIC_COLOR,
+            'JOINTS_0': pc.SEMANTIC_BLENDINDICES,
+            'WEIGHTS_0': pc.SEMANTIC_BLENDWEIGHT,
+            'TEXCOORD_0': pc.SEMANTIC_TEXCOORD0,
+            'TEXCOORD_1': pc.SEMANTIC_TEXCOORD1
+        };
 
-            // order vertexDesc to match the rest of the engine
-            var elementOrder = [
-                pc.SEMANTIC_POSITION,
-                pc.SEMANTIC_NORMAL,
-                pc.SEMANTIC_TANGENT,
-                pc.SEMANTIC_BINORMAL,
-                pc.SEMANTIC_COLOR,
-                pc.SEMANTIC_BLENDINDICES,
-                pc.SEMANTIC_BLENDWEIGHT,
-                pc.SEMANTIC_TEXCOORD0,
-                pc.SEMANTIC_TEXCOORD1
-            ];
+        // order vertexDesc to match the rest of the engine
+        var elementOrder = [
+            pc.SEMANTIC_POSITION,
+            pc.SEMANTIC_NORMAL,
+            pc.SEMANTIC_TANGENT,
+            pc.SEMANTIC_BINORMAL,
+            pc.SEMANTIC_COLOR,
+            pc.SEMANTIC_BLENDINDICES,
+            pc.SEMANTIC_BLENDWEIGHT,
+            pc.SEMANTIC_TEXCOORD0,
+            pc.SEMANTIC_TEXCOORD1
+        ];
 
-            // build vertex buffer format desc
-            var vertexDesc = [];
-            var sourceDesc = {};
-            for (var attrib in attributes) {
-                if (attributes.hasOwnProperty(attrib)) {
-                    var accessor = accessors[attributes[attrib]];
-                    var bufferView = bufferViews[accessor.bufferView];
+        // build vertex buffer format desc
+        var vertexDesc = [];
+        var sourceDesc = {};
+        for (var attrib in attributes) {
+            if (attributes.hasOwnProperty(attrib)) {
+                var accessor = accessors[attributes[attrib]];
+                var bufferView = bufferViews[accessor.bufferView];
 
-                    if (semanticMap.hasOwnProperty(attrib)) {
-                        var semantic = semanticMap[attrib];
-                        var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
-                        vertexDesc.push({
-                            semantic: semantic,
-                            components: getNumComponents(accessor.type),
-                            type: getComponentType(accessor.componentType)
-                        });
-                        // store the info we'll need to copy this data into the vertex buffer
-                        var buffer = buffers[bufferView.buffer];
-                        sourceDesc[semantic] = {
-                            array: new Uint32Array(buffer.buffer),
-                            buffer: bufferView.buffer,
-                            size: size,
-                            offset: accessor.byteOffset + bufferView.byteOffset + buffer.byteOffset,
-                            stride: bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size,
-                            count: accessor.count
-                        };
-                    }
+                if (semanticMap.hasOwnProperty(attrib)) {
+                    var semantic = semanticMap[attrib];
+                    var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
+                    vertexDesc.push({
+                        semantic: semantic,
+                        components: getNumComponents(accessor.type),
+                        type: getComponentType(accessor.componentType)
+                    });
+                    // store the info we'll need to copy this data into the vertex buffer
+                    var buffer = buffers[bufferView.buffer];
+                    sourceDesc[semantic] = {
+                        array: new Uint32Array(buffer.buffer),
+                        buffer: bufferView.buffer,
+                        size: size,
+                        offset: accessor.byteOffset + bufferView.byteOffset + buffer.byteOffset,
+                        stride: bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size,
+                        count: accessor.count
+                    };
                 }
             }
+        }
 
-            // sort by engine-ideal order
-            vertexDesc.sort(function (lhs, rhs) {
-                var lhsOrder = elementOrder.indexOf(lhs.semantic);
-                var rhsOrder = elementOrder.indexOf(rhs.semantic);
-                return (lhsOrder < rhsOrder) ? -1 : (rhsOrder < lhsOrder ? 1 : 0);
-            });
+        // sort by engine-ideal order
+        vertexDesc.sort(function (lhs, rhs) {
+            var lhsOrder = elementOrder.indexOf(lhs.semantic);
+            var rhsOrder = elementOrder.indexOf(rhs.semantic);
+            return (lhsOrder < rhsOrder) ? -1 : (rhsOrder < lhsOrder ? 1 : 0);
+        });
 
-            // get position attribute
-            var positionDesc = sourceDesc[pc.SEMANTIC_POSITION];
-            var numVertices = positionDesc.count;
+        // get position attribute
+        var positionDesc = sourceDesc[pc.SEMANTIC_POSITION];
+        var numVertices = positionDesc.count;
 
-            // create vertex buffer
-            vertexBuffer = new pc.VertexBuffer(globals.device,
+        // create vertex buffer
+        var vertexBuffer = new pc.VertexBuffer(globals.device,
                                                new pc.VertexFormat(globals.device, vertexDesc),
                                                numVertices,
                                                pc.BUFFER_STATIC);
 
-            // check whether source data is correctly interleaved
-            var isCorrectlyInterleaved = true;
-            for (var i = 0; i < vertexBuffer.format.elements.length; ++i) {
-                var target = vertexBuffer.format.elements[i];
-                var source = sourceDesc[target.name];
-                var sourceOffset = source.offset - positionDesc.offset;
-                if ((source.buffer !== positionDesc.buffer) ||
-                    (source.stride !== target.stride) ||
-                    (source.size !== target.size) ||
-                    (sourceOffset !== target.offset)) {
-                    isCorrectlyInterleaved = false;
-                    break;
-                }
+        var i, j, k;
+        var source, target, sourceOffset;
+
+        // check whether source data is correctly interleaved
+        var isCorrectlyInterleaved = true;
+        for (i = 0; i < vertexBuffer.format.elements.length; ++i) {
+            target = vertexBuffer.format.elements[i];
+            source = sourceDesc[target.name];
+            sourceOffset = source.offset - positionDesc.offset;
+            if ((source.buffer !== positionDesc.buffer) ||
+                (source.stride !== target.stride) ||
+                (source.size !== target.size) ||
+                (sourceOffset !== target.offset)) {
+                isCorrectlyInterleaved = false;
+                break;
             }
-
-            var vertexData = vertexBuffer.lock();
-            var targetArray = new Uint32Array(vertexData);
-
-            if (isCorrectlyInterleaved) {
-                // copy data
-                var sourceArray = new Uint32Array(positionDesc.array.buffer,
-                                                  positionDesc.offset,
-                                                  numVertices * vertexBuffer.format.size / 4);
-                targetArray.set(sourceArray);
-            } else {
-                // interleave data
-                for (var i = 0; i < vertexBuffer.format.elements.length; ++i) {
-                    var target = vertexBuffer.format.elements[i];
-                    var targetStride = target.stride / 4;
-
-                    var source = sourceDesc[target.name];
-                    var sourceArray = source.array;
-                    var sourceStride = source.stride / 4;
-
-                    var src = source.offset / 4;
-                    var dst = target.offset / 4;
-
-                    for (var j = 0; j < numVertices; ++j) {
-
-                        for (var k = 0; k < source.size / 4; ++k) {
-                            targetArray[dst + k] = sourceArray[src + k];
-                        }
-
-                        src += sourceStride;
-                        dst += targetStride;
-                    }
-                }
-            }
-            vertexBuffer.unlock();
-        } else {
-            var positions = null;
-            var normals = null;
-            var tangents = null;
-            var texCoord0 = null;
-            var texCoord1 = null;
-            var colors = null;
-            var joints = null;
-            var weights = null;
-
-            var i;
-
-                // Grab typed arrays for all vertex data
-            var accessor;
-
-            if (attributes.hasOwnProperty('POSITION') && positions === null) {
-                accessor = accessors[attributes.POSITION];
-                positions = getAccessorData(accessor, bufferViews, buffers);
-            }
-            if (attributes.hasOwnProperty('NORMAL') && normals === null) {
-                accessor = accessors[attributes.NORMAL];
-                normals = getAccessorData(accessor, bufferViews, buffers);
-            }
-            if (attributes.hasOwnProperty('TANGENT') && tangents === null) {
-                accessor = accessors[attributes.TANGENT];
-                tangents = getAccessorData(accessor, bufferViews, buffers);
-            }
-            if (attributes.hasOwnProperty('TEXCOORD_0') && texCoord0 === null) {
-                accessor = accessors[attributes.TEXCOORD_0];
-                texCoord0 = getAccessorData(accessor, bufferViews, buffers);
-            }
-            if (attributes.hasOwnProperty('TEXCOORD_1') && texCoord1 === null) {
-                accessor = accessors[attributes.TEXCOORD_1];
-                texCoord1 = getAccessorData(accessor, bufferViews, buffers);
-            }
-            if (attributes.hasOwnProperty('COLOR_0') && colors === null) {
-                accessor = accessors[attributes.COLOR_0];
-                colors = getAccessorData(accessor, bufferViews, buffers);
-            }
-            if (attributes.hasOwnProperty('JOINTS_0') && joints === null) {
-                accessor = accessors[attributes.JOINTS_0];
-                joints = getAccessorData(accessor, bufferViews, buffers);
-            }
-            if (attributes.hasOwnProperty('WEIGHTS_0') && weights === null) {
-                accessor = accessors[attributes.WEIGHTS_0];
-                weights = getAccessorData(accessor, bufferViews, buffers);
-            }
-
-            var numVertices = positions.length / 3;
-
-            var calculateIndices = function () {
-                var dummyIndices = new Uint16Array(numVertices);
-                for (i = 0; i < numVertices; i++) {
-                    dummyIndices[i] = i;
-                }
-                return dummyIndices;
-            };
-
-            if (positions !== null && normals === null) {
-                    // pc.calculateNormals needs indices so generate some if none are present
-                normals = pc.calculateNormals(positions, (indices === null) ? calculateIndices() : indices);
-            }
-
-            var vertexDesc = [];
-            if (positions) {
-                vertexDesc.push({ semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 });
-            }
-            if (normals) {
-                vertexDesc.push({ semantic: pc.SEMANTIC_NORMAL, components: 3, type: pc.TYPE_FLOAT32 });
-            }
-            if (tangents) {
-                vertexDesc.push({ semantic: pc.SEMANTIC_TANGENT, components: 4, type: pc.TYPE_FLOAT32 });
-            }
-            if (texCoord0) {
-                vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.TYPE_FLOAT32 });
-            }
-            if (texCoord1) {
-                vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD1, components: 2, type: pc.TYPE_FLOAT32 });
-            }
-            if (colors) {
-                vertexDesc.push({ semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true });
-            }
-            if (joints) {
-                vertexDesc.push({ semantic: pc.SEMANTIC_BLENDINDICES, components: 4, type: pc.TYPE_UINT8 });
-            }
-            if (weights) {
-                vertexDesc.push({ semantic: pc.SEMANTIC_BLENDWEIGHT, components: 4, type: pc.TYPE_FLOAT32 });
-            }
-
-            var vertexFormat = new pc.VertexFormat(globals.device, vertexDesc);
-            var vertexBuffer = new pc.VertexBuffer(globals.device, vertexFormat, numVertices, pc.BUFFER_STATIC);
-            var vertexData = vertexBuffer.lock();
-
-            var vertexDataF32 = new Float32Array(vertexData);
-            var vertexDataU8  = new Uint8Array(vertexData);
-
-            var getAttribute = function (semantic) {
-                var elements = vertexFormat.elements;
-                for (i = 0; i < elements.length; i++) {
-                    if (elements[i].name === semantic) {
-                        return elements[i];
-                    }
-                }
-                return null;
-            };
-
-            var dstIndex, srcIndex;
-            var attr, dstOffset, dstStride;
-            if (positions !== null) {
-                attr = getAttribute(pc.SEMANTIC_POSITION);
-                dstOffset = attr.offset / 4;
-                dstStride = attr.stride / 4;
-
-                for (i = 0; i < numVertices; i++) {
-                    dstIndex = dstOffset + i * dstStride;
-                    srcIndex = i * 3;
-                    vertexDataF32[dstIndex]     = positions[srcIndex];
-                    vertexDataF32[dstIndex + 1] = positions[srcIndex + 1];
-                    vertexDataF32[dstIndex + 2] = positions[srcIndex + 2];
-                }
-            }
-
-            if (normals !== null) {
-                attr = getAttribute(pc.SEMANTIC_NORMAL);
-                dstOffset = attr.offset / 4;
-                dstStride = attr.stride / 4;
-
-                for (i = 0; i < numVertices; i++) {
-                    dstIndex = dstOffset + i * dstStride;
-                    srcIndex = i * 3;
-                    vertexDataF32[dstIndex]     = normals[srcIndex];
-                    vertexDataF32[dstIndex + 1] = normals[srcIndex + 1];
-                    vertexDataF32[dstIndex + 2] = normals[srcIndex + 2];
-                }
-            }
-
-            if (tangents !== null) {
-                attr = getAttribute(pc.SEMANTIC_TANGENT);
-                dstOffset = attr.offset / 4;
-                dstStride = attr.stride / 4;
-
-                for (i = 0; i < numVertices; i++) {
-                    dstIndex = dstOffset + i * dstStride;
-                    srcIndex = i * 4;
-                    vertexDataF32[dstIndex]     = tangents[srcIndex];
-                    vertexDataF32[dstIndex + 1] = tangents[srcIndex + 1];
-                    vertexDataF32[dstIndex + 2] = tangents[srcIndex + 2];
-                    vertexDataF32[dstIndex + 3] = tangents[srcIndex + 3];
-                }
-            }
-
-            if (texCoord0 !== null) {
-                attr = getAttribute(pc.SEMANTIC_TEXCOORD0);
-                dstOffset = attr.offset / 4;
-                dstStride = attr.stride / 4;
-
-                for (i = 0; i < numVertices; i++) {
-                    dstIndex = dstOffset + i * dstStride;
-                    srcIndex = i * 2;
-                    vertexDataF32[dstIndex]     = texCoord0[srcIndex];
-                    vertexDataF32[dstIndex + 1] = texCoord0[srcIndex + 1];
-                }
-            }
-
-            if (texCoord1 !== null) {
-                attr = getAttribute(pc.SEMANTIC_TEXCOORD1);
-                dstOffset = attr.offset / 4;
-                dstStride = attr.stride / 4;
-
-                for (i = 0; i < numVertices; i++) {
-                    dstIndex = dstOffset + i * dstStride;
-                    srcIndex = i * 2;
-                    vertexDataF32[dstIndex]     = texCoord1[srcIndex];
-                    vertexDataF32[dstIndex + 1] = texCoord1[srcIndex + 1];
-                }
-            }
-
-            if (colors !== null) {
-                attr = getAttribute(pc.SEMANTIC_COLOR);
-                dstOffset = attr.offset;
-                dstStride = attr.stride;
-
-                accessor = accessors[attributes.COLOR_0];
-
-                for (i = 0; i < numVertices; i++) {
-                    dstIndex = dstOffset + i * dstStride;
-                    srcIndex = accessor.type === 'VEC4' ? i * 4 : i * 3;
-                    var r = colors[srcIndex];
-                    var g = colors[srcIndex + 1];
-                    var b = colors[srcIndex + 2];
-                    var a = colors[srcIndex + 3];
-                    vertexDataU8[dstIndex]     = Math.round(pc.math.clamp(r, 0, 1) * 255);
-                    vertexDataU8[dstIndex + 1] = Math.round(pc.math.clamp(g, 0, 1) * 255);
-                    vertexDataU8[dstIndex + 2] = Math.round(pc.math.clamp(b, 0, 1) * 255);
-                    vertexDataU8[dstIndex + 3] = accessor.type === 'VEC4' ? Math.round(pc.math.clamp(a, 0, 1) * 255) : 255;
-                }
-            }
-
-            if (joints !== null) {
-                attr = getAttribute(pc.SEMANTIC_BLENDINDICES);
-                dstOffset = attr.offset;
-                dstStride = attr.stride;
-
-                for (i = 0; i < numVertices; i++) {
-                    dstIndex = dstOffset + i * dstStride;
-                    srcIndex = i * 4;
-                    vertexDataU8[dstIndex]     = joints[srcIndex];
-                    vertexDataU8[dstIndex + 1] = joints[srcIndex + 1];
-                    vertexDataU8[dstIndex + 2] = joints[srcIndex + 2];
-                    vertexDataU8[dstIndex + 3] = joints[srcIndex + 3];
-                }
-            }
-
-            if (weights !== null) {
-                attr = getAttribute(pc.SEMANTIC_BLENDWEIGHT);
-                dstOffset = attr.offset / 4;
-                dstStride = attr.stride / 4;
-
-                for (i = 0; i < numVertices; i++) {
-                    dstIndex = dstOffset + i * dstStride;
-                    srcIndex = i * 4;
-                    vertexDataF32[dstIndex]     = weights[srcIndex];
-                    vertexDataF32[dstIndex + 1] = weights[srcIndex + 1];
-                    vertexDataF32[dstIndex + 2] = weights[srcIndex + 2];
-                    vertexDataF32[dstIndex + 3] = weights[srcIndex + 3];
-                }
-            }
-
-            vertexBuffer.unlock();
         }
+
+        var vertexData = vertexBuffer.lock();
+        var targetArray = new Uint32Array(vertexData);
+        var sourceArray, targetStride, sourceStride;
+
+        if (isCorrectlyInterleaved) {
+            // copy data
+            sourceArray = new Uint32Array(positionDesc.array.buffer,
+                                          positionDesc.offset,
+                                          numVertices * vertexBuffer.format.size / 4);
+            targetArray.set(sourceArray);
+        } else {
+            // interleave data
+            for (i = 0; i < vertexBuffer.format.elements.length; ++i) {
+                target = vertexBuffer.format.elements[i];
+                targetStride = target.stride / 4;
+
+                source = sourceDesc[target.name];
+                sourceArray = source.array;
+                sourceStride = source.stride / 4;
+
+                var src = source.offset / 4;
+                var dst = target.offset / 4;
+
+                for (j = 0; j < numVertices; ++j) {
+
+                    for (k = 0; k < source.size / 4; ++k) {
+                        targetArray[dst + k] = sourceArray[src + k];
+                    }
+
+                    src += sourceStride;
+                    dst += targetStride;
+                }
+            }
+        }
+        vertexBuffer.unlock();
+
         return vertexBuffer;
+    };
+
+    var createVertexBufferWithPacking = function (attributes, indices, accessors, bufferViews, buffers) {
+        var positions = null;
+        var normals = null;
+        var tangents = null;
+        var texCoord0 = null;
+        var texCoord1 = null;
+        var colors = null;
+        var joints = null;
+        var weights = null;
+
+        var i;
+
+        // Grab typed arrays for all vertex data
+        var accessor;
+
+        if (attributes.hasOwnProperty('POSITION') && positions === null) {
+            accessor = accessors[attributes.POSITION];
+            positions = getAccessorData(accessor, bufferViews, buffers);
+        }
+        if (attributes.hasOwnProperty('NORMAL') && normals === null) {
+            accessor = accessors[attributes.NORMAL];
+            normals = getAccessorData(accessor, bufferViews, buffers);
+        }
+        if (attributes.hasOwnProperty('TANGENT') && tangents === null) {
+            accessor = accessors[attributes.TANGENT];
+            tangents = getAccessorData(accessor, bufferViews, buffers);
+        }
+        if (attributes.hasOwnProperty('TEXCOORD_0') && texCoord0 === null) {
+            accessor = accessors[attributes.TEXCOORD_0];
+            texCoord0 = getAccessorData(accessor, bufferViews, buffers);
+        }
+        if (attributes.hasOwnProperty('TEXCOORD_1') && texCoord1 === null) {
+            accessor = accessors[attributes.TEXCOORD_1];
+            texCoord1 = getAccessorData(accessor, bufferViews, buffers);
+        }
+        if (attributes.hasOwnProperty('COLOR_0') && colors === null) {
+            accessor = accessors[attributes.COLOR_0];
+            colors = getAccessorData(accessor, bufferViews, buffers);
+        }
+        if (attributes.hasOwnProperty('JOINTS_0') && joints === null) {
+            accessor = accessors[attributes.JOINTS_0];
+            joints = getAccessorData(accessor, bufferViews, buffers);
+        }
+        if (attributes.hasOwnProperty('WEIGHTS_0') && weights === null) {
+            accessor = accessors[attributes.WEIGHTS_0];
+            weights = getAccessorData(accessor, bufferViews, buffers);
+        }
+
+        var numVertices = positions.length / 3;
+
+        var calculateIndices = function () {
+            var dummyIndices = new Uint16Array(numVertices);
+            for (i = 0; i < numVertices; i++) {
+                dummyIndices[i] = i;
+            }
+            return dummyIndices;
+        };
+
+        if (positions !== null && normals === null) {
+                // pc.calculateNormals needs indices so generate some if none are present
+            normals = pc.calculateNormals(positions, (indices === null) ? calculateIndices() : indices);
+        }
+
+        var vertexDesc = [];
+        if (positions) {
+            vertexDesc.push({ semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 });
+        }
+        if (normals) {
+            vertexDesc.push({ semantic: pc.SEMANTIC_NORMAL, components: 3, type: pc.TYPE_FLOAT32 });
+        }
+        if (tangents) {
+            vertexDesc.push({ semantic: pc.SEMANTIC_TANGENT, components: 4, type: pc.TYPE_FLOAT32 });
+        }
+        if (texCoord0) {
+            vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.TYPE_FLOAT32 });
+        }
+        if (texCoord1) {
+            vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD1, components: 2, type: pc.TYPE_FLOAT32 });
+        }
+        if (colors) {
+            vertexDesc.push({ semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true });
+        }
+        if (joints) {
+            vertexDesc.push({ semantic: pc.SEMANTIC_BLENDINDICES, components: 4, type: pc.TYPE_UINT8 });
+        }
+        if (weights) {
+            vertexDesc.push({ semantic: pc.SEMANTIC_BLENDWEIGHT, components: 4, type: pc.TYPE_FLOAT32 });
+        }
+
+        var vertexFormat = new pc.VertexFormat(globals.device, vertexDesc);
+        var vertexBuffer = new pc.VertexBuffer(globals.device, vertexFormat, numVertices, pc.BUFFER_STATIC);
+        var vertexData = vertexBuffer.lock();
+
+        var vertexDataF32 = new Float32Array(vertexData);
+        var vertexDataU8  = new Uint8Array(vertexData);
+
+        var getAttribute = function (semantic) {
+            var elements = vertexFormat.elements;
+            for (i = 0; i < elements.length; i++) {
+                if (elements[i].name === semantic) {
+                    return elements[i];
+                }
+            }
+            return null;
+        };
+
+        var dstIndex, srcIndex;
+        var attr, dstOffset, dstStride;
+        if (positions !== null) {
+            attr = getAttribute(pc.SEMANTIC_POSITION);
+            dstOffset = attr.offset / 4;
+            dstStride = attr.stride / 4;
+
+            for (i = 0; i < numVertices; i++) {
+                dstIndex = dstOffset + i * dstStride;
+                srcIndex = i * 3;
+                vertexDataF32[dstIndex]     = positions[srcIndex];
+                vertexDataF32[dstIndex + 1] = positions[srcIndex + 1];
+                vertexDataF32[dstIndex + 2] = positions[srcIndex + 2];
+            }
+        }
+
+        if (normals !== null) {
+            attr = getAttribute(pc.SEMANTIC_NORMAL);
+            dstOffset = attr.offset / 4;
+            dstStride = attr.stride / 4;
+
+            for (i = 0; i < numVertices; i++) {
+                dstIndex = dstOffset + i * dstStride;
+                srcIndex = i * 3;
+                vertexDataF32[dstIndex]     = normals[srcIndex];
+                vertexDataF32[dstIndex + 1] = normals[srcIndex + 1];
+                vertexDataF32[dstIndex + 2] = normals[srcIndex + 2];
+            }
+        }
+
+        if (tangents !== null) {
+            attr = getAttribute(pc.SEMANTIC_TANGENT);
+            dstOffset = attr.offset / 4;
+            dstStride = attr.stride / 4;
+
+            for (i = 0; i < numVertices; i++) {
+                dstIndex = dstOffset + i * dstStride;
+                srcIndex = i * 4;
+                vertexDataF32[dstIndex]     = tangents[srcIndex];
+                vertexDataF32[dstIndex + 1] = tangents[srcIndex + 1];
+                vertexDataF32[dstIndex + 2] = tangents[srcIndex + 2];
+                vertexDataF32[dstIndex + 3] = tangents[srcIndex + 3];
+            }
+        }
+
+        if (texCoord0 !== null) {
+            attr = getAttribute(pc.SEMANTIC_TEXCOORD0);
+            dstOffset = attr.offset / 4;
+            dstStride = attr.stride / 4;
+
+            for (i = 0; i < numVertices; i++) {
+                dstIndex = dstOffset + i * dstStride;
+                srcIndex = i * 2;
+                vertexDataF32[dstIndex]     = texCoord0[srcIndex];
+                vertexDataF32[dstIndex + 1] = texCoord0[srcIndex + 1];
+            }
+        }
+
+        if (texCoord1 !== null) {
+            attr = getAttribute(pc.SEMANTIC_TEXCOORD1);
+            dstOffset = attr.offset / 4;
+            dstStride = attr.stride / 4;
+
+            for (i = 0; i < numVertices; i++) {
+                dstIndex = dstOffset + i * dstStride;
+                srcIndex = i * 2;
+                vertexDataF32[dstIndex]     = texCoord1[srcIndex];
+                vertexDataF32[dstIndex + 1] = texCoord1[srcIndex + 1];
+            }
+        }
+
+        if (colors !== null) {
+            attr = getAttribute(pc.SEMANTIC_COLOR);
+            dstOffset = attr.offset;
+            dstStride = attr.stride;
+
+            accessor = accessors[attributes.COLOR_0];
+
+            for (i = 0; i < numVertices; i++) {
+                dstIndex = dstOffset + i * dstStride;
+                srcIndex = accessor.type === 'VEC4' ? i * 4 : i * 3;
+                var r = colors[srcIndex];
+                var g = colors[srcIndex + 1];
+                var b = colors[srcIndex + 2];
+                var a = colors[srcIndex + 3];
+                vertexDataU8[dstIndex]     = Math.round(pc.math.clamp(r, 0, 1) * 255);
+                vertexDataU8[dstIndex + 1] = Math.round(pc.math.clamp(g, 0, 1) * 255);
+                vertexDataU8[dstIndex + 2] = Math.round(pc.math.clamp(b, 0, 1) * 255);
+                vertexDataU8[dstIndex + 3] = accessor.type === 'VEC4' ? Math.round(pc.math.clamp(a, 0, 1) * 255) : 255;
+            }
+        }
+
+        if (joints !== null) {
+            attr = getAttribute(pc.SEMANTIC_BLENDINDICES);
+            dstOffset = attr.offset;
+            dstStride = attr.stride;
+
+            for (i = 0; i < numVertices; i++) {
+                dstIndex = dstOffset + i * dstStride;
+                srcIndex = i * 4;
+                vertexDataU8[dstIndex]     = joints[srcIndex];
+                vertexDataU8[dstIndex + 1] = joints[srcIndex + 1];
+                vertexDataU8[dstIndex + 2] = joints[srcIndex + 2];
+                vertexDataU8[dstIndex + 3] = joints[srcIndex + 3];
+            }
+        }
+
+        if (weights !== null) {
+            attr = getAttribute(pc.SEMANTIC_BLENDWEIGHT);
+            dstOffset = attr.offset / 4;
+            dstStride = attr.stride / 4;
+
+            for (i = 0; i < numVertices; i++) {
+                dstIndex = dstOffset + i * dstStride;
+                srcIndex = i * 4;
+                vertexDataF32[dstIndex]     = weights[srcIndex];
+                vertexDataF32[dstIndex + 1] = weights[srcIndex + 1];
+                vertexDataF32[dstIndex + 2] = weights[srcIndex + 2];
+                vertexDataF32[dstIndex + 3] = weights[srcIndex + 3];
+            }
+        }
+        vertexBuffer.unlock();
+
+        return vertexBuffer;
+    };
+
+    var createVertexBuffer = function (attributes, indices, accessors, bufferViews, buffers) {
+        // return createVertexBufferWithPacking(attributes, indices, accessors, bufferViews, buffers);
+        return createVertexBufferFast(attributes, indices, accessors, bufferViews, buffers);
     };
 
     var createSkin = function (skinData, accessors, bufferViews, nodes, buffers) {
@@ -504,8 +513,6 @@ Object.assign(pc, function () {
 
         meshData.primitives.forEach(function (primitive) {
             var attributes = primitive.attributes;
-
-            var i;
 
             //
             // // Start by looking for compressed vertex data for this primitive
@@ -1070,8 +1077,10 @@ Object.assign(pc, function () {
 
         var curves = [];
 
+        var i;
+
         // convert samplers
-        for (var i = 0; i < animationData.samplers.length; ++i) {
+        for (i = 0; i < animationData.samplers.length; ++i) {
             var sampler = animationData.samplers[i];
 
             // get input data
@@ -1099,7 +1108,7 @@ Object.assign(pc, function () {
         });
 
         // convert anim target channels
-        for (var i = 0; i < animationData.channels.length; ++i) {
+        for (i = 0; i < animationData.channels.length; ++i) {
             var channel = animationData.channels[i];
             var target = channel.target;
             targets[target.node][pathMap[target.path]] = channel.sampler;
@@ -1307,7 +1316,7 @@ Object.assign(pc, function () {
 
         for (var i = 0; i < gltf.images.length; ++i) {
             var img = new Image();
-            img.loadEvent = onLoad.bind(this, img, i);
+            img.loadEvent = onLoad.bind(null, img, i);
             img.addEventListener('load', img.loadEvent, false);
 
             var imgData = gltf.images[i];
@@ -1354,6 +1363,8 @@ Object.assign(pc, function () {
             }
         };
 
+        var LintHack = Uint8Array;
+
         for (var i = 0; i < gltf.buffers.length; ++i) {
             var buffer = gltf.buffers[i];
             if (buffer.hasOwnProperty('uri')) {
@@ -1366,21 +1377,23 @@ Object.assign(pc, function () {
                     var arrayBuffer = new ArrayBuffer(byteString.length);
 
                     // create a view into the buffer
-                    var uint8Array = new Uint8Array(arrayBuffer);
+                    var binaryArray = new Uint8Array(arrayBuffer);
 
                     // set the bytes of the buffer to the correct values
-                    for (var i = 0; i < byteString.length; i++) {
-                        uint8Array[i] = byteString.charCodeAt(i);
+                    for (var j = 0; j < byteString.length; j++) {
+                        binaryArray[j] = byteString.charCodeAt(j);
                     }
 
-                    onLoad(uint8Array, i);
+                    onLoad(binaryArray, i);
                 } else {
                     var xhr = new XMLHttpRequest();
                     xhr.responseType = 'arraybuffer';
                     xhr.open('GET', buffer.uri, true);
-                    xhr.onload = function () {
-                        onLoad(new Uint8Array(this.response), i);
-                    };
+                    xhr.onload = (function (index) {
+                        return function () {
+                            onLoad(new LintHack(this.response), index);
+                        };
+                    })(i);
                     xhr.send();
                 }
             } else {
@@ -1449,6 +1462,7 @@ Object.assign(pc, function () {
             }
             var str = array.reduce( function (accum, value) {
                 accum += String.fromCharCode(value);
+                return accum;
             }, "");
             return decodeURIComponent(escape(str));
 

@@ -21,9 +21,10 @@ Object.assign(pc, function () {
 
         createModel: function (glb) {
             var model = new pc.Model();
+            var i;
 
             var rootNodes = [];
-            for (var i = 0; i < glb.nodes.length; i++) {
+            for (i = 0; i < glb.nodes.length; i++) {
                 var node = glb.nodes[i];
                 if (node.parent === null) {
                     rootNodes.push(node);
@@ -43,7 +44,7 @@ Object.assign(pc, function () {
                 model.graph = rootNodes[0];
             } else {
                 model.graph = new pc.GraphNode('SceneGroup');
-                for (var i = 0; i < rootNodes.length; ++i) {
+                for (i = 0; i < rootNodes.length; ++i) {
                     model.graph.addChild(rootNodes[i]);
                 }
             }

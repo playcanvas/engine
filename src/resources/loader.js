@@ -160,14 +160,15 @@ Object.assign(pc, function () {
 
         // handle an async open response
         _handleOpen: function (key, extra, err, result) {
+            var i;
             if (err) {
                 console.error(err);
-                for (var i = 0; i < this._requests[key].length; i++)
+                for (i = 0; i < this._requests[key].length; i++)
                     this._requests[key][i](err);
                 delete this._requests[key];
             } else {
                 this._cache[key] = result;
-                for (var i = 0; i < this._requests[key].length; i++)
+                for (i = 0; i < this._requests[key].length; i++)
                     this._requests[key][i](null, result, extra);
                 delete this._requests[key];
             }
