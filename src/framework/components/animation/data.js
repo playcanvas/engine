@@ -13,8 +13,8 @@ Object.assign(pc, function () {
         this.prevAnim = null;
         this.currAnim = null;
         this.blending = false;
-        this.blendTime = 0;
-        this.blendTimeRemaining = 0;
+        this.blend = 0;
+        this.blendSpeed = 0;
         this.playing = false;
 
         // json animation skeleton

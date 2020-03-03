@@ -92,17 +92,23 @@ Object.assign(pc, function () {
                 if (components.hasOwnProperty(id)) {
                     var component = components[id];
                     var componentData = component.data;
+
                     if (componentData.enabled && component.entity.enabled) {
+
+                        // update blending
+                        if (componentData.blending) {
+                            componentData.blend += dt * componentData.blendSpeed;
+                            if (componentData.blend >= 1.0) {
+                                componentData.blend = 1.0;
+                            }
+                        }
+
+                        // update skeleton
                         if (componentData.playing) {
                             var skeleton = componentData.skeleton;
                             if (skeleton !== null && componentData.model !== null) {
                                 if (componentData.blending) {
-                                    componentData.blendTimeRemaining -= dt;
-                                    if (componentData.blendTimeRemaining < 0.0) {
-                                        componentData.blendTimeRemaining = 0.0;
-                                    }
-                                    var alpha = 1.0 - (componentData.blendTimeRemaining / componentData.blendTime);
-                                    skeleton.blend(componentData.fromSkel, componentData.toSkel, alpha);
+                                    skeleton.blend(componentData.fromSkel, componentData.toSkel, componentData.blend);
                                 } else {
                                     // Advance the animation, interpolating keyframes at each animated node in
                                     // skeleton
@@ -115,8 +121,7 @@ Object.assign(pc, function () {
                                     }
                                 }
 
-                                if (componentData.blending && (componentData.blendTimeRemaining === 0.0)) {
-                                    componentData.blending = false;
+                                if (componentData.blending && (componentData.blend === 1.0)) {
                                     skeleton.animation = componentData.toSkel._animation;
                                 }
 
@@ -124,10 +129,18 @@ Object.assign(pc, function () {
                             }
                         }
 
-                        // anim controller update
+                        // update anim controller
                         var animController = componentData.animController;
                         if (animController) {
+                            if (componentData.blending) {
+                                animController.getClip(1).blendWeight = componentData.blend;
+                            }
                             animController.update(dt);
+                        }
+
+                        // clear blending flag
+                        if (componentData.blending && componentData.blend === 1.0) {
+                            componentData.blending = false;
                         }
                     }
                 }

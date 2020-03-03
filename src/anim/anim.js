@@ -7,20 +7,44 @@ Object.assign(pc, function () {
         CUBIC: 2
     };
 
-    // animation data
-    //
-    // blob of animation which wraps a set of either times(/keys) or animation
-    // values
+    /**
+     * @class
+     * @name pc.AnimData
+     * @classdesc Wraps a set of data used in animation.
+     * @description Create a new animation data container.
+     * @param {number} dimension - Specifies the number of components which make up an element
+     * of data. For example, specify 3 for a set of 3-dimensional vectors. The number of elements
+     * in data must be a multiple of dimension.
+     * @param {Float32Array|number[]} data - The set of data
+     */
     var AnimData = function (dimension, data) {
         this._dimension = dimension;
         this._data = data;
     };
 
-    // cache data for the evaluation of a single curve
+    Object.defineProperties(AnimData.prototype, {
+        dimension: {
+            get: function () {
+                return this._dimension;
+            }
+        },
+        data: {
+            get: function () {
+                return this._data;
+            }
+        }
+    });
+
+    /**
+     * @class
+     * @name pc.AnimCache
+     * @classdesc Internal cache data for the evaluation of a single curve timeline.
+     * @description Create a new animation cache.
+     */
     var AnimCache = function () {
         // these members are calculated per-segment
-        this._left = Infinity;     // time of left knot
-        this._right = -Infinity;     // time of right knot
+        this._left = Infinity;      // time of left knot
+        this._right = -Infinity;    // time of right knot
         this._len = 0;              // distance between current knots
         this._recip = 0;            // reciprocal len
         this._p0 = 0;               // index of the left knot
@@ -148,18 +172,32 @@ Object.assign(pc, function () {
         }
     });
 
-    // animation curve
-    //
-    // links an input data set with an output data set and defines the interpolation method
+    /**
+     * @class
+     * @name pc.AnimCurve
+     * @classdesc Animation curve links an input data set to an output data set
+     * and defines the interpolation method to use.
+     * @description Create a new animation curve
+     * @param {number} input - index of the curve which specifies the key data.
+     * @param {number} output - index of the curve which specifies the value data.
+     * @param {pc.AnimInterpolation} interpolation - the interpolation method to use.
+     */
     var AnimCurve = function (input, output, interpolation) {
         this._input = input;
         this._output = output;
         this._interpolation = interpolation;
     };
 
-    // animation target
-    //
-    // names a target node and specifies the curves for t, r, s
+    /**
+     * @class
+     * @name pc.AnimTarget
+     * @classdesc AnimTarget names a target graph node and specifies the curves which drive translation, rotation and scale.
+     * @description Create a new animation target.
+     * @param {string} name - the target node to control.
+     * @param {number} translation - the curve index controlling the translation of the target node or -1 for none.
+     * @param {number} rotation - the curve index controlling the rotation of the target node or -1 for none.
+     * @param {number} scale - the curve index controlling the scale of the target node or -1 for none.
+     */
     var AnimTarget = function (name, translation, rotation, scale) {
         this._name = name;
         this._translation = translation;
@@ -190,9 +228,18 @@ Object.assign(pc, function () {
         }
     });
 
-    // animation track
-    //
-    // stores the data required to evaluate a list of curves
+    /**
+     * @class
+     * @name pc.AnimTrack
+     * @classdesc AnimTrack contains a set of curve data which can be used to animate a set of target nodes.
+     * @description Create a new animation track.
+     * @param {string} name - the track name
+     * @param {number} duration - the duration of the track in seconds.
+     * @param {pc.AnimData[]} inputs - list of curve key data.
+     * @param {pc.AnimData[]} outputs - list of curve value data.
+     * @param {pc.AnimCurve[]} curves - the list of curves.
+     * @param {pc.AnimTarget[]} targets - the list of targets.
+     */
     var AnimTrack = function (name, duration, inputs, outputs, curves, targets) {
         this._name = name;
         this._duration = duration;
@@ -249,9 +296,13 @@ Object.assign(pc, function () {
         }
     });
 
-    // animation snapshot
-    //
-    // stores the state of an animation track at a particular time
+    /**
+     * @class
+     * @name pc.AnimSnapshot
+     * @classdesc AnimSnapshot stores the state of an animation track at a particular time.
+     * @description Create a new animation snapshot.
+     * @param {pc.AnimTrack} animTrack - the source track.
+     */
     var AnimSnapshot = function (animTrack) {
         this._name = animTrack.name + 'Snapshot';
         this._time = -1;
@@ -283,24 +334,37 @@ Object.assign(pc, function () {
         }
     };
 
-    // animation clip
-    //
-    // stores the running state of an animation track
+    /**
+     * @class
+     * @name pc.AnimClip
+     * @classdesc AnimClip wraps the running state of an animation track. It contains and update
+     * the animation 'cursor' and performs looping logic.
+     * @description Create a new animation clip.
+     * @param {pc.AnimTrack} track - the animation data.
+     * @param {number} time - the initial time of the clip.
+     * @param {number} speed - speed of the animation playback.
+     * @param {boolean} playing - true if the clip is playing and false otherwise.
+     * @param {boolean} loop - whether the clip should loop.
+     */
     // TODO: add configurable looping start/end times?
-    var AnimClip = function (track, time, playing, speed, loop) {
+    var AnimClip = function (track, time, speed, playing, loop) {
+        this._name = track.name;        // default to track name
         this._track = track;
         this._snapshot = new AnimSnapshot(track);
         this._playing = playing;
-        this._time = time;          // play cursor
+        this._time = time;              // play cursor
         this._speed = speed;
         this._loop = loop;
-        this._weight = 1.0;         // blend weight 0..1
+        this._blendWeight = 1.0;         // blend weight 0..1
     };
 
     Object.defineProperties(AnimClip.prototype, {
         'name': {
             get: function () {
-                return this._track._name;
+                return this._name;
+            },
+            set: function (name) {
+                this._name = name;
             }
         },
         'track': {
@@ -337,12 +401,12 @@ Object.assign(pc, function () {
                 this._loop = loop;
             }
         },
-        'weight': {
+        'blendWeight': {
             get: function () {
-                return this._weight;
+                return this._blendWeight;
             },
-            set: function (weight) {
-                this._weight = weight;
+            set: function (blendWeight) {
+                this._blendWeight = blendWeight;
             }
         }
     });
@@ -366,7 +430,7 @@ Object.assign(pc, function () {
                             time = (time % duration) || 0;  // if duration is 0, % is NaN
                         } else {
                             time = this._track.duration;
-                            this._pause();
+                            this.pause();
                         }
                     }
                 } else {
@@ -376,7 +440,7 @@ Object.assign(pc, function () {
                             time = duration + ((time % duration) || 0);
                         } else {
                             time = 0;
-                            this._pause();
+                            this.pause();
                         }
                     }
                 }
@@ -412,9 +476,14 @@ Object.assign(pc, function () {
         }
     });
 
-    // animation controller
-    //
-    // stores a set of clips and blends between them
+    /**
+     * @class
+     * @name pc.AnimController
+     * @classdesc AnimContoller stores a set of animation clips and performs blending
+     * between them. It then applies the resulting transforms to the target nodes.
+     * @description Create a new animation controller.
+     * @param {pc.GraphNode} graph - root of the scene graph to control.
+     */
     var AnimController = function (graph) {
 
         var nodesMap = { };
@@ -443,7 +512,18 @@ Object.assign(pc, function () {
         this._activePose = basePose.slice();
         this._activeNodes = activeNodes;        // store per-node active curves (those with 0 can be skipped)
         this._clips = [];
+
+        this._q0 = new pc.Quat();
+        this._q1 = new pc.Quat();
     };
+
+    Object.defineProperties(AnimController.prototype, {
+        'numClips': {
+            get: function () {
+                return this._clips.length;
+            }
+        }
+    });
 
     Object.assign(AnimController.prototype, {
         addClip: function (clip) {
@@ -484,10 +564,6 @@ Object.assign(pc, function () {
             }
         },
 
-        numClips: function () {
-            return this._clips.length;
-        },
-
         removeClip: function (index) {
             // decrement node drivers
             var links = this._clips[index].links;
@@ -511,6 +587,12 @@ Object.assign(pc, function () {
 
             // remove clip
             this._clips.splice(index, 1);
+        },
+
+        removeClips: function () {
+            while (this.numClips > 0) {
+                this.removeClip(0);
+            }
         },
 
         getClip: function (index) {
@@ -552,7 +634,7 @@ Object.assign(pc, function () {
                 // update animation clip
                 clip.clip._update(deltaTime);
 
-                var weight = clip.clip.weight;
+                var weight = clip.clip.blendWeight;
                 if (weight >= 1.0) {
                     // overwrite active pose
                     for (i = 0; i < links.length; ++i) {
@@ -560,9 +642,8 @@ Object.assign(pc, function () {
                     }
                 } else if (weight > 0) {
                     // blend onto active pose
-                    var oneMinusWeight = 1.0 - weight;
                     for (i = 0; i < links.length; ++i) {
-                        this._blendActive(links[i], weight, oneMinusWeight);
+                        this._blendActive(links[i], weight);
                     }
                 } // skip clips with weight <= 0
             }
@@ -590,9 +671,13 @@ Object.assign(pc, function () {
                 }
             }
             if (r) {
-                for (i = 0; i < 4; ++i) {
-                    activePose[idx + 3 + i] = r[i];
-                }
+                this._q0.set(r[0], r[1], r[2], r[3]);
+                this._q0.normalize();
+
+                activePose[idx + 3 + 0] = this._q0.x;
+                activePose[idx + 3 + 1] = this._q0.y;
+                activePose[idx + 3 + 2] = this._q0.z;
+                activePose[idx + 3 + 3] = this._q0.w;
             }
             if (s) {
                 for (i = 0; i < 3; ++i) {
@@ -602,7 +687,8 @@ Object.assign(pc, function () {
         },
 
         // blend the link's t, r, s onto the active pose node
-        _blendActive: function (link, weight, oneMinusWeight) {
+        _blendActive: function (link, weight) {
+            var oneMinusWeight = 1.0 - weight;
             var activePose = this._activePose;
             var idx = link.node * 10;
             var t = link.translation;
@@ -615,11 +701,19 @@ Object.assign(pc, function () {
                     activePose[idx + i] = activePose[idx + i] * oneMinusWeight + t[i] * weight;
                 }
             }
+
             if (r) {
-                for (i = 0; i < 4; ++i) {
-                    activePose[idx + 3 + i] = activePose[idx + 3 + i] * oneMinusWeight + r[i] * weight;
-                }
+                this._q0.set(activePose[idx + 3], activePose[idx + 4], activePose[idx + 5], activePose[idx + 6]);
+                this._q1.set(r[0], r[1], r[2], r[3]);
+                this._q1.normalize();
+                this._q0.slerp(this._q0, this._q1, weight);
+
+                activePose[idx + 3 + 0] = this._q0.x;
+                activePose[idx + 3 + 1] = this._q0.y;
+                activePose[idx + 3 + 2] = this._q0.z;
+                activePose[idx + 3 + 3] = this._q0.w;
             }
+
             if (s) {
                 for (i = 0; i < 3; ++i) {
                     activePose[idx + 7 + i] = activePose[idx + 7 + i] * oneMinusWeight + s[i] * weight;
@@ -631,21 +725,11 @@ Object.assign(pc, function () {
         _applyActive: function (nodeIndex) {
             var activePose = this._activePose;
             var node = this._nodes[nodeIndex];
-            var p = node.localPosition;
-            var r = node.localRotation;
-            var s = node.localScale;
-
             var idx = nodeIndex * 10;
-            p.x = activePose[idx++];
-            p.y = activePose[idx++];
-            p.z = activePose[idx++];
-            r.x = activePose[idx++];
-            r.y = activePose[idx++];
-            r.z = activePose[idx++];
-            r.w = activePose[idx++];
-            s.x = activePose[idx++];
-            s.y = activePose[idx++];
-            s.z = activePose[idx++];
+
+            node.localPosition.set(activePose[idx++], activePose[idx++], activePose[idx++]);
+            node.localRotation.set(activePose[idx++], activePose[idx++], activePose[idx++], activePose[idx++]);
+            node.localScale.set(activePose[idx++], activePose[idx++], activePose[idx++]);
 
             // TODO: decide at what point to renormalize quaternions, options are:
             // after curve evaluation
