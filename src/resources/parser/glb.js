@@ -132,19 +132,21 @@ Object.assign(pc, function () {
 
                 if (semanticMap.hasOwnProperty(attrib)) {
                     var semantic = semanticMap[attrib];
-                    var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
                     vertexDesc.push({
                         semantic: semantic,
                         components: getNumComponents(accessor.type),
                         type: getComponentType(accessor.componentType)
                     });
                     // store the info we'll need to copy this data into the vertex buffer
+                    var size = getNumComponents(accessor.type) * getComponentSizeInBytes(accessor.componentType);
                     var buffer = buffers[bufferView.buffer];
                     sourceDesc[semantic] = {
                         array: new Uint32Array(buffer.buffer),
                         buffer: bufferView.buffer,
                         size: size,
-                        offset: accessor.byteOffset + bufferView.byteOffset + buffer.byteOffset,
+                        offset: (accessor.hasOwnProperty('byteOffset') ? accessor.byteOffset : 0) +
+                                (bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0) +
+                                (buffer.byteOffset),
                         stride: bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size,
                         count: accessor.count
                     };
@@ -198,7 +200,7 @@ Object.assign(pc, function () {
                                           numVertices * vertexBuffer.format.size / 4);
             targetArray.set(sourceArray);
         } else {
-            // interleave data
+            // copy data and interleave
             for (i = 0; i < vertexBuffer.format.elements.length; ++i) {
                 target = vertexBuffer.format.elements[i];
                 targetStride = target.stride / 4;
@@ -209,13 +211,10 @@ Object.assign(pc, function () {
 
                 var src = source.offset / 4;
                 var dst = target.offset / 4;
-
                 for (j = 0; j < numVertices; ++j) {
-
                     for (k = 0; k < source.size / 4; ++k) {
                         targetArray[dst + k] = sourceArray[src + k];
                     }
-
                     src += sourceStride;
                     dst += targetStride;
                 }
@@ -285,7 +284,7 @@ Object.assign(pc, function () {
         };
 
         if (positions !== null && normals === null) {
-                // pc.calculateNormals needs indices so generate some if none are present
+            // pc.calculateNormals needs indices so generate some if none are present
             normals = pc.calculateNormals(positions, (indices === null) ? calculateIndices() : indices);
         }
 
@@ -459,8 +458,8 @@ Object.assign(pc, function () {
     };
 
     var createVertexBuffer = function (attributes, indices, accessors, bufferViews, buffers) {
-        // return createVertexBufferWithPacking(attributes, indices, accessors, bufferViews, buffers);
         return createVertexBufferFast(attributes, indices, accessors, bufferViews, buffers);
+        //return createVertexBufferWithPacking(attributes, indices, accessors, bufferViews, buffers);
     };
 
     var createSkin = function (skinData, accessors, bufferViews, nodes, buffers) {
@@ -1010,6 +1009,13 @@ Object.assign(pc, function () {
         return material;
     };
 
+    var defaultSampler = {
+        magFilter: 9729,
+        minFilter: 9987,
+        wrapS: 10497,
+        wrapT: 10497
+    };
+
     var createTexture = function (textureData, samplers, images) {
         var getFilter = function (filter) {
             switch (filter) {
@@ -1032,7 +1038,7 @@ Object.assign(pc, function () {
             }
         };
 
-        var samplerData = samplers[textureData.sampler];
+        var samplerData = samplers ? samplers[textureData.sampler] : defaultSampler;
         var options = {
             name: textureData.name,
             minFilter: getFilter(samplerData.minFilter),
@@ -1200,14 +1206,12 @@ Object.assign(pc, function () {
     };
 
     var createTextures = function (gltf, images) {
-        if (!gltf.hasOwnProperty('textures') || gltf.textures.length === 0 ||
-            !gltf.hasOwnProperty('samplers') || gltf.samplers.length === 0) {
+        if (!gltf.hasOwnProperty('textures') || gltf.textures.length === 0) {
             return [];
         }
         return gltf.textures.map(function (textureData) {
             return createTexture(textureData, gltf.samplers, images);
         });
-
     };
 
     var createAnimations = function (gltf, nodes, buffers) {
@@ -1266,7 +1270,7 @@ Object.assign(pc, function () {
                     9986,   // NEAREST_MIPMAP_LINEAR,
                     9987    // LINEAR_MIPMAP_LINEAR
                 ];
-                var sampler = samplers[texture.sampler];
+                var sampler = samplers ? samplers[texture.sampler] : defaultSampler;
                 if (wraps.indexOf(sampler.wrapS) !== -1 ||
                     wraps.indexOf(sampler.wrapT) !== -1 ||
                     minFilters.indexOf(sampler.minFilter) !== -1) {
@@ -1295,7 +1299,6 @@ Object.assign(pc, function () {
         var result = [];
 
         if (!gltf.hasOwnProperty('images') || gltf.images.length === 0 ||
-            !gltf.hasOwnProperty('samplers') || gltf.sampers.length === 0 ||
             !gltf.hasOwnProperty('textures') || gltf.textures.length === 0) {
             callback(null, result);
             return;
@@ -1511,7 +1514,9 @@ Object.assign(pc, function () {
 
     GlbParser.parse = function (glbData, device, callback) {
         // reset global state
-        globals.device = device;
+        if (device) {
+            globals.device = device;
+        }
         globals.nodeId = 0;
         globals.animId = 0;
         loadGLBAsync(glbData, callback);
