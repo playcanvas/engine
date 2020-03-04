@@ -59,7 +59,6 @@ var Viewer = function (canvas) {
                                 app.root.addChild(camera);
                             });
 
-
     // create the light
     var light = new pc.Entity();
     light.addComponent("light", {

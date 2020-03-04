@@ -1136,11 +1136,16 @@ Object.assign(pc, function () {
                 outputs.push(createAnimData(accessors[sampler.output]));
             }
 
+            var interpolation =
+                sampler.hasOwnProperty('interpolation') &&
+                interpMap.hasOwnProperty(sampler.interpolation) ?
+                    interpMap[sampler.interpolation] : pc.AnimInterpolation.LINEAR;
+
             // create curve
             curves.push(new pc.AnimCurve(
                 inputMap[sampler.input],
                 outputMap[sampler.output],
-                interpMap[sampler.interpolation]));
+                interpolation));
         }
 
         // convert nodes -> anim targets
