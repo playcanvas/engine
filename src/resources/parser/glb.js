@@ -122,7 +122,7 @@ Object.assign(pc, function () {
             pc.SEMANTIC_TEXCOORD1
         ];
 
-        // build vertex buffer format desc
+        // build vertex buffer format desc and source
         var vertexDesc = [];
         var sourceDesc = {};
         for (var attrib in attributes) {
@@ -154,16 +154,50 @@ Object.assign(pc, function () {
             }
         }
 
-        // sort by engine-ideal order
+        // get position attribute
+        var positionDesc = sourceDesc[pc.SEMANTIC_POSITION];
+        var numVertices = positionDesc.count;
+
+        // generate normals if they're missing (this should probably be a user option)
+        if (attributes.hasOwnProperty('POSITION') && !attributes.hasOwnProperty('NORMAL')) {
+            var generateIndices = function () {
+                var dummyIndices = new Uint16Array(numVertices);
+                for (i = 0; i < numVertices; i++) {
+                    dummyIndices[i] = i;
+                }
+                return dummyIndices;
+            };
+
+            var positions = getAccessorData(accessors[attributes.POSITION], bufferViews, buffers);
+            if (!indices) {
+                indices = generateIndices();
+            }
+
+            // generate normals
+            var normals = Float32Array.from(pc.calculateNormals(positions, indices));
+
+            vertexDesc.push({
+                semantic: pc.SEMANTIC_NORMAL,
+                components: 3,
+                type: pc.TYPE_FLOAT32
+            });
+
+            sourceDesc[pc.SEMANTIC_NORMAL] = {
+                array: new Uint32Array(normals.buffer),
+                buffer: null,
+                size: 12,
+                offset: 0,
+                stride: 12,
+                count: numVertices
+            };
+        }
+
+        // sort vertex elements by engine-ideal order
         vertexDesc.sort(function (lhs, rhs) {
             var lhsOrder = elementOrder.indexOf(lhs.semantic);
             var rhsOrder = elementOrder.indexOf(rhs.semantic);
             return (lhsOrder < rhsOrder) ? -1 : (rhsOrder < lhsOrder ? 1 : 0);
         });
-
-        // get position attribute
-        var positionDesc = sourceDesc[pc.SEMANTIC_POSITION];
-        var numVertices = positionDesc.count;
 
         // create vertex buffer
         var vertexBuffer = new pc.VertexBuffer(globals.device,
