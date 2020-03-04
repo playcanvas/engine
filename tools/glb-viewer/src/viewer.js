@@ -107,11 +107,19 @@ var Viewer = function (canvas) {
 Object.assign(Viewer.prototype, {
     // reset the viewer, unloading resources
     resetScene: function () {
+        var app = this.app;
+
         var entity = this.entity;
         if (entity) {
-            var app = this.app;
             app.root.removeChild(entity);
             entity.destroy();
+            this.entity = null;
+        }
+
+        if (this.asset) {
+            app.assets.remove(this.asset);
+            this.asset.unload();
+            this.asset = null;
         }
     },
 
@@ -135,19 +143,32 @@ Object.assign(Viewer.prototype, {
         this.app.assets.loadFromUrl(url, "container", this._onLoaded.bind(this));
     },
 
-    _onLoaded: function (err, assets) {
+    _onLoaded: function (err, asset) {
         if (!err) {
             this.resetScene();
 
-            // construct new entity
+            var resource = asset.resource;
+
+            // construct model entity
             var entity = new pc.Entity();
             entity.addComponent("model", {
                 type: "asset",
-                asset: assets,
+                asset: resource.model,
                 castShadows: true
             });
+
+            if (resource.animations && resource.animations.length > 0) {
+                entity.addComponent('animation', {
+                    assets: resource.animations.map(function (asset) {
+                        return asset.id
+                    }),
+                    speed: 1
+                });
+            }
+
             this.app.root.addChild(entity);
             this.entity = entity;
+            this.asset = asset;
 
             this.focusCamera();
         }
