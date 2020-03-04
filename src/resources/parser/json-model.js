@@ -28,19 +28,17 @@ Object.assign(pc, function () {
     };
 
     Object.assign(JsonModelParser.prototype, {
-        parse: function (data, callback) {
+        parse: function (data) {
             var modelData = data.model;
             if (!modelData) {
-                callback(null, null);
-                return;
+                return null;
             }
 
             if (modelData.version <= 1) {
                 // #ifdef DEBUG
                 console.warn("JsonModelParser#parse: Trying to parse unsupported model format.");
                 // #endif
-                callback(null, null);
-                return;
+                return null;
             }
 
             // NODE HIERARCHY
@@ -73,7 +71,7 @@ Object.assign(pc, function () {
             model.morphInstances = morphs.instances;
             model.getGraph().syncHierarchy();
 
-            callback(null, model);
+            return model;
         },
 
         _parseNodes: function (data) {

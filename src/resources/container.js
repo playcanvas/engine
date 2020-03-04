@@ -9,10 +9,7 @@ Object.assign(pc, function () {
      */
     var ContainerHandler = function (device, defaultMaterial) {
         this._device = device;
-        this._parsers = [];
         this._defaultMaterial = defaultMaterial;
-        this.retryRequests = false;
-        this._parser = new pc.GlbModelParser(this._device);
     };
 
     Object.assign(ContainerHandler.prototype, {
@@ -36,7 +33,7 @@ Object.assign(pc, function () {
 
             var options = {
                 responseType: pc.Http.ResponseType.ARRAY_BUFFER,
-                retry: this.retryRequests
+                retry: false
             };
 
             pc.http.get(url.load, options, function (err, response) {
@@ -52,7 +49,18 @@ Object.assign(pc, function () {
         },
 
         openAsync: function (url, data, asset, callback) {
-            this._parser.parse(data, callback);
+            var self = this;
+            pc.GlbParser.parse(data, this._device, function (err, result) {
+                if (err) {
+                    callback(err);
+                } else {
+                    // construct the model
+                    result.model = pc.GlbModelParser.createModel(result, self._defaultMaterial);
+
+                    // return everything
+                    callback(null, result);
+                }
+            });
             return true;
         }
     });

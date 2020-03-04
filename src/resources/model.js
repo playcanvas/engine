@@ -13,22 +13,12 @@ Object.assign(pc, function () {
         this._defaultMaterial = defaultMaterial;
         this.retryRequests = false;
 
-        this.addParser(
-            new pc.JsonModelParser(this._device),
-            function (url, data) {
-                return (pc.path.getExtension(url) === '.json');
-            },
-            function (url, data) {
-                return (pc.path.getExtension(url) === '.json');
-            });
-        this.addParser(
-            new pc.GlbModelParser(this._device),
-            function (url, data) {
-                return false;
-            },
-            function (url, data) {
-                return (pc.path.getExtension(url) === '.glb');
-            });
+        this.addParser(new pc.JsonModelParser(this._device), function (url, data) {
+            return (pc.path.getExtension(url) === '.json');
+        });
+        this.addParser(new pc.GlbModelParser(this._device), function (url, data) {
+            return (pc.path.getExtension(url) === '.glb');
+        });
     };
 
     Object.assign(ModelHandler.prototype, {
@@ -80,15 +70,11 @@ Object.assign(pc, function () {
          * @returns {pc.Model} The loaded model.
          */
         open: function (url, data) {
-            var model = null, onLoad = function (m) {
-                model = m;
-            };
             for (var i = 0; i < this._parsers.length; i++) {
                 var p = this._parsers[i];
 
                 if (p.decider(url, data)) {
-                    var result = p.parser.parse(data, onLoad);
-                    return model ? model : result;
+                    return p.parser.parse(data);
                 }
             }
             logWARNING(pc.string.format("No model parser found for: {0}", url));
@@ -99,8 +85,12 @@ Object.assign(pc, function () {
             for (var i = 0; i < this._parsers.length; i++) {
                 var p = this._parsers[i];
 
-                if (p.deciderAsync && p.deciderAsync(url, data)) {
-                    p.parser.parse(data, callback);
+                if (p.decider(url, data)) {
+                    if (p.parser.parseAsync) {
+                        p.parser.parseAsync(data, callback);
+                    } else {
+                        callback(null, p.parser.parse(data));
+                    }
                     return true;
                 }
             }
@@ -180,11 +170,10 @@ Object.assign(pc, function () {
          * The first parser to return true is used.
          * @param {Function} deciderAsync - Same as above but for async loading.
          */
-        addParser: function (parser, decider, deciderAsync) {
+        addParser: function (parser, decider) {
             this._parsers.push({
                 parser: parser,
-                decider: decider,
-                deciderAsync: deciderAsync
+                decider: decider
             });
         }
     });

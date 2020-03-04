@@ -9,7 +9,6 @@ Object.assign(pc, function () {
      */
     var AnimationHandler = function () {
         this.retryRequests = false;
-        this._glbParser = new pc.GlbAnimationsParser();
     };
 
     Object.assign(AnimationHandler.prototype, {
@@ -45,7 +44,14 @@ Object.assign(pc, function () {
 
         openAsync: function (url, data, asset, callback) {
             if (pc.path.getExtension(url) === '.glb') {
-                this._glbParser.parse(data, callback);
+                pc.GlbParser.parse(data, null, function (err, result) {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        // this loader is only interested in animations
+                        callback(null, result.animations);
+                    }
+                });
             } else {
                 callback(null, this["_parseAnimationV" + data.animation.version](data));
             }
