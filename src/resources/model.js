@@ -168,7 +168,6 @@ Object.assign(pc, function () {
          * @param {pc.callbacks.AddParser} decider - Function that decides on which parser to use.
          * Function should take (url, data) arguments and return true if this parser should be used to parse the data into a {@link pc.Model}.
          * The first parser to return true is used.
-         * @param {Function} deciderAsync - Same as above but for async loading.
          */
         addParser: function (parser, decider) {
             this._parsers.push({

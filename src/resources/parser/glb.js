@@ -96,6 +96,14 @@ Object.assign(pc, function () {
         }
     };
 
+    var generateIndices = function (numVertices) {
+        var dummyIndices = new Uint16Array(numVertices);
+        for (var i = 0; i < numVertices; i++) {
+            dummyIndices[i] = i;
+        }
+        return dummyIndices;
+    };
+
     var createVertexBufferFast = function (attributes, indices, accessors, bufferViews, buffers) {
         var semanticMap = {
             'POSITION': pc.SEMANTIC_POSITION,
@@ -160,17 +168,10 @@ Object.assign(pc, function () {
 
         // generate normals if they're missing (this should probably be a user option)
         if (attributes.hasOwnProperty('POSITION') && !attributes.hasOwnProperty('NORMAL')) {
-            var generateIndices = function () {
-                var dummyIndices = new Uint16Array(numVertices);
-                for (i = 0; i < numVertices; i++) {
-                    dummyIndices[i] = i;
-                }
-                return dummyIndices;
-            };
 
             var positions = getAccessorData(accessors[attributes.POSITION], bufferViews, buffers);
             if (!indices) {
-                indices = generateIndices();
+                indices = generateIndices(numVertices);
             }
 
             // generate normals
@@ -493,7 +494,7 @@ Object.assign(pc, function () {
 
     var createVertexBuffer = function (attributes, indices, accessors, bufferViews, buffers) {
         return createVertexBufferFast(attributes, indices, accessors, bufferViews, buffers);
-        //return createVertexBufferWithPacking(attributes, indices, accessors, bufferViews, buffers);
+        // return createVertexBufferWithPacking(attributes, indices, accessors, bufferViews, buffers);
     };
 
     var createSkin = function (skinData, accessors, bufferViews, nodes, buffers) {
@@ -1561,9 +1562,9 @@ Object.assign(pc, function () {
     GlbParser.createModel = function (glb, defaultMaterial) {
         var createMeshInstance = function (model, mesh, skins, materials, node, nodeData) {
             var material = (mesh.materialIndex === undefined) ? defaultMaterial : materials[mesh.materialIndex];
-    
+
             var meshInstance = new pc.MeshInstance(node, mesh, material);
-    
+
             if (mesh.morph) {
                 var morphInstance = new pc.MorphInstance(mesh.morph);
                 // HACK: need to force calculation of the morph's AABB due to a bug
@@ -1574,22 +1575,22 @@ Object.assign(pc, function () {
                         morphInstance.setWeight(wi, mesh.weights[wi]);
                     }
                 }
-    
+
                 meshInstance.morphInstance = morphInstance;
                 model.morphInstances.push(morphInstance);
             }
-    
+
             if (nodeData.hasOwnProperty('skin')) {
                 var skin = skins[nodeData.skin];
                 mesh.skin = skin;
-    
+
                 var skinInstance = new pc.SkinInstance(skin);
                 skinInstance.bones = skin.bones;
-    
+
                 meshInstance.skinInstance = skinInstance;
                 model.skinInstances.push(skinInstance);
             }
-    
+
             model.meshInstances.push(meshInstance);
         };
 

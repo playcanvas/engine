@@ -14,7 +14,7 @@ Object.assign(pc, function () {
                     callback(err);
                 } else {
                     // construct model
-                    callback(null, GlbParser.createModel(result, self._defaultMaterial));
+                    callback(null, pc.GlbParser.createModel(result, self._defaultMaterial));
                 }
             });
         }

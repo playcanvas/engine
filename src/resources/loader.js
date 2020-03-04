@@ -104,39 +104,42 @@ Object.assign(pc, function () {
                 // new request
                 this._requests[key] = [callback];
 
-                var loader = this;
+                var self = this;
+
                 var handleLoad = function (err, urlObj) {
                     if (err) {
-                        console.error(err);
-                        if (loader._requests[key]) {
-                            for (var i = 0, len = loader._requests[key].length; i < len; i++) {
-                                loader._requests[key][i](err);
-                            }
-                        }
-                        delete loader._requests[key];
+                        self._onFailure(key, err);
                         return;
                     }
 
                     handler.load(urlObj, function (err, data, extra) {
                         // make sure key exists because loader
                         // might have been destroyed by now
-                        if (!loader._requests[key])
+                        if (!self._requests[key]) {
                             return;
+                        }
 
-                        if (!err) {
-                            try {
-                                if (!handler.openAsync ||
-                                    !handler.openAsync(urlObj.original,
-                                                       data,
-                                                       asset,
-                                                       loader._handleOpen.bind(loader, key, extra))) {
-                                    loader._handleOpen(key, extra, null, handler.open(urlObj.original, data, asset));
-                                }
-                            } catch (e) {
-                                loader._handleOpen(key, null, e);
+                        if (err) {
+                            self._onFailure(key, err);
+                            return;
+                        }
+
+                        try {
+                            // if the handler has an async version of open, prefer that
+                            if (handler.openAsync) {
+                                handler.openAsync(urlObj.original, data, asset, function (err, result) {
+                                    if (err) {
+                                        self._onFailure(key, err);
+                                    } else {
+                                        self._onSuccess(key, result, extra);
+                                    }
+                                });
+                            } else {
+                                // fall back to synchronous open
+                                self._onSuccess(key, handler.open(urlObj.original, data, asset), extra);
                             }
-                        } else {
-                            loader._handleOpen(key, null, err);
+                        } catch (e) {
+                            self._onFailure(key, e);
                         }
                     }, asset);
                 };
@@ -154,22 +157,23 @@ Object.assign(pc, function () {
                 } else {
                     handleLoad(null, { load: url, original: url });
                 }
-
             }
         },
 
-        // handle an async open response
-        _handleOpen: function (key, extra, err, result) {
-            var i;
-            if (err) {
-                console.error(err);
-                for (i = 0; i < this._requests[key].length; i++)
+        _onSuccess: function (key, result, extra) {
+            this._cache[key] = result;
+            for (var i = 0; i < this._requests[key].length; i++) {
+                this._requests[key][i](null, result, extra);
+            }
+            delete this._requests[key];
+        },
+
+        _onFailure: function (key, err) {
+            console.error(err);
+            if (this._requests[key]) {
+                for (var i = 0; i < this._requests[key].length; i++) {
                     this._requests[key][i](err);
-                delete this._requests[key];
-            } else {
-                this._cache[key] = result;
-                for (i = 0; i < this._requests[key].length; i++)
-                    this._requests[key][i](null, result, extra);
+                }
                 delete this._requests[key];
             }
         },
