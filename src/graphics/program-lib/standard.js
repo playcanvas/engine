@@ -1101,7 +1101,7 @@ pc.programlib.standard = {
         if (lighting) code += chunks.lightDiffuseLambertPS;
         var useOldAmbient = false;
         if (options.useSpecular) {
-            if (lighting) code += options.shadingModel === pc.SPECULAR_PHONG ? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
+            if (lighting) code += options.shadingModel === pc.SPECULAR_PHONG ? chunks.lightSpecularPhongPS : (options.useAnisotropy) ? chunks.lightSpecularAnisoGGXPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || cubemapReflection || options.dpAtlas || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
                     if (options.conserveEnergy) {
@@ -1163,7 +1163,7 @@ pc.programlib.standard = {
         if (needsNormal) {
             code += chunks.viewDirPS;
             if (options.useSpecular) {
-                code += chunks.reflDirPS;
+                code += (options.useAnisotropy) ? chunks.reflDirAnisoPS : chunks.reflDirPS;
             }
         }
         var hasPointLights = false;

@@ -114,6 +114,7 @@ Object.assign(pc, function () {
         options.customFragmentShader = stdMat.customFragmentShader;
         options.refraction = !!stdMat.refraction;
         options.useMetalness = stdMat.useMetalness;
+        options.useAnisotropy = stdMat.useAnisotropy
         options.msdf = !!stdMat.msdfMap;
         options.twoSidedLighting = stdMat.twoSidedLighting;
         options.pixelSnap = stdMat.pixelSnap;

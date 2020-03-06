@@ -680,6 +680,10 @@ Object.assign(pc, function () {
                 if (!this.metalnessMap || this.metalness < 1) {
                     this._setParameter('material_metalness', this.metalness);
                 }
+
+                if (this.useAnisotropy){
+                    this._setParameter('material_anisotropy', this.anisotropy);
+                }
             }
 
             uniform = this.getUniform("shininess", this.shininess, true);
@@ -941,6 +945,7 @@ Object.assign(pc, function () {
         _defineFloat(obj, "refraction", 0);
         _defineFloat(obj, "refractionIndex", 1.0 / 1.5); // approx. (air ior / glass ior)
         _defineFloat(obj, "metalness", 1);
+        _defineFloat(obj, "anisotropy", 0);
         _defineFloat(obj, "aoUvSet", 0, null); // legacy
 
         _defineObject(obj, "ambientSH", function (mat, val, changeMat) {
@@ -972,6 +977,7 @@ Object.assign(pc, function () {
         _defineFlag(obj, "fastTbn", false);
         _defineFlag(obj, "specularAntialias", false);
         _defineFlag(obj, "useMetalness", false);
+        _defineFlag(obj, "useAnisotropy", false);
         _defineFlag(obj, "occludeDirect", false);
         _defineFlag(obj, "normalizeNormalMap", true);
         _defineFlag(obj, "conserveEnergy", true);
