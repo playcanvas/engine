@@ -135,7 +135,7 @@ Object.assign(pc, function () {
                             if (componentData.blending) {
                                 animController.getClip(1).blendWeight = componentData.blend;
                             }
-                            animController.update(dt);
+                            animController.update(dt * componentData.speed * (componentData.playing ? 1 : 0));
                         }
 
                         // clear blending flag

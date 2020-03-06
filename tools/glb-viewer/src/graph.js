@@ -73,8 +73,8 @@ Object.assign(Graph.prototype, {
         var positions = this.positions;
         var i, j;
 
-        var right = camera.right;
-        var up = camera.up;
+        var right = new pc.Vec3();
+        var up = new pc.Vec3();
         var xscale = 0.1;
         var yscale = 1;
         var sample;
@@ -90,19 +90,25 @@ Object.assign(Graph.prototype, {
             if (graph.constantSamples < this.numSamples) {
                 var idx = graph.sample + numSamples - 1 + numSamples;
                 var base = (graph.node.parent || graph.node).getPosition();
+                var dist = base.distance(camera.getPosition());
+                right.copy(camera.right);
+                right.scale(dist * 0.005);
+                up.copy(camera.up);
+                up.scale(dist * 0.05);
+
                 for (j=0; j<numSamples-1; ++j) {
 
                     sample = graph.samples[(idx - j) % numSamples];
                     pos = positions[j*2+0];
-                    pos.x = base.x + right.x * j * xscale + up.x * sample * yscale;
-                    pos.y = base.y + right.y * j * xscale + up.y * sample * yscale;
-                    pos.z = base.z + right.z * j * xscale + up.z * sample * yscale;
+                    pos.x = base.x + right.x * j + up.x * sample;
+                    pos.y = base.y + right.y * j + up.y * sample;
+                    pos.z = base.z + right.z * j + up.z * sample;
 
                     sample = graph.samples[(idx - j - 1) % numSamples];
                     pos = positions[j*2+1];
-                    pos.x = base.x + right.x * (j + 1) * xscale + up.x * sample * yscale;
-                    pos.y = base.y + right.y * (j + 1) * xscale + up.y * sample * yscale;
-                    pos.z = base.z + right.z * (j + 1) * xscale + up.z * sample * yscale;
+                    pos.x = base.x + right.x * (j + 1) + up.x * sample;
+                    pos.y = base.y + right.y * (j + 1) + up.y * sample;
+                    pos.z = base.z + right.z * (j + 1) + up.z * sample;
                 }
 
                 app.renderLines(positions, graph.color, options);

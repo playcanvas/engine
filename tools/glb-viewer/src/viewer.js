@@ -7,8 +7,8 @@ var Viewer = function (canvas) {
 
     // create the application
     var app = new pc.Application(canvas, {
-        mouse: new pc.Mouse(document.body),
-        touch: new pc.TouchDevice(document.body)
+        mouse: new pc.Mouse(canvas),
+        touch: new pc.TouchDevice(canvas)
     });
 
     var getCanvasSize = function () {
@@ -107,8 +107,10 @@ var Viewer = function (canvas) {
 
     var graph = new Graph(app, 128);
     app.on('prerender', function () {
-        graph.update();
-        graph.render();
+        if (self.showGraphs) {
+            graph.update();
+            graph.render();
+        }
     });
 
     // store things
@@ -117,6 +119,7 @@ var Viewer = function (canvas) {
     this.light = light;
     this.entity = null;
     this.graph = graph;
+    this.showGraphs = false;
 };
 
 Object.assign(Viewer.prototype, {
@@ -138,15 +141,21 @@ Object.assign(Viewer.prototype, {
         }
 
         this.graph.clear();
+
+        this.animationMap = { };
+        onAnimationsLoaded([]);
     },
 
+    // move the camera to view the loaded object
     focusCamera: function () {
         var entity = this.entity;
         if (entity) {
             var camera = this.camera;
-            camera.script.orbitCamera.focus(entity);
 
-            var distance = camera.script.orbitCamera.distance;
+            var orbitCamera = camera.script.orbitCamera;
+            orbitCamera.focus(entity);
+
+            var distance = orbitCamera.distance;
             camera.camera.nearClip = distance / 10;
             camera.camera.farClip = distance * 10;
 
@@ -160,8 +169,29 @@ Object.assign(Viewer.prototype, {
         this.app.assets.loadFromUrl(url, "container", this._onLoaded.bind(this));
     },
 
+    // play the animation
     play: function (animationName) {
-        this.entity.animation.play(this.animationMap[animationName], 0);
+        if (animationName) {
+            this.entity.animation.play(this.animationMap[animationName], 1);
+        } else {
+            this.entity.animation.playing = true;
+        }
+    },
+
+    // stop playing animations
+    stop: function () {
+        this.entity.animation.playing = false;
+    },
+
+    setSpeed: function (speed) {
+        var entity = this.entity;
+        if (entity) {
+            entity.animation.speed = speed;
+        }
+    },
+
+    setGraphs: function (show) {
+        this.showGraphs = show;
     },
 
     _onLoaded: function (err, asset) {
@@ -170,7 +200,7 @@ Object.assign(Viewer.prototype, {
 
             var resource = asset.resource;
 
-            // construct model entity
+            // create entity and add model
             var entity = new pc.Entity();
             entity.addComponent("model", {
                 type: "asset",
@@ -178,6 +208,7 @@ Object.assign(Viewer.prototype, {
                 castShadows: true
             });
 
+            // create animations
             if (resource.animations && resource.animations.length > 0) {
                 entity.addComponent('animation', {
                     assets: resource.animations.map(function (asset) {
@@ -192,10 +223,10 @@ Object.assign(Viewer.prototype, {
                     animationMap[asset.resource.name] = asset.name;
                 }
 
-                onAnimationsLoaded(Object.keys(animationMap));
                 this.animationMap = animationMap;
+                onAnimationsLoaded(Object.keys(this.animationMap));
 
-                // create graphs
+                // create animation graphs
                 setTimeout((function () {
                     function extract(index) {
                         return this[index];

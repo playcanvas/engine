@@ -101,7 +101,7 @@ OrbitCamera.prototype.focus = function (focusEntity) {
     var halfExtents = this._modelsAabb.halfExtents;
     var radius = Math.max(halfExtents.x, Math.max(halfExtents.y, halfExtents.z));
 
-    this.distance = radius / Math.sin(0.5 * this.entity.camera.fov * pc.math.DEG_TO_RAD);
+    this.distance = (radius * 1.5) / Math.sin(0.5 * this.entity.camera.fov * pc.math.DEG_TO_RAD);
 
     this._removeInertia();
 
