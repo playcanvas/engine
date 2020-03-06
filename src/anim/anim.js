@@ -103,7 +103,7 @@ Object.assign(pc, function () {
             }
 
             // calculate normalized time
-            this._t = (time - this._left) * this._recip;
+            this._t = (this._recip === 0) ? 0 : ((time - this._left) * this._recip);
             this._hermite.valid = false;
         },
 
