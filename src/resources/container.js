@@ -3,9 +3,8 @@ Object.assign(pc, function () {
     /**
      * @class
      * @name pc.ContainerResource
-     * @classdesc Resource handler used for loading {@link pc.Model} resources.
-     * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
-     * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
+     * @classdesc Container for a list of animations, textures and a model.
+     * @param {Object} data - The loaded GLB data.
      */
     var ContainerResource = function (data) {
         this.data = data;
@@ -13,33 +12,39 @@ Object.assign(pc, function () {
 
     Object.assign(ContainerResource.prototype, {
         destroy: function () {
-            var i;
 
+            var registry = this.registry;
+
+            var destroyAsset = function (asset) {
+                registry.remove(asset);
+                asset.unload();
+            };
+
+            var destroyAssets = function (assets) {
+                assets.forEach(function (asset) {
+                    destroyAsset(asset);
+                });
+            };
+
+            // unload and destroy assets
             if (this.animations) {
-                for (i = 0; i < this.animations.length; ++i) {
-                    this.assets.remove(this.animations[i]);
-                    this.animations[i].unload();
-                }
+                destroyAssets(this.animations);
                 this.animations = null;
             }
 
             if (this.textures) {
-                for (i = 0; i < this.textures.length; ++i) {
-                    this.assets.remove(this.textures[i]);
-                    this.textures[i].unload();
-                }
+                destroyAssets(this.textures);
                 this.textures = null;
             }
 
-            if (this.model) {
-                this.assets.remove(this.model);
-                this.model.unload();
-                this.model = null;
+            if (this.materials) {
+                destroyAssets(this.materials);
+                this.materials = null;
             }
 
-            var textures = this.data.textures;
-            for (var i=0; i<textures.length; ++i) {
-                textures[i].destroy();
+            if (this.model) {
+                destroyAsset(this.model);
+                this.model = null;
             }
 
             this.data = null;
@@ -51,7 +56,8 @@ Object.assign(pc, function () {
      * @class
      * @name pc.ContainerHandler
      * @implements {pc.ResourceHandler}
-     * @classdesc Resource handler used for loading {@link pc.Model} resources.
+     * @classdesc Loads files that contain in them multiple resources. For example GLB files which can contain
+     * textures, models and animations.
      * @param {pc.GraphicsDevice} device - The graphics device that will be rendering.
      * @param {pc.StandardMaterial} defaultMaterial - The shared default material that is used in any place that a material is not specified.
      */
@@ -61,16 +67,6 @@ Object.assign(pc, function () {
     };
 
     Object.assign(ContainerHandler.prototype, {
-        /**
-         * @function
-         * @name pc.ContainerHandler#load
-         * @description Fetch model data from a remote url.
-         * @param {string} url - The URL of the model data.
-         * @param {pc.callbacks.ResourceHandler} callback - Callback function called when the load completes. The
-         * callback is of the form fn(err, response), where err is a String error message in
-         * the case where the load fails, and response is the model data that has been
-         * successfully loaded.
-         */
         load: function (url, callback) {
             if (typeof url === 'string') {
                 url = {
@@ -97,7 +93,6 @@ Object.assign(pc, function () {
         },
 
         openAsync: function (url, data, asset, callback) {
-            var self = this;
             pc.GlbParser.parse(data, this._device, function (err, result) {
                 if (err) {
                     callback(err);
@@ -109,6 +104,7 @@ Object.assign(pc, function () {
             return true;
         },
 
+        // Create assets to wrap the loaded engine resources - model, materials, textures and animations.
         patch: function (asset, assets) {
             var createAsset = function (type, resource, index) {
                 var subAsset = new pc.Asset(asset.name + '/' + type + '/' + index, type, {
@@ -120,12 +116,24 @@ Object.assign(pc, function () {
                 return subAsset;
             };
 
-            var resource = asset.resource;
-            var data = resource.data;
+            var container = asset.resource;
+            var data = container.data;
             var i;
 
             // create model asset
             var model = createAsset('model', pc.GlbParser.createModel(data, this._defaultMaterial), 0);
+
+            // create material assets
+            var materials = [];
+            for (i = 0; i < data.materials.length; ++i) {
+                materials.push(createAsset('material', data.materials[i], i));
+            }
+
+            // create texture assets
+            var textures = [];
+            for (i = 0; i < data.textures.length; ++i) {
+                textures.push(createAsset('texture', data.textures[i], i));
+            }
 
             // create animation assets
             var animations = [];
@@ -133,16 +141,12 @@ Object.assign(pc, function () {
                 animations.push(createAsset('animation', data.animations[i], i));
             }
 
-            // create texture assets
-            var textures = [];
-            for (i = 0; i < textures.length; ++i) {
-                textures.push(createAsset('texture', data.textures[i], i));
-            }
-
-            resource.model = model;
-            resource.animations = animations;
-            resource.textures = textures;
-            resource.assets = assets;
+            container.data = null;              // since assets are created, release GLB data
+            container.model = model;
+            container.materials = materials;
+            container.textures = textures;
+            container.animations = animations;
+            container.registry = assets;
         }
     });
 

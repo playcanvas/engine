@@ -135,7 +135,7 @@ Object.assign(pc, function () {
                                     }
                                 });
                             } else {
-                                // fall back to synchronous open
+                                // otherwise fall back to synchronous version
                                 self._onSuccess(key, handler.open(urlObj.original, data, asset), extra);
                             }
                         } catch (e) {
