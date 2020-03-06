@@ -1,0 +1,46 @@
+html {
+    height: 100%;
+}
+
+body { 
+    margin: 0;
+    height: 100%;
+    max-height: 100%;
+}
+
+.flex-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: stretch;
+}
+
+#controls {
+    width: 200px;
+    height: 100%;
+    background-color: #777;
+}
+
+#application-canvas {
+    width: 500px;
+    height: 500px;
+}
+
+ul {
+    list-style-type: none;
+    list-style-position: inside;
+    padding: 5px;
+    margin: 5px;
+}
+
+button {
+    width: 100%;
+    text-align: left;
+}
+
+h2 {
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 5px;
+    margin: 5px;
+    color: #fff;
+}

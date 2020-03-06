@@ -104,7 +104,7 @@ Object.assign(pc, function () {
 
             // calculate normalized time
             this._t = (time - this._left) * this._recip;
-            this._hermiteValid = false;
+            this._hermite.valid = false;
         },
 
         _findKey: function (time, input) {
@@ -162,9 +162,9 @@ Object.assign(pc, function () {
 
                         for (i = 0; i < dim; ++i) {
                             result[i] = hermite.p0 * data[p0 + i] +
-                                        hermite.m0 * data[m0 + i] * this._tlen +
+                                        hermite.m0 * data[m0 + i] * this._len +
                                         hermite.p1 * data[p1 + i] +
-                                        hermite.m1 * data[m1 + i] * this._tlen;
+                                        hermite.m1 * data[m1 + i] * this._len;
                         }
                         break;
                 }

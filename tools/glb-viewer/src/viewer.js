@@ -11,13 +11,22 @@ var Viewer = function (canvas) {
         touch: new pc.TouchDevice(document.body)
     });
 
+    var getCanvasSize = function () {
+        return {
+            width: document.body.clientWidth - 200,
+            height: document.body.clientHeight
+        };
+    };
+
     app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+    var canvasSize = getCanvasSize();
+    app.setCanvasFillMode(pc.FILLMODE_NONE, canvasSize.width, canvasSize.height);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
     window.addEventListener("resize", function () {
-        app.resizeCanvas(canvas.width, canvas.height);
+        var canvasSize = getCanvasSize();
+        app.resizeCanvas(canvasSize.width, canvasSize.height);
     });
 
     // load cubemap background
@@ -37,7 +46,7 @@ var Viewer = function (canvas) {
     });
 
     // create the orbit camera
-    var camera = new pc.Entity();
+    var camera = new pc.Entity("Camera");
     camera.addComponent("camera", {
         fov: 60,
         clearColor: new pc.Color(0.4, 0.45, 0.5)
@@ -96,11 +105,18 @@ var Viewer = function (canvas) {
     window.addEventListener('dragover', preventDefault, false);
     window.addEventListener('drop', dropHandler, false);
 
+    var graph = new Graph(app, 128);
+    app.on('prerender', function () {
+        graph.update();
+        graph.render();
+    });
+
     // store things
     this.app = app;
     this.camera = camera;
     this.light = light;
     this.entity = null;
+    this.graph = graph;
 };
 
 Object.assign(Viewer.prototype, {
@@ -120,6 +136,8 @@ Object.assign(Viewer.prototype, {
             this.asset.unload();
             this.asset = null;
         }
+
+        this.graph.clear();
     },
 
     focusCamera: function () {
@@ -140,6 +158,10 @@ Object.assign(Viewer.prototype, {
     // load model from the url
     load: function (url) {
         this.app.assets.loadFromUrl(url, "container", this._onLoaded.bind(this));
+    },
+
+    play: function (animationName) {
+        this.entity.animation.play(this.animationMap[animationName], 0);
     },
 
     _onLoaded: function (err, asset) {
@@ -163,6 +185,64 @@ Object.assign(Viewer.prototype, {
                     }),
                     speed: 1
                 });
+
+                var animationMap = {};
+                for (var i = 0; i < resource.animations.length; ++i) {
+                    var asset = resource.animations[i];
+                    animationMap[asset.resource.name] = asset.name;
+                }
+
+                onAnimationsLoaded(Object.keys(animationMap));
+                this.animationMap = animationMap;
+
+                // create graphs
+                setTimeout((function () {
+                    function extract(index) {
+                        return this[index];
+                    };
+    
+                    var graph = this.graph;
+                    var animController = entity.animation.data.animController;
+                    var nodes = animController._nodes;
+                    var activePose = animController._activePose;
+
+                    for (var i=0; i<nodes.length; ++i) {
+                        var node = nodes[i];
+
+                        graph.addGraph(node,
+                                       new pc.Color(1, 0, 0, 1),
+                                       extract.bind(activePose, i * 10 + 0));
+                        graph.addGraph(node,
+                                       new pc.Color(0, 1, 0, 1),
+                                       extract.bind(activePose, i * 10 + 1));
+                        graph.addGraph(node,
+                                       new pc.Color(0, 0, 1, 1),
+                                       extract.bind(activePose, i * 10 + 2));
+
+                        graph.addGraph(node,
+                                       new pc.Color(1, 0, 0, 1),
+                                       extract.bind(activePose, i * 10 + 3));
+                        graph.addGraph(node,
+                                       new pc.Color(0, 1, 0, 1),
+                                       extract.bind(activePose, i * 10 + 4));
+                        graph.addGraph(node,
+                                       new pc.Color(0, 0, 1, 1),
+                                       extract.bind(activePose, i * 10 + 5));
+                        graph.addGraph(node,
+                                       new pc.Color(1, 1, 0, 1),
+                                       extract.bind(activePose, i * 10 + 6));
+
+                        graph.addGraph(node,
+                                       new pc.Color(1, 0, 0, 1),
+                                       extract.bind(activePose, i * 10 + 7));
+                        graph.addGraph(node,
+                                       new pc.Color(0, 1, 0, 1),
+                                       extract.bind(activePose, i * 10 + 8));
+                        graph.addGraph(node,
+                                       new pc.Color(0, 0, 1, 1),
+                                       extract.bind(activePose, i * 10 + 9));
+                    }
+                }).bind(this), 1000);
             }
 
             this.app.root.addChild(entity);

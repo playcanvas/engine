@@ -5,18 +5,24 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="icon" type="image/png" href="../playcanvas-favicon.png" />
+    <link rel="stylesheet" href="style.css">
     <script src="../../build/output/playcanvas.js"></script>
-    <script src="./src/viewer.js"></script>
-    <style>
-        body { 
-            margin: 0;
-            overflow-y: hidden;
-        }
-    </style>
 </head>
 
-<body onload='main()'>
-    <!-- The canvas element -->
-    <canvas id="application-canvas"></canvas>
+<body onload="main()">
+    <div class="flex-container">
+        <div id="controls">
+            <h2>Animations</h2>
+            <ul id="anim-list">
+                <li><button>Animation 1</button></li>
+                <li><button>Animation 2</button></li>
+            </ul>
+        </div>
+        <!-- The canvas element -->
+        <canvas id="application-canvas"></canvas>
+    </div>
+    <script src="./src/viewer.js"></script>
+    <script src="./src/controls.js"></script>
+    <script src="./src/graph.js"></script>
 </body>
 </html>

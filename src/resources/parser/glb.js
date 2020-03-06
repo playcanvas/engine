@@ -1446,6 +1446,42 @@ Object.assign(pc, function () {
         }
     };
 
+    var loadGltfAsync = function (gltf, binaryChunk, callback) {
+        // load buffers
+        loadBuffersAsync(gltf, binaryChunk, function (err, buffers) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // load images
+            loadImagesAsync(gltf, buffers, function (err, images) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // create engine resources
+                var nodes = createNodes(gltf);
+                var animations = createAnimations(gltf, nodes, buffers);
+                var textures = createTextures(gltf, images);
+                var materials = createMaterials(gltf, textures);
+                var meshes = createMeshes(gltf, buffers);
+                var skins = createSkins(gltf, nodes, buffers);
+
+                callback(null, {
+                    'gltf': gltf,
+                    'nodes': nodes,
+                    'animations': animations,
+                    'textures': textures,
+                    'materials': materials,
+                    'meshes': meshes,
+                    'skins': skins
+                });
+            });
+        });
+    };
+
     // load a GLB
     var loadGLBAsync = function (glbData, callback) {
         var data = new DataView(glbData);
@@ -1514,39 +1550,7 @@ Object.assign(pc, function () {
         var gltf = JSON.parse(decodeBinaryUtf8(chunks[0].data));
         var binaryChunk = chunks.length === 2 ? chunks[1].data : null;
 
-        // load buffers
-        loadBuffersAsync(gltf, binaryChunk, function (err, buffers) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // load images
-            loadImagesAsync(gltf, buffers, function (err, images) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                // create engine resources
-                var nodes = createNodes(gltf);
-                var animations = createAnimations(gltf, nodes, buffers);
-                var textures = createTextures(gltf, images);
-                var materials = createMaterials(gltf, textures);
-                var meshes = createMeshes(gltf, buffers);
-                var skins = createSkins(gltf, nodes, buffers);
-
-                callback(null, {
-                    'gltf': gltf,
-                    'nodes': nodes,
-                    'animations': animations,
-                    'textures': textures,
-                    'materials': materials,
-                    'meshes': meshes,
-                    'skins': skins
-                });
-            });
-        });
+        loadGltfAsync(gltf, binaryChunk, callback);
     };
 
     // -- GlbParser
