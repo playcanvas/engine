@@ -41,9 +41,11 @@ Object.assign(pc, function () {
     var ScriptType = function (args) {
         pc.EventHandler.call(this);
 
+        var script = this.constructor; // get script type, i.e. function (class)
+
         // #ifdef DEBUG
         if (!args || !args.app || !args.entity) {
-            console.warn('script \'' + name + '\' has missing arguments in constructor');
+            console.warn('script \'' + script.__name + '\' has missing arguments in constructor');
         }
         // #endif
 
@@ -104,12 +106,12 @@ Object.assign(pc, function () {
             return;
 
         // set attributes values
-        for (var key in ScriptType.attributes.index) {
+        for (var key in this.__scriptType.attributes.index) {
             if (this.__attributesRaw && this.__attributesRaw.hasOwnProperty(key)) {
                 this[key] = this.__attributesRaw[key];
             } else if (!this.__attributes.hasOwnProperty(key)) {
-                if (ScriptType.attributes.index[key].hasOwnProperty('default')) {
-                    this[key] = ScriptType.attributes.index[key].default;
+                if (this.__scriptType.attributes.index[key].hasOwnProperty('default')) {
+                    this[key] = this.__scriptType.attributes.index[key].default;
                 } else {
                     this[key] = null;
                 }
@@ -143,7 +145,7 @@ Object.assign(pc, function () {
             if (!methods.hasOwnProperty(key))
                 continue;
 
-            ScriptType.prototype[key] = methods[key];
+            this.prototype[key] = methods[key];
         }
     };
 
