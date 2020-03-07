@@ -475,11 +475,12 @@ Object.assign(pc, function () {
             return !!this._scriptsIndex[name];
         },
 
+        /* eslint-disable jsdoc/no-undefined-types */
         /**
          * @function
          * @name pc.ScriptComponent#create
          * @description Create a script instance using name of a {@link pc.ScriptType} and attach to an entity script component.
-         * @param {string|pc.ScriptType} name - The name of the Script Type (or alternatively the {@link pc.ScriptType} to instantiate).
+         * @param {string|Class<pc.ScriptType>} name - The name of the Script Type (or alternatively the {@link pc.ScriptType} to instantiate).
          * @param {object} [args] - Object with arguments for a script.
          * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to true.
          * @param {object} [args.attributes] - Object with values for attributes (if any), where key is name of an attribute.
@@ -495,6 +496,7 @@ Object.assign(pc, function () {
          *     }
          * });
          */
+        /* eslint-enable jsdoc/no-undefined-types */
         create: function (name, args) {
             var self = this;
             args = args || { };

@@ -115,13 +115,15 @@ Object.assign(pc, function () {
     };
 
 
+    /* eslint-disable jsdoc/no-undefined-types */
     /**
      * @class
      * @name pc.ScriptAttributes
      * @classdesc Container of Script Attribute definitions. Implements an interface to add/remove attributes and store their definition for a {@link pc.ScriptType}.
      * Note: An instance of pc.ScriptAttributes is created automatically by each {@link pc.ScriptType}.
-     * @param {pc.ScriptType} scriptType - Script Type that attributes relate to.
+     * @param {Class<pc.ScriptType>} scriptType - Script Type that attributes relate to.
      */
+    /* eslint-enable jsdoc/no-undefined-types */
     var ScriptAttributes = function (scriptType) {
         this.scriptType = scriptType;
         this.index = { };
