@@ -91,7 +91,12 @@ Object.assign(pc, function () {
      *     default: 22.2
      * });
      */
-    ScriptType.attributes = new pc.ScriptAttributes(ScriptType);
+    Object.defineProperty(ScriptType, 'attributes', {
+        get: function () {
+            if (!this.hasOwnProperty('__attributes')) this.__attributes = new pc.ScriptAttributes(this);
+            return this.__attributes;
+        }
+    });
 
     // initialize attributes
     ScriptType.prototype.__initializeAttributes = function (force) {
