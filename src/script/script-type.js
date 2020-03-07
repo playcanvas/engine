@@ -72,7 +72,7 @@ Object.assign(pc, function () {
      * @type {string}
      * @description Name of a Script Type.
      */
-    ScriptType.__name = name;
+    ScriptType.__name = null; // Will be assigned when calling createScript or registerScript.
 
     /**
      * @field
