@@ -46,17 +46,52 @@ Object.assign(pc, function () {
 
         script.prototype = Object.create(pc.ScriptType.prototype);
 
-        script.__name = name;
-
         script.attributes = new pc.ScriptAttributes(script);
+
+        pc.registerScript(script, name, app);
+        return script;
+    };
+
+    /**
+     * @static
+     * @function
+     * @name pc.registerScript
+     * @description Register a existing class as a Script Type to {@link pc.ScriptRegistry}.
+     * Useful when defining a ES6-style script class that extends {@link pc.ScriptType}.
+     * @param {Class<pc.ScriptType>} script - The existing class to be registered as a Script Type. Class must extend {@link pc.ScriptType}.
+     * Please note: classes created using {@link pc.createScript} are auto-registered, do not pass them into {@link pc.registerScript}.
+     * @param {string} [name] - Optional unique name of the Script Type. By default it will use the same name as the existing class.
+     * If a Script Type with the same name has already been registered and the new one has a `swap` method defined in its prototype,
+     * then it will perform hot swapping of existing Script Instances on entities using this new Script Type.
+     * Note: There is a reserved list of names that cannot be used, such as list below as well as some starting from `_` (underscore):
+     * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
+     * @param {pc.Application} [app] - Optional application handler, to choose which {@link pc.ScriptRegistry} to register the script type to.
+     * By default it will use `pc.Application.getApplication()` to get current {@link pc.Application}.
+     */
+    var registerScript = function (script, name, app) {
+        if (pc.script.legacy) {
+            // #ifdef DEBUG
+            console.error("This project is using the legacy script system. You cannot call pc.registerScript(). See: http://developer.playcanvas.com/en/user-manual/scripting/legacy/");
+            // #endif
+            return;
+        }
+
+        if (typeof script !== 'function')
+            throw new Error('script class: \'' + script + '\' must be a function (class).');
+
+        if (!(script.prototype instanceof pc.ScriptType))
+            throw new Error('script class: \'' + _getFuncName(script) + '\' does not extend pc.ScriptType.');
+
+        if (createScript.reservedScripts[name])
+            throw new Error('script name: \'' + name + '\' is reserved, please change script name');
+
+        script.__name = name;
 
         // add to scripts registry
         var registry = app ? app.scripts : pc.Application.getApplication().scripts;
         registry.add(script);
 
         pc.ScriptHandler._push(script);
-
-        return script;
     };
 
     // reserved scripts
@@ -89,6 +124,7 @@ Object.assign(pc, function () {
 
 
     return {
-        createScript: createScript
+        createScript: createScript,
+        registerScript: registerScript
     };
 }());
