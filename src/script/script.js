@@ -57,6 +57,7 @@ Object.assign(pc, function () {
         script.prototype = Object.create(pc.ScriptType.prototype);
         script.prototype.constructor = script;
 
+        script.extend = pc.ScriptType.extend;
         script.attributes = new pc.ScriptAttributes(script);
 
         pc.registerScript(script, name, app);
