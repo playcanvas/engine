@@ -63,6 +63,7 @@ Object.assign(pc, function () {
         return script;
     };
 
+    /* eslint-disable jsdoc/check-examples */
     /**
      * @static
      * @function
@@ -78,7 +79,23 @@ Object.assign(pc, function () {
      * system, entity, create, destroy, swap, move, scripts, onEnable, onDisable, onPostStateChange, has, on, off, fire, once, hasEvent.
      * @param {pc.Application} [app] - Optional application handler, to choose which {@link pc.ScriptRegistry} to register the script type to.
      * By default it will use `pc.Application.getApplication()` to get current {@link pc.Application}.
+     * @example
+     * // define a ES6-style script class
+     * class PlayerController extends pc.ScriptType {
+     *
+     *     initialize() {
+     *         // called once on initialize
+     *     }
+     *
+     *     update(dt) {
+     *         // called each tick
+     *     }
+     * }
+     *
+     * // register the class as a script
+     * pc.registerScript(PlayerController);
      */
+    /* eslint-enable jsdoc/check-examples */
     var registerScript = function (script, name, app) {
         if (pc.script.legacy) {
             // #ifdef DEBUG
