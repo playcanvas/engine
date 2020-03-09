@@ -39,7 +39,7 @@ Object.assign(pc, function () {
      * With anisotropy == 0, specular is isotropic
      * With anisotropy < 0, anistropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1.
      * With anisotropy > 0, anistropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
-     *  
+     *
      * @property {boolean} useMetalness Use metalness properties instead of specular.
      * When enabled, diffuse colors also affect specular instead of the dedicated specular map.
      * This can be used as alternative to specular color to save space.
