@@ -97,7 +97,7 @@ var Viewer = function (canvas) {
             const items = ev.dataTransfer.items;
             if (items && items.length === 1 && items[0].kind === 'file') {
                 const file = items[0].getAsFile();
-                self.load(URL.createObjectURL(file));
+                self.load(file.name, URL.createObjectURL(file));
             }
         }
     }
@@ -165,8 +165,8 @@ Object.assign(Viewer.prototype, {
     },
 
     // load model from the url
-    load: function (url) {
-        this.app.assets.loadFromUrl(url, "container", this._onLoaded.bind(this));
+    load: function (filename, url) {
+        this.app.assets.loadFromUrl(url, "container", this._onLoaded.bind(this), filename);
     },
 
     // play the animation

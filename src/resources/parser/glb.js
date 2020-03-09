@@ -1209,7 +1209,22 @@ Object.assign(pc, function () {
         }
     };
 
-    var loadGltfAsync = function (gltf, binaryChunk, callback) {
+    var loadGltfAsync = function (gltfChunk, binaryChunk, callback) {
+
+        var decodeBinaryUtf8 = function (array) {
+            if (typeof TextDecoder !== 'undefined') {
+                return new TextDecoder().decode(array);
+            }
+            var str = array.reduce( function (accum, value) {
+                accum += String.fromCharCode(value);
+                return accum;
+            }, "");
+            return decodeURIComponent(escape(str));
+
+        };
+
+        var gltf = JSON.parse(decodeBinaryUtf8(gltfChunk));
+
         // load external buffers
         loadBuffersAsync(gltf, binaryChunk, function (err, buffers) {
             if (err) {
@@ -1246,7 +1261,7 @@ Object.assign(pc, function () {
     };
 
     // load a GLB
-    var loadGLBAsync = function (glbData, callback) {
+    var loadGlbAsync = function (glbData, callback) {
         var data = new DataView(glbData);
 
         // read header
@@ -1298,36 +1313,25 @@ Object.assign(pc, function () {
             return null;
         }
 
-        var decodeBinaryUtf8 = function (array) {
-            if (typeof TextDecoder !== 'undefined') {
-                return new TextDecoder().decode(array);
-            }
-            var str = array.reduce( function (accum, value) {
-                accum += String.fromCharCode(value);
-                return accum;
-            }, "");
-            return decodeURIComponent(escape(str));
-
-        };
-
-        var gltf = JSON.parse(decodeBinaryUtf8(chunks[0].data));
-        var binaryChunk = chunks.length === 2 ? chunks[1].data : null;
-
-        loadGltfAsync(gltf, binaryChunk, callback);
+        loadGltfAsync(chunks[0].data, chunks.length === 2 ? chunks[1].data : null, callback);
     };
 
     // -- GlbParser
     var GlbParser = function () { };
 
     // parse the blob of glb data
-    GlbParser.parse = function (glbData, device, callback) {
+    GlbParser.parse = function (filename, glbData, device, callback) {
         // reset global state
         if (device) {
             globals.device = device;
         }
         globals.nodeId = 0;
         globals.animId = 0;
-        loadGLBAsync(glbData, callback);
+        if (filename && filename.toLowerCase().endsWith('.gltf')) {
+            loadGltfAsync(glbData, null, callback);
+        } else {
+            loadGlbAsync(glbData, callback);
+        }
     };
 
     // create a pc.Model from the parsed GLB data structures

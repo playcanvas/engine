@@ -447,17 +447,19 @@ Object.assign(pc, function () {
          * @param {string} url - The url to load.
          * @param {string} type - The type of asset to load.
          * @param {pc.callbacks.LoadAsset} callback - Function called when asset is loaded, passed (err, asset), where err is null if no errors were encountered.
+         * @param {string} [filename] - Optional asset filename.
          * @example
          * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
          *     var texture = asset.resource;
          * });
          */
-        loadFromUrl: function (url, type, callback) {
+        loadFromUrl: function (url, type, callback, filename) {
             var self = this;
 
-            var name = pc.path.getBasename(url);
+            var name = pc.path.getBasename(filename || url);
 
             var file = {
+                filename: filename || name,
                 url: url
             };
             var data = {};
