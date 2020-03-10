@@ -1,12 +1,6 @@
 Object.assign(pc, function () {
     'use strict';
 
-    var globals = {
-        device: null,
-        nodeId: 0,
-        animId: 0
-    };
-
     var isDataURI = function (uri) {
         return /^data:.*,.*$/i.test(uri);
     };
@@ -104,7 +98,7 @@ Object.assign(pc, function () {
         return dummyIndices;
     };
 
-    var createVertexBuffer = function (attributes, indices, accessors, bufferViews, buffers) {
+    var createVertexBuffer = function (device, attributes, indices, accessors, bufferViews, buffers) {
         var semanticMap = {
             'POSITION': pc.SEMANTIC_POSITION,
             'NORMAL': pc.SEMANTIC_NORMAL,
@@ -201,8 +195,8 @@ Object.assign(pc, function () {
         });
 
         // create vertex buffer
-        var vertexBuffer = new pc.VertexBuffer(globals.device,
-                                               new pc.VertexFormat(globals.device, vertexDesc),
+        var vertexBuffer = new pc.VertexBuffer(device,
+                                               new pc.VertexFormat(device, vertexDesc),
                                                numVertices,
                                                pc.BUFFER_STATIC);
 
@@ -260,7 +254,7 @@ Object.assign(pc, function () {
         return vertexBuffer;
     };
 
-    var createSkin = function (skinData, accessors, bufferViews, nodes, buffers) {
+    var createSkin = function (device, skinData, accessors, bufferViews, nodes, buffers) {
         var i, j, bindMatrix;
         var joints = skinData.joints;
         var numJoints = joints.length;
@@ -292,7 +286,7 @@ Object.assign(pc, function () {
 
         var skeleton = skinData.skeleton;
 
-        var skin = new pc.Skin(globals.device, ibp, boneNames);
+        var skin = new pc.Skin(device, ibp, boneNames);
         skin.skeleton = nodes[skeleton];
 
         skin.bones = [];
@@ -305,7 +299,7 @@ Object.assign(pc, function () {
 
     var tempMat = new pc.Mat4();
     var tempVec = new pc.Vec3();
-    var createMesh = function (meshData, accessors, bufferViews, buffers) {
+    var createMesh = function (device, meshData, accessors, bufferViews, buffers) {
         var meshes = [];
 
         meshData.primitives.forEach(function (primitive) {
@@ -412,7 +406,7 @@ Object.assign(pc, function () {
                 primitive.hasOwnProperty('indices') ?
                     getAccessorData(accessors[primitive.indices], bufferViews, buffers) : null;
 
-            var vertexBuffer = createVertexBuffer(attributes, indices, accessors, bufferViews, buffers);
+            var vertexBuffer = createVertexBuffer(device, attributes, indices, accessors, bufferViews, buffers);
 
             var mesh = new pc.Mesh();
             mesh.vertexBuffer = vertexBuffer;
@@ -429,7 +423,7 @@ Object.assign(pc, function () {
                     indexFormat = pc.INDEXFORMAT_UINT32;
                 }
                 var numIndices = indices.length;
-                var indexBuffer = new pc.IndexBuffer(globals.device, indexFormat, numIndices, pc.BUFFER_STATIC, indices);
+                var indexBuffer = new pc.IndexBuffer(device, indexFormat, numIndices, pc.BUFFER_STATIC, indices);
                 mesh.indexBuffer[0] = indexBuffer;
                 mesh.primitive[0].count = indices.length;
             } else {
@@ -814,7 +808,7 @@ Object.assign(pc, function () {
         wrapT: 10497
     };
 
-    var createTexture = function (textureData, samplers, images) {
+    var createTexture = function (device, textureData, samplers, images) {
         var getFilter = function (filter) {
             switch (filter) {
                 case 9728: return pc.FILTER_NEAREST;
@@ -846,13 +840,13 @@ Object.assign(pc, function () {
             flipY: false
         };
 
-        var result = new pc.Texture(globals.device, options);
+        var result = new pc.Texture(device, options);
         result.setSource(images[textureData.source]);
         return result;
     };
 
     // create the anim structure
-    var createAnimation = function (animationData, accessors, bufferViews, nodes, buffers) {
+    var createAnimation = function (animationData, animationIndex, accessors, bufferViews, nodes, buffers) {
 
         // create animation data block for the accessor
         var createAnimData = function (accessor) {
@@ -930,7 +924,7 @@ Object.assign(pc, function () {
         }, 0);
 
         return new pc.AnimTrack(
-            animationData.hasOwnProperty('name') ? animationData.name : ("animation_" + globals.animId++),
+            animationData.hasOwnProperty('name') ? animationData.name : ("animation_" + animationIndex),
             duration,
             inputs,
             outputs,
@@ -938,13 +932,13 @@ Object.assign(pc, function () {
             targets);
     };
 
-    var createNode = function (nodeData) {
+    var createNode = function (nodeData, nodeIndex) {
         var entity = new pc.GraphNode();
 
         if (nodeData.hasOwnProperty('name')) {
             entity.name = nodeData.name;
         } else {
-            entity.name = "node_" + globals.nodeId++;
+            entity.name = "node_" + nodeIndex;
         }
 
         // Parse transformation properties
@@ -976,24 +970,24 @@ Object.assign(pc, function () {
         return entity;
     };
 
-    var createSkins = function (gltf, nodes, buffers) {
+    var createSkins = function (device, gltf, nodes, buffers) {
         if (!gltf.hasOwnProperty('skins') || gltf.skins.length === 0) {
             return [];
         }
         return gltf.skins.map(function (skinData) {
-            return createSkin(skinData, gltf.accessors, gltf.bufferViews, nodes, buffers);
+            return createSkin(device, skinData, gltf.accessors, gltf.bufferViews, nodes, buffers);
         });
 
     };
 
-    var createMeshes = function (gltf, buffers) {
+    var createMeshes = function (device, gltf, buffers) {
         if (!gltf.hasOwnProperty('meshes') || gltf.meshes.length === 0 ||
             !gltf.hasOwnProperty('accessors') || gltf.accessors.length === 0 ||
             !gltf.hasOwnProperty('bufferViews') || gltf.bufferViews.length === 0) {
             return [];
         }
         return gltf.meshes.map(function (meshData) {
-            return createMesh(meshData, gltf.accessors, gltf.bufferViews, buffers);
+            return createMesh(device, meshData, gltf.accessors, gltf.bufferViews, buffers);
         });
 
     };
@@ -1008,12 +1002,12 @@ Object.assign(pc, function () {
 
     };
 
-    var createTextures = function (gltf, images) {
+    var createTextures = function (device, gltf, images) {
         if (!gltf.hasOwnProperty('textures') || gltf.textures.length === 0) {
             return [];
         }
         return gltf.textures.map(function (textureData) {
-            return createTexture(textureData, gltf.samplers, images);
+            return createTexture(device, textureData, gltf.samplers, images);
         });
     };
 
@@ -1021,8 +1015,8 @@ Object.assign(pc, function () {
         if (!gltf.hasOwnProperty('animations') || gltf.animations.length === 0) {
             return [];
         }
-        return gltf.animations.map(function (animationData) {
-            return createAnimation(animationData, gltf.accessors, gltf.bufferViews, nodes, buffers);
+        return gltf.animations.map(function (animationData, animationIndex) {
+            return createAnimation(animationData, animationIndex, gltf.accessors, gltf.bufferViews, nodes, buffers);
         });
 
     };
@@ -1052,9 +1046,9 @@ Object.assign(pc, function () {
     };
 
     // test if the image at imageIndex must be resized to power of two
-    var imageRequiresResize = function (img, idx, textures, samplers) {
+    var imageRequiresResize = function (device, img, idx, textures, samplers) {
         if (isPower2d(img.width, img.height) ||         // already pot
-            globals.device.webgl2) {             // webgl2 doesn't have POT restrictions
+            device.webgl2) {                            // webgl2 doesn't have POT restrictions
             return false;
         }
 
@@ -1098,7 +1092,7 @@ Object.assign(pc, function () {
     };
 
     // load gltf images
-    var loadImagesAsync = function (gltf, buffers, callback) {
+    var loadImagesAsync = function (device, gltf, buffers, callback) {
         var result = [];
 
         if (!gltf.hasOwnProperty('images') || gltf.images.length === 0 ||
@@ -1109,7 +1103,7 @@ Object.assign(pc, function () {
 
         var remaining = gltf.images.length;
         var onLoad = function (img, idx) {
-            if (imageRequiresResize(img, idx, gltf.textures, gltf.samplers)) {
+            if (imageRequiresResize(device, img, idx, gltf.textures, gltf.samplers)) {
                 img.src = resampleImage(img);   // onLoad will get called again
             } else {
                 img.removeEventListener('load', img.loadEvent, false);
@@ -1209,7 +1203,8 @@ Object.assign(pc, function () {
         }
     };
 
-    var loadGltfAsync = function (gltfChunk, binaryChunk, callback) {
+    // load gltf data
+    var loadGltfAsync = function (device, gltfChunk, binaryChunk, callback) {
 
         var decodeBinaryUtf8 = function (array) {
             if (typeof TextDecoder !== 'undefined') {
@@ -1225,6 +1220,12 @@ Object.assign(pc, function () {
 
         var gltf = JSON.parse(decodeBinaryUtf8(gltfChunk));
 
+        // check gltf version
+        if (gltf.asset && gltf.asset.version && Number.parseFloat(gltf.asset.version) < 2) {
+            callback("Invalid gltf version. Expected version 2.0 or above but found version '" + gltf.asset.version + "'.");
+            return;
+        }
+
         // load external buffers
         loadBuffersAsync(gltf, binaryChunk, function (err, buffers) {
             if (err) {
@@ -1233,7 +1234,7 @@ Object.assign(pc, function () {
             }
 
             // load images
-            loadImagesAsync(gltf, buffers, function (err, images) {
+            loadImagesAsync(device, gltf, buffers, function (err, images) {
                 if (err) {
                     callback(err);
                     return;
@@ -1242,10 +1243,10 @@ Object.assign(pc, function () {
                 // create engine resources
                 var nodes = createNodes(gltf);
                 var animations = createAnimations(gltf, nodes, buffers);
-                var textures = createTextures(gltf, images);
+                var textures = createTextures(device, gltf, images);
                 var materials = createMaterials(gltf, textures);
-                var meshes = createMeshes(gltf, buffers);
-                var skins = createSkins(gltf, nodes, buffers);
+                var meshes = createMeshes(device, gltf, buffers);
+                var skins = createSkins(device, gltf, nodes, buffers);
 
                 callback(null, {
                     'gltf': gltf,
@@ -1260,8 +1261,8 @@ Object.assign(pc, function () {
         });
     };
 
-    // load a GLB
-    var loadGlbAsync = function (glbData, callback) {
+    // load glb data
+    var loadGlbAsync = function (device, glbData, callback) {
         var data = new DataView(glbData);
 
         // read header
@@ -1271,17 +1272,17 @@ Object.assign(pc, function () {
 
         if (magic !== 0x46546C67) {
             callback("Invalid magic number found in glb header. Expected 0x46546C67, found 0x" + magic.toString(16));
-            return null;
+            return;
         }
 
         if (version !== 2) {
             callback("Invalid version number found in glb header. Expected 2, found " + version);
-            return null;
+            return;
         }
 
         if (length <= 0 || length > glbData.byteLength) {
             callback("Invalid length found in glb header. Found " + length);
-            return null;
+            return;
         }
 
         // read chunks
@@ -1300,37 +1301,31 @@ Object.assign(pc, function () {
 
         if (chunks.length !== 1 && chunks.length !== 2) {
             callback("Invalid number of chunks found in glb file.");
-            return null;
+            return;
         }
 
         if (chunks[0].type !== 0x4E4F534A) {
             callback("Invalid chunk type found in glb file. Expected 0x4E4F534A, found 0x" + chunks[0].type.toString(16));
-            return null;
+            return;
         }
 
         if (chunks.length > 1 && chunks[1].type !== 0x004E4942) {
             callback("Invalid chunk type found in glb file. Expected 0x004E4942, found 0x" + chunks[1].type.toString(16));
-            return null;
+            return;
         }
 
-        loadGltfAsync(chunks[0].data, chunks.length === 2 ? chunks[1].data : null, callback);
+        loadGltfAsync(device, chunks[0].data, chunks.length === 2 ? chunks[1].data : null, callback);
     };
 
     // -- GlbParser
     var GlbParser = function () { };
 
     // parse the blob of glb data
-    GlbParser.parse = function (filename, glbData, device, callback) {
-        // reset global state
-        if (device) {
-            globals.device = device;
-        }
-        globals.nodeId = 0;
-        globals.animId = 0;
+    GlbParser.parse = function (filename, data, device, callback) {
         if (filename && filename.toLowerCase().endsWith('.gltf')) {
-            loadGltfAsync(glbData, null, callback);
+            loadGltfAsync(device, data, null, callback);
         } else {
-            loadGlbAsync(glbData, callback);
+            loadGlbAsync(device, data, callback);
         }
     };
 
