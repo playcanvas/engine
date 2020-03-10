@@ -668,9 +668,9 @@ Object.assign(pc, function () {
                     mat3FromMat4(view.viewMat3, view.viewOffMat);
                     view.projViewOffMat.mul2(view.projMat, view.viewOffMat);
 
-                    view.positionOff.x = view.viewInvOffMat.data[12];
-                    view.positionOff.y = view.viewInvOffMat.data[13];
-                    view.positionOff.z = view.viewInvOffMat.data[14];
+                    view.position[0] = view.viewInvOffMat.data[12];
+                    view.position[1] = view.viewInvOffMat.data[13];
+                    view.position[2] = view.viewInvOffMat.data[14];
 
                     camera.frustum.update(view.projMat, view.viewOffMat);
                 }
@@ -1774,7 +1774,7 @@ Object.assign(pc, function () {
                             this.viewInvId.setValue(view.viewInvOffMat.data);
                             this.viewId3.setValue(view.viewMat3.data);
                             this.viewProjId.setValue(view.projViewOffMat.data);
-                            this.viewPosId.setValue(view.positionOff.data);
+                            this.viewPosId.setValue(view.position);
 
                             if (v === 0) {
                                 i += this.drawInstance(device, drawCall, mesh, style, true);
