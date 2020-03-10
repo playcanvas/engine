@@ -96,22 +96,24 @@
             [0,0, 0.5,1, 1,0]
         );
 
-        var particleSystemConfiguration = (asset, animTilesX, animTilesY) => ({
-            numParticles: 32,
-            lifetime: 2,
-            rate: 0.2,
-            colorMap: asset.resource,
-            initialVelocity: 0.125,
-            emitterShape: pc.EMITTERSHAPE_SPHERE,
-            emitterRadius: 2.0,
-            animLoop: true,
-            animTilesX,
-            animTilesY,
-            animSpeed: 4,
-            autoPlay: true,
-            alphaGraph: alphaCurve,
-            scaleGraph: scaleCurve
-        });
+        var particleSystemConfiguration = function(asset, animTilesX, animTilesY) {
+            return {
+                numParticles: 32,
+                lifetime: 2,
+                rate: 0.2,
+                colorMap: asset.resource,
+                initialVelocity: 0.125,
+                emitterShape: pc.EMITTERSHAPE_SPHERE,
+                emitterRadius: 2.0,
+                animLoop: true,
+                animTilesX,
+                animTilesY,
+                animSpeed: 4,
+                autoPlay: true,
+                alphaGraph: alphaCurve,
+                scaleGraph: scaleCurve
+            };
+        };
 
         // load coins animation texture
         app.assets.loadFromUrl('particles-coins.png', 'texture', function (err, asset) {
