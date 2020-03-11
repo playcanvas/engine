@@ -602,7 +602,7 @@ Object.assign(pc, function () {
         // #ifdef DEBUG
         this._spectorMarkers = [];
         this._spectorCurrentMarker = "";
-        // endif
+        // #endif
 
         this.createGrabPass(options.alpha);
 
@@ -642,7 +642,7 @@ Object.assign(pc, function () {
                 }
             }
         },
-        // endif
+        // #endif
 
         getPrecision: function () {
             var gl = this.gl;
