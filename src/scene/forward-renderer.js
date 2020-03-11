@@ -457,7 +457,7 @@ Object.assign(pc, function () {
     }
 
     Object.assign(ForwardRenderer.prototype, {
-        
+
         sortCompare: function (drawCallA, drawCallB) {
             if (drawCallA.layer === drawCallB.layer) {
                 if (drawCallA.drawOrder && drawCallB.drawOrder) {
@@ -1324,7 +1324,7 @@ Object.assign(pc, function () {
                     // #ifdef DEBUG
                     this.device.pushMarker("SHADOW " + light._node.name);
                     // #endif
-                    
+
                     if (type !== pc.LIGHTTYPE_POINT) {
                         shadowCamView.setTRS(shadowCamNode.getPosition(), shadowCamNode.getRotation(), pc.Vec3.ONE).invert();
                         shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
@@ -1464,7 +1464,7 @@ Object.assign(pc, function () {
                         // #ifdef DEBUG
                         this.device.pushMarker("VSM");
                         // #endif
-                    
+
                         var filterSize = light._vsmBlurSize;
                         if (filterSize > 1) {
                             var origShadowMap = shadowCam.renderTarget;
@@ -2656,7 +2656,7 @@ Object.assign(pc, function () {
                 if (!layer.enabled || !comp.subLayerEnabled[i]) continue;
                 transparent = comp.subLayerList[i];
                 objects = layer.instances;
-                
+
                 cameras = layer.cameras;
                 for (j = 0; j < cameras.length; j++) {
                     camera = cameras[j];

@@ -603,7 +603,7 @@ Object.assign(pc, function () {
         this._spectorMarkers = [];
         this._spectorCurrentMarker = "";
         // endif
-        
+
         this.createGrabPass(options.alpha);
 
         pc.VertexFormat.init(this);
@@ -623,7 +623,7 @@ Object.assign(pc, function () {
                 this._spectorMarkers.push(name);
                 this.updateMarker();
                 window.spector.setMarker(this._spectorCurrentMarker);
-                //console.log("PUSH " + name + "     GOT: " + this._spectorCurrentMarker + "\n Callstack: " + new Error().stack);
+                // console.log("PUSH " + name + "     GOT: " + this._spectorCurrentMarker + "\n Callstack: " + new Error().stack);
             }
         },
 
@@ -637,13 +637,13 @@ Object.assign(pc, function () {
                         window.spector.setMarker(this._spectorCurrentMarker);
                     else
                         window.spector.clearMarker();
-    
-                    //console.log("POP " + name + "     GOT: " + this._spectorCurrentMarker + "\n Callstack: " + new Error().stack);
+
+                    // console.log("POP " + name + "     GOT: " + this._spectorCurrentMarker + "\n Callstack: " + new Error().stack);
                 }
             }
         },
         // endif
-        
+
         getPrecision: function () {
             var gl = this.gl;
             var precision = "highp";

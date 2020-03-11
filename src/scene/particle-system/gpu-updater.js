@@ -87,11 +87,11 @@ Object.assign(pc, function () {
 
     // This shouldn't change emitter state, only read from it
     ParticleGPUUpdater.prototype.update = function (device, spawnMatrix, extentsInnerRatioUniform, delta, isOnStop) {
-        
+
         // #ifdef DEBUG
         device.pushMarker("ParticleGPU");
         // #endif
-        
+
         var emitter = this._emitter;
 
         device.setBlending(false);
