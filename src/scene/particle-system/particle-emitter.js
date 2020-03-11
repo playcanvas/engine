@@ -947,6 +947,10 @@ Object.assign(pc, function () {
                         type: pc.TYPE_FLOAT32
                     }, {
                         semantic: pc.SEMANTIC_ATTR3,
+                        components: 1,
+                        type: pc.TYPE_FLOAT32
+                    }, {
+                        semantic: pc.SEMANTIC_ATTR4,
                         components: this.useMesh ? 4 : 2,
                         type: pc.TYPE_FLOAT32
                     }];
