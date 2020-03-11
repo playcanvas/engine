@@ -599,6 +599,11 @@ Object.assign(pc, function () {
 
         this._textureFloatHighPrecision = undefined;
 
+        // #ifdef DEBUG
+        this._spectorMarkers = [];
+        this._spectorCurrentMarker = "";
+        // endif
+        
         this.createGrabPass(options.alpha);
 
         pc.VertexFormat.init(this);
@@ -607,6 +612,38 @@ Object.assign(pc, function () {
     GraphicsDevice.prototype.constructor = GraphicsDevice;
 
     Object.assign(GraphicsDevice.prototype, {
+
+        // #ifdef DEBUG
+        updateMarker: function () {
+            this._spectorCurrentMarker = this._spectorMarkers.join(" | ") + " # ";
+        },
+
+        pushMarker: function (name) {
+            if (window.spector) {
+                this._spectorMarkers.push(name);
+                this.updateMarker();
+                window.spector.setMarker(this._spectorCurrentMarker);
+                //console.log("PUSH " + name + "     GOT: " + this._spectorCurrentMarker + "\n Callstack: " + new Error().stack);
+            }
+        },
+
+        popMarker: function () {
+            if (window.spector) {
+                if (this._spectorMarkers.length) {
+                    this._spectorMarkers.pop();
+                    this.updateMarker();
+
+                    if (this._spectorMarkers.length)
+                        window.spector.setMarker(this._spectorCurrentMarker);
+                    else
+                        window.spector.clearMarker();
+    
+                    //console.log("POP " + name + "     GOT: " + this._spectorCurrentMarker + "\n Callstack: " + new Error().stack);
+                }
+            }
+        },
+        // endif
+        
         getPrecision: function () {
             var gl = this.gl;
             var precision = "highp";
