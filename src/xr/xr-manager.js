@@ -410,9 +410,6 @@ Object.assign(pc, function () {
     };
 
     XrManager.prototype._setClipPlanes = function (near, far) {
-        near = Math.min(0.0001, Math.max(0.1, near));
-        far = Math.max(1000, far);
-
         if (this._depthNear === near && this._depthFar === far)
             return;
 
@@ -462,8 +459,7 @@ Object.assign(pc, function () {
                         viewInvOffMat: new pc.Mat4(),
                         projViewOffMat: new pc.Mat4(),
                         viewMat3: new pc.Mat3(),
-                        position: new pc.Vec3(),
-                        positionOff: new pc.Vec3(),
+                        position: new Float32Array(3),
                         rotation: new pc.Quat()
                     };
                 }

@@ -55,6 +55,9 @@ Object.assign(pc, function () {
         'animTilesY',
         'animStartFrame',
         'animNumFrames',
+        'animNumAnimations',
+        'animIndex',
+        'randomizeAnimIndex',
         'animSpeed',
         'animLoop',
         'layers'
