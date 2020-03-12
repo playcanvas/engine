@@ -39,23 +39,14 @@ Object.assign(pc, function () {
         },
 
         open: function (url, data) {
-            return this["_parseAnimationV" + data.animation.version](data);
-        },
-
-        openAsync: function (url, data, asset, callback) {
             if (pc.path.getExtension(url) === '.glb') {
-                pc.GlbParser.parse(data, null, function (err, result) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        // this loader is only interested in animations
-                        callback(null, result.animations);
-                    }
-                });
-            } else {
-                callback(null, this["_parseAnimationV" + data.animation.version](data));
+                var glb = pc.GlbParser.parse("filename.glb", data, null);
+                if (!glb) {
+                    return null;
+                }
+                return glb.animations;
             }
-            return true;
+            return this["_parseAnimationV" + data.animation.version](data);
         },
 
         _parseAnimationV3: function (data) {

@@ -125,19 +125,7 @@ Object.assign(pc, function () {
                         }
 
                         try {
-                            // if the handler has an async version of open, prefer that
-                            if (handler.openAsync) {
-                                handler.openAsync(urlObj.original, data, asset, function (err, result) {
-                                    if (err) {
-                                        self._onFailure(key, err);
-                                    } else {
-                                        self._onSuccess(key, result, extra);
-                                    }
-                                });
-                            } else {
-                                // otherwise fall back to synchronous version
-                                self._onSuccess(key, handler.open(urlObj.original, data, asset), extra);
-                            }
+                            self._onSuccess(key, handler.open(urlObj.original, data, asset), extra);
                         } catch (e) {
                             self._onFailure(key, e);
                         }

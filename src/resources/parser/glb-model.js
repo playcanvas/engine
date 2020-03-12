@@ -7,16 +7,12 @@ Object.assign(pc, function () {
     };
 
     Object.assign(GlbModelParser.prototype, {
-        parseAsync: function (data, callback) {
-            var self = this;
-            pc.GlbParser.parse(data, this._device, function (err, result) {
-                if (err) {
-                    callback(err);
-                } else {
-                    // construct model
-                    callback(null, pc.GlbParser.createModel(result, self._defaultMaterial));
-                }
-            });
+        parse: function (data) {
+            var glb = pc.GlbParser.parse("filename.glb", data, this._device);
+            if (!glb) {
+                return null;
+            }
+            return pc.GlbParser.createModel(glb, this._defaultMaterial);
         }
     });
 

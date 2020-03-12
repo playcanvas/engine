@@ -1045,7 +1045,27 @@ Object.assign(pc, function () {
 
     };
 
-    // test if the image at imageIndex must be resized to power of two
+    // create engine resources from the downloaded GLB data
+    var createResources = function (device, gltf, buffers, images, callback) {
+        var nodes = createNodes(gltf);
+        var animations = createAnimations(gltf, nodes, buffers);
+        var textures = createTextures(device, gltf, images);
+        var materials = createMaterials(gltf, textures);
+        var meshes = createMeshes(device, gltf, buffers);
+        var skins = createSkins(device, gltf, nodes, buffers);
+
+        callback(null, {
+            'gltf': gltf,
+            'nodes': nodes,
+            'animations': animations,
+            'textures': textures,
+            'materials': materials,
+            'meshes': meshes,
+            'skins': skins
+        });
+    };
+
+    // test if the image at requires resizing
     var imageRequiresResize = function (device, img, idx, textures, samplers) {
         if (isPower2d(img.width, img.height) ||         // already pot
             device.webgl2) {                            // webgl2 doesn't have POT restrictions
@@ -1091,7 +1111,7 @@ Object.assign(pc, function () {
         return canvas.toDataURL();
     };
 
-    // load gltf images
+    // load gltf images asynchronously, returning the images in callback
     var loadImagesAsync = function (device, gltf, buffers, callback) {
         var result = [];
 
@@ -1146,7 +1166,7 @@ Object.assign(pc, function () {
         }
     };
 
-    // load gltf buffers
+    // load gltf buffers asynchronously, returning them in the callback
     var loadBuffersAsync = function (gltf, binaryChunk, callback) {
         var result = [];
 
@@ -1203,9 +1223,8 @@ Object.assign(pc, function () {
         }
     };
 
-    // load gltf data
-    var loadGltfAsync = function (device, gltfChunk, binaryChunk, callback) {
-
+    // parse the gltf chunk, returns the gltf json
+    var parseGltf = function (gltfChunk, callback) {
         var decodeBinaryUtf8 = function (array) {
             if (typeof TextDecoder !== 'undefined') {
                 return new TextDecoder().decode(array);
@@ -1226,43 +1245,11 @@ Object.assign(pc, function () {
             return;
         }
 
-        // load external buffers
-        loadBuffersAsync(gltf, binaryChunk, function (err, buffers) {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            // load images
-            loadImagesAsync(device, gltf, buffers, function (err, images) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                // create engine resources
-                var nodes = createNodes(gltf);
-                var animations = createAnimations(gltf, nodes, buffers);
-                var textures = createTextures(device, gltf, images);
-                var materials = createMaterials(gltf, textures);
-                var meshes = createMeshes(device, gltf, buffers);
-                var skins = createSkins(device, gltf, nodes, buffers);
-
-                callback(null, {
-                    'gltf': gltf,
-                    'nodes': nodes,
-                    'animations': animations,
-                    'textures': textures,
-                    'materials': materials,
-                    'meshes': meshes,
-                    'skins': skins
-                });
-            });
-        });
+        callback(null, gltf);
     };
 
-    // load glb data
-    var loadGlbAsync = function (device, glbData, callback) {
+    // parse glb data, returns the gltf and binary chunk
+    var parseGlb = function (glbData, callback) {
         var data = new DataView(glbData);
 
         // read header
@@ -1314,19 +1301,95 @@ Object.assign(pc, function () {
             return;
         }
 
-        loadGltfAsync(device, chunks[0].data, chunks.length === 2 ? chunks[1].data : null, callback);
+        callback(null, {
+            gltfChunk: chunks[0].data,
+            binaryChunk: chunks.length === 2 ? chunks[1].data : null
+        });
+    };
+
+    // parse the chunk of data, which can be glb or gltf
+    var parseChunk = function (filename, data, callback) {
+        if (filename && filename.toLowerCase().endsWith('.glb')) {
+            parseGlb(data, callback);
+        } else {
+            callback(null, {
+                gltfChunk: data,
+                binaryChunk: null
+            });
+        }
     };
 
     // -- GlbParser
     var GlbParser = function () { };
 
-    // parse the blob of glb data
-    GlbParser.parse = function (filename, data, device, callback) {
-        if (filename && filename.toLowerCase().endsWith('.gltf')) {
-            loadGltfAsync(device, data, null, callback);
-        } else {
-            loadGlbAsync(device, data, callback);
-        }
+    // parse the gltf or glb data asynchronously, loading external resources
+    GlbParser.parseAsync = function (filename, data, device, callback) {
+        // parse the data
+        parseChunk(filename, data, function (err, chunks) {
+            if (err) {
+                callback(err);
+                return;
+            }
+
+            // parse gltf
+            parseGltf(chunks.gltfChunk, function (err, gltf) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                // async load external buffers
+                loadBuffersAsync(gltf, chunks.binaryChunk, function (err, buffers) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    // async load images
+                    loadImagesAsync(device, gltf, buffers, function (err, images) {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+
+                        createResources(device, gltf, buffers, images, callback);
+                    });
+                });
+            });
+        });
+    };
+
+    // parse the gltf or glb data synchronously. external resources (buffers and images) are ignored.
+    GlbParser.parse = function (filename, data, device) {
+        var result = null;
+
+        // parse the data
+        parseChunk(filename, data, function (err, chunks) {
+            if (err) {
+                console.error(err);
+            } else {
+                // parse gltf
+                parseGltf(chunks.gltfChunk, function (err, gltf) {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        var buffers = [chunks.binaryChunk];
+                        var images = [];
+
+                        // create resources
+                        createResources(device, gltf, buffers, images, function (err, result_) {
+                            if (err) {
+                                console.error(err);
+                            } else {
+                                result = result_;
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        return result;
     };
 
     // create a pc.Model from the parsed GLB data structures

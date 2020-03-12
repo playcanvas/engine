@@ -81,23 +81,6 @@ Object.assign(pc, function () {
             return null;
         },
 
-        openAsync: function (url, data, asset, callback) {
-            for (var i = 0; i < this._parsers.length; i++) {
-                var p = this._parsers[i];
-
-                if (p.decider(url, data)) {
-                    if (p.parser.parseAsync) {
-                        p.parser.parseAsync(data, callback);
-                    } else {
-                        callback(null, p.parser.parse(data));
-                    }
-                    return true;
-                }
-            }
-            logWARNING(pc.string.format("No model parser found for: {0}", url));
-            return false;
-        },
-
         patch: function (asset, assets) {
             if (!asset.resource)
                 return;
