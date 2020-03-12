@@ -4,7 +4,7 @@ Object.assign(pc, function () {
      * @class
      * @name pc.ContainerResource
      * @classdesc Container for a list of animations, textures, materials and a model.
-     * @param {Object} data - The loaded GLB data.
+     * @param {object} data - The loaded GLB data.
      */
     var ContainerResource = function (data) {
         this.data = data;
