@@ -4,7 +4,7 @@ describe("pc.AnimController", function () {
         // create curve
         var keys = new pc.AnimData(1, [0, 1, 2]);
         var translations = new pc.AnimData(3, [0, 0, 0, 1, 0, 0, 1, 0, 1]);
-        var curve = new pc.AnimCurve(0, 0, pc.AnimInterpolation.LINEAR);
+        var curve = new pc.AnimCurve(0, 0, pc.INTERPOLATION_LINEAR);
 
         // construct the target
         var target = new pc.AnimTarget("child1", 0, -1, -1);

@@ -32,17 +32,16 @@ var Viewer = function (canvas) {
     // load cubemap background
     var cubemapAsset = new pc.Asset('helipad.dds', 'cubemap', {
         url: assetsFolder + "/cubemaps/helipad.dds"
+    }, {
+        rgbm: true
     });
     app.assets.add(cubemapAsset);
     app.assets.load(cubemapAsset);
     cubemapAsset.ready(function () {
-        cubemapAsset.resources.forEach(function (cubemap) {
-            cubemap.rgbm = true;
-        });
-        app.scene.setSkybox(cubemapAsset.resources);
         app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
-        app.scene.skyboxMip = 1;                        // Set the skybox to the 128x128 cubemap mipmap level
+        app.scene.skyboxMip = 0;                        // Set the skybox to the 128x128 cubemap mipmap level
+        app.scene.setSkybox(cubemapAsset.resources);
     });
 
     // create the orbit camera

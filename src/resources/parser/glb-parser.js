@@ -856,9 +856,9 @@ Object.assign(pc, function () {
         };
 
         var interpMap = {
-            "STEP": pc.AnimInterpolation.STEP,
-            "LINEAR": pc.AnimInterpolation.LINEAR,
-            "CUBICSPLINE": pc.AnimInterpolation.CUBIC
+            "STEP": pc.INTERPOLATION_STEP,
+            "LINEAR": pc.INTERPOLATION_LINEAR,
+            "CUBICSPLINE": pc.INTERPOLATION_CUBIC
         };
 
         var pathMap = {
@@ -896,7 +896,7 @@ Object.assign(pc, function () {
             var interpolation =
                 sampler.hasOwnProperty('interpolation') &&
                 interpMap.hasOwnProperty(sampler.interpolation) ?
-                    interpMap[sampler.interpolation] : pc.AnimInterpolation.LINEAR;
+                    interpMap[sampler.interpolation] : pc.INTERPOLATION_LINEAR;
 
             // create curve
             curves.push(new pc.AnimCurve(

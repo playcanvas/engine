@@ -3,11 +3,16 @@ Object.assign(pc, function () {
     /**
      * @class
      * @name pc.ContainerResource
-     * @classdesc Container for a list of animations, textures and a model.
+     * @classdesc Container for a list of animations, textures, materials and a model.
      * @param {Object} data - The loaded GLB data.
      */
     var ContainerResource = function (data) {
         this.data = data;
+        this.model = null;
+        this.materials = [];
+        this.textures = [];
+        this.animations = [];
+        this.registry = null;
     };
 
     Object.assign(ContainerResource.prototype, {
@@ -67,7 +72,7 @@ Object.assign(pc, function () {
     };
 
     Object.assign(ContainerHandler.prototype, {
-        load: function (url, callback) {
+        load: function (url, callback, asset) {
             if (typeof url === 'string') {
                 url = {
                     load: url,
@@ -80,29 +85,30 @@ Object.assign(pc, function () {
                 retry: false
             };
 
+            var self = this;
+
             pc.http.get(url.load, options, function (err, response) {
                 if (!callback)
                     return;
 
                 if (!err) {
-                    callback(null, response);
+                    var filename = (asset.file && asset.file.filename) ? asset.file.filename : asset.name;
+                    pc.GlbParser.parse(filename, response, self._device, function (err, result) {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            // return everything
+                            callback(null, new ContainerResource(result));
+                        }
+                    });
                 } else {
                     callback(pc.string.format("Error loading model: {0} [{1}]", url.original, err));
                 }
             });
         },
 
-        openAsync: function (url, data, asset, callback) {
-            var filename = (asset.file && asset.file.filename) ? asset.file.filename : asset.name;
-            pc.GlbParser.parse(filename, data, this._device, function (err, result) {
-                if (err) {
-                    callback(err);
-                } else {
-                    // return everything
-                    callback(null, new ContainerResource(result));
-                }
-            });
-            return true;
+        open: function (url, data, asset) {
+            return data;
         },
 
         // Create assets to wrap the loaded engine resources - model, materials, textures and animations.
@@ -152,6 +158,7 @@ Object.assign(pc, function () {
     });
 
     return {
+        ContainerResource: ContainerResource,
         ContainerHandler: ContainerHandler
     };
 }());

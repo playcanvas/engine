@@ -1,11 +1,28 @@
 Object.assign(pc, function () {
 
-    // animation interpolation type
-    var AnimInterpolation = {
-        STEP: 0,
-        LINEAR: 1,
-        CUBIC: 2
-    };
+    /**
+     * @constant
+     * @type {number}
+     * @name pc.INTERPOLATION_STEP
+     * @description A stepped interpolation scheme.
+     */
+    var INTERPOLATION_STEP = 0;
+
+    /**
+     * @constant
+     * @type {number}
+     * @name pc.INTERPOLATION_LINEAR
+     * @description A linear interpolation scheme.
+     */
+    var INTERPOLATION_LINEAR = 1;
+
+    /**
+     * @constant
+     * @type {number}
+     * @name pc.INTERPOLATION_CUBIC
+     * @description A cubic spline interpolation scheme.
+     */
+    var INTERPOLATION_CUBIC = 2;
 
     /**
      * @class
@@ -123,7 +140,7 @@ Object.assign(pc, function () {
             var idx0 = this._p0 * dim;
             var i;
 
-            if (interpolation === AnimInterpolation.STEP) {
+            if (interpolation === pc.INTERPOLATION_STEP) {
                 for (i = 0; i < dim; ++i) {
                     result[i] = data[idx0 + i];
                 }
@@ -132,13 +149,13 @@ Object.assign(pc, function () {
                 var idx1 = this._p1 * dim;
 
                 switch (interpolation) {
-                    case AnimInterpolation.LINEAR:
+                    case pc.INTERPOLATION_LINEAR:
                         for (i = 0; i < dim; ++i) {
                             result[i] = pc.math.lerp(data[idx0 + i], data[idx1 + i], t);
                         }
                         break;
 
-                    case AnimInterpolation.CUBIC:
+                    case pc.INTERPOLATION_CUBIC:
                         var hermite = this._hermite;
 
                         if (!hermite.valid) {
@@ -180,7 +197,12 @@ Object.assign(pc, function () {
      * @description Create a new animation curve
      * @param {number} input - index of the curve which specifies the key data.
      * @param {number} output - index of the curve which specifies the value data.
-     * @param {pc.AnimInterpolation} interpolation - the interpolation method to use.
+     * @param {number} interpolation - the interpolation method to use. One of the following:
+     *
+     * * {@link pc.INTERPOLATION_STEP}
+     * * {@link pc.INTERPOLATION_LINEAR}
+     * * {@link pc.INTERPOLATION_CUBIC}
+     *
      */
     var AnimCurve = function (input, output, interpolation) {
         this._input = input;
@@ -743,7 +765,9 @@ Object.assign(pc, function () {
     });
 
     return {
-        AnimInterpolation: AnimInterpolation,
+        INTERPOLATION_STEP: INTERPOLATION_STEP,
+        INTERPOLATION_LINEAR: INTERPOLATION_LINEAR,
+        INTERPOLATION_CUBIC: INTERPOLATION_CUBIC,
         AnimData: AnimData,
         AnimCurve: AnimCurve,
         AnimTarget: AnimTarget,
