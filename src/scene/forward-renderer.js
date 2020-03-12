@@ -1373,8 +1373,11 @@ Object.assign(pc, function () {
                     while (pass < passes) {
 
                         // #ifdef DEBUG
-                        if (passes > 1)
+                        var doPopMarker = false;
+                        if (passes > 1) {
                             this.device.pushMarker("PASS " + pass);
+                            doPopMarker = true;
+                        }
                         // #endif
 
                         if (type === pc.LIGHTTYPE_POINT) {
@@ -1454,7 +1457,8 @@ Object.assign(pc, function () {
                         if (type === pc.LIGHTTYPE_DIRECTIONAL) light._visibleLength[cameraPass] = -1; // prevent light from rendering more than once for this camera
 
                         // #ifdef DEBUG
-                        this.device.popMarker();
+                        if (doPopMarker)
+                            this.device.popMarker();
                         // #endif
 
                     } // end pass
