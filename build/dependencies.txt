@@ -115,8 +115,10 @@
 ../src/xr/xr-input.js
 ../src/xr/xr-input-source.js
 ../src/net/http.js
-../src/script/script-registry.js
 ../src/script/script.js
+../src/script/script-type.js
+../src/script/script-attributes.js
+../src/script/script-registry.js
 ../src/bundles/bundle.js
 ../src/bundles/bundle-registry.js
 ../src/i18n/i18n-parser.js
