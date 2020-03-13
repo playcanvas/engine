@@ -12,7 +12,7 @@ Object.assign(pc, function () {
     function VertexIteratorAccessor(buffer, vertexElement) {
         this.index = 0;
 
-        switch (vertexElement.type) {
+        switch (vertexElement.dataType) {
             case pc.TYPE_INT8:
                 this.array = new Int8Array(buffer, vertexElement.offset);
                 break;
@@ -37,7 +37,7 @@ Object.assign(pc, function () {
         }
 
         // Methods
-        switch (vertexElement.components) {
+        switch (vertexElement.numComponents) {
             case 1: this.set = VertexIteratorAccessor_set1; break;
             case 2: this.set = VertexIteratorAccessor_set2; break;
             case 3: this.set = VertexIteratorAccessor_set3; break;
@@ -115,7 +115,7 @@ Object.assign(pc, function () {
         for (var i = 0; i < vertexFormat.elements.length; i++) {
             var vertexElement = vertexFormat.elements[i];
             this.accessors[i] = new VertexIteratorAccessor(this.buffer, vertexElement);
-            this.element[vertexElement.semantic] = this.accessors[i];
+            this.element[vertexElement.name] = this.accessors[i];
         }
     }
 

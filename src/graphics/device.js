@@ -1966,8 +1966,8 @@ Object.assign(pc, function () {
                         }
                         gl.vertexAttribPointer(
                             locationId,
-                            element.components,
-                            this.glType[element.type],
+                            element.numComponents,
+                            this.glType[element.dataType],
                             element.normalize,
                             element.stride,
                             element.offset + vbOffset

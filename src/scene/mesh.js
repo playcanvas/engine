@@ -204,11 +204,11 @@ Object.assign(pc, function () {
                     var offsetP, offsetI, offsetW;
                     var j, k, l;
                     for (i = 0; i < elems.length; i++) {
-                        if (elems[i].semantic === pc.SEMANTIC_POSITION) {
+                        if (elems[i].name === pc.SEMANTIC_POSITION) {
                             offsetP = elems[i].offset;
-                        } else if (elems[i].semantic === pc.SEMANTIC_BLENDINDICES) {
+                        } else if (elems[i].name === pc.SEMANTIC_BLENDINDICES) {
                             offsetI = elems[i].offset;
-                        } else if (elems[i].semantic === pc.SEMANTIC_BLENDWEIGHT) {
+                        } else if (elems[i].name === pc.SEMANTIC_BLENDWEIGHT) {
                             offsetW = elems[i].offset;
                         }
                     }

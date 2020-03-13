@@ -1941,7 +1941,7 @@ Object.assign(pc, function () {
                     verts = new Float32Array(vertexBuffer.storage);
 
                     for (k = 0; k < elems.length; k++) {
-                        if (elems[k].semantic === pc.SEMANTIC_POSITION) {
+                        if (elems[k].name === pc.SEMANTIC_POSITION) {
                             offsetP = elems[k].offset / 4; // / 4 because float
                         }
                     }
