@@ -305,102 +305,6 @@ Object.assign(pc, function () {
         meshData.primitives.forEach(function (primitive) {
             var attributes = primitive.attributes;
 
-            //
-            // // Start by looking for compressed vertex data for this primitive
-            // if (primitive.hasOwnProperty('extensions')) {
-            //     var extensions = primitive.extensions;
-            //     if (extensions.hasOwnProperty('KHR_draco_mesh_compression')) {
-            //         var extDraco = extensions.KHR_draco_mesh_compression;
-            //
-            //         var bufferView = bufferViews[extDraco.bufferView];
-            //         var arrayBuffer = buffers[bufferView.buffer];
-            //         var byteOffset = bufferView.hasOwnProperty('byteOffset') ? bufferView.byteOffset : 0;
-            //         var uint8Buffer = new Int8Array(arrayBuffer, byteOffset, bufferView.byteLength);
-            //
-            //         var decoderModule = decoderModule;
-            //         var buffer = new decoderModule.DecoderBuffer();
-            //         buffer.Init(uint8Buffer, uint8Buffer.length);
-            //
-            //         var decoder = new decoderModule.Decoder();
-            //         var geometryType = decoder.GetEncodedGeometryType(buffer);
-            //
-            //         var outputGeometry, status;
-            //         switch (geometryType) {
-            //             case decoderModule.INVALID_GEOMETRY_TYPE:
-            //                 console.error('Invalid geometry type');
-            //                 break;
-            //             case decoderModule.POINT_CLOUD:
-            //                 outputGeometry = new decoderModule.PointCloud();
-            //                 status = decoder.DecodeBufferToPointCloud(buffer, outputGeometry);
-            //                 break;
-            //             case decoderModule.TRIANGULAR_MESH:
-            //                 outputGeometry = new decoderModule.Mesh();
-            //                 status = decoder.DecodeBufferToMesh(buffer, outputGeometry);
-            //                 break;
-            //         }
-            //
-            //         if (!status.ok() || outputGeometry.ptr == 0) {
-            //             var errorMsg = status.error_msg();
-            //             console.error(errorMsg);
-            //         }
-            //
-            //         var numPoints = outputGeometry.num_points();
-            //         var numFaces = outputGeometry.num_faces();
-            //
-            //         if (extDraco.hasOwnProperty('attributes')) {
-            //             var extractAttribute = function (uniqueId) {
-            //                 var attribute = decoder.GetAttributeByUniqueId(outputGeometry, uniqueId);
-            //                 var attributeData = new decoderModule.DracoFloat32Array();
-            //                 decoder.GetAttributeFloatForAllPoints(outputGeometry, attribute, attributeData);
-            //                 var numValues = numPoints * attribute.num_components();
-            //                 var values = new Float32Array(numValues);
-            //
-            //                 for (i = 0; i < numValues; i++) {
-            //                     values[i] = attributeData.GetValue(i);
-            //                 }
-            //
-            //                 decoderModule.destroy(attributeData);
-            //                 return values;
-            //             };
-            //
-            //             var dracoAttribs = extDraco.attributes;
-            //             if (dracoAttribs.hasOwnProperty('POSITION'))
-            //                 positions = extractAttribute(dracoAttribs.POSITION);
-            //             if (dracoAttribs.hasOwnProperty('NORMAL'))
-            //                 normals   = extractAttribute(dracoAttribs.NORMAL);
-            //             if (dracoAttribs.hasOwnProperty('TANGENT'))
-            //                 tangents  = extractAttribute(dracoAttribs.TANGENT);
-            //             if (dracoAttribs.hasOwnProperty('TEXCOORD_0'))
-            //                 texCoord0 = extractAttribute(dracoAttribs.TEXCOORD_0);
-            //             if (dracoAttribs.hasOwnProperty('TEXCOORD_1'))
-            //                 texCoord1 = extractAttribute(dracoAttribs.TEXCOORD_1);
-            //             if (dracoAttribs.hasOwnProperty('COLOR_0'))
-            //                 colors    = extractAttribute(dracoAttribs.COLOR_0);
-            //             if (dracoAttribs.hasOwnProperty('JOINTS_0'))
-            //                 joints    = extractAttribute(dracoAttribs.JOINTS_0);
-            //             if (dracoAttribs.hasOwnProperty('WEIGHTS_0'))
-            //                 weights   = extractAttribute(dracoAttribs.WEIGHTS_0);
-            //         }
-            //
-            //         if (geometryType == decoderModule.TRIANGULAR_MESH) {
-            //             var face = new decoderModule.DracoInt32Array();
-            //             indices = (numPoints > 65535) ? new Uint32Array(numFaces * 3) : new Uint16Array(numFaces * 3);
-            //             for (i = 0; i < numFaces; ++i) {
-            //                 decoder.GetFaceFromMesh(outputGeometry, i, face);
-            //                 indices[i * 3]     = face.GetValue(0);
-            //                 indices[i * 3 + 1] = face.GetValue(1);
-            //                 indices[i * 3 + 2] = face.GetValue(2);
-            //             }
-            //             decoderModule.destroy(face);
-            //         }
-            //
-            //         decoderModule.destroy(outputGeometry);
-            //         decoderModule.destroy(decoder);
-            //         decoderModule.destroy(buffer);
-            //     }
-            // }
-            // //
-
             // get indices
             var indices =
                 primitive.hasOwnProperty('indices') ?
@@ -420,6 +324,8 @@ Object.assign(pc, function () {
                 } else if (indices instanceof Uint16Array) {
                     indexFormat = pc.INDEXFORMAT_UINT16;
                 } else {
+                    // TODO: these indices may need conversion since some old WebGL 1.0 devices
+                    // don't support 32bit index data
                     indexFormat = pc.INDEXFORMAT_UINT32;
                 }
                 var numIndices = indices.length;
@@ -472,6 +378,7 @@ Object.assign(pc, function () {
     };
 
     var createMaterial = function (materialData, textures) {
+        // TODO: integrate these shader chunks into the native engine
         var glossChunk = [
             "#ifdef MAPFLOAT",
             "uniform float material_shininess;",

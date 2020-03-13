@@ -1,9 +1,8 @@
-
 var Graph = function (app, numSamples) {
     var positions = [];
-    for (var i=0; i<numSamples-1; ++i) {
-        positions[i*2+0] = new pc.Vec3(0, 0, 0);
-        positions[i*2+1] = new pc.Vec3(0, 0, 0);
+    for (var i = 0; i < numSamples - 1; ++i) {
+        positions[i * 2 + 0] = new pc.Vec3(0, 0, 0);
+        positions[i * 2 + 1] = new pc.Vec3(0, 0, 0);
     }
 
     this.app = app;
@@ -33,13 +32,13 @@ Object.assign(Graph.prototype, {
     update: function () {
         var graphs = this.graphs;
         var numSamples = this.numSamples;
-        for (var i=0; i<graphs.length; ++i) {
+        for (var i = 0; i < graphs.length; ++i) {
             var graph = graphs[i];
             var sample = graph.callback();
 
             if (graph.samples.length === 0) {
                 // first sample, initialize everything
-                for (var j=0; j<this.numSamples; ++j) {
+                for (var j = 0; j < this.numSamples; ++j) {
                     graph.samples.push(sample);
                 }
                 graph.prevSample = sample;
@@ -75,8 +74,6 @@ Object.assign(Graph.prototype, {
 
         var right = new pc.Vec3();
         var up = new pc.Vec3();
-        var xscale = 0.1;
-        var yscale = 1;
         var sample;
         var pos;
 
@@ -85,7 +82,7 @@ Object.assign(Graph.prototype, {
             depthTest: false
         };
 
-        for (i=0; i<graphs.length; ++i) {
+        for (i = 0; i < graphs.length; ++i) {
             var graph = graphs[i];
             if (graph.constantSamples < this.numSamples) {
                 var idx = graph.sample + numSamples - 1 + numSamples;
@@ -96,16 +93,16 @@ Object.assign(Graph.prototype, {
                 up.copy(camera.up);
                 up.scale(dist * 0.05);
 
-                for (j=0; j<numSamples-1; ++j) {
+                for (j = 0; j < numSamples - 1; ++j) {
 
                     sample = graph.samples[(idx - j) % numSamples];
-                    pos = positions[j*2+0];
+                    pos = positions[j * 2 + 0];
                     pos.x = base.x + right.x * j + up.x * sample;
                     pos.y = base.y + right.y * j + up.y * sample;
                     pos.z = base.z + right.z * j + up.z * sample;
 
                     sample = graph.samples[(idx - j - 1) % numSamples];
-                    pos = positions[j*2+1];
+                    pos = positions[j * 2 + 1];
                     pos.x = base.x + right.x * (j + 1) + up.x * sample;
                     pos.y = base.y + right.y * (j + 1) + up.y * sample;
                     pos.z = base.z + right.z * (j + 1) + up.z * sample;

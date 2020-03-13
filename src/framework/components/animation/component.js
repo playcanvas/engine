@@ -48,7 +48,9 @@ Object.assign(pc, function () {
             var data = this.data;
 
             if (!data.animations[name]) {
+                // #ifdef DEBUG
                 console.error(pc.string.format("Trying to play animation '{0}' which doesn't exist", name));
+                // #endif
                 return;
             }
 

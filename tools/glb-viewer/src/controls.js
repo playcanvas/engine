@@ -1,22 +1,21 @@
-
 // initialize controls
-document.getElementById('play').onclick = function() {
+document.getElementById('play').onclick = function () {
     viewer.play();
 };
 
-document.getElementById('stop').onclick = function() {
+document.getElementById('stop').onclick = function () {
     viewer.stop();
 };
 
-document.getElementById('speed').onchange = function(e) {
+document.getElementById('speed').onchange = function (e) {
     viewer.setSpeed(Number.parseFloat(this.value));
 };
 
-document.getElementById('speed').oninput = function(e) {
+document.getElementById('speed').oninput = function (e) {
     viewer.setSpeed(Number.parseFloat(this.value));
 };
 
-document.getElementById('graphs').onclick = function(e) {
+document.getElementById('graphs').onclick = function (e) {
     viewer.setGraphs(this.checked);
 };
 
@@ -27,13 +26,14 @@ var onAnimationsLoaded = function (animationList) {
     // clear previous list
     animList.innerHTML = "";
 
+    var theviewer = viewer;
     for (var i = 0; i < animationList.length; ++i) {
         var button = document.createElement('button');
-        button.innerHTML = button.innerHTML + animationList[i];
+        button.innerHTML += animationList[i];
         button.onclick = (function (animation) {
             return function () {
-                viewer.play(animation);
-            }
+                theviewer.play(animation);
+            };
         })(animationList[i]);
         var li = document.createElement('li');
         li.appendChild(button);

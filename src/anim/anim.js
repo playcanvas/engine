@@ -272,17 +272,17 @@ Object.assign(pc, function () {
     };
 
     Object.defineProperties(AnimTrack.prototype, {
-        'name': {
+        name: {
             get: function () {
                 return this._name;
             }
         },
-        'duration': {
+        duration: {
             get: function () {
                 return this._duration;
             }
         },
-        'targets': {
+        targets: {
             get: function () {
                 return this._targets;
             }
@@ -381,7 +381,7 @@ Object.assign(pc, function () {
     };
 
     Object.defineProperties(AnimClip.prototype, {
-        'name': {
+        name: {
             get: function () {
                 return this._name;
             },
@@ -389,17 +389,17 @@ Object.assign(pc, function () {
                 this._name = name;
             }
         },
-        'track': {
+        track: {
             get: function () {
                 return this._track;
             }
         },
-        'snapshot': {
+        snapshot: {
             get: function () {
                 return this._snapshot;
             }
         },
-        'time': {
+        time: {
             get: function () {
                 return this._time;
             },
@@ -407,7 +407,7 @@ Object.assign(pc, function () {
                 this._time = time;
             }
         },
-        'speed': {
+        speed: {
             get: function () {
                 return this._speed;
             },
@@ -415,7 +415,7 @@ Object.assign(pc, function () {
                 this._speed = speed;
             }
         },
-        'loop': {
+        loop: {
             get: function () {
                 return this._loop;
             },
@@ -423,7 +423,7 @@ Object.assign(pc, function () {
                 this._loop = loop;
             }
         },
-        'blendWeight': {
+        blendWeight: {
             get: function () {
                 return this._blendWeight;
             },

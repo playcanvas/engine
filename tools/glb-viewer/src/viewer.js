@@ -1,4 +1,3 @@
-
 var assetsFolder = "../../examples/assets";
 
 var Viewer = function (canvas) {
@@ -35,14 +34,14 @@ var Viewer = function (canvas) {
     }, {
         rgbm: true
     });
-    app.assets.add(cubemapAsset);
-    app.assets.load(cubemapAsset);
     cubemapAsset.ready(function () {
         app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
-        app.scene.skyboxMip = 0;                        // Set the skybox to the 128x128 cubemap mipmap level
+        app.scene.skyboxMip = 1;                        // Set the skybox to the 128x128 cubemap mipmap level
         app.scene.setSkybox(cubemapAsset.resources);
     });
+    app.assets.add(cubemapAsset);
+    app.assets.load(cubemapAsset);
 
     // create the orbit camera
     var camera = new pc.Entity("Camera");
@@ -52,20 +51,21 @@ var Viewer = function (canvas) {
     });
 
     // load orbit script
-    app.assets.loadFromUrl(assetsFolder + "/scripts/camera/orbit-camera.js",
-                            "script",
-                            function (err, asset) {
-                                // setup orbit script component
-                                camera.addComponent("script");
-                                camera.script.create("orbitCamera", {
-                                    attributes: {
-                                        inertiaFactor: 0.1
-                                    }
-                                });
-                                camera.script.create("orbitCameraInputMouse");
-                                camera.script.create("orbitCameraInputTouch");
-                                app.root.addChild(camera);
-                            });
+    app.assets.loadFromUrl(
+        assetsFolder + "/scripts/camera/orbit-camera.js",
+        "script",
+        function (err, asset) {
+            // setup orbit script component
+            camera.addComponent("script");
+            camera.script.create("orbitCamera", {
+                attributes: {
+                    inertiaFactor: 0.1
+                }
+            });
+            camera.script.create("orbitCameraInputMouse");
+            camera.script.create("orbitCameraInputTouch");
+            app.root.addChild(camera);
+        });
 
     // create the light
     var light = new pc.Entity();
@@ -87,19 +87,19 @@ var Viewer = function (canvas) {
     // configure drag and drop
     var preventDefault = function (ev) {
         ev.preventDefault();
-    }
+    };
 
     var dropHandler = function (ev) {
         ev.preventDefault();
 
         if (ev.dataTransfer) {
-            const items = ev.dataTransfer.items;
+            var items = ev.dataTransfer.items;
             if (items && items.length === 1 && items[0].kind === 'file') {
-                const file = items[0].getAsFile();
+                var file = items[0].getAsFile();
                 self.load(file.name, URL.createObjectURL(file));
             }
         }
-    }
+    };
     window.addEventListener('dragenter', preventDefault, false);
     window.addEventListener('dragover', preventDefault, false);
     window.addEventListener('drop', dropHandler, false);
@@ -195,6 +195,7 @@ Object.assign(Viewer.prototype, {
 
     _onLoaded: function (err, asset) {
         if (!err) {
+
             this.resetScene();
 
             var resource = asset.resource;
@@ -211,32 +212,31 @@ Object.assign(Viewer.prototype, {
             if (resource.animations && resource.animations.length > 0) {
                 entity.addComponent('animation', {
                     assets: resource.animations.map(function (asset) {
-                        return asset.id
+                        return asset.id;
                     }),
                     speed: 1
                 });
 
                 var animationMap = {};
                 for (var i = 0; i < resource.animations.length; ++i) {
-                    var asset = resource.animations[i];
-                    animationMap[asset.resource.name] = asset.name;
+                    var animAsset = resource.animations[i];
+                    animationMap[animAsset.resource.name] = animAsset.name;
                 }
 
                 this.animationMap = animationMap;
                 onAnimationsLoaded(Object.keys(this.animationMap));
 
-                // create animation graphs
-                setTimeout((function () {
-                    function extract(index) {
+                var createAnimGraphs = function () {
+                    var extract = function (index) {
                         return this[index];
                     };
-    
+
                     var graph = this.graph;
                     var animController = entity.animation.data.animController;
                     var nodes = animController._nodes;
                     var activePose = animController._activePose;
 
-                    for (var i=0; i<nodes.length; ++i) {
+                    for (var i = 0; i < nodes.length; ++i) {
                         var node = nodes[i];
 
                         graph.addGraph(node,
@@ -272,7 +272,10 @@ Object.assign(Viewer.prototype, {
                                        new pc.Color(0, 0, 1, 1),
                                        extract.bind(activePose, i * 10 + 9));
                     }
-                }).bind(this), 1000);
+                };
+
+                // create animation graphs
+                setTimeout(createAnimGraphs.bind(this), 1000);
             }
 
             this.app.root.addChild(entity);
