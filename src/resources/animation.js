@@ -39,6 +39,13 @@ Object.assign(pc, function () {
         },
 
         open: function (url, data) {
+            if (pc.path.getExtension(url) === '.glb') {
+                var glb = pc.GlbParser.parse("filename.glb", data, null);
+                if (!glb) {
+                    return null;
+                }
+                return glb.animations;
+            }
             return this["_parseAnimationV" + data.animation.version](data);
         },
 

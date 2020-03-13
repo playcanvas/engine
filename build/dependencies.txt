@@ -93,6 +93,7 @@
 ../src/scene/sync-queue.js
 ../src/scene/texture-atlas.js
 ../src/scene/stencil-parameters.js
+../src/anim/anim.js
 ../src/anim/animation.js
 ../src/anim/skeleton.js
 ../src/sound/manager.js
@@ -244,9 +245,12 @@
 ../src/resources/texture-atlas.js
 ../src/resources/sprite.js
 ../src/resources/parser/json-model.js
+../src/resources/parser/glb-parser.js
+../src/resources/parser/glb-model.js
 ../src/resources/parser/scene.js
 ../src/resources/parser/material/json-standard-material.js
 ../src/resources/basis.js
+../src/resources/container.js
 ../src/asset/asset.js
 ../src/asset/asset-variants.js
 ../src/asset/asset-registry.js

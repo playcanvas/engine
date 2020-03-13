@@ -104,47 +104,33 @@ Object.assign(pc, function () {
                 // new request
                 this._requests[key] = [callback];
 
+                var self = this;
+
                 var handleLoad = function (err, urlObj) {
                     if (err) {
-                        console.error(err);
-                        if (this._requests[key]) {
-                            for (var i = 0, len = this._requests[key].length; i < len; i++) {
-                                this._requests[key][i](err);
-                            }
-                        }
-                        delete this._requests[key];
+                        self._onFailure(key, err);
                         return;
                     }
 
                     handler.load(urlObj, function (err, data, extra) {
                         // make sure key exists because loader
                         // might have been destroyed by now
-                        if (!this._requests[key])
+                        if (!self._requests[key]) {
                             return;
-
-                        var i, len = this._requests[key].length;
-
-                        var resource;
-                        if (! err) {
-                            try {
-                                resource = handler.open(urlObj.original, data, asset);
-                            } catch (ex) {
-                                err = ex;
-                            }
                         }
 
-                        if (!err) {
-                            this._cache[key] = resource;
-                            for (i = 0; i < len; i++)
-                                this._requests[key][i](null, resource, extra);
-                        } else {
-                            console.error(err);
-                            for (i = 0; i < len; i++)
-                                this._requests[key][i](err);
+                        if (err) {
+                            self._onFailure(key, err);
+                            return;
                         }
-                        delete this._requests[key];
-                    }.bind(this), asset);
-                }.bind(this);
+
+                        try {
+                            self._onSuccess(key, handler.open(urlObj.original, data, asset), extra);
+                        } catch (e) {
+                            self._onFailure(key, e);
+                        }
+                    }, asset);
+                };
 
                 var normalizedUrl = url.split('?')[0];
                 if (this._app.enableBundles && this._app.bundles.hasUrl(normalizedUrl)) {
@@ -159,7 +145,24 @@ Object.assign(pc, function () {
                 } else {
                     handleLoad(null, { load: url, original: url });
                 }
+            }
+        },
 
+        _onSuccess: function (key, result, extra) {
+            this._cache[key] = result;
+            for (var i = 0; i < this._requests[key].length; i++) {
+                this._requests[key][i](null, result, extra);
+            }
+            delete this._requests[key];
+        },
+
+        _onFailure: function (key, err) {
+            console.error(err);
+            if (this._requests[key]) {
+                for (var i = 0; i < this._requests[key].length; i++) {
+                    this._requests[key][i](err);
+                }
+                delete this._requests[key];
             }
         },
 
