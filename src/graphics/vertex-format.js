@@ -69,9 +69,58 @@ Object.assign(pc, function () {
 
     /**
      * @interface
-     * @implements VertexAttributeDescription
      * @name pc.VertexAttributeElement
      * @description Interface of a vertex attribute element in {@link pc.VertexFormat}.
+     */
+    /**
+     * @name pc.VertexAttributeElement#name
+     * @type {string}
+     * @description The meaning of the vertex element. This is used to link
+     * the vertex data to a shader input. Can be:
+     *
+     * * {@link pc.SEMANTIC_POSITION}
+     * * {@link pc.SEMANTIC_NORMAL}
+     * * {@link pc.SEMANTIC_TANGENT}
+     * * {@link pc.SEMANTIC_BLENDWEIGHT}
+     * * {@link pc.SEMANTIC_BLENDINDICES}
+     * * {@link pc.SEMANTIC_COLOR}
+     * * {@link pc.SEMANTIC_TEXCOORD0}
+     * * {@link pc.SEMANTIC_TEXCOORD1}
+     * * {@link pc.SEMANTIC_TEXCOORD2}
+     * * {@link pc.SEMANTIC_TEXCOORD3}
+     * * {@link pc.SEMANTIC_TEXCOORD4}
+     * * {@link pc.SEMANTIC_TEXCOORD5}
+     * * {@link pc.SEMANTIC_TEXCOORD6}
+     * * {@link pc.SEMANTIC_TEXCOORD7}
+     *
+     * If vertex data has a meaning other that one of those listed above, use the user-defined
+     * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
+     */
+    /**
+     * @name pc.VertexAttributeElement#numComponents
+     * @type {number}
+     * @description The number of components of the vertex attribute.
+     * Can be 1, 2, 3 or 4.
+     */
+    /**
+     * @name pc.VertexAttributeElement#dataType
+     * @type {number}
+     * @description The data type of the attribute. Can be:
+     *
+     * * {@link pc.TYPE_INT8}
+     * * {@link pc.TYPE_UINT8}
+     * * {@link pc.TYPE_INT16}
+     * * {@link pc.TYPE_UINT16}
+     * * {@link pc.TYPE_INT32}
+     * * {@link pc.TYPE_UINT32}
+     * * {@link pc.TYPE_FLOAT32}
+     */
+    /**
+     * @name pc.VertexAttributeElement#[normalize]
+     * @type {boolean}
+     * @description If true, vertex attribute data will be mapped from a
+     * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
+     * unchanged. If this property is unspecified, false is assumed.
      */
     /**
      * @name pc.VertexAttributeElement#offset
