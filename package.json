@@ -33,7 +33,7 @@
     "src/polyfill/*"
   ], 
   "devDependencies": {
-    "@playcanvas/jsdoc-template": "^1.0.9", 
+    "@playcanvas/jsdoc-template": "^1.0.10", 
     "@playcanvas/eslint-config": "^1.0.3", 
     "chai": "^4.2.0", 
     "eslint": "^6.8.0", 
@@ -69,7 +69,7 @@
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false", 
     "test:tsd": "npm run tsd && tsc --pretty false build/output/playcanvas.d.ts", 
     "tsd": "jsdoc -c conf-tsd.json", 
-    "lint": "eslint src examples/assets/scripts"
+    "lint": "eslint src examples/assets/scripts tools"
   }, 
   "engines": {
     "node": ">= 0.6.12"

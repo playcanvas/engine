@@ -177,13 +177,18 @@ Object.assign(pc, function () {
         this.hasTangents = false;
         this._defaultInstancingFormat = null;
 
-        this.size = 0;
+        // calculate total size
+        this.size = description.reduce(function (total, desc) {
+            return total + Math.ceil(desc.components * _typeSize[desc.type] / 4) * 4;
+        }, 0);
+
+        var offset = 0;
         for (i = 0, len = description.length; i < len; i++) {
             var elementDesc = description[i];
             element = {
                 name: elementDesc.semantic,
-                offset: 0,
-                stride: 0,
+                offset: elementDesc.hasOwnProperty('offset') ? elementDesc.offset : offset,
+                stride: elementDesc.hasOwnProperty('stride') ? elementDesc.stride : this.size,
                 stream: -1,
                 scopeId: graphicsDevice.scope.resolve(elementDesc.semantic),
                 dataType: elementDesc.type,
@@ -192,8 +197,8 @@ Object.assign(pc, function () {
                 size: elementDesc.components * _typeSize[elementDesc.type]
             };
             this.elements.push(element);
-            // This buffer will be accessed by a Float32Array and so must be 4 byte aligned
-            this.size += Math.ceil(element.size / 4) * 4;
+            offset += Math.ceil(element.size / 4) * 4;
+
             if (elementDesc.semantic === pc.SEMANTIC_TEXCOORD0) {
                 this.hasUv0 = true;
             } else if (elementDesc.semantic === pc.SEMANTIC_TEXCOORD1) {
@@ -203,16 +208,6 @@ Object.assign(pc, function () {
             } else if (elementDesc.semantic === pc.SEMANTIC_TANGENT) {
                 this.hasTangents = true;
             }
-        }
-
-        var offset = 0;
-        for (i = 0, len = this.elements.length; i < len; i++) {
-            element = this.elements[i];
-
-            element.offset = offset;
-            element.stride = this.size;
-
-            offset += element.size;
         }
     };
 

@@ -115,7 +115,6 @@
                 animLoop: true,
                 animTilesX: 4,
                 animTilesY: 4,
-                animNumFrames: 4,
                 animSpeed: 1,
                 autoPlay: true,
                 scaleGraph: scaleCurve
@@ -123,29 +122,37 @@
 
             particleEntity1.addComponent("particlesystem", 
                 Object.assign(particleSystemConfiguration, {
-                    // set the animation start frame to 0 for the first particle system
-                    animStartFrame: 0,
+                    // states that each animation in the sprite sheet has 4 frames
+                    animNumFrames: 4,
+                    // set the animation index of the first particle system to 0
+                    animIndex: 0
                 })
             );
 
             particleEntity2.addComponent("particlesystem", 
                 Object.assign(particleSystemConfiguration, {
-                    // set the animation start frame to 3 for the second particle system
-                    animStartFrame: 4,
+                    // states that each animation in the sprite sheet has 4 frames
+                    animNumFrames: 4,
+                    // set the animation index of the second particle system to 1
+                    animIndex: 1
                 })
             );
 
             particleEntity3.addComponent("particlesystem", 
                 Object.assign(particleSystemConfiguration, {
-                    // set the animation start frame to 7 for the third particle system
-                    animStartFrame: 8,
+                    // states that each animation in the sprite sheet has 4 frames
+                    animNumFrames: 4,
+                    // set the animation index of the third particle system to 2
+                    animIndex: 2
                 })
             );
 
             particleEntity4.addComponent("particlesystem", 
                 Object.assign(particleSystemConfiguration, {
-                    // set the animation start frame to 11 for the fourth particle system
-                    animStartFrame: 12,
+                    // states that each animation in the sprite sheet has 4 frames
+                    animNumFrames: 4,
+                    // set the animation index of the fourth particle system to 3
+                    animIndex: 3
                 })
             );
 

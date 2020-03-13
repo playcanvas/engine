@@ -1,12 +1,13 @@
 attribute vec4 particle_vertexData;     // XYZ = world pos, W = life
 attribute vec4 particle_vertexData2;     // X = angle, Y = scale, Z = alpha, W = velocity.x
 attribute vec4 particle_vertexData3;     // XYZ = particle local pos, W = velocity.y
+attribute float particle_vertexData4;     // particle id
 #ifndef USE_MESH
-#define VDATA4TYPE vec2
+#define VDATA5TYPE vec2
 #else
-#define VDATA4TYPE vec4
+#define VDATA5TYPE vec4
 #endif
-attribute VDATA4TYPE particle_vertexData4;     // VDATA4TYPE depends on useMesh property. Start with X = velocity.z, Y = particle ID and for mesh particles proceeds with Z = mesh UV.x, W = mesh UV.y
+attribute VDATA5TYPE particle_vertexData5;     // VDATA4TYPE depends on useMesh property. Start with X = velocity.z, Y = particle ID and for mesh particles proceeds with Z = mesh UV.x, W = mesh UV.y
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
@@ -22,6 +23,7 @@ uniform mat4 matrix_viewInverse;
 uniform float numParticles;
 uniform float lifetime;
 uniform float stretch;
+uniform float seed;
 //uniform float graphSampleSize;
 //uniform float graphNumSamples;
 uniform vec3 wrapBounds, emitterScale, faceTangent, faceBinorm;
@@ -63,7 +65,12 @@ void main(void)
     vec3 particlePos = particle_vertexData.xyz;
     vec3 inPos = particlePos;
     vec3 vertPos = particle_vertexData3.xyz;
-    vec3 inVel = vec3(particle_vertexData2.w, particle_vertexData3.w, particle_vertexData4.x);
+    vec3 inVel = vec3(particle_vertexData2.w, particle_vertexData3.w, particle_vertexData5.x);
+
+    float id = floor(particle_vertexData4);
+    float rndFactor = fract(sin(id + 1.0 + seed));
+    vec3 rndFactor3 = vec3(rndFactor, fract(rndFactor*10.0), fract(rndFactor*100.0));
+
 #ifdef LOCAL_SPACE
     inVel = mat3(matrix_model) * inVel;
 #endif
@@ -74,7 +81,7 @@ void main(void)
 #ifndef USE_MESH
     texCoordsAlphaLife = vec4(quadXY * -0.5 + 0.5, particle_vertexData2.z, particle_vertexData.w);
 #else
-    texCoordsAlphaLife = vec4(particle_vertexData4.zw, particle_vertexData2.z, particle_vertexData.w);
+    texCoordsAlphaLife = vec4(particle_vertexData5.zw, particle_vertexData2.z, particle_vertexData.w);
 #endif
     mat2 rotMatrix;
 
