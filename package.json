@@ -69,7 +69,7 @@
     "test:debug": "karma start tests/karma.conf.js -- --single-run=false", 
     "test:tsd": "npm run tsd && tsc --pretty false build/output/playcanvas.d.ts", 
     "tsd": "jsdoc -c conf-tsd.json", 
-    "lint": "eslint src examples/assets/scripts"
+    "lint": "eslint src examples/assets/scripts tools"
   }, 
   "engines": {
     "node": ">= 0.6.12"
