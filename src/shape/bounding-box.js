@@ -14,6 +14,8 @@ Object.assign(pc, function () {
      * @param {pc.Vec3} [halfExtents] - Half the distance across the box in each axis. The constructor takes a reference of this parameter.
      * @property {pc.Vec3} center Center of box.
      * @property {pc.Vec3} halfExtents Half the distance across the box in each axis.
+     * @property {pc.Vec3} min The minimum corner of the box.
+     * @property {pc.Vec3} max The maximum corner of the box.
      */
     var BoundingBox = function BoundingBox(center, halfExtents) {
         this.center = center || new pc.Vec3(0, 0, 0);
@@ -21,6 +23,46 @@ Object.assign(pc, function () {
         this._min = new pc.Vec3();
         this._max = new pc.Vec3();
     };
+
+    Object.defineProperty(BoundingBox.prototype, 'center', {
+        get: function () {
+            return this._center;
+        },
+        set: function (value) {
+            this._center.copy(value);
+            this._syncCtrHlfToMinMax();
+        }
+    });
+
+    Object.defineProperty(BoundingBox.prototype, 'halfExtents', {
+        get: function () {
+            return this._halfExtents;
+        },
+        set: function (value) {
+            this._halfExtents.copy(value);
+            this._syncCtrHlfToMinMax();
+        }
+    });
+
+    Object.defineProperty(BoundingBox.prototype, 'min', {
+        get: function () {
+            return this._min;
+        },
+        set: function (value) {
+            this._min.copy(value);
+            this._syncMinMaxToCtrHlf();
+        }
+    });
+
+    Object.defineProperty(BoundingBox.prototype, 'max', {
+        get: function () {
+            return this._max;
+        },
+        set: function (value) {
+            this._max.copy(value);
+            this._syncMinMaxToCtrHlf();
+        }
+    });
 
     Object.assign(BoundingBox.prototype, {
 
@@ -357,6 +399,16 @@ Object.assign(pc, function () {
             }
 
             return sq;
+        },
+
+        _syncCtrHlfToMinMax: function () {
+            this._min.copy(this._center).sub(this._halfExtents);
+            this._max.copy(this._center).add(this._halfExtents);
+        },
+
+        _syncMinMaxToCtrHlf: function () {
+            this._center.add2(this._max, this._min).scale(0.5);
+            this._halfExtents.sub2(this._max, this._min).scale(0.5);
         }
     });
 
