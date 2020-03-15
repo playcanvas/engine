@@ -1147,6 +1147,7 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.GraphicsDevice#getCopyShader
          * @description Get copy shader for efficient rendering of fullscreen-quad with texture.
