@@ -14,11 +14,7 @@ Object.assign(pc, function () {
      * @interface
      * @name pc.VertexAttributeDescription
      * @description Interface for describing a vertex attribute in {@link pc.VertexFormat}.
-     */
-    /**
-     * @name pc.VertexAttributeDescription#semantic
-     * @type {string}
-     * @description The meaning of the vertex element. This is used to link
+     * @param {string} semantic - The meaning of the vertex element. This is used to link
      * the vertex data to a shader input. Can be:
      *
      * * {@link pc.SEMANTIC_POSITION}
@@ -38,17 +34,9 @@ Object.assign(pc, function () {
      *
      * If vertex data has a meaning other that one of those listed above, use the user-defined
      * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
-     */
-    /**
-     * @name pc.VertexAttributeDescription#components
-     * @type {number}
-     * @description The number of components of the vertex attribute.
+     * @param {number} components - The number of components of the vertex attribute.
      * Can be 1, 2, 3 or 4.
-     */
-    /**
-     * @name pc.VertexAttributeDescription#type
-     * @type {number}
-     * @description The data type of the attribute. Can be:
+     * @param {number} type - The data type of the attribute. Can be:
      *
      * * {@link pc.TYPE_INT8}
      * * {@link pc.TYPE_UINT8}
@@ -57,25 +45,76 @@ Object.assign(pc, function () {
      * * {@link pc.TYPE_INT32}
      * * {@link pc.TYPE_UINT32}
      * * {@link pc.TYPE_FLOAT32}
-     */
-    /**
-     * @name pc.VertexAttributeDescription#[normalize]
-     * @type {boolean}
-     * @description If true, vertex attribute data will be mapped from a
+     *
+     * @param {boolean} [normalize] - If true, vertex attribute data will be mapped from a
      * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
      * unchanged. If this property is unspecified, false is assumed.
      */
-    var VertexAttributeDescription = function () {};
+    var VertexAttributeDescription = function (semantic, components, type, normalize) {
+        /**
+         * @name pc.VertexAttributeDescription#semantic
+         * @type {string}
+         * @description The meaning of the vertex element. This is used to link
+         * the vertex data to a shader input. Can be:
+         *
+         * * {@link pc.SEMANTIC_POSITION}
+         * * {@link pc.SEMANTIC_NORMAL}
+         * * {@link pc.SEMANTIC_TANGENT}
+         * * {@link pc.SEMANTIC_BLENDWEIGHT}
+         * * {@link pc.SEMANTIC_BLENDINDICES}
+         * * {@link pc.SEMANTIC_COLOR}
+         * * {@link pc.SEMANTIC_TEXCOORD0}
+         * * {@link pc.SEMANTIC_TEXCOORD1}
+         * * {@link pc.SEMANTIC_TEXCOORD2}
+         * * {@link pc.SEMANTIC_TEXCOORD3}
+         * * {@link pc.SEMANTIC_TEXCOORD4}
+         * * {@link pc.SEMANTIC_TEXCOORD5}
+         * * {@link pc.SEMANTIC_TEXCOORD6}
+         * * {@link pc.SEMANTIC_TEXCOORD7}
+         *
+         * If vertex data has a meaning other that one of those listed above, use the user-defined
+         * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
+         */
+        this.semantic = semantic;
+
+        /**
+         * @name pc.VertexAttributeDescription#components
+         * @type {number}
+         * @description The number of components of the vertex attribute.
+         * Can be 1, 2, 3 or 4.
+         */
+        this.components = components;
+
+        /**
+         * @name pc.VertexAttributeDescription#type
+         * @type {number}
+         * @description The data type of the attribute. Can be:
+         *
+         * * {@link pc.TYPE_INT8}
+         * * {@link pc.TYPE_UINT8}
+         * * {@link pc.TYPE_INT16}
+         * * {@link pc.TYPE_UINT16}
+         * * {@link pc.TYPE_INT32}
+         * * {@link pc.TYPE_UINT32}
+         * * {@link pc.TYPE_FLOAT32}
+         */
+        this.type = type;
+
+        /**
+         * @name pc.VertexAttributeDescription#[normalize]
+         * @type {boolean}
+         * @description If true, vertex attribute data will be mapped from a
+         * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
+         * unchanged. If this property is unspecified, false is assumed.
+         */
+        this.normalize = !!normalize;
+    };
 
     /**
      * @interface
      * @name pc.VertexAttributeElement
      * @description Interface of a vertex attribute element in {@link pc.VertexFormat}.
-     */
-    /**
-     * @name pc.VertexAttributeElement#name
-     * @type {string}
-     * @description The meaning of the vertex element. This is used to link
+     * @param {string} name - The meaning of the vertex element. This is used to link
      * the vertex data to a shader input. Can be:
      *
      * * {@link pc.SEMANTIC_POSITION}
@@ -95,17 +134,9 @@ Object.assign(pc, function () {
      *
      * If vertex data has a meaning other that one of those listed above, use the user-defined
      * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
-     */
-    /**
-     * @name pc.VertexAttributeElement#numComponents
-     * @type {number}
-     * @description The number of components of the vertex attribute.
+     * @param {number} numComponents - The number of components of the vertex attribute.
      * Can be 1, 2, 3 or 4.
-     */
-    /**
-     * @name pc.VertexAttributeElement#dataType
-     * @type {number}
-     * @description The data type of the attribute. Can be:
+     * @param {number} dataType - The data type of the attribute. Can be:
      *
      * * {@link pc.TYPE_INT8}
      * * {@link pc.TYPE_UINT8}
@@ -114,35 +145,102 @@ Object.assign(pc, function () {
      * * {@link pc.TYPE_INT32}
      * * {@link pc.TYPE_UINT32}
      * * {@link pc.TYPE_FLOAT32}
-     */
-    /**
-     * @name pc.VertexAttributeElement#[normalize]
-     * @type {boolean}
-     * @description If true, vertex attribute data will be mapped from a
+     *
+     * @param {boolean} normalize - If true, vertex attribute data will be mapped from a
      * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
      * unchanged. If this property is unspecified, false is assumed.
+     * @param {number} offset - The number of initial bytes at the start of a vertex that are not relevant to this attribute.
+     * @param {number} stride - The number of total bytes that are between the start of one vertex, and the start of the next.
+     * @param {pc.ScopeId} scopeId - The shader input variable corresponding to the attribute.
+     * @param {number} size - The size of the attribute in bytes.
      */
-    /**
-     * @name pc.VertexAttributeElement#offset
-     * @type {number}
-     * @description The number of initial bytes at the start of a vertex that are not relevant to this attribute.
-     */
-    /**
-     * @name pc.VertexAttributeElement#stride
-     * @type {number}
-     * @description The number of total bytes that are between the start of one vertex, and the start of the next.
-     */
-    /**
-     * @name pc.VertexAttributeElement#scopeId
-     * @type {pc.ScopeId}
-     * @description The shader input variable corresponding to the attribute.
-     */
-    /**
-     * @name pc.VertexAttributeElement#size
-     * @type {number}
-     * @description The size of the attribute in bytes.
-     */
-    var VertexAttributeElement = function () {};
+    var VertexAttributeElement = function (name, numComponents, dataType, normalize, offset, stride, scopeId, size) {
+        /**
+         * @name pc.VertexAttributeElement#name
+         * @type {string}
+         * @description The meaning of the vertex element. This is used to link
+         * the vertex data to a shader input. Can be:
+         *
+         * * {@link pc.SEMANTIC_POSITION}
+         * * {@link pc.SEMANTIC_NORMAL}
+         * * {@link pc.SEMANTIC_TANGENT}
+         * * {@link pc.SEMANTIC_BLENDWEIGHT}
+         * * {@link pc.SEMANTIC_BLENDINDICES}
+         * * {@link pc.SEMANTIC_COLOR}
+         * * {@link pc.SEMANTIC_TEXCOORD0}
+         * * {@link pc.SEMANTIC_TEXCOORD1}
+         * * {@link pc.SEMANTIC_TEXCOORD2}
+         * * {@link pc.SEMANTIC_TEXCOORD3}
+         * * {@link pc.SEMANTIC_TEXCOORD4}
+         * * {@link pc.SEMANTIC_TEXCOORD5}
+         * * {@link pc.SEMANTIC_TEXCOORD6}
+         * * {@link pc.SEMANTIC_TEXCOORD7}
+         *
+         * If vertex data has a meaning other that one of those listed above, use the user-defined
+         * semantics: pc.SEMANTIC_ATTR0 to pc.SEMANTIC_ATTR15.
+         */
+        this.name = name;
+
+        /**
+         * @name pc.VertexAttributeElement#numComponents
+         * @type {number}
+         * @description The number of components of the vertex attribute.
+         * Can be 1, 2, 3 or 4.
+         */
+        this.numComponents = numComponents;
+
+        /**
+         * @name pc.VertexAttributeElement#dataType
+         * @type {number}
+         * @description The data type of the attribute. Can be:
+         *
+         * * {@link pc.TYPE_INT8}
+         * * {@link pc.TYPE_UINT8}
+         * * {@link pc.TYPE_INT16}
+         * * {@link pc.TYPE_UINT16}
+         * * {@link pc.TYPE_INT32}
+         * * {@link pc.TYPE_UINT32}
+         * * {@link pc.TYPE_FLOAT32}
+         */
+        this.dataType = dataType;
+
+        /**
+         * @name pc.VertexAttributeElement#normalize
+         * @type {boolean}
+         * @description If true, vertex attribute data will be mapped from a
+         * 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
+         * unchanged. If this property is unspecified, false is assumed.
+         */
+        this.normalize = !!normalize;
+
+        /**
+         * @name pc.VertexAttributeElement#offset
+         * @type {number}
+         * @description The number of initial bytes at the start of a vertex that are not relevant to this attribute.
+         */
+        this.offset = offset;
+
+        /**
+         * @name pc.VertexAttributeElement#stride
+         * @type {number}
+         * @description The number of total bytes that are between the start of one vertex, and the start of the next.
+         */
+        this.stride = stride;
+
+        /**
+         * @name pc.VertexAttributeElement#scopeId
+         * @type {pc.ScopeId}
+         * @description The shader input variable corresponding to the attribute.
+         */
+        this.scopeId = scopeId;
+
+        /**
+         * @name pc.VertexAttributeElement#size
+         * @type {number}
+         * @description The size of the attribute in bytes.
+         */
+        this.size = size;
+    };
 
     /**
      * @class
