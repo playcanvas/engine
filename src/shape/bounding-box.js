@@ -87,6 +87,12 @@ Object.assign(pc, function () {
             if (omax.z > tmax.z) tmax.z = omax.z;
         },
 
+        /**
+         * @function
+         * @name pc.BoundingBox#copy
+         * @description Copies the contents of a source AABB.
+         * @param {pc.BoundingBox} src - The AABB to copy from.
+         */
         copy: function (src) {
             this._center.copy(src._center);
             this._halfExtents.copy(src._halfExtents);
@@ -94,6 +100,12 @@ Object.assign(pc, function () {
             this._max.copy(src._max);
         },
 
+        /**
+         * @function
+         * @name pc.BoundingBox#clone
+         * @description Returns a clone of the AABB
+         * @returns {pc.BoundingBox} A duplicate AABB.
+         */
         clone: function () {
             var clone = new pc.BoundingBox();
             clone.copy(this);
@@ -214,6 +226,14 @@ Object.assign(pc, function () {
             return this._fastIntersectsRay(ray);
         },
 
+        /**
+         * @function
+         * @name pc.BoundingBox#setMinMax
+         * @description Sets the minimum and maximum corner of the AABB.
+         * Using this function is faster than assigning min and max separately.
+         * @param {pc.Vec3|number[]} min - The minimum corner of the AABB. Can be a {@link pc.Vec3} or an array (of length 3).
+         * @param {pc.Vec3|number[]} max - The maximum corner of the AABB. Can be a {@link pc.Vec3} or an array (of length 3).
+         */
         setMinMax: function (min, max) {
             if (!Array.isArray(min)) this._min.copy(min);
             else this._min.set(min[0], min[1], min[2]);
@@ -310,6 +330,12 @@ Object.assign(pc, function () {
             );
         },
 
+        /**
+         * @function
+         * @name pc.BoundingBox#compute
+         * @description Compute the size of the AABB to encapsulate all specified vertices.
+         * @param {pc.Vec3[]} vertices - The vertices used to compute the new size for the AABB.
+         */
         compute: function (vertices) {
             var min = tmpVecA.set(vertices[0], vertices[1], vertices[2]);
             var max = tmpVecB.set(vertices[0], vertices[1], vertices[2]);
