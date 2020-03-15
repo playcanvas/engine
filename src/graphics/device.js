@@ -1077,7 +1077,7 @@ Object.assign(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#copyRenderTarget
-         * @description Copies source render target into destination render target. Mostly used for by post-effects.
+         * @description Copies source render target into destination render target. Mostly used by post-effects.
          * @param {pc.RenderTarget} source - The source render target.
          * @param {pc.RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
          * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
