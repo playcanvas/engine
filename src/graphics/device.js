@@ -1082,7 +1082,7 @@ Object.assign(pc, function () {
          * @param {pc.RenderTarget} [dest] - The destination render target. Defaults to frame buffer.
          * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
          * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
-         * @returns {boolean} True if copy has been initiated.
+         * @returns {boolean} True if the copy was successful, false otherwise.
          */
         copyRenderTarget: function (source, dest, color, depth) {
             var gl = this.gl;
