@@ -956,6 +956,13 @@ Object.assign(pc, function () {
             var grabPassTextureId = this.scope.resolve(grabPassTexture.name);
             grabPassTextureId.setValue(grabPassTexture);
 
+            var grabPassRenderTarget = new pc.RenderTarget({
+                colorBuffer: grabPassTexture,
+                depth: false
+            });
+            this.createFrameBuffer(grabPassRenderTarget);
+
+            this.grabPassRenderTarget = grabPassRenderTarget;
             this.grabPassTextureId = grabPassTextureId;
             this.grabPassTexture = grabPassTexture;
         },
@@ -983,9 +990,12 @@ Object.assign(pc, function () {
         },
 
         destroyGrabPass: function () {
+            this.grabPassRenderTarget.destroy();
+            this.grabPassRenderTarget = null;
+
+            this.grabPassTextureId = null;
             this.grabPassTexture.destroy();
             this.grabPassTexture = null;
-            this.grabPassTextureId = null;
         },
 
         updateClientRect: function () {
