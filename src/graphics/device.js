@@ -1185,12 +1185,9 @@ Object.assign(pc, function () {
                 this.renderTarget = prevRt;
                 gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt._glFrameBuffer : null);
             } else {
-                if (!this._copyShader) {
-                    var chunks = pc.shaderChunks;
-                    this._copyShader = chunks.createShaderFromCode(this, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
-                }
+                var shader = this.getCopyShader();
                 this.constantTexSource.setValue(source._colorBuffer);
-                pc.drawQuadWithShader(this, dest, this._copyShader);
+                pc.drawQuadWithShader(this, dest, shader);
             }
 
             return true;
@@ -1329,6 +1326,21 @@ Object.assign(pc, function () {
             // #ifdef PROFILER
             this._renderTargetCreationTime += pc.now() - startTime;
             // #endif
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.GraphicsDevice#getCopyShader
+         * @description Get copy shader for efficient rendering of fullscreen-quad with texture.
+         * @returns {pc.Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in `pc.shaderChunks`).
+         */
+        getCopyShader: function () {
+            if (!this._copyShader) {
+                var chunks = pc.shaderChunks;
+                this._copyShader = chunks.createShaderFromCode(this, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
+            }
+            return this._copyShader;
         },
 
         /**
