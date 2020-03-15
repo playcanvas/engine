@@ -18,10 +18,11 @@ Object.assign(pc, function () {
      * @property {pc.Vec3} max The maximum corner of the box.
      */
     var BoundingBox = function BoundingBox(center, halfExtents) {
-        this.center = center || new pc.Vec3(0, 0, 0);
-        this.halfExtents = halfExtents || new pc.Vec3(0.5, 0.5, 0.5);
+        this._center = center || new pc.Vec3(0, 0, 0);
+        this._halfExtents = halfExtents || new pc.Vec3(0.5, 0.5, 0.5);
         this._min = new pc.Vec3();
         this._max = new pc.Vec3();
+        this._syncCtrHlfToMinMax();
     };
 
     Object.defineProperty(BoundingBox.prototype, 'center', {
@@ -73,59 +74,30 @@ Object.assign(pc, function () {
          * @param {pc.BoundingBox} other - Bounding box to add.
          */
         add: function (other) {
-            var tc = this.center;
-            var tcx = tc.x;
-            var tcy = tc.y;
-            var tcz = tc.z;
-            var th = this.halfExtents;
-            var thx = th.x;
-            var thy = th.y;
-            var thz = th.z;
-            var tminx = tcx - thx;
-            var tmaxx = tcx + thx;
-            var tminy = tcy - thy;
-            var tmaxy = tcy + thy;
-            var tminz = tcz - thz;
-            var tmaxz = tcz + thz;
+            var tmin = this._min;
+            var tmax = this._max;
+            var omin = other._min;
+            var omax = other._max;
 
-            var oc = other.center;
-            var ocx = oc.x;
-            var ocy = oc.y;
-            var ocz = oc.z;
-            var oh = other.halfExtents;
-            var ohx = oh.x;
-            var ohy = oh.y;
-            var ohz = oh.z;
-            var ominx = ocx - ohx;
-            var omaxx = ocx + ohx;
-            var ominy = ocy - ohy;
-            var omaxy = ocy + ohy;
-            var ominz = ocz - ohz;
-            var omaxz = ocz + ohz;
-
-            if (ominx < tminx) tminx = ominx;
-            if (omaxx > tmaxx) tmaxx = omaxx;
-            if (ominy < tminy) tminy = ominy;
-            if (omaxy > tmaxy) tmaxy = omaxy;
-            if (ominz < tminz) tminz = ominz;
-            if (omaxz > tmaxz) tmaxz = omaxz;
-
-            tc.x = (tminx + tmaxx) * 0.5;
-            tc.y = (tminy + tmaxy) * 0.5;
-            tc.z = (tminz + tmaxz) * 0.5;
-            th.x = (tmaxx - tminx) * 0.5;
-            th.y = (tmaxy - tminy) * 0.5;
-            th.z = (tmaxz - tminz) * 0.5;
+            if (omin.x < tmin.x) tmin.x = omin.x;
+            if (omax.x > tmax.x) tmax.x = omax.x;
+            if (omin.y < tmin.y) tmin.y = omin.y;
+            if (omax.y > tmax.y) tmax.y = omax.y;
+            if (omin.z < tmin.z) tmin.z = omin.z;
+            if (omax.z > tmax.z) tmax.z = omax.z;
         },
 
         copy: function (src) {
-            this.center.copy(src.center);
-            this.halfExtents.copy(src.halfExtents);
-            this.type = src.type;
+            this._center.copy(src._center);
+            this._halfExtents.copy(src._halfExtents);
+            this._min.copy(src._min);
+            this._max.copy(src._max);
         },
 
         clone: function () {
-            return new pc.BoundingBox(this.center.clone(), this.halfExtents.clone());
+            var clone = new pc.BoundingBox();
+            clone.copy(this);
+            return clone;
         },
 
         /**
@@ -243,8 +215,11 @@ Object.assign(pc, function () {
         },
 
         setMinMax: function (min, max) {
-            this.center.add2(max, min).scale(0.5);
-            this.halfExtents.sub2(max, min).scale(0.5);
+            if (!Array.isArray(min)) this._min.copy(min);
+            else this._min.set(min[0], min[1], min[2]);
+            if (!Array.isArray(max)) this._max.copy(max);
+            else this._max.set(max[0], max[1], max[2]);
+            this._syncMinMaxToCtrHlf();
         },
 
         /**
@@ -254,7 +229,7 @@ Object.assign(pc, function () {
          * @returns {pc.Vec3} Minimum corner.
          */
         getMin: function () {
-            return this._min.copy(this.center).sub(this.halfExtents);
+            return this._min;
         },
 
         /**
@@ -264,7 +239,7 @@ Object.assign(pc, function () {
          * @returns {pc.Vec3} Maximum corner.
          */
         getMax: function () {
-            return this._max.copy(this.center).add(this.halfExtents);
+            return this._max;
         },
 
         /**
