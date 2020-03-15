@@ -173,9 +173,9 @@ Object.assign(pc, function () {
          * @description Copies color and/or depth contents of source render target to this one. Formats, sizes and anti-aliasing samples must match.
          * Depth buffer can only be copied on WebGL 2.0.
          * @param {pc.RenderTarget} source - Source render target to copy from.
-         * @param {boolean} color - Copy color buffer.
-         * @param {boolean} depth - Copy depth buffer.
-         * @returns {boolean} True if the copy was successfull, false otherwise.
+         * @param {boolean} [color] - If true will copy the color buffer. Defaults to false.
+         * @param {boolean} [depth] - If true will copy the depth buffer. Defaults to false.
+         * @returns {boolean} True if the copy was successful, false otherwise.
          */
         copy: function (source, color, depth) {
             if (!this._device) {
