@@ -960,7 +960,7 @@ Object.assign(pc, function () {
                 colorBuffer: grabPassTexture,
                 depth: false
             });
-            this.createFrameBuffer(grabPassRenderTarget);
+            this.initRenderTarget(grabPassRenderTarget);
 
             this.grabPassRenderTarget = grabPassRenderTarget;
             this.grabPassTextureId = grabPassTextureId;
@@ -1190,11 +1190,11 @@ Object.assign(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.GraphicsDevice#createFrameBuffer
-         * @description Create frame buffer for render target
-         * @param {pc.RenderTarget} target - The render target to create the frame buffer for.
+         * @name pc.GraphicsDevice#initRenderTarget
+         * @description Initialize render target before it can be used.
+         * @param {pc.RenderTarget} target - The render target to be initialized.
          */
-        createFrameBuffer: function (target) {
+        initRenderTarget: function (target) {
             if (target._glFrameBuffer) return;
 
             // #ifdef PROFILER
@@ -1347,7 +1347,7 @@ Object.assign(pc, function () {
             if (target) {
                 // Create a new WebGL frame buffer object
                 if (!target._glFrameBuffer) {
-                   this.createFrameBuffer(target);
+                    this.initRenderTarget(target);
 
                 } else {
                     this.setFramebuffer(target._glFrameBuffer);
