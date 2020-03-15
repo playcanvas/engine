@@ -1148,7 +1148,7 @@ Object.assign(pc, function () {
 
         /**
          * @function
-         * @name pc.GraphicsDevice#createFrameBuffer
+         * @name pc.GraphicsDevice#getCopyShader
          * @description Get copy shader for efficient rendering of fullscreen-quad with texture.
          * @returns {pc.Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in `pc.shaderChunks`).
          */
