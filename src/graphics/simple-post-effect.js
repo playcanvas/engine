@@ -110,8 +110,22 @@ Object.assign(pc, (function () {
         }
     }
 
+    function drawTexture(device, texture, target, shader, rect, scissorRect, useBlend) {
+        if (!shader) {
+            if (!device._copyShader) {
+                var chunks = pc.shaderChunks;
+                device._copyShader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputTex2DPS, "outputTex2D");
+            }
+            shader = device._copyShader;
+        }
+
+        device.constantTexSource.setValue(texture);
+        drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend);
+    }
+
     return {
         drawQuadWithShader: drawQuadWithShader,
-        destroyPostEffectQuad: destroyPostEffectQuad
+        destroyPostEffectQuad: destroyPostEffectQuad,
+        drawTexture: drawTexture
     };
 }()));
