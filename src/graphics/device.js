@@ -970,22 +970,37 @@ Object.assign(pc, function () {
         updateGrabPass: function () {
             var gl = this.gl;
 
-            var target = this.renderTarget;
-            var resolve = target && target._glResolveFrameBuffer;
+            var renderTarget = this.renderTarget;
+            var resolveRenderTarget = renderTarget && renderTarget._glResolveFrameBuffer;
+            var grabPassTexture = this.grabPassTexture;
+            var width = this.width;
+            var height = this.height;
 
-            if (resolve) {
-                target.resolve(true);
-                gl.bindFramebuffer(gl.FRAMEBUFFER, target._glResolveFrameBuffer);
-            }
+            if (this.webgl2 && width === grabPassTexture._width && height === grabPassTexture._height) {
+                if (resolveRenderTarget) renderTarget.resolve(true);
 
-            var format = this.grabPassTexture._glFormat;
-            var source = (this.target && this.target.colorBuffer) || this.canvas;
-            gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, source.width, source.height, 0);
-            this.grabPassTexture._width = source.width;
-            this.grabPassTexture._height = source.height;
+                var currentFrameBuffer = renderTarget ? renderTarget._glFrameBuffer : null;
+                var resolvedFrameBuffer = renderTarget ? renderTarget._glResolveFrameBuffer || renderTarget._glFrameBuffer : null;
+                var grabPassFrameBuffer = this.grabPassRenderTarget._glFrameBuffer;
+                gl.bindFramebuffer(gl.READ_FRAMEBUFFER, resolvedFrameBuffer);
+                gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, grabPassFrameBuffer);
+                gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+                gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, currentFrameBuffer);
 
-            if (resolve) {
-                gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
+            } else {
+                if (resolveRenderTarget) {
+                    renderTarget.resolve(true);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glResolveFrameBuffer);
+                }
+
+                var format = grabPassTexture._glFormat;
+                gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, width, height, 0);
+                grabPassTexture._width = width;
+                grabPassTexture._height = height;
+
+                if (resolveRenderTarget) {
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, renderTarget._glFrameBuffer);
+                }
             }
         },
 
