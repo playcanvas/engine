@@ -243,6 +243,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.BoundingBox#getMin
          * @description Return the minimum corner of the AABB.
@@ -253,6 +255,8 @@ Object.assign(pc, function () {
         },
 
         /**
+         * @private
+         * @deprecated
          * @function
          * @name pc.BoundingBox#getMax
          * @description Return the maximum corner of the AABB.
