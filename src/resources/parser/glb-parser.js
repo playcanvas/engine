@@ -341,10 +341,8 @@ Object.assign(pc, function () {
             var accessor = accessors[primitive.attributes.POSITION];
             var min = accessor.min;
             var max = accessor.max;
-            var aabb = new pc.BoundingBox(
-                new pc.Vec3((max[0] + min[0]) / 2, (max[1] + min[1]) / 2, (max[2] + min[2]) / 2),
-                new pc.Vec3((max[0] - min[0]) / 2, (max[1] - min[1]) / 2, (max[2] - min[2]) / 2)
-            );
+            var aabb = new pc.BoundingBox();
+            aabb.setMinMax(min, max);
             mesh.aabb = aabb;
 
             if (primitive.hasOwnProperty('targets')) {

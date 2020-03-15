@@ -157,10 +157,8 @@ Object.assign(pc, function () {
 
                         var min = targetAabb.min;
                         var max = targetAabb.max;
-                        var aabb = new pc.BoundingBox(
-                            new pc.Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
-                            new pc.Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
-                        );
+                        var aabb = new pc.BoundingBox();
+                        aabb.setMinMax(min, max);
 
                         morphTarget = new pc.MorphTarget({ indices: targets[j].indices,
                             deltaPositions: targets[j].deltaPositions,
@@ -624,10 +622,8 @@ Object.assign(pc, function () {
                 var meshAabb = meshData.aabb;
                 var min = meshAabb.min;
                 var max = meshAabb.max;
-                var aabb = new pc.BoundingBox(
-                    new pc.Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
-                    new pc.Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
-                );
+                var aabb = new pc.BoundingBox();
+                aabb.setMinMax(min, max);
 
                 var indexed = (meshData.indices !== undefined);
                 var mesh = new pc.Mesh();
