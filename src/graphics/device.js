@@ -963,11 +963,23 @@ Object.assign(pc, function () {
         updateGrabPass: function () {
             var gl = this.gl;
 
+            var target = this.renderTarget;
+            var resolve = target && target._glResolveFrameBuffer;
+
+            if (resolve) {
+                target.resolve(true);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, target._glResolveFrameBuffer);
+            }
+
             var format = this.grabPassTexture._glFormat;
-            var source = (this.renderTarget && this.renderTarget.colorBuffer) || this.canvas;
+            var source = (this.target && this.target.colorBuffer) || this.canvas;
             gl.copyTexImage2D(gl.TEXTURE_2D, 0, format, 0, 0, source.width, source.height, 0);
             this.grabPassTexture._width = source.width;
             this.grabPassTexture._height = source.height;
+
+            if (resolve) {
+                gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
+            }
         },
 
         destroyGrabPass: function () {
