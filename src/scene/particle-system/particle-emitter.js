@@ -284,6 +284,8 @@ Object.assign(pc, function () {
 
         this.prevWorldBoundsSize = new pc.Vec3();
         this.prevWorldBoundsCenter = new pc.Vec3();
+        this.prevEmitterExtents = this.emitterExtents;
+        this.prevEmitterRadius = this.emitterRadius;
         this.worldBoundsMul = new pc.Vec3();
         this.worldBoundsAdd = new pc.Vec3();
         this.timeToSwitchBounds = 0;
@@ -299,7 +301,7 @@ Object.assign(pc, function () {
         this.material = null;
         this.meshInstance = null;
 
-        this.seed = 0;
+        this.seed = Math.random();
 
         this.fixedTimeStep = 1.0 / 60;
         this.maxSubSteps = 10;
@@ -381,6 +383,16 @@ Object.assign(pc, function () {
 
             this.prevWorldBoundsSize.copy(this.worldBoundsSize);
             this.prevWorldBoundsCenter.copy(this.worldBounds.center);
+
+            var recalculateLocalBounds = false;
+            if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
+                recalculateLocalBounds = !this.emitterExtents.equals(this.prevEmitterExtents);
+            } else {
+                recalculateLocalBounds = !(this.emitterRadius === this.prevEmitterRadius);
+            }
+            if (recalculateLocalBounds) {
+                this.calculateLocalBounds();
+            }
 
             var nodeWT = this.node.getWorldTransform();
             if (this.localSpace) {
@@ -1076,7 +1088,9 @@ Object.assign(pc, function () {
 
             this.simTimeTotal += delta;
 
-            this.calculateWorldBounds();
+            if (!this.useCpu) {
+                this.calculateWorldBounds();
+            }
 
             if (this._isAnimated()) {
                 var tilesParams = this.animTilesParams;
