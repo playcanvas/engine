@@ -85,6 +85,8 @@ Object.assign(pc, function () {
             if (omax.y > tmax.y) tmax.y = omax.y;
             if (omin.z < tmin.z) tmin.z = omin.z;
             if (omax.z > tmax.z) tmax.z = omax.z;
+
+            this._syncMinMaxToCtrHlf();
         },
 
         /**
