@@ -237,10 +237,18 @@ Object.assign(pc, function () {
          * @param {pc.Vec3|number[]} max - The maximum corner of the AABB. Can be a {@link pc.Vec3} or an array (of length 3).
          */
         setMinMax: function (min, max) {
-            if (!Array.isArray(min)) this._min.copy(min);
-            else this._min.set(min[0], min[1], min[2]);
-            if (!Array.isArray(max)) this._max.copy(max);
-            else this._max.set(max[0], max[1], max[2]);
+            if (Array.isArray(min)) {
+                this._min.set(min[0], min[1], min[2]);
+            } else {
+                this._min.copy(min);
+            }
+
+            if (Array.isArray(max)) {
+                this._max.set(max[0], max[1], max[2]);
+            } else {
+                this._max.copy(max);
+            }
+
             this._syncMinMaxToCtrHlf();
         },
 
