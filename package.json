@@ -33,7 +33,7 @@
     "src/polyfill/*"
   ], 
   "devDependencies": {
-    "@playcanvas/jsdoc-template": "^1.0.10", 
+    "@playcanvas/jsdoc-template": "^1.0.11", 
     "@playcanvas/eslint-config": "^1.0.3", 
     "chai": "^4.2.0", 
     "eslint": "^6.8.0", 
